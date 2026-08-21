@@ -4,8 +4,8 @@
 
 | Version | Supported |
 | --- | --- |
-| 2.46.x | Yes |
-| 2.45.x | Transition support while 2.46.x is the current stable line |
+| 2.50.x | Yes |
+| 2.46.x | Transition support while 2.50.x is the current stable line |
 | Earlier releases and preview builds | No public security support |
 
 The lifecycle and transition rules are defined in
@@ -39,4 +39,4 @@ QuickPLS is designed as an offline Windows desktop application:
 - No cloud sync.
 - No remote computation.
 
-The 2.46.0 installer is currently unsigned. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as the competitor-grade stable release.
+The 2.50.0 installer is currently unsigned. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as the competitor-grade stable release.

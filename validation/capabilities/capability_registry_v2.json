@@ -1,8 +1,8 @@
 {
   "registry_schema_version": 2,
   "registry_id": "quickpls.capability_registry.v2",
-  "registry_version": "2.4.0",
-  "frozen_on": "2026-08-19",
+  "registry_version": "2.5.0",
+  "frozen_on": "2026-08-21",
   "catalogue_snapshot": {
     "provider": "SmartPLS GmbH",
     "product": "SmartPLS 4",
@@ -72,8 +72,8 @@
       "internal"
     ],
     "baseline_counts": {
-      "standard": 26,
-      "labs": 17,
+      "standard": 27,
+      "labs": 16,
       "legacy": 2,
       "internal": 0
     },
@@ -172,7 +172,7 @@
         },
         {
           "id": "2.50.0",
-          "objective": "Complete segmentation workflows."
+          "objective": "Integrate the Rank 0–3 General SEM upgrade across PLS mediation, moderation, higher-order constructs, moderated mediation, and bounded CB-SEM workflows."
         },
         {
           "id": "2.51.0",
@@ -5228,8 +5228,8 @@
       "official_lifecycle": "active",
       "official_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
       "coverage_state": "partial",
-      "evidence_state": "engine_only",
-      "surface": "labs",
+      "evidence_state": "release_qualified",
+      "surface": "standard",
       "product_areas": [
         "diagram",
         "data",
@@ -5349,17 +5349,17 @@
         ]
       },
       "known_differences": [
-        "The exact Rank 0 cells are independently Standard under rank0_streamlined_plan4b_v1; the exact two-way moderated-mediation cell remains opt-in Labs with engine-only evidence, so the conservative mixed-cell row projection remains Labs and engine-only.",
-        "Create current method-scoped release evidence for the moderated-mediation cell; causal identification, counterfactual mediation beyond the exact registered two-way conditional-process cell, and cyclic paths remain excluded."
+        "The exact Rank 0 cells and bounded two-way moderated-mediation cell are Standard under the user-approved streamlined Version 2.50 integration profile; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made.",
+        "Causal identification, counterfactual mediation beyond the exact registered two-way conditional-process cell, and cyclic paths remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.mediation",
         "catalogue_position": 27,
         "official_family": "Extended Relationships",
         "official_method": "Mediation",
-        "status": "engine-preview",
+        "status": "release-qualified",
         "priority": "P1",
-        "target_release": "2.49.0",
+        "target_release": "current",
         "competitor_scope": true,
         "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
         "quickpls_capability_ids": [
@@ -5372,7 +5372,7 @@
           "smartpls.pls_algorithm",
           "smartpls.pls_bootstrapping"
         ],
-        "remaining_gap": "Create independent qualification and packaged-release evidence for the bounded two-way moderated-mediation cell; causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
+        "remaining_gap": "Causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
       },
       "option_cells": [
         {
@@ -5513,8 +5513,8 @@
           "cell_id": "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
           "capability_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
           "coverage_state": "partial",
-          "evidence_state": "engine_only",
-          "surface": "labs",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
           "supported_model_predicate": {
             "official": [
               "model_family:pls_sem",
@@ -5586,7 +5586,7 @@
             ]
           },
           "known_differences": [
-            "This bounded Labs cell is connected from exact path authoring through source-preserving schema-6 revision v2, shared-replicate full-model execution, canonical five-target results, strict archive persistence, reopen, and canonical-table export. It has engine-only implementation evidence and is not Standard or release qualified.",
+            "This bounded Standard cell is connected from exact path authoring through source-preserving schema-6 revision v2, shared-replicate full-model execution, canonical five-target results, strict archive persistence, reopen, and canonical-table export under the user-approved streamlined Version 2.50 integration profile.",
             "Only one selected two-relation X-to-M-to-Y path and one first- or second-stage two-way interaction are admitted. Arbitrary probes, both-stage moderation, multiple interactions, longer paths, causal identification claims, BCa, one-sided, studentized, multigroup, weighted, clustered, transformed, and non-listwise inputs remain excluded."
           ]
         }
@@ -7585,7 +7585,7 @@
           "groups:single"
         ]
       },
-      "scope_statement": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM with listwise deletion, marker identification, parameter estimates, residuals, fit indices, modification screening, typed persistence, and selected-run export. The separate CompiledCbsemPlanV2 covariance/scaled-correlation input cell remains Labs and unqualified.",
+      "scope_statement": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM remains available under its existing identity. Standard also offers the bounded schema-6 resident SemModelV4 recursive common-factor ML workflow; the separate CompiledCbsemPlanV2 matrix-input cell remains unqualified.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"
       ],
@@ -7606,7 +7606,8 @@
       "qualification_references": [
         "validation/methods/cbsem_ml_v1.manifest.json",
         "validation/capabilities/cbsem_matrix_input_v2.cell.manifest.json",
-        "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json"
+        "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json",
+        "validation/methods/cbsem_general_sem_ml_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -7620,13 +7621,20 @@
           "capability_id": "smartpls.cbsem",
           "cell_id": "qpls3.cbsem.ml.matrix_input",
           "capability_version": "cbsem_ml_compiled_moment_input_v2"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem",
+          "cell_id": "qpls3.cbsem.general_sem_ml",
+          "capability_version": "cbsem_general_sem_ml_v1"
         }
       ],
       "qualification_spec": {
         "references": [
           "validation/methods/cbsem_ml_v1.manifest.json",
           "validation/capabilities/cbsem_matrix_input_v2.cell.manifest.json",
-          "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json"
+          "validation/qualification_v2/cbsem_matrix_input_v2.qualification.json",
+          "validation/methods/cbsem_general_sem_ml_v1.manifest.json"
         ],
         "links": [
           {
@@ -7640,12 +7648,19 @@
             "capability_id": "smartpls.cbsem",
             "cell_id": "qpls3.cbsem.ml.matrix_input",
             "capability_version": "cbsem_ml_compiled_moment_input_v2"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.cbsem",
+            "cell_id": "qpls3.cbsem.general_sem_ml",
+            "capability_version": "cbsem_general_sem_ml_v1"
           }
         ]
       },
       "known_differences": [
         "The release-qualified Standard cell is limited to the documented raw-data ML scope; robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, matrix input, and unrestricted multigroup/invariance remain excluded.",
-        "The bounded raw/covariance/scaled-correlation CompiledCbsemPlanV2 path is registered as a separate partial/absent Labs option cell with Internal Recipe V4, cancellable-job, canonical-result, schema-6 append/readback, independent NumPy/SciPy work-oracle, and a compatibility-only QualificationSpec V2. It has zero admitted receipts and no Standard GUI, CLI, semantic export, packaged Windows, or independent scientific-review qualification."
+        "The bounded raw/covariance/scaled-correlation CompiledCbsemPlanV2 path is registered as a separate partial/absent Labs option cell with Internal Recipe V4, cancellable-job, canonical-result, schema-6 append/readback, independent NumPy/SciPy work-oracle, and a compatibility-only QualificationSpec V2. It has zero admitted receipts and no Standard GUI, CLI, semantic export, packaged Windows, or independent scientific-review qualification.",
+        "The schema-6 General SEM V3 recursive common-factor ML cell is scoped Standard under the user-approved streamlined Version 2.50 integration profile. Mean structures, feedback, categorical estimators, robust/FIML methods, groups, derived effects, and unrestricted constraint semantics remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.cbsem",
@@ -7656,14 +7671,15 @@
         "priority": "P0",
         "target_release": "current",
         "competitor_scope": true,
-        "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM with listwise deletion, marker identification, parameter estimates, residuals, fit indices, modification screening, typed persistence, and selected-run export. The separate CompiledCbsemPlanV2 covariance/scaled-correlation input cell remains Labs and unqualified.",
+        "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM remains available under its existing identity. Standard also offers the bounded schema-6 resident SemModelV4 recursive common-factor ML workflow; the separate CompiledCbsemPlanV2 matrix-input cell remains unqualified.",
         "quickpls_capability_ids": [
           "qpls3.cbsem.ml",
-          "qpls3.cbsem.ml.matrix_input"
+          "qpls3.cbsem.ml.matrix_input",
+          "qpls3.cbsem.general_sem_ml"
         ],
         "implementation_evidence": [],
         "dependencies": [],
-        "remaining_gap": "Maintain the bounded raw-data evidence. Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance require separate qualification before expansion."
+        "remaining_gap": "Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance remain excluded."
       },
       "option_cells": [
         {
@@ -7786,6 +7802,68 @@
           "known_differences": [
             "This is a registered partial/absent Labs contract, not an evidence claim. Its bounded raw/covariance/scaled-correlation Internal execution has zero admitted QualificationSpec receipts and no Standard GUI, CLI, semantic export, packaged Windows, or independent scientific-review qualification."
           ]
+        },
+        {
+          "capability_id": "smartpls.cbsem",
+          "cell_id": "qpls3.cbsem.general_sem_ml",
+          "capability_version": "cbsem_general_sem_ml_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:cb_sem"
+            ],
+            "quickpls": [
+              "availability:partial",
+              "scope:bounded",
+              "authority:resident_sem_model_v4",
+              "compiler:compiled_cbsem_plan_v3",
+              "model_shape:reflective_recursive_sem",
+              "structural_paths:one_or_more",
+              "groups:single"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_continuous",
+              "missing_data:listwise_deletion",
+              "weights:none",
+              "groups:single"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/",
+              "docs/methods/CBSEM_GENERAL_SEM_V3.md"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/cbsem_general_sem_ml_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.cbsem",
+                "cell_id": "qpls3.cbsem.general_sem_ml",
+                "capability_version": "cbsem_general_sem_ml_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Standard scope is limited to raw continuous listwise single-group recursive common-factor ML through the resident schema-6 SemModelV4 parameter authority under the user-approved streamlined Version 2.50 integration profile."
+          ]
         }
       ]
     },
@@ -7851,7 +7929,7 @@
           "sampling_unit:row"
         ]
       },
-      "scope_statement": "Recipe-v4 exact case bootstrap for raw continuous single-group reflective CFA with listwise deletion, 500 to 10,000 indexed no-retry full-ML refits, and fixed 95% percentile Type-7, analytic-studentized Type-7, or complete-delete-one BCa Type-7 output.",
+      "scope_statement": "Standard provides exact case bootstrap for raw continuous single-group reflective CFA and fixed 95% two-sided percentile Type-7 full-ML case bootstrap for the bounded schema-6 recursive common-factor SEM cell.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"
       ],
@@ -7870,7 +7948,8 @@
       },
       "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/",
       "qualification_references": [
-        "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json"
+        "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+        "validation/methods/cbsem_recursive_sem_case_bootstrap_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -7878,11 +7957,18 @@
           "capability_id": "smartpls.cbsem_bootstrapping",
           "cell_id": "qpls3.cbsem.bootstrap",
           "capability_version": "cbsem_exact_case_bootstrap_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.cbsem_bootstrapping",
+          "cell_id": "qpls3.cbsem.bootstrap.recursive_sem",
+          "capability_version": "cbsem_exact_recursive_sem_case_bootstrap_v1"
         }
       ],
       "qualification_spec": {
         "references": [
-          "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json"
+          "validation/methods/cbsem_exact_case_bootstrap_v1.manifest.json",
+          "validation/methods/cbsem_recursive_sem_case_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -7890,11 +7976,17 @@
             "capability_id": "smartpls.cbsem_bootstrapping",
             "cell_id": "qpls3.cbsem.bootstrap",
             "capability_version": "cbsem_exact_case_bootstrap_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.cbsem_bootstrapping",
+            "cell_id": "qpls3.cbsem.bootstrap.recursive_sem",
+            "capability_version": "cbsem_exact_recursive_sem_case_bootstrap_v1"
           }
         ]
       },
       "known_differences": [
-        "Standard scope is exact reflective CFA case resampling only. Recursive structural SEM, multigroup, ordinal/WLSMV, robust/FIML, weighted, clustered, multilevel, parametric, and Bollen-Stine bootstrap remain excluded; historical cbsem_bootstrap_v1 and schema-3 cbsem_bootstrap_v2 stay readable but non-promotional."
+        "Standard scope includes exact reflective CFA case resampling and the bounded recursive structural SEM percentile bootstrap; multigroup, ordinal/WLSMV, robust/FIML, weighted, clustered, multilevel, parametric, and Bollen-Stine procedures remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.cbsem_bootstrapping",
@@ -7905,15 +7997,16 @@
         "priority": "P0",
         "target_release": "current",
         "competitor_scope": true,
-        "quickpls_scope": "Recipe-v4 exact case bootstrap for raw continuous single-group reflective CFA with listwise deletion, 500 to 10,000 indexed no-retry full-ML refits, and fixed 95% percentile Type-7, analytic-studentized Type-7, or complete-delete-one BCa Type-7 output.",
+        "quickpls_scope": "Standard provides exact case bootstrap for raw continuous single-group reflective CFA and fixed 95% two-sided percentile Type-7 full-ML case bootstrap for the bounded schema-6 recursive common-factor SEM cell.",
         "quickpls_capability_ids": [
-          "qpls3.cbsem.bootstrap"
+          "qpls3.cbsem.bootstrap",
+          "qpls3.cbsem.bootstrap.recursive_sem"
         ],
         "implementation_evidence": [],
         "dependencies": [
           "smartpls.cbsem"
         ],
-        "remaining_gap": "Maintain current method-scoped Windows package, export, save/reopen, and audit receipts for the bounded exact-CFA family; broader CB-SEM bootstrap variants remain excluded."
+        "remaining_gap": "Broader CB-SEM bootstrap variants remain excluded."
       },
       "option_cells": [
         {
@@ -7971,6 +8064,67 @@
           },
           "known_differences": [
             "Standard scope is exact reflective CFA case resampling only. Recursive structural SEM, multigroup, ordinal/WLSMV, robust/FIML, weighted, clustered, multilevel, parametric, and Bollen-Stine bootstrap remain excluded; historical cbsem_bootstrap_v1 and schema-3 cbsem_bootstrap_v2 stay readable but non-promotional."
+          ]
+        },
+        {
+          "capability_id": "smartpls.cbsem_bootstrapping",
+          "cell_id": "qpls3.cbsem.bootstrap.recursive_sem",
+          "capability_version": "cbsem_exact_recursive_sem_case_bootstrap_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:cb_sem"
+            ],
+            "quickpls": [
+              "availability:partial",
+              "scope:bounded",
+              "authority:compiled_cbsem_plan_v3",
+              "model_shape:reflective_recursive_sem",
+              "structural_paths:one_or_more",
+              "groups:single"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_continuous",
+              "missing_data:listwise_deletion",
+              "sampling_unit:row",
+              "weights:none"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/",
+              "docs/methods/CBSEM_GENERAL_SEM_V3.md"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/cbsem_recursive_sem_case_bootstrap_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.cbsem_bootstrapping",
+                "cell_id": "qpls3.cbsem.bootstrap.recursive_sem",
+                "capability_version": "cbsem_exact_recursive_sem_case_bootstrap_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Standard scope is limited to fixed 95% two-sided percentile Type-7 case resampling for the bounded recursive common-factor General SEM V3 point cell under the user-approved streamlined Version 2.50 integration profile."
           ]
         }
       ]

@@ -6,7 +6,7 @@ Last reviewed: 2026-08-13
 
 | Area | Current condition | Impact | Required closure |
 | --- | --- | --- | --- |
-| Windows trust | Current 2.46.0 artifacts are unsigned. | Windows may identify the publisher as unknown; the build is not competitor-grade distribution evidence. | Sign and timestamp the exact QuickPLS 3 candidate, verify with SignTool, then rerun candidate-bound acceptance. |
+| Windows trust | Current 2.50.0 artifacts are unsigned. | Windows may identify the publisher as unknown; the build is not competitor-grade distribution evidence. | Sign and timestamp the exact QuickPLS candidate, verify with SignTool, then rerun candidate-bound acceptance. |
 | Installer lifecycle | The complete oldest/current Windows clean-install, N-1 upgrade, interrupted recovery, unattended install, coexistence, and uninstall matrix is not yet accepted. | Offline and institutional deployment claims are not commercially qualified. | Run the matrix against the exact candidate and preserve reports. |
 | Updater | Trusted beta/stable updater channels and recovery evidence are not yet release-qualified. | Preview users must use a full installer; no stable updater claim is allowed. | Qualify signed manifests, downgrade rejection, interruption recovery, and full-installer fallback. |
 | Diagnostics | The privacy-preserving rotating-log and diagnostic-bundle product workflow is designed but not implemented and packaged-tested. | Users must provide manual, privacy-safe reproduction details. | Implement preview/redaction/export, then run packaged boundary and privacy tests. |

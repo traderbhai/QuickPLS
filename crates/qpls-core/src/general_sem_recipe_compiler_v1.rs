@@ -1256,8 +1256,7 @@ mod tests {
         let plan =
             compile_pls_plan_v3(&model, recipe.general_sem_config.as_ref().unwrap()).unwrap();
         assert!(plan.two_way_moderated_mediation_target().is_some());
-        let registry_artifact =
-            compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
+        let registry_artifact = compile_general_sem_pls_recipe_v1(&recipe, Some(&model)).unwrap();
         let exact_cell =
             crate::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
         assert_eq!(

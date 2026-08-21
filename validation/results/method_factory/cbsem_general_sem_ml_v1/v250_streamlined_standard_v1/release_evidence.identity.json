@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_v250_streamlined_method_identity_v1",
+  "passed": true,
+  "feature_id": "qpls3.cbsem.general_sem_ml",
+  "method_version": "cbsem_general_sem_ml_v1",
+  "catalogue_snapshot_date": "2026-08-12",
+  "generated_at_utc": "2026-08-21T05:50:59Z",
+  "qualification_profile_id": "v250_streamlined_standard_v1",
+  "representative_evidence_acknowledged": true,
+  "streamlined_release_report": {
+    "path": "validation/results/general_sem_v250_standard_v1/streamlined-release-evidence.json",
+    "size": 3361,
+    "sha256": "199b635ef87e94f184a44b115890bdc7a4e2e6ed20bc5c2ec747c1892ca6f511"
+  },
+  "source_artifacts": [
+    {"path":"crates/qpls-core/src/compiled_cbsem_plan_v3.rs","size":51401,"sha256":"aefbad41e1a1d2be8d462d7cd7a2e1318e164a01e56d7fbd0ec94710e0d87c50"},
+    {"path":"crates/qpls-core/src/general_sem_capability_preflight_v1.rs","size":93896,"sha256":"54134e7a128f070e2751d2cc90a74a28aba5af248bef6f8daf6277abd695ea67"},
+    {"path":"docs/methods/CBSEM_GENERAL_SEM_V3.md","size":2614,"sha256":"02e7e60cd2d48c6361d4332bf44bb56a10d2812799ecdac22f3461924fcd2f67"},
+    {"path":"src-tauri/src/project_schema6_result_append.rs","size":21387,"sha256":"0c8c14f7b50feadbaaa5568160640da45116daa82cefea526e588c78b32d517f"},
+    {"path":"src-tauri/src/project_schema6_result_read.rs","size":50637,"sha256":"c042005aee33f650b40efd16363bd343e03a5b9bf3ab265620aa9f8867d042a5"},
+    {"path":"src/domain/canonicalResultCrossFormatExportV2.ts","size":91678,"sha256":"0fb90db7a822ae3e7bd26189c138dd6003d39ef2e2963c6b45cb7ca2655f70e3"},
+    {"path":"src/native/CanonicalResultExportPanelV2.tsx","size":17960,"sha256":"036f44dabc4059bac177c5320296826698316b4a00e9bd85ea4ece82e65a72ea"},
+    {"path":"src/native/GeneralSemEstimatorCompatibilityPanel.test.tsx","size":8126,"sha256":"814a9a504f4466b81c23676431f04a201c61c9c7e61a1ec92a52cc66fd2af184"},
+    {"path":"src/native/NativeRecipeV4GeneralSemWorkspace.test.tsx","size":37729,"sha256":"e548d9a1958a7ce9880066e4cf4bb246a24232d722f7082a6c31347111be77ad"},
+    {"path":"validation/cbsem_lavaan_reference.py","size":14502,"sha256":"6eee5d099d9ba91343adf22f4ec2f8a572fb94aaf3c3f8d471da9ce58742cc45"},
+    {"path":"validation/cbsem_ml_v1_boundary_gate.py","size":9270,"sha256":"39f66001e8c7c999d86b9e19fff64bc60f076195e164737c6e51c4a3af442f6a"},
+    {"path":"validation/cbsem_ml_v1_persistence_gate.py","size":2083,"sha256":"79297de226f0a72f0781c72bee0d75e60d5bb14474ee6002b96465e07b9986bd"},
+    {"path":"validation/cbsem_ml_v1_reference.py","size":8461,"sha256":"1450b05af9a3f6715b976349a62ae2476c48e484b55d0d1272399dbf83dfa967"},
+    {"path":"validation/cbsem_ml_v1_simulation.py","size":2579,"sha256":"9247a3a18bee30ecb3ff66875fa543192db3c796c184da7e59e01b884c85df32"},
+    {"path":"validation/cbsem_publication_audit.py","size":5461,"sha256":"d58973bf218b698d64f5c490bf600229646f99549f4940ff9d4eec9089573f27"},
+    {"path":"validation/method_promotion_manifest.py","size":34283,"sha256":"e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"},
+    {"path":"validation/methods/cbsem_general_sem_ml_v1.manifest.json","size":11673,"sha256":"b59fd90b608a0a6ee3b130366c8bb2b12113c065da0745e464199b9cfd307278"},
+    {"path":"validation/methods/method_promotion_manifest.schema.json","size":15836,"sha256":"dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"},
+    {"path":"validation/run_v247_cbsem_native_acceptance.ps1","size":2350,"sha256":"00427f09eb77ff97f80862c243be6955c87b5787495e67c155b2a9c5c7cf9e2e"},
+    {"path":"validation/test_method_promotion_manifest.py","size":21368,"sha256":"8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"}
+  ]
+}

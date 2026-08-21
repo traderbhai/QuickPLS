@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_v250_streamlined_integration_evidence_v1",
+  "passed": true,
+  "product_version": "2.50.0",
+  "generated_at_utc": "2026-08-21T05:50:59Z",
+  "qualification_profile_id": "v250_streamlined_standard_v1",
+  "approval": {
+    "profile": "streamlined_version_2_50_integration",
+    "representative_evidence_accepted": true,
+    "independent_scientific_and_per_cell_packaged_qualification_replaced": true
+  },
+  "promoted_cells": [
+    {
+      "capability_id": "smartpls.mediation",
+      "cell_id": "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+      "capability_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
+    },
+    {
+      "capability_id": "smartpls.cbsem",
+      "cell_id": "qpls3.cbsem.general_sem_ml",
+      "capability_version": "cbsem_general_sem_ml_v1"
+    },
+    {
+      "capability_id": "smartpls.cbsem_bootstrapping",
+      "cell_id": "qpls3.cbsem.bootstrap.recursive_sem",
+      "capability_version": "cbsem_exact_recursive_sem_case_bootstrap_v1"
+    }
+  ],
+  "registry": {
+    "version": "2.5.0",
+    "canonical_sha256": "c7f79c4a441a07f9d66c5a05b4bfafab36ce1ca8480a22caca71693845ff50b6",
+    "standard_option_cell_count": 38,
+    "standard_row_projection_count": 27,
+    "structural_validation_passed": true
+  },
+  "integrated_verification": {
+    "frontend_full": {"files": 188, "tests_passed": 1518, "tests_failed": 0},
+    "frontend_typecheck": {"passed": true},
+    "frontend_production_build": {"modules_transformed": 1902, "passed": true},
+    "rust_qpls_core": {"tests_passed": 288, "tests_failed": 0},
+    "rust_qpls_estimation": {"tests_passed": 168, "tests_failed": 0, "tests_ignored": 1},
+    "rust_qpls_resampling": {"tests_passed": 122, "tests_failed": 0},
+    "rust_general_sem_final": {
+      "qpls_project": {"tests_passed": 32, "tests_failed": 0},
+      "qpls_runner": {"tests_passed": 21, "tests_failed": 0},
+      "quickpls_desktop": {"tests_passed": 63, "tests_failed": 0, "tests_ignored": 1}
+    },
+    "streamlined_python_contracts": {"tests_passed": 33, "tests_failed": 0},
+    "final_standard_access_smoke": {
+      "frontend_files": 5,
+      "frontend_tests_passed": 89,
+      "frontend_tests_failed": 0,
+      "embedded_rust_registry_tests_passed": 1,
+      "embedded_rust_registry_tests_failed": 0
+    }
+  },
+  "artifacts": {
+    "report": "validation/results/release_artifacts.json",
+    "portable": {
+      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_portable.exe",
+      "bytes": 61481472,
+      "sha256": "5e8ba782dd2bdf09112caae3ccb04fe292eccd598de9b651fccd026765b99618"
+    },
+    "cli": {
+      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_cli.exe",
+      "bytes": 32458752,
+      "sha256": "6670d27f103fb638475964756a6a68b395f329e449339a4e33fdc4215b9d3228"
+    },
+    "setup": {
+      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_setup.exe",
+      "bytes": 228071356,
+      "sha256": "6d3e7d91b253718673954d9fd2adde839d5bb69317d10e6239c6b5ec053d8b51"
+    }
+  },
+  "scope_note": "Standard applies only to each exact registered predicate. SmartPLS numerical identity and unrestricted SmartPLS parity are not claimed."
+}

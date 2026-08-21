@@ -1,9 +1,8 @@
 # Rank 3 CB-SEM V3 authority foundation
 
-Status: bounded product-path source is prepared for Experimental Labs, but the
-two exact Registry entries and five Tauri command registrations are a separate
-activation change. Until that activation lands with fresh engine evidence,
-the path remains fail-closed and is not release-qualified or Standard.
+Status: bounded product path is connected through two exact scoped-Standard
+Registry cells and five archive-bound Tauri job commands. Version 2.50 promotes
+both cells under the user-approved streamlined integration profile.
 
 ## Frozen candidate identities
 
@@ -47,11 +46,10 @@ The source now includes an archive-bound native job lifecycle, structured
 progress/failure/cancellation state, resident RecipeV4 and parameter-table
 preflight, exact-cell schema-6 append and strict readback, a dual-estimator
 General SEM workspace, canonical result tables, and the shared provenance-bound
-CSV/XLSX/HTML/PDF/SVG/PNG publication path. These sources intentionally remain
-unreachable until the exact Registry cells, managed state, command handlers,
-and shared export handler are activated together. The established CFA v1
-selector, method identities, source predicate, and release surface are
-unchanged.
+CSV/XLSX/HTML/PDF/SVG/PNG publication path. The exact Registry cells, managed
+state, command handlers, and shared export handler are activated together on
+the integrated Rank 0–3 branch. The established CFA v1 selector, method
+identities, source predicate, and release surface are unchanged.
 
 Canonical General SEM results now have additive typed CB parameter rows,
 existing fit/identification rows, and an optional CB-specific recursive
@@ -59,8 +57,9 @@ bootstrap receipt plus per-parameter inference ledger. Empty collections and
 the absent receipt are omitted, so historical documents retain their original
 wire shape.
 
-The two method manifests declare only `engine_only` intent. Their compact
-identity reports are deliberately absent until the consolidated source checks
-actually pass. Independent recursive-SEM parity, simulation and interval
-coverage, persistence/native/export qualification, performance and soak work,
-method audit, and genuine packaged Windows acceptance remain pending.
+The two method manifests declare scoped Standard intent under the user-approved
+streamlined Version 2.50 integration profile. The consolidated Rust/frontend
+regression and production frontend build passed before promotion. The Standard
+claim remains limited to the exact predicates above; broader CB-SEM methods and
+the previously planned per-cell qualification matrix remain outside this
+profile.

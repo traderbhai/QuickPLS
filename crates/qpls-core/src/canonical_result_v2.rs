@@ -1842,7 +1842,7 @@ fn validate_general_sem_inference_receipt_v1(
             &format!("{context}.capability_dependencies"),
         );
         let mut expected_dependencies = vec![
-            RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+            crate::RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
             crate::pls_general_multiple_moderation_point_capability_cell_v1(),
         ];
         expected_dependencies.sort_by_key(capability_cell_reference_identity_v2);
@@ -2699,7 +2699,6 @@ fn validate_cbsem_bootstrap_v1(
         }
     }
 }
-
 
 fn validate_canonical_moderated_mediation_results_v1<'a>(
     errors: &mut Vec<String>,
@@ -6261,7 +6260,9 @@ mod tests {
             validate_canonical_result_document_v2(&wrong_cell)
                 .errors
                 .iter()
-                .any(|error| error.contains("must equal the exact General SEM multiple-mediation full-model bootstrap option cell"))
+                .any(|error| error.contains(
+                    "must equal an exact General SEM mediation, moderation, or two-way moderated-mediation full-model bootstrap option cell"
+                ))
         );
 
         let mut changed_effect_set = general_sem_inference_document_fixture();

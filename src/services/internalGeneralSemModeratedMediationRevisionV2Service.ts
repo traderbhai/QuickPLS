@@ -3,11 +3,13 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
-import type { GeneralSemModeratedMediationSelectionReadyV1 } from "../domain/generalSemModeratedMediationAuthoringV1";
+import {
+  GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
+  type GeneralSemModeratedMediationSelectionReadyV1,
+} from "../domain/generalSemModeratedMediationAuthoringV1";
 import {
   GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_LAYOUT_KEY,
   INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_COMMAND_V2,
-  INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2,
   InternalGeneralSemModeratedMediationRevisionWireError,
   parseGeneralSemExecutionAuthorityRevisionLineageV2,
   parseInternalGeneralSemModeratedMediationRevisionNativeOutcomeV2,
@@ -29,18 +31,35 @@ const moderatedMediationRegistryMatches = capabilityRegistryV2.quickPlsCell(
 const moderatedMediationRegistryCell = moderatedMediationRegistryMatches.length === 1
   ? moderatedMediationRegistryMatches[0]!.cell
   : null;
+const moderatedMediationExecutionAccess = moderatedMediationRegistryCell?.surface === "standard"
+  ? {
+    surface: "standard" as const,
+    experimentalLabsEnabled: false as const,
+    recipeExecutionSurface: "native_general_sem_pls_standard_v1" as const,
+  }
+  : moderatedMediationRegistryCell?.surface === "labs"
+    ? {
+      surface: "internal_labs" as const,
+      experimentalLabsEnabled: true as const,
+      recipeExecutionSurface: "native_general_sem_pls_labs_v1" as const,
+    }
+    : null;
 
-/** The product route is available only while the exact shipped Registry cell is selectable in Labs. */
+/** The product route follows the exact shipped Registry cell on Standard or Labs. */
 export const GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1 =
   moderatedMediationRegistryCell !== null
   && moderatedMediationRegistryCell.capability_version
     === "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
-  && moderatedMediationRegistryCell.surface === "labs"
+  && (moderatedMediationRegistryCell.surface === "standard"
+    || moderatedMediationRegistryCell.surface === "labs")
   && capabilityRegistryV2.availability(
     moderatedMediationRegistryCell.capability_id,
     moderatedMediationRegistryCell.cell_id,
     true,
   ).selectable;
+
+export const GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_REQUIRES_LABS_V1 =
+  moderatedMediationRegistryCell?.surface === "labs";
 
 export type InternalGeneralSemModeratedMediationRevisionDiagnosticV1 =
   InternalGeneralSemExecutionAuthorityRevisionDiagnosticV1;
@@ -165,6 +184,13 @@ function sourceSnapshotMatches(
 export function buildInternalGeneralSemModeratedMediationRevisionRequestV2(
   transaction: InternalGeneralSemModeratedMediationRevisionTransactionV2,
 ): InternalGeneralSemModeratedMediationRevisionRequestV2 {
+  if (!moderatedMediationExecutionAccess) {
+    throw new InternalGeneralSemModeratedMediationRevisionWireError(
+      "schema6_general_sem_revision_v2.capability_unavailable",
+      "transaction",
+      "The exact moderated-mediation capability cell has no executable Registry surface.",
+    );
+  }
   if (!sourceSnapshotMatches(transaction)) {
     throw new InternalGeneralSemModeratedMediationRevisionWireError(
       "schema6_general_sem_revision_v2.source_session_stale",
@@ -174,8 +200,8 @@ export function buildInternalGeneralSemModeratedMediationRevisionRequestV2(
   }
   const selected = transaction.selection.selectedPath;
   return parseInternalGeneralSemModeratedMediationRevisionRequestV2({
-    surface: INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2,
-    experimentalLabsEnabled: true,
+    surface: moderatedMediationExecutionAccess.surface,
+    experimentalLabsEnabled: moderatedMediationExecutionAccess.experimentalLabsEnabled,
     sourceArchivePath: transaction.snapshot.archivePath,
     expectedSourceArchiveSha256: transaction.snapshot.archiveSha256,
     destinationArchivePath: transaction.destinationArchivePath,
@@ -189,6 +215,8 @@ export function buildInternalGeneralSemModeratedMediationRevisionRequestV2(
         estimand_id: selected.estimandId,
         ordered_relation_ids: [...selected.orderedRelationIds],
       },
+      expectedCapabilityCell: GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
+      recipeExecutionSurface: moderatedMediationExecutionAccess.recipeExecutionSurface,
     },
   });
 }
@@ -355,7 +383,7 @@ export async function reviseInternalGeneralSemModeratedMediationAtV2(
   };
 }
 
-/** Native Save As entrypoint for the Registry-authorized Labs route. */
+/** Native Save As entrypoint for the exact Registry-authorized route. */
 export async function saveInternalGeneralSemModeratedMediationRevisionV1(
   input: SaveInternalGeneralSemModeratedMediationRevisionInputV2,
   dependencies: SaveRevisionDependenciesV2 = {},
@@ -363,8 +391,8 @@ export async function saveInternalGeneralSemModeratedMediationRevisionV1(
   if (!GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1) {
     return blocked(
       "general_sem.moderated_mediation.registry_cell_unavailable",
-      "The exact moderated-mediation capability cell is not selectable in the shipped Labs Registry.",
-      "Keep the source archive unchanged and restore the exact Registry-authorized Labs cell before retrying.",
+      "The exact moderated-mediation capability cell is not selectable in the shipped Registry.",
+      "Keep the source archive unchanged and restore the exact Registry-authorized cell before retrying.",
     );
   }
   const selectDestination = dependencies.selectDestination ?? (async (suggestedPath: string) => {

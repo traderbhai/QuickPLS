@@ -2,13 +2,13 @@
 
 ## Status and product route
 
-This exact option cell is connected in opt-in Experimental Labs with `partial`
-coverage and `engine_only` evidence. It is not Standard, qualification-ready,
-or promotion-allowed. The connected route includes path selection, a new-file
+This exact option cell is connected as scoped Standard with `partial` coverage
+and `release_qualified` evidence under the user-approved streamlined Version
+2.50 integration profile. The connected route includes path selection, a new-file
 model and Recipe revision, strict schema-6 activation, native execution,
-canonical results and tables, shared XLSX table export, atomic result append,
-and strict reopen. Connection does not imply independent numerical or packaged
-release qualification.
+canonical results and tables, shared export, atomic result append, and strict
+reopen. The Standard claim remains limited to the exact predicate below and
+does not imply SmartPLS numerical identity.
 
 The Registry identity is:
 

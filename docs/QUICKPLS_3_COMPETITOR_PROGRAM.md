@@ -83,7 +83,7 @@ All other active rows currently derive `absent`, including the PLS core and boot
 | `2.47.0` | Establish signed distribution, clean install/upgrade/uninstall certification, and release operations. |
 | `2.48.0` | Promote accepted native methods and bounded assessment capabilities with method-scoped release evidence. |
 | `2.49.0` | Complete diagnostic and extended-relationship native workflows. |
-| `2.50.0` | Complete PLS-POS and FIMIX-PLS native segmentation workflows. |
+| `2.50.0` | Integrate the Rank 0–3 General SEM upgrade across PLS mediation, moderation, higher-order constructs, moderated mediation, and bounded CB-SEM workflows. |
 | `2.51.0` | Add power analysis, consistent bootstrap, consistent permutation, and consistent MGA. |
 | `2.52.0` | Add model comparison/selection and advanced CB-SEM workflows. |
 | `3.0.0-beta.1` | Run a signed external competitor beta after operational policies and independent scientific review are in place. |

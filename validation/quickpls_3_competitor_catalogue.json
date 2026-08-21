@@ -47,7 +47,7 @@
     },
     {
       "id": "2.50.0",
-      "objective": "Complete segmentation workflows."
+      "objective": "Integrate the Rank 0–3 General SEM upgrade across PLS mediation, moderation, higher-order constructs, moderated mediation, and bounded CB-SEM workflows."
     },
     {
       "id": "2.51.0",
@@ -806,33 +806,35 @@
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM with listwise deletion, marker identification, parameter estimates, residuals, fit indices, modification screening, typed persistence, and selected-run export. The separate CompiledCbsemPlanV2 covariance/scaled-correlation input cell remains Labs and unqualified.",
+      "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM remains available under its existing identity. Labs additionally offers a schema-6 resident SemModelV4 recursive common-factor ML workflow; the separate CompiledCbsemPlanV2 matrix-input cell remains unqualified.",
       "quickpls_capability_ids": [
         "qpls3.cbsem.ml",
-        "qpls3.cbsem.ml.matrix_input"
+        "qpls3.cbsem.ml.matrix_input",
+        "qpls3.cbsem.general_sem_ml"
       ],
       "implementation_evidence": [],
       "dependencies": [],
-      "remaining_gap": "Maintain the bounded raw-data evidence. Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance require separate qualification before expansion."
+      "remaining_gap": "Qualify the General SEM V3 ML cell independently before Standard promotion. Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance remain excluded."
     },
     {
       "id": "smartpls.cbsem_bootstrapping",
       "catalogue_position": 39,
       "official_family": "CB-SEM and CFA",
       "official_method": "CB-SEM Bootstrapping",
-      "status": "release-qualified",
+      "status": "engine-preview",
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "Recipe-v4 exact case bootstrap for raw continuous single-group reflective CFA with listwise deletion, 500 to 10,000 indexed no-retry full-ML refits, and fixed 95% percentile Type-7, analytic-studentized Type-7, or complete-delete-one BCa Type-7 output.",
+      "quickpls_scope": "Standard retains exact case bootstrap for raw continuous single-group reflective CFA. Labs additionally offers fixed 95% two-sided percentile Type-7 full-ML case bootstrap for the bounded schema-6 recursive common-factor SEM cell.",
       "quickpls_capability_ids": [
-        "qpls3.cbsem.bootstrap"
+        "qpls3.cbsem.bootstrap",
+        "qpls3.cbsem.bootstrap.recursive_sem"
       ],
       "implementation_evidence": [],
       "dependencies": [
         "smartpls.cbsem"
       ],
-      "remaining_gap": "Maintain current method-scoped Windows package, export, save/reopen, and audit receipts for the bounded exact-CFA family; broader CB-SEM bootstrap variants remain excluded."
+      "remaining_gap": "Maintain the qualified CFA bootstrap and qualify the recursive-SEM bootstrap independently before Standard promotion; broader CB-SEM bootstrap variants remain excluded."
     },
     {
       "id": "smartpls.cbsem_model_comparison",

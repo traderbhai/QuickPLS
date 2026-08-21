@@ -1044,9 +1044,10 @@ fn ensure_cbsem_general_sem_v1_scope(
         ));
     }
     if let Some(issue) = validate_cbsem_general_sem_parameter_semantics_v1(plan).first() {
-        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
-            format!("{} [{}]: {}", issue.code, issue.subject, issue.message),
-        ));
+        return Err(RecipeV4CompilationError::CbsemGeneralSemScope(format!(
+            "{} [{}]: {}",
+            issue.code, issue.subject, issue.message
+        )));
     }
     let general_sem = recipe
         .general_sem_config

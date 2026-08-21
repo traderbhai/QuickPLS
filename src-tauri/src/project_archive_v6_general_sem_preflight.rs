@@ -6,9 +6,8 @@
 use crate::general_sem_registry_access_v1::{
     GENERAL_SEM_INTERNAL_LABS_SURFACE as INTERNAL_LABS_SURFACE,
     GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
-    authorize_general_sem_registry_access_v1,
-    decision_declares_general_sem_execution_cell_v1, is_general_sem_execution_cell_v1,
-    is_rank3_general_sem_cbsem_execution_cell_v1,
+    authorize_general_sem_registry_access_v1, decision_declares_general_sem_execution_cell_v1,
+    is_general_sem_execution_cell_v1, is_rank3_general_sem_cbsem_execution_cell_v1,
     selected_general_sem_cbsem_execution_cell_v1, selected_general_sem_execution_cell_v1,
 };
 use qpls_core::{
@@ -24,7 +23,7 @@ use uuid::Uuid;
 const GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION: u32 = 2;
 const DIAGNOSTIC_CODE_PREFIX: &str = "schema6_general_sem_preflight";
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct GeneralSemEstimatorPreflightRequestV1 {
     surface: String,
@@ -471,12 +470,8 @@ mod tests {
         project.datasets.push(DatasetDescriptor::from(&dataset));
         let model_document_sha256 = model.model_document_sha256().unwrap();
         let project = insert_sem_model_v4_draft_v6(&project, model.clone()).unwrap();
-        let project = promote_sem_model_v4_draft_v6(
-            &project,
-            &model.id,
-            &model_document_sha256,
-        )
-        .unwrap();
+        let project =
+            promote_sem_model_v4_draft_v6(&project, &model.id, &model_document_sha256).unwrap();
         (project, model)
     }
 
@@ -503,19 +498,19 @@ mod tests {
             value.schema_version,
             GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION
         );
-        assert_eq!(
-            value.pls.status(),
-            SemCapabilityDecisionStatusV1::Experimental
-        );
+        assert_eq!(value.pls.status(), SemCapabilityDecisionStatusV1::Supported);
         assert_eq!(value.cbsem.status(), SemCapabilityDecisionStatusV1::Blocked);
         assert_eq!(
             value.authority.source,
             "resident_schema6_sem_model_v4_parameter_table"
         );
         assert_eq!(value.authority.model_id, request().model_id);
-        assert_eq!(value.authority.parameter_count, value.authority.free_parameter_count
-            + value.authority.fixed_parameter_count
-            + value.authority.derived_parameter_count);
+        assert_eq!(
+            value.authority.parameter_count,
+            value.authority.free_parameter_count
+                + value.authority.fixed_parameter_count
+                + value.authority.derived_parameter_count
+        );
         assert_eq!(value.authority.explicit_constraint_count, 0);
         assert_eq!(value.authority.parameter_table_sha256.len(), 64);
     }

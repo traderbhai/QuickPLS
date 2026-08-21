@@ -28,6 +28,12 @@ export interface NativeCommandContext {
   selectedResultSaved: boolean;
   canOpenContextModel: boolean;
   canCalculate: boolean;
+  /**
+   * A strict schema-6 General SEM project is immutable by design, but it still
+   * owns a calculation workspace. This flag keeps the familiar Calculate
+   * command available without granting ordinary model-mutation authority.
+   */
+  generalSemCalculationAvailable?: boolean;
   canUndo: boolean;
   canRedo: boolean;
   canRecode: boolean;
@@ -201,7 +207,7 @@ const modelIsMutable: ContextRule = (context) =>
   context.surface === "model" && context.hasDataset && projectIsMutable(context);
 const canOpenCalculation: ContextRule = (context) =>
   context.projectOpen
-  && context.projectWritable
+  && (context.projectWritable || Boolean(context.generalSemCalculationAvailable))
   && context.hasDataset
   && !isNativeCalculationActive(context.calculationStatus);
 const hasModelSelection: ContextRule = (context) =>
@@ -212,6 +218,14 @@ function moderationMutationAuthority(
 ): NativeModerationMutationAuthorityV1 {
   return context.moderationMutationAuthority ?? { kind: "direct" };
 }
+
+const canInvokeHigherOrder: ContextRule = (context) => {
+  const authority = moderationMutationAuthority(context);
+  return context.canAddHigherOrder && (
+    modelIsMutable(context)
+    || (authority.kind === "general_sem_revision" && authority.available)
+  );
+};
 
 const canInvokeModeration: ContextRule = (context) => {
   if (context.surface !== "model"
@@ -513,11 +527,20 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
   {
     id: "add-higher-order",
-    label: "Higher-Order Construct…",
+    label: (context) => moderationMutationAuthority(context).kind === "general_sem_revision"
+      ? "Higher-Order Construct (Save As Revision)…"
+      : "Higher-Order Construct…",
     action: { id: "model.add-higher-order" },
     toolbar: [{ surface: "model", order: 53 }],
     contextMenu: [{ surface: "model", selections: ["multiple"], order: 6 }],
-    enabledWhen: (context) => modelIsMutable(context) && context.canAddHigherOrder,
+    enabledWhen: canInvokeHigherOrder,
+    disabledReason: (context) => {
+      const authority = moderationMutationAuthority(context);
+      if (authority.kind === "general_sem_revision") {
+        return authority.disabledReason ?? "The General SEM revision is not currently available.";
+      }
+      return "Open a writable model with eligible lower-order components.";
+    },
   },
   {
     id: "add-moderating-effect",
@@ -569,7 +592,11 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
   {
     id: "open-calculation",
-    label: (context) => context.surface === "data" ? "Analyze…" : "Calculate…",
+    label: (context) => context.surface === "data"
+      ? "Analyze…"
+      : context.generalSemCalculationAvailable
+        ? "Calculate General SEM…"
+        : "Calculate…",
     action: { id: "calculation.open" },
     shortcut: { key: "r", ctrl: true },
     menu: { menu: "calculate", order: 10 },

@@ -1,8 +1,8 @@
 # CB-SEM General SEM V3
 
-Status: engine-only Experimental Labs scope. This document freezes the two
-bounded Rank 3 identities; it does not claim Standard availability, independent
-scientific qualification, or packaged release readiness.
+Status: scoped Standard Version 2.50 capability. This document freezes the two
+bounded Rank 3 identities and their exclusions under the user-approved
+streamlined integration profile.
 
 ## Exact identities
 
@@ -32,7 +32,8 @@ does not provide BCa, studentized, one-sided, parametric, residual, robust,
 weighted, clustered, multilevel, or CFA-bootstrap semantics.
 
 Execution is admitted only after the exact requested cell and every dependency
-cell are available in Capability Registry V2 on the Experimental Labs surface.
+cell are available in Capability Registry V2 on Standard, while historical
+Labs-authored archives retain read-only compatibility.
 The native boundary independently resolves the regular local archive, resident
 dataset, promoted model, Recipe V4, scientific digests, inference owner, and
 Registry evidence. Results use CanonicalResultDocumentV2 tables, exact-cell
@@ -41,9 +42,8 @@ dispatcher. Cancellation commits no analytical result.
 
 ## Evidence boundary
 
-The current `engine_only` state means that source contracts and inherited V2
-numerical foundations are present. The Rank 3 identities still require their
-own independent recursive-SEM reference, simulation and interval-coverage
-evidence, boundary and persistence receipts, native accessibility/export
-qualification, performance and soak checks, method audit, and genuine packaged
-Windows acceptance before any higher evidence state or Standard promotion.
+The Version 2.50 Standard decision uses the user-approved streamlined profile:
+the consolidated integrated Rust/frontend regression, production build, and
+short Standard-access smoke replace the previously planned independent and
+per-cell packaged qualification. This does not expand either exact predicate or
+claim numerical identity with SmartPLS.

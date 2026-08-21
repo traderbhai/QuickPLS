@@ -29,7 +29,7 @@ class QuickPls3CompetitorContractTests(unittest.TestCase):
         self.assertFalse(report["claim_authorized"])
         self.assertFalse(report["evidence_verified"])
         self.assertFalse(report["competitor_ready"])
-        self.assertEqual(report["method_manifest_count"], 40)
+        self.assertEqual(report["method_manifest_count"], 47)
         self.assertEqual(report["method_count"], 45)
 
     def test_catalogue_mapping_mutation_still_fails_closed(self) -> None:

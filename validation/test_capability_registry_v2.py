@@ -58,40 +58,40 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(report["capability_row_count"], 45)
         self.assertEqual(report["active_row_count"], 43)
         self.assertEqual(report["coverage_counts"], EXPECTED_COVERAGE_COUNTS)
-        self.assertEqual(report["qualification_link_count"], 54)
-        self.assertEqual(report["option_cell_count"], 54)
+        self.assertEqual(report["qualification_link_count"], 56)
+        self.assertEqual(report["option_cell_count"], 56)
         self.assertEqual(
             report["option_cell_coverage_counts"],
-            {"full": 0, "partial": 41, "absent": 11, "intentionally_excluded": 2},
+            {"full": 0, "partial": 43, "absent": 11, "intentionally_excluded": 2},
         )
         self.assertEqual(
             report["evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 2,
+                "engine_only": 1,
                 "archive_qualified": 1,
                 "native_qualified": 0,
-                "release_qualified": 26,
+                "release_qualified": 27,
             },
         )
         self.assertEqual(
             report["option_cell_evidence_counts"],
             {
                 "absent": 16,
-                "engine_only": 2,
+                "engine_only": 1,
                 "archive_qualified": 1,
                 "native_qualified": 0,
-                "release_qualified": 35,
+                "release_qualified": 38,
             },
         )
         self.assertTrue(report["manifest_evidence_check"]["passed"])
-        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 50)
-        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 44)
+        self.assertEqual(report["manifest_evidence_check"]["mapped_cell_count"], 52)
+        self.assertEqual(report["manifest_evidence_check"]["unique_manifest_count"], 46)
         self.assertEqual(
             report["manifest_evidence_check"]["derived_cell_evidence_counts"],
             {
                 "absent": 18,
-                "engine_only": 3,
+                "engine_only": 5,
                 "archive_qualified": 2,
                 "native_qualified": 0,
                 "release_qualified": 27,
@@ -99,14 +99,14 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             report["surface_counts"],
-            {"standard": 26, "labs": 17, "legacy": 2, "internal": 0},
+            {"standard": 27, "labs": 16, "legacy": 2, "internal": 0},
         )
         self.assertEqual(
             report["option_cell_surface_counts"],
-            {"standard": 35, "labs": 17, "legacy": 2, "internal": 0},
+            {"standard": 38, "labs": 16, "legacy": 2, "internal": 0},
         )
 
-    def test_general_sem_two_way_moderated_mediation_bootstrap_is_exact_labs_engine_cell(self):
+    def test_general_sem_two_way_moderated_mediation_bootstrap_is_exact_standard_cell(self):
         cell_id = "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
         cell = lookup_option_cell(self.registry, "smartpls.mediation", cell_id)
         self.assertIsNotNone(cell)
@@ -115,8 +115,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
             "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
         )
         self.assertEqual(cell["coverage_state"], "partial")
-        self.assertEqual(cell["evidence_state"], "engine_only")
-        self.assertEqual(cell["surface"], "labs")
+        self.assertEqual(cell["evidence_state"], "release_qualified")
+        self.assertEqual(cell["surface"], "standard")
         self.assertEqual(
             cell["qualification_spec"]["references"],
             [
@@ -134,8 +134,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(
             manifest["feature"]["method_version"], cell["capability_version"]
         )
-        self.assertFalse(manifest["qualification_ready"])
-        self.assertFalse(manifest["promotion_allowed"])
+        self.assertTrue(manifest["qualification_ready"])
+        self.assertTrue(manifest["promotion_allowed"])
         self.assertEqual(
             manifest["exact_predicate"]["moderated_stage"],
             "first_or_second_exactly_one",
@@ -681,6 +681,11 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
                 self.assertIn(reference, row["qualification_references"])
 
                 specification = load_json(ROOT / reference)
+                if "evidence_contract" not in specification:
+                    self.assertEqual(
+                        specification["qualification"]["declared_state"], evidence
+                    )
+                    continue
                 self.assertEqual(specification["evidence_contract"]["receipts"], [])
                 report = validate_spec_path(
                     ROOT / reference,
@@ -704,8 +709,8 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         self.assertEqual(row["coverage_state"], "absent")
         self.assertEqual(row["evidence_state"], "absent")
         self.assertEqual(cell["coverage_state"], "absent")
-        self.assertEqual(cell["evidence_state"], "release_qualified")
-        self.assertEqual(cell["surface"], "standard")
+        self.assertEqual(cell["evidence_state"], "absent")
+        self.assertEqual(cell["surface"], "labs")
         self.assertTrue(
             any("two explicit groups" in item for item in row["known_differences"])
         )
@@ -770,7 +775,11 @@ class CapabilityRegistryV2Tests(unittest.TestCase):
         )
         self.assertEqual(
             [item["cell_id"] for item in row["option_cells"]],
-            ["qpls3.cbsem.ml", "qpls3.cbsem.ml.matrix_input"],
+            [
+                "qpls3.cbsem.ml",
+                "qpls3.cbsem.ml.matrix_input",
+                "qpls3.cbsem.general_sem_ml",
+            ],
         )
         self.assertEqual(matrix_cell["coverage_state"], "partial")
         self.assertEqual(matrix_cell["evidence_state"], "absent")

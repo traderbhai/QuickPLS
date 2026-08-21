@@ -11,8 +11,8 @@ from validation import package_release_artifacts as release
 
 
 VERSION = "3.0.0"
-REPOSITORY_RELEASE_VERSION = "2.46.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_46_0_quickpls_3_scoped_methods"
+REPOSITORY_RELEASE_VERSION = "2.50.0"
+REPOSITORY_ARTIFACT_LABEL = "v2_50_0_sem_upgrade"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -160,10 +160,10 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             "python validation/package_release_artifacts.py --channel unsigned-preview "
             f"--label {REPOSITORY_ARTIFACT_LABEL}",
         )
-        self.assertEqual(prototype.count('const releaseVersion = "2.46.0";'), 1)
+        self.assertEqual(prototype.count('const releaseVersion = "2.50.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
-        self.assertIn("Current development release: `v2.46.0`.", readme)
+        self.assertIn("Current development release: `v2.50.0`.", readme)
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
         self.assertIn(
             "Standard shows only an exact option cell that has passed the full release evidence ladder and "
@@ -171,15 +171,14 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             " ".join(readme.replace("**", "").split()),
         )
         self.assertIn(
-            "Twenty-six official rows and 29 exact option-cell registrations are nevertheless available as "
-            "scoped Standard",
+            "The Registry currently contains 35 scoped-Standard exact cells across 29 catalogue rows",
             " ".join(readme.split()),
         )
         self.assertNotIn("The coordinated public 2.46.0 Wave 1 release packages this qualified capability", readme)
         self.assertIn("Previous Milestone Notes v2.45.0", readme)
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
-        self.assertIn("Current development release: `v2.46.0`.", installation)
+        self.assertIn("Current development release: `v2.50.0`.", installation)
         self.assertIn("_x64_cli.exe` for offline command-line and batch recipe execution.", installation)
         normalized_installation = " ".join(installation.split())
         self.assertIn(

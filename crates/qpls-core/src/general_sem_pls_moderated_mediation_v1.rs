@@ -233,28 +233,6 @@ pub fn compile_pls_two_way_moderated_mediation_target_v1(
     CompiledPlsTwoWayModeratedMediationTargetV1,
     CompiledPlsTwoWayModeratedMediationTargetErrorV1,
 > {
-    match config.inference {
-        GeneralSemInferenceV1::None => {
-            return Err(CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapRequired);
-        }
-        GeneralSemInferenceV1::CaseBootstrap { interval, tail, .. } => {
-            if interval != GeneralSemBootstrapIntervalV1::Percentile {
-                return Err(
-                    CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapIntervalUnsupported,
-                );
-            }
-            if tail != GeneralSemInferenceTailV1::TwoSided {
-                return Err(
-                    CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapTailUnsupported,
-                );
-            }
-        }
-    }
-    if !config.conditional_effect_probes.is_empty() {
-        return Err(
-            CompiledPlsTwoWayModeratedMediationTargetErrorV1::AuthoredConditionalProbesUnsupported,
-        );
-    }
     if config.requested_effect_estimands.len() != 1 {
         return Err(
             CompiledPlsTwoWayModeratedMediationTargetErrorV1::RequestedEffectCardinality {
@@ -288,6 +266,28 @@ pub fn compile_pls_two_way_moderated_mediation_target_v1(
                 estimand_id: estimand_id.clone(),
             }
         })?;
+    match config.inference {
+        GeneralSemInferenceV1::None => {
+            return Err(CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapRequired);
+        }
+        GeneralSemInferenceV1::CaseBootstrap { interval, tail, .. } => {
+            if interval != GeneralSemBootstrapIntervalV1::Percentile {
+                return Err(
+                    CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapIntervalUnsupported,
+                );
+            }
+            if tail != GeneralSemInferenceTailV1::TwoSided {
+                return Err(
+                    CompiledPlsTwoWayModeratedMediationTargetErrorV1::BootstrapTailUnsupported,
+                );
+            }
+        }
+    }
+    if !config.conditional_effect_probes.is_empty() {
+        return Err(
+            CompiledPlsTwoWayModeratedMediationTargetErrorV1::AuthoredConditionalProbesUnsupported,
+        );
+    }
     if plan.two_way_interactions().len() != 1 {
         return Err(
             CompiledPlsTwoWayModeratedMediationTargetErrorV1::InteractionCardinality {

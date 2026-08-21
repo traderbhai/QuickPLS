@@ -1,11 +1,10 @@
 use crate::{
     CapabilityCellReferenceV2, CompiledCbsemParameterRoleV2, CompiledCbsemParameterRowV2,
     CompiledCbsemParameterStatusV2, CompiledCbsemPlanV2, CompiledCbsemPlanV2Error,
-    CompiledSemStronglyConnectedComponentV1,
-    CompiledSemTopologyV1, CompiledSemTopologyV1Error, FactorIdentificationV4, GeneralSemConfigV1,
-    GeneralSemConfigV1ValidationError, GeneralSemInferenceV1,
-    GeneralSemSpecificPathLimitBehaviorV1, SemConstraintV4, SemEndpointV4, SemParameterTargetV4,
-    SemVariableV4, compile_cbsem_plan_v2, compile_sem_topology_v1,
+    CompiledSemStronglyConnectedComponentV1, CompiledSemTopologyV1, CompiledSemTopologyV1Error,
+    FactorIdentificationV4, GeneralSemConfigV1, GeneralSemConfigV1ValidationError,
+    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, SemConstraintV4, SemEndpointV4,
+    SemParameterTargetV4, SemVariableV4, compile_cbsem_plan_v2, compile_sem_topology_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -55,8 +54,7 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
     plan: &CompiledCbsemPlanV3,
 ) -> Vec<CbsemGeneralSemParameterSemanticsIssueV1> {
     let mut issues = Vec::new();
-    let mut equality_groups =
-        BTreeMap::<String, Vec<&CompiledCbsemParameterRowV2>>::new();
+    let mut equality_groups = BTreeMap::<String, Vec<&CompiledCbsemParameterRowV2>>::new();
 
     for constraint in plan.base_plan().constraints() {
         let (code, message) = match constraint {
@@ -120,7 +118,8 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
                     issues.push(CbsemGeneralSemParameterSemanticsIssueV1 {
                         code: "free_parameter_nonfinite".into(),
                         subject: parameter.id().into(),
-                        message: "Free parameter starts and bounds must be finite when present.".into(),
+                        message: "Free parameter starts and bounds must be finite when present."
+                            .into(),
                     });
                 }
                 let effective_lower = if parameter.role() == CompiledCbsemParameterRoleV2::Variance
@@ -172,7 +171,8 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
             issues.push(CbsemGeneralSemParameterSemanticsIssueV1 {
                 code: "equality_label_singleton".into(),
                 subject: label.clone(),
-                message: "An equality label must bind at least two compatible free parameter rows.".into(),
+                message: "An equality label must bind at least two compatible free parameter rows."
+                    .into(),
             });
         }
         let first_role = parameters.first().map(|parameter| parameter.role());
@@ -192,13 +192,15 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
         let mut starts = Vec::<(&str, f64)>::new();
         for parameter in &parameters {
             let CompiledCbsemParameterStatusV2::Free {
-                start, lower, upper, ..
+                start,
+                lower,
+                upper,
+                ..
             } = parameter.specification()
             else {
                 unreachable!("equality groups contain only free rows")
             };
-            let effective_lower = if parameter.role() == CompiledCbsemParameterRoleV2::Variance
-            {
+            let effective_lower = if parameter.role() == CompiledCbsemParameterRoleV2::Variance {
                 Some(lower.unwrap_or(0.0).max(0.0))
             } else {
                 *lower
@@ -207,7 +209,8 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
                 group_lower = Some(group_lower.map_or(candidate, |current| current.max(candidate)));
             }
             if let Some(candidate) = upper {
-                group_upper = Some(group_upper.map_or(*candidate, |current| current.min(*candidate)));
+                group_upper =
+                    Some(group_upper.map_or(*candidate, |current| current.min(*candidate)));
             }
             if let Some(start) = start {
                 starts.push((parameter.id(), *start));
@@ -220,7 +223,8 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
             issues.push(CbsemGeneralSemParameterSemanticsIssueV1 {
                 code: "equality_label_bounds_empty".into(),
                 subject: label.clone(),
-                message: "The intersected open bounds for this equality-label group are empty.".into(),
+                message: "The intersected open bounds for this equality-label group are empty."
+                    .into(),
             });
         }
         if let Some((_, reference)) = starts.first()
@@ -231,7 +235,9 @@ pub fn validate_cbsem_general_sem_parameter_semantics_v1(
             issues.push(CbsemGeneralSemParameterSemanticsIssueV1 {
                 code: "equality_label_start_conflict".into(),
                 subject: label.clone(),
-                message: "Rows sharing an equality label must declare the same explicit start value.".into(),
+                message:
+                    "Rows sharing an equality label must declare the same explicit start value."
+                        .into(),
             });
         }
         if let Some((parameter_id, start)) = starts.first()
@@ -984,7 +990,8 @@ mod tests {
     }
 
     #[test]
-    fn general_sem_parameter_predicate_executes_row_equality_and_bounds_but_not_constraint_objects() {
+    fn general_sem_parameter_predicate_executes_row_equality_and_bounds_but_not_constraint_objects()
+    {
         let mut model = recursive_model();
         let loading_ids = free_loading_ids(&model);
         assert!(loading_ids.len() >= 2);
@@ -1054,9 +1061,11 @@ mod tests {
         }
         model.ensure_valid().unwrap();
         let plan = compile_cbsem_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
-        assert!(validate_cbsem_general_sem_parameter_semantics_v1(&plan)
-            .iter()
-            .any(|issue| issue.code == "equality_label_bounds_empty"));
+        assert!(
+            validate_cbsem_general_sem_parameter_semantics_v1(&plan)
+                .iter()
+                .any(|issue| issue.code == "equality_label_bounds_empty")
+        );
     }
 
     #[test]

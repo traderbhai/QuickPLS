@@ -231,8 +231,8 @@ describe("General SEM capability preflight v1", () => {
     const decision = preflightGeneralSemPlsV1(inputModel, config);
 
     expect(decision).toMatchObject({
-      status: "experimental",
-      status_label: "Experimental",
+      status: "supported",
+      status_label: "Supported",
       estimator_id: GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
       capability_cells: [{
         registry_schema_version: 2,
@@ -241,7 +241,7 @@ describe("General SEM capability preflight v1", () => {
         capability_version: "pls_mediation_v1",
       }],
     });
-    expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
+    expect(codes(decision)).toEqual(["sem.capability.pls.standard"]);
     expect(Object.isFrozen(decision)).toBe(true);
     expect(inputModel).toEqual(modelBefore);
     expect(config).toEqual(configBefore);
@@ -381,7 +381,7 @@ describe("General SEM capability preflight v1", () => {
 
     const decision = preflightGeneralSemPlsV1(multipleMediationModel(), config);
 
-    expect(decision.status).toBe("experimental");
+    expect(decision.status).toBe("supported");
     expect(decision.capability_cells).toEqual(expect.arrayContaining([
       expect.objectContaining({
         capability_id: "smartpls.mediation",
@@ -410,12 +410,12 @@ describe("General SEM capability preflight v1", () => {
       const before = structuredClone(inputModel);
       const decision = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
 
-      expect(decision.status).toBe("experimental");
+      expect(decision.status).toBe("supported");
       expect(decision.capability_cells).toStrictEqual([
         GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
       ]);
-      expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
-      expect(decision.summary).toContain("Registry-governed");
+      expect(codes(decision)).toEqual(["sem.capability.pls.standard"]);
+      expect(decision.summary).toContain("Standard Registry");
       expect(decision.summary).not.toContain("Experimental Labs");
       expect(decision.explanation).toContain("joint stage-two solve");
       expect(inputModel).toStrictEqual(before);
@@ -440,13 +440,13 @@ describe("General SEM capability preflight v1", () => {
       const pointBefore = preflightGeneralSemPlsV1(inputModel, defaultGeneralSemConfigV1());
       const decision = preflightGeneralSemPlsV1(inputModel, config);
 
-      expect(decision.status).toBe("experimental");
+      expect(decision.status).toBe("supported");
       expect(decision.capability_cells).toEqual(expect.arrayContaining([
         GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
         GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
       ]));
       expect(decision.capability_cells).toHaveLength(2);
-      expect(codes(decision)).toEqual(["sem.capability.pls.experimental_labs"]);
+      expect(codes(decision)).toEqual(["sem.capability.pls.standard"]);
       expect(decision.evidence.map((item) => item.evidence_id)).toEqual(expect.arrayContaining([
         "compiler:recipe_v4_to_compiled_pls_plan_v3_multiple_two_way_moderation_bootstrap_v1",
         "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap:general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
@@ -737,27 +737,27 @@ describe("General SEM capability preflight v1", () => {
       tail: "two_sided",
     };
     const decision = preflightGeneralSemPlsV1(disjointHigherOrderModel(), config);
-    expect(decision.status).toBe("experimental");
+    expect(decision.status).toBe("supported");
     expect(decision.capability_cells.map((cell) => cell.cell_id)).toEqual([
       "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
       "qpls3.pls.general_sem_higher_order_point",
     ]);
-    expect(codes(decision)).toContain("sem.capability.pls.experimental_labs");
+    expect(codes(decision)).toContain("sem.capability.pls.standard");
     expect(decision.evidence.map((item) => item.evidence_id)).toContain(
       "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
     );
   });
 
-  it("keeps CB-SEM General v3 blocked and gives feedback-specific recovery", () => {
+  it("authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery", () => {
     const recursive = model(undefined, "cbsem_common_factor");
     const runtimeDecision = preflightGeneralSemCbsemV1(recursive, defaultGeneralSemConfigV1());
     expect(runtimeDecision).toMatchObject({
-      status: "blocked",
+      status: "supported",
       estimator_id: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
-      capability_cells: [{ cell_id: "qpls3.cbsem.ml" }],
+      capability_cells: [{ cell_id: "qpls3.cbsem.general_sem_ml" }],
     });
     expect(runtimeDecision.diagnostics.map((item) => item.code))
-      .toContain("sem.capability.cbsem.general_runtime_not_connected");
+      .toContain("sem.capability.cbsem.standard");
 
     const feedbackDecision = preflightGeneralSemCbsemV1(
       addFeedback(recursive),
@@ -766,7 +766,7 @@ describe("General SEM capability preflight v1", () => {
     expect(feedbackDecision.diagnostics.map((item) => item.code))
       .toContain("sem.capability.cbsem.feedback_execution_blocked");
     expect(feedbackDecision.diagnostics.map((item) => item.code))
-      .not.toContain("sem.capability.cbsem.general_runtime_not_connected");
+      .not.toContain("sem.capability.cbsem.standard");
 
     const bootstrapConfig = defaultGeneralSemConfigV1();
     bootstrapConfig.inference = {
@@ -778,9 +778,10 @@ describe("General SEM capability preflight v1", () => {
       tail: "two_sided",
     };
     const bootstrapDecision = preflightGeneralSemCbsemV1(recursive, bootstrapConfig);
-    expect(bootstrapDecision.status).toBe("blocked");
+    expect(bootstrapDecision.status).toBe("supported");
     expect(bootstrapDecision.capability_cells).toEqual([
-      expect.objectContaining({ cell_id: "qpls3.cbsem.ml" }),
+      expect.objectContaining({ cell_id: "qpls3.cbsem.general_sem_ml" }),
+      expect.objectContaining({ cell_id: "qpls3.cbsem.bootstrap.recursive_sem" }),
     ]);
   });
 });

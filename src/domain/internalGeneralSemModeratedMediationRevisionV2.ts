@@ -25,6 +25,8 @@ export const INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_COMMAND_V2 =
   "revise_internal_general_sem_execution_authority_v2" as const;
 export const INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2 =
   "internal_labs" as const;
+export const STANDARD_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2 =
+  "standard" as const;
 export const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_LAYOUT_KEY =
   "general_sem_execution_authority_revision_v2" as const;
 
@@ -37,8 +39,9 @@ export interface GeneralSemModeratedMediationRevisionIntentV2 {
 }
 
 export interface InternalGeneralSemModeratedMediationRevisionRequestV2 {
-  surface: typeof INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2;
-  experimentalLabsEnabled: true;
+  surface: typeof INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2
+    | typeof STANDARD_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2;
+  experimentalLabsEnabled: boolean;
   sourceArchivePath: string;
   expectedSourceArchiveSha256: string;
   destinationArchivePath: string;
@@ -46,6 +49,8 @@ export interface InternalGeneralSemModeratedMediationRevisionRequestV2 {
     source: GeneralSemExecutionAuthoritySourcePinV1;
     revision: GeneralSemExecutionAuthorityRevisionIdentityV1;
     intent: GeneralSemModeratedMediationRevisionIntentV2;
+    expectedCapabilityCell: CapabilityCellReferenceV2;
+    recipeExecutionSurface: "native_general_sem_pls_labs_v1" | "native_general_sem_pls_standard_v1";
   };
 }
 
@@ -345,14 +350,38 @@ export function parseInternalGeneralSemModeratedMediationRevisionRequestV2(
     "surface", "experimentalLabsEnabled", "sourceArchivePath",
     "expectedSourceArchiveSha256", "destinationArchivePath", "revision",
   ], "request");
-  if (request.surface !== INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2
-    || request.experimentalLabsEnabled !== true) {
-    fail("schema6_general_sem_revision_v2.internal_labs_required", "request", "Revision-v2 requires the Experimental Labs boundary.");
+  const standard = request.surface === STANDARD_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2
+    && request.experimentalLabsEnabled === false;
+  const labs = request.surface === INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2
+    && request.experimentalLabsEnabled === true;
+  if (!standard && !labs) {
+    fail("schema6_general_sem_revision_v2.execution_access_invalid", "request", "Revision-v2 requires an exact Standard or opted-in Labs access tuple.");
   }
-  const revision = exactRecordAt(request.revision, ["source", "revision", "intent"], "request.revision");
+  const revision = exactRecordAt(request.revision, [
+    "source", "revision", "intent", "expectedCapabilityCell", "recipeExecutionSurface",
+  ], "request.revision");
+  const expectedCapabilityCell = parseCapabilityCell(
+    revision.expectedCapabilityCell,
+    "request.revision.expectedCapabilityCell",
+  );
+  if (!sameCapability(expectedCapabilityCell, GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1)) {
+    fail("schema6_general_sem_revision_v2.capability_cell_mismatch", "request.revision.expectedCapabilityCell", "Revision-v2 requires the exact moderated-mediation bootstrap cell.");
+  }
+  const recipeExecutionSurface = textAt(
+    revision.recipeExecutionSurface,
+    "request.revision.recipeExecutionSurface",
+  );
+  const expectedRecipeSurface = standard
+    ? "native_general_sem_pls_standard_v1"
+    : "native_general_sem_pls_labs_v1";
+  if (recipeExecutionSurface !== expectedRecipeSurface) {
+    fail("schema6_general_sem_revision_v2.recipe_execution_surface_mismatch", "request.revision.recipeExecutionSurface", "RecipeV4 execution surface differs from the selected Registry access.");
+  }
   const parsed: InternalGeneralSemModeratedMediationRevisionRequestV2 = {
-    surface: INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2,
-    experimentalLabsEnabled: true,
+    surface: standard
+      ? STANDARD_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2
+      : INTERNAL_GENERAL_SEM_MODERATED_MEDIATION_REVISION_SURFACE_V2,
+    experimentalLabsEnabled: !standard,
     sourceArchivePath: textAt(request.sourceArchivePath, "request.sourceArchivePath"),
     expectedSourceArchiveSha256: shaAt(request.expectedSourceArchiveSha256, "request.expectedSourceArchiveSha256"),
     destinationArchivePath: textAt(request.destinationArchivePath, "request.destinationArchivePath"),
@@ -360,6 +389,8 @@ export function parseInternalGeneralSemModeratedMediationRevisionRequestV2(
       source: parseSourcePin(revision.source, "request.revision.source"),
       revision: parseRevisionIdentity(revision.revision, "request.revision.revision"),
       intent: parseIntent(revision.intent, "request.revision.intent"),
+      expectedCapabilityCell,
+      recipeExecutionSurface: expectedRecipeSurface,
     },
   };
   if (parsed.sourceArchivePath.toLowerCase() === parsed.destinationArchivePath.toLowerCase()) {

@@ -19,11 +19,11 @@ function node(id: string, indicators: string[] = [`${id}1`, `${id}2`]): Node<Con
   };
 }
 
-describe("Experimental SemModelV4 scientific authoring UI", () => {
+describe("SemModelV4 scientific authoring UI", () => {
   it("renders an accessible factor-versus-composite decision with an actionable legacy diagnostic", () => {
     const html = renderToStaticMarkup(<NativeSemConstructAuthoringFields node={node("x")} onCommit={vi.fn()} />);
     expect(html).toContain("Scientific representation");
-    expect(html).toContain("Experimental");
+    expect(html).toContain("Model authority");
     expect(html).toContain("Choose representation");
     expect(html).toContain("Composite");
     expect(html).toContain("Common factor");
@@ -112,7 +112,7 @@ describe("Experimental SemModelV4 scientific authoring UI", () => {
     expect(app).toContain('<NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled={experimentalSemAuthoringEnabled} projectActivationConnected />');
     expect(app).toContain('id="nd-model-cbsem-labs-tab"');
     expect(app).toContain('<NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} />');
-    expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields');
+    expect(modelInspector).toContain('mode === "expert" && constructRepresentationAuthoringEnabled ? <NativeSemConstructAuthoringFields');
     expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled && pathRole === "covariance" ? <NativeSemCovarianceAuthoringFields');
     expect(standardInspector).not.toContain("Scientific representation");
     expect(standardInspector).not.toContain("Model covariance");

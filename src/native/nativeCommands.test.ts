@@ -290,13 +290,16 @@ describe("native command registry", () => {
     const dispatch = vi.fn();
     expect(executeNativeCommand("add-moderating-effect", revision, dispatch)).toBe(true);
     expect(dispatch).toHaveBeenCalledWith({ id: "model.add-moderating-effect" });
+    expect(resolveNativeCommand("add-higher-order", revision)).toMatchObject({
+      label: "Higher-Order Construct (Save As Revision)…",
+      enabled: true,
+    });
 
     for (const directMutation of [
       "save-project",
       "undo",
       "add-construct",
       "path-tool",
-      "add-higher-order",
       "edit-selection",
       "delete-selection",
       "arrange-model",

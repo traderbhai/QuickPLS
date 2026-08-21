@@ -16,7 +16,7 @@
     "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem/"
   },
   "claim": {
-    "supported_scope": "Experimental Labs ordinary-ML point estimation for a newly created schema-6 general_sem_v1 project containing one promoted resident SemModelV4, raw continuous unweighted listwise data, and a single-group recursive common-factor SEM with at least one structural regression.",
+    "supported_scope": "Standard ordinary-ML point estimation for a newly created schema-6 general_sem_v1 project containing one promoted resident SemModelV4, raw continuous unweighted listwise data, and a single-group recursive common-factor SEM with at least one structural regression.",
     "estimand": "The model-implied covariance-structure ML estimates, uncertainty rows, bounded fit indices, and provisional identification facts for the exact resident free and fixed parameter table.",
     "assumptions": [
       "The structural graph is recursive and every observed indicator is continuous.",
@@ -28,7 +28,7 @@
       "Derived parameter rows, explicit constraint objects, derived effect requests, and conditional probes are represented but not executed."
     ],
     "warnings": [
-      "Engine-only Labs availability is not independent scientific qualification, packaged acceptance, release qualification, or Standard support.",
+      "Standard qualification uses the user-approved streamlined Version 2.50 integration profile and remains limited to the exact registered predicate.",
       "The V2 ML kernel foundation does not by itself qualify this new resident-authority workflow or its broader parameter-table predicate."
     ]
   },
@@ -122,7 +122,7 @@
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": ["docs/methods/CBSEM_GENERAL_SEM_V3.md"],
@@ -138,7 +138,7 @@
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/cbsem_general_sem_ml_v1/engine_evidence.identity.json",
+          "path": "validation/results/method_factory/cbsem_general_sem_ml_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
           "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
           "verification": {
             "kind": "identity_report",
@@ -148,9 +148,21 @@
           }
         }
       ],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "archive_qualified": [{
+        "path": "validation/results/method_factory/cbsem_general_sem_ml_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["persistence_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }],
+      "native_qualified": [{
+        "path": "validation/results/method_factory/cbsem_general_sem_ml_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["frontend_report", "export_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }],
+      "release_qualified": [{
+        "path": "validation/results/method_factory/cbsem_general_sem_ml_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_audit", "packaged_acceptance"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }]
     }
   }
 }

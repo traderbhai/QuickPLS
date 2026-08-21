@@ -42,12 +42,11 @@ use qpls_core::{
     PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION, PLS_NONLINEAR_EFFECTS_CELL_ID,
     RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
     SemParameterTargetV4, SemVariableV4, StructuralRelationRoleV4,
-    canonical_cbsem_general_sem_tables_v1,
-    cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
-    compile_analysis_recipe_v4, compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1,
+    canonical_cbsem_general_sem_tables_v1, cbsem_general_sem_ml_capability_cell_v1,
+    cbsem_recursive_sem_bootstrap_capability_cell_v1, compile_analysis_recipe_v4,
+    compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, compile_general_sem_pls_recipe_v1,
     compile_pls_higher_order_repeated_stage_projection_v1,
-    compile_pls_higher_order_score_stage_projection_v1,
-    compile_general_sem_pls_recipe_v1, confirm_legacy_recipe_estimand_v4,
+    compile_pls_higher_order_score_stage_projection_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
 };
 use qpls_data::DatasetDescriptor;
@@ -1219,16 +1218,16 @@ fn validate_general_sem_cbsem_result_authority_v1(
             CBSEM_GENERAL_SEM_POINT_EXECUTION_ADAPTER_VERSION_V1,
             false,
             None,
-            1_i64,
+            1_u32,
         ),
         GeneralSemInferenceV1::CaseBootstrap { seed, .. } => (
             cbsem_recursive_sem_bootstrap_capability_cell_v1(),
             CBSEM_RECURSIVE_SEM_BOOTSTRAP_METHOD_VERSION_V1,
             CBSEM_GENERAL_SEM_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
             true,
-            i64::try_from(seed).ok(),
-            i64::try_from(recipe.settings.workers)
-                .map_err(|_| invalid_general_sem_authority("resident worker count exceeds i64"))?,
+            Some(seed),
+            u32::try_from(recipe.settings.workers)
+                .map_err(|_| invalid_general_sem_authority("resident worker count exceeds u32"))?,
         ),
     };
     if is_bootstrap && seed.is_none() {
@@ -1763,12 +1762,12 @@ fn validate_general_sem_result_authority_v1(
         }
         match resident_config.inference {
             GeneralSemInferenceV1::None => (
-            qpls_core::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1,
-            GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
+                qpls_core::PLS_GENERAL_HIGHER_ORDER_POINT_CAPABILITY_VERSION_V1,
+                GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
             ),
             GeneralSemInferenceV1::CaseBootstrap { .. } => (
-            qpls_core::PLS_GENERAL_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_VERSION_V1,
-            GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+                qpls_core::PLS_GENERAL_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_VERSION_V1,
+                GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
             ),
         }
     } else if has_interactions {
@@ -1778,17 +1777,17 @@ fn validate_general_sem_result_authority_v1(
                 GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
             ),
             (false, GeneralSemInferenceV1::None) => (
-            GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
-            GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+                GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
             ),
             (false, GeneralSemInferenceV1::CaseBootstrap { .. }) => (
-            qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
-            GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+                qpls_core::GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+                GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
             ),
             (true, GeneralSemInferenceV1::None) => {
-            return Err(invalid_general_sem_authority(
-                "the combined moderated-mediation receipt requires an interaction model and case-bootstrap inference",
-            ));
+                return Err(invalid_general_sem_authority(
+                    "the combined moderated-mediation receipt requires an interaction model and case-bootstrap inference",
+                ));
             }
         }
     } else {
@@ -14522,7 +14521,7 @@ mod tests {
         assert!(matches!(
             section_project.ensure_valid(),
             Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
-                if message.contains("point-only General SEM PLS interaction cell")
+                if message.contains("PLS General SEM result cannot carry CB-SEM")
         ));
     }
 

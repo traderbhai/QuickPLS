@@ -1,17 +1,16 @@
-//! Archive-bound native job lifecycle for bounded CB-SEM V3 Experimental Labs.
+//! Archive-bound native job lifecycle for bounded CB-SEM V3.
 //!
 //! Every calculation is admitted from one strict schema-6 archive, one
 //! promoted SemModelV4, one resident Recipe V4, and one exact Registry-owned
-//! Labs cell. This module makes no Standard or release-qualified claim.
+//! cell. Capability Registry V2 determines whether that cell is Standard or Labs.
 
 use crate::{
     DesktopJobs,
     general_sem_registry_access_v1::{
-        GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1,
         GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
         decision_declares_general_sem_execution_cell_v1,
-        is_rank3_general_sem_cbsem_execution_cell_v1,
-        selected_general_sem_cbsem_execution_cell_v1,
+        general_sem_cbsem_recipe_execution_surface_v1,
+        is_rank3_general_sem_cbsem_execution_cell_v1, selected_general_sem_cbsem_execution_cell_v1,
     },
     recipe_v4_general_sem_cbsem_canonical_result::build_internal_cbsem_general_sem_canonical_result_v1,
     recipe_v4_general_sem_pls_jobs::{
@@ -39,6 +38,7 @@ use qpls_runner::internal_cbsem_general_sem_execution::{
     InternalCbsemGeneralSemExecutionErrorV1, InternalCbsemGeneralSemExecutionResultV1,
     run_internal_cbsem_general_sem_v3,
 };
+use serde::Serialize;
 use std::{
     collections::HashMap,
     path::Path,
@@ -47,7 +47,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
     },
 };
-use serde::Serialize;
+use tauri::State;
 use uuid::Uuid;
 
 const JOB_SCHEMA_VERSION_V1: u32 = 1;
@@ -122,6 +122,20 @@ pub(crate) struct InternalCbsemGeneralSemCompletedResultV1 {
     pub(crate) canonical_document: CanonicalResultDocumentV2,
 }
 
+impl From<InternalCbsemGeneralSemCompletedResultV1>
+    for InternalCbsemGeneralSemCompletedResultWireV1
+{
+    fn from(value: InternalCbsemGeneralSemCompletedResultV1) -> Self {
+        Self {
+            schema_version: value.schema_version,
+            archive_identity: value.archive_identity,
+            adapter_version: value.analytical_result.adapter_version().to_owned(),
+            capability_cells: value.analytical_result.capability_cells().to_vec(),
+            canonical_document: value.canonical_document,
+        }
+    }
+}
+
 struct InternalCbsemGeneralSemJobV1 {
     snapshot: InternalCbsemGeneralSemJobSnapshotV1,
     cancellation: Arc<AtomicBool>,
@@ -152,13 +166,7 @@ fn cbsem_failure(
     message: impl Into<String>,
     corrective_action: impl Into<String>,
 ) -> InternalLabsGeneralSemPlsFailureV1 {
-    general_sem_job_failure_v1(
-        stage,
-        "modelId",
-        code,
-        message,
-        corrective_action,
-    )
+    general_sem_job_failure_v1(stage, "modelId", code, message, corrective_action)
 }
 
 fn authorize_cbsem_request_before_archive_access(
@@ -166,8 +174,7 @@ fn authorize_cbsem_request_before_archive_access(
 ) -> Result<(), String> {
     if !is_rank3_general_sem_cbsem_execution_cell_v1(&request.capability_cell) {
         return Err(
-            "requested capabilityCell does not own bounded General SEM CB-SEM V3 execution"
-                .into(),
+            "requested capabilityCell does not own bounded General SEM CB-SEM V3 execution".into(),
         );
     }
     authorize_general_sem_registry_access_v1(
@@ -196,16 +203,22 @@ fn validate_resident_cbsem_authority(
     resolved: &ResolvedGeneralSemArchiveV1,
 ) -> Result<(), String> {
     if resolved.recipe.settings.method != AnalysisMethod::Cbsem
-        || !matches!(&resolved.recipe.method_config, Some(MethodConfig::Cbsem { .. }))
+        || !matches!(
+            &resolved.recipe.method_config,
+            Some(MethodConfig::Cbsem { .. })
+        )
     {
         return Err("resident RecipeV4 is not a CB-SEM recipe".into());
     }
+    let expected_recipe_surface =
+        general_sem_cbsem_recipe_execution_surface_v1(&request.surface)
+            .ok_or_else(|| "requested CB-SEM surface is invalid".to_owned())?;
     if resolved
         .recipe
         .metadata
         .get("execution_surface")
         .map(String::as_str)
-        != Some(GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1)
+        != Some(expected_recipe_surface)
         || resolved
             .recipe
             .metadata
@@ -214,7 +227,7 @@ fn validate_resident_cbsem_authority(
             != Some("general_sem_v1")
     {
         return Err(
-            "resident RecipeV4 does not declare the exact General SEM CB-SEM Labs execution surface"
+            "resident RecipeV4 does not declare the exact Registry-selected General SEM CB-SEM execution surface"
                 .into(),
         );
     }
@@ -225,7 +238,7 @@ fn validate_resident_cbsem_authority(
         .ok_or_else(|| "resident RecipeV4 omits GeneralSemConfigV1".to_owned())?;
     let decision = preflight_general_sem_cbsem_v1(&resolved.model, config)
         .map_err(|error| format!("CB-SEM capability preflight contract failed: {error}"))?;
-    if decision.status() != SemCapabilityDecisionStatusV1::Experimental {
+    if decision.status() == SemCapabilityDecisionStatusV1::Blocked {
         let diagnostics = decision
             .diagnostics()
             .iter()
@@ -233,7 +246,7 @@ fn validate_resident_cbsem_authority(
             .collect::<Vec<_>>()
             .join("; ");
         return Err(if diagnostics.is_empty() {
-            "the resident CB-SEM request is not authorized for Experimental Labs".into()
+            "the resident CB-SEM request is not authorized for execution".into()
         } else {
             format!("the resident CB-SEM request is blocked: {diagnostics}")
         });
@@ -363,6 +376,25 @@ pub(crate) fn cancel_internal_cbsem_general_sem_job_v1(
     Ok(job.snapshot.clone())
 }
 
+pub(crate) fn dismiss_internal_cbsem_general_sem_job_v1(
+    job_id: Uuid,
+    jobs: &DesktopCbsemGeneralSemJobsV1,
+) -> Result<(), String> {
+    let mut state = jobs
+        .0
+        .lock()
+        .map_err(|_| "internal CB-SEM V3 job state is unavailable".to_owned())?;
+    let terminal = state
+        .get(&job_id)
+        .map(|job| job.snapshot.state.is_terminal())
+        .ok_or_else(|| format!("unknown internal CB-SEM V3 job {job_id}"))?;
+    if !terminal {
+        return Err("an active internal CB-SEM V3 job cannot be dismissed".into());
+    }
+    state.remove(&job_id);
+    Ok(())
+}
+
 pub(crate) fn take_internal_cbsem_general_sem_result_v1(
     job_id: Uuid,
     jobs: &DesktopCbsemGeneralSemJobsV1,
@@ -392,6 +424,53 @@ pub(crate) fn take_internal_cbsem_general_sem_result_v1(
         .remove(&job_id)
         .and_then(|job| job.result)
         .ok_or_else(|| "completed internal CB-SEM V3 result is unavailable".into())
+}
+
+#[tauri::command]
+pub(crate) fn start_internal_labs_general_sem_cbsem_job_v1(
+    request: InternalLabsGeneralSemPlsJobRequestV1,
+    standard_jobs: State<'_, DesktopJobs>,
+    shared_recipe_jobs: State<'_, DesktopRecipeV4Jobs>,
+    jobs: State<'_, DesktopCbsemGeneralSemJobsV1>,
+) -> Result<InternalCbsemGeneralSemJobSnapshotV1, String> {
+    start_internal_cbsem_general_sem_job_v1(
+        request,
+        standard_jobs.inner(),
+        shared_recipe_jobs.inner(),
+        jobs.inner(),
+    )
+}
+
+#[tauri::command]
+pub(crate) fn status_internal_labs_general_sem_cbsem_job_v1(
+    job_id: Uuid,
+    jobs: State<'_, DesktopCbsemGeneralSemJobsV1>,
+) -> Result<InternalCbsemGeneralSemJobSnapshotV1, String> {
+    status_internal_cbsem_general_sem_job_v1(job_id, jobs.inner())
+}
+
+#[tauri::command]
+pub(crate) fn cancel_internal_labs_general_sem_cbsem_job_v1(
+    job_id: Uuid,
+    jobs: State<'_, DesktopCbsemGeneralSemJobsV1>,
+) -> Result<InternalCbsemGeneralSemJobSnapshotV1, String> {
+    cancel_internal_cbsem_general_sem_job_v1(job_id, jobs.inner())
+}
+
+#[tauri::command]
+pub(crate) fn dismiss_internal_labs_general_sem_cbsem_job_v1(
+    job_id: Uuid,
+    jobs: State<'_, DesktopCbsemGeneralSemJobsV1>,
+) -> Result<(), String> {
+    dismiss_internal_cbsem_general_sem_job_v1(job_id, jobs.inner())
+}
+
+#[tauri::command]
+pub(crate) fn result_internal_labs_general_sem_cbsem_job_v1(
+    job_id: Uuid,
+    jobs: State<'_, DesktopCbsemGeneralSemJobsV1>,
+) -> Result<InternalCbsemGeneralSemCompletedResultWireV1, String> {
+    take_internal_cbsem_general_sem_result_v1(job_id, jobs.inner()).map(Into::into)
 }
 
 fn run_worker_with_checkpoint_hook(
@@ -446,9 +525,9 @@ fn run_worker_with_checkpoint_hook(
                     format!("CB-SEM recursive SEM bootstrap failed: {detail}"),
                     "Inspect usable-resample and model-refit diagnostics before starting a new archive-bound job.",
                 ),
-                InternalCbsemGeneralSemExecutionErrorV1::Cancelled => unreachable!(
-                    "cancelled execution is handled before terminal-failure mapping"
-                ),
+                InternalCbsemGeneralSemExecutionErrorV1::Cancelled => {
+                    unreachable!("cancelled execution is handled before terminal-failure mapping")
+                }
             };
             finish_failed(&jobs, job_id, terminal_failure);
             return;
@@ -684,6 +763,7 @@ fn prune_terminal_jobs(jobs: &mut HashMap<Uuid, InternalCbsemGeneralSemJobV1>) {
 #[cfg(all(test, windows))]
 mod tests {
     use super::*;
+    use crate::general_sem_registry_access_v1::GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1;
     use chrono::TimeZone;
     use qpls_core::{
         ANALYSIS_RECIPE_V4_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipeModelBindingV4,

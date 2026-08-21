@@ -22,12 +22,11 @@ use qpls_core::{
     AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
     CapabilityRegistryV2, GeneralSemInferenceV1, MissingDataPolicyV4, ObservedScaleV4,
     SemCapabilityDecisionStatusV1, SemDataBindingV4, SemModelV4, SemVariableV4,
-    compile_general_sem_pls_recipe_v1,
+    compile_general_sem_pls_recipe_v1, pls_general_higher_order_bootstrap_capability_cell_v1,
+    pls_general_higher_order_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     preflight_general_sem_pls_v1, sha256_serialized,
-    pls_general_higher_order_bootstrap_capability_cell_v1,
-    pls_general_higher_order_point_capability_cell_v1,
 };
 use qpls_data::{ColumnType, DataKind, Dataset, ScaleType};
 use qpls_project::{
@@ -1566,10 +1565,9 @@ mod tests {
     };
     use chrono::TimeZone;
     use qpls_core::{
-        AnalysisRecipeModelBindingV4, GeneralSemBootstrapIntervalV1, GeneralSemConfigV1,
-        GeneralSemEffectEstimandV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
-        CompositeWeightingV4,
-        HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4,
+        AnalysisRecipeModelBindingV4, CompositeWeightingV4, GeneralSemBootstrapIntervalV1,
+        GeneralSemConfigV1, GeneralSemEffectEstimandV1, GeneralSemInferenceTailV1,
+        GeneralSemInferenceV1, HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4,
         InteractionHierarchyPolicyV2, InteractionMethodV4, PlsBootstrapTestTail, SemDerivedTermV4,
         SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
         StructuralRelationRoleV4,
@@ -3094,8 +3092,8 @@ mod tests {
         assert!(matches!(
             append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
@@ -3119,8 +3117,8 @@ mod tests {
         assert!(matches!(
             append_internal_project_schema6_canonical_result_v2(
                 ProjectSchema6ResultAppendRequestV1 {
-                    surface: INTERNAL_LABS_SURFACE.into(),
-                    experimental_labs_enabled: true,
+                    surface: STANDARD_SURFACE.into(),
+                    experimental_labs_enabled: false,
                     capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1(),),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
@@ -3134,8 +3132,8 @@ mod tests {
 
         let append = append_internal_project_schema6_canonical_result_v2(
             ProjectSchema6ResultAppendRequestV1 {
-                surface: INTERNAL_LABS_SURFACE.into(),
-                experimental_labs_enabled: true,
+                surface: STANDARD_SURFACE.into(),
+                experimental_labs_enabled: false,
                 capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
                 archive_path: published.request.archive_path.clone(),
                 expected_source_sha256: published.request.expected_archive_sha256.clone(),
@@ -3151,8 +3149,8 @@ mod tests {
         };
         let reopened =
             read_internal_project_schema6_canonical_results_v2(ProjectSchema6ResultReadRequestV1 {
-                surface: INTERNAL_LABS_SURFACE.into(),
-                experimental_labs_enabled: true,
+                surface: STANDARD_SURFACE.into(),
+                experimental_labs_enabled: false,
                 capability_cell: Some(pls_general_higher_order_bootstrap_capability_cell_v1()),
                 archive_path: published.request.archive_path.clone(),
                 expected_source_sha256: append_receipt.updated_document_sha256,
@@ -3799,6 +3797,7 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(published.request.capability_cell.clone()),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -3815,6 +3814,7 @@ mod tests {
                 ProjectSchema6ResultAppendRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(published.request.capability_cell.clone()),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: published.request.expected_archive_sha256.clone(),
                     recipe: None,
@@ -3831,6 +3831,7 @@ mod tests {
                 ProjectSchema6ResultReadRequestV1 {
                     surface: INTERNAL_LABS_SURFACE.into(),
                     experimental_labs_enabled: true,
+                    capability_cell: Some(published.request.capability_cell.clone()),
                     archive_path: published.request.archive_path.clone(),
                     expected_source_sha256: receipt.updated_document_sha256,
                 },

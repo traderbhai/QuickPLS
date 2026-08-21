@@ -824,7 +824,7 @@ function canonicalCompletedInteractionEffects(
 }
 
 describe("General SEM Recipe-v4 workspace contract", () => {
-  it("builds distinct resident CB-SEM point and recursive-bootstrap recipes with exact Labs ownership", () => {
+  it("builds distinct resident CB-SEM point and recursive-bootstrap recipes with exact Standard ownership", () => {
     const dataset = rawDataset();
     const model = convertLegacyBasicModelV4({
       id: "model:general-sem-cbsem",
@@ -861,7 +861,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       config: pointConfig,
       engine: defaultGeneralSemPlsEngineOptionsV1(),
       capabilityCell: GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
-      experimentalLabsEnabled: true,
+      experimentalLabsEnabled: false,
     });
     expect(pointRecipe.settings).toMatchObject({
       method: "cbsem",
@@ -876,7 +876,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       mean_structure: false,
       bootstrap_samples: 0,
     });
-    expect(pointRecipe.metadata.execution_surface).toBe("native_general_sem_cbsem_labs_v1");
+    expect(pointRecipe.metadata.execution_surface).toBe("native_general_sem_cbsem_standard_v1");
 
     const bootstrapEngine = {
       ...defaultGeneralSemPlsEngineOptionsV1(),
@@ -894,7 +894,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       config: bootstrapConfig,
       engine: bootstrapEngine,
       capabilityCell: GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
-      experimentalLabsEnabled: true,
+      experimentalLabsEnabled: false,
     });
     expect(bootstrapRecipe.method_config).toMatchObject({
       kind: "cbsem",
@@ -908,8 +908,8 @@ describe("General SEM Recipe-v4 workspace contract", () => {
 
     const decision = {
       schema_version: 1 as const,
-      status: "experimental" as const,
-      status_label: "Experimental" as const,
+      status: "supported" as const,
+      status_label: "Supported" as const,
       estimator_id: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
       capability_cells: [
         GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
@@ -921,9 +921,9 @@ describe("General SEM Recipe-v4 workspace contract", () => {
         GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
       ].map((cell) => ({
         evidence_id: `capability_registry_v2:${cell.capability_id}:${cell.cell_id}:${cell.capability_version}`,
-        description: "Exact Registry-owned Experimental Labs cell.",
+        description: "Exact Registry-owned Standard cell.",
       })),
-      summary: "Exact CB-SEM recursive bootstrap is available in Experimental Labs.",
+      summary: "Exact CB-SEM recursive bootstrap is available in Standard.",
       explanation: "The resident RecipeV4 and exact capability cells are unchanged.",
     };
     const execution = selectGeneralSemCbsemExecutionCapabilityV1({
@@ -933,8 +933,8 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     expect(execution.capabilityCell).toStrictEqual(GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1);
     expect(generalSemCbsemJobRequestFromReceiptV1(receipt(), bootstrapConfig, decision))
       .toMatchObject({
-        surface: "internal_labs",
-        experimentalLabsEnabled: true,
+        surface: "standard",
+        experimentalLabsEnabled: false,
         capabilityCell: GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
       });
   });
@@ -1074,7 +1074,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     },
   );
 
-  it("routes the exact selected two-relation moderated-mediation path through its Registry Labs cell", () => {
+  it("routes the exact selected two-relation moderated-mediation path through its Registry Standard cell", () => {
     const model = convertLegacyBasicModelV4({
       id: "model:general-sem",
       name: "First-stage moderated mediation",
@@ -1110,7 +1110,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     const decision = preflightGeneralSemPlsV1(model, config);
     const selected = selectGeneralSemPlsExecutionCapabilityV1({ model, config, decision });
 
-    expect(decision.status).toBe("experimental");
+    expect(decision.status).toBe("supported");
     expect(selected).toMatchObject({
       kind: "two_way_moderated_mediation_bootstrap",
       capabilityCell: GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
@@ -1767,7 +1767,7 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     const validation = validateCanonicalResultDocumentV2(genericCellTamper);
     expect(validation.passed).toBe(false);
     expect(validation.errors.join("\n")).toContain(
-      "must equal the exact General SEM multiple-mediation or multiple two-way moderation full-model case-bootstrap option cell",
+      "must equal an exact General SEM full-model case-bootstrap option cell",
     );
     expect(() => parseGeneralSemPlsCompletedResultV1({
       ...completedResult(),

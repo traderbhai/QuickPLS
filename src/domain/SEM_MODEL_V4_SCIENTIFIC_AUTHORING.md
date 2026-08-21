@@ -1,6 +1,8 @@
 # SemModelV4 scientific authoring workflow
 
-Status: Internal/Experimental editor contract. It is not a Standard calculation surface and does not activate a SemModelV4 estimator.
+Status: Connected General SEM model-authority workflow. Exact estimator cells and
+the Capability Registry still determine whether calculation is Standard, Labs,
+or blocked.
 
 ## Purpose
 
@@ -13,7 +15,13 @@ The workflow removes two legacy ambiguities before the live graph can be compile
    - disturbance covariance between two endogenous construct disturbances;
    - presentation-only canvas annotation.
 
-The pure contract is implemented in `semModelV4ScientificAuthoring.ts`. The native controls are implemented in `NativeSemScientificAuthoring.tsx` and are mounted only when Experimental Labs is enabled. The SemModelV4 Parameter Table uses the existing live-workbench adapter to show the resulting scientific parameters, presentation objects, and remaining decisions.
+The pure contract is implemented in `semModelV4ScientificAuthoring.ts`. The
+native controls are implemented in `NativeSemScientificAuthoring.tsx`.
+Construct representation and marker controls are available in Expert mode when
+the active General SEM workflow has a Registry-authorized CB-SEM cell; advanced
+covariance semantics remain Labs-gated. The SemModelV4 Parameter Table shows the
+same scientific parameters, presentation objects, and remaining decisions used
+by native compilation.
 
 ## Safety behavior
 
@@ -25,13 +33,17 @@ The pure contract is implemented in `semModelV4ScientificAuthoring.ts`. The nati
 - Confirmations preserve the existing node or edge ID and create one undoable store change.
 - A confirmed construct decision can be cleared explicitly when a user must return to a legacy recipe; clearing records unresolved intent and never guesses a replacement meaning.
 - The exact marker indicator and exact residual/disturbance endpoint IDs are serialized in the existing versioned `semModelV4` authoring metadata and survive project presentation reopen.
-- Current recipe-v3 execution continues to fail closed before it can filter a scientific covariance or ignore an explicit factor/composite choice.
+- Recipe-v4 execution fails closed before it can filter a scientific covariance or ignore an explicit factor/composite choice.
 
 ## Deliberate live gaps
 
-- No recipe-v4 runner consumes these choices yet.
-- The canonical v3 model remains the executable scientific source; SemModelV4 authoring metadata is dormant presentation state during current project reconciliation.
-- Standard Calculate does not expose this authoring workflow or claim support for its scientific relations.
+- The strict resident SemModelV4 and Parameter Table are the executable
+  scientific source for connected General SEM PLS and bounded CB-SEM cells.
+- Standard Calculate opens the same General SEM estimator/settings workspace;
+  unsupported scientific relations remain visible and block before estimation.
 - Residual/error covariance is currently authored through construct-to-construct canvas arcs with exact indicator endpoint selectors. Direct indicator-to-indicator drawing remains future editor work.
-- Free/fixed parameter specifications, starts, bounds, equality labels, factor identification, observed intercepts, latent means, and ordinal thresholds are now authored through the Experimental Parameter Table; see `SEM_MODEL_V4_PARAMETER_AUTHORING.md`.
-- Observed structural-variable drawing, group-specific parameters, Special Assumptions toggles, and all recipe-v4 execution remain future work.
+- Free/fixed parameter rows, starts, compatible bounds, equality labels, and
+  factor identification are represented in the Parameter Table. Means,
+  intercepts, thresholds, group-specific parameters, feedback, robust/ordinal
+  estimators, and unsupported constraint objects remain outside the bounded
+  Version 2.50 CB-SEM cells.

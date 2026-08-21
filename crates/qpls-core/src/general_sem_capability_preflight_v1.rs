@@ -2,10 +2,10 @@ use crate::{
     CapabilityRegistryV2, CbsemMlExactCapabilityProfileV2, CompiledCbsemExecutionDispositionV3,
     CompiledCbsemPlanV3, CompiledCbsemStructuralFormV3, CompiledPlsHigherOrderV1Error,
     CompiledPlsInteractionV3Error, CompiledPlsPlanV3, CompiledPlsPlanV3Error,
-    CompiledPlsTwoWayModeratedMediationTargetErrorV1,
-    GeneralSemBootstrapIntervalV1, GeneralSemConfigV1, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4,
-    ObservedScaleV4, SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
+    CompiledPlsTwoWayModeratedMediationTargetErrorV1, GeneralSemBootstrapIntervalV1,
+    GeneralSemConfigV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    GeneralSemSpecificPathLimitBehaviorV1, MissingDataPolicyV4, ObservedScaleV4,
+    SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
     SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
     SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
@@ -17,6 +17,41 @@ use crate::{
 
 pub const GENERAL_SEM_PLS_ESTIMATOR_ID_V1: &str = "qpls.pls_sem.v3";
 pub const GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1: &str = "qpls.cbsem.v3";
+
+fn registry_surface_status_v1(
+    capability_cells: &[SemCapabilityCellIdV1],
+) -> Result<SemCapabilityDecisionStatusV1, String> {
+    let registry = CapabilityRegistryV2::embedded().map_err(|error| error.to_string())?;
+    let mut all_standard = true;
+    for requested in capability_cells {
+        let matches = registry
+            .option_cells()
+            .filter(|cell| {
+                cell.capability_id == requested.capability_id()
+                    && cell.cell_id == requested.cell_id()
+                    && cell.capability_version == requested.capability_version()
+            })
+            .collect::<Vec<_>>();
+        let [cell] = matches.as_slice() else {
+            return Err(format!(
+                "exact capability cell {} is missing or duplicated",
+                requested.cell_id()
+            ));
+        };
+        if !cell.standard_available() && !cell.labs_available() {
+            return Err(format!(
+                "exact capability cell {} is unavailable",
+                requested.cell_id()
+            ));
+        }
+        all_standard &= cell.standard_available();
+    }
+    Ok(if all_standard {
+        SemCapabilityDecisionStatusV1::Supported
+    } else {
+        SemCapabilityDecisionStatusV1::Experimental
+    })
+}
 
 /// Exact, recovery-oriented preflight for the General SEM PLS point-estimation
 /// and bounded percentile case-bootstrap compiler slices. Model semantics are
@@ -90,7 +125,7 @@ pub fn preflight_general_sem_pls_v1(
         } else if requests_moderated_mediation {
             evidence.push(SemCapabilityEvidenceV1::new(
                 "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
-                "Capability Registry V2 exposes the exact one-path, one-interaction, five-target full-model case-bootstrap combination in Experimental Labs.",
+                "Capability Registry V2 exposes the exact one-path, one-interaction, five-target full-model case-bootstrap combination on its registered product surface.",
             )?);
         } else if has_interactions {
             evidence.push(SemCapabilityEvidenceV1::new(
@@ -117,6 +152,19 @@ pub fn preflight_general_sem_pls_v1(
         )?);
     }
     let mut diagnostics = execution_scope_diagnostics(model, config, has_interactions)?;
+    let registry_status = match registry_surface_status_v1(&capability_cells) {
+        Ok(status) => status,
+        Err(error) => {
+            diagnostics.push(SemCapabilityDiagnosticV1::new(
+                "sem.capability.pls.registry_unavailable",
+                SemCapabilityDiagnosticSeverityV1::Error,
+                None,
+                format!("Capability Registry V2 cannot authorize this exact PLS request: {error}"),
+                vec!["Restore the exact Registry cell authority before calculating.".into()],
+            )?);
+            SemCapabilityDecisionStatusV1::Blocked
+        }
+    };
     match compile_pls_plan_v3(model, config) {
         Ok(plan) => {
             if has_higher_order {
@@ -167,57 +215,62 @@ pub fn preflight_general_sem_pls_v1(
             "The authored model remains intact. Apply one of the listed corrections or select an estimator whose exact capability cell supports the graph.",
         );
     }
+    let standard = registry_status == SemCapabilityDecisionStatusV1::Supported;
     SemCapabilityDecisionV1::new(
-        SemCapabilityDecisionStatusV1::Experimental,
+        registry_status,
         GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
         capability_cells,
         vec![SemCapabilityDiagnosticV1::new(
-            "sem.capability.pls.experimental_labs",
+            if standard {
+                "sem.capability.pls.standard"
+            } else {
+                "sem.capability.pls.experimental_labs"
+            },
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
             if has_higher_order {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
-                        "General SEM higher-order point estimation passes the bounded Experimental Labs compiler preflight."
+                        "General SEM higher-order point estimation passes the bounded exact-cell compiler preflight."
                     }
                     GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                        "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
                     }
                 }
             } else if has_interactions {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
-                        "General SEM simultaneous two-way moderation point estimation passes the Experimental Labs compiler preflight."
+                        "General SEM simultaneous two-way moderation point estimation passes the exact-cell compiler preflight."
                     }
                     GeneralSemInferenceV1::CaseBootstrap { .. } => {
                         if requests_moderated_mediation {
-                            "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                            "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
                         } else {
-                            "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                            "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
                         }
                     }
                 }
             } else {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
-                        "General recursive PLS point estimation and path-specific effects pass the Experimental Labs compiler preflight."
+                        "General recursive PLS point estimation and path-specific effects pass the exact-cell compiler preflight."
                     }
                     GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                        "General recursive PLS percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+                        "General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
                     }
                 }
             },
             Vec::new(),
         )?],
         evidence,
-        "PLS-SEM can compile this exact request in Experimental Labs.",
+        "PLS-SEM can compile this exact Registry-governed request.",
         if has_higher_order {
             match config.inference {
                 GeneralSemInferenceV1::None => {
                     "The compiler binds one exact HOC approach/type predicate to stable generated mappings and ordered stage projections. Runtime qualification remains required before Standard promotion."
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                    "The point HOC cell remains primary authority and the supplemental Labs cell requires every raw-case replicate to rerun all compiled stages under one usable/failure ledger."
+                    "The point HOC cell remains primary authority and the supplemental cell requires every raw-case replicate to rerun all compiled stages under one usable/failure ledger."
                 }
             }
         } else if has_interactions {
@@ -227,9 +280,9 @@ pub fn preflight_general_sem_pls_v1(
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
                     if requests_moderated_mediation {
-                        "The point moderation cell remains primary while the Registry-authorized conditional-process Labs cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
+                        "The point moderation cell remains primary while the Registry-authorized conditional-process cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
                     } else {
-                        "The point moderation cell remains the primary artifact authority and the supplemental Labs cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+                        "The point moderation cell remains the primary artifact authority and the supplemental cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
                     }
                 }
             }
@@ -247,9 +300,8 @@ pub fn preflight_general_sem_pls_v1(
 }
 
 /// Exact Registry-governed preflight for the bounded General SEM CB-SEM v3
-/// adapter. Predicate compatibility and product authority remain separate:
-/// compatible requests are runnable only when every exact execution cell is
-/// currently exposed by the embedded Registry as Labs-available.
+/// adapter. Predicate compatibility and product authority remain separate;
+/// Registry V2 determines whether an exact runnable request is Standard or Labs.
 pub fn preflight_general_sem_cbsem_v1(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
@@ -262,13 +314,16 @@ pub fn preflight_general_sem_cbsem_v1(
         )?,
         SemCapabilityEvidenceV1::new(
             "adapter:cbsem_general_sem_point_v1",
-            "The bounded point adapter reuses the qualified V2 ML and fit kernel and projects typed parameter, fit, and identification rows under an exact Registry-owned Labs cell.",
+            "The bounded point adapter reuses the qualified V2 ML and fit kernel and projects typed parameter, fit, and identification rows under an exact Registry-owned cell.",
         )?,
     ];
-    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. }) {
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
         evidence.push(SemCapabilityEvidenceV1::new(
             "adapter:cbsem_recursive_sem_case_bootstrap_v1",
-            "The bounded recursive adapter reuses the indexed no-retry full-ML case-refit scheduler under an exact Registry-owned Labs cell.",
+            "The bounded recursive adapter reuses the indexed no-retry full-ML case-refit scheduler under an exact Registry-owned cell.",
         )?);
     }
     let mut diagnostics = Vec::new();
@@ -298,9 +353,11 @@ pub fn preflight_general_sem_cbsem_v1(
             Vec::new(),
         )?);
     }
-    let registry_available = match CapabilityRegistryV2::embedded() {
+    let registry_status = match CapabilityRegistryV2::embedded() {
         Ok(registry) => {
-            let all_available = capability_cells.iter().all(|requested| {
+            let mut all_available = true;
+            let mut all_standard = true;
+            for requested in &capability_cells {
                 let matches = registry
                     .option_cells()
                     .filter(|cell| {
@@ -309,11 +366,13 @@ pub fn preflight_general_sem_cbsem_v1(
                             && cell.capability_version == requested.capability_version()
                     })
                     .collect::<Vec<_>>();
-                matches.as_slice() {
-                    [cell] => cell.labs_available(),
-                    _ => false,
+                match matches.as_slice() {
+                    [cell] if cell.standard_available() || cell.labs_available() => {
+                        all_standard &= cell.standard_available();
+                    }
+                    _ => all_available = false,
                 }
-            });
+            }
             if all_available {
                 for cell in &capability_cells {
                     evidence.push(SemCapabilityEvidenceV1::new(
@@ -323,11 +382,15 @@ pub fn preflight_general_sem_cbsem_v1(
                             cell.cell_id(),
                             cell.capability_version()
                         ),
-                        "Capability Registry V2 exposes this exact bounded CB-SEM execution cell in Experimental Labs without making a Standard or release-qualified claim.",
+                        "Capability Registry V2 exposes this exact bounded CB-SEM execution cell on its registered product surface.",
                     )?);
                 }
             }
-            all_available
+            all_available.then_some(if all_standard {
+                SemCapabilityDecisionStatusV1::Supported
+            } else {
+                SemCapabilityDecisionStatusV1::Experimental
+            })
         }
         Err(error) => {
             diagnostics.push(SemCapabilityDiagnosticV1::new(
@@ -337,36 +400,42 @@ pub fn preflight_general_sem_cbsem_v1(
                 format!("Capability Registry V2 cannot authorize this CB-SEM request: {error}"),
                 vec!["Restore the embedded Registry to a valid, exact-cell contract before retrying.".into()],
             )?);
-            false
+            None
         }
     };
-    if predicate_compatible && registry_available {
+    if predicate_compatible && registry_status.is_some() {
+        let status = registry_status.unwrap_or(SemCapabilityDecisionStatusV1::Blocked);
+        let standard = status == SemCapabilityDecisionStatusV1::Supported;
         diagnostics.push(SemCapabilityDiagnosticV1::new(
-            "sem.capability.cbsem.experimental_labs",
+            if standard {
+                "sem.capability.cbsem.standard"
+            } else {
+                "sem.capability.cbsem.experimental_labs"
+            },
             SemCapabilityDiagnosticSeverityV1::Info,
             None,
             match config.inference {
                 GeneralSemInferenceV1::None => {
-                    "Bounded General SEM CB-SEM ML point estimation passes the exact Experimental Labs compiler and Registry preflight."
+                    "Bounded General SEM CB-SEM ML point estimation passes the exact compiler and Registry preflight."
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                    "Bounded recursive General SEM CB-SEM percentile case-bootstrap inference passes the exact Experimental Labs compiler and Registry preflight."
+                    "Bounded recursive General SEM CB-SEM percentile case-bootstrap inference passes the exact compiler and Registry preflight."
                 }
             },
             Vec::new(),
         )?);
         return SemCapabilityDecisionV1::new(
-            SemCapabilityDecisionStatusV1::Experimental,
+            status,
             GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
             capability_cells,
             diagnostics,
             evidence,
-            "CB-SEM can compile this exact request in Experimental Labs.",
-            "Execution remains bound to the resident SemModelV4, Recipe V4 config, exact Labs capability cell, and runtime archive authority. No Standard or release-qualified claim is implied.",
+            "CB-SEM can compile this exact Registry-governed request.",
+            "Execution remains bound to the resident SemModelV4, Recipe V4 config, exact capability cell, and runtime archive authority.",
         );
     }
     if predicate_compatible
-        && !registry_available
+        && registry_status.is_none()
         && !diagnostics
             .iter()
             .any(|diagnostic| diagnostic.code() == "sem.capability.cbsem.registry_invalid")
@@ -375,7 +444,7 @@ pub fn preflight_general_sem_cbsem_v1(
             "sem.capability.cbsem.candidate_cell_unavailable",
             SemCapabilityDiagnosticSeverityV1::Error,
             None,
-            "The exact General SEM CB-SEM execution cell is not currently Labs-available in Capability Registry V2.",
+            "The exact General SEM CB-SEM execution cell is not currently available in Capability Registry V2.",
             vec![
                 "Retain this request until the exact candidate cell has engine evidence and an atomic Registry entry; do not substitute a neighboring CB-SEM cell.".into(),
             ],
@@ -450,7 +519,9 @@ fn cbsem_candidate_scope_diagnostics(
             "explicit_bound_constraint_object_unsupported" => {
                 "Move this restriction to finite lower/upper values on the free parameter row."
             }
-            _ => "Revise the reported parameter-table semantics without silently deleting the authored restriction.",
+            _ => {
+                "Revise the reported parameter-table semantics without silently deleting the authored restriction."
+            }
         };
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             format!("sem.capability.cbsem.{}", issue.code),
@@ -460,8 +531,7 @@ fn cbsem_candidate_scope_diagnostics(
             vec![correction.into()],
         )?);
     }
-    if !config.requested_effect_estimands.is_empty()
-        || !config.conditional_effect_probes.is_empty()
+    if !config.requested_effect_estimands.is_empty() || !config.conditional_effect_probes.is_empty()
     {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.cbsem.derived_effect_inference_unsupported",
@@ -973,7 +1043,10 @@ fn cbsem_candidate_cells(
         "qpls3.cbsem.general_sem_ml",
         "cbsem_general_sem_ml_v1",
     )?];
-    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. }) {
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) {
         cells.push(SemCapabilityCellIdV1::new(
             2,
             "smartpls.cbsem_bootstrapping",
@@ -1276,15 +1349,12 @@ mod tests {
     }
 
     #[test]
-    fn recursive_pls_is_experimental_and_feedback_is_blocked_with_correction() {
+    fn recursive_pls_is_supported_and_feedback_is_blocked_with_correction() {
         let model = recursive_model();
         let decision =
             preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
-        assert_eq!(
-            decision.status(),
-            SemCapabilityDecisionStatusV1::Experimental
-        );
-        assert_eq!(decision.status_label(), "Experimental");
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Supported);
+        assert_eq!(decision.status_label(), "Supported");
 
         let mut feedback = model;
         let relation = feedback
@@ -1344,15 +1414,12 @@ mod tests {
     }
 
     #[test]
-    fn multiple_two_way_moderation_uses_only_the_exact_point_labs_cell() {
+    fn multiple_two_way_moderation_uses_only_the_exact_standard_point_cell() {
         for different_focal in [false, true] {
             let model = multiple_moderation_model_for_layout(different_focal);
             let decision =
                 preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
-            assert_eq!(
-                decision.status(),
-                SemCapabilityDecisionStatusV1::Experimental
-            );
+            assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Supported);
             assert_eq!(decision.capability_cells().len(), 1);
             let cell = &decision.capability_cells()[0];
             assert_eq!(cell.capability_id(), "smartpls.moderation");
@@ -1418,10 +1485,7 @@ mod tests {
             let point_before =
                 preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
             let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-            assert_eq!(
-                decision.status(),
-                SemCapabilityDecisionStatusV1::Experimental
-            );
+            assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Supported);
             assert_eq!(decision.capability_cells().len(), 2);
             assert!(decision.capability_cells().iter().any(|cell| {
                 cell.cell_id() == "qpls3.pls.general_sem_multiple_two_way_moderation_point"
@@ -1564,7 +1628,10 @@ mod tests {
         let scientific_before = model.scientific_sha256().unwrap();
 
         let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Experimental);
+        assert_eq!(
+            decision.status(),
+            SemCapabilityDecisionStatusV1::Experimental
+        );
         assert_eq!(model.scientific_sha256().unwrap(), scientific_before);
         assert!(decision.capability_cells().iter().any(|cell| {
             cell.capability_id() == "smartpls.moderation"
@@ -1814,7 +1881,7 @@ mod tests {
     }
 
     #[test]
-    fn percentile_two_sided_bootstrap_is_experimental_and_requires_both_exact_cells() {
+    fn percentile_two_sided_bootstrap_is_supported_and_requires_both_exact_cells() {
         let model = multiple_mediation_model();
         let mut config = GeneralSemConfigV1::default();
         config.inference = GeneralSemInferenceV1::CaseBootstrap {
@@ -1825,10 +1892,7 @@ mod tests {
             tail: crate::GeneralSemInferenceTailV1::TwoSided,
         };
         let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(
-            decision.status(),
-            SemCapabilityDecisionStatusV1::Experimental
-        );
+        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Supported);
         assert_eq!(decision.capability_cells().len(), 2);
         assert!(decision.capability_cells().iter().any(|cell| {
             cell.capability_id() == "smartpls.mediation" && cell.cell_id() == "qpls3.pls.mediation"
@@ -1914,7 +1978,7 @@ mod tests {
     fn hoc_preflight_binds_exact_cells_and_reaches_the_connected_runtime() {
         let model = disjoint_higher_order_model();
         let point = preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
-        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Experimental);
+        assert_eq!(point.status(), SemCapabilityDecisionStatusV1::Supported);
         assert_eq!(point.capability_cells().len(), 1);
         assert_eq!(
             point.capability_cells()[0].cell_id(),
@@ -1937,10 +2001,7 @@ mod tests {
             tail: GeneralSemInferenceTailV1::TwoSided,
         };
         let bootstrap = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(
-            bootstrap.status(),
-            SemCapabilityDecisionStatusV1::Experimental
-        );
+        assert_eq!(bootstrap.status(), SemCapabilityDecisionStatusV1::Supported);
         assert_eq!(bootstrap.capability_cells().len(), 2);
         assert!(bootstrap.capability_cells().iter().any(|cell| {
             cell.cell_id() == "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"

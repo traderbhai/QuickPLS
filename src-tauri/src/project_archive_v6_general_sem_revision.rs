@@ -214,6 +214,17 @@ fn registry_access_block(
     }
 }
 
+fn registry_access_block_v2(
+    error: GeneralSemRegistryAccessErrorV1,
+) -> GeneralSemExecutionAuthorityRevisionOutcomeV2 {
+    let GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic } =
+        registry_access_block(error)
+    else {
+        unreachable!("registry access failures always map to a blocked outcome")
+    };
+    GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked { diagnostic }
+}
+
 fn map_publication_error(
     error: ProjectArchiveV6SaveCopyError,
 ) -> GeneralSemExecutionAuthorityRevisionOutcomeV1 {
@@ -365,11 +376,29 @@ where
 fn revise_v2(
     request: GeneralSemExecutionAuthorityRevisionCommandRequestV2,
 ) -> GeneralSemExecutionAuthorityRevisionOutcomeV2 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
+    let capability_cell =
+        qpls_core::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    if request.revision.expected_capability_cell != capability_cell {
         return blocked_v2(
-            "internal_labs_required",
-            "General SEM moderated-mediation path revision is available only through the opt-in Labs bridge.",
-            "Enable Experimental Labs and retry from the exact Registry-authorized General SEM project authority.",
+            "capability_unavailable",
+            "General SEM moderated-mediation revision requires its exact Registry capability cell.",
+            "Refresh the marked General SEM workflow before choosing a destination.",
+        );
+    }
+    if let Err(error) = authorize_general_sem_registry_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+        &capability_cell,
+    ) {
+        return registry_access_block_v2(error);
+    }
+    if general_sem_recipe_execution_surface_v1(&request.surface)
+        != Some(request.revision.recipe_execution_surface.as_str())
+    {
+        return blocked_v2(
+            "recipe_execution_surface_mismatch",
+            "The revised RecipeV4 execution-surface identity disagrees with its Registry-authorized command surface.",
+            "Refresh exact capability access and rebuild the revision request from the unchanged source.",
         );
     }
     for (field, value) in [
@@ -546,12 +575,15 @@ mod tests {
                     estimand_id: "path:one".into(),
                     ordered_relation_ids: ["relation:x-m".into(), "relation:m-y".into()],
                 },
+                expected_capability_cell:
+                    qpls_core::pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+                recipe_execution_surface:
+                    qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
             },
         });
         assert!(matches!(
             outcome,
-            GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked { diagnostic }
-                if diagnostic.code.ends_with("internal_labs_required")
+            GeneralSemExecutionAuthorityRevisionOutcomeV2::Blocked { .. }
         ));
     }
 

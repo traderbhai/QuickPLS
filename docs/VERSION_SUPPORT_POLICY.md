@@ -51,7 +51,7 @@ recovery or export procedure before ending support.
 
 ## Current Transition
 
-QuickPLS 2.46.x is the current legacy line while QuickPLS 3 is under development.
+QuickPLS 2.50.x is the current integrated SEM-upgrade line while QuickPLS 3 remains under development.
 Unsigned QuickPLS 3 builds are preview artifacts and do not replace the stable line.
 The first competitor-grade QuickPLS 3 stable line begins only after the signed
 commercial-readiness gate passes.

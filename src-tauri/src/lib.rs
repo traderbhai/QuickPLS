@@ -20,7 +20,6 @@ mod recipe_v4_cbsem_execution;
 mod recipe_v4_general_sem_canonical_result;
 #[allow(dead_code)]
 mod recipe_v4_general_sem_cbsem_canonical_result;
-#[allow(dead_code)]
 mod recipe_v4_general_sem_cbsem_jobs;
 mod recipe_v4_general_sem_pls_jobs;
 mod recipe_v4_jobs;
@@ -90,6 +89,11 @@ use qpls_runner::{
     run_compiled_pls_recipe_v4, run_pls_analysis,
 };
 use recipe_v4_cbsem_execution::run_internal_labs_recipe_v4_cbsem_execution;
+use recipe_v4_general_sem_cbsem_jobs::{
+    DesktopCbsemGeneralSemJobsV1, cancel_internal_labs_general_sem_cbsem_job_v1,
+    dismiss_internal_labs_general_sem_cbsem_job_v1, result_internal_labs_general_sem_cbsem_job_v1,
+    start_internal_labs_general_sem_cbsem_job_v1, status_internal_labs_general_sem_cbsem_job_v1,
+};
 use recipe_v4_general_sem_pls_jobs::{
     DesktopGeneralSemPlsJobsV1, cancel_internal_labs_general_sem_pls_job_v1,
     dismiss_internal_labs_general_sem_pls_job_v1, result_internal_labs_general_sem_pls_job_v1,
@@ -7313,6 +7317,7 @@ pub fn run() {
         .manage(DesktopProjectUpgradePlans::default())
         .manage(DesktopRecipeV4Jobs::default())
         .manage(DesktopGeneralSemPlsJobsV1::default())
+        .manage(DesktopCbsemGeneralSemJobsV1::default())
         .manage(DesktopPlsModelComparisonJobsV1::default())
         .invoke_handler(tauri::generate_handler![
             capability_registry_v2,
@@ -7347,6 +7352,11 @@ pub fn run() {
             cancel_internal_labs_general_sem_pls_job_v1,
             dismiss_internal_labs_general_sem_pls_job_v1,
             result_internal_labs_general_sem_pls_job_v1,
+            start_internal_labs_general_sem_cbsem_job_v1,
+            status_internal_labs_general_sem_cbsem_job_v1,
+            cancel_internal_labs_general_sem_cbsem_job_v1,
+            dismiss_internal_labs_general_sem_cbsem_job_v1,
+            result_internal_labs_general_sem_cbsem_job_v1,
             mutate_internal_project_archive_v6_model,
             inspect_internal_project_archive_v6_zip,
             read_internal_project_archive_v6_dataset_rows,

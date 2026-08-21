@@ -63,9 +63,37 @@ export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1 = Obj
 const CBSEM_CELL = {
   registry_schema_version: 2,
   capability_id: "smartpls.cbsem",
-  cell_id: "qpls3.cbsem.ml",
-  capability_version: "cbsem_ml_v1",
+  cell_id: "qpls3.cbsem.general_sem_ml",
+  capability_version: "cbsem_general_sem_ml_v1",
 } as const;
+
+const CBSEM_BOOTSTRAP_CELL = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.cbsem_bootstrapping",
+  cell_id: "qpls3.cbsem.bootstrap.recursive_sem",
+  capability_version: "cbsem_exact_recursive_sem_case_bootstrap_v1",
+} as const;
+
+function exactRegistryDecisionStatusV1(
+  cells: readonly {
+    capability_id: string;
+    cell_id: string;
+    capability_version: string;
+  }[],
+): "supported" | "experimental" | null {
+  let allStandard = true;
+  for (const expected of cells) {
+    const matches = capabilityRegistryV2.quickPlsCell(expected.cell_id).filter(({ row }) => (
+      row.capability_id === expected.capability_id
+    ));
+    if (matches.length !== 1) return null;
+    const actual = matches[0]!.cell;
+    if (actual.capability_version !== expected.capability_version) return null;
+    if (!capabilityRegistryV2.availability(actual.capability_id, actual.cell_id, true).selectable) return null;
+    if (actual.surface !== "standard") allStandard = false;
+  }
+  return allStandard ? "supported" : "experimental";
+}
 
 const PLS_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
@@ -122,20 +150,25 @@ const PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE: readonly SemCapability
   },
   {
     evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
-    description: "Capability Registry V2 exposes the exact conditional-process full-model case-bootstrap option in Experimental Labs.",
+    description: "Capability Registry V2 exposes the exact conditional-process full-model case-bootstrap option on its current authorized surface.",
   },
 ];
 
 const CBSEM_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
   {
-    evidence_id: "capability_registry_v2:smartpls.cbsem:qpls3.cbsem.ml:cbsem_ml_v1",
-    description: "Capability Registry V2 is the exact authority for the bounded CB-SEM ML cell.",
+    evidence_id: "capability_registry_v2:smartpls.cbsem:qpls3.cbsem.general_sem_ml:cbsem_general_sem_ml_v1",
+    description: "Capability Registry V2 is the exact authority for the bounded General SEM CB-SEM ML cell.",
   },
   {
     evidence_id: "compiler:compiled_cbsem_plan_v3",
-    description: "CB-SEM v3 preserves the complete v2 parameter table and adds SCC and identification evidence without implying execution support.",
+    description: "CB-SEM v3 preserves the complete v2 parameter table and binds recursive topology, identification evidence, data, recipe, and capability identities.",
   },
 ];
+
+const CBSEM_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
+  evidence_id: "capability_registry_v2:smartpls.cbsem_bootstrapping:qpls3.cbsem.bootstrap.recursive_sem:cbsem_exact_recursive_sem_case_bootstrap_v1",
+  description: "Capability Registry V2 is the exact authority for bounded recursive-SEM full-refit percentile case bootstrapping.",
+};
 
 type StructuralRelation = Extract<SemRelationV4, { kind: "structural" }>;
 
@@ -719,7 +752,7 @@ function exactTwoWayModeratedMediationRequestV1(
   );
   return registryCell.capability_version
     === GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.capability_version
-    && registryCell.surface === "labs"
+    && (registryCell.surface === "standard" || registryCell.surface === "labs")
     && availability.selectable;
 }
 
@@ -911,6 +944,14 @@ export function preflightGeneralSemPlsV1(
     ));
   }
 
+  const registryStatus = exactRegistryDecisionStatusV1(capabilityCells);
+  if (!registryStatus) diagnostics.push(errorDiagnostic(
+    "sem.capability.pls.registry_unavailable",
+    "The exact General SEM PLS capability set is not currently selectable in Capability Registry V2.",
+    "Keep the model unchanged and restore the exact Registry cells before calculation.",
+    "capability_registry_v2",
+  ));
+
   let basePlanCompiles = false;
   let interactionOutputIds: ReadonlySet<string> = new Set();
   if (modelIsValid && !hasFeedback && diagnostics.every((item) => (
@@ -990,12 +1031,14 @@ export function preflightGeneralSemPlsV1(
     });
   }
 
+  const status = registryStatus ?? "experimental";
+  const standard = status === "supported";
   return createSemCapabilityDecisionV1({
-    status: "experimental",
+    status,
     estimator_id: GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
     capability_cells: capabilityCells,
     diagnostics: [{
-      code: "sem.capability.pls.experimental_labs",
+      code: standard ? "sem.capability.pls.standard" : "sem.capability.pls.experimental_labs",
       severity: "info",
       subject: null,
       message: hasHigherOrder
@@ -1005,7 +1048,7 @@ export function preflightGeneralSemPlsV1(
         : hasInteractions
         ? bootstrapRequested
           ? requestsModeratedMediation
-            ? "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded Experimental Labs compiler preflight."
+            ? "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
             : "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
           : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
         : bootstrapRequested
@@ -1014,7 +1057,9 @@ export function preflightGeneralSemPlsV1(
       corrections: [],
     }],
     evidence,
-    summary: "PLS-SEM can compile this exact Registry-governed request.",
+    summary: standard
+      ? "PLS-SEM can compile this exact Standard Registry request."
+      : "PLS-SEM can compile this exact Registry-governed request.",
     explanation: hasHigherOrder
       ? bootstrapRequested
         ? "The exact HOC point cell remains the primary artifact authority and the supplemental HOC cell authorizes indexed raw-case resampling with every compiled stage refitted before bounded target inference is published."
@@ -1022,7 +1067,7 @@ export function preflightGeneralSemPlsV1(
       : hasInteractions
       ? bootstrapRequested
         ? requestsModeratedMediation
-          ? "The point moderation cell remains the primary artifact authority and the exact Registry-authorized Labs cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
+          ? "The point moderation cell remains the primary artifact authority and the exact Registry-authorized supplemental cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
           : "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
         : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
       : bootstrapRequested
@@ -1031,16 +1076,22 @@ export function preflightGeneralSemPlsV1(
   });
 }
 
-/**
- * CB-SEM v3 can describe topology and identification, but its General SEM
- * runtime adapter is deliberately unavailable until the exact cell is qualified.
- */
+/** Exact Registry-governed preview for the connected bounded CB-SEM v3 adapter. */
 export function preflightGeneralSemCbsemV1(
   model: SemModelV4,
   config: GeneralSemConfigV1,
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
+  const capabilityCells = [CBSEM_CELL, ...(bootstrapRequested ? [CBSEM_BOOTSTRAP_CELL] : [])];
+  const evidence = [...CBSEM_EVIDENCE, ...(bootstrapRequested ? [CBSEM_BOOTSTRAP_EVIDENCE] : [])];
+  const registryStatus = exactRegistryDecisionStatusV1(capabilityCells);
+  if (registryStatus === null) diagnostics.push(errorDiagnostic(
+    "sem.capability.cbsem.registry_unavailable",
+    "Capability Registry V2 cannot authorize the exact General SEM CB-SEM request.",
+    "Restore the exact point or recursive-bootstrap option cell before calculating.",
+  ));
   let modelIsValid = false;
   try {
     modelIsValid = validateSemModelV4(model).length === 0;
@@ -1089,22 +1140,42 @@ export function preflightGeneralSemCbsemV1(
         "The reciprocal block is preserved, but the current CB-SEM executor is not qualified to estimate feedback systems.",
         "Remove the reciprocal path to create a recursive model, or retain the model until the identified feedback capability is qualified.",
       ));
-    } else {
-      diagnostics.push(errorDiagnostic(
-        "sem.capability.cbsem.general_runtime_not_connected",
-        "The CB-SEM v3 parameter and identification plan is available, but the General SEM runtime adapter is not connected.",
-        "Use the currently qualified bounded CB-SEM workflow, or keep this request in Labs until the v3 adapter is qualified.",
-      ));
     }
+  }
+
+  if (diagnostics.length === 0) {
+    const status = registryStatus ?? "experimental";
+    const standard = status === "supported";
+    return createSemCapabilityDecisionV1({
+      status,
+      estimator_id: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+      capability_cells: capabilityCells,
+      diagnostics: [{
+        code: standard ? "sem.capability.cbsem.standard" : "sem.capability.cbsem.experimental_labs",
+        severity: "info",
+        subject: null,
+        message: bootstrapRequested
+          ? "General SEM recursive CB-SEM full-refit percentile case bootstrapping passes the bounded exact-cell preview."
+          : "General SEM recursive CB-SEM ML estimation passes the bounded exact-cell preview.",
+        corrections: [],
+      }],
+      evidence,
+      summary: standard
+        ? "CB-SEM can compile this exact Standard Registry request."
+        : "CB-SEM can compile this exact Registry-governed request.",
+      explanation: bootstrapRequested
+        ? "The point cell remains the model authority and the recursive-bootstrap cell owns one indexed full-ML refit ledger for eligible free parameters. Native preflight remains authoritative before execution."
+        : "The connected v3 adapter binds the resident SemModelV4 parameter table to the proven ML kernel and canonical parameter, fit, and identification results.",
+    });
   }
 
   return createSemCapabilityDecisionV1({
     status: "blocked",
     estimator_id: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
-    capability_cells: [CBSEM_CELL],
+    capability_cells: capabilityCells,
     diagnostics,
-    evidence: CBSEM_EVIDENCE,
+    evidence,
     summary: "CB-SEM cannot calculate this exact General SEM request yet.",
-    explanation: "Compilation and identification diagnostics remain visible, while execution stays disabled until the exact runtime cell is qualified.",
+    explanation: "The authored model remains unchanged. Resolve the listed predicate or Registry issue and run preflight again.",
   });
 }

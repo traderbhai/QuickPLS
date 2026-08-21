@@ -105,6 +105,7 @@ import {
   resultTableForItem,
   type NativeResultNavigation,
 } from "./nativeResults";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import {
   loadNativeRecentProjects,
   rememberNativeRecentProject,
@@ -584,9 +585,16 @@ export function NativeDesktopApp() {
   );
   const [newProjectName, setNewProjectName] = useState("Untitled project");
   const [newProjectMode, setNewProjectMode] = useState<NativeNewProjectMode>("standard");
+  const [generalSemCanonicalResult, setGeneralSemCanonicalResult] = useState<CanonicalResultDocumentV2 | null>(null);
+  const [generalSemResultSelected, setGeneralSemResultSelected] = useState(false);
   const lastNavigatedCompletedRunId = useRef<string | null>(null);
   const [recentProjects, setRecentProjects] = useState<NativeRecentProject[]>(() => loadNativeRecentProjects(window.localStorage));
   const smokeSeeded = useRef(false);
+
+  useEffect(() => {
+    setGeneralSemCanonicalResult(null);
+    setGeneralSemResultSelected(false);
+  }, [projectPath]);
 
   useEffect(() => {
     if (!isNativeDesktop()) return;
@@ -632,12 +640,16 @@ export function NativeDesktopApp() {
       } as NativeCanonicalModelSpec)),
   ], [projectModels, strictAuthorities]);
   const canOpenContextModel = useMemo(() => {
-    const modelId = surface === "results" ? selectedRun?.modelId : activeModelId;
+    const modelId = surface === "results"
+      ? generalSemResultSelected
+        ? generalSemCanonicalResult?.provenance.model_id
+        : selectedRun?.modelId
+      : activeModelId;
     return Boolean(modelId && (
       projectModels.some((model) => model.id === modelId)
       || strictAuthorities[modelId]
     ));
-  }, [activeModelId, projectModels, selectedRun?.modelId, strictAuthorities, surface]);
+  }, [activeModelId, generalSemCanonicalResult?.provenance.model_id, generalSemResultSelected, projectModels, selectedRun?.modelId, strictAuthorities, surface]);
   const selectedRunId = selectedRun?.id ?? "";
   const resultNavigation = useMemo(() => navigationWithPrecision(buildNativeResultNavigation(selectedRun), uiPreferences.defaultPrecision), [selectedRun, uiPreferences.defaultPrecision]);
   const resultTables = resultNavigation.tables;
@@ -671,7 +683,7 @@ export function NativeDesktopApp() {
       ? { kind: selectionCount > 1 ? "multiple" as const : selectedEdgeId ? "path" as const : selectionCount ? "construct" as const : "none" as const, count: selectionCount }
       : surface === "data"
         ? { kind: selectedColumn ? "variable" as const : dataset.columns.length ? "dataset" as const : "none" as const, count: selectedColumn || dataset.columns.length ? 1 : 0 }
-        : surface === "results" && selectedRun
+        : surface === "results" && (selectedRun || (generalSemResultSelected && generalSemCanonicalResult))
           ? { kind: "result" as const, count: 1 }
           : { kind: "none" as const, count: 0 };
     const moderationMutationAuthority: NativeModerationMutationAuthorityV1 = strictGeneralSemRevisionRequired
@@ -691,10 +703,11 @@ export function NativeDesktopApp() {
       projectOpen: projectName !== "No project open",
       projectWritable,
       hasDataset: dataset.columns.length > 0,
-      hasCompletedRun: completedRuns.length > 0,
+      hasCompletedRun: completedRuns.length > 0 || Boolean(generalSemCanonicalResult),
       selectedResultSaved,
       canOpenContextModel,
-      canCalculate: modelReadiness.canRun && !strictAuthority,
+      canCalculate: strictGeneralSemRevisionRequired || (modelReadiness.canRun && !strictAuthority),
+      generalSemCalculationAvailable: strictGeneralSemRevisionRequired,
       canUndo: past.length > 0,
       canRedo: future.length > 0,
       canRecode: Boolean(selectedColumn) && projectWritable && (dataset.kind ?? "raw") === "raw",
@@ -710,7 +723,7 @@ export function NativeDesktopApp() {
       selection,
       calculationStatus: runMonitor.status,
     };
-  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, generalSemRevisionDisabledReason, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, strictGeneralSemRevisionRequired, surface]);
+  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, generalSemCanonicalResult, generalSemRevisionDisabledReason, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, strictGeneralSemRevisionRequired, surface]);
 
   const dataMutationsLocked = datasetDescriptorOnly
     || generalSemPublicationPending
@@ -743,7 +756,28 @@ export function NativeDesktopApp() {
     return () => window.removeEventListener("quickpls:navigate-surface", onNavigate);
 
   }, [navigate]);
+  useEffect(() => {
+    const onCanonicalResult = (event: Event) => {
+      const detail = (event as CustomEvent<{
+        document?: CanonicalResultDocumentV2;
+        navigate?: boolean;
+      }>).detail;
+      if (!detail?.document) return;
+      setGeneralSemCanonicalResult(detail.document);
+      setGeneralSemResultSelected(true);
+      if (detail.navigate) navigate("results");
+    };
+    window.addEventListener("quickpls:general-sem-canonical-result", onCanonicalResult);
+    return () => window.removeEventListener("quickpls:general-sem-canonical-result", onCanonicalResult);
+  }, [navigate]);
   const openCalculation = () => {
+    if (strictGeneralSemRevisionRequired) {
+      navigate("model");
+      window.setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("quickpls:open-general-sem-calculation"));
+      }, 0);
+      return;
+    }
     if (!["queued", "validating", "running", "cancelling"].includes(runMonitor.status)) {
       resetRunMonitor();
     }
@@ -1226,11 +1260,19 @@ export function NativeDesktopApp() {
         return;
       case "surface.navigate": {
         if (action.surface === "model" && surface === "results") {
-          const resultModelId = selectedRun?.modelId;
-          if (resultModelId && projectModels.some((model) => model.id === resultModelId)) {
+          const resultModelId = generalSemResultSelected
+            ? generalSemCanonicalResult?.provenance.model_id
+            : selectedRun?.modelId;
+          if (resultModelId && (
+            projectModels.some((model) => model.id === resultModelId)
+            || strictAuthorities[resultModelId]
+          )) {
             commandEvent("open-explorer-model", { modelId: resultModelId });
           }
           return;
+        }
+        if (action.surface === "results" && generalSemCanonicalResult) {
+          setGeneralSemResultSelected(true);
         }
         navigate(action.surface);
         return;
@@ -1282,7 +1324,13 @@ export function NativeDesktopApp() {
       case "model.fit": commandEvent("model-fit"); return;
       case "calculation.open": openCalculation(); return;
       case "calculation.cancel": commandEvent("cancel-analysis"); return;
-      case "results.export": openDialog("export"); return;
+      case "results.export":
+        if (generalSemResultSelected && generalSemCanonicalResult) {
+          document.getElementById("nd-canonical-export-v2-heading")?.scrollIntoView({ behavior: "smooth", block: "start" });
+          document.getElementById("nd-canonical-export-v2-chart")?.focus();
+          return;
+        }
+        openDialog("export"); return;
       case "results.open-run-details": openDialog("run-details"); return;
       case "view.toggle-properties": setPropertiesOpen((value) => !value); return;
       case "utility.open": openDialog(({ "method-scope": "trust", preferences: "settings", shortcuts: "shortcuts", about: "about" } as const)[action.utility]); return;
@@ -1465,7 +1513,24 @@ export function NativeDesktopApp() {
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
       {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} generalSemRevisionRequired={strictGeneralSemRevisionRequired} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
-      {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface runs={completedRuns} selectedRun={selectedRun} selectedRunId={selectedRunId} setSelectedRunId={setSelectedResultRun} navigation={resultNavigation} selectedItem={selectedResultItem} selectedTable={selectedTable} setSelectedTableId={setSelectedTableId} propertiesOpen={propertiesOpen} openMethodDetails={() => openDialog("trust")} /></Suspense> : null}
+      {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface
+        runs={completedRuns}
+        selectedRun={selectedRun}
+        selectedRunId={selectedRunId}
+        setSelectedRunId={(id) => {
+          setGeneralSemResultSelected(false);
+          setSelectedResultRun(id);
+        }}
+        canonicalDocument={generalSemCanonicalResult ?? undefined}
+        canonicalSelected={generalSemResultSelected && Boolean(generalSemCanonicalResult)}
+        selectCanonicalDocument={() => setGeneralSemResultSelected(true)}
+        navigation={resultNavigation}
+        selectedItem={selectedResultItem}
+        selectedTable={selectedTable}
+        setSelectedTableId={setSelectedTableId}
+        propertiesOpen={propertiesOpen}
+        openMethodDetails={() => openDialog("trust")}
+      /></Suspense> : null}
     </div>
     {contextMenu ? <ContextCommandMenu items={contextMenuItems} state={contextMenu} close={closeContextMenu} /> : null}
     <NativeToastStack toasts={toasts} dismiss={dismissToast} />
@@ -1984,6 +2049,15 @@ function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevision
 
   type ModelDocumentView = "canvas" | "parameters" | "general_sem_labs" | "cbsem_labs";
   const [documentView, setDocumentView] = useState<ModelDocumentView>("canvas");
+  useEffect(() => {
+    const openGeneralSemCalculation = () => {
+      if (!generalSemViewAvailable) return;
+      setDocumentView("general_sem_labs");
+      window.setTimeout(() => document.getElementById("nd-model-general-sem-labs-tab")?.focus(), 0);
+    };
+    window.addEventListener("quickpls:open-general-sem-calculation", openGeneralSemCalculation);
+    return () => window.removeEventListener("quickpls:open-general-sem-calculation", openGeneralSemCalculation);
+  }, [generalSemViewAvailable]);
   useEffect(() => {
     if (!useWorkspace.getState().generalSemTransientWorkBlocker) setDocumentView("canvas");
   }, [activeModelId, experimentalSemAuthoringEnabled]);

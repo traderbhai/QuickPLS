@@ -343,9 +343,11 @@ describe("native desktop multi-model shell contracts", () => {
 
   it("opens the selected result's surviving source model instead of the arbitrary active model", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
-    expect(source).toContain('const modelId = surface === "results" ? selectedRun?.modelId : activeModelId');
+    expect(source).toContain('const modelId = surface === "results"');
+    expect(source).toContain("generalSemResultSelected");
+    expect(source).toContain("generalSemCanonicalResult?.provenance.model_id");
     expect(source).toContain("projectModels.some((model) => model.id === modelId)");
-    expect(source).toContain("const resultModelId = selectedRun?.modelId");
+    expect(source).toContain("const resultModelId = generalSemResultSelected");
     expect(source).toContain('commandEvent("open-explorer-model", { modelId: resultModelId })');
   });
 

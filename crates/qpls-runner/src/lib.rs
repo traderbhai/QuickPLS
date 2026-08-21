@@ -1,11 +1,11 @@
+#[doc(hidden)]
+pub mod internal_cbsem_general_sem_execution;
 mod pls_model_comparison_execution;
 mod recipe_v4_cbsem_execution;
 #[allow(dead_code)]
 mod recipe_v4_cbsem_general_sem_bootstrap_execution;
 #[allow(dead_code)]
 mod recipe_v4_cbsem_general_sem_point_execution;
-#[doc(hidden)]
-pub mod internal_cbsem_general_sem_execution;
 mod recipe_v4_cbsem_product_indicator_execution;
 mod recipe_v4_general_sem_hoc_bootstrap_execution;
 mod recipe_v4_general_sem_hoc_point_execution;

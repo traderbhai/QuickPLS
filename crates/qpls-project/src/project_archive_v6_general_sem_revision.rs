@@ -15,12 +15,11 @@ use chrono::{DateTime, Utc};
 use qpls_core::{
     AnalysisRecipeModelBindingV4, CapabilityCellReferenceV2,
     CompiledPlsTwoWayModeratedMediationTargetV1, GeneralSemEffectEstimandV1,
-    GeneralSemPlsRecipeCompilationErrorV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
-    HigherOrderConstructionApproachV4, HigherOrderMeasurementTypeV4, SemDerivedTermV4, SemModelV4,
-    SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
-    StructuralRelationRoleV4, capability_cell_reference_identity_v2,
-    compile_general_sem_pls_recipe_v1,
-    pls_general_higher_order_bootstrap_capability_cell_v1,
+    GeneralSemPlsRecipeCompilationErrorV1, HigherOrderConstructionApproachV4,
+    HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
+    SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
+    SemVariableV4, StructuralRelationRoleV4, capability_cell_reference_identity_v2,
+    compile_general_sem_pls_recipe_v1, pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
@@ -151,6 +150,8 @@ pub struct GeneralSemExecutionAuthorityRevisionRequestV2 {
     pub source: GeneralSemExecutionAuthoritySourcePinV1,
     pub revision: GeneralSemExecutionAuthorityRevisionIdentityV1,
     pub intent: GeneralSemExecutionAuthorityRevisionIntentV2,
+    pub expected_capability_cell: CapabilityCellReferenceV2,
+    pub recipe_execution_surface: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -684,6 +685,12 @@ fn create_general_sem_execution_authority_revision_windows_v2(
 
     let supplemental_capability_cell =
         pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
+    if request.expected_capability_cell != supplemental_capability_cell {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "revision-v2 expected capability cell is not the exact moderated-mediation bootstrap cell"
+                .into(),
+        ));
+    }
     let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
     let compiled_target = compiled
         .plan()
@@ -883,13 +890,37 @@ fn validate_request_paths(
 fn validate_new_identity(
     request: &GeneralSemExecutionAuthorityRevisionRequestV1,
 ) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
-    validate_new_identity_parts(&request.source, &request.revision)
+    validate_new_identity_parts(
+        &request.source,
+        &request.revision,
+        &request.recipe_execution_surface,
+    )
 }
 
 fn validate_new_identity_v2(
     request: &GeneralSemExecutionAuthorityRevisionRequestV2,
 ) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV2> {
-    validate_new_identity_parts(&request.source, &request.revision)?;
+    validate_new_identity_parts(
+        &request.source,
+        &request.revision,
+        &request.recipe_execution_surface,
+    )?;
+    if request.recipe_execution_surface != GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        && request.recipe_execution_surface != GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "revision-v2 recipe execution surface must be an exact General SEM Labs or Standard v1 identity"
+                .into(),
+        ));
+    }
+    if request.expected_capability_cell
+        != pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+    {
+        return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+            "revision-v2 expected capability cell is not the exact moderated-mediation bootstrap cell"
+                .into(),
+        ));
+    }
     let GeneralSemExecutionAuthorityRevisionIntentV2::SelectTwoWayModeratedMediationPath {
         intent_version,
         sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
@@ -935,6 +966,7 @@ fn validate_new_identity_v2(
 fn validate_new_identity_parts(
     source: &GeneralSemExecutionAuthoritySourcePinV1,
     revision: &GeneralSemExecutionAuthorityRevisionIdentityV1,
+    recipe_execution_surface: &str,
 ) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
     for (field, value) in [
         ("source model id", source.model_id.as_str()),
@@ -985,8 +1017,8 @@ fn validate_new_identity_parts(
             "revision project, model, and recipe identities must all be new".into(),
         ));
     }
-    if request.recipe_execution_surface != GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
-        && request.recipe_execution_surface != GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    if recipe_execution_surface != GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
+        && recipe_execution_surface != GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
     {
         return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
             "recipe execution surface must be an exact General SEM Labs or Standard v1 identity"
@@ -2277,6 +2309,10 @@ mod tests {
                     estimand_id,
                     ordered_relation_ids,
                 },
+                expected_capability_cell:
+                    pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+                recipe_execution_surface:
+                    GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1.into(),
             };
             ModeratedMediationSourceFixture {
                 source,
@@ -2666,8 +2702,7 @@ mod tests {
                         && scientific_sha256 == &receipt.resident_model_scientific_sha256
                 ));
                 let recompiled =
-                    compile_general_sem_pls_recipe_v1(revised_recipe, Some(revised_model))
-                        .unwrap();
+                    compile_general_sem_pls_recipe_v1(revised_recipe, Some(revised_model)).unwrap();
                 assert_eq!(recompiled.compiler_version(), receipt.compiler_version);
                 assert_eq!(
                     recompiled.capability_cell(),

@@ -37,7 +37,7 @@ export function NativeSemConstructAuthoringFields({ node, onCommit }: NativeSemC
   const markerValue = projection.marker_indicator ?? projection.marker_candidates[0] ?? "";
 
   return <section className="nd-sem-authoring" aria-labelledby={`${controlId}-heading`}>
-    <header><strong id={`${controlId}-heading`}>Scientific representation</strong><span>Experimental</span></header>
+    <header><strong id={`${controlId}-heading`}>Scientific representation</strong><span>Model authority</span></header>
     <p id={`${controlId}-help`}>Confirm whether this construct is an explicitly weighted composite or a common factor reflected by its indicators.</p>
     <label htmlFor={`${controlId}-representation`}>Representation</label>
     <select
@@ -78,7 +78,7 @@ export function NativeSemConstructAuthoringFields({ node, onCommit }: NativeSemC
     />
     {projection.choice === "composite" || projection.choice === "common_factor" ? <>
       <button type="button" className="nd-sem-authoring-clear" onClick={() => onCommit({ kind: "legacy_estimand_unspecified" })}>Clear representation decision</button>
-      <p className="nd-sem-authoring-boundary">This choice is serialized with the model. Current calculation recipes stop before executing it; clearing the decision restores legacy recipe eligibility without guessing its meaning.</p>
+      <p className="nd-sem-authoring-boundary">This choice is serialized with the model and used only by estimator cells whose exact preflight supports it. Clearing the decision restores legacy recipe eligibility without guessing its meaning.</p>
     </> : null}
   </section>;
 }

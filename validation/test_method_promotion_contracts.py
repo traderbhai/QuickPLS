@@ -25,7 +25,7 @@ class MethodPromotionContractTests(unittest.TestCase):
         self.assertTrue(report["passed"], report)
         self.assertFalse(report["claim_authorized"])
         self.assertFalse(report["evidence_verified"])
-        self.assertEqual(report["manifest_count"], 40)
+        self.assertEqual(report["manifest_count"], 47)
 
     def test_contract_errors_still_fail_closed(self) -> None:
         source = factory.strict_load_json(

@@ -6,6 +6,8 @@ import {
   type StandardSemRelationshipDefinitionV1,
 } from "../domain/standardSemModelV4Authority";
 import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
+import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
+import { GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1 } from "../domain/internalRecipeV4GeneralSemWorkspace";
 import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
 import {
   NativeSemConstructAuthoringFields,
@@ -37,6 +39,12 @@ export const NATIVE_MODEL_INSPECTOR_TABS: readonly NativeModelInspectorTab[] = [
   "appearance",
   "data-binding",
 ];
+
+const standardCbsemConstructAuthoringAvailable = capabilityRegistryV2.availability(
+  GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1.capability_id,
+  GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1.cell_id,
+  false,
+).selectable;
 
 type AuthorityFeedback = { tone: "pending" | "committed" | "blocked" | "stale" | "rejected"; message: string };
 
@@ -345,6 +353,8 @@ export function NativeModelInspector({
   const selectedNodeId = selectedNodeIdOverride === undefined ? storeSelectedNodeId : selectedNodeIdOverride;
   const selectedEdgeId = selectedEdgeIdOverride === undefined ? storeSelectedEdgeId : selectedEdgeIdOverride;
   const experimentalSemAuthoringEnabled = experimentalLabsEnabledOverride ?? storeExperimentalSemAuthoringEnabled;
+  const constructRepresentationAuthoringEnabled = experimentalSemAuthoringEnabled
+    || standardCbsemConstructAuthoringAvailable;
   const nodes = nodesOverride ?? storeNodes;
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedInteraction = selected?.data.semantic === "interaction"
@@ -581,7 +591,7 @@ export function NativeModelInspector({
         </> : selected ? <>
           <fieldset><legend>Measurement model</legend><label><input type="radio" checked={selected.data.mode === "reflective"} onChange={() => setMeasurementMode("reflective")} />Reflective</label><label><input type="radio" checked={selected.data.mode === "formative"} onChange={() => setMeasurementMode("formative")} />Formative</label></fieldset>
           {mode === "expert" ? <dl className="nd-property-list"><div><dt>Stable construct ID</dt><dd>{selected.id}</dd></div><div><dt>Bound indicators</dt><dd>{selected.data.indicators.length}</dd></div></dl> : null}
-          {mode === "expert" && experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields node={selected} onCommit={setScientificRepresentation} /> : experimentalSemAuthoringEnabled ? <p className="nd-property-note">Switch to Expert to edit factor/composite representation and identification.</p> : null}
+          {mode === "expert" && constructRepresentationAuthoringEnabled ? <NativeSemConstructAuthoringFields node={selected} onCommit={setScientificRepresentation} /> : constructRepresentationAuthoringEnabled ? <p className="nd-property-note">Switch to Expert to edit factor/composite representation and identification.</p> : null}
         </> : selectedPath ? <>
           <label>Relationship type<select value={pathRole} disabled={selectedPathSupportsModeration} aria-describedby={selectedPathSupportsModeration ? "nd-moderation-path-lock" : undefined} onChange={(event) => setPathRole(event.target.value as NativePathRole)}><option value="structural">Structural path</option><option value="control">Control path</option><option value="covariance">Covariance</option></select></label>
           {mode === "expert" ? <dl className="nd-property-list"><div><dt>Stable relationship ID</dt><dd>{selectedPath.id}</dd></div><div><dt>Endpoint IDs</dt><dd>{selectedPath.source} → {selectedPath.target}</dd></div></dl> : null}

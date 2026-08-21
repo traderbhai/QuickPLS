@@ -17,24 +17,22 @@ use qpls_core::{
     CanonicalGeneralSemFailedReplicateV1, CanonicalGeneralSemInferenceKindV1,
     CanonicalGeneralSemInferenceReceiptV1, CanonicalGeneralSemInferenceTailV1,
     CanonicalGeneralSemResultTraceV1, CanonicalGeneralSemResultsV1,
-    CanonicalInteractionConstructionMethodV1, CanonicalInteractionEffectResultV1,
-    CanonicalInteractionHierarchyPolicyV1, CanonicalInteractionPlotPointV1,
-    CanonicalInteractionPlotResultV1, CanonicalInteractionPlotSeriesV1,
-    CanonicalJointStageStructuralCoefficientResultV1, CanonicalModeratedMediationIndexResultV1,
-    CanonicalModeratedMediationStageV1, CanonicalSpecificIndirectEffectResultV1,
-    CanonicalStructuralEstimateStageV1, CanonicalStructuralRelationRoleV1,
-    CanonicalHocBootstrapFailedReplicateV1,
-    CanonicalHocBootstrapFailureReasonV1, CanonicalHocBootstrapReceiptV1,
-    CanonicalHocBootstrapTargetIdentityV1, CanonicalHocBootstrapTargetKindV1,
-    CanonicalHocGeneratedScoreColumnReceiptV1, CanonicalHocGeneratedScoreDatasetReceiptV1,
-    CanonicalHocGeneratedVariableMappingV1, CanonicalHocPointStageReceiptV1,
-    CanonicalHocRelationEstimateV1, CanonicalHocRelationKindV1, CanonicalHocStageKindV1,
-    CanonicalHocStageResultV1,
-    CapabilityCellReferenceV2, CompiledGeneralSemPlsRecipeV1, CompiledPlsEffectEstimandV3,
-    ExecutionRecipeError, GeneralSemBootstrapIntervalV1, GeneralSemEffectsV1,
-    GeneralSemEffectsV1Error, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
-    GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4, StructuralRelationRoleV4,
-    ValidatedExecutionRecipe, capability_cell_reference_identity_v2,
+    CanonicalHocBootstrapFailedReplicateV1, CanonicalHocBootstrapFailureReasonV1,
+    CanonicalHocBootstrapReceiptV1, CanonicalHocBootstrapTargetIdentityV1,
+    CanonicalHocBootstrapTargetKindV1, CanonicalHocGeneratedScoreColumnReceiptV1,
+    CanonicalHocGeneratedScoreDatasetReceiptV1, CanonicalHocGeneratedVariableMappingV1,
+    CanonicalHocPointStageReceiptV1, CanonicalHocRelationEstimateV1, CanonicalHocRelationKindV1,
+    CanonicalHocStageKindV1, CanonicalHocStageResultV1, CanonicalInteractionConstructionMethodV1,
+    CanonicalInteractionEffectResultV1, CanonicalInteractionHierarchyPolicyV1,
+    CanonicalInteractionPlotPointV1, CanonicalInteractionPlotResultV1,
+    CanonicalInteractionPlotSeriesV1, CanonicalJointStageStructuralCoefficientResultV1,
+    CanonicalModeratedMediationIndexResultV1, CanonicalModeratedMediationStageV1,
+    CanonicalSpecificIndirectEffectResultV1, CanonicalStructuralEstimateStageV1,
+    CanonicalStructuralRelationRoleV1, CapabilityCellReferenceV2, CompiledGeneralSemPlsRecipeV1,
+    CompiledPlsEffectEstimandV3, ExecutionRecipeError, GeneralSemBootstrapIntervalV1,
+    GeneralSemEffectsV1, GeneralSemEffectsV1Error, GeneralSemInferenceTailV1,
+    GeneralSemInferenceV1, GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4,
+    StructuralRelationRoleV4, ValidatedExecutionRecipe, capability_cell_reference_identity_v2,
     decompose_general_sem_effects_v1, general_sem_effect_identity_set_sha256_v1,
     pls_general_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
@@ -58,7 +56,7 @@ use qpls_resampling::{
     bootstrap_general_sem_pls_two_way_moderated_mediation_v1, bootstrap_general_sem_pls_v1,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub const RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_RESULT_SCHEMA_VERSION_V1: u32 = 1;
 pub const RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_ADAPTER_VERSION_V1: &str =
@@ -2307,11 +2305,18 @@ fn canonical_joint_stage_structural_coefficients_v1(
             .into(),
         capability_cell: artifact.capability_cell().clone(),
     };
+    let technical_interaction_relation_ids = artifact
+        .plan()
+        .two_way_interactions()
+        .iter()
+        .map(|interaction| interaction.interaction_effect_relation_id())
+        .collect::<BTreeSet<_>>();
     let topology_by_relation = artifact
         .plan()
         .topology()
         .structural_relations()
         .iter()
+        .filter(|relation| !technical_interaction_relation_ids.contains(relation.relation_id()))
         .map(|relation| (relation.relation_id(), relation))
         .collect::<BTreeMap<_, _>>();
     let mut rows = point
@@ -2534,8 +2539,7 @@ mod tests {
         LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
         SemDataBindingV4, SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
         SemVariableV4, StructuralPath, StructuralRelationRoleV4, compile_general_sem_pls_recipe_v1,
-        compile_pls_plan_v3,
-        confirm_legacy_recipe_estimand_v4, convert_legacy_basic_model_v4,
+        compile_pls_plan_v3, confirm_legacy_recipe_estimand_v4, convert_legacy_basic_model_v4,
         migrate_analysis_recipe_to_v4_pending,
     };
     use qpls_data::{ImportOptions, import_delimited_bytes};

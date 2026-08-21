@@ -103,13 +103,14 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertEqual(
             report["status_counts"],
             {
-                "absent": 39,
+                "absent": 14,
                 "deferred": 2,
                 "engine-preview": 4,
+                "release-qualified": 25,
             },
         )
         self.assertEqual(len(report["pending_non_method_gates"]), 18)
-        self.assertEqual(report["method_manifest_count"], 40)
+        self.assertEqual(report["method_manifest_count"], 47)
         self.assertEqual(report["missing_method_manifests"], [])
         self.assertTrue(
             all(
@@ -189,7 +190,12 @@ class QuickPls3CompetitorProgramTests(unittest.TestCase):
         self.assertFalse(demoted_report["competitor_ready"])
         self.assertEqual(
             demoted_report["status_counts"],
-            {"absent": 39, "deferred": 2, "engine-preview": 4},
+            {
+                "absent": 14,
+                "deferred": 2,
+                "engine-preview": 4,
+                "release-qualified": 25,
+            },
         )
         self.assertFalse(promoted_report["passed"])
         self.assertFalse(promoted_report["competitor_ready"])

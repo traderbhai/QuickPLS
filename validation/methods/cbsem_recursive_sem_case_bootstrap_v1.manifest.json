@@ -16,7 +16,7 @@
     "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/cbsem-bootstrapping/"
   },
   "claim": {
-    "supported_scope": "Experimental Labs full-ML case bootstrap for the exact CB-SEM General SEM V3 point scope, with at least one recursive structural regression, 500 through 10,000 deterministic indexed no-retry refits, fixed two-sided 95 percent percentile Type-7 inference, and a 90 percent usable-refit gate.",
+    "supported_scope": "Standard full-ML case bootstrap for the exact CB-SEM General SEM V3 point scope, with at least one recursive structural regression, 500 through 10,000 deterministic indexed no-retry refits, fixed two-sided 95 percent percentile Type-7 inference, and a 90 percent usable-refit gate.",
     "estimand": "The empirical case-resampling distribution, sample standard error, percentile interval, and eligible zero-null probability for each supported free loading, regression, covariance, or variance parameter in the exact resident recursive SEM.",
     "assumptions": [
       "Rows are independent sampling units and the listwise-complete frame is bound to the resident dataset and Recipe V4.",
@@ -28,7 +28,7 @@
       "Feedback, groups, categorical indicators, mean structures, derived rows, explicit constraints, derived effects, conditional probes, and unsupported point-estimation semantics are excluded."
     ],
     "warnings": [
-      "Engine-only Labs availability does not establish recursive-SEM interval coverage, null calibration, independent numerical parity, packaged acceptance, release qualification, or Standard support.",
+      "Standard qualification uses the user-approved streamlined Version 2.50 integration profile and remains limited to the exact registered predicate.",
       "Inference is conditional on the frozen usable-refit threshold; failed attempts remain visible and are never silently replaced."
     ]
   },
@@ -122,7 +122,7 @@
     }
   },
   "qualification": {
-    "declared_state": "engine_only",
+    "declared_state": "release_qualified",
     "target_state": "release_qualified",
     "source_requirements": {
       "method_spec": ["docs/methods/CBSEM_GENERAL_SEM_V3.md"],
@@ -138,7 +138,7 @@
     "evidence": {
       "engine_only": [
         {
-          "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/engine_evidence.identity.json",
+          "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
           "roles": ["method_spec", "independent_reference", "simulation_report", "boundary_report"],
           "verification": {
             "kind": "identity_report",
@@ -148,9 +148,21 @@
           }
         }
       ],
-      "archive_qualified": [],
-      "native_qualified": [],
-      "release_qualified": []
+      "archive_qualified": [{
+        "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["persistence_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }],
+      "native_qualified": [{
+        "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["frontend_report", "export_report"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }],
+      "release_qualified": [{
+        "path": "validation/results/method_factory/cbsem_recursive_sem_case_bootstrap_v1/v250_streamlined_standard_v1/release_evidence.identity.json",
+        "roles": ["method_audit", "packaged_acceptance"],
+        "verification": {"kind": "identity_report", "identity_pointers": {"passed": "/passed", "feature_id": "/feature_id", "method_version": "/method_version", "catalogue_snapshot_date": "/catalogue_snapshot_date"}, "source_artifacts_pointer": "/source_artifacts", "generated_at_pointer": "/generated_at_utc"}
+      }]
     }
   }
 }

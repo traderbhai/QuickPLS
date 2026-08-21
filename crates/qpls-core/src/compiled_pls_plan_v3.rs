@@ -1,7 +1,6 @@
 use crate::{
     CapabilityCellReferenceV2, CompiledPlsBlockModeV2, CompiledPlsPlanV2, CompiledPlsPlanV2Error,
-    CompiledPlsTwoWayModeratedMediationTargetErrorV1,
-    CompiledPlsTwoWayModeratedMediationTargetV1,
+    CompiledPlsTwoWayModeratedMediationTargetErrorV1, CompiledPlsTwoWayModeratedMediationTargetV1,
     CompiledSemSpecificDirectedPathV1, CompiledSemTopologyV1, CompiledSemTopologyV1Error,
     CompositeWeightingV4, GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1, GeneralSemConfigV1,
     GeneralSemConfigV1ValidationError, GeneralSemEffectEstimandV1,
@@ -2593,11 +2592,10 @@ fn sha256_serialized<T: Serialize>(value: &T) -> String {
 mod tests {
     use super::*;
     use crate::{
-        Construct, GeneralSemEffectEstimandV1, GeneralSemInferenceV1,
-        InteractionHierarchyPolicyV2, InteractionMethodV4, LegacyBasicModelInterpretationV4,
-        MeasurementMode, ModelSpec, SemDerivedTermV4,
-        SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4, StructuralPath,
-        convert_legacy_basic_model_v4,
+        Construct, GeneralSemEffectEstimandV1, GeneralSemInferenceV1, InteractionHierarchyPolicyV2,
+        InteractionMethodV4, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
+        SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+        StructuralPath, convert_legacy_basic_model_v4,
     };
     use uuid::Uuid;
 

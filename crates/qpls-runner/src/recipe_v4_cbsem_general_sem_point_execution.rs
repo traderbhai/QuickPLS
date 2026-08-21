@@ -332,8 +332,11 @@ fn canonical_point_results_v1(
         interaction_effects: Vec::new(),
         conditional_effect_probes: Vec::new(),
         conditional_effects: Vec::new(),
+        conditional_indirect_effects: Vec::new(),
+        moderated_mediation_indices: Vec::new(),
         interaction_plots: Vec::new(),
         higher_order_stages: Vec::new(),
+        higher_order_inference_receipt: None,
         cbsem_parameters: parameters,
         cbsem_fit: vec![fit],
         identification_diagnostics: identification,
@@ -469,13 +472,12 @@ fn canonical_parameter_rows_v1(
                 equality_label,
                 ..
             } => {
-                let effective_lower = if authority.role()
-                    == qpls_core::CompiledCbsemParameterRoleV2::Variance
-                {
-                    Some(lower.unwrap_or(0.0).max(0.0))
-                } else {
-                    *lower
-                };
+                let effective_lower =
+                    if authority.role() == qpls_core::CompiledCbsemParameterRoleV2::Variance {
+                        Some(lower.unwrap_or(0.0).max(0.0))
+                    } else {
+                        *lower
+                    };
                 let (Some(standard_error), Some(z_value), Some(p_value)) = (
                     point.standard_error,
                     point.z_statistic,

@@ -2,13 +2,13 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current development release: `v2.46.0`.
+Current development release: `v2.50.0`.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
 > QuickPLS is independently implemented from published methods and permitted documentation. It does not import SmartPLS project files, does not reverse-engineer SmartPLS, and does not claim identical results for undocumented SmartPLS behavior.
 
-QuickPLS 2.46.0 is the evidence-backed baseline for the QuickPLS 3.0 competitor program. The program does not treat a method name or engine preview as product parity: each advertised capability must pass its own scientific, archive, native-workflow, export, packaged-release, and claim-scope gates before promotion.
+QuickPLS 2.50.0 integrates the Rank 0–3 General SEM upgrade program across mediation, moderation, higher-order PLS, moderated mediation, and bounded CB-SEM workflows. The program does not treat a method name or engine preview as unrestricted parity: each advertised capability retains its exact documented scope.
 
 ## Download
 
@@ -52,7 +52,7 @@ QuickPLS now separates scientific coverage from verification maturity. The optio
 - **Legacy** keeps discontinued or historical analyses readable without advertising them in normal Calculate.
 - Internal evidence states, source hashes, and promotion terminology are confined to validation reports and Run Details rather than repeated throughout the customer workflow.
 
-The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is yet classified as full SmartPLS parity. Twenty-six official rows and 29 exact option-cell registrations are nevertheless available as scoped Standard because their bounded claims have release-qualified evidence; remaining executable-but-incomplete cells stay in Experimental Labs. Scoped Standard never implies unrestricted SmartPLS parity.
+The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. Version 2.50 promotes the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Scoped Standard never implies unrestricted SmartPLS parity.
 
 The implemented product foundation now includes the option-cell registry, a universal `SemModelV4` contract, estimator-specific compiler foundations, schema-6 project migration, recipe-schema-4 execution receipts, canonical result/comparison/export contracts, deterministic data transformations, Method Details, Run Details, and a synchronized SEM parameter table. These foundations are being connected to the production workflows before existing evidence is regenerated.
 

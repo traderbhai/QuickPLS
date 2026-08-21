@@ -80,10 +80,12 @@ contract or work artifact is not qualification evidence.
 
 The raw-data CB-SEM ML option and the duplicate CFA catalogue row are scoped
 Standard under their exact point-estimator identity. The parent CB-SEM row stays
-conservatively in Labs because its separately registered covariance and
-scaled-correlation `CompiledCbsemPlanV2` option remains absent/Labs. Exact CFA
-case bootstrap is a separate scoped Standard row/cell under
-`cbsem_exact_case_bootstrap_v1`; historical `cbsem_bootstrap_v1` and schema-3
+conservatively in Labs because its separately registered covariance/scaled-
+correlation option and General SEM V3 option have different maturity. Exact CFA
+case bootstrap remains a scoped Standard cell under
+`cbsem_exact_case_bootstrap_v1`; its mixed parent row now projects to Standard
+because the separately governed recursive-SEM bootstrap cell is also Standard
+in Version 2.50. Historical `cbsem_bootstrap_v1` and schema-3
 `cbsem_bootstrap_v2` remain readable but are not relabeled or promotional.
 
 Evidence is a separate internal axis:
@@ -91,23 +93,23 @@ Evidence is a separate internal axis:
 | Evidence state | Count |
 | --- | ---: |
 | `absent` | 16 |
-| `engine_only` | 2 |
+| `engine_only` | 1 |
 | `archive_qualified` | 1 |
 | `native_qualified` | 0 |
-| `release_qualified` | 26 |
+| `release_qualified` | 27 |
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 54 option cells: 52 active and two
-legacy. Their baseline coverage counts are 0 full, 41 partial, 11 absent, and
+The authoritative inventory contains 56 option cells: 54 active and two
+legacy. Their baseline coverage counts are 0 full, 43 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
 sample-size/power, moderation, mediation, and permutation catalogue rows contain
 separately governed option cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
-Option-cell evidence is 16 absent, two engine-only, one archive-qualified,
-zero native-qualified, and 35 release-qualified. Row evidence is 16 absent,
-two engine-only, one archive-qualified, zero native-qualified, and 26
+Option-cell evidence is 16 absent, one engine-only, one archive-qualified,
+zero native-qualified, and 38 release-qualified. Row evidence is 16 absent,
+one engine-only, one archive-qualified, zero native-qualified, and 27
 release-qualified; the row projection remains conservative when independently
 governed cells on one official row differ.
 
@@ -123,15 +125,27 @@ infers only its frozen target inventory. Hybrid, nested or multiple HOCs, HOC
 interactions, groups, weights, feedback, PLSc, matrix input, BCa, studentized
 inference, and permutation remain outside these exact cells.
 
-The exact two-way moderated-mediation bootstrap cell is also engine-only and
-Labs-only. It admits one selected two-relation `X -> M -> Y` path, one
+The exact two-way moderated-mediation bootstrap cell is a scoped Standard
+Version 2.50 option. It admits one selected two-relation `X -> M -> Y` path, one
 first-stage or second-stage two-way interaction, fixed standardized moderator
 probes at `-1/0/+1`, and one shared full-model case-bootstrap ledger for gamma,
 three conditional indirect effects, and the index of moderated mediation. Its
-source-preserving revision-v2 workflow, native job, canonical tables, generic
-XLSX table export, append, and strict schema-6 reopen are connected; its cell
-manifest remains non-promotable until independent numerical, packaged-Windows,
-cross-format export, accessibility, and performance evidence is accepted.
+source-preserving revision-v2 workflow, native job, canonical tables, shared
+export, append, and strict schema-6 reopen are connected. Its Standard claim is
+limited to this exact predicate under the user-approved streamlined Version
+2.50 integration profile.
+
+The two Rank 3 General SEM CB-SEM cells are independently registered as scoped
+Standard options: bounded recursive common-factor ML point estimation
+and full-refit percentile case bootstrap. They consume the resident SemModelV4
+and parameter table rather than reconstructing a legacy canvas model. Recursive
+structural SEM is excluded from the historical CFA bootstrap cell, but is
+implemented by this separately governed Rank 3 cell.
+
+Rows with multiple exact options are PLS power analysis (2), permutation (2),
+moderation (3), mediation (3), higher-order models (3), CB-SEM (3), and CB-SEM
+bootstrap (2). Consumers must select an exact cell rather than infer one row-
+wide maturity level.
 
 ## Coverage and lifecycle rules
 

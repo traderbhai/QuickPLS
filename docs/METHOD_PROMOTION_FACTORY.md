@@ -89,7 +89,7 @@ Later-stage evidence cannot compensate for a failed or missing earlier stage.
 The validator derives the highest state on disk and rejects a higher declared
 state.
 
-The repository currently carries 40 method contracts. Nine derive
+The repository currently carries 47 method contracts. Nine derive
 `release_qualified`: PLS Algorithm, WPLS, PLSc, PLS Bootstrapping, PCA, CTA-PLS,
 Structural Path Randomization, Binary Logistic Regression, and Regression
 Bootstrapping. Graph-defined PROCESS v2 derives `native_qualified`; the other 30

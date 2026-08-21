@@ -44,11 +44,8 @@ export interface GeneralSemEstimatorSelectionButtonProps {
 
 export function isRunnableGeneralSemDecisionV1(
   decision: SemCapabilityDecisionV1,
-  estimatorId: GeneralSemEstimatorIdV1,
+  _estimatorId: GeneralSemEstimatorIdV1,
 ): boolean {
-  if (estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1) {
-    return decision.status === "experimental";
-  }
   return decision.status === "supported" || decision.status === "experimental";
 }
 
@@ -64,7 +61,7 @@ export function GeneralSemEstimatorSelectionButton({
   onSelectEstimator,
 }: GeneralSemEstimatorSelectionButtonProps) {
   const runnable = isRunnableGeneralSemDecisionV1(decision, estimatorId);
-  const isSelected = selected;
+  const isSelected = selected && runnable;
   const selectionDisabled = !runnable || selectionLocked;
   return <button
     type="button"
@@ -125,10 +122,7 @@ function EstimatorCard({
   const explanationId = `${idPrefix}-explanation`;
   const blockedReasonId = `${idPrefix}-blocked-reason`;
   const selectionDescriptionId = runnable ? explanationId : blockedReasonId;
-  const blockingReason = decision.status === "supported"
-    && estimatorId === GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
-    ? "This workflow accepts only Registry-authorized Experimental Labs decisions; Standard status cannot authorize a Labs execution action."
-    : firstBlockingReason(decision);
+  const blockingReason = firstBlockingReason(decision);
   const capabilitySummary = decision.capability_cells
     .map((capability) => `${capability.cell_id} (${capability.capability_version})`)
     .join("; ");
@@ -159,6 +153,8 @@ function EstimatorCard({
         <p id={explanationId}>{decision.explanation}</p>
         {decision.status === "experimental" ? <p className="nd-inline-warning" role="note">
           <strong>Experimental Labs.</strong> This request passes the exact compiler-qualification cells listed above. Selecting it records an estimator preference only; it does not start native execution.
+        </p> : decision.status === "supported" ? <p className="nd-method-availability-message" role="note">
+          <strong>Supported.</strong> This request passes the exact Standard cells listed above. Review the settings, then calculate through the resident RecipeV4.
         </p> : null}
       </section>
       <section>

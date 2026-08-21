@@ -39,6 +39,9 @@ import {
 import { nativeRunSettingApplicability } from "./nativeExportTables";
 import { resolveAnalysisModel } from "./nativeRunModelSnapshot";
 import { nativeGridClipboardText, useNativeScientificGrid } from "./nativeScientificGrid";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
+import { CanonicalResultDocumentV2View } from "./NativeRecipeV4CbsemWorkspace";
 
 export interface NativeResultTreeEntry {
   id: string;
@@ -120,6 +123,9 @@ export interface NativeResultsSurfaceProps {
   selectedItem?: NativeResultNavigationItem;
   selectedTable?: ResultTable;
   setSelectedTableId: (id: string) => void;
+  canonicalDocument?: CanonicalResultDocumentV2;
+  canonicalSelected?: boolean;
+  selectCanonicalDocument?: () => void;
   propertiesOpen: boolean;
   openMethodDetails?: () => void;
 }
@@ -133,6 +139,9 @@ export default function NativeResultsSurface({
   selectedItem,
   selectedTable,
   setSelectedTableId,
+  canonicalDocument,
+  canonicalSelected = false,
+  selectCanonicalDocument,
   propertiesOpen,
   openMethodDetails,
 }: NativeResultsSurfaceProps) {
@@ -163,6 +172,9 @@ export default function NativeResultsSurface({
     ? selectedRun.result.predict.repeated_kfold
     : null;
   const processResult = selectedRun ? nativeProcessResultProjection(selectedRun) : null;
+  const canonicalOptionId = canonicalDocument ? `canonical:${canonicalDocument.document_id}` : "";
+  const canonicalActive = Boolean(canonicalDocument && canonicalSelected);
+  const activeResultId = canonicalActive ? canonicalOptionId : selectedRun?.id ?? selectedRunId;
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroupIds((current) => {
@@ -194,8 +206,19 @@ export default function NativeResultsSurface({
   return <div className={`nd-three-pane nd-results-workspace${propertiesOpen ? "" : " no-properties"}`}>
     <aside className="nd-navigator nd-results-nav" aria-label="Results navigation">
       <PaneTitle icon={<BarChart3 size={14} />} title="Results" />
-      {runs.length ? <label className="nd-run-select">Run<select value={selectedRun?.id ?? selectedRunId} onChange={(event) => setSelectedRunId(event.target.value)}>{runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}</select></label> : null}
-      {selectedRun ? <div className="nd-result-tree" role="tree" aria-label="Available result sections" onKeyDown={handleTreeKeyDown}>
+      {runs.length || canonicalDocument ? <label className="nd-run-select">Result<select value={activeResultId} onChange={(event) => {
+        if (event.target.value === canonicalOptionId) selectCanonicalDocument?.();
+        else setSelectedRunId(event.target.value);
+      }}>
+        {canonicalDocument ? <option value={canonicalOptionId}>{canonicalDocument.title}</option> : null}
+        {runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}
+      </select></label> : null}
+      {canonicalActive ? <div className="nd-result-tree" role="tree" aria-label="Available result sections">
+        <button type="button" role="treeitem" aria-current="page" className="active" onClick={selectCanonicalDocument}>
+          <FileSpreadsheet size={13} aria-hidden="true" />Verified canonical result
+        </button>
+        <span className="nd-pane-empty">{canonicalDocument?.tables.length ?? 0} tables · {canonicalDocument?.charts.length ?? 0} charts</span>
+      </div> : selectedRun ? <div className="nd-result-tree" role="tree" aria-label="Available result sections" onKeyDown={handleTreeKeyDown}>
         {navigation.groups.map((group) => <TreeGroup
           group={group}
           key={group.id}
@@ -209,12 +232,22 @@ export default function NativeResultsSurface({
       </div> : null}
     </aside>
     <section className="nd-document nd-results-document">
-      <div className="nd-document-tab"><BarChart3 size={14} /><span>{selectedRun?.name ?? "Results"}</span>{selectedRun && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
-      {!selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <ResultTableView table={selectedTable} run={selectedRun} /> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
+      <div className="nd-document-tab"><BarChart3 size={14} /><span>{canonicalActive ? canonicalDocument?.title : selectedRun?.name ?? "Results"}</span>{selectedRun && !canonicalActive && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
+      {canonicalActive && canonicalDocument ? <div className="nd-general-sem-canonical-results-workspace">
+        <CanonicalResultDocumentV2View document={canonicalDocument} reopened compilationReceipt={null} />
+        <CanonicalResultExportPanelV2 document={canonicalDocument} />
+      </div> : !selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <ResultTableView table={selectedTable} run={selectedRun} /> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
     </section>
     {propertiesOpen ? <aside className="nd-properties" aria-label="Result properties">
       <PaneTitle title="Run information" />
-      {powerResult ? <dl className="nd-property-list">
+      {canonicalActive && canonicalDocument ? <dl className="nd-property-list">
+        <div><dt>Method</dt><dd>{canonicalDocument.provenance.method_version}</dd></div>
+        <div><dt>Status</dt><dd>Verified and saved</dd></div>
+        <div><dt>Estimator cell</dt><dd>{canonicalDocument.provenance.capability_cell.cell_id}</dd></div>
+        <div><dt>Model</dt><dd>{canonicalDocument.provenance.model_id}</dd></div>
+        <div><dt>Dataset</dt><dd>{canonicalDocument.provenance.dataset_id}</dd></div>
+        <div><dt>Completed</dt><dd>{new Date(canonicalDocument.provenance.completed_at).toLocaleString()}</dd></div>
+      </dl> : powerResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Prospective PLS-SEM sample size and power</dd></div>
         <div><dt>Status</dt><dd>Completed</dd></div>
         <div><dt>Target path</dt><dd>{powerResult.recipe.design.predictor_construct} -&gt; {powerResult.recipe.design.outcome_construct}</dd></div>

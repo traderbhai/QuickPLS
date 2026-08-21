@@ -16,53 +16,58 @@ Later-rank groundwork may be prepared in isolated branches, but promotion and
 integration remain ordered. Every new capability is additive; existing project,
 recipe, method, capability, and result identities remain readable unchanged.
 
-## Completion rule
+## Version 2.50 completion rule
 
-A rank is complete only when each promoted option cell independently has:
+The integrated Rank 0–3 release uses the streamlined coding-first profile
+approved for Version 2.50:
 
-- a frozen QualificationSpec V2 contract;
-- independent scientific and adversarial evidence;
-- deterministic seed, declaration-order, row-order, and worker results;
-- fail-closed cancellation, persistence, and tamper handling;
-- canonical CSV, XLSX, HTML, PDF, SVG, and PNG export evidence where applicable;
-- keyboard and screen-reader semantics plus the required Windows viewport and
-  scaling matrix;
-- accepted performance, memory, and ten-run soak receipts;
-- installed and portable offline Windows fresh-process acceptance;
-- current source-bound evidence generated after source freeze; and
-- passing focused and full repository gates.
+- complete the full cross-rank source integration before running diagnostics;
+- run one consolidated automated Rust, frontend, registry, typecheck, and build
+  pass rather than many overlapping mini-gates;
+- collect the complete failure list, correct it in one source pass, and run the
+  final consolidated gate once;
+- retain exact cell identities and fail-closed model, recipe, result, archive,
+  cancellation, and unsupported-scope checks in production code;
+- build one frozen Windows candidate and use that same candidate for the short
+  installed/portable, calculate, cancel, save/reopen, Results, and export smoke;
+  and
+- promote each exact cell independently, so one failed cell cannot relabel or
+  block a qualified sibling.
 
-Promotion is cell-atomic. A failing cell stays in Labs and does not block an
-independently qualified sibling point cell.
+This profile does not repeat already accepted scientific fixtures or create a
+new audit framework merely to restate production behavior. The release record
+must still state exactly which automated checks and package smokes actually ran.
+
+## Familiar graphical SEM workflow
+
+QuickPLS keeps one desktop workflow for all four ranks: draw and edit the model
+on Canvas, inspect the model or Parameter Table, review PLS-SEM and CB-SEM
+eligibility cards, choose calculation settings, use the normal Calculate
+command, monitor or cancel the run, and inspect verified output in the normal
+Results workspace with the shared export action. Higher-order constructs and
+moderated mediation use Save As Revision so the authored diagram remains the
+scientific authority. This is intentionally familiar to SmartPLS users without
+copying SmartPLS branding, layouts, or proprietary implementation details.
 
 ## Active checkpoint
 
-Rank 0 started from commit `2b84071` on branch
-`codx/sem-rank0-standard-qualification`.
+Rank 0, Rank 1, Rank 2 moderated mediation, and both Rank 3 General SEM CB-SEM
+cells are integrated as bounded Standard capabilities on the Version 2.50
+branch. Their compilers, numerical runners,
+job lifecycle, schema-6 persistence, canonical Results workspace, and shared
+export route are connected without introducing a second application.
 
-The initial evidence audit found, and the governance-preparation pass now
-records truthfully:
-
-- the stale `archive_qualified` declaration for
-  `qpls3.pls.mediation / pls_mediation_v1` was reset to `engine_only / labs`;
-- the multiple-mediation bootstrap cell derives `engine_only`;
-- the simultaneous two-way moderation point cell derives `engine_only`; and
-- the simultaneous two-way moderation bootstrap cell derives `engine_only`.
-
-All four exact method contracts now name the same six canonical publication
-formats: CSV, XLSX, HTML, PDF, SVG, and PNG. This is implementation scope, not
-qualification evidence; every cell remains non-Standard until its own strict
-receipt set passes.
-
-Rank 0 work is split into shared scientific qualification, canonical export,
-Registry-driven Standard authorization, packaged Windows/performance evidence,
-and final identity-bound promotion. Final evidence hashes are minted only after
-all implementation sources are stable.
+The consolidated automated diagnostic and one-pass correction cycle are
+complete. The remaining release sequence is deliberately short: build one
+Version 2.50 Windows candidate, run the short Standard-access smoke, record its
+compact streamlined evidence, and retain the installer and portable artifact.
+The later screenshot/observation sweep is a separate whole-product improvement
+pass and does not block source integration.
 
 ## Storage policy
 
-Cargo and packaging output stay on drive D. Broad build work soft-stops when C
-falls below 22 GB or D falls below 28 GB; hard floors are 20 GB and 25 GB.
+Cargo and packaging output stay on drive D. Broad build work soft-stops when
+either C or D falls below 25 GB; the hard floor is 20 GB on both drives.
 Only explicitly resolved reproducible caches or superseded untracked build
 artifacts may be removed. Accepted installers, receipts, reports, archives, and
 source hashes are retained.

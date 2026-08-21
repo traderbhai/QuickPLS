@@ -189,7 +189,7 @@ describe("General SEM moderated-mediation authoring v1", () => {
     );
   });
 
-  it("binds the supplemental cell to the exact opt-in Labs Registry authority", () => {
+  it("binds the supplemental cell to the exact Standard Registry authority", () => {
     expect(GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1).toEqual({
       registry_schema_version: 2,
       capability_id: "smartpls.mediation",
@@ -205,15 +205,15 @@ describe("General SEM moderated-mediation authoring v1", () => {
       cell: {
         capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
         coverage_state: "partial",
-        evidence_state: "engine_only",
-        surface: "labs",
+        evidence_state: "release_qualified",
+        surface: "standard",
       },
     });
     expect(capabilityRegistryV2.availability(
       GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.capability_id,
       GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.cell_id,
       false,
-    ).selectable).toBe(false);
+    ).selectable).toBe(true);
     expect(capabilityRegistryV2.availability(
       GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.capability_id,
       GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1.cell_id,

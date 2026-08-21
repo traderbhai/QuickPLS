@@ -16,30 +16,29 @@ describe("Capability Registry V2 frontend adapter", () => {
       row_count: 45,
       active_row_count: 43,
       coverage: { full: 0, partial: 32, absent: 11, intentionally_excluded: 2 },
-      surfaces: { standard: 26, labs: 17, legacy: 2, internal: 0 },
-      option_cell_count: 54,
-      option_cell_coverage: { full: 0, partial: 41, absent: 11, intentionally_excluded: 2 },
-      option_cell_surfaces: { standard: 35, labs: 17, legacy: 2, internal: 0 },
+      surfaces: { standard: 27, labs: 16, legacy: 2, internal: 0 },
+      option_cell_count: 56,
+      option_cell_coverage: { full: 0, partial: 43, absent: 11, intentionally_excluded: 2 },
+      option_cell_surfaces: { standard: 38, labs: 16, legacy: 2, internal: 0 },
     });
     expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
     expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
   });
 
-  it("authorizes the exact two-way moderated-mediation cell only in Labs", () => {
+  it("authorizes the exact two-way moderated-mediation cell as scoped Standard", () => {
     const capabilityId = "smartpls.mediation";
     const cellId = "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap";
     expect(capabilityRegistryV2.quickPlsCell(cellId)).toHaveLength(1);
     expect(capabilityRegistryV2.requireOptionCell(capabilityId, cellId)).toMatchObject({
       capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
       coverage_state: "partial",
-      evidence_state: "engine_only",
-      surface: "labs",
+      evidence_state: "release_qualified",
+      surface: "standard",
     });
-    expect(capabilityRegistryV2.availability(capabilityId, cellId, false).selectable).toBe(false);
-    expect(capabilityRegistryV2.availability(capabilityId, cellId, true)).toMatchObject({
-      visibility: "experimental",
+    expect(capabilityRegistryV2.availability(capabilityId, cellId, false)).toMatchObject({
+      visibility: "supported",
       selectable: true,
-      reason: "labs_ready",
+      reason: "standard_ready",
     });
   });
 

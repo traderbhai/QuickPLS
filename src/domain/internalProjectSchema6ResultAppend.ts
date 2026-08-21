@@ -18,8 +18,6 @@ export interface InternalProjectSchema6ResultAppendRequestV1 {
   capabilityCell?: CapabilityCellReferenceV2;
   archivePath: string;
   expectedSourceSha256: string;
-  /** Required by General SEM; optional only for older non-General internal callers. */
-  capabilityCell?: CapabilityCellReferenceV2;
   recipe?: AnalysisRecipeV4<AnalysisRecipeV4MissingDataPolicy>;
   canonicalDocument: CanonicalResultDocumentV2;
 }

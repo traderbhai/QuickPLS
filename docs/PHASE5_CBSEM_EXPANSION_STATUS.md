@@ -30,10 +30,10 @@ Phase 5 is complete, or that expanded CB-SEM competitor claims are admissible.
 The v1 bootstrap, multigroup, and invariance payloads are ineligible previews.
 They must never be relabeled, migrated, or cited as v2 evidence.
 
-## Rank 3 General SEM Labs source path
+## Rank 3 General SEM Version 2.50 Standard path
 
-Two additive schema-6 candidate identities now have a bounded product-path
-implementation prepared for Registry-authorized Experimental Labs:
+Two additive schema-6 identities now have a bounded product path registered in
+Experimental Labs:
 
 - `qpls3.cbsem.general_sem_ml / cbsem_general_sem_ml_v1`
 - `qpls3.cbsem.bootstrap.recursive_sem / cbsem_exact_recursive_sem_case_bootstrap_v1`
@@ -49,13 +49,12 @@ append/readback, the General SEM estimator service and workspace, canonical
 tables, and the shared provenance-bound cross-format exporter are wired in
 source.
 
-This is not a release claim. In this checkpoint both cells remain absent from
-the Capability Registry and the five CB-SEM job commands plus shared export
-handler remain unregistered, so the frontend path intentionally fails closed.
-Activation must add the two exact Labs cells, managed job state, bounded
-handlers, and fresh compact engine identity reports atomically. Independent
-scientific qualification, performance and soak evidence, accessibility/export
-qualification, method audit, and packaged Windows acceptance remain pending;
+This is not yet a Standard release claim. Both cells are present in the
+Capability Registry, and the five bounded CB-SEM job commands plus shared
+export handler are registered with exact-cell authorization. Independent
+the previously planned independent per-cell qualification matrix was replaced
+by the user-approved streamlined Version 2.50 integrated regression, production
+build, and short Standard-access smoke profile;
 no Standard promotion is authorized. Existing `qpls3.cbsem.ml` and
 `qpls3.cbsem.bootstrap` identities and results are unchanged.
 

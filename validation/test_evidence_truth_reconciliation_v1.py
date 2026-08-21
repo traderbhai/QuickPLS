@@ -49,7 +49,7 @@ class EvidenceTruthReconciliationV1Tests(unittest.TestCase):
         report = validate_all(repository_root=ROOT)
 
         self.assertTrue(report["passed"], report["errors"])
-        self.assertEqual(report["manifest_count"], 40)
+        self.assertEqual(report["manifest_count"], 47)
         self.assertTrue(all(item["passed"] for item in report["manifests"]))
 
 

@@ -1,6 +1,6 @@
 # QuickPLS Installation
 
-Current development release: `v2.46.0`.
+Current development release: `v2.50.0`.
 
 ## Choose An Install Type
 

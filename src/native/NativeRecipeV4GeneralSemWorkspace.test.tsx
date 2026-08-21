@@ -665,7 +665,7 @@ describe("General SEM native workspace accessibility", () => {
     expect(close).toHaveBeenCalledOnce();
   });
 
-  it("renders a ready fresh-project Labs flow without opening legacy adaptation", () => {
+  it("renders a ready fresh-project General SEM flow without opening legacy adaptation", () => {
     setReadyDraftWorkspace();
     const html = renderToStaticMarkup(<NativeRecipeV4GeneralSemWorkspace
       modelName="Parallel mediation"
@@ -678,7 +678,7 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('aria-labelledby="nd-model-general-sem-labs-tab"');
     expect(html).toContain("General SEM in QuickPLS");
-    expect(html).toContain("One QuickPLS canvas · explicit General SEM project authority · Registry-authorized PLS-SEM estimation");
+    expect(html).toContain("One graphical model authority · Registry-authorized PLS-SEM and CB-SEM · one Calculate, progress, Results, export, and reopen workflow");
     expect(html).not.toContain("PLS-first Experimental Labs");
     expect(html).toContain('role="note"');
     expect(html).toContain("This is a fresh General SEM draft inside QuickPLS.");
@@ -694,7 +694,7 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toContain('tabindex="-1"');
     expect(html).toContain("Ready for QuickPLS engine verification");
     expect(html).toContain("Safe QuickPLS project file");
-    expect(html).toContain("Pending final engine verification");
+    expect(html).toContain("pending exact Registry-backed engine verification");
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-live="polite"');
     expect(html).toMatch(/<button(?=[^>]*class="primary")(?![^>]*disabled="")[^>]*>[^<]*(?:<svg[\s\S]*?<\/svg>)?Save and activate project…<\/button>/);

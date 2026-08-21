@@ -79,12 +79,12 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(html).toContain('role="status"');
     expect(html).toContain('aria-live="polite"');
     expect(html).toContain('aria-atomic="true"');
-    expect(html).toContain("PLS-SEM General v3: Experimental");
+    expect(html).toContain("PLS-SEM General v3: Supported");
     expect(html).toContain("CB-SEM General v3: Blocked");
-    expect(html).toContain("PLS-SEM can compile this exact Registry-governed request.");
+    expect(html).toContain("PLS-SEM can compile this exact Standard Registry request.");
     expect(html).toContain("The compiler binds the proven PLS scoring plan to stable relation-path identities.");
-    expect(html).toContain("Experimental Labs.</strong> This request passes the exact compiler-qualification cells listed above.");
-    expect(html).toContain("Selecting it records an estimator preference only; it does not start native execution.");
+    expect(html).toContain("Supported.</strong> This request passes the exact Standard cells listed above.");
+    expect(html).toContain("Review the settings, then calculate through the resident RecipeV4.");
     expect(html).toContain("Exact capability cells: qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("Diagnostics and next actions");
     expect(html).toContain("How to proceed");
@@ -113,7 +113,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(blockedSelectedHtml).not.toContain("Selected CB-SEM General v3");
   });
 
-  it("qualifies supported percentile two-sided bootstrap as Experimental and renders every exact capability cell", () => {
+  it("qualifies Standard percentile two-sided bootstrap and renders every exact capability cell", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -129,7 +129,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
       onSelectEstimator={() => undefined}
     />);
 
-    expect(html).toContain("PLS-SEM General v3: Experimental");
+    expect(html).toContain("PLS-SEM General v3: Supported");
     expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight.");
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");

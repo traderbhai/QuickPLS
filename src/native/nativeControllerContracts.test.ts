@@ -196,7 +196,8 @@ describe("native controller release contracts", () => {
     expect(plsCompletion).toContain("lastRunId: envelope.id,");
     expect(plsCompletion.match(/addRun\(completedRun\);/g)).toHaveLength(1);
     expect(app).toContain("resolveSelectedCompletedRun(completedRuns, selectedResultRunId)");
-    expect(app).toContain("setSelectedRunId={setSelectedResultRun}");
+    expect(app).toContain("setGeneralSemResultSelected(false);");
+    expect(app).toContain("setSelectedResultRun(id);");
     expect(app).not.toContain("useState(selectedResultRunId");
   });
 

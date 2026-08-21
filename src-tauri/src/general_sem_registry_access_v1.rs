@@ -5,16 +5,15 @@
 //! that request to promote, downgrade, or make an unavailable cell executable.
 
 use qpls_core::{
-    cbsem_general_sem_ml_capability_cell_v1, cbsem_recursive_sem_bootstrap_capability_cell_v1,
-    pls_general_bootstrap_capability_cell_v1,
+    CapabilityCellReferenceV2, CapabilityRegistryV2, GeneralSemConfigV1, GeneralSemInferenceV1,
+    SemCapabilityDecisionV1, SemDerivedTermV4, SemModelV4, cbsem_general_sem_ml_capability_cell_v1,
+    cbsem_recursive_sem_bootstrap_capability_cell_v1, pls_general_bootstrap_capability_cell_v1,
     pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
-    CapabilityCellReferenceV2, CapabilityRegistryV2, GeneralSemConfigV1, GeneralSemInferenceV1,
-    SemCapabilityDecisionV1, SemDerivedTermV4, SemModelV4,
 };
 
 pub(crate) const GENERAL_SEM_STANDARD_SURFACE: &str = "standard";
@@ -25,6 +24,8 @@ pub(crate) const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1: &str =
     "native_general_sem_pls_standard_v1";
 pub(crate) const GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1: &str =
     "native_general_sem_cbsem_labs_v1";
+pub(crate) const GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1: &str =
+    "native_general_sem_cbsem_standard_v1";
 
 pub(crate) fn general_sem_recipe_execution_surface_v1(surface: &str) -> Option<&'static str> {
     match surface {
@@ -34,11 +35,16 @@ pub(crate) fn general_sem_recipe_execution_surface_v1(surface: &str) -> Option<&
     }
 }
 
-pub(crate) fn general_sem_cbsem_recipe_execution_surface_v1(
-    surface: &str,
-) -> Option<&'static str> {
-    (surface == GENERAL_SEM_INTERNAL_LABS_SURFACE)
-        .then_some(GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1)
+pub(crate) fn general_sem_cbsem_recipe_execution_surface_v1(surface: &str) -> Option<&'static str> {
+    match surface {
+        GENERAL_SEM_STANDARD_SURFACE => {
+            Some(GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
+        }
+        GENERAL_SEM_INTERNAL_LABS_SURFACE => {
+            Some(GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1)
+        }
+        _ => None,
+    }
 }
 
 /// Bounded PLS General SEM execution inventory. The base PLS dependency is
@@ -90,8 +96,7 @@ pub(crate) fn is_pls_general_sem_execution_cell_v1(cell: &CapabilityCellReferenc
     )
 }
 
-/// Bounded Rank-3 CB-SEM V3 execution inventory. These cells remain Labs-only
-/// until their independent qualification evidence is complete.
+/// Bounded Rank-3 CB-SEM V3 execution inventory. Registry V2 owns the surface.
 pub(crate) fn is_rank3_general_sem_cbsem_execution_cell_v1(
     cell: &CapabilityCellReferenceV2,
 ) -> bool {
@@ -100,8 +105,7 @@ pub(crate) fn is_rank3_general_sem_cbsem_execution_cell_v1(
 }
 
 pub(crate) fn is_general_sem_execution_cell_v1(cell: &CapabilityCellReferenceV2) -> bool {
-    is_pls_general_sem_execution_cell_v1(cell)
-        || is_rank3_general_sem_cbsem_execution_cell_v1(cell)
+    is_pls_general_sem_execution_cell_v1(cell) || is_rank3_general_sem_cbsem_execution_cell_v1(cell)
 }
 
 /// Selects the exact Rank-3 execution owner from resident Recipe V4 inference.
@@ -142,7 +146,10 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
         };
     }
     if has_two_way_interactions
-        && matches!(&config.inference, GeneralSemInferenceV1::CaseBootstrap { .. })
+        && matches!(
+            &config.inference,
+            GeneralSemInferenceV1::CaseBootstrap { .. }
+        )
         && !config.requested_effect_estimands.is_empty()
     {
         return pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
@@ -376,12 +383,32 @@ mod tests {
             .unwrap();
         target["surface"] = json!(surface);
         target["evidence_state"] = json!(evidence_state);
-        row["surface"] = json!(if surface == "standard" {
+        let cells = row["option_cells"].as_array().unwrap();
+        let projected_surface = if cells.iter().all(|cell| cell["surface"] == "standard") {
             "standard"
+        } else if cells.iter().all(|cell| cell["surface"] == "legacy") {
+            "legacy"
+        } else if cells.iter().all(|cell| cell["surface"] == "internal") {
+            "internal"
         } else {
             "labs"
-        });
-        row["evidence_state"] = json!(evidence_state);
+        };
+        let projected_evidence = [
+            "absent",
+            "engine_only",
+            "archive_qualified",
+            "native_qualified",
+            "release_qualified",
+        ]
+        .into_iter()
+        .find(|candidate| {
+            cells
+                .iter()
+                .any(|cell| cell["evidence_state"] == *candidate)
+        })
+        .unwrap();
+        row["surface"] = json!(projected_surface);
+        row["evidence_state"] = json!(projected_evidence);
         CapabilityRegistryV2::from_json(&source.to_string()).unwrap()
     }
 

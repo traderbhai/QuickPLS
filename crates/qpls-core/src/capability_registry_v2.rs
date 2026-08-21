@@ -366,7 +366,7 @@ mod tests {
             .option_cells()
             .filter(|cell| cell.standard_available())
             .collect();
-        assert_eq!(standard_cells.len(), 33);
+        assert_eq!(standard_cells.len(), 38);
         assert!(standard_cells.iter().all(|cell| {
             matches!(
                 cell.cell_id.as_str(),
@@ -385,6 +385,9 @@ mod tests {
                     | "qpls3.pls.general_sem_multiple_mediation_bootstrap"
                     | "qpls3.pls.general_sem_multiple_two_way_moderation_point"
                     | "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+                    | "qpls3.pls.general_sem_higher_order_point"
+                    | "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap"
+                    | "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
                     | "qpls3.groups.micom_permutation_mga"
                     | "qpls3.inference.structural_path_randomization"
                     | "qpls3.prediction.plspredict_cvpat"
@@ -397,6 +400,8 @@ mod tests {
                     | "qpls3.standalone.process"
                     | "qpls3.cbsem.ml"
                     | "qpls3.cbsem.bootstrap"
+                    | "qpls3.cbsem.general_sem_ml"
+                    | "qpls3.cbsem.bootstrap.recursive_sem"
             ) && cell.coverage_state == CoverageStateV2::Partial
         }));
         assert_eq!(

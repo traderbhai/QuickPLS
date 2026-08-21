@@ -6,7 +6,6 @@ import {
   type CanonicalResultCell,
   type CanonicalResultTable,
 } from "./canonicalResultDocumentV2";
-import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import {
   cbsemCfaScoreLmChiSquare1PValueV1,
   cbsemCfaScoreLmNumbersCloseV1,
@@ -43,8 +42,6 @@ export interface InternalProjectSchema6ResultReadRequestV1 {
   capabilityCell?: CapabilityCellReferenceV2;
   archivePath: string;
   expectedSourceSha256: string;
-  /** Exact Registry owner for General SEM readback authorization. */
-  capabilityCell?: CapabilityCellReferenceV2;
 }
 
 export interface InternalProjectSchema6CanonicalResultEntryV1 {

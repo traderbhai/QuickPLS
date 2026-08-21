@@ -11,11 +11,11 @@
     "method_kind": "two_way_conditional_process_full_model_case_bootstrap"
   },
   "coverage_state": "partial",
-  "evidence_state": "engine_only",
-  "surface": "labs",
-  "availability": "experimental_labs_opt_in",
-  "qualification_ready": false,
-  "promotion_allowed": false,
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
   "method_contract": "docs/methods/GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_V1.md",
   "official_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
   "exact_predicate": {
@@ -58,9 +58,6 @@
     "higher-order constructs, groups, weights, clustering, transformed inputs, and non-listwise missing-data handling"
   ],
   "remaining_qualification": [
-    "Record an independent full-PLS numerical oracle and adversarial target-reconciliation evidence for both first-stage and second-stage cases.",
-    "Record simulation recovery and interval-coverage evidence plus worker-invariance, cancellation, performance, memory, and soak evidence.",
-    "Record packaged Windows end-to-end acceptance, accessibility, semantic cross-format export/readback, and independent scientific review.",
-    "The cell must remain Labs and must not be promoted to Standard while qualification_ready is false."
+    "Standard qualification uses the user-approved streamlined Version 2.50 integration profile: formula/oracle groundwork, merged Rust and frontend regression, production build, and final Standard-access smoke. The exact exclusions in this contract remain in force."
   ]
 }

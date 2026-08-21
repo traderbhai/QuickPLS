@@ -196,12 +196,15 @@ export const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1 =
   "native_general_sem_pls_standard_v1" as const;
 export const GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1 =
   "native_general_sem_cbsem_labs_v1" as const;
+export const GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1 =
+  "native_general_sem_cbsem_standard_v1" as const;
 export type GeneralSemPlsRecipeExecutionSurfaceV1 =
   | typeof GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
   | typeof GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1;
 export type GeneralSemRecipeExecutionSurfaceV1 =
   | GeneralSemPlsRecipeExecutionSurfaceV1
-  | typeof GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1;
+  | typeof GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+  | typeof GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1;
 
 function generalSemRecipeExecutionSurfaceV1(
   access: GeneralSemExecutionAccessV1,
@@ -209,6 +212,15 @@ function generalSemRecipeExecutionSurfaceV1(
   return access.surface === "standard"
     ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
     : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
+}
+
+function generalSemCbsemRecipeExecutionSurfaceV1(
+  access: GeneralSemExecutionAccessV1,
+): typeof GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+  | typeof GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1 {
+  return access.surface === "standard"
+    ? GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+    : GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1;
 }
 
 /**
@@ -651,7 +663,7 @@ export function buildGeneralSemRecipeV1(input: BuildGeneralSemRecipeV1Input): An
   };
 }
 
-/** Publishes the exact resident RecipeV4 required by the CB-SEM V3 Labs adapters. */
+/** Publishes the exact resident RecipeV4 required by the CB-SEM V3 adapters. */
 export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input): AnalysisRecipeV4 {
   if (!SHA256.test(input.nativeScientificSha256)) throw new GeneralSemWorkspaceErrorV1(
     "general_sem.model.native_digest_invalid", input.model.id, "The native model digest is invalid.", "Re-run native scientific validation.",
@@ -672,12 +684,6 @@ export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input
     experimentalLabsEnabled: input.experimentalLabsEnabled,
     registry: input.capabilityRegistry,
   });
-  if (access.surface !== "internal_labs") throw new GeneralSemWorkspaceErrorV1(
-    "general_sem.cbsem.labs_surface_required",
-    input.capabilityCell.cell_id,
-    "CB-SEM General v3 is bounded to its exact Experimental Labs capability cell.",
-    "Keep this estimator in Experimental Labs until its Registry cell is separately promoted.",
-  );
   const bootstrapInference = config.inference.kind === "case_bootstrap" ? config.inference : null;
   if (bootstrapInference && (
     bootstrapInference.resamples < 500
@@ -733,7 +739,7 @@ export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input
     },
     general_sem_config: config,
     metadata: {
-      execution_surface: GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1,
+      execution_surface: generalSemCbsemRecipeExecutionSurfaceV1(access),
       general_sem_generation: "general_sem_v1",
     },
     legacy_source: null,
@@ -835,7 +841,9 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     && recipe.settings.missing_data === "listwise_deletion"
     && recipe.settings.case_weight_column === null
     && recipe.settings.confidence_level === 0.95
-    && (recipe.settings.bootstrap_test_tail === undefined || recipe.settings.bootstrap_test_tail === "two_sided")
+    // Two-sided is the canonical default and is therefore omitted from the
+    // compact recipe wire. Any present value is a one-sided PLS-only tail.
+    && recipe.settings.bootstrap_test_tail === undefined
     && methodConfig?.kind === "cbsem"
     && methodConfig.model_type === "sem"
     && methodConfig.estimator === "ml"
@@ -844,7 +852,8 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     && methodConfig.bootstrap_samples === recipe.settings.bootstrap_samples
     && methodConfig.group_column === undefined
     && methodConfig.invariance_steps === undefined
-    && recipeExecutionSurface === GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+    && (recipeExecutionSurface === GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+      || recipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
     && recipe.metadata.general_sem_generation === "general_sem_v1",
   );
   if (!config || (!plsRecipe && !cbsemRecipe)) {
@@ -856,7 +865,9 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     );
   }
   const residentRecipeExecutionSurface: GeneralSemRecipeExecutionSurfaceV1 = cbsemRecipe
-    ? GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+    ? recipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      ? GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      : GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
     : recipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
       ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
       : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
@@ -885,11 +896,12 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     registry,
   });
   const expectedRecipeSurface: GeneralSemRecipeExecutionSurfaceV1 = cbsemRecipe
-    ? GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+    ? generalSemCbsemRecipeExecutionSurfaceV1(executionAccess)
     : generalSemRecipeExecutionSurfaceV1(executionAccess);
-  const legacyLabsRecipeOnStandardCell =
+  const legacyLabsRecipeOnStandardCell = (
     residentRecipeExecutionSurface === GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1
-    && executionAccess.surface === "standard";
+      || residentRecipeExecutionSurface === GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+  ) && executionAccess.surface === "standard";
   if (residentRecipeExecutionSurface !== expectedRecipeSurface && !legacyLabsRecipeOnStandardCell) {
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem.rehydrate.execution_surface_mismatch",
@@ -968,6 +980,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     executionAccess,
     readAccess: {
       surface: residentRecipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+        || residentRecipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
         ? "standard"
         : "internal_labs",
       experimentalLabsEnabled: false,
@@ -1685,7 +1698,7 @@ function capabilityRegistryEvidenceIdV1(cell: CapabilityCellReferenceV2): string
   return `capability_registry_v2:${cell.capability_id}:${cell.cell_id}:${cell.capability_version}`;
 }
 
-/** Labs-only: a Standard/supported decision is deliberately not accepted here. */
+/** Accepts the exact Registry-authorized cell on either Standard or Labs. */
 export function selectGeneralSemCbsemExecutionCapabilityV1(input: {
   config: GeneralSemConfigV1;
   decision: SemCapabilityDecisionV1;
@@ -1699,10 +1712,10 @@ export function selectGeneralSemCbsemExecutionCapabilityV1(input: {
     ? GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1
     : GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1;
   if (input.decision.estimator_id !== GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
-    || input.decision.status !== "experimental") throw new GeneralSemWorkspaceErrorV1(
-    "general_sem.capability.cbsem_labs_preflight_not_runnable",
+    || (input.decision.status !== "supported" && input.decision.status !== "experimental")) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.capability.cbsem_preflight_not_runnable",
     input.decision.estimator_id,
-    "The exact native CB-SEM V3 decision is not authorized for Experimental Labs execution.",
+    "The exact native CB-SEM V3 decision is not authorized for execution.",
     "Keep CB-SEM disabled and rerun native Registry-backed preflight from the unchanged marked project.",
   );
   if (input.decision.capability_cells.length !== capabilityCells.length
@@ -1720,7 +1733,7 @@ export function selectGeneralSemCbsemExecutionCapabilityV1(input: {
     "general_sem.capability.cbsem_registry_evidence_missing",
     missingRegistryEvidence.cell_id,
     "The native CB-SEM V3 decision omitted the exact Capability Registry V2 evidence for an execution cell.",
-    "Keep CB-SEM disabled until native preflight returns the Registry-backed Labs decision.",
+    "Keep CB-SEM disabled until native preflight returns the Registry-backed execution decision.",
   );
   return {
     kind: bootstrap ? "recursive_sem_bootstrap" : "recursive_sem_point",
@@ -2558,11 +2571,17 @@ export function generalSemCbsemJobRequestFromReceiptV1(
   config: GeneralSemConfigV1,
   decision: SemCapabilityDecisionV1,
   expectedArchiveSha256 = receipt.destinationArchiveSha256,
+  experimentalLabsEnabled = true,
+  registry: GeneralSemCapabilityRegistryReaderV1 = capabilityRegistryV2,
 ): GeneralSemJobRequestV1 {
   const execution = selectGeneralSemCbsemExecutionCapabilityV1({ config, decision });
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell: execution.capabilityCell,
+    experimentalLabsEnabled,
+    registry,
+  });
   return {
-    surface: "internal_labs",
-    experimentalLabsEnabled: true,
+    ...access,
     archivePath: receipt.destinationArchivePath,
     expectedArchiveSha256,
     projectId: receipt.projectId,
@@ -2591,6 +2610,7 @@ export function generalSemJobRequestForEstimatorFromReceiptV1(input: {
       input.config,
       input.decision,
       input.expectedArchiveSha256,
+      input.experimentalLabsEnabled ?? true,
     )
     : generalSemJobRequestFromReceiptV1(
       input.receipt,

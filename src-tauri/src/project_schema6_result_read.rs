@@ -1,9 +1,9 @@
 use crate::general_sem_registry_access_v1::{
     GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_read_access_v1,
-    decision_declares_general_sem_execution_cell_v1,
-    general_sem_cbsem_recipe_execution_surface_v1, general_sem_recipe_execution_surface_v1,
-    is_general_sem_execution_cell_v1, is_rank3_general_sem_cbsem_execution_cell_v1,
-    selected_general_sem_cbsem_execution_cell_v1, selected_general_sem_execution_cell_v1,
+    decision_declares_general_sem_execution_cell_v1, general_sem_cbsem_recipe_execution_surface_v1,
+    general_sem_recipe_execution_surface_v1, is_general_sem_execution_cell_v1,
+    is_rank3_general_sem_cbsem_execution_cell_v1, selected_general_sem_cbsem_execution_cell_v1,
+    selected_general_sem_execution_cell_v1,
 };
 use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
@@ -353,10 +353,14 @@ fn validate_exact_general_sem_document_owners(
     let Some(requested_cell) = request.capability_cell.as_ref() else {
         return Ok(());
     };
-    if document.canonical_result_documents.iter().any(|attachment| {
-        selected_general_sem_document_cell(attachment.canonical_document())
-            .is_some_and(|owner| !same_capability_cell(&owner, requested_cell))
-    }) {
+    if document
+        .canonical_result_documents
+        .iter()
+        .any(|attachment| {
+            selected_general_sem_document_cell(attachment.canonical_document())
+                .is_some_and(|owner| !same_capability_cell(&owner, requested_cell))
+        })
+    {
         return Err(blocked(
             "schema6_result_read.capability_document_mismatch",
             "A stored General SEM document is owned by a different point-or-bootstrap execution cell than the requested read authority.",
@@ -1100,8 +1104,7 @@ mod tests {
         ));
 
         let mut cbsem = historical.clone();
-        cbsem.capability_cell =
-            Some(qpls_core::cbsem_recursive_sem_bootstrap_capability_cell_v1());
+        cbsem.capability_cell = Some(qpls_core::cbsem_recursive_sem_bootstrap_capability_cell_v1());
         assert!(matches!(
             read_schema6_results_using(&cbsem, |surface, enabled, cell| {
                 assert_eq!(surface, INTERNAL_LABS_SURFACE);
