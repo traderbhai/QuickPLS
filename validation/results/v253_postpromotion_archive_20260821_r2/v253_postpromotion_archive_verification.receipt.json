@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "receipt_kind": "quickpls_v253_postpromotion_archive_verification_sha256_v1",
+  "report": {
+    "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.json",
+    "size": 387269,
+    "sha256": "a9a7a8b5d8abdd108043ad90c9472bb7b2d2c3bc6591a5e2e52716e8d52002a8"
+  }
+}

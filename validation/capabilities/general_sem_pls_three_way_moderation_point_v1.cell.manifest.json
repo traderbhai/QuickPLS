@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.moderation",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_point_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_three_way_moderation_point",
+    "label": "General SEM three-way PLS moderation point estimates",
+    "method_version": "general_sem_pls_three_way_moderation_point_v1",
+    "analytical_method_version": "qpls.general-sem-pls.three-way.point.v1",
+    "method_kind": "two_stage_strong_hierarchy_joint_point_estimation"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+  "method_contract": "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md",
+  "exact_predicate": {
+    "project_schema": 6,
+    "sem_generation": "general_sem_v1",
+    "estimator": "qpls.pls_sem.v3",
+    "derived_term": "interaction_v2",
+    "interaction_order": "three_way",
+    "three_way_term_count": "exactly_one",
+    "construction": "two_stage",
+    "hierarchy": "strong",
+    "required_lower_order_terms": "all_main_and_pairwise",
+    "structural_topology": "recursive_dag",
+    "higher_order_constructs": "none",
+    "moderated_mediation": "none",
+    "probe_policy": "continuous_standardized_minus_one_zero_plus_one_or_binary_zero_one",
+    "inference": "point_only",
+    "input": "raw_numeric",
+    "missing_data": "listwise_deletion",
+    "weights": "none",
+    "groups": "single"
+  },
+  "implemented_contracts": [
+    "one ordered three-operand interaction_v2 term bound to the original focal relation and parent two-way interaction",
+    "strong hierarchy with jointly estimated main effects, all pairwise products and the three-way product",
+    "typed three-way coefficient, conditional X-by-W effects and two-dimensional simple-slope grid",
+    "standardized minus-one, zero and plus-one continuous probes and actual zero/one binary probes",
+    "presentation-only moderator anchors excluded from scientific relationships, hashes and estimation matrices"
+  ],
+  "blocked_contracts": [
+    "a second three-way term, fourth-order interaction or weak/no hierarchy",
+    "HOC interactions and three-way moderated mediation",
+    "bootstrap, permutation, Johnson-Neyman, groups, weights and non-listwise handling",
+    "binary moderators not coded exactly zero and one"
+  ],
+  "remaining_qualification": [
+    "Scoped Standard under quickpls_v253_streamlined_integration_v1; the compact independent product/reference report and one consolidated automated integration pass replace repeated historical matrices and per-cell packaged matrices."
+  ]
+}

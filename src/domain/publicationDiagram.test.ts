@@ -5,6 +5,7 @@ import type { Edge, Node } from "@xyflow/react";
 import type { AnalysisRun, ConstructData, PlsResult } from "../types";
 import { completedStructuralPathRandomizationRun } from "../native/nativeStructuralPathRandomization.testFixture";
 import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "../native/nativeStructuralPathRandomization";
+import { moderationConnectorEdgeId } from "./moderationDiagramProjectionV1";
 
 const nodes: Array<Node<ConstructData>> = [
   { id: "x", type: "construct", position: { x: 100, y: 80 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] } },
@@ -100,5 +101,47 @@ describe("publication diagram SVG", () => {
     const shifted = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
     expect(shifted).toContain("0.457");
     expect(shifted).not.toBe(baseline);
+  });
+
+  it("exports moderation as a compact anchor with its persisted visual connector route", () => {
+    const moderator: Node<ConstructData> = {
+      id: "w",
+      type: "construct",
+      position: { x: 230, y: 220 },
+      data: { label: "Moderator", shortName: "W", mode: "reflective", indicators: ["w1"] },
+    };
+    const interaction: Node<ConstructData> = {
+      id: "xw",
+      type: "construct",
+      position: { x: 0, y: 0 },
+      data: {
+        label: "X × W",
+        shortName: "XW",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "term:xw",
+          operands: ["x", "w"],
+          focalRelationId: "x-y",
+          outcome: "y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+        },
+      },
+    };
+    const modelNodes = [...nodes, moderator, interaction];
+    const layout = defaultDiagramLayout(modelNodes, edges);
+    layout.moderationAnchorFractions = { "term:xw": 0.68 };
+    layout.moderationConnectorBendPoints = {
+      [moderationConnectorEdgeId("term:xw", "w")]: [{ x: 310, y: 185 }],
+    };
+
+    const svg = publicationDiagramSvg(modelNodes, edges, undefined, { layoutSource: "current_canvas" }, layout);
+    expect(svg).toContain('class="moderation-anchor-export"');
+    expect(svg).toContain('class="moderation-connector"');
+    expect(svg).toContain('aria-label="Moderating effect: Moderator moderates Predictor to Outcome"');
+    expect(svg).not.toContain("moderation-anchor::term%3Axw");
   });
 });

@@ -28,31 +28,40 @@ use qpls_core::{
     CanonicalInteractionPlotSeriesV1, CanonicalJointStageStructuralCoefficientResultV1,
     CanonicalModeratedMediationIndexResultV1, CanonicalModeratedMediationStageV1,
     CanonicalSpecificIndirectEffectResultV1, CanonicalStructuralEstimateStageV1,
-    CanonicalStructuralRelationRoleV1, CapabilityCellReferenceV2, CompiledGeneralSemPlsRecipeV1,
-    CompiledPlsEffectEstimandV3, ExecutionRecipeError, GeneralSemBootstrapIntervalV1,
-    GeneralSemEffectsV1, GeneralSemEffectsV1Error, GeneralSemInferenceTailV1,
-    GeneralSemInferenceV1, GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4,
-    StructuralRelationRoleV4, ValidatedExecutionRecipe, capability_cell_reference_identity_v2,
+    CanonicalStructuralRelationRoleV1, CanonicalThreeWayConditionalInteractionEffectResultV1,
+    CanonicalThreeWayInteractionEffectResultV1, CanonicalThreeWayModerationBootstrapReceiptV1,
+    CanonicalThreeWayModeratorProbeKindV1, CanonicalThreeWaySimpleSlopeResultV1,
+    CapabilityCellReferenceV2, CompiledGeneralSemPlsRecipeV1, CompiledPlsEffectEstimandV3,
+    ExecutionRecipeError, GeneralSemBootstrapIntervalV1, GeneralSemEffectsV1,
+    GeneralSemEffectsV1Error, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    GeneralSemPlsRecipeCompilationErrorV1, MethodConfig, SemModelV4, StructuralRelationRoleV4,
+    ValidatedExecutionRecipe, capability_cell_reference_identity_v2,
     decompose_general_sem_effects_v1, general_sem_effect_identity_set_sha256_v1,
     pls_general_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
+    pls_general_single_mediation_bootstrap_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     project_general_sem_pls_stage_one_recipe_v1, validate_compiled_general_sem_pls_recipe_v1,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
     GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1, GeneralSemPlsInteractionPointErrorV1,
-    GeneralSemPlsMultipleInteractionPointResultV1,
+    GeneralSemPlsModeratorProbeKindV1, GeneralSemPlsMultipleInteractionPointResultV1,
+    GeneralSemPlsStructuralCoefficientV1, GeneralSemPlsThreeWayPointErrorV1,
+    GeneralSemPlsThreeWayPointResultV1,
     estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control,
+    estimate_general_sem_pls_three_way_moderation_v1_with_control,
 };
 use qpls_resampling::{
     GeneralSemPlsBootstrapEffectInferenceV1, GeneralSemPlsBootstrapErrorV1,
     GeneralSemPlsBootstrapResultV1, GeneralSemPlsModeratedMediationBootstrapDerivedInferenceV1,
     GeneralSemPlsModerationBootstrapGammaInferenceV1,
     GeneralSemPlsMultipleModerationBootstrapErrorV1,
-    GeneralSemPlsMultipleModerationBootstrapResultV1,
-    GeneralSemPlsTwoWayModeratedMediationBootstrapResultV1,
+    GeneralSemPlsMultipleModerationBootstrapResultV1, GeneralSemPlsThreeWayBootstrapErrorV1,
+    GeneralSemPlsThreeWayBootstrapResultV1, GeneralSemPlsTwoWayModeratedMediationBootstrapResultV1,
     bootstrap_general_sem_pls_multiple_two_way_moderation_v1,
+    bootstrap_general_sem_pls_single_mediation_v1,
+    bootstrap_general_sem_pls_three_way_moderation_v1,
     bootstrap_general_sem_pls_two_way_moderated_mediation_v1, bootstrap_general_sem_pls_v1,
 };
 use serde::{Deserialize, Serialize};
@@ -69,6 +78,13 @@ pub const RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAP
     &str = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1:
     &str = "compiled_general_sem_pls_recipe_v1_two_way_moderated_mediation_percentile_bootstrap_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_three_way_moderation_point_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1:
+    &str =
+    "compiled_general_sem_pls_recipe_v1_three_way_moderation_percentile_bootstrap_execution_v1";
+pub const RECIPE_V4_GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
+    "compiled_general_sem_pls_recipe_v1_single_mediation_percentile_bootstrap_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1: &str =
     "compiled_general_sem_pls_recipe_v1_disjoint_higher_order_point_execution_v1";
 pub const RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1: &str =
@@ -201,6 +217,8 @@ pub struct RecipeV4GeneralSemPlsExecutionResultV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     interaction_point_estimation: Option<GeneralSemPlsMultipleInteractionPointResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    three_way_point_estimation: Option<GeneralSemPlsThreeWayPointResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     higher_order_point_estimation: Option<GeneralSemPlsHigherOrderPointResultV1>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     higher_order_bootstrap_inference: Option<GeneralSemPlsDisjointHocBootstrapResultV1>,
@@ -211,6 +229,11 @@ pub struct RecipeV4GeneralSemPlsExecutionResultV1 {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     moderated_mediation_bootstrap_inference:
         Option<GeneralSemPlsTwoWayModeratedMediationBootstrapResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    three_way_bootstrap_inference: Option<GeneralSemPlsThreeWayBootstrapResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    three_way_joint_stage_structural_coefficients:
+        Vec<CanonicalJointStageStructuralCoefficientResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     moderated_mediation_joint_stage_structural_coefficients:
         Vec<CanonicalJointStageStructuralCoefficientResultV1>,
@@ -269,6 +292,14 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         &self,
     ) -> Option<&GeneralSemPlsMultipleInteractionPointResultV1> {
         self.interaction_point_estimation.as_ref()
+    }
+
+    pub fn three_way_point_estimation(&self) -> Option<&GeneralSemPlsThreeWayPointResultV1> {
+        self.three_way_point_estimation.as_ref()
+    }
+
+    pub fn three_way_bootstrap_inference(&self) -> Option<&GeneralSemPlsThreeWayBootstrapResultV1> {
+        self.three_way_bootstrap_inference.as_ref()
     }
 
     pub fn higher_order_point_estimation(&self) -> Option<&GeneralSemPlsHigherOrderPointResultV1> {
@@ -395,7 +426,7 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         specific_indirect_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
         aggregate_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
         let (
-            interaction_effects,
+            mut interaction_effects,
             conditional_effect_probes,
             conditional_effects,
             interaction_plots,
@@ -405,6 +436,8 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
         let joint_stage_structural_coefficients = if moderated_mediation.is_some() {
             self.moderated_mediation_joint_stage_structural_coefficients
                 .clone()
+        } else if self.three_way_point_estimation.is_some() {
+            self.three_way_joint_stage_structural_coefficients.clone()
         } else {
             Vec::new()
         };
@@ -414,6 +447,15 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             .as_ref()
             .map(canonical_higher_order_bootstrap_receipt_v1)
             .transpose()?;
+        let (
+            three_way_lower_order_interaction_effects,
+            three_way_interaction_effects,
+            three_way_conditional_interaction_effects,
+            three_way_simple_slopes,
+            three_way_moderation_bootstrap_receipt,
+        ) = canonical_three_way_sections_v1(self, &trace)?;
+        interaction_effects.extend(three_way_lower_order_interaction_effects);
+        interaction_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
         let inference_receipt = match (
             self.bootstrap_inference.as_ref(),
             self.moderation_bootstrap_inference.as_ref(),
@@ -449,6 +491,10 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
             aggregate_effects,
             joint_stage_structural_coefficients,
             interaction_effects,
+            three_way_interaction_effects,
+            three_way_conditional_interaction_effects,
+            three_way_simple_slopes,
+            three_way_moderation_bootstrap_receipt,
             conditional_effect_probes,
             conditional_effects,
             conditional_indirect_effects,
@@ -465,6 +511,367 @@ impl RecipeV4GeneralSemPlsExecutionResultV1 {
     }
 }
 
+type CanonicalThreeWaySectionsV1 = (
+    Vec<CanonicalInteractionEffectResultV1>,
+    Vec<CanonicalThreeWayInteractionEffectResultV1>,
+    Vec<CanonicalThreeWayConditionalInteractionEffectResultV1>,
+    Vec<CanonicalThreeWaySimpleSlopeResultV1>,
+    Option<CanonicalThreeWayModerationBootstrapReceiptV1>,
+);
+
+fn canonical_three_way_sections_v1(
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+    trace: &CanonicalGeneralSemResultTraceV1,
+) -> Result<CanonicalThreeWaySectionsV1, RecipeV4GeneralSemPlsExecutionErrorV1> {
+    let Some(point) = result.three_way_point_estimation.as_ref() else {
+        if result.three_way_bootstrap_inference.is_some() {
+            return Err(
+                RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                    "three-way bootstrap requires its exact typed point result".into(),
+                ),
+            );
+        }
+        return Ok((Vec::new(), Vec::new(), Vec::new(), Vec::new(), None));
+    };
+    let point_targets = point.target_values_v1();
+    let expected_target_ids = point_targets.keys().cloned().collect::<Vec<_>>();
+    let inference_by_id = if let Some(bootstrap) = result.three_way_bootstrap_inference.as_ref() {
+        let by_id = bootstrap
+            .targets
+            .iter()
+            .map(|target| (target.target_id.as_str(), target))
+            .collect::<BTreeMap<_, _>>();
+        if bootstrap.target_ids != expected_target_ids
+            || by_id.len() != expected_target_ids.len()
+            || bootstrap.targets.iter().any(|target| {
+                point_targets
+                    .get(&target.target_id)
+                    .is_none_or(|point_value| {
+                        target.original.to_bits() != point_value.to_bits()
+                            || target.usable_replicates != bootstrap.resamples_usable
+                    })
+            })
+        {
+            return Err(RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "three-way bootstrap targets do not bind one-to-one to the exact point inventory"
+                    .into(),
+            ));
+        }
+        by_id
+    } else {
+        BTreeMap::new()
+    };
+    let coefficient = &point.three_way_coefficient;
+    let receipt = &point.three_way_product_scale_receipt;
+    let lower_receipts = point
+        .lower_order_product_scale_receipts
+        .iter()
+        .map(|receipt| (receipt.interaction_id(), receipt))
+        .collect::<BTreeMap<_, _>>();
+    let mut lower_order_interaction_effects = point
+        .lower_order_interaction_coefficients
+        .iter()
+        .map(|coefficient| {
+            let receipt = lower_receipts
+                .get(coefficient.interaction_id())
+                .ok_or_else(|| {
+                    RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(format!(
+                        "three-way lower-order interaction {} has no product-scale receipt",
+                        coefficient.interaction_id(),
+                    ))
+                })?;
+            Ok(CanonicalInteractionEffectResultV1 {
+                effect_id: coefficient.interaction_effect_relation_id().into(),
+                trace: trace.clone(),
+                interaction_id: coefficient.interaction_id().into(),
+                focal_relation_id: coefficient.focal_relation_id().into(),
+                interaction_effect_relation_id: coefficient.interaction_effect_relation_id().into(),
+                interaction_effect_parameter_id: coefficient
+                    .interaction_effect_parameter_id()
+                    .into(),
+                focal_predictor_id: coefficient.focal_predictor_id().into(),
+                moderator_id: coefficient.moderator_id().into(),
+                outcome_id: coefficient.outcome_id().into(),
+                generated_product_column_id: receipt.generated_product_column_id().into(),
+                stage_one_model_scientific_sha256: result.stage_one_model_scientific_sha256.clone(),
+                method_version: point.method_version.clone(),
+                construction_method: CanonicalInteractionConstructionMethodV1::TwoStage,
+                product_scale_version: receipt.scale_version().into(),
+                hierarchy_policy: CanonicalInteractionHierarchyPolicyV1::Strong,
+                hierarchy_policy_version: coefficient.hierarchy_policy_version().into(),
+                conditioning_policy_version: point.probe_policy_version.clone(),
+                observation_count: u32::try_from(point.observation_count).map_err(|_| {
+                    RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                        "three-way observation count exceeds u32".into(),
+                    )
+                })?,
+                unstandardized_product_mean: receipt.unstandardized_product_mean(),
+                unstandardized_product_sample_standard_deviation: receipt
+                    .unstandardized_product_sample_standard_deviation(),
+                standardized_product_coefficient: canonical_estimate(
+                    coefficient.standardized_product_estimate(),
+                    None,
+                ),
+                scientific_rescaled_gamma: canonical_estimate(
+                    coefficient.raw_product_estimate(),
+                    None,
+                ),
+            })
+        })
+        .collect::<Result<Vec<_>, RecipeV4GeneralSemPlsExecutionErrorV1>>()?;
+    lower_order_interaction_effects.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+    let delta_id = qpls_estimation::three_way_delta_target_id(&coefficient.interaction_id);
+    let interaction_effects = vec![CanonicalThreeWayInteractionEffectResultV1 {
+        effect_id: delta_id.clone(),
+        trace: trace.clone(),
+        interaction_id: coefficient.interaction_id.clone(),
+        focal_relation_id: coefficient.focal_relation_id.clone(),
+        interaction_effect_relation_id: coefficient.interaction_effect_relation_id.clone(),
+        interaction_effect_parameter_id: coefficient.interaction_effect_parameter_id.clone(),
+        operand_ids: coefficient.operand_ids.clone(),
+        outcome_id: coefficient.outcome_id.clone(),
+        generated_product_column_id: receipt.generated_product_column_id.clone(),
+        stage_one_model_scientific_sha256: result.stage_one_model_scientific_sha256.clone(),
+        method_version: point.method_version.clone(),
+        product_scale_version: receipt.scale_version.clone(),
+        hierarchy_policy: CanonicalInteractionHierarchyPolicyV1::Strong,
+        hierarchy_policy_version: coefficient.hierarchy_policy_version.clone(),
+        observation_count: u32::try_from(point.observation_count).map_err(|_| {
+            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                "three-way observation count exceeds u32".into(),
+            )
+        })?,
+        unstandardized_product_mean: receipt.unstandardized_product_mean,
+        unstandardized_product_sample_standard_deviation: receipt
+            .unstandardized_product_sample_standard_deviation,
+        standardized_product_coefficient: canonical_estimate(
+            coefficient.standardized_product_estimate,
+            None,
+        ),
+        scientific_rescaled_delta: canonical_three_way_estimate(
+            coefficient.scientific_rescaled_delta,
+            inference_by_id.get(delta_id.as_str()).copied(),
+        ),
+    }];
+    let mut conditional = point
+        .conditional_interaction_effects
+        .iter()
+        .map(
+            |row| CanonicalThreeWayConditionalInteractionEffectResultV1 {
+                effect_id: row.target_id.clone(),
+                trace: trace.clone(),
+                interaction_id: row.interaction_id.clone(),
+                focal_relation_id: row.focal_relation_id.clone(),
+                first_moderator_id: row.first_moderator_id.clone(),
+                second_moderator_id: row.second_moderator_id.clone(),
+                second_moderator_probe_kind: canonical_three_way_probe_kind(
+                    row.second_moderator_probe.probe_kind,
+                ),
+                second_moderator_probe_index: row.second_moderator_probe.probe_index,
+                second_moderator_value: row.second_moderator_probe.reported_value,
+                value: canonical_three_way_estimate(
+                    row.estimate,
+                    inference_by_id.get(row.target_id.as_str()).copied(),
+                ),
+            },
+        )
+        .collect::<Vec<_>>();
+    conditional.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+    let mut slopes = point
+        .simple_slopes
+        .iter()
+        .map(|row| CanonicalThreeWaySimpleSlopeResultV1 {
+            effect_id: row.target_id.clone(),
+            trace: trace.clone(),
+            interaction_id: row.interaction_id.clone(),
+            focal_relation_id: row.focal_relation_id.clone(),
+            first_moderator_id: row.first_moderator_id.clone(),
+            second_moderator_id: row.second_moderator_id.clone(),
+            first_moderator_probe_kind: canonical_three_way_probe_kind(
+                row.first_moderator_probe.probe_kind,
+            ),
+            first_probe_index: row.first_moderator_probe.probe_index,
+            first_moderator_value: row.first_moderator_probe.reported_value,
+            second_moderator_probe_kind: canonical_three_way_probe_kind(
+                row.second_moderator_probe.probe_kind,
+            ),
+            second_probe_index: row.second_moderator_probe.probe_index,
+            second_moderator_value: row.second_moderator_probe.reported_value,
+            value: canonical_three_way_estimate(
+                row.estimate,
+                inference_by_id.get(row.target_id.as_str()).copied(),
+            ),
+        })
+        .collect::<Vec<_>>();
+    slopes.sort_by(|left, right| left.effect_id.cmp(&right.effect_id));
+    let canonical_receipt = result
+        .three_way_bootstrap_inference
+        .as_ref()
+        .map(|bootstrap| {
+            let mut dependencies = vec![
+                qpls_core::RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+                bootstrap.point_capability_cell.clone(),
+            ];
+            dependencies.sort_by_key(capability_cell_reference_identity_v2);
+            Ok(CanonicalThreeWayModerationBootstrapReceiptV1 {
+                capability_cell: bootstrap.bootstrap_capability_cell.clone(),
+                capability_dependencies: dependencies,
+                method_version: bootstrap.method_version.clone(),
+                point_method_version: bootstrap.point_method_version.clone(),
+                resampling_operation_version: bootstrap.resampling_operation_version.clone(),
+                resampling_stream_version: bootstrap.resampling_stream_version.clone(),
+                quantile_method_version: bootstrap.quantile_method_version.clone(),
+                standard_error_method_version: bootstrap.standard_error_method_version.clone(),
+                summation_method_version: bootstrap.summation_method_version.clone(),
+                p_value_method_version: bootstrap.p_value_method_version.clone(),
+                failure_policy_version: bootstrap.failure_policy_version.clone(),
+                sign_alignment_method_version: bootstrap.sign_alignment_method_version.clone(),
+                product_scale_version: bootstrap.product_scale_version.clone(),
+                probe_policy_version: bootstrap.probe_policy_version.clone(),
+                compiled_plan_sha256: bootstrap.compiled_plan_sha256.clone(),
+                general_sem_config_sha256: bootstrap.general_sem_config_sha256.clone(),
+                model_scientific_sha256: bootstrap.model_scientific_sha256.clone(),
+                stage_one_model_scientific_sha256: bootstrap
+                    .stage_one_model_scientific_sha256
+                    .clone(),
+                source_dataset_fingerprint: bootstrap.source_dataset_fingerprint.clone(),
+                complete_case_frame_sha256: bootstrap.complete_case_frame_sha256.clone(),
+                usable_replicate_indices_sha256: bootstrap.usable_replicate_indices_sha256.clone(),
+                target_identity_set_sha256: bootstrap.target_identity_set_sha256.clone(),
+                target_ids: bootstrap.target_ids.clone(),
+                interval: match bootstrap.interval {
+                    GeneralSemBootstrapIntervalV1::Percentile => {
+                        CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+                    }
+                    GeneralSemBootstrapIntervalV1::Bca => {
+                        return Err(
+                            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                                "three-way v1 cannot publish BCa inference".into(),
+                            ),
+                        );
+                    }
+                },
+                tail: match bootstrap.tail {
+                    GeneralSemInferenceTailV1::TwoSided => {
+                        CanonicalGeneralSemInferenceTailV1::TwoSided
+                    }
+                    _ => {
+                        return Err(
+                            RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
+                                "three-way v1 cannot publish one-sided inference".into(),
+                            ),
+                        );
+                    }
+                },
+                confidence_level: bootstrap.confidence_level,
+                resamples_requested: bootstrap.resamples_requested,
+                resamples_usable: bootstrap.resamples_usable,
+                minimum_usable_resamples: bootstrap.minimum_usable_resamples,
+                seed: bootstrap.seed.clone(),
+                workers: bootstrap.workers,
+                complete_model_reestimated_per_replicate: bootstrap
+                    .complete_model_reestimated_per_replicate,
+                shared_stage_one_reestimated_per_replicate: bootstrap
+                    .shared_stage_one_reestimated_per_replicate,
+                score_vectors_sign_aligned_before_products: bootstrap
+                    .score_vectors_sign_aligned_before_products,
+                all_lower_order_and_three_way_products_recomputed_per_replicate: bootstrap
+                    .all_lower_order_and_three_way_products_recomputed_per_replicate,
+                joint_stage_two_reestimated_per_replicate: bootstrap
+                    .joint_stage_two_reestimated_per_replicate,
+                complete_joint_point_contract_validated_per_replicate: bootstrap
+                    .complete_joint_point_contract_validated_per_replicate,
+                all_three_way_targets_share_one_replicate_ledger: bootstrap
+                    .all_three_way_targets_share_one_replicate_ledger,
+                failed_replicates: bootstrap
+                    .failed_replicates
+                    .iter()
+                    .map(|failure| CanonicalGeneralSemFailedReplicateV1 {
+                        replicate_index: failure.replicate_index,
+                        reason_code: canonical_three_way_failure_reason(failure.reason_code),
+                        message: failure.message.clone(),
+                    })
+                    .collect(),
+            })
+        })
+        .transpose()?;
+    Ok((
+        lower_order_interaction_effects,
+        interaction_effects,
+        conditional,
+        slopes,
+        canonical_receipt,
+    ))
+}
+
+fn canonical_three_way_probe_kind(
+    kind: GeneralSemPlsModeratorProbeKindV1,
+) -> CanonicalThreeWayModeratorProbeKindV1 {
+    match kind {
+        GeneralSemPlsModeratorProbeKindV1::ContinuousStandardized => {
+            CanonicalThreeWayModeratorProbeKindV1::ContinuousStandardized
+        }
+        GeneralSemPlsModeratorProbeKindV1::BinaryZeroOne => {
+            CanonicalThreeWayModeratorProbeKindV1::BinaryZeroOne
+        }
+    }
+}
+
+fn canonical_three_way_estimate(
+    estimate: f64,
+    inference: Option<&qpls_resampling::GeneralSemPlsThreeWayBootstrapInferenceV1>,
+) -> CanonicalGeneralSemEstimateV1 {
+    let Some(inference) = inference else {
+        return canonical_estimate(estimate, None);
+    };
+    CanonicalGeneralSemEstimateV1 {
+        estimate,
+        bootstrap_mean: Some(inference.bootstrap_mean),
+        bootstrap_bias: Some(inference.bootstrap_bias),
+        standard_error: Some(inference.standard_error),
+        lower: Some(inference.lower),
+        upper: Some(inference.upper),
+        p_value: Some(inference.p_value_two_sided),
+        bootstrap_usable_replicates: Some(inference.usable_replicates),
+        bootstrap_two_sided_exceedances: Some(inference.two_sided_exceedances),
+    }
+}
+
+fn canonical_three_way_failure_reason(
+    reason: qpls_resampling::GeneralSemPlsThreeWayBootstrapFailureCodeV1,
+) -> CanonicalGeneralSemFailedReplicateReasonV1 {
+    use qpls_resampling::GeneralSemPlsThreeWayBootstrapFailureCodeV1 as Source;
+    match reason {
+        Source::InsufficientObservations => {
+            CanonicalGeneralSemFailedReplicateReasonV1::InsufficientObservations
+        }
+        Source::ConstantIndicator => CanonicalGeneralSemFailedReplicateReasonV1::ConstantIndicator,
+        Source::StageOneRankDeficient => {
+            CanonicalGeneralSemFailedReplicateReasonV1::StageOneRankDeficient
+        }
+        Source::IsolatedConstruct => CanonicalGeneralSemFailedReplicateReasonV1::IsolatedConstruct,
+        Source::StageOneNonconvergence => {
+            CanonicalGeneralSemFailedReplicateReasonV1::StageOneNonconvergence
+        }
+        Source::IndeterminateScoreSign => {
+            CanonicalGeneralSemFailedReplicateReasonV1::IndeterminateScoreSign
+        }
+        Source::ConstantConstructScore => {
+            CanonicalGeneralSemFailedReplicateReasonV1::ConstantConstructScore
+        }
+        Source::ConstantInteractionProduct => {
+            CanonicalGeneralSemFailedReplicateReasonV1::ConstantInteractionProduct
+        }
+        Source::JointStageRankDeficient => {
+            CanonicalGeneralSemFailedReplicateReasonV1::JointStageRankDeficient
+        }
+        Source::TargetInventoryMismatch => {
+            CanonicalGeneralSemFailedReplicateReasonV1::TargetInventoryMismatch
+        }
+        Source::NumericalFailure => CanonicalGeneralSemFailedReplicateReasonV1::NumericalFailure,
+    }
+}
+
 fn canonical_higher_order_stages_v1(
     result: &RecipeV4GeneralSemPlsExecutionResultV1,
     trace: &CanonicalGeneralSemResultTraceV1,
@@ -472,6 +879,7 @@ fn canonical_higher_order_stages_v1(
     let Some(higher_order) = result.higher_order_point_estimation.as_ref() else {
         if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256
             && result.interaction_point_estimation.is_none()
+            && result.three_way_point_estimation.is_none()
         {
             return Err(
                 RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
@@ -984,6 +1392,7 @@ fn canonical_interaction_sections_v1(
     let Some(interactions) = &result.interaction_point_estimation else {
         if result.stage_one_model_scientific_sha256 != result.model_scientific_sha256
             && result.higher_order_point_estimation.is_none()
+            && result.three_way_point_estimation.is_none()
         {
             return Err(
                 RecipeV4GeneralSemPlsExecutionErrorV1::InferenceResultMismatch(
@@ -1574,7 +1983,13 @@ fn canonical_inference_receipt(
     };
     Ok(CanonicalGeneralSemInferenceReceiptV1 {
         kind: CanonicalGeneralSemInferenceKindV1::CaseBootstrap,
-        capability_cell: pls_general_bootstrap_capability_cell_v1(),
+        capability_cell: if bootstrap.method_version
+            == qpls_resampling::GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        {
+            pls_general_single_mediation_bootstrap_capability_cell_v1()
+        } else {
+            pls_general_bootstrap_capability_cell_v1()
+        },
         capability_dependencies: Vec::new(),
         method_version: bootstrap.method_version.clone(),
         resampling_operation_version: bootstrap.resampling_operation_version.clone(),
@@ -1935,6 +2350,10 @@ pub enum RecipeV4GeneralSemPlsExecutionErrorV1 {
     #[error(transparent)]
     InteractionPoint(#[from] GeneralSemPlsInteractionPointErrorV1),
     #[error(transparent)]
+    ThreeWayPoint(#[from] GeneralSemPlsThreeWayPointErrorV1),
+    #[error(transparent)]
+    ThreeWayBootstrap(#[from] GeneralSemPlsThreeWayBootstrapErrorV1),
+    #[error(transparent)]
     HigherOrderPoint(#[from] GeneralSemPlsHigherOrderPointErrorV1),
     #[error(transparent)]
     HigherOrderBootstrap(#[from] GeneralSemPlsDisjointHocBootstrapErrorV1),
@@ -2025,7 +2444,9 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     } else {
         None
     };
-    let interaction_point_estimation = if artifact.plan().two_way_interactions().is_empty() {
+    let interaction_point_estimation = if artifact.plan().three_way_interaction().is_some()
+        || artifact.plan().two_way_interactions().is_empty()
+    {
         None
     } else {
         progress(RunnerProgress {
@@ -2055,7 +2476,36 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         });
         Some(result)
     };
-    let requested_effects = if interaction_point_estimation.is_some() {
+    let three_way_point_estimation = if artifact.plan().three_way_interaction().is_some() {
+        progress(RunnerProgress {
+            phase: "general_sem_three_way_point".into(),
+            completed_units: 0,
+            total_units: 1,
+        });
+        let result = estimate_general_sem_pls_three_way_moderation_v1_with_control(
+            artifact.plan(),
+            &point_estimation.estimation().construct_scores,
+            || !should_cancel(),
+        )
+        .map_err(|error| match error {
+            GeneralSemPlsThreeWayPointErrorV1::Cancelled => {
+                RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled
+            }
+            error => RecipeV4GeneralSemPlsExecutionErrorV1::ThreeWayPoint(error),
+        })?;
+        result.ensure_valid_against_plan_v1(artifact.plan())?;
+        progress(RunnerProgress {
+            phase: "general_sem_three_way_point".into(),
+            completed_units: 1,
+            total_units: 1,
+        });
+        Some(result)
+    } else {
+        None
+    };
+    let requested_effects = if interaction_point_estimation.is_some()
+        || three_way_point_estimation.is_some()
+    {
         Vec::new()
     } else {
         let relation_coefficients = if let Some(higher_order) = &higher_order_point_estimation {
@@ -2104,6 +2554,56 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     } else {
         None
     };
+    let three_way_bootstrap_inference =
+        if let (Some(three_way_point), GeneralSemInferenceV1::CaseBootstrap { .. }) =
+            (&three_way_point_estimation, config.inference)
+        {
+            let projected_recipe = project_pls_plan_to_current_recipe(
+                &base_recipe,
+                resolved_model,
+                artifact.plan().base_plan(),
+            )?;
+            let execution =
+                ValidatedExecutionRecipe::for_dataset(&projected_recipe, &dataset.fingerprint.0)?;
+            let initialization = match base_recipe.method_config.as_ref() {
+                Some(MethodConfig::PlsAlgorithmConfiguredV2(config)) => Some(config),
+                _ => None,
+            };
+            Some(
+                bootstrap_general_sem_pls_three_way_moderation_v1(
+                    dataset,
+                    &execution,
+                    artifact.plan(),
+                    point_estimation.estimation(),
+                    three_way_point,
+                    config,
+                    initialization,
+                    recipe.settings.workers,
+                    &should_cancel,
+                    |update| {
+                        progress(RunnerProgress {
+                            phase: format!("general_sem_three_way_{}", update.phase.as_str()),
+                            completed_units: u64::from(update.completed_replicates),
+                            total_units: u64::from(update.total_replicates),
+                        });
+                    },
+                )
+                .map_err(|error| match error {
+                    GeneralSemPlsThreeWayBootstrapErrorV1::Resampling(
+                        qpls_resampling::ResamplingError::Cancelled,
+                    )
+                    | GeneralSemPlsThreeWayBootstrapErrorV1::Estimation(
+                        qpls_estimation::EstimationError::Cancelled,
+                    )
+                    | GeneralSemPlsThreeWayBootstrapErrorV1::Point(
+                        GeneralSemPlsThreeWayPointErrorV1::Cancelled,
+                    ) => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
+                    error => RecipeV4GeneralSemPlsExecutionErrorV1::ThreeWayBootstrap(error),
+                })?,
+            )
+        } else {
+            None
+        };
     let (
         bootstrap_inference,
         moderation_bootstrap_inference,
@@ -2111,6 +2611,9 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
     ) = match config.inference {
         GeneralSemInferenceV1::None => (None, None, None),
         GeneralSemInferenceV1::CaseBootstrap { .. } if has_higher_order => (None, None, None),
+        GeneralSemInferenceV1::CaseBootstrap { .. } if three_way_point_estimation.is_some() => {
+            (None, None, None)
+        }
         GeneralSemInferenceV1::CaseBootstrap { .. } => {
             let projected_recipe = project_pls_plan_to_current_recipe(
                 &base_recipe,
@@ -2204,30 +2707,46 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
                     (None, Some(moderation_bootstrap), None)
                 }
             } else {
-                let mediation_bootstrap = bootstrap_general_sem_pls_v1(
-                    dataset,
-                    &execution,
-                    artifact.plan(),
-                    point_estimation.estimation(),
-                    config,
-                    initialization,
-                    recipe.settings.workers,
-                    &should_cancel,
-                    |update| {
-                        progress(RunnerProgress {
-                            phase: format!("general_sem_{}", update.phase.as_str()),
-                            completed_units: u64::from(update.completed_replicates),
-                            total_units: u64::from(update.total_replicates),
-                        });
-                    },
-                )
-                .map_err(|error| match error {
-                    GeneralSemPlsBootstrapErrorV1::PointRefitCancelled
-                    | GeneralSemPlsBootstrapErrorV1::Resampling(
-                        qpls_resampling::ResamplingError::Cancelled,
-                    ) => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
-                    error => RecipeV4GeneralSemPlsExecutionErrorV1::Bootstrap(error),
-                })?;
+                let progress_adapter = |update: qpls_resampling::ResamplingProgress| {
+                    progress(RunnerProgress {
+                        phase: format!("general_sem_{}", update.phase.as_str()),
+                        completed_units: u64::from(update.completed_replicates),
+                        total_units: u64::from(update.total_replicates),
+                    });
+                };
+                let mediation_bootstrap =
+                    if artifact.plan().topology().specific_directed_paths().len() == 1 {
+                        bootstrap_general_sem_pls_single_mediation_v1(
+                            dataset,
+                            &execution,
+                            artifact.plan(),
+                            point_estimation.estimation(),
+                            config,
+                            initialization,
+                            recipe.settings.workers,
+                            &should_cancel,
+                            progress_adapter,
+                        )
+                    } else {
+                        bootstrap_general_sem_pls_v1(
+                            dataset,
+                            &execution,
+                            artifact.plan(),
+                            point_estimation.estimation(),
+                            config,
+                            initialization,
+                            recipe.settings.workers,
+                            &should_cancel,
+                            progress_adapter,
+                        )
+                    }
+                    .map_err(|error| match error {
+                        GeneralSemPlsBootstrapErrorV1::PointRefitCancelled
+                        | GeneralSemPlsBootstrapErrorV1::Resampling(
+                            qpls_resampling::ResamplingError::Cancelled,
+                        ) => RecipeV4GeneralSemPlsExecutionErrorV1::Cancelled,
+                        error => RecipeV4GeneralSemPlsExecutionErrorV1::Bootstrap(error),
+                    })?;
                 (Some(mediation_bootstrap), None, None)
             }
         }
@@ -2239,14 +2758,24 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
     } else if higher_order_point_estimation.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1
+    } else if three_way_bootstrap_inference.is_some() {
+        RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+    } else if three_way_point_estimation.is_some() {
+        RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
     } else if moderated_mediation_bootstrap_inference.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
     } else if moderation_bootstrap_inference.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
     } else if interaction_point_estimation.is_some() {
         RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1
-    } else if bootstrap_inference.is_some() {
-        RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+    } else if let Some(bootstrap) = bootstrap_inference.as_ref() {
+        if bootstrap.method_version
+            == qpls_resampling::GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+        {
+            RECIPE_V4_GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        } else {
+            RECIPE_V4_GENERAL_SEM_PLS_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        }
     } else {
         RECIPE_V4_GENERAL_SEM_PLS_EXECUTION_ADAPTER_VERSION_V1
     };
@@ -2257,6 +2786,16 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
                 interaction_point_estimation
                     .as_ref()
                     .expect("combined bootstrap requires an interaction point result"),
+                &point_estimation,
+            )?
+        } else {
+            Vec::new()
+        };
+    let three_way_joint_stage_structural_coefficients =
+        if let Some(point) = three_way_point_estimation.as_ref() {
+            canonical_three_way_joint_stage_structural_coefficients_v1(
+                artifact,
+                point,
                 &point_estimation,
             )?
         } else {
@@ -2280,11 +2819,14 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
         point_estimation,
         requested_effects,
         interaction_point_estimation,
+        three_way_point_estimation,
         higher_order_point_estimation,
         higher_order_bootstrap_inference,
         bootstrap_inference,
         moderation_bootstrap_inference,
         moderated_mediation_bootstrap_inference,
+        three_way_bootstrap_inference,
+        three_way_joint_stage_structural_coefficients,
         moderated_mediation_joint_stage_structural_coefficients,
     })
 }
@@ -2292,6 +2834,39 @@ pub fn run_compiled_general_sem_pls_recipe_v1(
 fn canonical_joint_stage_structural_coefficients_v1(
     artifact: &CompiledGeneralSemPlsRecipeV1,
     point: &GeneralSemPlsMultipleInteractionPointResultV1,
+    point_estimation: &RecipeV4PlsExecutionResultV1,
+) -> Result<
+    Vec<CanonicalJointStageStructuralCoefficientResultV1>,
+    RecipeV4GeneralSemPlsExecutionErrorV1,
+> {
+    canonical_joint_stage_structural_coefficients_from_rows_v1(
+        artifact,
+        point.structural_coefficients(),
+        point.method_version(),
+        point_estimation,
+    )
+}
+
+fn canonical_three_way_joint_stage_structural_coefficients_v1(
+    artifact: &CompiledGeneralSemPlsRecipeV1,
+    point: &GeneralSemPlsThreeWayPointResultV1,
+    point_estimation: &RecipeV4PlsExecutionResultV1,
+) -> Result<
+    Vec<CanonicalJointStageStructuralCoefficientResultV1>,
+    RecipeV4GeneralSemPlsExecutionErrorV1,
+> {
+    canonical_joint_stage_structural_coefficients_from_rows_v1(
+        artifact,
+        &point.structural_coefficients,
+        &point.method_version,
+        point_estimation,
+    )
+}
+
+fn canonical_joint_stage_structural_coefficients_from_rows_v1(
+    artifact: &CompiledGeneralSemPlsRecipeV1,
+    structural_coefficients: &[GeneralSemPlsStructuralCoefficientV1],
+    method_version: &str,
     point_estimation: &RecipeV4PlsExecutionResultV1,
 ) -> Result<
     Vec<CanonicalJointStageStructuralCoefficientResultV1>,
@@ -2310,6 +2885,13 @@ fn canonical_joint_stage_structural_coefficients_v1(
         .two_way_interactions()
         .iter()
         .map(|interaction| interaction.interaction_effect_relation_id())
+        .chain(
+            artifact
+                .plan()
+                .three_way_interaction()
+                .iter()
+                .map(|interaction| interaction.interaction_effect_relation_id()),
+        )
         .collect::<BTreeSet<_>>();
     let topology_by_relation = artifact
         .plan()
@@ -2319,8 +2901,7 @@ fn canonical_joint_stage_structural_coefficients_v1(
         .filter(|relation| !technical_interaction_relation_ids.contains(relation.relation_id()))
         .map(|relation| (relation.relation_id(), relation))
         .collect::<BTreeMap<_, _>>();
-    let mut rows = point
-        .structural_coefficients()
+    let mut rows = structural_coefficients
         .iter()
         .map(|coefficient| {
             let relation = topology_by_relation
@@ -2355,7 +2936,7 @@ fn canonical_joint_stage_structural_coefficients_v1(
                 },
                 estimate: canonical_estimate(coefficient.estimate(), None),
                 stage: CanonicalStructuralEstimateStageV1::JointStageTwo,
-                method_version: point.method_version().into(),
+                method_version: method_version.into(),
             })
         })
         .collect::<Result<Vec<_>, _>>()?;

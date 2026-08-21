@@ -1,6 +1,16 @@
 import { MarkerType, type Edge, type Node, type XYPosition } from "@xyflow/react";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, DiagramMode, DiagramOverlayMode, IndicatorLayout, IndicatorSide } from "../types";
-import { SEM_SIZES, measureDiagramQuality, routeBetweenBoxes, semNodeBox, smartIndicatorPosition } from "./semGeometry";
+import {
+  deriveModerationAnchorProjections,
+  hiddenInteractionNodeIds,
+  moderationAnchorNodeId,
+  moderationAnchorPosition,
+  moderationConnectorEdgeId,
+  type ModerationAnchorProjectionV1,
+  type ModerationConnectorProjectionV1,
+  type ResultOverlaySelectionV1,
+} from "./moderationDiagramProjectionV1";
+import { SEM_SIZES, boxCenter, measureDiagramQuality, routeBetweenBoxes, semNodeBox, smartIndicatorPosition } from "./semGeometry";
 
 export interface IndicatorNodeData extends Record<string, unknown> {
   constructId: string;
@@ -17,8 +27,10 @@ export interface LatentNodeData extends ConstructData {
   pathCount: number;
 }
 
+export type ModerationAnchorNodeData = ModerationAnchorProjectionV1;
+
 export interface DiagramGraph {
-  nodes: Array<Node<LatentNodeData | IndicatorNodeData>>;
+  nodes: Array<Node<LatentNodeData | IndicatorNodeData | ModerationAnchorNodeData>>;
   edges: Edge[];
   compatible: boolean;
   diagnostic: string | null;
@@ -27,6 +39,18 @@ export interface DiagramGraph {
 export interface DiagramGraphOptions {
   layout?: DiagramLayoutState;
   layoutSource?: "current_canvas" | "tidy_publication";
+  /** Selected HOC whose lower-order membership should be projected visually. */
+  selectedHigherOrderId?: string | null;
+  /** Selected presentation-only interaction anchor in the editable canvas. */
+  selectedInteractionTermId?: string | null;
+  /** Result-driven read-only highlighting without altering the scientific graph. */
+  resultOverlay?: ResultOverlaySelectionV1 | null;
+  /** Expert-only compatibility view; generated interaction constructs are hidden by default. */
+  showGeneratedInteractionTerms?: boolean;
+  /** Optional presentation layout overrides, keyed by stable interaction term id. */
+  moderationAnchorFractions?: Readonly<Record<string, number>>;
+  /** Optional visual connector routing points, keyed by moderation connector edge id. */
+  moderationConnectorBendPoints?: Readonly<Record<string, readonly XYPosition[]>>;
 }
 
 const LATENT_WIDTH = 150;
@@ -59,14 +83,23 @@ export function buildDiagramGraph(
   run?: AnalysisRun,
   options: DiagramGraphOptions = {},
 ): DiagramGraph {
-  const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance");
-  const covarianceEdges = modelEdges.filter((edge) => edge.data?.role === "covariance");
+  const scientificStructuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance");
+  const generatedInteractionIds = hiddenInteractionNodeIds(modelNodes, modelEdges);
+  const displayModelNodes = options.showGeneratedInteractionTerms
+    ? modelNodes
+    : modelNodes.filter((node) => !generatedInteractionIds.has(node.id));
+  const structuralEdges = scientificStructuralEdges.filter((edge) => options.showGeneratedInteractionTerms
+    || (!generatedInteractionIds.has(edge.source) && !generatedInteractionIds.has(edge.target)));
+  const covarianceEdges = modelEdges
+    .filter((edge) => edge.data?.role === "covariance")
+    .filter((edge) => options.showGeneratedInteractionTerms
+      || (!generatedInteractionIds.has(edge.source) && !generatedInteractionIds.has(edge.target)));
   const paperStyle = mode === "sem" || mode === "publication" || mode === "smartpls_result";
   const lockedResultMode = mode === "smartpls_result" || mode === "publication";
-  const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(modelNodes, structuralEdges) : null;
-  const structuralShape = structuralShapeMaps(modelNodes, structuralEdges);
+  const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(displayModelNodes, structuralEdges) : null;
+  const structuralShape = structuralShapeMaps(displayModelNodes, structuralEdges);
   const result = run?.status === "completed" ? run.result : undefined;
-  const compatible = result ? resultMatchesModel(modelNodes, structuralEdges, result) : true;
+  const compatible = result ? resultMatchesModel(modelNodes, scientificStructuralEdges, result) : true;
   const resultForOverlay = result && compatible ? result : undefined;
   const outerEstimatesForOverlay = resultForOverlay?.plsc
     ? resultForOverlay.plsc.corrected_outer_loadings ?? []
@@ -78,7 +111,7 @@ export function buildDiagramGraph(
     loadingByConstruct.set(estimate.construct, current);
   }
   const pathCoefficients = new Map((resultForOverlay?.paths ?? []).map((path) => [`${path.source}\u0000${path.target}`, path.coefficient]));
-  const visualNodes: DiagramGraph["nodes"] = modelNodes.map((node) => {
+  const visualNodes: DiagramGraph["nodes"] = displayModelNodes.map((node) => {
     const estimates = [...(loadingByConstruct.get(node.id)?.entries() ?? [])];
     const layoutPosition = options.layout?.constructLayouts[node.id];
     return ({
@@ -118,8 +151,166 @@ export function buildDiagramGraph(
     };
   });
 
+  const moderationAnchors = deriveModerationAnchorProjections(
+    modelNodes,
+    modelEdges,
+    options.moderationAnchorFractions ?? options.layout?.moderationAnchorFractions,
+  );
+  for (const anchor of moderationAnchors) {
+    const focalEdge = visualEdges.find((edge) => edge.id === anchor.focalRelationId);
+    const sourceNode = focalEdge ? visualNodes.find((node) => node.id === focalEdge.source) : undefined;
+    const targetNode = focalEdge ? visualNodes.find((node) => node.id === focalEdge.target) : undefined;
+    if (!focalEdge || !sourceNode || !targetNode) continue;
+    const focalRoute = routeBetweenBoxes(semNodeBox(sourceNode), semNodeBox(targetNode));
+    const position = moderationAnchorPosition(focalRoute.start, focalRoute.end, anchor.fraction);
+    const anchorId = moderationAnchorNodeId(anchor.interactionTermId);
+    const highlightedByResult = Boolean(options.resultOverlay?.interactionTermIds.includes(anchor.interactionTermId));
+    const selected = options.selectedInteractionTermId === anchor.interactionTermId || highlightedByResult;
+    visualNodes.push({
+      id: anchorId,
+      type: "moderationAnchor",
+      position,
+      data: { ...anchor, editable: !lockedResultMode },
+      draggable: false,
+      connectable: false,
+      deletable: false,
+      selectable: true,
+      focusable: false,
+      selected,
+      className: highlightedByResult ? "result-overlay-highlight moderation-result-highlight" : undefined,
+      zIndex: 8,
+    });
+    const focalClass = [
+      String(focalEdge.className ?? ""),
+      "moderated-focal-edge",
+      highlightedByResult ? "result-overlay-edge-highlight" : "",
+    ].filter(Boolean).join(" ");
+    focalEdge.className = focalClass;
+    focalEdge.data = {
+      ...focalEdge.data,
+      moderationTermIds: [
+        ...new Set([
+          ...((Array.isArray(focalEdge.data?.moderationTermIds) ? focalEdge.data.moderationTermIds : []) as string[]),
+          anchor.interactionTermId,
+        ]),
+      ],
+      edgeClassName: focalClass,
+    };
+    const anchorCenter = { x: position.x + 11, y: position.y + 11 };
+    for (const moderatorId of anchor.moderatorIds) {
+      const moderatorNode = visualNodes.find((node) => node.id === moderatorId);
+      if (!moderatorNode) continue;
+      const moderatorCenter = boxCenter(semNodeBox(moderatorNode));
+      const sides = moderationConnectorSides(moderatorCenter, anchorCenter);
+      const sourceSide = mode === "compact"
+        ? (Math.abs(anchorCenter.x - moderatorCenter.x) >= Math.abs(anchorCenter.y - moderatorCenter.y) ? "right" : "bottom")
+        : sides.source;
+      const connectorClass = [
+        "moderation-connector-edge",
+        anchor.order === 3 ? "three-way" : "two-way",
+        selected ? "selected" : "",
+        highlightedByResult ? "result-overlay-edge-highlight" : "",
+      ].filter(Boolean).join(" ");
+      const connectorId = moderationConnectorEdgeId(anchor.interactionTermId, moderatorId);
+      const bendPoints = (options.moderationConnectorBendPoints
+        ?? options.layout?.moderationConnectorBendPoints)?.[connectorId]
+        ?.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y))
+        .map((point) => ({ x: point.x, y: point.y }));
+      const connectorData: ModerationConnectorProjectionV1 = {
+        visualOnly: true,
+        relationshipKind: "moderation_connector",
+        interactionTermId: anchor.interactionTermId,
+        focalRelationId: anchor.focalRelationId,
+        moderatorId,
+        order: anchor.order,
+        edgeClassName: connectorClass,
+        routing: bendPoints?.length ? "polyline" : "straight",
+        ...(bendPoints?.length ? { bendPoints } : {}),
+      };
+      visualEdges.push({
+        id: connectorId,
+        source: moderatorId,
+        target: anchorId,
+        sourceHandle: handleId("source", sourceSide),
+        targetHandle: handleId("target", sides.target),
+        type: "semEdge",
+        markerEnd: { type: MarkerType.ArrowClosed, width: 11, height: 11 },
+        selectable: true,
+        deletable: false,
+        reconnectable: false,
+        focusable: false,
+        className: connectorClass,
+        interactionWidth: 26,
+        data: connectorData,
+        zIndex: 7,
+      });
+    }
+  }
+
+  if (options.resultOverlay) {
+    const highlightedNodes = new Set(options.resultOverlay.nodeIds);
+    const highlightedRelations = new Set(options.resultOverlay.relationIds);
+    const relationHighlighted = (edge: Edge): boolean => {
+      const authorityRelationId = (edge.data as {
+        standardSemV4Authority?: { authorityObjectId?: string };
+      } | undefined)?.standardSemV4Authority?.authorityObjectId;
+      return highlightedRelations.has(edge.id)
+        || (authorityRelationId != null && highlightedRelations.has(authorityRelationId));
+    };
+    for (const edge of visualEdges) {
+      if (!relationHighlighted(edge)) continue;
+      highlightedNodes.add(edge.source);
+      highlightedNodes.add(edge.target);
+    }
+    for (const node of visualNodes) {
+      if (!highlightedNodes.has(node.id)) continue;
+      node.className = [node.className, "result-overlay-highlight"].filter(Boolean).join(" ");
+    }
+    for (const edge of visualEdges) {
+      if (!relationHighlighted(edge)) continue;
+      const className = [edge.className, "result-overlay-edge-highlight"].filter(Boolean).join(" ");
+      edge.className = className;
+      edge.data = { ...edge.data, edgeClassName: className };
+    }
+  }
+
+  const selectedHigherOrder = options.selectedHigherOrderId
+    ? displayModelNodes.find((node) => node.id === options.selectedHigherOrderId
+      && node.data.semantic === "higher_order"
+      && node.data.higherOrder)
+    : undefined;
+  if (selectedHigherOrder?.data.higherOrder) {
+    for (const componentId of selectedHigherOrder.data.higherOrder.components) {
+      const componentNode = visualNodes.find((node) => node.id === componentId);
+      if (!componentNode) continue;
+      componentNode.className = [componentNode.className, "hoc-component-highlight"].filter(Boolean).join(" ");
+      visualEdges.push({
+        id: `hoc-membership::${selectedHigherOrder.id}::${componentId}`,
+        source: componentId,
+        target: selectedHigherOrder.id,
+        type: "straight",
+        selectable: false,
+        deletable: false,
+        focusable: false,
+        reconnectable: false,
+        animated: false,
+        style: {
+          stroke: "#7a8590",
+          strokeDasharray: "5 4",
+          strokeWidth: 1.25,
+          opacity: 0.78,
+        },
+        data: {
+          visualOnly: true,
+          relationshipKind: "higher_order_membership",
+          edgeClassName: "hoc-membership-edge",
+        },
+      });
+    }
+  }
+
   if (mode !== "compact") {
-    for (const node of modelNodes) {
+    for (const node of displayModelNodes) {
       const latentPosition = visualNodes.find((visualNode) => visualNode.id === node.id)?.position ?? node.position;
       const placement = smartplsPlacement?.indicators.get(node.id)
         ?? indicatorPositionsForConstruct(node, latentPosition, paperStyle, structuralShape, options.layout);
@@ -266,6 +457,30 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
     diagramTheme: existing?.diagramTheme === "academic_grayscale" || existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" || existing?.diagramTheme === "journal_mono" || existing?.diagramTheme === "smartpls_like" ? existing.diagramTheme : "smartpls_like",
     showGrid: existing?.showGrid ?? true,
     layoutLocked: existing?.layoutLocked ?? false,
+    ...(existing?.moderationAnchorFractions
+      ? { moderationAnchorFractions: { ...existing.moderationAnchorFractions } }
+      : {}),
+    ...(existing?.moderationConnectorBendPoints
+      ? {
+          moderationConnectorBendPoints: Object.fromEntries(
+            Object.entries(existing.moderationConnectorBendPoints)
+              .map(([id, points]) => [id, points.map((point) => ({ ...point }))]),
+          ),
+        }
+      : {}),
+    ...(existing?.standardSemPresentation
+      ? {
+          standardSemPresentation: {
+            schemaVersion: 1,
+            objects: existing.standardSemPresentation.objects.map((object) => ({
+              ...object,
+              ...(object.kind === "shape" || object.kind === "image" || object.kind === "line"
+                ? { style: { ...object.style } }
+                : {}),
+            })),
+          },
+        }
+      : {}),
   };
 }
 
@@ -359,8 +574,12 @@ function smartplsBarycenter(node: Node<ConstructData>, neighbors: Map<string, st
 }
 
 export function layoutSmartplsModel(modelNodes: Array<Node<ConstructData>>, modelEdges: Edge[]): Array<Node<ConstructData>> {
-  const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance");
-  const placement = smartplsLayout(modelNodes, structuralEdges);
+  const hiddenInteractions = hiddenInteractionNodeIds(modelNodes, modelEdges);
+  const visibleNodes = modelNodes.filter((node) => !hiddenInteractions.has(node.id));
+  const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance"
+    && !hiddenInteractions.has(edge.source)
+    && !hiddenInteractions.has(edge.target));
+  const placement = smartplsLayout(visibleNodes, structuralEdges);
   return modelNodes.map((node) => ({ ...node, position: placement.latents.get(node.id) ?? node.position }));
 }
 
@@ -408,7 +627,19 @@ function structuralRouting(edge: Edge, paperStyle: boolean, layout?: DiagramLayo
   return "straight";
 }
 
-function routeSides(sourceNode: Node<LatentNodeData | IndicatorNodeData>, targetNode: Node<LatentNodeData | IndicatorNodeData>): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
+function moderationConnectorSides(
+  source: XYPosition,
+  target: XYPosition,
+): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
+  const dx = target.x - source.x;
+  const dy = target.y - source.y;
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return dx >= 0 ? { source: "right", target: "left" } : { source: "left", target: "right" };
+  }
+  return dy >= 0 ? { source: "bottom", target: "top" } : { source: "top", target: "bottom" };
+}
+
+function routeSides(sourceNode: Node, targetNode: Node): { source: "left" | "right" | "top" | "bottom"; target: "left" | "right" | "top" | "bottom" } {
   const route = routeBetweenBoxes(semNodeBox(sourceNode), semNodeBox(targetNode));
   return { source: route.source, target: route.target };
 }

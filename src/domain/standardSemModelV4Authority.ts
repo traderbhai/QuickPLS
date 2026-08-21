@@ -23,6 +23,7 @@ import {
 
 export const STANDARD_SEM_MODEL_V4_AUTHORITY_VERSION = 1 as const;
 export const GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1 = 1 as const;
+export const GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3 = 3 as const;
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
 
@@ -79,6 +80,53 @@ export interface AddGeneralSemInteractionV2EditorIntentV1 {
   readonly hierarchy_policy: "strong";
 }
 
+export type ModeratingEffectTargetV1 =
+  | { readonly kind: "focal_relation"; readonly relationId: string }
+  | { readonly kind: "parent_interaction"; readonly interactionTermId: string };
+
+type ModeratingEffectOperandsV3 =
+  | readonly [predictor: string, moderator: string]
+  | readonly [predictor: string, firstModerator: string, secondModerator: string];
+
+/**
+ * Diagram-native General SEM moderation intent. The target is a relationship
+ * or an existing two-way interaction; it is never an edge-to-edge SEM
+ * relationship. Two-way terms retain their historical deterministic IDs.
+ */
+export interface AddModeratingEffectIntentV3 {
+  readonly kind: "add_moderating_effect_v3";
+  readonly intent_version: typeof GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3;
+  readonly sem_generation: "general_sem_v1";
+  readonly label: string;
+  readonly operands: ModeratingEffectOperandsV3;
+  readonly target: ModeratingEffectTargetV1;
+  readonly outcome: string;
+  readonly method: "two_stage";
+  readonly hierarchy_policy: "strong";
+}
+
+export interface ReplaceModeratingEffectIntentV1 {
+  readonly kind: "replace_moderating_effect";
+  readonly intent_version: typeof GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3;
+  readonly sem_generation: "general_sem_v1";
+  readonly term_id: string;
+  readonly output_id: string;
+  readonly label: string;
+  readonly operands: ModeratingEffectOperandsV3;
+  readonly target: ModeratingEffectTargetV1;
+  readonly outcome: string;
+  readonly method: "two_stage";
+  readonly hierarchy_policy: "strong";
+}
+
+export interface RemoveModeratingEffectIntentV1 {
+  readonly kind: "remove_moderating_effect";
+  readonly intent_version: typeof GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3;
+  readonly sem_generation: "general_sem_v1";
+  readonly term_id: string;
+  readonly output_id: string;
+}
+
 export interface AddGeneralSemHigherOrderEditorIntentV1 {
   readonly kind: "add_higher_order";
   readonly term_id: string;
@@ -93,6 +141,16 @@ export interface AddGeneralSemHigherOrderEditorIntentV1 {
     readonly target: string;
     readonly label: string;
   };
+}
+
+export interface ReplaceGeneralSemHigherOrderEditorIntentV1 {
+  readonly kind: "replace_higher_order";
+  readonly term_id: string;
+  readonly output_id: string;
+  readonly label: string;
+  readonly components: string[];
+  readonly approach: HigherOrderConstructionApproachV4;
+  readonly measurement_type: HigherOrderMeasurementTypeV4;
 }
 
 export type StandardSemModelV4EditorIntentV1 =
@@ -142,16 +200,13 @@ export type StandardSemModelV4EditorIntentV1 =
     product_indicator?: ProductIndicatorSpecificationV4 | null;
   }
   | AddGeneralSemInteractionV2EditorIntentV1
+  | AddModeratingEffectIntentV3
+  | ReplaceModeratingEffectIntentV1
+  | RemoveModeratingEffectIntentV1
   | { kind: "add_polynomial"; term_id: string; output_id: string; label: string; source: string; degree: number }
   | { kind: "replace_polynomial"; term_id: string; source: string; degree: number }
   | AddGeneralSemHigherOrderEditorIntentV1
-  | {
-    kind: "replace_higher_order";
-    term_id: string;
-    components: string[];
-    approach: HigherOrderConstructionApproachV4;
-    measurement_type: HigherOrderMeasurementTypeV4;
-  }
+  | ReplaceGeneralSemHigherOrderEditorIntentV1
   | { kind: "set_group"; group: SemGroupV4 }
   | { kind: "set_data_binding"; data_binding: SemDataBindingV4 };
 
@@ -292,6 +347,16 @@ export const standardSemGeneralSemInteractionV2ModeratorMainRelationIdV1 = (term
   `general-sem:v1:interaction-moderator-main:${encodeURIComponent(termId)}`;
 export const standardSemGeneralSemInteractionV2EffectRelationIdV1 = (termId: string) =>
   `general-sem:v1:interaction-effect:${encodeURIComponent(termId)}`;
+export const standardSemGeneralSemThreeWayInteractionTermIdV1 = (
+  parentInteractionTermId: string,
+  secondModeratorId: string,
+) => `general-sem:v1:interaction-three-way:${encodeURIComponent(parentInteractionTermId)}:${encodeURIComponent(secondModeratorId)}`;
+export const standardSemGeneralSemInteractionDependencyAnnotationIdV1 = (
+  ownerTermId: string,
+  subjectId: string,
+) => `general-sem:v1:interaction-dependency:${encodeURIComponent(ownerTermId)}:${encodeURIComponent(subjectId)}`;
+export const standardSemGeneralSemGeneratedHierarchyAnnotationIdV1 = (subjectId: string) =>
+  `general-sem:v1:interaction-generated:${encodeURIComponent(subjectId)}`;
 
 function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntentV1) {
   switch (intent.kind) {
@@ -369,6 +434,15 @@ function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntent
       return;
     case "add_general_sem_interaction_v2":
       addGeneralSemInteractionV2(model, intent);
+      return;
+    case "add_moderating_effect_v3":
+      addModeratingEffectV3(model, intent);
+      return;
+    case "replace_moderating_effect":
+      replaceModeratingEffectV1(model, intent);
+      return;
+    case "remove_moderating_effect":
+      removeModeratingEffectV1(model, intent);
       return;
     case "add_polynomial":
       addPolynomial(model, intent);
@@ -851,6 +925,443 @@ function addGeneralSemInteractionV2(
   );
 }
 
+type EditableModeratingEffectIntent = AddModeratingEffectIntentV3 | ReplaceModeratingEffectIntentV1;
+
+interface ResolvedModeratingEffectV3 {
+  operands: [string, string] | [string, string, string];
+  focalRelationId: string;
+  outcome: string;
+  parentInteractionTermId: string | null;
+}
+
+function validateModeratingEffectIntentV3(intent: EditableModeratingEffectIntent) {
+  if (intent.intent_version !== GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3
+    || intent.sem_generation !== "general_sem_v1") {
+    fail(
+      "standard_sem_authority.moderating_effect_intent_version_invalid",
+      "intent.intent_version",
+      "Diagram-native moderation requires the exact version-3 General SEM intent.",
+      "Refresh the model and retry from the current Moderating Effect dialog.",
+    );
+  }
+  if (intent.method !== "two_stage" || intent.hierarchy_policy !== "strong") {
+    fail(
+      "standard_sem_authority.moderating_effect_method_invalid",
+      "intent.method",
+      "QuickPLS 2.53 moderation supports the qualified two-stage method with strong hierarchy.",
+      "Use the qualified two-stage method and strong hierarchy.",
+    );
+  }
+  if (!Array.isArray(intent.operands)
+    || (intent.operands.length !== 2 && intent.operands.length !== 3)
+    || new Set(intent.operands).size !== intent.operands.length) {
+    fail(
+      "standard_sem_authority.moderating_effect_operands_invalid",
+      "intent.operands",
+      "A moderating effect requires two or three distinct operands in authored order.",
+      "Choose a predictor followed by one or two distinct moderators.",
+    );
+  }
+}
+
+function resolveModeratingEffectV3(
+  model: MutableModel,
+  intent: EditableModeratingEffectIntent,
+): ResolvedModeratingEffectV3 {
+  validateModeratingEffectIntentV3(intent);
+  const operands = intent.operands.map((operand, index) => stableId(operand, `intent.operands[${index}]`)) as
+    [string, string] | [string, string, string];
+  const outcome = stableId(intent.outcome, "intent.outcome");
+  for (const operand of operands) structuralVariable(model, operand, "source");
+  structuralVariable(model, outcome, "target");
+  if (new Set([...operands, outcome]).size !== operands.length + 1) {
+    fail(
+      "standard_sem_authority.moderating_effect_variables_not_distinct",
+      "intent.operands",
+      "The predictor, moderators, and outcome must be distinct variables.",
+      "Choose distinct constructs for every role.",
+    );
+  }
+
+  if (intent.target.kind === "focal_relation") {
+    if (operands.length !== 2) {
+      fail(
+        "standard_sem_authority.three_way_parent_required",
+        "intent.target",
+        "A three-way moderation must extend an existing two-way interaction.",
+        "Target the existing moderation anchor rather than the focal path.",
+      );
+    }
+    const focalRelationId = stableId(intent.target.relationId, "intent.target.relationId");
+    const focal = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+      relation.id === focalRelationId && relation.kind === "structural");
+    if (!focal || focal.role === "control" || focal.source !== operands[0] || focal.target !== outcome) {
+      fail(
+        "standard_sem_authority.moderating_effect_focal_invalid",
+        focalRelationId,
+        "The moderating effect must target the exact current predictor-to-outcome structural-effect path.",
+        "Choose an eligible structural path and retry.",
+      );
+    }
+    return { operands, focalRelationId, outcome, parentInteractionTermId: null };
+  }
+
+  if (operands.length !== 3) {
+    fail(
+      "standard_sem_authority.parent_interaction_requires_three_operands",
+      "intent.operands",
+      "Extending a moderation anchor requires predictor, first moderator, and second moderator operands.",
+      "Choose the existing two-way effect and one additional moderator.",
+    );
+  }
+  const parentInteractionTermId = stableId(
+    intent.target.interactionTermId,
+    "intent.target.interactionTermId",
+  );
+  const parent = model.derived_terms.find((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> =>
+    term.kind === "interaction_v2" && term.id === parentInteractionTermId);
+  if (!parent
+    || parent.operands.length !== 2
+    || parent.operands[0] !== operands[0]
+    || parent.operands[1] !== operands[1]
+    || parent.method !== "two_stage"
+    || parent.hierarchy_policy !== "strong") {
+    fail(
+      "standard_sem_authority.parent_interaction_invalid",
+      parentInteractionTermId,
+      "Three-way moderation must extend the exact resident qualified two-way interaction.",
+      "Refresh the Canvas and target an existing two-way moderation anchor.",
+    );
+  }
+  const focalRelationId = parent.focal_relation;
+  const focal = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+    relation.kind === "structural" && relation.id === focalRelationId);
+  if (!focal || focal.role === "control" || focal.source !== operands[0] || focal.target !== outcome) {
+    fail(
+      "standard_sem_authority.parent_interaction_focal_invalid",
+      focalRelationId,
+      "The parent interaction no longer resolves to the requested focal path and outcome.",
+      "Refresh the model before extending the interaction.",
+    );
+  }
+  return { operands, focalRelationId, outcome, parentInteractionTermId };
+}
+
+function hierarchyOrigin(model: MutableModel, subjectId: string) {
+  const id = standardSemGeneralSemGeneratedHierarchyAnnotationIdV1(subjectId);
+  if (!model.annotations.some((annotation) => annotation.id === id)) {
+    model.annotations.push({
+      kind: "note",
+      id,
+      subject: subjectId,
+      text: "QuickPLS-generated strong-hierarchy dependency.",
+    });
+  }
+}
+
+function hierarchyReference(model: MutableModel, ownerTermId: string, subjectId: string) {
+  const id = standardSemGeneralSemInteractionDependencyAnnotationIdV1(ownerTermId, subjectId);
+  if (!model.annotations.some((annotation) => annotation.id === id)) {
+    model.annotations.push({
+      kind: "note",
+      id,
+      subject: subjectId,
+      text: `Required by moderating effect ${ownerTermId}.`,
+    });
+  }
+}
+
+function ensureModerationMainEffect(
+  model: MutableModel,
+  operand: string,
+  outcome: string,
+  ownerTermId: string,
+) {
+  const conflicting = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+    relation.kind === "structural" && relation.source === operand && relation.target === outcome);
+  if (conflicting?.role === "control") {
+    fail(
+      "standard_sem_authority.moderating_effect_main_conflicts_control",
+      conflicting.id,
+      "A required moderator main effect is currently authored as a control path.",
+      "Convert it to a structural-effect path before adding moderation.",
+    );
+  }
+  if (conflicting) {
+    hierarchyReference(model, ownerTermId, conflicting.id);
+    return conflicting.id;
+  }
+  const id = `general-sem:v1:interaction-main:${encodeURIComponent(ownerTermId)}:${encodeURIComponent(operand)}`;
+  addRelationship(model, id, {
+    kind: "structural",
+    source: operand,
+    target: outcome,
+    label: "Moderator main effect",
+  });
+  hierarchyOrigin(model, id);
+  hierarchyReference(model, ownerTermId, id);
+  return id;
+}
+
+function findPairInteraction(
+  model: MutableModel,
+  first: string,
+  second: string,
+  focalRelationId: string,
+  outcome: string,
+) {
+  return model.derived_terms.find((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> => {
+    if (term.kind !== "interaction_v2"
+      || term.operands.length !== 2
+      || term.operands[0] !== first
+      || term.operands[1] !== second
+      || term.focal_relation !== focalRelationId
+      || term.method !== "two_stage"
+      || term.hierarchy_policy !== "strong") return false;
+    return model.relations.some((relation) => relation.kind === "structural"
+      && relation.source === term.output
+      && relation.target === outcome
+      && relation.role !== "control");
+  });
+}
+
+function ensurePairInteraction(
+  model: MutableModel,
+  first: string,
+  second: string,
+  focalRelationId: string,
+  outcome: string,
+  ownerTermId: string,
+) {
+  const existing = findPairInteraction(model, first, second, focalRelationId, outcome);
+  if (existing) {
+    hierarchyReference(model, ownerTermId, existing.id);
+    return existing;
+  }
+  const termId = standardSemGeneralSemInteractionV2TermIdV1(focalRelationId, first, second);
+  const outputId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  if (model.derived_terms.some((term) => term.id === termId)
+    || model.variables.some((variable) => variable.id === outputId)) {
+    fail(
+      "standard_sem_authority.lower_order_interaction_identity_conflict",
+      termId,
+      "A required lower-order interaction identity is occupied by incompatible model content.",
+      "Rename or remove the conflicting derived term before creating three-way moderation.",
+    );
+  }
+  model.variables.push({
+    kind: "derived",
+    id: outputId,
+    label: `${anyVariable(model, first).label} × ${anyVariable(model, second).label}`,
+  });
+  model.derived_terms.push({
+    kind: "interaction_v2",
+    id: termId,
+    output: outputId,
+    operands: [first, second],
+    focal_relation: focalRelationId,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+  addRelationship(model, standardSemGeneralSemInteractionV2EffectRelationIdV1(termId), {
+    kind: "structural",
+    source: outputId,
+    target: outcome,
+    label: "Lower-order interaction effect",
+  });
+  hierarchyOrigin(model, termId);
+  hierarchyReference(model, ownerTermId, termId);
+  return model.derived_terms.find((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> =>
+    term.kind === "interaction_v2" && term.id === termId)!;
+}
+
+function addModeratingEffectV3(
+  model: MutableModel,
+  intent: AddModeratingEffectIntentV3,
+  preservedIdentity?: { termId: string; outputId: string },
+) {
+  const resolved = resolveModeratingEffectV3(model, intent);
+  if (resolved.operands.length === 3 && model.derived_terms.some((term) => (
+    term.kind === "interaction_v2" && term.operands.length === 3
+  ))) {
+    fail(
+      "standard_sem_authority.multiple_three_way_interactions_unsupported",
+      "intent.operands",
+      "This bounded workflow supports one three-way moderating effect per model.",
+      "Edit or remove the existing three-way effect before creating another one.",
+    );
+  }
+  const [predictor, firstModerator, secondModerator] = resolved.operands;
+  const termId = preservedIdentity?.termId ?? (resolved.parentInteractionTermId
+    ? standardSemGeneralSemThreeWayInteractionTermIdV1(
+      resolved.parentInteractionTermId,
+      secondModerator!,
+    )
+    : standardSemGeneralSemInteractionV2TermIdV1(
+      resolved.focalRelationId,
+      predictor,
+      firstModerator,
+    ));
+  const outputId = preservedIdentity?.outputId
+    ?? standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  if (model.derived_terms.some((term) => term.id === termId)
+    || model.variables.some((variable) => variable.id === outputId)) duplicate("moderating effect", termId);
+  const semanticDuplicate = model.derived_terms.find((term) => term.kind === "interaction_v2"
+    && term.focal_relation === resolved.focalRelationId
+    && term.operands.length === resolved.operands.length
+    && term.operands.every((operand, index) => operand === resolved.operands[index]));
+  if (semanticDuplicate) {
+    fail(
+      "standard_sem_authority.moderating_effect_duplicate",
+      termId,
+      `Moderating effect ${semanticDuplicate.id} already represents the requested operands and focal relationship.`,
+      "Edit the existing moderating effect or choose a different target.",
+    );
+  }
+
+  for (const operand of resolved.operands) {
+    ensureModerationMainEffect(model, operand, resolved.outcome, termId);
+  }
+  if (resolved.parentInteractionTermId && secondModerator) {
+    hierarchyReference(model, termId, resolved.parentInteractionTermId);
+    const firstModeratorMain = model.relations.find((relation): relation is Extract<SemRelationV4, { kind: "structural" }> =>
+      relation.kind === "structural"
+      && relation.source === firstModerator
+      && relation.target === resolved.outcome
+      && relation.role !== "control");
+    if (!firstModeratorMain) {
+      fail(
+        "standard_sem_authority.parent_interaction_main_missing",
+        resolved.parentInteractionTermId,
+        "The parent interaction has no first-moderator main-effect path.",
+        "Repair the parent interaction before extending it.",
+      );
+    }
+    ensurePairInteraction(
+      model,
+      predictor,
+      secondModerator,
+      resolved.focalRelationId,
+      resolved.outcome,
+      termId,
+    );
+    ensurePairInteraction(
+      model,
+      firstModerator,
+      secondModerator,
+      firstModeratorMain.id,
+      resolved.outcome,
+      termId,
+    );
+  }
+
+  model.variables.push({
+    kind: "derived",
+    id: outputId,
+    label: requiredText(intent.label, "intent.label"),
+  });
+  model.derived_terms.push({
+    kind: "interaction_v2",
+    id: termId,
+    output: outputId,
+    operands: [...resolved.operands],
+    focal_relation: resolved.focalRelationId,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+  addRelationship(model, standardSemGeneralSemInteractionV2EffectRelationIdV1(termId), {
+    kind: "structural",
+    source: outputId,
+    target: resolved.outcome,
+    label: resolved.operands.length === 3 ? "Three-way interaction effect" : "Interaction effect",
+  });
+}
+
+function generatedHierarchyReferences(model: MutableModel, ownerTermId: string) {
+  const prefix = `${standardSemGeneralSemInteractionDependencyAnnotationIdV1(ownerTermId, "")}`;
+  return model.annotations.filter((annotation): annotation is Extract<SemModelV4["annotations"][number], { kind: "note" }> =>
+    annotation.kind === "note" && annotation.id.startsWith(prefix));
+}
+
+function removeModeratingEffectCore(
+  model: MutableModel,
+  termId: string,
+  outputId: string,
+) {
+  const term = model.derived_terms.find((candidate): candidate is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> =>
+    candidate.kind === "interaction_v2" && candidate.id === termId);
+  if (!term || term.output !== outputId) {
+    fail(
+      "standard_sem_authority.moderating_effect_identity_mismatch",
+      termId,
+      "The requested moderating effect identity does not match the resident model.",
+      "Refresh the Canvas and retry against the current moderating effect.",
+    );
+  }
+  const requiredBy = model.annotations.filter((annotation) => annotation.kind === "note"
+    && annotation.subject === termId
+    && annotation.id.startsWith("general-sem:v1:interaction-dependency:"));
+  if (requiredBy.length) {
+    fail(
+      "standard_sem_authority.moderating_effect_still_required",
+      termId,
+      "This two-way moderating effect is required by a three-way effect.",
+      "Remove the dependent three-way effect first.",
+    );
+  }
+  const dependencySubjects = generatedHierarchyReferences(model, termId).map((annotation) => annotation.subject);
+  model.annotations = model.annotations.filter((annotation) =>
+    !annotation.id.startsWith(standardSemGeneralSemInteractionDependencyAnnotationIdV1(termId, "")));
+  removeVariablesCascade(model, new Set([outputId]));
+
+  const stillReferenced = (subjectId: string) => model.annotations.some((annotation) =>
+    annotation.kind === "note"
+    && annotation.subject === subjectId
+    && annotation.id.startsWith("general-sem:v1:interaction-dependency:"));
+  for (const subjectId of dependencySubjects) {
+    const originId = standardSemGeneralSemGeneratedHierarchyAnnotationIdV1(subjectId);
+    if (!model.annotations.some((annotation) => annotation.id === originId) || stillReferenced(subjectId)) continue;
+    const dependencyTerm = model.derived_terms.find((candidate) => candidate.id === subjectId);
+    if (dependencyTerm) removeVariablesCascade(model, new Set([dependencyTerm.output]));
+    else if (model.relations.some((relation) => relation.id === subjectId)) removeRelationCascade(model, subjectId);
+    model.annotations = model.annotations.filter((annotation) => annotation.id !== originId);
+  }
+}
+
+function replaceModeratingEffectV1(model: MutableModel, intent: ReplaceModeratingEffectIntentV1) {
+  const termId = stableId(intent.term_id, "intent.term_id");
+  const outputId = stableId(intent.output_id, "intent.output_id");
+  removeModeratingEffectCore(model, termId, outputId);
+  addModeratingEffectV3(model, {
+    kind: "add_moderating_effect_v3",
+    intent_version: intent.intent_version,
+    sem_generation: intent.sem_generation,
+    label: intent.label,
+    operands: intent.operands,
+    target: intent.target,
+    outcome: intent.outcome,
+    method: intent.method,
+    hierarchy_policy: intent.hierarchy_policy,
+  }, { termId, outputId });
+}
+
+function removeModeratingEffectV1(model: MutableModel, intent: RemoveModeratingEffectIntentV1) {
+  if (intent.intent_version !== GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3
+    || intent.sem_generation !== "general_sem_v1") {
+    fail(
+      "standard_sem_authority.moderating_effect_intent_version_invalid",
+      "intent.intent_version",
+      "Removing moderation requires the exact version-3 General SEM intent.",
+      "Refresh the model and retry.",
+    );
+  }
+  removeModeratingEffectCore(
+    model,
+    stableId(intent.term_id, "intent.term_id"),
+    stableId(intent.output_id, "intent.output_id"),
+  );
+}
+
 function addInteraction(model: MutableModel, intent: Extract<StandardSemModelV4EditorIntentV1, { kind: "add_interaction" }>) {
   const termId = stableId(intent.term_id, "intent.term_id");
   const outputId = stableId(intent.output_id, "intent.output_id");
@@ -961,6 +1472,19 @@ function replaceHigherOrder(model: MutableModel, intent: Extract<StandardSemMode
   const index = model.derived_terms.findIndex((term) => term.id === intent.term_id && term.kind === "higher_order");
   if (index < 0) missing("higher-order term", intent.term_id);
   const current = model.derived_terms[index] as Extract<SemModelV4["derived_terms"][number], { kind: "higher_order" }>;
+  const outputId = stableId(intent.output_id, "intent.output_id");
+  if (current.output !== outputId) {
+    fail(
+      "standard_sem_authority.higher_order_output_mismatch",
+      intent.term_id,
+      "The replacement output identity differs from the resident higher-order construct.",
+      "Refresh the model and edit the existing higher-order construct.",
+    );
+  }
+  const outputIndex = model.variables.findIndex((variable) => variable.id === outputId && variable.kind === "derived");
+  if (outputIndex < 0) missing("higher-order output", outputId);
+  const output = model.variables[outputIndex] as Extract<SemVariableV4, { kind: "derived" }>;
+  model.variables[outputIndex] = { ...output, label: requiredText(intent.label, "intent.label") };
   model.derived_terms[index] = { ...current, components: distinctExistingConstructs(model, intent.components, intent.term_id), approach: intent.approach, measurement_type: intent.measurement_type };
 }
 

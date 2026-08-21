@@ -41,6 +41,7 @@ import {
   nativeHigherOrderDraftMeasurementType,
   nativeHigherOrderDraftProblems,
   nativeHigherOrderHocMode,
+  isNativeStructuralEdge,
   type NativeHigherOrderDraft,
 } from "./native/nativeHigherOrder";
 import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
@@ -71,6 +72,10 @@ export type AddHigherOrderConstructBlockReason =
 
 export type AddHigherOrderConstructResult =
   | { status: "created"; constructId: string }
+  | { status: "blocked"; reason: AddHigherOrderConstructBlockReason; detail: string };
+
+export type ReplaceHigherOrderConstructResult =
+  | { status: "replaced"; constructId: string }
   | { status: "blocked"; reason: AddHigherOrderConstructBlockReason; detail: string };
 
 interface LegacyHistorySnapshot {
@@ -260,6 +265,7 @@ export interface WorkspaceState {
   addCovariance: (source: string, target: string) => void;
   addTwoStageInteraction: (predictor: string, moderator: string, outcome: string) => AddTwoStageInteractionResult;
   addHigherOrderConstruct: (draft: NativeHigherOrderDraft) => AddHigherOrderConstructResult;
+  replaceHigherOrderConstruct: (constructId: string, draft: NativeHigherOrderDraft) => ReplaceHigherOrderConstructResult;
   updateConstruct: (id: string, patch: Partial<ConstructData>) => void;
   setConstructEstimandV4: (id: string, specification: SemModelV4ConstructAuthoring) => void;
   updateEdge: (id: string, patch: Partial<Edge>) => void;
@@ -349,6 +355,7 @@ const defaultUiPreferences: UiPreferences = {
   defaultPrecision: 4,
   showAdvancedHelp: true,
   experimentalLabsEnabled: false,
+  showGeneratedInteractionTerms: false,
   recentPanels: ["models", "runs", "reports"],
   methodScopeDrawerOpen: false,
   showThresholdColors: true,
@@ -366,6 +373,7 @@ function normalizedUiPreferences(candidate: Partial<UiPreferences> = {}): UiPref
     tableDensity: candidate.tableDensity === "comfortable" ? "comfortable" : "compact",
     defaultPrecision: Math.min(6, Math.max(2, Number.isFinite(precision) ? Math.trunc(precision) : defaultUiPreferences.defaultPrecision)),
     experimentalLabsEnabled: candidate.experimentalLabsEnabled === true,
+    showGeneratedInteractionTerms: candidate.showGeneratedInteractionTerms === true,
   };
 }
 
@@ -1407,6 +1415,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         type: "straight",
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+        data: { technicalGenerated: true },
       }, state.edges);
     for (const edge of withModeratorMainEffect) occupiedIds.add(edge.id);
     const interactionEdgeId = uniqueStableGraphId(`path-${id}-${outcome}`, occupiedIds);
@@ -1520,6 +1529,79 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
             },
           },
         ],
+      };
+    });
+    return result;
+  },
+  replaceHigherOrderConstruct: (constructId, draft) => {
+    let result: ReplaceHigherOrderConstructResult = {
+      status: "blocked",
+      reason: "invalid_draft",
+      detail: "The higher-order construct could not be updated.",
+    };
+    set((state) => {
+      if (activeStandardSemModelV4Authority(state)) {
+        result = {
+          status: "blocked",
+          reason: "scope_unavailable",
+          detail: "Strict Standard models must be edited through a versioned SemModelV4 authority intent.",
+        };
+        return state;
+      }
+      const current = state.nodes.find((node) => node.id === constructId);
+      if (!current || current.data.semantic !== "higher_order" || !current.data.higherOrder) {
+        result = {
+          status: "blocked",
+          reason: "invalid_draft",
+          detail: "Select an existing higher-order construct to edit.",
+        };
+        return state;
+      }
+      const structuralEdges = state.edges.filter(isNativeStructuralEdge);
+      const hocIsEndogenous = structuralEdges.some((edge) => edge.target === constructId)
+        ? true
+        : structuralEdges.some((edge) => edge.source === constructId)
+          ? false
+          : null;
+      const problems = nativeHigherOrderDraftProblems(draft, state.nodes, state.edges, {
+        editingHigherOrderId: constructId,
+        hocIsEndogenous,
+      });
+      if (problems.length) {
+        result = { status: "blocked", reason: "invalid_draft", detail: problems[0] };
+        return state;
+      }
+      const approach = nativeHigherOrderDraftApproach(draft);
+      const measurementType = nativeHigherOrderDraftMeasurementType(draft);
+      result = { status: "replaced", constructId };
+      return {
+        ...historyPatch(state),
+        selectedNodeId: constructId,
+        selectedEdgeId: null,
+        nodes: state.nodes.map((node) => node.id === constructId
+          ? {
+              ...node,
+              selected: true,
+              data: {
+                ...node.data,
+                label: draft.name.trim(),
+                shortName: draft.shortName.trim(),
+                mode: nativeHigherOrderHocMode(measurementType),
+                indicators: [],
+                semantic: "higher_order" as const,
+                higherOrder: {
+                  ...current.data.higherOrder!,
+                  id: current.data.higherOrder!.id,
+                  components: [...draft.components],
+                  method: approach === "repeated_indicators" || approach === "extended_repeated_indicators"
+                    ? "repeated_indicators" as const
+                    : "two_stage" as const,
+                  canonicalApproach: approach,
+                  measurementType,
+                },
+              },
+            }
+          : { ...node, selected: false }),
       };
     });
     return result;

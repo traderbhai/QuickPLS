@@ -552,6 +552,7 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
 
   it("builds a strict typed PLS document with exact native table identities", async () => {
     const run = currentPlsRun();
+    const nativeNavigation = buildNativeResultNavigation(run);
     const built = await canonicalResultDocumentFromAnalysisRunV2(run, {
       projectId: "project-corporate-reputation",
       datasetId: "dataset-corporate-reputation",
@@ -562,7 +563,7 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
     expect(built.mode).toBe("current_typed_bridge");
     expect(validateCanonicalResultDocumentV2(built.document)).toEqual({ passed: true, errors: [] });
     expect(built.document.tables.map((table) => table.id)).toEqual(
-      buildNativeResultNavigation(run).tables.map((table) => table.id).filter((id) => id !== "blindfolding"),
+      nativeNavigation.tables.map((table) => table.id).filter((id) => id !== "blindfolding"),
     );
     expect(new Set(built.document.sections.flatMap((section) => section.table_ids))).toEqual(
       new Set(built.document.tables.map((table) => table.id)),
@@ -601,6 +602,10 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
         capability_cell: expect.objectContaining({ capability_id: "smartpls.blindfolding" }),
       }),
     ]);
+    expect(nativeNavigation.tables.find((table) => table.id === "model_fit"))
+      .toMatchObject({ warning: null, advisory: { tone: "neutral", title: "About these measures" } });
+    expect(built.document.notices.find((notice) => notice.table_ids.includes("model_fit")))
+      .toMatchObject({ severity: "information", code: "table_advisory" });
   });
 
   it("adapts a current non-PLS family and preserves GSCA table ordering", async () => {

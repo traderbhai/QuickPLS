@@ -111,7 +111,7 @@ const base: NativeProjectSignatureInput = {
 describe("native project lifecycle", () => {
   it("blocks even clean workspace replacement while a schema-6 Standard source remains bound", () => {
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(false, false)).toBeNull();
-    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close General SEM project");
+    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close the calculation-ready project");
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, true)).toContain("Save a validated new copy");
   });
 
@@ -148,6 +148,63 @@ describe("native project lifecycle", () => {
     };
 
     expect(nativeProjectSignature(selected)).toBe(nativeProjectSignature(base));
+  });
+
+  it("signs an interaction_v2 draft from its scientific graph without legacy recipe serialization", () => {
+    const moderation = {
+      ...base,
+      nodes: [
+        ...base.nodes,
+        {
+          id: "w",
+          type: "construct",
+          position: { x: 10, y: 160 },
+          data: { label: "Moderator", shortName: "W", mode: "reflective" as const, indicators: ["w1"] },
+        },
+        {
+          id: "y",
+          type: "construct",
+          position: { x: 280, y: 20 },
+          data: { label: "Outcome", shortName: "Y", mode: "reflective" as const, indicators: ["y1"] },
+        },
+        {
+          id: "interaction-x-w-y",
+          type: "construct",
+          position: { x: 140, y: 90 },
+          data: {
+            label: "X x W",
+            shortName: "XW",
+            mode: "formative" as const,
+            indicators: [],
+            semantic: "interaction" as const,
+            interaction: {
+              kind: "interaction_v2" as const,
+              termId: "term:x-w-y",
+              operands: ["x", "w"],
+              outcome: "y",
+              focalRelationId: "x-y",
+              canonicalMethod: "two_stage" as const,
+              hierarchyPolicy: "strong" as const,
+              productIndicator: null,
+            },
+          },
+        },
+      ],
+      edges: [
+        { id: "x-y", source: "x", target: "y" },
+        { id: "w-y", source: "w", target: "y", data: { technicalGenerated: true } },
+        { id: "xw-y", source: "interaction-x-w-y", target: "y" },
+      ],
+    } satisfies NativeProjectSignatureInput;
+
+    const signed = nativeProjectSignature(moderation);
+    expect(signed).toContain('"activeScientificGraph"');
+    expect(nativeProjectSignature({
+      ...moderation,
+      nodes: moderation.nodes.map((node) => node.id === "interaction-x-w-y"
+        ? { ...node, data: { ...node.data, label: "X x W revised" } }
+        : node),
+    })).not.toBe(signed);
   });
 
   it("detects model, method, dataset, result, and diagram changes", () => {

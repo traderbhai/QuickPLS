@@ -472,7 +472,11 @@ function analyticalGeneralSemResults(document: CanonicalResultDocumentV2): unkno
 
   const results = generalSemResults as unknown as Record<string, unknown>;
   const analyticalResults = { ...results };
-  for (const key of ["inference_receipt", "cbsem_bootstrap_receipt"] as const) {
+  for (const key of [
+    "inference_receipt",
+    "three_way_moderation_bootstrap_receipt",
+    "cbsem_bootstrap_receipt",
+  ] as const) {
     const receipt = results[key];
     if (receipt != null && typeof receipt === "object" && !Array.isArray(receipt)) {
       const { workers: _workers, ...analyticalReceipt } = receipt as Record<string, unknown>;

@@ -1,15 +1,17 @@
 use crate::{
     CapabilityCellReferenceV2, CompiledPlsBlockModeV2, CompiledPlsPlanV2, CompiledPlsPlanV2Error,
+    CompiledPlsThreeWayInteractionErrorV1, CompiledPlsThreeWayInteractionV1,
     CompiledPlsTwoWayModeratedMediationTargetErrorV1, CompiledPlsTwoWayModeratedMediationTargetV1,
     CompiledSemSpecificDirectedPathV1, CompiledSemTopologyV1, CompiledSemTopologyV1Error,
     CompositeWeightingV4, GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1, GeneralSemConfigV1,
     GeneralSemConfigV1ValidationError, GeneralSemEffectEstimandV1,
     GeneralSemSpecificPathLimitBehaviorV1, HigherOrderConstructionApproachV4,
     HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
-    ObservedRoleV4, ObservedScaleV4, SemConstraintV4, SemDerivedTermV4, SemModelV4,
-    SemParameterTargetV4, SemParameterV4, SemPresentationV4, SemRelationV4, SemVariableV4,
-    StructuralRelationRoleV4, compile_pls_plan_v2,
-    compile_pls_two_way_moderated_mediation_target_v1, compile_sem_topology_v1,
+    ObservedRoleV4, ObservedScaleV4, SemAnnotationV4, SemConstraintV4, SemDerivedTermV4,
+    SemModelV4, SemParameterTargetV4, SemParameterV4, SemPresentationV4, SemRelationV4,
+    SemVariableV4, StructuralRelationRoleV4, compile_pls_plan_v2,
+    compile_pls_three_way_interaction_v1, compile_pls_two_way_moderated_mediation_target_v1,
+    compile_sem_topology_v1,
 };
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -251,6 +253,8 @@ pub enum CompiledPlsInteractionV3Error {
     InvalidModel(#[from] crate::SemModelV4ValidationError),
     #[error("PLS v3 interaction cell does not support derived term {term_id} ({kind})")]
     UnsupportedDerivedTerm { term_id: String, kind: &'static str },
+    #[error("three-way interaction projection is invalid: {message}")]
+    ThreeWayProjection { message: String },
     #[error("interaction {interaction_id} requires exactly two operands; received {operand_count}")]
     UnsupportedInteractionOrder {
         interaction_id: String,
@@ -743,6 +747,8 @@ pub struct CompiledPlsPlanV3 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     two_way_interactions: Vec<CompiledPlsTwoWayInteractionV3>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    three_way_interaction: Option<CompiledPlsThreeWayInteractionV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     two_way_moderated_mediation_target: Option<CompiledPlsTwoWayModeratedMediationTargetV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     higher_order_stage_plans: Vec<CompiledPlsHigherOrderStagePlanV1>,
@@ -783,6 +789,10 @@ impl CompiledPlsPlanV3 {
         &self.two_way_interactions
     }
 
+    pub fn three_way_interaction(&self) -> Option<&CompiledPlsThreeWayInteractionV1> {
+        self.three_way_interaction.as_ref()
+    }
+
     pub fn two_way_moderated_mediation_target(
         &self,
     ) -> Option<&CompiledPlsTwoWayModeratedMediationTargetV1> {
@@ -817,6 +827,8 @@ pub enum CompiledPlsPlanV3Error {
     #[error(transparent)]
     Interaction(#[from] CompiledPlsInteractionV3Error),
     #[error(transparent)]
+    ThreeWayInteraction(#[from] CompiledPlsThreeWayInteractionErrorV1),
+    #[error(transparent)]
     ModeratedMediationTarget(#[from] CompiledPlsTwoWayModeratedMediationTargetErrorV1),
     #[error(transparent)]
     HigherOrder(#[from] CompiledPlsHigherOrderV1Error),
@@ -828,6 +840,8 @@ pub enum CompiledPlsPlanV3Error {
         "General SEM HOC v1 publishes effects through its typed HOC stages and does not accept generic requested-effect estimands"
     )]
     HigherOrderRequestedEffectsNotExecutable,
+    #[error("General SEM three-way moderation v1 does not execute mediated-path estimands")]
+    ThreeWayRequestedEffectsNotExecutable,
     #[error("aggregate estimand id {estimand_id} collides with a canonical specific-path identity")]
     AggregateEstimandIdCollidesWithSpecificPathIdentity { estimand_id: String },
     #[error("requested specific indirect estimand {estimand_id} is not an exact compiled path")]
@@ -867,6 +881,11 @@ pub fn compile_pls_plan_v3(
     } else {
         Vec::new()
     };
+    let three_way_interaction = if higher_order_stage_plans.is_empty() {
+        compile_pls_three_way_interaction_v1(model)?
+    } else {
+        None
+    };
     let (base_plan, stage_one_projection_scientific_sha256) =
         if !higher_order_stage_plans.is_empty() {
             let projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
@@ -879,7 +898,7 @@ pub fn compile_pls_plan_v3(
                 base_plan,
                 Some(projection.projected_scientific_sha256().to_string()),
             )
-        } else if two_way_interactions.is_empty() {
+        } else if two_way_interactions.is_empty() && three_way_interaction.is_none() {
             (compile_pls_plan_v2(model)?, None)
         } else {
             let projection = compile_pls_stage_one_projection_v3(model)?;
@@ -896,18 +915,36 @@ pub fn compile_pls_plan_v3(
     if !higher_order_stage_plans.is_empty() && !config.requested_effect_estimands.is_empty() {
         return Err(CompiledPlsPlanV3Error::HigherOrderRequestedEffectsNotExecutable);
     }
+    if three_way_interaction.is_some() && !config.requested_effect_estimands.is_empty() {
+        return Err(CompiledPlsPlanV3Error::ThreeWayRequestedEffectsNotExecutable);
+    }
     let auto_selected_effects =
         higher_order_stage_plans.is_empty() && config.requested_effect_estimands.is_empty();
     let interaction_outputs = two_way_interactions
         .iter()
         .map(|interaction| interaction.output_variable_id().to_string())
+        .chain(
+            three_way_interaction
+                .iter()
+                .map(|interaction| interaction.output_variable_id().to_string()),
+        )
         .collect::<BTreeSet<_>>();
+    let generated_hierarchy_relation_ids = generated_hierarchy_relation_ids_v3(model);
     let effect_estimands = if !higher_order_stage_plans.is_empty() {
         Vec::new()
     } else if auto_selected_effects {
-        compile_all_effect_estimands(&topology, &interaction_outputs)
+        compile_all_effect_estimands(
+            &topology,
+            &interaction_outputs,
+            &generated_hierarchy_relation_ids,
+        )
     } else {
-        compile_requested_effect_estimands(&topology, config, &interaction_outputs)?
+        compile_requested_effect_estimands(
+            &topology,
+            config,
+            &interaction_outputs,
+            &generated_hierarchy_relation_ids,
+        )?
     };
     let scientific_hash = model
         .scientific_sha256()
@@ -922,12 +959,16 @@ pub fn compile_pls_plan_v3(
         topology,
         stage_one_projection_scientific_sha256,
         two_way_interactions,
+        three_way_interaction,
         two_way_moderated_mediation_target: None,
         higher_order_stage_plans,
         effect_estimands,
         auto_selected_effects,
     };
-    if !plan.two_way_interactions.is_empty() && !config.requested_effect_estimands.is_empty() {
+    if plan.three_way_interaction.is_none()
+        && !plan.two_way_interactions.is_empty()
+        && !config.requested_effect_estimands.is_empty()
+    {
         plan.two_way_moderated_mediation_target = Some(
             compile_pls_two_way_moderated_mediation_target_v1(&plan, config)?,
         );
@@ -2066,6 +2107,9 @@ pub fn compile_pls_two_way_interactions_v3(
                 kind,
             });
         };
+        if operands.len() == 3 {
+            continue;
+        }
         if operands.len() != 2 {
             return Err(CompiledPlsInteractionV3Error::UnsupportedInteractionOrder {
                 interaction_id: id.clone(),
@@ -2259,8 +2303,13 @@ pub fn compile_pls_stage_one_projection_v3(
     model: &SemModelV4,
 ) -> Result<CompiledPlsStageOneProjectionV3, CompiledPlsInteractionV3Error> {
     let interactions = compile_pls_two_way_interactions_v3(model)?;
+    let three_way = compile_pls_three_way_interaction_v1(model).map_err(|error| {
+        CompiledPlsInteractionV3Error::ThreeWayProjection {
+            message: error.to_string(),
+        }
+    })?;
     let source_scientific_sha256 = model.scientific_sha256()?;
-    if interactions.is_empty() {
+    if interactions.is_empty() && three_way.is_none() {
         return Ok(CompiledPlsStageOneProjectionV3 {
             contract_version: COMPILED_PLS_STAGE_ONE_PROJECTION_V3_VERSION.to_string(),
             source_scientific_sha256: source_scientific_sha256.clone(),
@@ -2272,14 +2321,49 @@ pub fn compile_pls_stage_one_projection_v3(
     let output_ids = interactions
         .iter()
         .map(|interaction| interaction.output_variable_id())
+        .chain(
+            three_way
+                .iter()
+                .map(|interaction| interaction.output_variable_id()),
+        )
         .collect::<BTreeSet<_>>();
     let relation_ids = interactions
         .iter()
         .map(|interaction| interaction.interaction_effect_relation_id())
+        .chain(
+            three_way
+                .iter()
+                .map(|interaction| interaction.interaction_effect_relation_id()),
+        )
         .collect::<BTreeSet<_>>();
     let parameter_ids = interactions
         .iter()
         .map(|interaction| interaction.interaction_effect_parameter_id())
+        .chain(
+            three_way
+                .iter()
+                .map(|interaction| interaction.interaction_effect_parameter_id()),
+        )
+        .collect::<BTreeSet<_>>();
+    let binary_three_way_indicator_ids = three_way
+        .iter()
+        .flat_map(|interaction| {
+            [
+                (
+                    interaction.first_moderator_id(),
+                    interaction.first_moderator_scale(),
+                ),
+                (
+                    interaction.second_moderator_id(),
+                    interaction.second_moderator_scale(),
+                ),
+            ]
+        })
+        .filter_map(|(moderator_id, scale)| {
+            (scale == crate::CompiledPlsThreeWayModeratorScaleV1::BinaryZeroOne)
+                .then(|| exact_single_indicator_id_v3(model, moderator_id))
+                .flatten()
+        })
         .collect::<BTreeSet<_>>();
     let mut projected_model = model.clone();
     projected_model
@@ -2291,6 +2375,27 @@ pub fn compile_pls_stage_one_projection_v3(
     projected_model
         .parameters
         .retain(|parameter| !parameter_ids.contains(parameter.id()));
+    // The established PLS score compiler accepts numeric continuous columns.
+    // An authored exact 0/1 single-indicator moderator is therefore projected
+    // as a numeric scoring column only inside this generated stage-one model.
+    // The source SemModelV4 and compiled three-way contract retain BinaryZeroOne
+    // as the scientific probe authority.
+    for variable in &mut projected_model.variables {
+        if !binary_three_way_indicator_ids.contains(variable.id()) {
+            continue;
+        }
+        if let SemVariableV4::Observed {
+            scale,
+            categories,
+            value_labels,
+            ..
+        } = variable
+        {
+            *scale = ObservedScaleV4::Continuous;
+            categories.clear();
+            value_labels.clear();
+        }
+    }
     projected_model.derived_terms.clear();
     projected_model.annotations.clear();
     projected_model.presentation = SemPresentationV4::None;
@@ -2303,6 +2408,27 @@ pub fn compile_pls_stage_one_projection_v3(
         projected_scientific_sha256,
         projected_model,
     })
+}
+
+fn exact_single_indicator_id_v3<'a>(model: &'a SemModelV4, construct_id: &str) -> Option<&'a str> {
+    let mut indicators = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::MeasurementEffect {
+                construct,
+                indicator,
+                ..
+            } if construct == construct_id => Some(indicator.as_str()),
+            SemRelationV4::MeasurementCausal {
+                indicator,
+                composite,
+                ..
+            } if composite == construct_id => Some(indicator.as_str()),
+            _ => None,
+        });
+    let indicator = indicators.next()?;
+    indicators.next().is_none().then_some(indicator)
 }
 
 fn relation_references_variable(relation: &SemRelationV4, variable_id: &str) -> bool {
@@ -2361,15 +2487,46 @@ fn interaction_product_column_identity(
     format!("qpls_pls_product_v1_{:x}", digest.finalize())
 }
 
+fn generated_hierarchy_relation_ids_v3(model: &SemModelV4) -> BTreeSet<String> {
+    let structural_relation_ids = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::Structural { id, .. } => Some(id.as_str()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    model
+        .annotations
+        .iter()
+        .filter_map(|annotation| match annotation {
+            SemAnnotationV4::Note { id, subject, .. }
+                if id.starts_with("general-sem:v1:interaction-generated:")
+                    && structural_relation_ids.contains(subject.as_str()) =>
+            {
+                Some(subject.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
 fn compile_requested_effect_estimands(
     topology: &CompiledSemTopologyV1,
     config: &GeneralSemConfigV1,
     excluded_sources: &BTreeSet<String>,
+    excluded_relation_ids: &BTreeSet<String>,
 ) -> Result<Vec<CompiledPlsEffectEstimandV3>, CompiledPlsPlanV3Error> {
     let reserved_specific_path_identities = topology
         .specific_directed_paths()
         .iter()
-        .filter(|path| !excluded_sources.contains(path.source()))
+        .filter(|path| {
+            !excluded_sources.contains(path.source())
+                && path
+                    .relation_ids()
+                    .iter()
+                    .all(|relation_id| !excluded_relation_ids.contains(relation_id))
+        })
         .map(|path| path.identity().to_string())
         .collect::<BTreeSet<_>>();
     let mut compiled = Vec::with_capacity(config.requested_effect_estimands.len());
@@ -2384,6 +2541,10 @@ fn compile_requested_effect_estimands(
                     .iter()
                     .find(|path| {
                         !excluded_sources.contains(path.source())
+                            && path
+                                .relation_ids()
+                                .iter()
+                                .all(|relation_id| !excluded_relation_ids.contains(relation_id))
                             && path.relation_ids() == ordered_relation_ids
                     })
                     .ok_or_else(|| CompiledPlsPlanV3Error::UnknownSpecificIndirectPath {
@@ -2400,7 +2561,13 @@ fn compile_requested_effect_estimands(
                     &reserved_specific_path_identities,
                     estimand_id,
                 )?;
-                let path_ids = indirect_path_ids(topology, source_id, target_id, excluded_sources);
+                let path_ids = indirect_path_ids(
+                    topology,
+                    source_id,
+                    target_id,
+                    excluded_sources,
+                    excluded_relation_ids,
+                );
                 if path_ids.is_empty() {
                     return Err(CompiledPlsPlanV3Error::UnreachableEffect {
                         kind: "total_indirect",
@@ -2425,9 +2592,20 @@ fn compile_requested_effect_estimands(
                     &reserved_specific_path_identities,
                     estimand_id,
                 )?;
-                let direct_relation_ids =
-                    direct_relation_ids(topology, source_id, target_id, excluded_sources);
-                let path_ids = indirect_path_ids(topology, source_id, target_id, excluded_sources);
+                let direct_relation_ids = direct_relation_ids(
+                    topology,
+                    source_id,
+                    target_id,
+                    excluded_sources,
+                    excluded_relation_ids,
+                );
+                let path_ids = indirect_path_ids(
+                    topology,
+                    source_id,
+                    target_id,
+                    excluded_sources,
+                    excluded_relation_ids,
+                );
                 if direct_relation_ids.is_empty() && path_ids.is_empty() {
                     return Err(CompiledPlsPlanV3Error::UnreachableEffect {
                         kind: "total_effect",
@@ -2467,30 +2645,50 @@ fn reject_aggregate_specific_path_identity_collision(
 fn compile_all_effect_estimands(
     topology: &CompiledSemTopologyV1,
     excluded_sources: &BTreeSet<String>,
+    excluded_relation_ids: &BTreeSet<String>,
 ) -> Vec<CompiledPlsEffectEstimandV3> {
     let mut compiled = topology
         .specific_directed_paths()
         .iter()
-        .filter(|path| !excluded_sources.contains(path.source()))
+        .filter(|path| {
+            !excluded_sources.contains(path.source())
+                && path
+                    .relation_ids()
+                    .iter()
+                    .all(|relation_id| !excluded_relation_ids.contains(relation_id))
+        })
         .map(|path| specific_estimand(path.identity().to_string(), path))
         .collect::<Vec<_>>();
     let mut pairs = BTreeSet::new();
     for relation in topology.structural_relations() {
         if relation.role() == StructuralRelationRoleV4::Structural {
-            if excluded_sources.contains(relation.source()) {
+            if excluded_sources.contains(relation.source())
+                || excluded_relation_ids.contains(relation.relation_id())
+            {
                 continue;
             }
             pairs.insert((relation.source().to_string(), relation.target().to_string()));
         }
     }
     for path in topology.specific_directed_paths() {
-        if excluded_sources.contains(path.source()) {
+        if excluded_sources.contains(path.source())
+            || path
+                .relation_ids()
+                .iter()
+                .any(|relation_id| excluded_relation_ids.contains(relation_id))
+        {
             continue;
         }
         pairs.insert((path.source().to_string(), path.target().to_string()));
     }
     for (source_id, target_id) in pairs {
-        let path_ids = indirect_path_ids(topology, &source_id, &target_id, excluded_sources);
+        let path_ids = indirect_path_ids(
+            topology,
+            &source_id,
+            &target_id,
+            excluded_sources,
+            excluded_relation_ids,
+        );
         if !path_ids.is_empty() {
             compiled.push(CompiledPlsEffectEstimandV3::TotalIndirect {
                 estimand_id: auto_effect_identity("total_indirect", &source_id, &target_id),
@@ -2506,6 +2704,7 @@ fn compile_all_effect_estimands(
                 &source_id,
                 &target_id,
                 excluded_sources,
+                excluded_relation_ids,
             ),
             source_id,
             target_id,
@@ -2534,6 +2733,7 @@ fn indirect_path_ids(
     source: &str,
     target: &str,
     excluded_sources: &BTreeSet<String>,
+    excluded_relation_ids: &BTreeSet<String>,
 ) -> Vec<String> {
     if excluded_sources.contains(source) {
         return Vec::new();
@@ -2541,7 +2741,14 @@ fn indirect_path_ids(
     let mut identities = topology
         .specific_directed_paths()
         .iter()
-        .filter(|path| path.source() == source && path.target() == target)
+        .filter(|path| {
+            path.source() == source
+                && path.target() == target
+                && path
+                    .relation_ids()
+                    .iter()
+                    .all(|relation_id| !excluded_relation_ids.contains(relation_id))
+        })
         .map(|path| path.identity().to_string())
         .collect::<Vec<_>>();
     identities.sort();
@@ -2553,6 +2760,7 @@ fn direct_relation_ids(
     source: &str,
     target: &str,
     excluded_sources: &BTreeSet<String>,
+    excluded_relation_ids: &BTreeSet<String>,
 ) -> Vec<String> {
     if excluded_sources.contains(source) {
         return Vec::new();
@@ -2564,6 +2772,7 @@ fn direct_relation_ids(
             relation.role() == StructuralRelationRoleV4::Structural
                 && relation.source() == source
                 && relation.target() == target
+                && !excluded_relation_ids.contains(relation.relation_id())
         })
         .map(|relation| relation.relation_id().to_string())
         .collect::<Vec<_>>();
@@ -2838,6 +3047,64 @@ mod tests {
                 .deterministic_sha256(),
             plan.deterministic_sha256()
         );
+    }
+
+    #[test]
+    fn generated_hierarchy_relations_remain_in_estimation_but_not_effect_discovery() {
+        let mut model = recursive_model();
+        let generated_relation_id = relation_id(&model, "construct:x", "construct:m2");
+        model.annotations.push(SemAnnotationV4::Note {
+            id: format!(
+                "general-sem:v1:interaction-generated:{}",
+                generated_relation_id
+            ),
+            subject: generated_relation_id.clone(),
+            text: "QuickPLS-generated strong-hierarchy dependency.".into(),
+        });
+        let complete_topology = compile_sem_topology_v1(&model, 100).unwrap();
+        let excluded_path_ids = complete_topology
+            .specific_directed_paths()
+            .iter()
+            .filter(|path| path.relation_ids().contains(&generated_relation_id))
+            .map(|path| path.identity().to_string())
+            .collect::<BTreeSet<_>>();
+        assert!(!excluded_path_ids.is_empty());
+
+        let plan = compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()).unwrap();
+        assert!(
+            plan.topology()
+                .structural_relations()
+                .iter()
+                .any(|relation| relation.relation_id() == generated_relation_id)
+        );
+        for estimand in plan.effect_estimands() {
+            match estimand {
+                CompiledPlsEffectEstimandV3::SpecificIndirect {
+                    ordered_relation_ids,
+                    ..
+                } => assert!(!ordered_relation_ids.contains(&generated_relation_id)),
+                CompiledPlsEffectEstimandV3::TotalIndirect {
+                    contributing_path_identities,
+                    ..
+                } => assert!(
+                    contributing_path_identities
+                        .iter()
+                        .all(|identity| !excluded_path_ids.contains(identity))
+                ),
+                CompiledPlsEffectEstimandV3::TotalEffect {
+                    direct_relation_ids,
+                    contributing_indirect_path_identities,
+                    ..
+                } => {
+                    assert!(!direct_relation_ids.contains(&generated_relation_id));
+                    assert!(
+                        contributing_indirect_path_identities
+                            .iter()
+                            .all(|identity| !excluded_path_ids.contains(identity))
+                    );
+                }
+            }
+        }
     }
 
     #[test]

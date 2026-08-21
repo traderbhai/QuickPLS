@@ -8,8 +8,8 @@ use crate::{
     SemCapabilityCellIdV1, SemCapabilityDecisionStatusV1, SemCapabilityDecisionV1,
     SemCapabilityDecisionV1ValidationError, SemCapabilityDiagnosticSeverityV1,
     SemCapabilityDiagnosticV1, SemCapabilityEvidenceV1, SemDataBindingV4, SemDerivedTermV4,
-    SemGroupV4, SemModelV4, SemVariableV4, compile_cbsem_plan_v3, compile_pls_plan_v3,
-    pls_general_higher_order_bootstrap_capability_cell_v1,
+    SemGroupV4, SemModelV4, SemRelationV4, SemVariableV4, compile_cbsem_plan_v3,
+    compile_pls_plan_v3, pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     validate_cbsem_general_sem_parameter_semantics_v1,
     validate_cbsem_ml_exact_parameter_table_v4_capability_v2,
@@ -64,6 +64,9 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
+    let has_three_way = model.derived_terms.iter().any(|term| {
+        matches!(term, SemDerivedTermV4::InteractionV2 { operands, .. } if operands.len() == 3)
+    });
     let requests_moderated_mediation = has_interactions
         && matches!(
             config.inference,
@@ -74,7 +77,16 @@ pub fn preflight_general_sem_pls_v1(
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }));
-    let capability_cells = pls_cells(has_interactions, has_higher_order, config)?;
+    let indirect_path_count = compile_pls_plan_v3(model, config)
+        .map(|plan| plan.topology().specific_directed_paths().len())
+        .unwrap_or(0);
+    let capability_cells = pls_cells(
+        has_interactions,
+        has_three_way,
+        has_higher_order,
+        indirect_path_count,
+        config,
+    )?;
     let mut evidence = vec![SemCapabilityEvidenceV1::new(
         "compiler:recipe_v4_to_compiled_pls_plan_v3_v1",
         "The versioned PLS v3 compiler preserves the proven v2 scoring plan and adds stable topology and effect identities.",
@@ -87,6 +99,15 @@ pub fn preflight_general_sem_pls_v1(
         evidence.push(SemCapabilityEvidenceV1::new(
             "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_point:general_sem_pls_higher_order_point_v1",
             "The exact bounded General SEM HOC point identity owns approach-specific staged execution and canonical result authority.",
+        )?);
+    } else if has_three_way {
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "compiler:recipe_v4_to_compiled_pls_plan_v3_three_way_moderation_point_v1",
+            "The bounded compiler binds one ordered X-by-W-by-Z term, all strong-hierarchy lower-order terms, and one joint stage-two equation.",
+        )?);
+        evidence.push(SemCapabilityEvidenceV1::new(
+            "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_three_way_moderation_point:general_sem_pls_three_way_moderation_point_v1",
+            "The exact bounded three-way moderation point cell owns the ordered three-operand scientific estimand.",
         )?);
     } else if has_interactions {
         evidence.push(SemCapabilityEvidenceV1::new(
@@ -122,6 +143,15 @@ pub fn preflight_general_sem_pls_v1(
                 "capability_contract:smartpls.higher_order_models:qpls3.pls.general_sem_higher_order_full_model_case_bootstrap:general_sem_pls_higher_order_full_model_case_bootstrap_v1",
                 "The exact bounded HOC bootstrap identity owns indexed raw-case resampling and complete approach-specific stage refitting.",
             )?);
+        } else if has_three_way {
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "compiler:recipe_v4_to_compiled_pls_plan_v3_three_way_moderation_bootstrap_v1",
+                "The three-way bootstrap compiler binds every point, conditional-interaction, and simple-slope target to one indexed full-model case-resampling ledger.",
+            )?);
+            evidence.push(SemCapabilityEvidenceV1::new(
+                "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_three_way_moderation_bootstrap:general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+                "The exact bounded three-way moderation bootstrap cell owns percentile inference for its fixed probe inventory.",
+            )?);
         } else if requests_moderated_mediation {
             evidence.push(SemCapabilityEvidenceV1::new(
                 "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
@@ -138,12 +168,24 @@ pub fn preflight_general_sem_pls_v1(
             )?);
         } else {
             evidence.push(SemCapabilityEvidenceV1::new(
-                "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1",
+                if indirect_path_count == 1 {
+                    "compiler:recipe_v4_to_compiled_pls_plan_v3_single_mediation_bootstrap_v1"
+                } else {
+                    "compiler:recipe_v4_to_compiled_pls_plan_v3_bootstrap_v1"
+                },
                 "The bootstrap compiler binds exact Recipe V4 inference settings to the General SEM config while retaining the proven point-scoring plan.",
             )?);
             evidence.push(SemCapabilityEvidenceV1::new(
-                "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1",
-                "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs.",
+                if indirect_path_count == 1 {
+                    "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_single_mediation_bootstrap:general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
+                } else {
+                    "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_multiple_mediation_bootstrap:general_sem_pls_full_model_case_bootstrap_v1"
+                },
+                if indirect_path_count == 1 {
+                    "Capability Registry V2 exposes this exact single-mediation, full-model percentile case-bootstrap combination."
+                } else {
+                    "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination in Experimental Labs."
+                },
             )?);
         }
         evidence.push(SemCapabilityEvidenceV1::new(
@@ -169,6 +211,9 @@ pub fn preflight_general_sem_pls_v1(
         Ok(plan) => {
             if has_higher_order {
                 debug_assert_eq!(plan.higher_order_stage_plans().len(), 1);
+            } else if has_three_way {
+                debug_assert!(plan.three_way_interaction().is_some());
+                diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
             } else if has_interactions {
                 diagnostics.extend(interaction_scope_diagnostics(config, &plan)?);
             } else {
@@ -185,16 +230,16 @@ pub fn preflight_general_sem_pls_v1(
                             ],
                         )?);
                     }
-                    GeneralSemInferenceV1::CaseBootstrap { .. } if found < 2 => {
+                    GeneralSemInferenceV1::CaseBootstrap { .. } if found == 0 => {
                         diagnostics.push(SemCapabilityDiagnosticV1::new(
-                            "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
+                            "sem.capability.pls.mediation_requires_indirect_path",
                             SemCapabilityDiagnosticSeverityV1::Error,
                             None,
                             format!(
-                                "The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has {found}."
+                                "The mediation bootstrap cell requires at least one compiled specific indirect path; this graph has {found}."
                             ),
                             vec![
-                                "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.".into(),
+                                "Add a supported mediator path, or use the ordinary PLS workflow for a direct-only recursive model.".into(),
                             ],
                         )?);
                     }
@@ -237,6 +282,15 @@ pub fn preflight_general_sem_pls_v1(
                         "General SEM higher-order full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
                     }
                 }
+            } else if has_three_way {
+                match config.inference {
+                    GeneralSemInferenceV1::None => {
+                        "General SEM ordered three-way moderation point estimation passes the bounded exact-cell compiler preflight."
+                    }
+                    GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                        "General SEM ordered three-way moderation full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+                    }
+                }
             } else if has_interactions {
                 match config.inference {
                     GeneralSemInferenceV1::None => {
@@ -273,6 +327,15 @@ pub fn preflight_general_sem_pls_v1(
                     "The point HOC cell remains primary authority and the supplemental cell requires every raw-case replicate to rerun all compiled stages under one usable/failure ledger."
                 }
             }
+        } else if has_three_way {
+            match config.inference {
+                GeneralSemInferenceV1::None => {
+                    "The compiler binds ordered X, W, and Z operands, all strong-hierarchy pairwise terms, fixed binary-or-standardized probes, and one joint stage-two solve."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                    "The point cell remains primary while the supplemental three-way cell refits scoring, products, and the complete joint equation for every indexed raw-case replicate under one shared target ledger."
+                }
+            }
         } else if has_interactions {
             match config.inference {
                 GeneralSemInferenceV1::None => {
@@ -290,6 +353,9 @@ pub fn preflight_general_sem_pls_v1(
             match config.inference {
                 GeneralSemInferenceV1::None => {
                     "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published."
+                }
+                GeneralSemInferenceV1::CaseBootstrap { .. } if indirect_path_count == 1 => {
+                    "The compiler binds percentile, two-sided case resampling to the distinct single-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
                 }
                 GeneralSemInferenceV1::CaseBootstrap { .. } => {
                     "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
@@ -586,22 +652,62 @@ fn execution_scope_diagnostics(
             let SemDerivedTermV4::InteractionV2 { id, operands, .. } = term else {
                 continue;
             };
-            if operands.len() != 2 {
+            if !matches!(operands.len(), 2 | 3) {
                 diagnostics.push(SemCapabilityDiagnosticV1::new(
                     "sem.capability.pls.interaction_order_not_executable",
                     SemCapabilityDiagnosticSeverityV1::Error,
                     Some(id.clone()),
                     format!(
-                        "Interaction {id} requires exactly two operands; received {}.",
+                        "Interaction {id} requires exactly two operands for two-way moderation or exactly three for the bounded three-way cell; received {}.",
                         operands.len()
                     ),
                     vec![
-                        "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.".into(),
+                        "Use two ordered operands for a two-way effect or three ordered X, W, and Z operands with strong hierarchy; fourth-order and higher interactions remain blocked.".into(),
                     ],
                 )?);
             }
         }
     }
+    let three_way_moderator_observed_ids = model
+        .derived_terms
+        .iter()
+        .filter_map(|term| match term {
+            SemDerivedTermV4::InteractionV2 { operands, .. } if operands.len() == 3 => {
+                Some([operands[1].as_str(), operands[2].as_str()])
+            }
+            _ => None,
+        })
+        .flatten()
+        .filter_map(|moderator_id| {
+            if matches!(
+                model
+                    .variables
+                    .iter()
+                    .find(|variable| variable.id() == moderator_id),
+                Some(SemVariableV4::Observed { .. })
+            ) {
+                return Some(moderator_id.to_string());
+            }
+            let indicators = model
+                .relations
+                .iter()
+                .filter_map(|relation| match relation {
+                    SemRelationV4::MeasurementEffect {
+                        construct,
+                        indicator,
+                        ..
+                    } if construct == moderator_id => Some(indicator.as_str()),
+                    SemRelationV4::MeasurementCausal {
+                        indicator,
+                        composite,
+                        ..
+                    } if composite == moderator_id => Some(indicator.as_str()),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            (indicators.len() == 1).then(|| indicators[0].to_string())
+        })
+        .collect::<std::collections::BTreeSet<_>>();
     match &model.data_binding {
         SemDataBindingV4::Raw {
             missing_data,
@@ -662,7 +768,9 @@ fn execution_scope_diagnostics(
         else {
             continue;
         };
-        if *scale != ObservedScaleV4::Continuous
+        let bounded_binary_moderator =
+            *scale == ObservedScaleV4::Binary && three_way_moderator_observed_ids.contains(id);
+        if (*scale != ObservedScaleV4::Continuous && !bounded_binary_moderator)
             || !missing_markers.is_empty()
             || !transformation_lineage.is_empty()
         {
@@ -670,7 +778,7 @@ fn execution_scope_diagnostics(
                 "sem.capability.pls.observed_semantics_not_executable",
                 SemCapabilityDiagnosticSeverityV1::Error,
                 Some(id.clone()),
-                "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell.",
+                "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell. Binary 0/1 coding is admitted only for a bounded three-way moderator.",
                 vec!["Keep the authored semantics unchanged and use an explicit, lineage-recorded dataset transformation or a future qualified cell.".into()],
             )?);
         }
@@ -806,6 +914,10 @@ fn pls_compile_diagnostic(
             "sem.capability.pls.higher_order_generic_effect_requests_not_executable",
             "Clear generic requested effects; HOC loadings, weights, authored HOC paths, and extended-repeated effects are published through the typed HOC stage tables.",
         ),
+        CompiledPlsPlanV3Error::ThreeWayRequestedEffectsNotExecutable => (
+            "sem.capability.pls.three_way_moderated_mediation_not_executable",
+            "Clear mediation-path selections for this bounded three-way moderation cell.",
+        ),
         CompiledPlsPlanV3Error::UnknownSpecificIndirectPath { .. } => (
             "sem.capability.pls.requested_path_missing",
             "Re-open the mediation inspector and select an exact directed relation path that exists in the current model.",
@@ -829,7 +941,7 @@ fn pls_compile_diagnostic(
         CompiledPlsPlanV3Error::Interaction(error) => match error {
             CompiledPlsInteractionV3Error::UnsupportedInteractionOrder { .. } => (
                 "sem.capability.pls.interaction_order_not_executable",
-                "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+                "Use two ordered operands for a two-way term or one exact three-operand X-by-W-by-Z term; fourth-order and higher moderation remain blocked.",
             ),
             CompiledPlsInteractionV3Error::UnsupportedInteractionMethod { .. } => (
                 "sem.capability.pls.interaction_method_not_executable",
@@ -846,6 +958,16 @@ fn pls_compile_diagnostic(
             _ => (
                 "sem.capability.pls.interaction_shape_not_executable",
                 "Review the interaction output, effect relation, parameter, and generated-column identities in the compatibility inspector.",
+            ),
+        },
+        CompiledPlsPlanV3Error::ThreeWayInteraction(error) => match error {
+            crate::CompiledPlsThreeWayInteractionErrorV1::BinaryModeratorCoding { .. } => (
+                "sem.capability.pls.three_way_binary_moderator_coding_not_executable",
+                "Recode the selected binary moderator to exact numeric categories 0 and 1, then create a calculation-ready revision.",
+            ),
+            _ => (
+                "sem.capability.pls.three_way_interaction_shape_not_executable",
+                "Keep one ordered X-by-W-by-Z two-stage term with strong hierarchy and all three pairwise lower-order interactions.",
             ),
         },
         CompiledPlsPlanV3Error::ModeratedMediationTarget(error) => match error {
@@ -953,6 +1075,39 @@ fn pls_bootstrap_cell() -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1
     )
 }
 
+fn pls_single_mediation_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = crate::pls_general_single_mediation_bootstrap_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
+fn pls_three_way_moderation_point_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = crate::pls_general_three_way_moderation_point_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
+fn pls_three_way_moderation_bootstrap_cell()
+-> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
+    let cell = crate::pls_general_three_way_moderation_bootstrap_capability_cell_v1();
+    SemCapabilityCellIdV1::new(
+        cell.registry_schema_version,
+        cell.capability_id,
+        cell.cell_id,
+        cell.capability_version,
+    )
+}
+
 fn pls_multiple_moderation_point_cell()
 -> Result<SemCapabilityCellIdV1, SemCapabilityDecisionV1ValidationError> {
     SemCapabilityCellIdV1::new(
@@ -1007,11 +1162,15 @@ fn pls_higher_order_bootstrap_cell()
 
 fn pls_cells(
     has_interactions: bool,
+    has_three_way: bool,
     has_higher_order: bool,
+    indirect_path_count: usize,
     config: &GeneralSemConfigV1,
 ) -> Result<Vec<SemCapabilityCellIdV1>, SemCapabilityDecisionV1ValidationError> {
     let mut cells = if has_higher_order {
         vec![pls_higher_order_point_cell()?]
+    } else if has_three_way {
+        vec![pls_three_way_moderation_point_cell()?]
     } else if has_interactions {
         vec![pls_multiple_moderation_point_cell()?]
     } else {
@@ -1023,10 +1182,14 @@ fn pls_cells(
     ) {
         cells.push(if has_higher_order {
             pls_higher_order_bootstrap_cell()?
+        } else if has_three_way {
+            pls_three_way_moderation_bootstrap_cell()?
         } else if has_interactions && !config.requested_effect_estimands.is_empty() {
             pls_two_way_moderated_mediation_bootstrap_cell()?
         } else if has_interactions {
             pls_multiple_moderation_bootstrap_cell()?
+        } else if indirect_path_count == 1 {
+            pls_single_mediation_bootstrap_cell()?
         } else {
             pls_bootstrap_cell()?
         });
@@ -1348,6 +1511,198 @@ mod tests {
         multiple_moderation_model_for_layout(false)
     }
 
+    fn three_way_moderation_model() -> SemModelV4 {
+        let mut model = multiple_moderation_model();
+        add_preflight_interaction(
+            &mut model,
+            "interaction:w_by_z",
+            "construct:w",
+            "construct:z",
+        );
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == "construct:x" && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let output = "derived:interaction:x_by_w_by_z".to_string();
+        let effect_parameter = "parameter:interaction:x_by_w_by_z:effect".to_string();
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: "X by W by Z".into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: "relation:interaction:x_by_w_by_z:effect".into(),
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: effect_parameter.clone(),
+            role: crate::StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(crate::SemParameterV4::Free {
+            id: effect_parameter,
+            label: "X by W by Z to Y".into(),
+            target: crate::SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: "interaction:x_by_w_by_z".into(),
+            output,
+            operands: vec![
+                "construct:x".into(),
+                "construct:w".into(),
+                "construct:z".into(),
+            ],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model.ensure_valid().unwrap();
+        model
+    }
+
+    #[test]
+    fn bounded_three_way_point_and_bootstrap_route_to_their_distinct_cells() {
+        let model = three_way_moderation_model();
+        let point = preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        if point.status() == SemCapabilityDecisionStatusV1::Blocked {
+            assert!(point.diagnostics().iter().all(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.registry_unavailable"
+            }));
+        }
+        assert!(
+            point.capability_cells().iter().any(|cell| {
+                cell.cell_id() == "qpls3.pls.general_sem_three_way_moderation_point"
+            })
+        );
+
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 53,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        let bootstrap = preflight_general_sem_pls_v1(&model, &config).unwrap();
+        if bootstrap.status() == SemCapabilityDecisionStatusV1::Blocked {
+            assert!(bootstrap.diagnostics().iter().all(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.registry_unavailable"
+            }));
+        }
+        assert!(bootstrap.capability_cells().iter().any(|cell| {
+            cell.cell_id() == "qpls3.pls.general_sem_three_way_moderation_bootstrap"
+        }));
+    }
+
+    #[test]
+    fn bounded_three_way_accepts_an_exact_zero_one_single_indicator_moderator() {
+        let mut model = three_way_moderation_model();
+        let mut z_measurements = model
+            .relations
+            .iter()
+            .filter_map(|relation| match relation {
+                SemRelationV4::MeasurementEffect {
+                    id,
+                    construct,
+                    indicator,
+                    parameter,
+                } if construct == "construct:z" => {
+                    Some((id.clone(), indicator.clone(), parameter.clone()))
+                }
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        z_measurements.sort();
+        let kept_indicator = z_measurements[0].1.clone();
+        let removed_relation_ids = z_measurements
+            .iter()
+            .skip(1)
+            .map(|row| row.0.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        let removed_indicator_ids = z_measurements
+            .iter()
+            .skip(1)
+            .map(|row| row.1.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        let removed_parameter_ids = z_measurements
+            .iter()
+            .skip(1)
+            .map(|row| row.2.as_str())
+            .collect::<std::collections::BTreeSet<_>>();
+        model
+            .relations
+            .retain(|relation| !removed_relation_ids.contains(relation.id()));
+        model
+            .variables
+            .retain(|variable| !removed_indicator_ids.contains(variable.id()));
+        model
+            .parameters
+            .retain(|parameter| !removed_parameter_ids.contains(parameter.id()));
+        let SemVariableV4::Observed {
+            scale,
+            categories,
+            value_labels,
+            ..
+        } = model
+            .variables
+            .iter_mut()
+            .find(|variable| variable.id() == kept_indicator)
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *scale = ObservedScaleV4::Binary;
+        *categories = vec!["0".into(), "1".into()];
+        value_labels.clear();
+        model.ensure_valid().unwrap();
+
+        let decision =
+            preflight_general_sem_pls_v1(&model, &GeneralSemConfigV1::default()).unwrap();
+        if decision.status() == SemCapabilityDecisionStatusV1::Blocked {
+            assert!(decision.diagnostics().iter().all(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.registry_unavailable"
+            }));
+        }
+        assert!(!decision.diagnostics().iter().any(|diagnostic| {
+            matches!(
+                diagnostic.code(),
+                "sem.capability.pls.observed_semantics_not_executable"
+                    | "sem.capability.pls.three_way_binary_moderator_coding_not_executable"
+            )
+        }));
+        let projection = crate::compile_pls_stage_one_projection_v3(&model).unwrap();
+        assert!(
+            projection
+                .projected_model()
+                .variables
+                .iter()
+                .any(|variable| {
+                    matches!(
+                        variable,
+                        SemVariableV4::Observed {
+                            id,
+                            scale: ObservedScaleV4::Continuous,
+                            categories,
+                            ..
+                        } if id == &kept_indicator && categories.is_empty()
+                    )
+                })
+        );
+    }
+
     #[test]
     fn recursive_pls_is_supported_and_feedback_is_blocked_with_correction() {
         let model = recursive_model();
@@ -1663,6 +2018,7 @@ mod tests {
             unreachable!()
         };
         operands.push("construct:z".into());
+        operands.push("construct:y".into());
 
         let mut method = multiple_moderation_model();
         let SemDerivedTermV4::InteractionV2 {
@@ -1913,7 +2269,7 @@ mod tests {
     }
 
     #[test]
-    fn single_indirect_path_is_blocked_from_the_exact_multiple_mediation_bootstrap_cell() {
+    fn single_indirect_path_uses_the_distinct_single_mediation_bootstrap_cell() {
         let model = recursive_model();
         let mut config = GeneralSemConfigV1::default();
         config.inference = GeneralSemInferenceV1::CaseBootstrap {
@@ -1924,10 +2280,19 @@ mod tests {
             tail: crate::GeneralSemInferenceTailV1::TwoSided,
         };
         let decision = preflight_general_sem_pls_v1(&model, &config).unwrap();
-        assert_eq!(decision.status(), SemCapabilityDecisionStatusV1::Blocked);
-        assert!(decision.diagnostics().iter().any(|diagnostic| {
-            diagnostic.code() == "sem.capability.pls.multiple_mediation_requires_two_indirect_paths"
-                && !diagnostic.corrections().is_empty()
+        if decision.status() == SemCapabilityDecisionStatusV1::Blocked {
+            assert!(decision.diagnostics().iter().all(|diagnostic| {
+                diagnostic.code() == "sem.capability.pls.registry_unavailable"
+            }));
+        }
+        assert!(decision.capability_cells().iter().any(|cell| {
+            cell.cell_id() == "qpls3.pls.general_sem_single_mediation_bootstrap"
+                && cell.capability_version()
+                    == "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
+        }));
+        assert!(decision.evidence().iter().any(|item| {
+            item.evidence_id()
+                == "compiler:recipe_v4_to_compiled_pls_plan_v3_single_mediation_bootstrap_v1"
         }));
     }
 

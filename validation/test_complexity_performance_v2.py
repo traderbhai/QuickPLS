@@ -45,10 +45,10 @@ class ComplexityPerformanceContractV2Tests(unittest.TestCase):
         report = self.context()
         self.assertTrue(report["contract_valid"], report["errors"])
         self.assertEqual(report["active_row_count"], 43)
-        self.assertEqual(report["active_option_cell_count"], 54)
-        self.assertEqual(report["resolved_capability_count"], 54)
-        self.assertEqual(report["resolved_budget_count"], 540)
-        self.assertEqual(report["expected_capability_current_measurements"], 864)
+        self.assertEqual(report["active_option_cell_count"], 57)
+        self.assertEqual(report["resolved_capability_count"], 57)
+        self.assertEqual(report["resolved_budget_count"], 570)
+        self.assertEqual(report["expected_capability_current_measurements"], 912)
         self.assertEqual(report["expected_ui_current_measurements"], 8)
 
     def test_machine_readable_schemas_are_valid_and_manifest_conforms(self) -> None:

@@ -34,7 +34,9 @@ import {
   type UnifiedSemCalculationContextV1,
   type UnifiedSemCalculationMethodV1,
   type UnifiedSemCalculationPlanV1,
+  type UnifiedSemHigherOrderFeatureV1,
   type UnifiedSemInferenceChoiceV1,
+  type UnifiedSemInteractionFeatureV1,
 } from "../domain/unifiedSemCalculationV1";
 import {
   methodCapabilityAvailabilityV2,
@@ -235,6 +237,32 @@ function unifiedSemMethodV1(kind: NativeWorkbenchAnalysisKind): UnifiedSemCalcul
   return kind === "pls_algorithm" || kind === "pls_bootstrap" || kind === "cbsem" ? kind : null;
 }
 
+const UNIFIED_HOC_APPROACH_LABELS_V1: Readonly<Record<UnifiedSemHigherOrderFeatureV1["approach"], string>> = {
+  repeated_indicators: "repeated indicators",
+  extended_repeated_indicators: "extended repeated indicators",
+  embedded_two_stage: "embedded two-stage",
+  disjoint_two_stage: "disjoint two-stage",
+  hybrid: "hybrid",
+};
+
+const UNIFIED_HOC_TYPE_CODES_V1: Readonly<Record<UnifiedSemHigherOrderFeatureV1["measurementType"], string>> = {
+  reflective_reflective: "RR",
+  reflective_formative: "RF",
+  formative_reflective: "FR",
+  formative_formative: "FF",
+};
+
+function unifiedHigherOrderSummaryV1(feature: UnifiedSemHigherOrderFeatureV1): string {
+  return `${feature.label} · ${UNIFIED_HOC_TYPE_CODES_V1[feature.measurementType]} · ${UNIFIED_HOC_APPROACH_LABELS_V1[feature.approach]}`;
+}
+
+export function unifiedInteractionSummaryV1(feature: UnifiedSemInteractionFeatureV1): string {
+  if (feature.order === "three_way") {
+    return `${feature.moderatorLabels[1] ?? feature.moderatorIds[1]} extends ${feature.predictorLabel} × ${feature.moderatorLabels[0] ?? feature.moderatorIds[0]} → ${feature.outcomeLabel}`;
+  }
+  return `${feature.moderatorLabels[0] ?? feature.moderatorIds[0]} moderates ${feature.predictorLabel} → ${feature.outcomeLabel}`;
+}
+
 export interface NativeCalculationCatalogEntryV2 {
   readonly item: NativeAnalysisCatalogItem;
   readonly availability: MethodCapabilityAvailabilityV2;
@@ -343,6 +371,23 @@ export function dispatchNativeCalculationStartV1<T>(
   }
   legacyStart(profile);
   return "legacy";
+}
+
+export interface NativeCalculationBlockingMessageV1 {
+  readonly cause: string;
+  readonly correction: string | null;
+}
+
+export function unifiedSemPrimaryBlockingMessageV1(
+  plan: UnifiedSemCalculationPlanV1 | null | undefined,
+): NativeCalculationBlockingMessageV1 | null {
+  const diagnostic = plan?.decision?.diagnostics.find((item) => item.severity === "error");
+  if (diagnostic) return {
+    cause: diagnostic.message,
+    correction: diagnostic.corrections[0] ?? null,
+  };
+  const cause = plan?.blockers[0]?.trim();
+  return cause ? { cause, correction: null } : null;
 }
 
 /**
@@ -589,6 +634,14 @@ export default function NativeCalculationDialog({
       ? ["The unified calculation controller is unavailable. Close this setup and reopen the active project before calculating."]
       : []),
   ])];
+  const unifiedPrimaryBlocker = unifiedRouteSelected
+    ? unifiedSemPrimaryBlockingMessageV1(unifiedSemPlan)
+    : null;
+  const fallbackPrimaryBlocker = !unifiedRouteSelected && !readiness.canRun
+    ? readiness.blockers[0]?.detail ?? readiness.summary
+    : methodProfileBlockers[0];
+  const primaryCalculationBlocker: NativeCalculationBlockingMessageV1 | null = unifiedPrimaryBlocker
+    ?? (fallbackPrimaryBlocker ? { cause: fallbackPrimaryBlocker, correction: null } : null);
   const canStart = !registryUnavailableReason
     && selectedMethodVisible
     && (unifiedRouteSelected ? unifiedSemPlan?.canStart === true : readiness.canRun)
@@ -964,15 +1017,11 @@ export default function NativeCalculationDialog({
               />
             </section>
 
-            {(!unifiedRouteSelected && !readiness.canRun) || methodProfileBlockers.length ? (
+            {primaryCalculationBlocker ? (
               <div className="nd-blocker" role="alert">
                 <strong>Cannot start this calculation</strong>
-                <ul>
-                  {[...new Set([
-                    ...(!unifiedRouteSelected ? readiness.blockers.map((blocker) => blocker.detail) : []),
-                    ...methodProfileBlockers,
-                  ])].map((blocker) => <li key={blocker}>{blocker}</li>)}
-                </ul>
+                <span><strong>Cause:</strong> {primaryCalculationBlocker.cause}</span>
+                {primaryCalculationBlocker.correction ? <span><strong>Correction:</strong> {primaryCalculationBlocker.correction}</span> : null}
               </div>
             ) : null}
 
@@ -1041,10 +1090,10 @@ function UnifiedSemFeatureSummary({
   onModeratedMediationPathChange: (pathId: string | null) => void;
 }) {
   if (!context) return null;
-  const featureText = plan.featureSummaries.length
-    ? plan.featureSummaries.join("; ")
-    : "No advanced model feature is required for this setup.";
-  const expectedResults = plan.expectedResultCategories.join(", ");
+  const higherOrderConstructs = plan.inventory?.higherOrderConstructs ?? [];
+  const interactions = plan.inventory?.interactions ?? [];
+  const indirectPathCount = plan.inventory?.indirectPathCount ?? 0;
+  const indirectPathCountCapped = plan.inventory?.indirectPathCountCapped ?? false;
   let moderatedMediationCandidates: ReturnType<typeof unifiedSemModeratedMediationCandidatesV1> = [];
   try {
     moderatedMediationCandidates = unifiedSemModeratedMediationCandidatesV1(context, bootstrapOptions);
@@ -1052,17 +1101,38 @@ function UnifiedSemFeatureSummary({
     moderatedMediationCandidates = [];
   }
   return <div className="nd-settings-grid" data-unified-sem-calculation={plan.route}>
-    <div className="nd-setting-note wide" id="nd-calculation-detected-features" role="status" aria-live="polite">
-      <span>Detected model features</span>
-      <strong>{featureText}</strong>
-    </div>
-    {expectedResults ? <div className="nd-setting-note wide" id="nd-calculation-expected-results">
-      <span>Result categories</span>
-      <strong>{expectedResults}</strong>
+    {plan.method !== "cbsem" && indirectPathCount > 0 ? <div className="nd-setting-note wide" id="nd-calculation-indirect-paths" role="status" aria-live="polite">
+      <span>Indirect paths</span>
+      <strong>{indirectPathCount}{indirectPathCountCapped ? "+" : ""} detected</strong>
     </div> : null}
-    {plan.route === "general_sem_pls" ? <div className="nd-setting-note wide" id="nd-calculation-general-pls-contract">
-      <span>Estimator setup</span>
-      <strong>Path weighting and standardized construct scores. Bootstrap routes use two-sided percentile inference.</strong>
+    {interactions.map((interaction, index) => <div
+      className="nd-setting-note wide"
+      id={`nd-calculation-${interaction.order}-moderation-${index}`}
+      data-interaction-term-id={interaction.termId}
+      key={interaction.termId}
+    >
+      <span>{interaction.order === "three_way" ? "Three-way moderation" : "Moderation"}</span>
+      <strong>{unifiedInteractionSummaryV1(interaction)}</strong>
+    </div>)}
+    {higherOrderConstructs.length > 0 ? <div className="nd-setting-note wide" id="nd-calculation-higher-order">
+      <span>{higherOrderConstructs.length === 1 ? "Higher-order construct" : "Higher-order constructs"}</span>
+      <span>
+        <strong>{higherOrderConstructs.length === 1
+          ? unifiedHigherOrderSummaryV1(higherOrderConstructs[0]!)
+          : `${higherOrderConstructs.length} configured`}</strong>{" "}
+        {higherOrderConstructs.length === 1 ? <button
+          type="button"
+          disabled={!onAction}
+          aria-label={`Edit higher-order construct ${higherOrderConstructs[0]!.label}`}
+          onClick={() => onAction?.({
+            kind: "edit_higher_order",
+            authorityKey: context.authorityKey,
+            plan,
+            higherOrderTermId: higherOrderConstructs[0]!.termId,
+            higherOrderConstructId: higherOrderConstructs[0]!.constructId,
+          })}
+        >Edit…</button> : null}
+      </span>
     </div> : null}
     {plan.method === "cbsem" ? <>
       <label className="wide" htmlFor="nd-calculation-cbsem-inference">Inference

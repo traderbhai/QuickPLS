@@ -6,6 +6,7 @@ import {
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1,
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1,
   interactionProductColumnIdentityV1,
   preflightGeneralSemCbsemV1,
   preflightGeneralSemPlsV1,
@@ -545,7 +546,7 @@ describe("General SEM capability preflight v1", () => {
     const order = multipleModerationModel("same_focal");
     const orderTerm = order.derived_terms.find((term) => term.kind === "interaction_v2");
     if (!orderTerm || orderTerm.kind !== "interaction_v2") throw new Error("interaction fixture required");
-    orderTerm.operands.push("construct:z");
+    orderTerm.operands.push("construct:z", "construct:y");
 
     const method = multipleModerationModel("same_focal");
     const methodTerm = method.derived_terms.find((term) => term.kind === "interaction_v2");
@@ -579,7 +580,7 @@ describe("General SEM capability preflight v1", () => {
     }
   });
 
-  it("blocks a single indirect path from the exact multiple-mediation bootstrap cell", () => {
+  it("routes a single indirect path to its distinct exact bootstrap cell", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -592,13 +593,12 @@ describe("General SEM capability preflight v1", () => {
 
     const decision = preflightGeneralSemPlsV1(model(), config);
 
-    expect(decision.status).toBe("blocked");
-    expect(codes(decision)).toContain(
+    expect(decision.capability_cells).toContainEqual(
+      GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1,
+    );
+    expect(codes(decision)).not.toContain(
       "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
     );
-    expect(decision.diagnostics.find((diagnostic) => (
-      diagnostic.code === "sem.capability.pls.multiple_mediation_requires_two_indirect_paths"
-    ))?.corrections).not.toEqual([]);
   });
 
   it("blocks BCa and one-sided bootstrap with corrective typed diagnostics", () => {

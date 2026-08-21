@@ -61,7 +61,21 @@ function snapshot(): InternalProjectArchiveV6ReadSnapshotV1 {
     project: {
       schema_version: 6, project_id: projectId, name: "Revision", created_at: r.createdAt, modified_at: r.createdAt,
       datasets: [{ id: datasetId, name: "Data", fingerprint: "dataset-fingerprint", schema: { version: 1, kind: "raw", case_count: 10, sample_size: 10, columns: [] } }],
-      models: [{ model_id: "model:revision", payload: { kind: "sem_model_v4", model: {} as never, scientific_sha256: sha("0") } }],
+      models: [{
+        model_id: "model:revision",
+        payload: {
+          kind: "sem_model_v4",
+          model: {
+            variables: [],
+            relations: [],
+            parameters: [],
+            constraints: [],
+            derived_terms: [],
+            annotations: [],
+          } as never,
+          scientific_sha256: sha("0"),
+        },
+      }],
       recipes: [{} as never], historical_recipes: [], layouts: { general_sem_execution_authority_revision_v1: { schemaVersion: 1, revisionNumber: 1, revised: { projectId, modelDocumentSha256: sha("f") }, compilation: { compiledArtifactIdentitySha256: sha("5") } } }, historical_results: [], canonical_result_documents: [], origin: { kind: "new_project" }, sem_generation: "general_sem_v1",
     },
     residentDatasets: [{ datasetId, name: "Data", fingerprint: "dataset-fingerprint", rowCount: 10, columnCount: 0, sampleSize: 10, arrowResident: true }],
@@ -93,8 +107,10 @@ describe("General SEM revision persistence service", () => {
       general_sem_config: defaultGeneralSemConfigV1(),
       metadata: { execution_surface: "native_general_sem_pls_labs_v1" },
     } as never;
+    const moderationIntent = request().revision.intent;
     expect(selectGeneralSemRevisionExecutionV1({
       snapshot: point,
+      intent: moderationIntent,
       experimentalLabsEnabled: false,
       capabilityRegistry: standardRegistry,
     })).toMatchObject({
@@ -134,6 +150,7 @@ describe("General SEM revision persistence service", () => {
     };
     expect(selectGeneralSemRevisionExecutionV1({
       snapshot: bootstrap,
+      intent: moderationIntent,
       experimentalLabsEnabled: false,
       capabilityRegistry: standardRegistry,
     }).expectedCapabilityCell.cell_id)
@@ -151,6 +168,7 @@ describe("General SEM revision persistence service", () => {
     };
     expect(() => selectGeneralSemRevisionExecutionV1({
       snapshot: point,
+      intent: moderationIntent,
       experimentalLabsEnabled: false,
       capabilityRegistry: labsRegistry,
     })).toThrowError(expect.objectContaining({

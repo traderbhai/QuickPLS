@@ -61,6 +61,7 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
       <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-top" type="source" position={Position.Top} />
       <Handle className={editablePaperMode ? "smartpls-edit-handle source" : "smartpls-hidden-handle"} id="source-bottom" type="source" position={Position.Bottom} />
       <div className="smartpls-latent-ellipse">
+        {data.semantic === "higher_order" ? <span className="smartpls-hoc-marker">HOC</span> : null}
         {data.resultR2 !== undefined && data.overlayMode !== "model" ? <span className="smartpls-r2">R² {data.resultR2.toFixed(3)}</span> : null}
       </div>
       {editing && !lockedResultMode ? <input

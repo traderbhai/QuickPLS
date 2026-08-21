@@ -17,14 +17,19 @@ use crate::{
     },
     recipe_v4_jobs::{DesktopRecipeV4Jobs, reserve_general_sem_pls_admission},
 };
+use arrow::array::{Array, Float64Array, Int64Array};
 use chrono::{SecondsFormat, Utc};
 use qpls_core::{
     AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CapabilityCellReferenceV2,
-    CapabilityRegistryV2, GeneralSemInferenceV1, MissingDataPolicyV4, ObservedScaleV4,
-    SemCapabilityDecisionStatusV1, SemDataBindingV4, SemModelV4, SemVariableV4,
-    compile_general_sem_pls_recipe_v1, pls_general_higher_order_bootstrap_capability_cell_v1,
+    CapabilityRegistryV2, CompiledPlsThreeWayInteractionV1, CompiledPlsThreeWayModeratorScaleV1,
+    GeneralSemInferenceV1, MissingDataPolicyV4, ObservedScaleV4, SemCapabilityDecisionStatusV1,
+    SemDataBindingV4, SemModelV4, SemRelationV4, SemVariableV4, compile_general_sem_pls_recipe_v1,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
+    pls_general_single_mediation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_point_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     preflight_general_sem_pls_v1, sha256_serialized,
 };
@@ -40,7 +45,7 @@ use qpls_runner::{
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, HashMap},
     fs::{self, File, OpenOptions},
     io::{Read, Seek, SeekFrom},
     path::{Path, PathBuf},
@@ -743,7 +748,6 @@ fn validate_exact_capability_and_data(
         });
     }
 
-    validate_dataset_predicate(&resolved.dataset, &resolved.model)?;
     let artifact = compile_general_sem_pls_recipe_v1(&resolved.recipe, Some(&resolved.model))
         .map_err(|error| {
             failure(
@@ -754,7 +758,13 @@ fn validate_exact_capability_and_data(
                 "Correct the resident model/config and create a new General SEM project archive.",
             )
         })?;
-    let has_interactions = !artifact.plan().two_way_interactions().is_empty();
+    validate_dataset_predicate(
+        &resolved.dataset,
+        &resolved.model,
+        artifact.plan().three_way_interaction(),
+    )?;
+    let has_three_way = artifact.plan().three_way_interaction().is_some();
+    let has_interactions = has_three_way || !artifact.plan().two_way_interactions().is_empty();
     let has_moderated_mediation = artifact
         .plan()
         .two_way_moderated_mediation_target()
@@ -764,6 +774,15 @@ fn validate_exact_capability_and_data(
             GeneralSemInferenceV1::None => pls_general_higher_order_point_capability_cell_v1(),
             GeneralSemInferenceV1::CaseBootstrap { .. } => {
                 pls_general_higher_order_bootstrap_capability_cell_v1()
+            }
+        }
+    } else if has_three_way {
+        match config.inference {
+            GeneralSemInferenceV1::None => {
+                pls_general_three_way_moderation_point_capability_cell_v1()
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                pls_general_three_way_moderation_bootstrap_capability_cell_v1()
             }
         }
     } else if has_moderated_mediation {
@@ -781,13 +800,19 @@ fn validate_exact_capability_and_data(
         match config.inference {
             GeneralSemInferenceV1::None => pls_general_recursive_effects_capability_cell_v1(),
             GeneralSemInferenceV1::CaseBootstrap { .. } => {
-                general_sem_multiple_mediation_bootstrap_capability_cell_v1()
+                if artifact.plan().topology().specific_directed_paths().len() == 1 {
+                    pls_general_single_mediation_bootstrap_capability_cell_v1()
+                } else {
+                    general_sem_multiple_mediation_bootstrap_capability_cell_v1()
+                }
             }
         }
     };
     let compiled_primary_cell = artifact.capability_cell();
     let compiled_cell_matches = if has_higher_order {
         compiled_primary_cell == &pls_general_higher_order_point_capability_cell_v1()
+    } else if has_three_way {
+        compiled_primary_cell == &pls_general_three_way_moderation_point_capability_cell_v1()
     } else if has_interactions {
         compiled_primary_cell == &general_sem_multiple_moderation_point_capability_cell_v1()
     } else {
@@ -808,7 +833,7 @@ fn validate_exact_capability_and_data(
             "capabilityCell",
             "general_sem_pls.capability_cell_mismatch",
             "The selected option cell differs from the resident compiled model and inference request.",
-            "Use the exact General SEM mediation point/bootstrap cell or simultaneous two-way moderation point/supplemental-bootstrap cell selected by preflight.",
+            "Use the exact General SEM mediation, two-way moderation, or bounded three-way point/bootstrap cell selected by preflight.",
         ));
     }
     if has_moderated_mediation
@@ -861,14 +886,14 @@ fn validate_exact_capability_and_data(
             ));
         }
         GeneralSemInferenceV1::CaseBootstrap { .. }
-            if !has_higher_order && !has_interactions && found < 2 =>
+            if !has_higher_order && !has_interactions && found == 0 =>
         {
             return Err(failure(
                 InternalLabsGeneralSemPlsFailureStageV1::Capability,
                 "modelId",
-                "general_sem_pls.multiple_mediation_required",
-                "This exact mediation cell requires at least two distinct compiled indirect paths.",
-                "Author parallel, serial, or mixed multiple mediation with at least two indirect paths.",
+                "general_sem_pls.mediation_bootstrap_required",
+                "The mediation bootstrap cells require at least one compiled indirect path.",
+                "Author one or more supported mediator paths before requesting bootstrap inference.",
             ));
         }
         _ => {}
@@ -879,6 +904,7 @@ fn validate_exact_capability_and_data(
 fn validate_dataset_predicate(
     dataset: &Dataset,
     model: &SemModelV4,
+    three_way: Option<&CompiledPlsThreeWayInteractionV1>,
 ) -> Result<(), InternalLabsGeneralSemPlsFailureV1> {
     let SemDataBindingV4::Raw {
         dataset_id,
@@ -903,10 +929,13 @@ fn validate_dataset_predicate(
             "The exact General SEM cell requires raw unweighted single-level data with listwise deletion.",
         ));
     }
+    let binary_moderator_observed_ids = binary_three_way_moderator_observed_ids(model, three_way);
     for variable in &model.variables {
         let SemVariableV4::Observed {
+            id,
             source_column,
             scale,
+            categories,
             missing_markers,
             transformation_lineage,
             ..
@@ -932,18 +961,144 @@ fn validate_dataset_predicate(
                 "Observed source column {source_column} is absent from the resident dataset."
             )));
         };
-        if *scale != ObservedScaleV4::Continuous
+        let binary_zero_one_moderator = binary_moderator_observed_ids.contains(id)
+            && *scale == ObservedScaleV4::Binary
+            && exact_zero_one_categories(categories)
+            && metadata.column_type == ColumnType::Numeric
+            && metadata.scale_type == ScaleType::Binary
+            && metadata
+                .theoretical_min
+                .is_none_or(|value| value.to_bits() == 0.0_f64.to_bits())
+            && metadata
+                .theoretical_max
+                .is_none_or(|value| value.to_bits() == 1.0_f64.to_bits())
+            && metadata.value_labels.keys().all(|value| {
+                value
+                    .trim()
+                    .parse::<f64>()
+                    .is_ok_and(|value| value == 0.0 || value == 1.0)
+            })
+            && dataset_column_is_exact_binary_zero_one(dataset, source_column);
+        let continuous = *scale == ObservedScaleV4::Continuous
+            && metadata.column_type == ColumnType::Numeric
+            && metadata.scale_type == ScaleType::Continuous;
+        if (!continuous && !binary_zero_one_moderator)
             || !missing_markers.is_empty()
             || !transformation_lineage.is_empty()
-            || metadata.column_type != ColumnType::Numeric
-            || metadata.scale_type != ScaleType::Continuous
         {
             return Err(data_predicate_failure(format!(
-                "Observed source column {source_column} must be continuous numeric data for this exact General SEM cell. Missing rows are handled by the declared listwise-deletion policy."
+                "Observed source column {source_column} must be continuous numeric data, except that the exact observed indicators serving as moderators in the qualified three-way interaction may use binary 0/1 metadata and authored categories. Missing rows are handled by the declared listwise-deletion policy."
             )));
         }
     }
     Ok(())
+}
+
+fn dataset_column_is_exact_binary_zero_one(dataset: &Dataset, source_column: &str) -> bool {
+    let Some(position) = dataset
+        .schema
+        .columns
+        .iter()
+        .position(|column| column.name == source_column)
+    else {
+        return false;
+    };
+    let values = dataset.batch.column(position);
+    if let Some(values) = values.as_any().downcast_ref::<Float64Array>() {
+        return (0..values.len()).all(|row| {
+            values.is_null(row)
+                || matches!(values.value(row).to_bits(), bits if bits == 0.0_f64.to_bits() || bits == 1.0_f64.to_bits())
+        });
+    }
+    if let Some(values) = values.as_any().downcast_ref::<Int64Array>() {
+        return (0..values.len())
+            .all(|row| values.is_null(row) || matches!(values.value(row), 0 | 1));
+    }
+    false
+}
+
+fn binary_three_way_moderator_observed_ids(
+    model: &SemModelV4,
+    three_way: Option<&CompiledPlsThreeWayInteractionV1>,
+) -> BTreeSet<String> {
+    let Some(three_way) = three_way else {
+        return BTreeSet::new();
+    };
+    [
+        (
+            three_way.first_moderator_id(),
+            three_way.first_moderator_scale(),
+        ),
+        (
+            three_way.second_moderator_id(),
+            three_way.second_moderator_scale(),
+        ),
+    ]
+    .into_iter()
+    .filter_map(|(moderator_id, scale)| {
+        (scale == CompiledPlsThreeWayModeratorScaleV1::BinaryZeroOne)
+            .then(|| observed_variable_for_three_way_moderator(model, moderator_id))
+            .flatten()
+    })
+    .collect()
+}
+
+fn observed_variable_for_three_way_moderator(
+    model: &SemModelV4,
+    moderator_id: &str,
+) -> Option<String> {
+    let indicator_ids = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::MeasurementEffect {
+                construct,
+                indicator,
+                ..
+            } if construct == moderator_id => Some(indicator.as_str()),
+            SemRelationV4::MeasurementCausal {
+                indicator,
+                composite,
+                ..
+            } if composite == moderator_id => Some(indicator.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let observed_id = if indicator_ids.len() == 1 {
+        indicator_ids[0]
+    } else {
+        moderator_id
+    };
+    model
+        .variables
+        .iter()
+        .find(|variable| variable.id() == observed_id)
+        .and_then(|variable| match variable {
+            SemVariableV4::Observed {
+                id,
+                scale: ObservedScaleV4::Binary,
+                categories,
+                ..
+            } if exact_zero_one_categories(categories) => Some(id.clone()),
+            _ => None,
+        })
+}
+
+fn exact_zero_one_categories(categories: &[String]) -> bool {
+    if categories.len() != 2 {
+        return false;
+    }
+    let Some(mut values) = categories
+        .iter()
+        .map(|value| value.trim().parse::<f64>().ok())
+        .collect::<Option<Vec<_>>>()
+    else {
+        return false;
+    };
+    values.sort_by(f64::total_cmp);
+    values.len() == 2
+        && values[0].to_bits() == 0.0_f64.to_bits()
+        && values[1].to_bits() == 1.0_f64.to_bits()
 }
 
 fn data_predicate_failure(message: impl Into<String>) -> InternalLabsGeneralSemPlsFailureV1 {
@@ -952,7 +1107,7 @@ fn data_predicate_failure(message: impl Into<String>) -> InternalLabsGeneralSemP
         "datasetId",
         "general_sem_pls.data_predicate_blocked",
         message,
-        "Use continuous numeric raw data with listwise deletion and without weights, clusters, strata, or transformation lineage.",
+        "Use continuous numeric raw data, or exact binary 0/1 coding only for an observed moderator in the qualified three-way interaction, with listwise deletion and without weights, clusters, strata, or transformation lineage.",
     )
 }
 
@@ -4186,7 +4341,7 @@ mod tests {
         };
         *dataset_id = dataset.id.to_string();
 
-        validate_dataset_predicate(&dataset, &model).unwrap();
+        validate_dataset_predicate(&dataset, &model, None).unwrap();
     }
 
     #[test]

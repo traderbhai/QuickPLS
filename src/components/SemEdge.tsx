@@ -3,8 +3,43 @@ import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerE
 import { useWorkspace } from "../store";
 
 type LabelOffset = { x?: number; y?: number };
+type VisualPoint = { x: number; y: number };
 
-export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, markerStart, label, selected, data }: EdgeProps) {
+function polylinePath(
+  source: VisualPoint,
+  bends: readonly VisualPoint[],
+  target: VisualPoint,
+): [string, number, number] {
+  const points = [source, ...bends, target];
+  const lengths = points.slice(1).map((point, index) => Math.hypot(
+    point.x - points[index]!.x,
+    point.y - points[index]!.y,
+  ));
+  const halfway = lengths.reduce((sum, length) => sum + length, 0) / 2;
+  let consumed = 0;
+  let label = { x: (source.x + target.x) / 2, y: (source.y + target.y) / 2 };
+  for (let index = 0; index < lengths.length; index += 1) {
+    const length = lengths[index]!;
+    if (consumed + length >= halfway && length > 0) {
+      const start = points[index]!;
+      const end = points[index + 1]!;
+      const fraction = (halfway - consumed) / length;
+      label = {
+        x: start.x + (end.x - start.x) * fraction,
+        y: start.y + (end.y - start.y) * fraction,
+      };
+      break;
+    }
+    consumed += length;
+  }
+  return [
+    points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" "),
+    label.x,
+    label.y,
+  ];
+}
+
+export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, markerStart, label, selected, data, style, interactionWidth }: EdgeProps) {
   const checkpoint = useWorkspace((state) => state.checkpoint);
   const nudgeEdgeLabel = useWorkspace((state) => state.nudgeEdgeLabel);
   const resetEdgeLabel = useWorkspace((state) => state.resetEdgeLabel);
@@ -13,19 +48,31 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
   const setEdgeLabelOffset = useWorkspace((state) => state.setEdgeLabelOffset);
   const zoom = useStore((state) => state.transform[2]);
   const routing = String(data?.routing ?? "straight");
-  const [path, labelX, labelY] = routing === "smoothstep"
+  const bendPoints = Array.isArray(data?.bendPoints)
+    ? data.bendPoints.flatMap((candidate): VisualPoint[] => {
+      if (!candidate || typeof candidate !== "object") return [];
+      const x = Number((candidate as VisualPoint).x);
+      const y = Number((candidate as VisualPoint).y);
+      return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
+    })
+    : [];
+  const [path, labelX, labelY] = routing === "polyline" && bendPoints.length
+    ? polylinePath({ x: sourceX, y: sourceY }, bendPoints, { x: targetX, y: targetY })
+    : routing === "smoothstep"
     ? getSmoothStepPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, borderRadius: 8 })
     : routing === "default"
       ? getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition })
       : getStraightPath({ sourceX, sourceY, targetX, targetY });
   const offset = (data?.labelOffset ?? {}) as LabelOffset;
   const edgeClassName = String(data?.edgeClassName ?? "");
+  const visualOnly = data?.visualOnly === true;
   const x = labelX + Number(offset.x ?? 0);
   const y = labelY + Number(offset.y ?? 0);
   const text = typeof label === "string" ? label : "";
   const isGenericPathLabel = text.trim().toLowerCase() === "path";
   const shouldShowLabel = Boolean(text && (!isGenericPathLabel || selected));
   const startDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (visualOnly) return;
     event.preventDefault();
     event.stopPropagation();
     checkpoint();
@@ -45,6 +92,7 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
     window.addEventListener("pointerup", up, { once: true });
   };
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (visualOnly) return;
     const step = event.shiftKey ? 12 : 4;
     if (event.key === "ArrowUp") {
       event.preventDefault();
@@ -69,7 +117,7 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
   };
 
   return <>
-    <BaseEdge id={id} path={path} markerEnd={markerEnd} markerStart={markerStart} className={`${edgeClassName}${selected ? " selected" : ""}`} />
+    <BaseEdge id={id} path={path} markerEnd={markerEnd} markerStart={markerStart} style={style} interactionWidth={interactionWidth} className={`${edgeClassName}${selected ? " selected" : ""}`} />
     {shouldShowLabel ? <EdgeLabelRenderer>
       <div className={`sem-edge-label${isGenericPathLabel ? " generic-path-label" : ""}${selected ? " selected" : ""}`} role="button" tabIndex={0} aria-label={`Move label for ${text || "selected path"}`} title="Drag to move label. Arrow keys nudge; Home resets." style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }} onPointerDown={startDrag} onKeyDown={handleKeyDown}>
         {text}

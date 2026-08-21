@@ -48,6 +48,9 @@ export {
   GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
   GENERAL_SEM_PLS_DISJOINT_HOC_BOOTSTRAP_OPERATION_VERSION_V1,
   GENERAL_SEM_PLS_DISJOINT_HOC_SCORE_DATASET_RECEIPT_VERSION_V1,
   GENERAL_SEM_PLS_DISJOINT_HOC_SIGN_ALIGNMENT_VERSION_V1,
@@ -57,6 +60,12 @@ export {
   GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
   GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
   GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1,
   GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
   GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
   parseCanonicalGeneralSemResultsV1,
@@ -105,6 +114,11 @@ export type {
   CanonicalInteractionPlotPointV1,
   CanonicalInteractionPlotResultV1,
   CanonicalInteractionPlotSeriesV1,
+  CanonicalThreeWayConditionalInteractionEffectResultV1,
+  CanonicalThreeWayInteractionEffectResultV1,
+  CanonicalThreeWayModeratorProbeKindV1,
+  CanonicalThreeWayModerationBootstrapReceiptV1,
+  CanonicalThreeWaySimpleSlopeResultV1,
   CanonicalSpecificIndirectEffectResultV1,
 } from "../domain/canonicalGeneralSemResultsV1";
 
@@ -776,17 +790,43 @@ function mergeTableSections(run: AnalysisRun, tableIds: ReadonlySet<string>): Ca
 }
 
 function noticeInputs(run: AnalysisRun, tables: readonly ResultTable[]) {
-  const inputs: Array<{ message: string; tableId: string | null; code: string }> = [];
-  for (const message of run.warnings) inputs.push({ message, tableId: null, code: "run_warning" });
-  for (const message of run.result?.warnings ?? []) inputs.push({ message, tableId: null, code: "method_warning" });
-  for (const message of run.assessment?.warnings ?? []) inputs.push({ message, tableId: null, code: "assessment_warning" });
+  const inputs: Array<{
+    message: string;
+    tableId: string | null;
+    code: string;
+    severity: CanonicalResultNotice["severity"];
+  }> = [];
+  for (const message of run.warnings) inputs.push({ message, tableId: null, code: "run_warning", severity: "warning" });
+  for (const message of run.result?.warnings ?? []) inputs.push({ message, tableId: null, code: "method_warning", severity: "warning" });
+  for (const message of run.assessment?.warnings ?? []) inputs.push({ message, tableId: null, code: "assessment_warning", severity: "warning" });
   for (const table of tables) {
-    if (table.warning) inputs.push({ message: table.warning, tableId: table.id, code: "table_warning" });
+    const advisorySeverity: CanonicalResultNotice["severity"] = table.advisory?.tone === "error"
+      ? "error"
+      : table.advisory?.tone === "warning"
+        ? "warning"
+        : "information";
+    if (table.warning) inputs.push({
+      message: table.warning,
+      tableId: table.id,
+      code: "table_warning",
+      severity: table.advisory ? advisorySeverity : "warning",
+    });
+    else if (table.advisory) inputs.push({
+      message: table.advisory.message,
+      tableId: table.id,
+      code: "table_advisory",
+      severity: advisorySeverity,
+    });
     if (table.status === "experimental" && !table.warning) {
-      inputs.push({ message: `${table.title} is an Experimental result.`, tableId: table.id, code: "experimental_result" });
+      inputs.push({ message: `${table.title} is an Experimental result.`, tableId: table.id, code: "experimental_result", severity: "warning" });
     }
   }
-  const aggregated: Array<{ message: string; tableIds: string[]; code: string }> = [];
+  const aggregated: Array<{
+    message: string;
+    tableIds: string[];
+    code: string;
+    severity: CanonicalResultNotice["severity"];
+  }> = [];
   const byMessage = new Map<string, (typeof aggregated)[number]>();
   for (const item of inputs) {
     const message = item.message.trim();
@@ -794,9 +834,17 @@ function noticeInputs(run: AnalysisRun, tables: readonly ResultTable[]) {
     const existing = byMessage.get(message);
     if (existing) {
       if (item.tableId && !existing.tableIds.includes(item.tableId)) existing.tableIds.push(item.tableId);
+      if (item.severity === "error" || (item.severity === "warning" && existing.severity === "information")) {
+        existing.severity = item.severity;
+      }
       continue;
     }
-    const created = { message, tableIds: item.tableId ? [item.tableId] : [], code: item.code };
+    const created = {
+      message,
+      tableIds: item.tableId ? [item.tableId] : [],
+      code: item.code,
+      severity: item.severity,
+    };
     byMessage.set(message, created);
     aggregated.push(created);
   }
@@ -819,7 +867,7 @@ async function noticesFor(
   return Promise.all(noticeInputs(run, tables).map(async (input, index) => ({
     id: `notice_${index + 1}_${(await sha256Hex(`${input.code}\u0000${input.tableIds.join("\u0000")}\u0000${input.message}`)).slice(0, 10)}`,
     code: input.code,
-    severity: "warning" as const,
+    severity: input.severity,
     message: input.message,
     section_ids: [...new Set(input.tableIds.flatMap((tableId) => sectionByTable.get(tableId) ?? []))],
     table_ids: input.tableIds,

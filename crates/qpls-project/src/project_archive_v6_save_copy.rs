@@ -61,6 +61,10 @@ struct StandardSemModelV4DiagramLayoutStateV1 {
     layout_locked: bool,
     #[serde(default, deserialize_with = "deserialize_optional_non_null")]
     standard_sem_presentation: Option<StandardSemPresentationLayoutV1>,
+    #[serde(default)]
+    moderation_anchor_fractions: BTreeMap<String, f64>,
+    #[serde(default)]
+    moderation_connector_bend_points: BTreeMap<String, Vec<StandardSemDiagramPointV1>>,
 }
 
 fn deserialize_optional_non_null<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
@@ -605,6 +609,20 @@ fn standard_diagram_layout_state_is_valid(layout: &StandardSemModelV4DiagramLayo
             .standard_sem_presentation
             .as_ref()
             .is_none_or(standard_sem_presentation_is_valid)
+        && layout
+            .moderation_anchor_fractions
+            .iter()
+            .all(|(term_id, fraction)| {
+                exact_nonempty_id(term_id) && fraction.is_finite() && (0.2..=0.8).contains(fraction)
+            })
+        && layout
+            .moderation_connector_bend_points
+            .iter()
+            .all(|(connector_id, points)| {
+                exact_nonempty_id(connector_id)
+                    && points.len() <= 8
+                    && points.iter().all(standard_diagram_point_is_valid)
+            })
         && matches!(layout.show_grid, true | false)
         && matches!(layout.layout_locked, true | false)
 }

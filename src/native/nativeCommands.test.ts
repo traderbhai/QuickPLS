@@ -257,7 +257,7 @@ describe("native command registry", () => {
     expect(ids(pointerCommands)).toContain("delete-selection");
   });
 
-  it("keeps an immutable activated General SEM model revision-reachable from toolbar, path context, and shortcut", () => {
+  it("keeps an immutable activated General SEM model revision-reachable from Model, path context, and shortcut", () => {
     const revision = context({
       surface: "model",
       projectOpen: true,
@@ -272,9 +272,9 @@ describe("native command registry", () => {
       selection: { kind: "path", count: 1 },
     });
 
-    const toolbar = nativeCommandsFor({ kind: "toolbar", surface: "model" }, revision);
-    const toolbarModeration = toolbar.find((command) => command.id === "add-moderating-effect");
-    expect(toolbarModeration).toMatchObject({
+    const modelMenuModeration = nativeCommandsFor({ kind: "menu", menu: "model" }, revision)
+      .find((command) => command.id === "add-moderating-effect");
+    expect(modelMenuModeration).toMatchObject({
       label: "Moderating Effect (Save As Revision)…",
       enabled: true,
       action: { id: "model.add-moderating-effect" },
@@ -308,6 +308,32 @@ describe("native command registry", () => {
     }
   });
 
+  it("offers selected HOC editing from Model, context, Properties authority, and Enter semantics", () => {
+    const hoc = context({
+      surface: "model",
+      projectOpen: true,
+      projectWritable: false,
+      hasDataset: true,
+      canAddHigherOrder: false,
+      selectedHigherOrder: true,
+      moderationMutationAuthority: { kind: "general_sem_revision", available: true },
+      selection: { kind: "construct", count: 1 },
+    });
+
+    expect(resolveNativeCommand("edit-selection", hoc)).toMatchObject({
+      label: "Edit Higher-Order Construct…",
+      enabled: true,
+    });
+    expect(resolveNativeCommand("edit-higher-order", hoc)).toMatchObject({
+      visible: true,
+      enabled: true,
+      action: { id: "model.edit-selection" },
+    });
+    expect(nativeCommandsFor({ kind: "menu", menu: "model" }, hoc).map((command) => command.id))
+      .toContain("edit-higher-order");
+    expect(nativeCommandForShortcut({ key: "Enter" }, hoc)?.action).toEqual({ id: "model.edit-selection" });
+  });
+
   it("fails closed across every moderation entry point when revision authority is busy", () => {
     const reason = "Wait for General SEM archive publication to finish.";
     const blockedRevision = context({
@@ -329,7 +355,7 @@ describe("native command registry", () => {
       enabled: false,
       disabledReason: reason,
     });
-    expect(nativeCommandsFor({ kind: "toolbar", surface: "model" }, blockedRevision)
+    expect(nativeCommandsFor({ kind: "menu", menu: "model" }, blockedRevision)
       .find((command) => command.id === "add-moderating-effect")?.disabledReason).toBe(reason);
     expect(nativeContextMenuCommands(blockedRevision)
       .find((command) => command.id === "add-moderating-effect")?.disabledReason).toBe(reason);

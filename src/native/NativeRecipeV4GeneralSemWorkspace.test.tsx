@@ -18,6 +18,7 @@ import type { InternalProjectArchiveV6ReadOnlySession } from "../internalProject
 import type { ConstructData, Dataset } from "../types";
 import {
   generalSemCompletionMatchesLatestAuthorityV1,
+  generalSemAutomaticPersistenceNextActionV1,
   generalSemPersistenceNextActionV1,
   generalSemResultCanAppendV1,
   generalSemStartedJobRetentionV1,
@@ -620,6 +621,34 @@ describe("General SEM native workspace accessibility", () => {
       reopened: true,
       resultIntegrityInvalid: false,
     })).toBe(false);
+  });
+
+  it("waits for exact execution authority before consuming automatic persistence steps", () => {
+    const ready = {
+      completed: true,
+      appendSucceeded: false,
+      persistedArchiveAvailable: false,
+      reopened: false,
+      authorityCurrent: true,
+      sessionDirty: false,
+      resultIntegrityInvalid: false,
+      appendStarted: false,
+      reopenStarted: false,
+    };
+    expect(generalSemAutomaticPersistenceNextActionV1({
+      ...ready,
+      executionReady: false,
+    })).toBeNull();
+    expect(generalSemAutomaticPersistenceNextActionV1({
+      ...ready,
+      executionReady: true,
+    })).toBe("append");
+    expect(generalSemAutomaticPersistenceNextActionV1({
+      ...ready,
+      executionReady: true,
+      appendSucceeded: true,
+      persistedArchiveAvailable: true,
+    })).toBe("reopen");
   });
 
   it("chooses the latest matching strict readback by instant and releases a clean project", () => {

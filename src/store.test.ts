@@ -526,6 +526,24 @@ describe("model editor state", () => {
     expect(hoc.data).toMatchObject({ mode: "reflective", indicators: [], semantic: "higher_order" });
     expect(hoc.data.higherOrder?.components).toEqual(["x", "z"]);
 
+    useWorkspace.getState().addPath(created.constructId, "y");
+    const structuralEdgeId = useWorkspace.getState().edges.find((edge) => edge.source === created.constructId && edge.target === "y")!.id;
+    const replaced = useWorkspace.getState().replaceHigherOrderConstruct(created.constructId, {
+      name: "Reputation strength",
+      shortName: "RSTR",
+      components: ["x", "z"],
+      approach: "disjoint_two_stage",
+      measurementType: "reflective_reflective",
+    });
+    expect(replaced).toEqual({ status: "replaced", constructId: created.constructId });
+    hoc = useWorkspace.getState().nodes.find((node) => node.id === created.constructId)!;
+    expect(hoc.data).toMatchObject({
+      label: "Reputation strength",
+      shortName: "RSTR",
+      higherOrder: { id: created.constructId, components: ["x", "z"], canonicalApproach: "disjoint_two_stage" },
+    });
+    expect(useWorkspace.getState().edges.some((edge) => edge.id === structuralEdgeId)).toBe(true);
+
     useWorkspace.getState().setSelectedNode("x");
     useWorkspace.getState().removeSelection();
     expect(useWorkspace.getState().nodes.map((node) => node.id)).toEqual(["z", "y"]);

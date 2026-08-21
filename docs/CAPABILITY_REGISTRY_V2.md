@@ -101,8 +101,8 @@ Evidence is a separate internal axis:
 
 These labels are governance data, not customer copy.
 
-The authoritative inventory contains 56 option cells: 54 active and two
-legacy. Their baseline coverage counts are 0 full, 43 partial, 11 absent, and
+The authoritative inventory contains 59 option cells: 57 active and two
+legacy. Their baseline coverage counts are 0 full, 46 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
 sample-size/power, permutation, moderation, mediation, higher-order-model,
 CB-SEM, and CB-SEM-bootstrap catalogue rows contain separately governed option
@@ -110,7 +110,7 @@ cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
 Option-cell evidence is 16 absent, one engine-only, one archive-qualified,
-zero native-qualified, and 38 release-qualified. Row evidence is 16 absent,
+zero native-qualified, and 41 release-qualified. Row evidence is 16 absent,
 one engine-only, one archive-qualified, zero native-qualified, and 27
 release-qualified; the row projection remains conservative when independently
 governed cells on one official row differ.
@@ -119,6 +119,14 @@ The exact Rank 0 General SEM mediation and moderation cells remain independently
 release-qualified Standard options. Adding a less-mature cell never demotes
 those exact cells; it only makes a mixed parent row project conservatively to
 Labs when consumers request the row without selecting a cell.
+
+Version 2.53 adds three separately governed scoped Standard cells: one
+exactly-one-path mediation full-model bootstrap cell and one true three-way
+moderation point/bootstrap pair. All three have `evidence_state =
+release_qualified`, `availability = standard`, and source-bound method reports
+under `quickpls_v253_streamlined_integration_v1`. The existing exact multiple-mediation, simultaneous
+two-way moderation, and moderated-mediation cells retain their own Standard
+states and historical identities.
 
 The two bounded General SEM higher-order cells are independently
 release-qualified Standard options. The point cell owns approach-specific HOC
@@ -145,7 +153,7 @@ structural SEM is excluded from the historical CFA bootstrap cell, but is
 implemented by this separately governed Rank 3 cell.
 
 Rows with multiple exact options are PLS power analysis (2), permutation (2),
-moderation (3), mediation (3), higher-order models (3), CB-SEM (3), and CB-SEM
+moderation (5), mediation (4), higher-order models (3), CB-SEM (3), and CB-SEM
 bootstrap (2). Consumers must select an exact cell rather than infer one row-
 wide maturity level.
 

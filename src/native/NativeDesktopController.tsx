@@ -540,10 +540,6 @@ export function NativeDesktopController() {
     const inspected = await inspectInternalProjectArchiveV6At(selectedPath);
     if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project)) {
       await invalidateNativeGeneralSemFreshDraftAuthorityV1();
-      const residentProject = await openNativeProjectAt(selectedPath);
-      if (residentProject.projectId !== inspected.value.project.project_id) {
-        throw new Error("The native project identity differs from the strictly inspected calculation-ready archive.");
-      }
       // Activation revokes any backend-only fresh-draft token before resolving
       // and installing Standard authority, so a previous draft cannot survive.
       const sessionStore = useInternalProjectArchiveV6Session.getState();

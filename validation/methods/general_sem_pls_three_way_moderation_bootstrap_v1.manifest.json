@@ -1,0 +1,373 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-21T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    "label": "General SEM PLS Three-Way Moderation Full-Model Case Bootstrap",
+    "method_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+    "method_kind": "stochastic",
+    "catalogue_snapshot_date": "2026-08-21",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/"
+  },
+  "claim": {
+    "supported_scope": "One true three-way interaction in a recursive, single-group composite PLS model with complete stage-1/stage-2 case-bootstrap refits, one shared ledger, and percentile Type-7 inference.",
+    "estimand": "Two-sided percentile Type-7 inference for the jointly refitted X-by-W-by-Z coefficient, conditional X-by-W effects at fixed Z probes, and X simple slopes over the fixed W-by-Z grid, all governed by one shared replicate ledger.",
+    "assumptions": [
+      "The resident model satisfies the exact one-term, two-stage, strong-hierarchy predicate of the three-way point cell.",
+      "Every usable bootstrap replicate refits the complete stage-1 and stage-2 model and jointly estimates main, pairwise and three-way terms.",
+      "Replicate indices, replacement sampling, percentile Type-7 intervals and the usable threshold follow the frozen General SEM convention."
+    ],
+    "exclusions": [
+      "A second three-way term, fourth-order interactions, HOC interactions, three-way moderated mediation and Johnson-Neyman regions are excluded.",
+      "BCa, studentized, one-sided and permutation inference, groups, weights, clusters and non-listwise inputs are excluded.",
+      "The observed-variable PROCESS workflow is separate and is not claimed by this latent-variable PLS cell."
+    ],
+    "warnings": [
+      "This exact bounded cell is scoped Standard under quickpls_v253_streamlined_integration_v1; all exclusions and corrective fail-closed behavior remain in force.",
+      "SmartPLS documentation is used only as a terminology and observable-workflow benchmark; QuickPLS is independently implemented."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "replicate_three_way_model",
+        "expression": "fit_b = refit_pls_and_joint_hierarchy(case_sample(seed,b)); theta_b = {bxwz_b, bxw_b + bxwz_b*z0, bx_b + bxw_b*w0 + bxz_b*z0 + bxwz_b*w0*z0}",
+        "variables": [
+          "fit_b",
+          "seed",
+          "b",
+          "theta_b",
+          "bxwz_b",
+          "bxw_b",
+          "bx_b",
+          "bxz_b",
+          "w0",
+          "z0"
+        ],
+        "source_reference_id": "dawson_richter_2006"
+      },
+      {
+        "id": "shared_percentile_interval",
+        "expression": "ci_j = quantile_type7({theta_jb for shared usable b}, [alpha/2, 1-alpha/2])",
+        "variables": [
+          "ci_j",
+          "theta_jb",
+          "alpha",
+          "b"
+        ],
+        "source_reference_id": "independent_v253_reference"
+      }
+    ],
+    "references": [
+      {
+        "id": "dawson_richter_2006",
+        "kind": "primary_paper",
+        "citation": "Dawson and Richter (2006), Probing Three-Way Interactions in Moderated Multiple Regression: Development and Application of a Slope Difference Test",
+        "locator": "https://doi.org/10.1037/0021-9010.91.4.917",
+        "independence_group": "published_three_way_moderation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_v253_reference",
+        "kind": "independent_python",
+        "citation": "QuickPLS 2.53 validation-only single-path and three-way compact reference matrix",
+        "locator": "validation/general_sem_v253_reference.py",
+        "independence_group": "python_v253_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "three_way_full_model_bootstrap_replay",
+        "purpose": "recovery",
+        "design": "Compact continuous-continuous and binary-continuous strong-hierarchy fixtures with explicit indexed resamples, fixed probes, worker replay and one failed-fit boundary; the independent reference refits every replicate.",
+        "seed_policy": "Frozen scenario seed and explicit replicate-index streams; failed fits remain in the shared ledger and are never silently retried under a new index.",
+        "metrics": [
+          "point_error",
+          "replicate_coefficient_error",
+          "conditional_interval_error",
+          "simple_slope_interval_error",
+          "usable_ledger_error",
+          "worker_replay_error"
+        ],
+        "acceptance_rule": "Point and every usable replayed target agree within 1e-10; intervals agree within 1e-10 and ledger plus worker replay identities agree exactly."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "singular_bootstrap_replicate",
+        "category": "data_pathology",
+        "case": "A resample makes a main score, product or joint equation constant, nonfinite or singular.",
+        "expected_behavior": "Record one typed failed replicate, continue the indexed traversal and publish only if the shared usable threshold passes."
+      },
+      {
+        "id": "unsupported_three_way_inference",
+        "category": "unsupported_scope",
+        "case": "The model requests another three-way term, missing hierarchy, HOC interaction, moderated mediation, unsupported binary coding or an unsupported inference option.",
+        "expected_behavior": "Preserve the model and return one corrective blocked decision without silently simplifying it."
+      },
+      {
+        "id": "row_and_worker_metamorphism",
+        "category": "metamorphic",
+        "case": "Rows or declarations are consistently reordered, or the supported worker count changes.",
+        "expected_behavior": "Mapped scientific results remain equivalent and indexed replicate identities remain deterministic."
+      },
+      {
+        "id": "bootstrap_replay",
+        "category": "determinism",
+        "case": "The same resident authority, data, seed, replicate count and worker count are rerun.",
+        "expected_behavior": "The scientific payload and shared failure ledger are identical apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "three_way_bootstrap_archive_tamper",
+        "category": "tamper",
+        "case": "A point value, replicate count, failure ledger, interval, probe, method version or cell identity is altered.",
+        "expected_behavior": "Strict validation rejects the archive and exposes no changed completed result."
+      }
+    ],
+    "numerical_tolerance": 1e-10
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose three-way bootstrap cell or point authority differs from its compiled authority."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabelled with a two-way or point-only method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose resident dataset fingerprint differs."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject a changed archive member, presentation mapping or canonical attachment digest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, nonfinite values, missing targets or incoherent shared bootstrap ledgers."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret a historical two-way bootstrap or visible interaction node as this new exact identity."
+        }
+      ],
+      "legacy_policy": "Older moderation results preserve their original identities; this cell applies only to a newly executed exact three-way general_sem_v1 authority."
+    },
+    "native": {
+      "setup_controls": [
+        "Moderator-on-path authoring",
+        "Parent interaction selection",
+        "Bootstrapping resamples",
+        "Seed and worker controls",
+        "Fixed probe policy"
+      ],
+      "applicability_blockers": [
+        "Missing main or pairwise hierarchy",
+        "More than one three-way term",
+        "Unsupported binary coding",
+        "HOC interaction or three-way moderated mediation",
+        "Unsupported inference or data setting"
+      ],
+      "result_surfaces": [
+        "Three-Way Moderation",
+        "Conditional Effects",
+        "Simple Slopes",
+        "Bootstrap Inference",
+        "Two-dimensional simple-slope chart",
+        "Run Details"
+      ],
+      "gui_cli_parity_rule": "For the same resident authority, data, seed and recipe, every surface reads the same canonical point, interval, shared ledger and exact cell identity.",
+      "accessibility_rules": [
+        "Context menu and M shortcut provide non-drag alternatives; anchors have descriptive accessible names.",
+        "Dash and marker shape supplement color, and every chart has an accessible source table."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Joint hierarchy coefficients",
+        "Three-way interaction inference",
+        "Conditional interaction inference",
+        "Simple-slope inference",
+        "Bootstrap ledger",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "cancel_retry",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": true,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md"
+      ],
+      "independent_reference": [
+        "validation/general_sem_v253_reference.py"
+      ],
+      "simulation_report": [
+        "validation/general_sem_v253_reference.py"
+      ],
+      "boundary_report": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "persistence_report": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "frontend_report": [
+        "src/domain/moderationDiagramProjectionV1.test.ts",
+        "src/domain/unifiedSemCalculationV1.test.ts",
+        "src/native/NativeResultsSurface.test.tsx"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts"
+      ],
+      "method_audit": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_v253_mediation_moderation_packaged_smoke.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

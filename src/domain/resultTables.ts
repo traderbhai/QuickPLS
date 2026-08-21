@@ -12,11 +12,21 @@ import {
 } from "../native/nativeStructuralPathRandomization";
 import { spreadsheetSafeCsvCell } from "./spreadsheetSafety";
 
+export type ResultTableAdvisoryTone = "neutral" | "info" | "warning" | "error";
+
+export interface ResultTableAdvisory {
+  tone: ResultTableAdvisoryTone;
+  title: string;
+  message: string;
+}
+
 export interface ResultTable {
   id: string;
   title: string;
   status: "validated" | "experimental";
   warning: string | null;
+  /** Compact presentation guidance. `warning` remains the export/archive authority. */
+  advisory?: ResultTableAdvisory | null;
   columns: string[];
   rows: string[][];
 }

@@ -115,6 +115,7 @@ function PreferencesDialog({ close }: { close: () => void }) {
       <label>Interface density<select value={draft.density} onChange={(event) => setDraft((current) => ({ ...current, density: event.target.value as typeof current.density }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
       <label>Table density<select value={draft.tableDensity} onChange={(event) => setDraft((current) => ({ ...current, tableDensity: event.target.value as typeof current.tableDensity }))}><option value="compact">Compact</option><option value="comfortable">Comfortable</option></select></label>
       <label>Default precision<input type="number" min={2} max={6} value={draft.defaultPrecision} onChange={(event) => setDraft((current) => ({ ...current, defaultPrecision: Number(event.target.value) }))} /></label>
+      <label className="checkbox-row">Show generated interaction terms<input type="checkbox" checked={draft.showGeneratedInteractionTerms} onChange={(event) => setDraft((current) => ({ ...current, showGeneratedInteractionTerms: event.target.checked }))} /></label>
       <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit">OK</button></footer>
     </form>
     <DiagnosticBundlePanel />

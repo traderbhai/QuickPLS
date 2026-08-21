@@ -1,6 +1,8 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.51 workflow: `Launcher → Data → Canvas → Calculate → Results`.
+This guide follows the verified Version 2.53 workflow:
+`Launcher → Data → Canvas → Calculate → Results`. Its consolidated checks and
+unsigned packaged save/fresh-reopen journey have passed.
 
 ## 1. Start or open a project
 
@@ -20,14 +22,27 @@ Open `Data`, import the dataset, and check row/variable counts, missing values, 
 
 Open `Model` and use Canvas to add constructs, assign indicators, draw structural paths or supported covariances, arrange the diagram, and validate it. Canvas is the only permanent model-authoring document. For common-factor CB-SEM, set the applicable construct representation and open the **Advanced Parameter Table** from Canvas or CB-SEM setup when fixed/free parameters, bounds, or equality labels need attention.
 
-Use the Higher-Order Construct or Moderating Effect commands only when the model meets their displayed requirements. QuickPLS detects mediation from the drawn paths and offers bounded moderated-mediation selection in PLS Bootstrapping setup. Advanced changes use **Save As Revision** so the source project remains unchanged.
+For a higher-order construct (HOC), select at least two eligible constructs and choose **Model → Higher-Order Construct…** or the same command from the selection context menu. Choose the conceptual direction; QuickPLS derives the RR/RF/FR/FF type and recommends a valid construction approach. Select the HOC and press Enter, use its context menu, or use Properties to edit it. The permanent Canvas shows only the HOC marker; detailed settings stay in the dialog.
+
+Mediation needs no special object: draw substantive paths such as `X → M → Y`.
+QuickPLS ignores covariance, control, measurement, generated, and interaction-
+hierarchy relationships when discovering indirect paths.
+
+For moderation, drag a moderator construct onto an eligible structural path, or
+select/right-click the path and choose **Add Moderating Effect…**. Pressing `M`
+provides the same keyboard entry point. The small `×` anchor and dashed connector
+show which path is moderated; they are visual only and never become scientific
+paths. Select the anchor and press Enter to edit it or Delete to remove only that
+effect. Adding a second moderator to an eligible parent interaction defines a
+true three-way term when its bounded scope is available. Advanced changes use
+**Save As Revision** so the source project remains unchanged.
 
 ## 4. Calculate
 
 Choose `Calculate`. The searchable catalogue still contains 18 methods. QuickPLS evaluates the resident model, data, settings, and exact Registry cells, then shows only the settings relevant to the selected method.
 
-- Choose **PLS Algorithm** for point estimation. Eligible mediation, moderation, and higher-order output is detected from the model.
-- Choose **Bootstrapping** for inference. Eligible multiple mediation, simultaneous moderation, higher-order, and bounded moderated-mediation calculations route automatically.
+- Choose **PLS Algorithm** for point estimation. Eligible mediation, two-way moderation, and higher-order output is detected from the model; an HOC routes to its existing point cell. The bounded three-way point cell is Standard for its exact one-term strong-hierarchy predicate.
+- Choose **Bootstrapping** for inference. Eligible multiple mediation, simultaneous two-way moderation, higher-order, and bounded moderated-mediation calculations route automatically. The exactly-one-path mediation and bounded three-way bootstrap cells are Standard for their exact predicates.
 - Choose **CB-SEM** for bounded common-factor ML, with case bootstrap selected inside its method settings when eligible.
 - Use Data's `Analyze…` command for compatible model-free methods.
 
@@ -40,6 +55,8 @@ Start the calculation and follow native progress. Cancellation stops publication
 ## 6. Review results
 
 After completion, QuickPLS opens the verified canonical result in `Results`. Its searchable sidebar contains only groups owned by that run, which may include Overview, Measurement Model, Structural Model, Direct/Indirect/Total Effects, Moderation, Higher-Order Constructs, Moderated Mediation, CB-SEM Parameters, Model Fit, Bootstrap Inference, and Run Details.
+
+PLS fit is shown as **Model fit — descriptive**. Open its information button or Model Fit Details for interpretation. A compact exact-fit state says whether exact-fit inference was not run, is available, is partial or unavailable, or failed; Version 2.52 does not add adapted Bollen–Stine to Calculate.
 
 ## 7. Export and reopen
 
@@ -54,4 +71,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and the [Version 2.51 Release Notes](RELEASE_NOTES_V2_51_0.md).
+For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md), and the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md).

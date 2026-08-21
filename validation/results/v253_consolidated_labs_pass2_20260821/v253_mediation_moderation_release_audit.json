@@ -1,0 +1,165 @@
+{
+  "audit_id": "quickpls_v253_mediation_moderation_release_audit_v1",
+  "checks": {
+    "Calculate catalogue remains exactly 18 methods": true,
+    "Calculate presents concise two and three-way rows": true,
+    "Manifests exact and lifecycle-consistent: single_mediation_bootstrap": true,
+    "Manifests exact and lifecycle-consistent: three_way_bootstrap": true,
+    "Manifests exact and lifecycle-consistent: three_way_point": true,
+    "Registry exact cell: single_mediation_bootstrap": true,
+    "Registry exact cell: three_way_bootstrap": true,
+    "Registry exact cell: three_way_point": true,
+    "Tauri execution routes all three exact cells": true,
+    "canonical payload exposes additive three-way and single identities": true,
+    "compact product witness executes production and exposes exact indexed rows": true,
+    "core compiler declares all three new exact cells": true,
+    "mediation discovery uses substantive structural relations": true,
+    "moderation anchors are explicitly visual only": true,
+    "native moderation offers pointer, keyboard, and explicit second-moderator alternatives": true,
+    "provided evidence reports pass": false,
+    "required evidence reports supplied": true,
+    "required integration sources exist": true,
+    "researcher-facing result navigation includes all effect families": true,
+    "schema-6 validation binds new method identities": true,
+    "single and multiple mediation routes remain distinct": true,
+    "three-way bootstrap is one indexed complete-refit ledger": true,
+    "three-way point and bootstrap route independently": true,
+    "three-way point engine freezes hierarchy and fixed probes": true
+  },
+  "evidence_reports": [
+    {
+      "exists": true,
+      "identity_matrix_passed": true,
+      "kind": "reference",
+      "passed": false,
+      "path": "validation/results/v253_consolidated_labs_pass2_20260821/general_sem_v253_reference.json",
+      "product_comparison_status": "failed",
+      "r_cross_check_status": "passed",
+      "reported_passed": false,
+      "sha256": "b9ca931c4ea31e56221fe319cda820fcc49cbd5bc339396ab4b4b61414f92f6b",
+      "suite_id": "quickpls_v253_general_sem_compact_reference_v1"
+    }
+  ],
+  "excluded_repetition": [
+    "historical two-way moderation qualification matrices",
+    "historical multiple-mediation qualification matrices",
+    "per-cell package and performance matrices"
+  ],
+  "expected_surface": "labs",
+  "failed": [
+    "provided evidence reports pass"
+  ],
+  "manifests": {
+    "single_mediation_bootstrap": {
+      "cell analytical method identity": true,
+      "cell capability version": true,
+      "cell feature identity": true,
+      "cell lifecycle is fail closed or independently promoted": true,
+      "cell owner identity": true,
+      "cell surface matches requested gate": true,
+      "method capability version": true,
+      "method evidence lifecycle is declared": true,
+      "method feature identity": true
+    },
+    "three_way_bootstrap": {
+      "cell analytical method identity": true,
+      "cell capability version": true,
+      "cell feature identity": true,
+      "cell lifecycle is fail closed or independently promoted": true,
+      "cell owner identity": true,
+      "cell surface matches requested gate": true,
+      "method capability version": true,
+      "method evidence lifecycle is declared": true,
+      "method feature identity": true
+    },
+    "three_way_point": {
+      "cell analytical method identity": true,
+      "cell capability version": true,
+      "cell feature identity": true,
+      "cell lifecycle is fail closed or independently promoted": true,
+      "cell owner identity": true,
+      "cell surface matches requested gate": true,
+      "method capability version": true,
+      "method evidence lifecycle is declared": true,
+      "method feature identity": true
+    }
+  },
+  "missing_sources": [],
+  "passed": false,
+  "public_method_count": 18,
+  "public_method_kinds": [
+    "pls_algorithm",
+    "plsc",
+    "wpls",
+    "gsca",
+    "cca",
+    "cta_pls",
+    "ipma",
+    "cbsem",
+    "pls_bootstrap",
+    "plsc_bootstrap",
+    "pls_permutation",
+    "pls_posthoc_technical_minimum_sample_size",
+    "pls_sample_size_power",
+    "mga",
+    "predict",
+    "nca",
+    "pca",
+    "regression"
+  ],
+  "registry_cells": {
+    "single_mediation_bootstrap": {
+      "evidence_state": "absent",
+      "matches": 1,
+      "surface": "labs"
+    },
+    "three_way_bootstrap": {
+      "evidence_state": "absent",
+      "matches": 1,
+      "surface": "labs"
+    },
+    "three_way_point": {
+      "evidence_state": "absent",
+      "matches": 1,
+      "surface": "labs"
+    }
+  },
+  "schema_version": 1,
+  "scope": "source integration, exact Registry routing, and supplied evidence ingestion",
+  "source_sha256": {
+    "crates/qpls-core/src/canonical_result_v2.rs": "f6fc3ef7dcebdc4786d8b42f34f3888f7341a56eb81fa3cb8571a10fe9802381",
+    "crates/qpls-core/src/general_sem_pls_three_way_v1.rs": "a493825793ac72fb0daa70063506244d06f57f63a13537e3250aeb4fbf3e4a8b",
+    "crates/qpls-core/src/general_sem_recipe_compiler_v1.rs": "69d39b23c5d1dfc02105c4d3b8905b2308ecbc2152043a124189b3623804fe06",
+    "crates/qpls-estimation/src/general_sem_pls_three_way_v1.rs": "467e10b4454f550a0aba8e89539e0f8f051382435186e2df6e112f0f0c6e5fad",
+    "crates/qpls-project/src/project_schema_v6.rs": "7129ed6c088a21acd68696519adf59bb91706f3ca329403147e245c0bad2d7bc",
+    "crates/qpls-resampling/src/general_sem_pls_three_way_bootstrap_v1.rs": "04199ef06c1bf0892a183a3997c85f26b8786a4369f251f7c1c2cd23ccdfaf3f",
+    "crates/qpls-runner/examples/general_sem_v253_product_reference.rs": "6e0bd54d642bba93f9531822e638819d9c444fba23376a7f0a096727f1b0f909",
+    "src-tauri/src/recipe_v4_general_sem_canonical_result.rs": "8ec77167a4f6f679f38bb2dc83e1e1437ac66a943a15d3b68815b452b68f7a29",
+    "src-tauri/src/recipe_v4_general_sem_pls_jobs.rs": "53faa4c2022a16e1a746914835ea9786c8885b0d54fbe51a7897fc52204bd946",
+    "src/components/ModelCanvas.tsx": "dccfb8bb5db6c2ee3d8cc65cc8243be514457c1cb8fff56923fccbcd2fa52c95",
+    "src/components/ModerationAnchorNode.tsx": "d4daa79a0815b47aa01def0c06dd432cdbc7e6e9f55d71beace16428e0c1f7a9",
+    "src/domain/canonicalGeneralSemResultsV1.ts": "9f4ca93e5e4a510c9395bc9ffc4eb09ae106092196e1fac9117e723d4589eb08",
+    "src/domain/canonicalResultNavigationV1.ts": "713d60117bdf0b9baf90658334d56d5a5853a4c0b44f451e69c18f0e91a04575",
+    "src/domain/diagramGraph.ts": "0c6a7190615e0a9a8a4d84048da70abb3e29e8990acc31d09b4a6c2bcf15067f",
+    "src/domain/generalSemCapabilityPreflightV1.ts": "ffbc7b21abb2347babd6f1472c34c377627bc6efc6fc01e926e8ca1a7a4d025a",
+    "src/domain/moderationDiagramProjectionV1.ts": "811f91d1343b86c5be2dfc8a9e19717c78ee41e3c72d40fb53c81ed55a128937",
+    "src/domain/unifiedSemCalculationV1.ts": "9671c83cae503626f6aed182cc3c1040fb51b7512d3fa75986ab3df0b082a43f",
+    "src/native/NativeCalculationDialog.tsx": "60655d6c319dff92657134d390be7affbca92b3803fa7a488c1970032597db8b",
+    "src/native/NativeDesktopApp.tsx": "b22e486c495ffd1b8a62a5062dd4d11e3fb3050de32335e91fd5a97b1a5fc852",
+    "src/native/NativeModerationDialog.tsx": "0e13c1a8592a321d54f87281dcf6143cfbfda23f48c1a766500a612b7c080a84",
+    "src/native/nativeAnalysisCatalog.ts": "f5f640280bc430a4d26ce23ad46c26a71fc14927b00eee4da946d3a20876b9c9",
+    "src/native/nativeResults.ts": "6aa69d7fd5e06e7a8b260e1e0ab2d8f55bc189a7bd35d2e34bd0d7dd60e772d8",
+    "validation/capabilities/capability_registry_v2.json": "4f32fcd8bc198c17d356eff2589a4b104427c8686ba266bea61087eee524803c",
+    "validation/capabilities/general_sem_pls_single_mediation_full_model_case_bootstrap_v1.cell.manifest.json": "b63e088bca5868823e056818e514f3b2c6a11bfa1a462b9dcec047208e5d8500",
+    "validation/capabilities/general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json": "85a7ec6cfba04683b83fedd45fc4d334a3241534e62bb81c5cebb267894a4a65",
+    "validation/capabilities/general_sem_pls_three_way_moderation_point_v1.cell.manifest.json": "fdd23e6c8225718ca567069c2c3f78d8ac3a9125cd89f53b0597023ed1a072d2",
+    "validation/general_sem_v253_reference.py": "4c68d861ff006601a64a52273c3b082fe01cc26a7301a675d62de19bba335a11",
+    "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json": "1830c0b1104de1bdb2126f89525304cab8d881ffb1f58cde7c2eadabe62d6cc5",
+    "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json": "d0e6eb82fbffa53145e7a663d9b5ef067497f814c0d447dbf76608624337f1c9",
+    "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json": "e3cfaed183b526d33c67b417d0729ad73b0c01636ade37c0cdde8d7ccd91b43f",
+    "validation/run_v253_consolidated_diagnostics.ps1": "af0adabc157d2b95752731a8af0f7aac423bce38e80fc65e0455baee533d824a",
+    "validation/run_v253_mediation_moderation_packaged_smoke.ps1": "ca6f79e9a2500633ee5e61e3192f56a73cea1d178b8877ca3ca26ed8cb0d9633",
+    "validation/v253_mediation_moderation_packaged_smoke.mjs": "201a5beef3cd48015814ce8262d7b74b5bb3ba302a3e9fb3eeae6b91941ef1a2"
+  },
+  "version": "2.53.0"
+}

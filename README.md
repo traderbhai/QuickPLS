@@ -10,6 +10,20 @@ QuickPLS runs locally. It does not require an account, activation server, cloud 
 
 QuickPLS 2.51.0 places the Rank 0–3 SEM capabilities behind one `Canvas → Calculate → Results` workflow. The existing 18-method Calculate catalogue is unchanged: model features and selected inference options route to the appropriate bounded engine internally. The verified unsigned Windows preview and checksums are published on GitHub.
 
+The verified 2.52 unsigned Windows candidate makes higher-order constructs diagram-native: select eligible constructs, open **Higher-Order Construct…** from the Model or context menu, and edit the result from the diagram or Properties. It also presents PLS model fit as descriptive information, with exact-fit availability shown as one compact state instead of a permanent warning.
+
+QuickPLS 2.53.0 workflow implementation and its three bounded exact-cell
+qualifications are complete. Mediation stays diagram-derived from ordinary
+paths. Moderation is attached to the focal path through a compact visual anchor
+and dashed moderator connector, with drag, context-menu, and `M`-key entry
+points. The new single-path mediation-bootstrap and true three-way moderation
+point/bootstrap cells are independently scoped Standard; the existing qualified
+two-way, multiple-mediation, and moderated-mediation cells keep their exact
+identities and states. The public Calculate catalogue remains exactly 18 methods.
+The unsigned Windows candidate and its packaged moderation create → calculate →
+Results → save/fresh-reopen journey passed; public release publication remains
+pending.
+
 ## Download
 
 Use the [QuickPLS 2.51.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0) and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
@@ -35,9 +49,9 @@ The visual acceptance harness writes its current viewport evidence to [the nativ
 - Inspect paged case data, edit truthful variable label/scale/range metadata, and review data quality, missing values, and import details without loading an entire native dataset into the grid at once. Page sizes are 50, 100, or 250 cases.
 - Navigate the backend-owned immutable dataset history, activate an earlier or derived version, and search variables by name or label. Metadata edits and native Recode operations create fingerprinted descendants while retaining their source versions and lineage.
 - Create a typed recoded variable in a raw dataset from the installed Windows app. Recode transforms the complete native dataset rather than the visible grid page, appends a derived column, and supports explicit handling for unmapped values; it is disabled in browser preview and read-only projects.
-- Build SEM diagrams with latent constructs, indicators, paths, covariances, layout controls, keyboard editing, and result overlays. Canvas commands add supported moderating effects and higher-order constructs; mediation is detected from the drawn paths; bounded moderated mediation is selected while configuring PLS Bootstrapping. Generated technical paths remain distinguishable from authored hypotheses.
+- Build SEM diagrams with latent constructs, indicators, paths, covariances, layout controls, keyboard editing, and result overlays. Select eligible constructs and use the Model or context menu to create a higher-order construct; its RR/RF/FR/FF type and recommended construction approach are derived from the selected dimensions and topology. Mediation is detected from substantive drawn paths. Moderation is authored against the focal path with a compact anchor and dashed connector, while bounded moderated mediation is selected in PLS Bootstrapping. Generated interaction terms stay hidden in the ordinary diagram and remain available in Expert/Diagnostics.
 - Use the same Canvas and `Calculate` workflow for scoped-Standard PLS-SEM and CB-SEM estimators. PLS Algorithm, Bootstrapping, and CB-SEM use the resident model topology to reach the qualified mediation, simultaneous moderation, higher-order PLS, moderated-mediation, or recursive common-factor CB-SEM cell when applicable. Internal compatibility adapters do not appear as separate General SEM or Exact CB-SEM tabs.
-- Open completed results automatically, navigate only the diagrams and tables available for the selected run, and return to the same live model for editing. A PLS or Bootstrap run with a genuine indirect path adds a focused Mediation result group for direct, path-specific indirect, total indirect, total, and available bootstrap effect inference.
+- Open completed results automatically, navigate only the diagrams and tables available for the selected run, and return to the same live model for editing. A PLS or Bootstrap run with a genuine indirect path adds a focused Mediation result group for direct, path-specific indirect, total indirect, total, and available bootstrap effect inference. PLS model fit appears as **Model fit — descriptive** with neutral interpretation details and a compact exact-fit state.
 - Manage multiple named editable models from the Workspace Explorer, preserve each model's canvas presentation while switching, and save, rename, open, or remove report aliases without deleting their completed calculation results.
 - Save and reopen native projects through canonical typed models, immutable recipes, and integrity-checked result envelopes. Workspace JSON retains positions and pane state but cannot override scientific model or result content.
 - Export from the focused Results action. Canonical General SEM results support CSV, XLSX, self-contained HTML, PDF, SVG, and PNG from one provenance-bound result document; other result families expose only the formats they own, including reviewer-pack and Windows Print/PDF paths where documented.
@@ -52,7 +66,7 @@ QuickPLS now separates scientific coverage from verification maturity. The optio
 - **Legacy** keeps discontinued or historical analyses readable without advertising them in normal Calculate.
 - Internal evidence states, source hashes, and promotion terminology are confined to validation reports and Run Details rather than repeated throughout the customer workflow.
 
-The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. Version 2.50 promoted the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Version 2.51 changes their user workflow, not their scientific identities or documented predicates. Scoped Standard never implies unrestricted SmartPLS parity.
+The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 41 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. This row-level projection does not demote any previously qualified exact cell. Version 2.50 promoted the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Versions 2.51–2.53 change user workflow and add separately versioned cells without relabelling historical scientific identities. Scoped Standard never implies unrestricted SmartPLS parity.
 
 The implemented product foundation includes the option-cell registry, universal `SemModelV4` authority, estimator-specific compiled plans, schema-6 project migration, recipe-schema-4 execution receipts, canonical result/comparison/export contracts, deterministic data transformations, Method Details, Run Details, and a synchronized SEM parameter table. The Rank 0–3 Version 2.50 workflows are connected to the production Canvas, calculation, cancellation, Results, export, append, and strict reopen paths.
 
@@ -62,6 +76,8 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
+- [QuickPLS 2.53.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
+- [QuickPLS 2.52.0 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
 - [QuickPLS 2.51.0 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [QuickPLS 2.50.0 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Rank 0–3 SEM Upgrade Status](docs/SEM_UPGRADE_RANKS_0_3_STATUS.md)
@@ -156,6 +172,8 @@ Local versioned builds write setup, portable, CLI, and checksum files to `target
 
 ## Documentation
 
+- [Version 2.53 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
+- [Version 2.52 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
 - [Version 2.51 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [Version 2.50 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Changelog](CHANGELOG.md)

@@ -5,6 +5,7 @@ import {
   MarkerType,
   ReactFlow,
   applyNodeChanges,
+  type Edge,
   type EdgeChange,
   type EdgeTypes,
   type Node,
@@ -13,21 +14,30 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import type { DragEvent } from "react";
+import type { DragEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
 import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId } from "../domain/diagramGraph";
+import {
+  dispatchModerationCanvasRequest,
+  isModerationAnchorData,
+  isModerationConnectorData,
+  MODERATION_FOCUS_EVENT,
+  type ResultOverlaySelectionV1,
+} from "../domain/moderationDiagramProjectionV1";
 import type { StandardSemModelV4AuthorityRecordV1, StandardSemModelV4EditorIntentV1 } from "../domain/standardSemModelV4Authority";
 import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
-import { SEM_SIZES } from "../domain/semGeometry";
+import { SEM_SIZES, boxCenter, semNodeBox } from "../domain/semGeometry";
+import { nearestNativeModerationDropTarget, type NativeModerationDropTarget } from "../native/nativeModeration";
 import { useWorkspace } from "../store";
 import type { ConstructData, Dataset, DiagramToolMode, StandardSemPresentationLayoutV1 } from "../types";
 import { ConstructNode } from "./ConstructNode";
 import { IndicatorNode } from "./IndicatorNode";
 import { LatentNode } from "./LatentNode";
+import { ModerationAnchorNode } from "./ModerationAnchorNode";
 import { planModelCanvasNodeChanges } from "./modelCanvasNodeChangePlan";
 import { SemEdge } from "./SemEdge";
 import { StandardSemPresentationLayer } from "./StandardSemPresentationLayer";
 
-const nodeTypes: NodeTypes = { construct: memo(ConstructNode), latent: memo(LatentNode), indicator: memo(IndicatorNode) };
+const nodeTypes: NodeTypes = { construct: memo(ConstructNode), latent: memo(LatentNode), indicator: memo(IndicatorNode), moderationAnchor: memo(ModerationAnchorNode) };
 const edgeTypes: EdgeTypes = { semEdge: SemEdge };
 const SNAP_SIZE = 10;
 const ALIGN_THRESHOLD = 8;
@@ -41,7 +51,8 @@ const compactNodeSize = { width: 170, height: 118 };
 export type ModelCanvasContextMenuTarget =
   | { kind: "canvas" }
   | { kind: "construct"; id: string }
-  | { kind: "path"; id: string };
+  | { kind: "path"; id: string }
+  | { kind: "moderation"; interactionTermId: string };
 
 export interface ModelCanvasContextMenuRequest {
   clientX: number;
@@ -53,9 +64,53 @@ export interface ModelCanvasContextMenuRequest {
 export interface ModelCanvasProps {
   onContextMenuRequest?: (request: ModelCanvasContextMenuRequest) => void;
   presentation?: "editor" | "results_readonly";
+  resultOverlay?: ResultOverlaySelectionV1 | null;
+  showGeneratedInteractionTerms?: boolean;
 }
 
-export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: ModelCanvasProps) {
+/**
+ * React Flow also reports changes for presentation-only measurement and HOC
+ * membership edges. Keep those changes outside the scientific store for every
+ * change shape, including defensive add events.
+ */
+export function persistentModelEdgeChanges(
+  changes: readonly EdgeChange[],
+  visualEdges: readonly Edge[],
+): EdgeChange[] {
+  const visualOnlyIds = new Set(visualEdges
+    .filter((edge) => edge.data?.visualOnly === true)
+    .map((edge) => edge.id));
+  return changes.filter((change) => {
+    if (change.type === "add") {
+      return !change.item.id.startsWith("measurement::")
+        && change.item.data?.visualOnly !== true;
+    }
+    if (!("id" in change)) return true;
+    return !change.id.startsWith("measurement::")
+      && !visualOnlyIds.has(change.id);
+  });
+}
+
+export function persistentModelNodeChanges(
+  changes: readonly NodeChange[],
+  visualNodes: readonly Node[],
+): NodeChange[] {
+  const visualOnlyIds = new Set(visualNodes
+    .filter((node) => node.data?.visualOnly === true)
+    .map((node) => node.id));
+  return changes.filter((change) => {
+    if (change.type === "add") return change.item.data?.visualOnly !== true;
+    if (!("id" in change)) return true;
+    return !visualOnlyIds.has(change.id);
+  });
+}
+
+export function ModelCanvas({
+  onContextMenuRequest,
+  presentation = "editor",
+  resultOverlay = null,
+  showGeneratedInteractionTerms = false,
+}: ModelCanvasProps) {
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
   const runs = useWorkspace((state) => state.runs);
@@ -76,6 +131,8 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
   const reconnectPath = useWorkspace((state) => state.reconnectPath);
   const addPath = useWorkspace((state) => state.addPath);
   const addCovariance = useWorkspace((state) => state.addCovariance);
+  const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
+  const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setDiagramTool = useWorkspace((state) => state.setDiagramTool);
@@ -96,6 +153,10 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
   const [dropHint, setDropHint] = useState<null | { count: number; x: number; y: number; targetConstructId?: string | null }>(null);
   const [dragGuide, setDragGuide] = useState<null | { vertical?: number; horizontal?: number; x: number; y: number; label: string }>(null);
   const [actionFeedback, setActionFeedback] = useState<null | { message: string; x?: number; y?: number }>(null);
+  const [selectedInteractionTermId, setSelectedInteractionTermId] = useState<string | null>(null);
+  const [moderationDropTarget, setModerationDropTarget] = useState<null | (NativeModerationDropTarget & { clientX: number; clientY: number })>(null);
+  const moderationDropTargetRef = useRef<typeof moderationDropTarget>(null);
+  const moderationDragOrigin = useRef<null | { id: string; position: { x: number; y: number } }>(null);
   const [draggingVariableCount, setDraggingVariableCount] = useState(0);
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
   const strictIdCounter = useRef(0);
@@ -137,8 +198,14 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
     {
       layout: diagramLayout,
       layoutSource: readOnlyResultsPresentation || diagramMode === "publication" ? "current_canvas" : undefined,
+      selectedHigherOrderId: selectedNodeId,
+      selectedInteractionTermId,
+      resultOverlay,
+      showGeneratedInteractionTerms,
+      moderationAnchorFractions: diagramLayout.moderationAnchorFractions,
+      moderationConnectorBendPoints: diagramLayout.moderationConnectorBendPoints,
     },
-  ), [canvasDiagramMode, diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, readOnlyResultsPresentation, selectedResultRun]);
+  ), [canvasDiagramMode, diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, readOnlyResultsPresentation, resultOverlay, selectedInteractionTermId, selectedNodeId, selectedResultRun, showGeneratedInteractionTerms]);
   const [canvasNodes, setCanvasNodes] = useState(graph.nodes);
   const draggingNodeId = useRef<string | null>(null);
   const dragGuideFrame = useRef<number | null>(null);
@@ -155,10 +222,56 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
       diagramLayout: { ...state.diagramLayout, standardSemPresentation: presentation },
     }));
   };
-  const visibleGraph = graph;
+  const visibleGraph = useMemo(() => {
+    const hoveredRelationshipId = moderationDropTarget?.relationship.edgeId;
+    if (!hoveredRelationshipId) return graph;
+    return {
+      ...graph,
+      edges: graph.edges.map((edge) => {
+        if (edge.id !== hoveredRelationshipId) return edge;
+        const className = [edge.className, "moderation-drop-target-edge"].filter(Boolean).join(" ");
+        return { ...edge, className, data: { ...edge.data, edgeClassName: className } };
+      }),
+    };
+  }, [graph, moderationDropTarget?.relationship.edgeId]);
+  const updateModerationDropTarget = (target: typeof moderationDropTarget) => {
+    moderationDropTargetRef.current = target;
+    setModerationDropTarget(target);
+  };
+  const visualNodeCenter = (nodeId: string, dragged?: Node) => {
+    const node = dragged?.id === nodeId ? dragged : canvasNodes.find((candidate) => candidate.id === nodeId);
+    return node ? boxCenter(semNodeBox(node)) : undefined;
+  };
+  const moderationTargetForDraggedNode = (node: Node) => {
+    const modelNode = nodes.find((candidate) => candidate.id === node.id);
+    if (!modelNode || modelNode.data.semantic || modelNode.data.indicators.length === 0) return null;
+    return nearestNativeModerationDropTarget(
+      nodes,
+      edges,
+      node.id,
+      boxCenter(semNodeBox(node)),
+      (id) => visualNodeCenter(id, node),
+    );
+  };
+  useEffect(() => {
+    const handleModerationFocus = (event: Event) => {
+      const termId = (event as CustomEvent<{ interactionTermId?: string }>).detail?.interactionTermId;
+      if (termId) setSelectedInteractionTermId(termId);
+    };
+    window.addEventListener(MODERATION_FOCUS_EVENT, handleModerationFocus);
+    return () => window.removeEventListener(MODERATION_FOCUS_EVENT, handleModerationFocus);
+  }, []);
+
   useEffect(() => {
     if (draggingNodeId.current === null) setCanvasNodes(graph.nodes);
   }, [graph.nodes]);
+  useEffect(() => {
+    if (!selectedInteractionTermId) return;
+    if (!graph.nodes.some((node) => isModerationAnchorData(node.data)
+      && node.data.interactionTermId === selectedInteractionTermId)) {
+      setSelectedInteractionTermId(null);
+    }
+  }, [graph.nodes, selectedInteractionTermId]);
   const arrangeModel = (direction: "horizontal" | "vertical" | "smartpls") => {
     autoLayout(direction);
     window.setTimeout(() => { void flow?.fitView({ padding: 0.2, duration: animationDuration(220) }); }, 0);
@@ -185,13 +298,23 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
       if (!source || !target || !flow) return;
       void flow.setCenter((source.position.x + target.position.x) / 2 + smartplsNodeSize.width / 2, (source.position.y + target.position.y) / 2 + smartplsNodeSize.height / 2, { zoom: Math.max(0.7, flow.getZoom()), duration: animationDuration(240) });
     };
+    const centerModeration = (termId: string) => {
+      const anchor = graph.nodes.find((node) => isModerationAnchorData(node.data)
+        && node.data.interactionTermId === termId);
+      if (!anchor || !flow) return;
+      setSelectedInteractionTermId(termId);
+      void flow.setCenter(anchor.position.x + 11, anchor.position.y + 11, { zoom: Math.max(0.8, flow.getZoom()), duration: animationDuration(240) });
+    };
     const handleConstruct = (event: Event) => centerNode((event as CustomEvent<{ id: string }>).detail.id);
     const handleEdge = (event: Event) => centerEdge((event as CustomEvent<{ id: string }>).detail.id);
+    const handleModeration = (event: Event) => centerModeration((event as CustomEvent<{ interactionTermId: string }>).detail.interactionTermId);
     window.addEventListener("quickpls:focus-construct", handleConstruct);
     window.addEventListener("quickpls:focus-edge", handleEdge);
+    window.addEventListener("quickpls:focus-moderation", handleModeration);
     return () => {
       window.removeEventListener("quickpls:focus-construct", handleConstruct);
       window.removeEventListener("quickpls:focus-edge", handleEdge);
+      window.removeEventListener("quickpls:focus-moderation", handleModeration);
     };
   }, [flow, graph.edges, graph.nodes]);
 
@@ -264,7 +387,8 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
   };
   const onVisualNodesChange = (changes: NodeChange[]) => {
     setCanvasNodes((current) => applyNodeChanges(changes as NodeChange<(typeof current)[number]>[], current));
-    const permittedChanges = strictAuthority ? changes.filter((change) => change.type !== "remove") : changes;
+    const persistentChanges = persistentModelNodeChanges(changes, graph.nodes);
+    const permittedChanges = strictAuthority ? persistentChanges.filter((change) => change.type !== "remove") : persistentChanges;
     const plan = planModelCanvasNodeChanges(
       permittedChanges as Array<NodeChange<Node>>,
       draggingNodeId.current !== null,
@@ -279,10 +403,11 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
   };
   const onVisualEdgesChange = (changes: EdgeChange[]) => {
     if (strictAuthority) return;
-    const modelChanges = changes.filter((change) => !("id" in change) || !change.id.startsWith("measurement::"));
+    const modelChanges = persistentModelEdgeChanges(changes, graph.edges);
     if (modelChanges.length) onEdgesChange(modelChanges);
   };
   const chooseConstruct = (id: string, point?: { x: number; y: number }) => {
+    setSelectedInteractionTermId(null);
     if (diagramTool === "path" || diagramTool === "covariance") {
       if (!pathSource) {
         setPathSource(id);
@@ -429,6 +554,10 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
           : "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
         return;
       }
+      if (selectedInteractionTermId) {
+        dispatchModerationCanvasRequest({ action: "remove", interactionTermId: selectedInteractionTermId, origin: "menu" });
+        return;
+      }
       if (strictAuthority) {
         const state = useWorkspace.getState();
         if (state.selectedNodeId) commitStrict({ kind: "delete_construct", variable_id: state.selectedNodeId });
@@ -454,12 +583,65 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
       window.removeEventListener("quickpls:model-undo", handleUndo);
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
-  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, strictAuthority, undo]);
+  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, selectedInteractionTermId, strictAuthority, undo]);
   const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
+    setSelectedInteractionTermId(null);
     setSelectedNode(constructId);
   };
-  const clearSelectionForCanvas = () => {
+  const selectModeratingEffect = (interactionTermId: string) => {
     setSelectedNode(null);
+    setSelectedEdge(null);
+    setSelectedInteractionTermId(interactionTermId);
+  };
+  const clearSelectionForCanvas = () => {
+    setSelectedInteractionTermId(null);
+    setSelectedNode(null);
+  };
+  const requestCreateModeratingEffect = (relationId: string, moderatorId: string | undefined, origin: "drag" | "keyboard" | "menu") => {
+    dispatchModerationCanvasRequest({
+      action: "create",
+      target: { kind: "focal_relation", relationId },
+      moderatorId,
+      origin,
+    });
+  };
+  const handleCanvasKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey) return;
+    const target = event.target instanceof Element ? event.target : null;
+    if (target?.closest("input, textarea, select, [contenteditable='true']")) return;
+    if (canEditLayout && selectedInteractionTermId && (event.key === "Enter" || event.key === "F2")) {
+      event.preventDefault();
+      dispatchModerationCanvasRequest({ action: "edit", interactionTermId: selectedInteractionTermId, origin: "keyboard" });
+      return;
+    }
+    if (canEditLayout && selectedInteractionTermId && (event.key === "Delete" || event.key === "Backspace")) {
+      event.preventDefault();
+      dispatchModerationCanvasRequest({ action: "remove", interactionTermId: selectedInteractionTermId, origin: "keyboard" });
+      return;
+    }
+    if (canEditLayout && selectedInteractionTermId && event.key.toLowerCase() === "m") {
+      const selectedAnchor = graph.nodes.find((node) => isModerationAnchorData(node.data)
+        && node.data.interactionTermId === selectedInteractionTermId);
+      if (selectedAnchor && isModerationAnchorData(selectedAnchor.data) && selectedAnchor.data.order === 2) {
+        event.preventDefault();
+        dispatchModerationCanvasRequest({
+          action: "create",
+          target: { kind: "parent_interaction", interactionTermId: selectedInteractionTermId },
+          origin: "keyboard",
+        });
+        return;
+      }
+    }
+    if (event.key === "Escape" && selectedInteractionTermId) {
+      event.preventDefault();
+      setSelectedInteractionTermId(null);
+      return;
+    }
+    if (!canEditLayout || event.key.toLowerCase() !== "m" || !selectedEdgeId) return;
+    const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
+    if (!selectedEdge || selectedEdge.data?.role === "control" || selectedEdge.data?.role === "covariance") return;
+    event.preventDefault();
+    requestCreateModeratingEffect(selectedEdge.id, undefined, "keyboard");
   };
   const requestNativeContextMenu = (event: { clientX: number; clientY: number; target: EventTarget | null; stopPropagation: () => void }, target: ModelCanvasContextMenuTarget) => {
     if (!onContextMenuRequest) return;
@@ -472,6 +654,7 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
   return <div
     className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}
     data-model-canvas-presentation={presentation}
+    onKeyDownCapture={handleCanvasKeyDown}
   >
     {resultDiagramMode && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
     {generalSemPublicationPending && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning" role="status">Calculation-ready project publication is in progress. Canvas editing is temporarily locked.</div> : null}
@@ -493,6 +676,15 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
     {dragGuide?.vertical !== undefined ? <div className="canvas-alignment-guide vertical" style={{ left: dragGuide.vertical }} /> : null}
     {dragGuide?.horizontal !== undefined ? <div className="canvas-alignment-guide horizontal" style={{ top: dragGuide.horizontal }} /> : null}
     {dragGuide ? <div className="canvas-snap-hint" style={{ left: dragGuide.x + 12, top: dragGuide.y + 12 }}>{dragGuide.label}</div> : null}
+    {moderationDropTarget ? <div
+      className="canvas-moderation-drop-hint"
+      style={{ left: moderationDropTarget.clientX + 14, top: moderationDropTarget.clientY + 14 }}
+      role="status"
+      aria-live="polite"
+    >
+      <strong>Release to moderate</strong>
+      <span>{moderationDropTarget.relationship.label}</span>
+    </div> : null}
     <ReactFlow
       nodes={canvasNodes}
       edges={visibleGraph.edges}
@@ -543,12 +735,38 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
               : { kind: "structural", source: connection.source, target: connection.target, label },
         });
       }}
-      onNodeDragStart={!canEditLayout ? undefined : (_, node) => { draggingNodeId.current = node.id; checkpoint(); }}
-      onNodeDrag={!canEditLayout ? undefined : (_, node) => scheduleDragGuide(node)}
+      onNodeDragStart={!canEditLayout ? undefined : (_, node) => {
+        draggingNodeId.current = node.id;
+        moderationDragOrigin.current = { id: node.id, position: { ...node.position } };
+        updateModerationDropTarget(null);
+        checkpoint();
+      }}
+      onNodeDrag={!canEditLayout ? undefined : (event, node) => {
+        scheduleDragGuide(node);
+        const target = moderationTargetForDraggedNode(node);
+        updateModerationDropTarget(target ? {
+          ...target,
+          clientX: "clientX" in event ? Number(event.clientX) : 0,
+          clientY: "clientY" in event ? Number(event.clientY) : 0,
+        } : null);
+      }}
       onNodeDragStop={!canEditLayout ? undefined : (_, node) => {
         draggingNodeId.current = null;
         cancelPendingDragGuide();
         setDragGuide(null);
+        const moderationTarget = moderationDropTargetRef.current;
+        const dragOrigin = moderationDragOrigin.current;
+        updateModerationDropTarget(null);
+        moderationDragOrigin.current = null;
+        if (moderationTarget && dragOrigin?.id === node.id) {
+          const restored = { id: node.id, type: "position" as const, position: dragOrigin.position, dragging: false };
+          setCanvasNodes((current) => applyNodeChanges([restored] as NodeChange<(typeof current)[number]>[], current));
+          onNodesChange([restored] as Array<NodeChange<Node<ConstructData>>>);
+          setSelectedNode(node.id);
+          requestCreateModeratingEffect(moderationTarget.relationship.edgeId, node.id, "drag");
+          setActionFeedback({ message: `Moderating effect setup opened for ${moderationTarget.relationship.label}.` });
+          return;
+        }
         const indicator = parseIndicatorNodeId(node.id);
         if (!indicator) {
           onNodesChange([{ id: node.id, type: "position", position: node.position, dragging: false }]);
@@ -562,6 +780,10 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
         else moveIndicator(indicator.constructId, indicator.indicator, node.position);
       }}
       onNodeClick={(event, node) => {
+        if (isModerationAnchorData(node.data)) {
+          selectModeratingEffect(node.data.interactionTermId);
+          return;
+        }
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) {
           selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
@@ -573,10 +795,32 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
         }
         chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
       }}
-      onEdgeClick={(_, edge) => setSelectedEdge(edge.id)}
+      onNodeDoubleClick={(event, node) => {
+        if (!canEditLayout || !isModerationAnchorData(node.data)) return;
+        event.preventDefault();
+        selectModeratingEffect(node.data.interactionTermId);
+        dispatchModerationCanvasRequest({
+          action: "edit",
+          interactionTermId: node.data.interactionTermId,
+          origin: "anchor",
+        });
+      }}
+      onEdgeClick={(_, edge) => {
+        if (isModerationConnectorData(edge.data)) {
+          selectModeratingEffect(edge.data.interactionTermId);
+          return;
+        }
+        setSelectedInteractionTermId(null);
+        setSelectedEdge(edge.id);
+      }}
       onNodeContextMenu={(event, node) => {
         event.preventDefault();
         if (!canEditLayout) return;
+        if (isModerationAnchorData(node.data)) {
+          selectModeratingEffect(node.data.interactionTermId);
+          requestNativeContextMenu(event, { kind: "moderation", interactionTermId: node.data.interactionTermId });
+          return;
+        }
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) {
           selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
@@ -589,6 +833,11 @@ export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: M
       onEdgeContextMenu={(event, edge) => {
         event.preventDefault();
         if (!canEditLayout) return;
+        if (isModerationConnectorData(edge.data)) {
+          selectModeratingEffect(edge.data.interactionTermId);
+          requestNativeContextMenu(event, { kind: "moderation", interactionTermId: edge.data.interactionTermId });
+          return;
+        }
         if (edge.id.startsWith("measurement::")) {
           clearSelectionForCanvas();
           requestNativeContextMenu(event, { kind: "canvas" });

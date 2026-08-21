@@ -3,6 +3,7 @@ import { buildDiagramGraph } from "./diagramGraph";
 import { SEM_SIZES, routeBetweenBoxes, semNodeBox } from "./semGeometry";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, PublicationDiagramSettings } from "../types";
 import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING, nativeStructuralPathRandomizationProjection } from "../native/nativeStructuralPathRandomization";
+import { isModerationAnchorData, isModerationConnectorData } from "./moderationDiagramProjectionV1";
 
 const PADDING = 42;
 const FALLBACK_SETTINGS: PublicationDiagramSettings = {
@@ -20,6 +21,7 @@ const FALLBACK_SETTINGS: PublicationDiagramSettings = {
   showRunProvenance: true,
 };
 const QUICKPLS_SIZE = { latentWidth: 150, latentHeight: 110, indicatorWidth: 96, indicatorHeight: 34 };
+const MODERATION_ANCHOR_SIZE = 22;
 const SMARTPLS_SIZE = {
   latentWidth: SEM_SIZES.smartplsLatent.width,
   latentHeight: SEM_SIZES.smartplsLatent.height,
@@ -37,7 +39,11 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
   const width = Math.max(smartpls ? 720 : 640, bounds.width + PADDING * 2);
   const height = Math.max(smartpls ? 430 : 420, bounds.height + PADDING * 2 + 34);
   const palette = paletteClass(options.palette, smartpls);
-  const nodeMarkup = graph.nodes.map((node) => node.type === "indicator" ? renderIndicator(node, bounds, options.precision, smartpls) : renderLatent(node, bounds, smartpls, options)).join("\n");
+  const nodeMarkup = graph.nodes.map((node) => isModerationAnchorData(node.data)
+    ? renderModerationAnchor(node, bounds)
+    : node.type === "indicator"
+      ? renderIndicator(node, bounds, options.precision, smartpls)
+      : renderLatent(node, bounds, smartpls, options)).join("\n");
   const edgeMarkup = graph.edges.map((edge) => renderEdge(edge, graph.nodes, bounds, smartpls, options)).join("\n");
   const title = run ? `${run.name} publication diagram` : "QuickPLS model diagram";
   const warning = run && options.showValidationWatermark
@@ -57,6 +63,7 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
 .latent{fill:#fff;stroke:#2d777a;stroke-width:1.8}.latent.formative{stroke:#a16d0b}.latent-title{font:700 12px Arial,sans-serif;fill:#172126}.latent-meta{font:10px Arial,sans-serif;fill:#56656b}.r2{font:700 10px Arial,sans-serif;fill:#32630d}.indicator{fill:#fff8df;stroke:#c49116;stroke-width:1.2}.indicator.formative{fill:#eaf8f8;stroke:#0b8f92}.indicator-text{font:700 9px Arial,sans-serif;fill:#253137}.indicator-stat{font:700 8px Arial,sans-serif;fill:#32630d}
 .smartpls-latent{fill:#7d7d7d;stroke:#777;stroke-width:1}.smartpls-latent-label{font:10px Arial,sans-serif;fill:#222}.smartpls-latent-label-bg{fill:#fff;fill-opacity:.9;stroke:none}.smartpls-r2{font:700 10px Arial,sans-serif;fill:#fff}.smartpls-indicator{fill:#eee;stroke:#d2d2d2;stroke-width:1}.smartpls-indicator-text{font:700 9px Arial,sans-serif;fill:#222}
 .edge{stroke:#465961;stroke-width:1.65;fill:none}.measurement{stroke:#8d9699;stroke-width:1.2;fill:none}.measurement.formative{stroke:#0c777b}.covariance{stroke:#4f5b60;stroke-width:1.3;stroke-dasharray:4 3;fill:none}.edge-label{font:700 10px Arial,sans-serif;fill:#172126}.label-bg{fill:#fff;stroke:#dce2e5}.arrow{fill:#465961}
+.moderation-anchor-export{fill:#fff;stroke:#465961;stroke-width:1.4}.moderation-anchor-text{font:700 12px Arial,sans-serif;fill:#172126}.moderation-connector{stroke:#465961;stroke-width:1.35;stroke-dasharray:5 4;fill:none}
 .smartpls .edge{stroke:#222;stroke-width:1.45}.smartpls .measurement{stroke:#444;stroke-width:1.12}.smartpls .edge-label{font:500 9px Arial,sans-serif;fill:#222}.smartpls .label-bg{fill:#fff;stroke:none;fill-opacity:.85}.smartpls .arrow{fill:#222}
 .mono .latent,.mono .indicator{stroke:#333}.mono .indicator{fill:#fff}.mono .edge,.mono .measurement,.mono .covariance{stroke:#333}.mono .arrow{fill:#333}.high-contrast .smartpls-latent{fill:#222;stroke:#111}.high-contrast .smartpls-indicator{fill:#fff;stroke:#111}.quickpls-color .smartpls-latent{fill:#4f9fa2;stroke:#1f6e72}.quickpls-color .smartpls-indicator{fill:#fff8df;stroke:#c49116}
 </style>
@@ -92,9 +99,11 @@ function paletteClass(palette: PublicationDiagramSettings["palette"], smartpls: 
 
 function diagramBounds(nodes: Array<Node>, smartpls: boolean) {
   if (nodes.length === 0) return { minX: 0, minY: 0, width: 640, height: 420 };
-  const dimensions = (node: Node) => node.type === "indicator"
-    ? (smartpls ? { width: SMARTPLS_SIZE.indicatorWidth, height: SMARTPLS_SIZE.indicatorHeight } : { width: QUICKPLS_SIZE.indicatorWidth, height: QUICKPLS_SIZE.indicatorHeight })
-    : (smartpls ? { width: SMARTPLS_SIZE.latentWidth, height: SMARTPLS_SIZE.latentHeight } : { width: QUICKPLS_SIZE.latentWidth, height: QUICKPLS_SIZE.latentHeight });
+  const dimensions = (node: Node) => isModerationAnchorData(node.data)
+    ? { width: MODERATION_ANCHOR_SIZE, height: MODERATION_ANCHOR_SIZE }
+    : node.type === "indicator"
+      ? (smartpls ? { width: SMARTPLS_SIZE.indicatorWidth, height: SMARTPLS_SIZE.indicatorHeight } : { width: QUICKPLS_SIZE.indicatorWidth, height: QUICKPLS_SIZE.indicatorHeight })
+      : (smartpls ? { width: SMARTPLS_SIZE.latentWidth, height: SMARTPLS_SIZE.latentHeight } : { width: QUICKPLS_SIZE.latentWidth, height: QUICKPLS_SIZE.latentHeight });
   const minX = Math.min(...nodes.map((node) => node.position.x));
   const minY = Math.min(...nodes.map((node) => node.position.y));
   const maxX = Math.max(...nodes.map((node) => node.position.x + dimensions(node).width));
@@ -146,6 +155,14 @@ function renderIndicator(node: Node, bounds: { minX: number; minY: number }, pre
 ${stat}`;
 }
 
+function renderModerationAnchor(node: Node, bounds: { minX: number; minY: number }) {
+  if (!isModerationAnchorData(node.data)) return "";
+  const position = project(node.position, bounds);
+  const centerX = position.x + MODERATION_ANCHOR_SIZE / 2;
+  const centerY = position.y + MODERATION_ANCHOR_SIZE / 2;
+  return `<g role="img" aria-label="${escapeXml(node.data.label)}"><circle class="moderation-anchor-export" cx="${centerX}" cy="${centerY}" r="10"/><text x="${centerX}" y="${centerY + 4}" text-anchor="middle" class="moderation-anchor-text">${node.data.order === 3 ? "3&#215;" : "&#215;"}</text></g>`;
+}
+
 function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY: number }, smartpls: boolean, options: PublicationDiagramSettings) {
   const source = nodes.find((node) => node.id === edge.source);
   const target = nodes.find((node) => node.id === edge.target);
@@ -154,12 +171,14 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
   const start = route.start;
   const end = route.end;
   const rawLabel = typeof edge.label === "string" ? edge.label : "";
+  const moderationConnector = isModerationConnectorData(edge.data);
   const measurement = String(edge.className ?? "").includes("measurement-edge");
   const structural = String(edge.className ?? "").includes("structural-edge");
   const label = measurement && !options.showLoadings ? "" : structural && !options.showPathCoefficients ? "" : rawLabel;
   const className = measurement ? `measurement ${String(edge.className).includes("formative") ? "formative" : ""}`
     : String(edge.className ?? "").includes("covariance-edge") ? "covariance"
-      : "edge";
+      : moderationConnector ? "moderation-connector"
+        : "edge";
   const marker = className === "covariance" ? `marker-start="url(#arrow-start)" marker-end="url(#arrow)"` : `marker-end="url(#arrow)"`;
   const offset = edge.data?.labelOffset && typeof edge.data.labelOffset === "object"
     ? edge.data.labelOffset as { x?: number; y?: number }
@@ -174,9 +193,18 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
     x: (start.x + end.x) / 2 + automaticLabelOffset.x + Number(offset.x ?? 0),
     y: (start.y + end.y) / 2 + automaticLabelOffset.y + Number(offset.y ?? 0),
   };
+  const bendPoints = moderationConnector && Array.isArray(edge.data?.bendPoints)
+    ? edge.data.bendPoints.flatMap((point): Array<{ x: number; y: number }> => (
+      point && typeof point === "object"
+        && Number.isFinite(Number((point as { x?: unknown }).x))
+        && Number.isFinite(Number((point as { y?: unknown }).y))
+        ? [project({ x: Number((point as { x: unknown }).x), y: Number((point as { y: unknown }).y) }, bounds)]
+        : []
+    ))
+    : [];
   const d = className === "covariance"
     ? `M${start.x},${start.y} Q${mid.x},${mid.y - 50} ${end.x},${end.y}`
-    : `M${start.x},${start.y} L${end.x},${end.y}`;
+    : `M${start.x},${start.y} ${[...bendPoints, end].map((point) => `L${point.x},${point.y}`).join(" ")}`;
   const labelWidth = Math.max(30, label.length * (smartpls ? 5 : 6) + 10);
   const labelMarkup = label ? `<rect class="label-bg" x="${mid.x - labelWidth / 2}" y="${mid.y - 12}" width="${labelWidth}" height="15" rx="2"/><text x="${mid.x}" y="${mid.y}" text-anchor="middle" class="edge-label">${escapeXml(label)}</text>` : "";
   return `<path class="${className}" d="${d}" ${marker}/>
@@ -184,6 +212,17 @@ ${labelMarkup}`;
 }
 
 function projectedBox(node: Node, bounds: { minX: number; minY: number }, smartpls: boolean) {
+  if (isModerationAnchorData(node.data)) {
+    const position = project(node.position, bounds);
+    return {
+      x: position.x,
+      y: position.y,
+      width: MODERATION_ANCHOR_SIZE,
+      height: MODERATION_ANCHOR_SIZE,
+      kind: "compact" as const,
+      ellipse: true,
+    };
+  }
   if (smartpls) {
     const base = semNodeBox(node);
     const projected = project(node.position, bounds);

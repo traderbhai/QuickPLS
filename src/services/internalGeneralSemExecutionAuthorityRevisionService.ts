@@ -19,12 +19,19 @@ import { parseGeneralSemConfigV1 } from "../domain/generalSemConfigV1";
 import {
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
   selectGeneralSemExecutionAccessV1,
   type GeneralSemCapabilityRegistryReaderV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import { GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1 } from "../domain/generalSemCapabilityPreflightV1";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
+import type { SemModelV4 } from "../domain/semModelV4";
 import { inspectInternalProjectArchiveV6At } from "./internalProjectArchiveV6ReadService";
 
 export type InternalGeneralSemExecutionAuthorityRevisionPersistOutcomeV1 =
@@ -153,14 +160,52 @@ export function selectGeneralSemRevisionExecutionV1(input: {
     throw new Error("The strict General SEM revision source has no resident GeneralSemConfigV1 authority.");
   }
   const config = parseGeneralSemConfigV1(authority.recipe.general_sem_config);
-  const higherOrderIntent = input.intent?.kind === "add_higher_order";
-  const expectedCapabilityCell = higherOrderIntent
+  const modelRecord = input.snapshot.project.models.find((candidate) => (
+    candidate.model_id === authority.modelId
+  ));
+  if (!modelRecord || modelRecord.payload.kind !== "sem_model_v4") {
+    throw new Error("The strict General SEM revision source has no resident executable SemModelV4 authority.");
+  }
+  const model = modelRecord.payload.model;
+  const higherOrderIntent = input.intent?.kind === "add_higher_order"
+    || input.intent?.kind === "replace_higher_order";
+  const projectedInteractionOrders = model.derived_terms.flatMap((term) => (
+    term.kind === "interaction_v2"
+      && !(input.intent?.kind === "replace_moderating_effect" || input.intent?.kind === "remove_moderating_effect"
+        ? term.id === input.intent.term_id
+        : false)
+      ? [term.operands.length]
+      : []
+  ));
+  if (input.intent?.kind === "add_general_sem_interaction_v2") projectedInteractionOrders.push(2);
+  if (input.intent?.kind === "add_moderating_effect_v3"
+    || input.intent?.kind === "replace_moderating_effect") {
+    projectedInteractionOrders.push(input.intent.operands.length);
+  }
+  const hasHigherOrder = higherOrderIntent
+    || model.derived_terms.some((term) => term.kind === "higher_order");
+  const hasThreeWay = projectedInteractionOrders.includes(3);
+  const hasTwoWay = projectedInteractionOrders.includes(2);
+  const indirectPathCount = countScientificIndirectPathsV1(model);
+  const expectedCapabilityCell = hasHigherOrder
     ? config.inference.kind === "case_bootstrap"
       ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
       : GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
+    : hasThreeWay
+      ? config.inference.kind === "case_bootstrap"
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1
+    : hasTwoWay
+      ? config.inference.kind === "case_bootstrap"
+        ? config.requested_effect_estimands.length === 1
+          ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
+          : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
     : config.inference.kind === "case_bootstrap"
-      ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+      ? indirectPathCount === 1
+        ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+      : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
   const access = selectGeneralSemExecutionAccessV1({
     capabilityCell: expectedCapabilityCell,
     experimentalLabsEnabled: input.experimentalLabsEnabled,
@@ -170,6 +215,44 @@ export function selectGeneralSemRevisionExecutionV1(input: {
     ? GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1
     : GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1;
   return { access, expectedCapabilityCell, recipeExecutionSurface } as const;
+}
+
+function countScientificIndirectPathsV1(model: SemModelV4): number {
+  const variables = new Set(model.variables.flatMap((variable) => {
+    if (variable.kind === "common_factor" || variable.kind === "composite") return [variable.id];
+    if (variable.kind === "observed" && (variable.role === "structural" || variable.role === "both")) {
+      return [variable.id];
+    }
+    return [];
+  }));
+  const generatedHierarchyRelationIds = new Set(model.annotations.flatMap((annotation) => (
+    annotation.kind === "note"
+      && annotation.id.startsWith("general-sem:v1:interaction-generated:")
+      ? [annotation.subject]
+      : []
+  )));
+  const outgoing = new Map<string, Array<{ target: string }>>();
+  for (const relation of model.relations) {
+    if (relation.kind !== "structural"
+      || (relation.role ?? "structural") !== "structural"
+      || generatedHierarchyRelationIds.has(relation.id)
+      || !variables.has(relation.source)
+      || !variables.has(relation.target)) continue;
+    const bucket = outgoing.get(relation.source) ?? [];
+    bucket.push({ target: relation.target });
+    outgoing.set(relation.source, bucket);
+  }
+  let count = 0;
+  const visit = (source: string, visited: ReadonlySet<string>, depth: number): void => {
+    for (const relation of outgoing.get(source) ?? []) {
+      if (visited.has(relation.target)) continue;
+      const nextDepth = depth + 1;
+      if (nextDepth >= 2) count += 1;
+      visit(relation.target, new Set([...visited, relation.target]), nextDepth);
+    }
+  };
+  for (const source of outgoing.keys()) visit(source, new Set([source]), 0);
+  return count;
 }
 
 export async function saveGeneralSemExecutionAuthorityRevisionV1(input: {

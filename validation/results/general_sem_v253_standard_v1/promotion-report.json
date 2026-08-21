@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_v253_streamlined_standard_promotion_v1",
+  "passed": false,
+  "promotion_eligible": true,
+  "promotion_completed": true,
+  "release_complete": false,
+  "postpromotion_verification_required": true,
+  "qualification_profile_id": "quickpls_v253_streamlined_integration_v1",
+  "generated_at_utc": "2026-08-21T14:52:12Z",
+  "cell_atomic": true,
+  "standard_active_cell_ids": [
+    "qpls3.pls.general_sem_single_mediation_bootstrap",
+    "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    "qpls3.pls.general_sem_three_way_moderation_point"
+  ],
+  "accepted_evidence": {
+    "consolidated": {
+      "path": "validation/results/v253_consolidated_labs_pass2_20260821/v253_consolidated_diagnostics.json",
+      "size": 53587,
+      "sha256": "31ebab8cb2ddb3ba3a216a4e1681f9aa601c240451e287fdefc49dbb7ad8e381"
+    },
+    "reference": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_reference.json",
+      "size": 50369,
+      "sha256": "76d11d979c7bbde9cd2874fa82af9f0e7f22db083996bc02ff5ac0879a41dc72"
+    },
+    "product": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_product_reference.json",
+      "size": 265446,
+      "sha256": "2842037cc41e93896501d5d9d7ef4eb1789b8a949ac1373172ce51a77d3bd332"
+    },
+    "remediation": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.json",
+      "size": 418592,
+      "sha256": "700cc3c5746506eca2a524c1a43ca78ecfd1c08701d6db8ecc2ea27c40746ed5"
+    },
+    "remediation_receipt": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.receipt.json",
+      "size": 333,
+      "sha256": "9893dd2488a1beb3e1bb6ce2a2757d00dc749a9c3716e66d8a9702476de7b05c"
+    }
+  },
+  "method_reports": {
+    "qpls3.pls.general_sem_single_mediation_bootstrap": {
+      "path": "validation/results/method_factory/general_sem_pls_single_mediation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 5009,
+      "sha256": "5965a99c862117a968c1dccae75debf9e7b7174281b60d4543cc4a37e6c1c29d"
+    },
+    "qpls3.pls.general_sem_three_way_moderation_point": {
+      "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 4899,
+      "sha256": "bc362cd8a805e02f5dc08e29d908fc5cb7ccddca5493fe5e74043a297ccec4a5"
+    },
+    "qpls3.pls.general_sem_three_way_moderation_bootstrap": {
+      "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 5222,
+      "sha256": "a3009d04033d74463762d488c4aab348a4f372ccfee3a50abb922ab5ebfc237e"
+    }
+  },
+  "registry_sha256": "cd583efc413d84d0bf1246e85b903a10b980c5e7ba5be5318a8c193d37ec7644",
+  "registry_surface_counts": {
+    "standard": 27,
+    "labs": 16,
+    "legacy": 2,
+    "internal": 0
+  },
+  "remaining_release_steps": [
+    "run the two exact post-promotion archive reopen tests",
+    "finalize the cell-specific release receipts",
+    "promote product version authorities to 2.53.0",
+    "build one unsigned Windows candidate",
+    "run one automated packaged create-to-reopen smoke journey"
+  ]
+}

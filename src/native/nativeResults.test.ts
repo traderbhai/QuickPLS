@@ -33,7 +33,9 @@ import {
   nativeOlsResultProjection,
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
+  nativeModelFitPresentationStateV2,
   nativeRegressionBootstrapResultProjection,
+  nativeResultOverlaySelectionV1,
   nativeResultTables,
   resolveSelectedCompletedRun,
   resultTableForItem,
@@ -2662,6 +2664,109 @@ describe("native result navigation", () => {
     expect(tables.flatMap((table) => table.rows).flat()).not.toContain("N/A");
   });
 
+  it("keeps generated interaction paths out of mediation result focus", () => {
+    const base = completedSamplePlsRun();
+    const run: AnalysisRun = {
+      ...base,
+      modelSnapshot: {
+        nodes: [
+          { id: "x", position: { x: 0, y: 0 }, data: { label: "X", shortName: "X", mode: "reflective", indicators: [] } },
+          { id: "y", position: { x: 300, y: 0 }, data: { label: "Y", shortName: "Y", mode: "reflective", indicators: [] } },
+          {
+            id: "generated:x_w",
+            position: { x: 150, y: 0 },
+            data: {
+              label: "X × W",
+              shortName: "XW",
+              mode: "reflective",
+              indicators: [],
+              semantic: "interaction",
+              interaction: {
+                kind: "interaction_v2",
+                termId: "term:x_w",
+                operands: ["x", "w"],
+                outcome: "y",
+                focalRelationId: "relation:x_y",
+                canonicalMethod: "two_stage",
+                hierarchyPolicy: "strong",
+              },
+            },
+          },
+        ],
+        edges: [],
+      } as NonNullable<AnalysisRun["modelSnapshot"]>,
+      result: {
+        ...base.result!,
+        paths: [
+          { source: "x", target: "generated:x_w", coefficient: 0.4 },
+          { source: "generated:x_w", target: "y", coefficient: 0.3 },
+        ],
+      },
+    };
+
+    expect(nativeResultOverlaySelectionV1(run, "specific_indirect_effects")).toBeNull();
+  });
+
+  it("projects a native three-way result selection onto both moderators and the focal path", () => {
+    const base = completedSamplePlsRun();
+    const run: AnalysisRun = {
+      ...base,
+      modelSnapshot: {
+        nodes: [
+          {
+            id: "generated:x_w",
+            position: { x: 100, y: 0 },
+            data: {
+              label: "X × W",
+              shortName: "XW",
+              mode: "reflective",
+              indicators: [],
+              semantic: "interaction",
+              interaction: {
+                kind: "interaction_v2",
+                termId: "term:x_w",
+                operands: ["x", "w"],
+                outcome: "y",
+                focalRelationId: "relation:x_y",
+                canonicalMethod: "two_stage",
+                hierarchyPolicy: "strong",
+              },
+            },
+          },
+          {
+            id: "generated:x_w_z",
+            position: { x: 150, y: 0 },
+            data: {
+              label: "X × W × Z",
+              shortName: "XWZ",
+              mode: "reflective",
+              indicators: [],
+              semantic: "interaction",
+              interaction: {
+                kind: "interaction_v2",
+                termId: "term:x_w_z",
+                operands: ["x", "w", "z"],
+                outcome: "y",
+                focalRelationId: "relation:x_y",
+                canonicalMethod: "two_stage",
+                hierarchyPolicy: "strong",
+              },
+            },
+          },
+        ],
+        edges: [],
+      } as NonNullable<AnalysisRun["modelSnapshot"]>,
+    };
+
+    expect(nativeResultOverlaySelectionV1(run, "three_way_simple_slopes")).toEqual({
+      kind: "three_way_moderation",
+      nodeIds: ["x", "w", "z", "y"],
+      relationIds: ["relation:x_y"],
+      interactionTermIds: ["term:x_w_z", "term:x_w"],
+      label: "Three-way moderating effect",
+    });
+  });
+
   it("never emits an empty table or an N/A placeholder", () => {
     const tables = nativeResultTables(completedSamplePlsRun());
 
@@ -3245,6 +3350,7 @@ describe("native result navigation", () => {
     const navigation = buildNativeResultNavigation(run);
     const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
     expect(navigation.defaultItemId).toBe("hoc_component_relationships");
+    expect(navigation.groups.find((group) => group.id === "higher_order")?.title).toBe("Higher-order constructs");
     expect(navigation.groups.find((group) => group.id === "higher_order")?.items.map((item) => item.id)).toEqual([
       "hoc_component_relationships",
       "hoc_structural_paths",
@@ -3255,7 +3361,20 @@ describe("native result navigation", () => {
       ["Organizational strength", "Resources", "Disjoint two-stage", "0.900000", "0.550000"],
     ]);
     expect(table("hoc_structural_paths")?.rows).toEqual([["Organizational strength → Performance", "0.740000"]]);
-    expect(table("hoc_scope")?.title).toBe("Higher-order run details");
+    expect(table("hoc_scope")?.title).toBe("Higher-order method and run details");
+    expect(table("hoc_scope")?.advisory).toMatchObject({
+      tone: "neutral",
+      title: "Model fit not reported",
+    });
+    expect(nativeModelFitPresentationStateV2(run)).toMatchObject({
+      mode: "higher_order_not_reported",
+      aggregateStatus: null,
+      detailValue: "Not reported for this higher-order workflow",
+    });
+    expect(nativeRunProvenanceTable(run).rows).toContainEqual([
+      "PLS model-fit reporting",
+      "Not reported for this higher-order workflow",
+    ]);
     expect(table("hoc_scope")?.rows[0]).toHaveLength(4);
     expect(table("hoc_scope")?.rows.flat().join(" ")).not.toContain("HOC bootstrapping and permutation inference remain unavailable");
     expect(table("model_fit")).toBeUndefined();

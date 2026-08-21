@@ -19,6 +19,9 @@ use qpls_core::{
     GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_RECIPE_COMPILER_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+    GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
     RecipeV4CompilerTarget, SemModelV4, SemParameterV4, StructuralRelationRoleV4,
     canonical_general_sem_effect_identities_v1, compile_general_sem_pls_recipe_v1,
@@ -28,6 +31,9 @@ use qpls_core::{
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
+    pls_general_single_mediation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_point_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
     project_general_sem_pls_stage_one_recipe_v1, validate_canonical_result_document_v2,
 };
@@ -38,6 +44,9 @@ use qpls_runner::{
     RECIPE_V4_GENERAL_SEM_PLS_HIGHER_ORDER_POINT_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+    RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
     RECIPE_V4_GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
     RecipeV4GeneralSemPlsExecutionResultV1,
 };
@@ -67,6 +76,12 @@ const GENERAL_SEM_HIGHER_ORDER_STAGES_TABLE_ID_V1: &str = "general_sem_higher_or
 const GENERAL_SEM_HIGHER_ORDER_TARGETS_TABLE_ID_V1: &str = "general_sem_higher_order_targets";
 const GENERAL_SEM_HIGHER_ORDER_BOOTSTRAP_RECEIPT_TABLE_ID_V1: &str =
     "general_sem_higher_order_bootstrap_receipt";
+const GENERAL_SEM_THREE_WAY_SECTION_ID_V1: &str = "general_sem_three_way_moderation";
+const GENERAL_SEM_THREE_WAY_EFFECT_TABLE_ID_V1: &str = "general_sem_three_way_effect";
+const GENERAL_SEM_THREE_WAY_CONDITIONAL_TABLE_ID_V1: &str =
+    "general_sem_three_way_conditional_effects";
+const GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1: &str = "general_sem_three_way_simple_slopes";
+const GENERAL_SEM_THREE_WAY_RECEIPT_TABLE_ID_V1: &str = "general_sem_three_way_bootstrap_receipt";
 
 pub(crate) fn general_sem_multiple_mediation_bootstrap_capability_cell_v1()
 -> CapabilityCellReferenceV2 {
@@ -190,9 +205,149 @@ fn validate_archived_moderated_mediation_method_identity_v1(
     document.ensure_valid().map_err(|error| error.to_string())
 }
 
+fn validate_archived_three_way_method_identity_v1(
+    document: &qpls_project::CanonicalResultDocumentV2,
+) -> Result<(), String> {
+    let point_cell = pls_general_three_way_moderation_point_capability_cell_v1();
+    let bootstrap_cell = pls_general_three_way_moderation_bootstrap_capability_cell_v1();
+    let same_cell = |candidate: &qpls_project::CapabilityCellReferenceV2,
+                     expected: &CapabilityCellReferenceV2| {
+        candidate.registry_schema_version == expected.registry_schema_version
+            && candidate.capability_id == expected.capability_id
+            && candidate.cell_id == expected.cell_id
+            && candidate.capability_version == expected.capability_version
+    };
+    let results = document.general_sem_results.as_ref().ok_or_else(|| {
+        "archived three-way document omits its typed scientific payload".to_string()
+    })?;
+    let inferred = results.three_way_moderation_bootstrap_receipt.is_some();
+    let (method, adapter, title) = if inferred {
+        (
+            GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+            RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1,
+            "General SEM three-way PLS moderation bootstrap inference",
+        )
+    } else {
+        (
+            GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1,
+            RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1,
+            "General SEM three-way PLS moderation point estimates",
+        )
+    };
+    if !same_cell(&document.provenance.capability_cell, &point_cell)
+        || document.provenance.method_version != method
+        || document.provenance.engine_version != adapter
+        || document.title != title
+        || results.three_way_interaction_effects.len() != 1
+        || results.three_way_conditional_interaction_effects.is_empty()
+        || results.three_way_simple_slopes.is_empty()
+        || document
+            .sections
+            .iter()
+            .filter(|section| section.id == GENERAL_SEM_THREE_WAY_SECTION_ID_V1)
+            .count()
+            != 1
+        || [
+            GENERAL_SEM_THREE_WAY_EFFECT_TABLE_ID_V1,
+            GENERAL_SEM_THREE_WAY_CONDITIONAL_TABLE_ID_V1,
+            GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1,
+        ]
+        .iter()
+        .any(|id| {
+            document
+                .tables
+                .iter()
+                .filter(|table| table.id == **id)
+                .count()
+                != 1
+        })
+    {
+        return Err(
+            "archived three-way method, typed inventory, or result projection has drifted".into(),
+        );
+    }
+    if inferred
+        && results
+            .three_way_moderation_bootstrap_receipt
+            .as_ref()
+            .is_none_or(|receipt| receipt.capability_cell != bootstrap_cell)
+    {
+        return Err("archived three-way bootstrap receipt has a stale supplemental cell".into());
+    }
+    document.ensure_valid().map_err(|error| error.to_string())
+}
+
+fn validate_archived_single_mediation_method_identity_v1(
+    document: &qpls_project::CanonicalResultDocumentV2,
+) -> Result<(), String> {
+    let point_cell = pls_general_recursive_effects_capability_cell_v1();
+    let bootstrap_cell = pls_general_single_mediation_bootstrap_capability_cell_v1();
+    let same_cell = |candidate: &qpls_project::CapabilityCellReferenceV2,
+                     expected: &CapabilityCellReferenceV2| {
+        candidate.registry_schema_version == expected.registry_schema_version
+            && candidate.capability_id == expected.capability_id
+            && candidate.cell_id == expected.cell_id
+            && candidate.capability_version == expected.capability_version
+    };
+    let results = document.general_sem_results.as_ref().ok_or_else(|| {
+        "archived single-mediation document omits its typed scientific payload".to_string()
+    })?;
+    let receipt = results.inference_receipt.as_ref().ok_or_else(|| {
+        "archived single-mediation bootstrap document omits its inference receipt".to_string()
+    })?;
+    if !same_cell(&document.provenance.capability_cell, &point_cell)
+        || document.provenance.method_version
+            != GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1
+        || document.provenance.engine_version
+            != RECIPE_V4_GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1
+        || document.title != "PLS-SEM single mediation with full-model bootstrap"
+        || receipt.capability_cell != bootstrap_cell
+        || receipt.method_version
+            != GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1
+        || results.specific_indirect_effects.len() != 1
+        || !document
+            .capability_cells
+            .as_ref()
+            .is_some_and(|cells| cells.iter().any(|cell| same_cell(cell, &bootstrap_cell)))
+    {
+        return Err(
+            "archived single-mediation bootstrap identity or typed inventory has drifted".into(),
+        );
+    }
+    document.ensure_valid().map_err(|error| error.to_string())
+}
+
 pub(crate) fn validate_archived_general_sem_pls_method_identity_v1(
     document: &qpls_project::CanonicalResultDocumentV2,
 ) -> Result<(), String> {
+    let three_way_point_cell = pls_general_three_way_moderation_point_capability_cell_v1();
+    let has_three_way_artifact = document.provenance.capability_cell.cell_id
+        == three_way_point_cell.cell_id
+        || document
+            .general_sem_results
+            .as_ref()
+            .is_some_and(|results| {
+                !results.three_way_interaction_effects.is_empty()
+                    || !results.three_way_conditional_interaction_effects.is_empty()
+                    || !results.three_way_simple_slopes.is_empty()
+                    || results.three_way_moderation_bootstrap_receipt.is_some()
+            });
+    if has_three_way_artifact {
+        return validate_archived_three_way_method_identity_v1(document);
+    }
+    let single_mediation_cell = pls_general_single_mediation_bootstrap_capability_cell_v1();
+    let has_single_mediation_artifact = document
+        .general_sem_results
+        .as_ref()
+        .and_then(|results| results.inference_receipt.as_ref())
+        .is_some_and(|receipt| receipt.capability_cell == single_mediation_cell)
+        || document.provenance.method_version
+            == GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1
+        || document.provenance.engine_version
+            == RECIPE_V4_GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1;
+    if has_single_mediation_artifact {
+        return validate_archived_single_mediation_method_identity_v1(document);
+    }
     let combined_cell = pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
     let has_combined_artifact = document
         .general_sem_results
@@ -797,6 +952,18 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
             result,
         );
     }
+    if result.three_way_point_estimation().is_some() {
+        return build_recipe_v4_general_sem_pls_three_way_canonical_result_v1(
+            job_id,
+            project_id,
+            dataset_id,
+            started_at,
+            completed_at,
+            recipe,
+            model,
+            result,
+        );
+    }
     let interaction_point = result.interaction_point_estimation();
     let moderation_bootstrap = result.moderation_bootstrap_inference();
     let moderated_mediation_bootstrap = result.moderated_mediation_bootstrap_inference();
@@ -916,6 +1083,12 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
             )?;
     }
     let inferred = general_sem_results.inference_receipt.is_some();
+    let single_mediation = general_sem_results
+        .inference_receipt
+        .as_ref()
+        .is_some_and(|receipt| {
+            receipt.capability_cell == pls_general_single_mediation_bootstrap_capability_cell_v1()
+        });
     if moderation
         && inferred != (moderation_bootstrap.is_some() || moderated_mediation_bootstrap.is_some())
         || moderation_bootstrap.is_some() && moderated_mediation_bootstrap.is_some()
@@ -933,6 +1106,8 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         "General SEM simultaneous two-way PLS moderation bootstrap inference".into()
     } else if moderation {
         "General SEM simultaneous two-way PLS moderation point estimates".into()
+    } else if single_mediation {
+        "PLS-SEM single mediation with full-model bootstrap".into()
     } else if inferred {
         "PLS-SEM multiple mediation with full-model bootstrap".into()
     } else {
@@ -957,6 +1132,8 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1.into()
     } else if moderation {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1.into()
+    } else if single_mediation {
+        GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1.into()
     } else if inferred {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1.into()
     } else {
@@ -977,6 +1154,8 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
     } else if moderation {
         general_sem_multiple_moderation_bootstrap_capability_cell_v1()
+    } else if single_mediation {
+        pls_general_single_mediation_bootstrap_capability_cell_v1()
     } else {
         general_sem_multiple_mediation_bootstrap_capability_cell_v1()
     };
@@ -1209,6 +1388,485 @@ pub(crate) fn build_recipe_v4_general_sem_pls_canonical_result_v1(
         )]
     })?;
     Ok(document)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn build_recipe_v4_general_sem_pls_three_way_canonical_result_v1(
+    job_id: Uuid,
+    project_id: Uuid,
+    dataset_id: Uuid,
+    started_at: &str,
+    completed_at: &str,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    result: &RecipeV4GeneralSemPlsExecutionResultV1,
+) -> Result<CanonicalResultDocumentV2, Vec<String>> {
+    let artifact = compile_general_sem_pls_recipe_v1(recipe, Some(model)).map_err(|error| {
+        vec![format!(
+            "General SEM three-way recompilation failed: {error}"
+        )]
+    })?;
+    if artifact.plan().three_way_interaction().is_none()
+        || artifact.capability_cell()
+            != &pls_general_three_way_moderation_point_capability_cell_v1()
+        || result.capability_cell() != artifact.capability_cell()
+        || result.compiled_plan_sha256() != artifact.plan().deterministic_sha256()
+        || result.model_scientific_sha256() != artifact.plan().scientific_hash()
+    {
+        return Err(vec![
+            "The three-way result differs from its exact compiled plan or point capability cell"
+                .into(),
+        ]);
+    }
+    let point = result.three_way_point_estimation().ok_or_else(|| {
+        vec!["The three-way canonical path requires its typed point result".into()]
+    })?;
+    point
+        .ensure_valid_against_plan_v1(artifact.plan())
+        .map_err(|error| vec![format!("Three-way point validation failed: {error}")])?;
+    if let Some(bootstrap) = result.three_way_bootstrap_inference() {
+        bootstrap
+            .ensure_valid_against_plan_v1(artifact.plan(), point)
+            .map_err(|error| vec![format!("Three-way bootstrap validation failed: {error}")])?;
+    }
+
+    let (base_recipe, stage_one_model) = project_general_sem_pls_stage_one_recipe_v1(recipe, model)
+        .map_err(|error| {
+            vec![format!(
+                "General SEM three-way stage-one projection failed: {error}"
+            )]
+        })?;
+    let base_request = InternalRecipeV4PlsExecutionRequestV1 {
+        surface: InternalRecipeV4ExecutionSurfaceV1::InternalLabs,
+        experimental_labs_enabled: true,
+        resident_data: InternalRecipeV4ResidentDataV1::ProjectResident,
+        dataset_id: dataset_id.to_string(),
+        dataset_fingerprint: result.source_dataset_fingerprint().into(),
+        recipe: base_recipe,
+        model: stage_one_model,
+        compiler_target: RecipeV4CompilerTarget::PlsPlanV2,
+        capability_cell: RecipeV4CompilerTarget::PlsPlanV2
+            .capability_cell_for_method(recipe.settings.method),
+        posthoc_technical_minimum_sample_size: None,
+    };
+    let mut document = build_recipe_v4_pls_canonical_result(
+        job_id,
+        project_id,
+        started_at,
+        completed_at,
+        &base_request,
+        result.point_estimation(),
+    )?;
+    let results = result
+        .canonical_general_sem_results_v1()
+        .map_err(|error| vec![format!("Three-way canonical projection failed: {error}")])?;
+    let inferred = result.three_way_bootstrap_inference().is_some();
+    if results.three_way_moderation_bootstrap_receipt.is_some() != inferred
+        || results.three_way_interaction_effects.len() != 1
+        || results.three_way_conditional_interaction_effects.is_empty()
+        || results.three_way_simple_slopes.is_empty()
+    {
+        return Err(vec![
+            "The typed three-way point, fixed-probe, or bootstrap receipt inventory is incomplete"
+                .into(),
+        ]);
+    }
+
+    let point_cell = pls_general_three_way_moderation_point_capability_cell_v1();
+    let bootstrap_cell = pls_general_three_way_moderation_bootstrap_capability_cell_v1();
+    let base_cell =
+        RecipeV4CompilerTarget::PlsPlanV2.capability_cell_for_method(recipe.settings.method);
+    let mut cells = vec![base_cell, point_cell.clone()];
+    if inferred {
+        cells.push(bootstrap_cell.clone());
+    }
+    sort_and_deduplicate_cells(&mut cells);
+    let table_cells = if inferred {
+        vec![point_cell.clone(), bootstrap_cell.clone()]
+    } else {
+        vec![point_cell.clone()]
+    };
+    project_canonical_joint_stage_two_structural_tables_v1(
+        &mut document,
+        artifact.plan(),
+        &results.joint_stage_structural_coefficients,
+        model,
+        &point_cell,
+    )?;
+    let tables = three_way_tables_v1(&results, &table_cells, &bootstrap_cell)?;
+    let table_ids = tables
+        .iter()
+        .map(|table| table.id.clone())
+        .collect::<Vec<_>>();
+    document.tables.extend(tables);
+    let charts = three_way_simple_slope_charts_v1(&results);
+    let chart_ids = charts
+        .iter()
+        .map(|chart| chart.id.clone())
+        .collect::<Vec<_>>();
+    document.charts.extend(charts);
+    document.sections.push(CanonicalResultSection {
+        id: GENERAL_SEM_THREE_WAY_SECTION_ID_V1.into(),
+        title: "Three-way moderation".into(),
+        description: Some(
+            "Three-way coefficient, conditional two-way interaction effects, and two-dimensional simple slopes from one strong-hierarchy stage-two model."
+                .into(),
+        ),
+        table_ids,
+        chart_ids,
+        capability_cells: Some(table_cells),
+    });
+    document.schema_version = CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION;
+    document.title = if inferred {
+        "General SEM three-way PLS moderation bootstrap inference".into()
+    } else {
+        "General SEM three-way PLS moderation point estimates".into()
+    };
+    document.provenance.model_id = model.id.clone();
+    document.provenance.model_digest = result.model_scientific_sha256().into();
+    document.provenance.dataset_id = dataset_id.to_string();
+    document.provenance.dataset_fingerprint = result.source_dataset_fingerprint().into();
+    document.provenance.recipe_id = recipe.id.to_string();
+    document.provenance.recipe_digest = result.recipe_analytical_sha256().into();
+    document.provenance.capability_cell = point_cell.clone();
+    document.provenance.method_version = if inferred {
+        GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1.into()
+    } else {
+        GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1.into()
+    };
+    document.provenance.engine_version = if inferred {
+        RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_EXECUTION_ADAPTER_VERSION_V1.into()
+    } else {
+        RECIPE_V4_GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_EXECUTION_ADAPTER_VERSION_V1.into()
+    };
+    document.provenance.seed = Some(i64::try_from(recipe.settings.seed).map_err(|_| {
+        vec!["General SEM recipe seed exceeds the canonical safe-integer boundary".into()]
+    })?);
+    document.provenance.workers = i64::try_from(recipe.settings.workers)
+        .ok()
+        .filter(|workers| *workers > 0)
+        .ok_or_else(|| vec!["General SEM recipe worker count is invalid".into()])?;
+    document.capability_cells = Some(cells);
+    document.general_sem_results = Some(results);
+    document.exclusions = vec![CanonicalResultExclusion {
+        id: "three_way_v1_bounded_scope".into(),
+        capability_cell: Some(if inferred { bootstrap_cell } else { point_cell }),
+        title: "Bounded three-way scope".into(),
+        reason: "This method supports one strong-hierarchy three-way term and fixed standardized or binary moderator probes; fourth-order, HOC interaction, and three-way moderated mediation are outside this method version."
+            .into(),
+    }];
+    document.presentation.default_section_id = Some(GENERAL_SEM_THREE_WAY_SECTION_ID_V1.into());
+    document.presentation.default_table_id =
+        Some(GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1.into());
+
+    let validation = validate_canonical_result_document_v2(&document);
+    if !validation.passed {
+        return Err(validation.errors);
+    }
+    let archive_value = serde_json::to_value(&document)
+        .map_err(|error| vec![format!("canonical result serialization failed: {error}")])?;
+    let archive_document =
+        serde_json::from_value::<qpls_project::CanonicalResultDocumentV2>(archive_value)
+            .map_err(|error| vec![format!("schema-6 canonical result parsing failed: {error}")])?;
+    archive_document.ensure_valid().map_err(|error| {
+        vec![format!(
+            "schema-6 three-way canonical validation failed: {error}"
+        )]
+    })?;
+    Ok(document)
+}
+
+fn three_way_estimate_cells_v1(
+    estimate: &CanonicalGeneralSemEstimateV1,
+) -> Vec<CanonicalResultCell> {
+    vec![
+        number(estimate.estimate),
+        optional_number(estimate.standard_error),
+        optional_number(estimate.lower),
+        optional_number(estimate.upper),
+        optional_number(estimate.p_value),
+    ]
+}
+
+fn three_way_estimate_columns_v1() -> Vec<CanonicalResultColumn> {
+    vec![
+        number_column("estimate", "Estimate", "Point estimate."),
+        number_column(
+            "standard_error",
+            "Std. error",
+            "Bootstrap standard error when requested.",
+        ),
+        number_column("lower", "Lower", "Lower percentile bound when requested."),
+        number_column("upper", "Upper", "Upper percentile bound when requested."),
+        number_column(
+            "p_value",
+            "P value",
+            "Two-sided bootstrap probability when requested.",
+        ),
+    ]
+}
+
+fn three_way_tables_v1(
+    results: &CanonicalGeneralSemResultsV1,
+    table_cells: &[CapabilityCellReferenceV2],
+    bootstrap_cell: &CapabilityCellReferenceV2,
+) -> Result<Vec<CanonicalResultTable>, Vec<String>> {
+    let effect_columns = [
+        text_column("effect_id", "Effect", "Stable three-way effect identity."),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Stable interaction term identity.",
+        ),
+        text_column(
+            "focal_relation_id",
+            "Focal path",
+            "Authored focal structural relation.",
+        ),
+        text_column(
+            "operands",
+            "Operands",
+            "Ordered focal predictor and two moderators.",
+        ),
+        text_column("outcome_id", "Outcome", "Focal outcome identity."),
+    ]
+    .into_iter()
+    .chain(three_way_estimate_columns_v1())
+    .collect::<Vec<_>>();
+    let effect_rows = results
+        .three_way_interaction_effects
+        .iter()
+        .enumerate()
+        .map(|(index, effect)| CanonicalResultRow {
+            id: format!("three_way_effect_{index:04}"),
+            cells: [
+                text(&effect.effect_id),
+                text(&effect.interaction_id),
+                text(&effect.focal_relation_id),
+                text(&effect.operand_ids.join(" × ")),
+                text(&effect.outcome_id),
+            ]
+            .into_iter()
+            .chain(three_way_estimate_cells_v1(
+                &effect.scientific_rescaled_delta,
+            ))
+            .collect(),
+        })
+        .collect();
+    let conditional_columns = [
+        text_column(
+            "effect_id",
+            "Effect",
+            "Stable conditional-interaction identity.",
+        ),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Stable interaction term identity.",
+        ),
+        text_column(
+            "first_moderator",
+            "Moderator 1",
+            "First moderator identity.",
+        ),
+        text_column(
+            "second_moderator",
+            "Moderator 2",
+            "Second moderator identity.",
+        ),
+        number_column(
+            "second_value",
+            "Moderator 2 value",
+            "Fixed standardized or binary probe.",
+        ),
+    ]
+    .into_iter()
+    .chain(three_way_estimate_columns_v1())
+    .collect::<Vec<_>>();
+    let conditional_rows = results
+        .three_way_conditional_interaction_effects
+        .iter()
+        .enumerate()
+        .map(|(index, effect)| CanonicalResultRow {
+            id: format!("three_way_conditional_{index:04}"),
+            cells: [
+                text(&effect.effect_id),
+                text(&effect.interaction_id),
+                text(&effect.first_moderator_id),
+                text(&effect.second_moderator_id),
+                number(effect.second_moderator_value),
+            ]
+            .into_iter()
+            .chain(three_way_estimate_cells_v1(&effect.value))
+            .collect(),
+        })
+        .collect();
+    let slope_columns = [
+        text_column("effect_id", "Slope", "Stable simple-slope identity."),
+        text_column(
+            "interaction_id",
+            "Interaction",
+            "Stable interaction term identity.",
+        ),
+        text_column(
+            "first_moderator",
+            "Moderator 1",
+            "First moderator identity.",
+        ),
+        number_column(
+            "first_value",
+            "Moderator 1 value",
+            "Fixed standardized or binary probe.",
+        ),
+        text_column(
+            "second_moderator",
+            "Moderator 2",
+            "Second moderator identity.",
+        ),
+        number_column(
+            "second_value",
+            "Moderator 2 value",
+            "Fixed standardized or binary probe.",
+        ),
+    ]
+    .into_iter()
+    .chain(three_way_estimate_columns_v1())
+    .collect::<Vec<_>>();
+    let slope_rows = results
+        .three_way_simple_slopes
+        .iter()
+        .enumerate()
+        .map(|(index, effect)| CanonicalResultRow {
+            id: format!("three_way_slope_{index:04}"),
+            cells: [
+                text(&effect.effect_id),
+                text(&effect.interaction_id),
+                text(&effect.first_moderator_id),
+                number(effect.first_moderator_value),
+                text(&effect.second_moderator_id),
+                number(effect.second_moderator_value),
+            ]
+            .into_iter()
+            .chain(three_way_estimate_cells_v1(&effect.value))
+            .collect(),
+        })
+        .collect();
+    let mut tables = vec![
+        CanonicalResultTable {
+            id: GENERAL_SEM_THREE_WAY_EFFECT_TABLE_ID_V1.into(),
+            title: "Three-way interaction".into(),
+            description: Some(
+                "Scientific three-way coefficient from the joint strong-hierarchy model.".into(),
+            ),
+            columns: effect_columns,
+            rows: effect_rows,
+            footnote_ids: Vec::new(),
+            capability_cells: Some(table_cells.to_vec()),
+        },
+        CanonicalResultTable {
+            id: GENERAL_SEM_THREE_WAY_CONDITIONAL_TABLE_ID_V1.into(),
+            title: "Conditional two-way interaction".into(),
+            description: Some("The focal X-by-W interaction conditional on fixed Z probes.".into()),
+            columns: conditional_columns,
+            rows: conditional_rows,
+            footnote_ids: Vec::new(),
+            capability_cells: Some(table_cells.to_vec()),
+        },
+        CanonicalResultTable {
+            id: GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1.into(),
+            title: "Simple slopes".into(),
+            description: Some(
+                "Simple slopes of the focal predictor across the two-moderator probe grid.".into(),
+            ),
+            columns: slope_columns,
+            rows: slope_rows,
+            footnote_ids: Vec::new(),
+            capability_cells: Some(table_cells.to_vec()),
+        },
+    ];
+    if let Some(receipt) = &results.three_way_moderation_bootstrap_receipt {
+        tables.push(CanonicalResultTable {
+            id: GENERAL_SEM_THREE_WAY_RECEIPT_TABLE_ID_V1.into(),
+            title: "Three-way bootstrap receipt".into(),
+            description: Some(
+                "Shared full-model case-bootstrap and failure-ledger receipt.".into(),
+            ),
+            columns: vec![
+                text_column("method", "Method", "Frozen three-way bootstrap method."),
+                number_column("requested", "Requested", "Requested replicates."),
+                number_column("usable", "Usable", "Usable full-model refits."),
+                text_column("seed", "Seed", "Deterministic resampling seed."),
+                number_column("workers", "Workers", "Configured worker count."),
+                number_column("failed", "Failed", "Typed failed-replicate count."),
+            ],
+            rows: vec![CanonicalResultRow {
+                id: "three_way_bootstrap_receipt".into(),
+                cells: vec![
+                    text(&receipt.method_version),
+                    number(f64::from(receipt.resamples_requested)),
+                    number(f64::from(receipt.resamples_usable)),
+                    text(&receipt.seed),
+                    number(f64::from(receipt.workers)),
+                    number(receipt.failed_replicates.len() as f64),
+                ],
+            }],
+            footnote_ids: Vec::new(),
+            capability_cells: Some(vec![bootstrap_cell.clone()]),
+        });
+    }
+    Ok(tables)
+}
+
+fn three_way_simple_slope_charts_v1(
+    results: &CanonicalGeneralSemResultsV1,
+) -> Vec<CanonicalResultChart> {
+    let Some(first) = results.three_way_simple_slopes.first() else {
+        return Vec::new();
+    };
+    let mut second_probes = results
+        .three_way_simple_slopes
+        .iter()
+        .map(|row| (row.second_probe_index, row.second_moderator_value))
+        .collect::<Vec<_>>();
+    second_probes.sort_by_key(|(index, _)| *index);
+    second_probes.dedup_by_key(|(index, _)| *index);
+    vec![CanonicalResultChart {
+        id: "general_sem_three_way_simple_slope_chart".into(),
+        title: "Simple slopes across moderator probes".into(),
+        description: format!(
+            "Simple slope of the focal predictor across {} values, grouped by {}.",
+            first.first_moderator_id, first.second_moderator_id
+        ),
+        kind: CanonicalChartKind::Line,
+        series: second_probes
+            .into_iter()
+            .map(|(probe_index, probe_value)| CanonicalChartSeries {
+                id: format!("second_probe_{probe_index:04}"),
+                label: format!("{} = {probe_value:.4}", first.second_moderator_id),
+                group: Some(first.interaction_id.clone()),
+                points: results
+                    .three_way_simple_slopes
+                    .iter()
+                    .filter(|row| row.second_probe_index == probe_index)
+                    .map(|row| CanonicalChartPoint {
+                        x: CanonicalChartX::Number(row.first_moderator_value),
+                        y: row.value.estimate,
+                        lower: row.value.lower,
+                        upper: row.value.upper,
+                        label: None,
+                    })
+                    .collect(),
+            })
+            .collect(),
+        source_table_id: Some(GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1.into()),
+        display: CanonicalChartDisplayOptions {
+            palette: None,
+            show_legend: Some(true),
+            show_values: Some(false),
+            x_axis_label: Some(first.first_moderator_id.clone()),
+            y_axis_label: Some("Simple slope of focal predictor".into()),
+        },
+    }]
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1929,12 +2587,125 @@ fn project_joint_stage_two_structural_tables_v1(
             }),
         }
     }
+    replace_joint_stage_two_structural_tables_v1(
+        document,
+        ordinary_rows,
+        control_rows,
+        capability_cell,
+    )
+}
+
+fn project_canonical_joint_stage_two_structural_tables_v1(
+    document: &mut CanonicalResultDocumentV2,
+    plan: &qpls_core::CompiledPlsPlanV3,
+    coefficients: &[CanonicalJointStageStructuralCoefficientResultV1],
+    model: &SemModelV4,
+    capability_cell: &CapabilityCellReferenceV2,
+) -> Result<(), Vec<String>> {
+    let relations = plan
+        .topology()
+        .structural_relations()
+        .iter()
+        .map(|relation| (relation.relation_id(), relation))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    let technical_relation_ids = plan
+        .two_way_interactions()
+        .iter()
+        .map(|interaction| interaction.interaction_effect_relation_id())
+        .chain(
+            plan.three_way_interaction()
+                .iter()
+                .map(|interaction| interaction.interaction_effect_relation_id()),
+        )
+        .collect::<std::collections::BTreeSet<_>>();
+    let expected_relation_ids = relations
+        .keys()
+        .copied()
+        .filter(|relation_id| !technical_relation_ids.contains(relation_id))
+        .collect::<std::collections::BTreeSet<_>>();
+    let mut observed_relation_ids = std::collections::BTreeSet::new();
+    let mut ordinary_rows = Vec::new();
+    let mut control_rows = Vec::new();
+    for coefficient in coefficients {
+        let relation = relations
+            .get(coefficient.relation_id.as_str())
+            .ok_or_else(|| {
+                vec![format!(
+                    "Final joint-stage coefficient {} is absent from the compiled topology",
+                    coefficient.relation_id
+                )]
+            })?;
+        let expected_role = match relation.role() {
+            StructuralRelationRoleV4::Structural => CanonicalStructuralRelationRoleV1::Structural,
+            StructuralRelationRoleV4::Control => CanonicalStructuralRelationRoleV1::Control,
+        };
+        if technical_relation_ids.contains(coefficient.relation_id.as_str())
+            || coefficient.parameter_id != relation.parameter_id()
+            || coefficient.source_id != relation.source()
+            || coefficient.target_id != relation.target()
+            || coefficient.role != expected_role
+            || coefficient.stage != CanonicalStructuralEstimateStageV1::JointStageTwo
+            || coefficient.method_version
+                != GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+            || coefficient.trace.model_id != model.id
+            || coefficient.trace.capability_cell != *capability_cell
+            || !coefficient.estimate.estimate.is_finite()
+            || !observed_relation_ids.insert(coefficient.relation_id.as_str())
+        {
+            return Err(vec![format!(
+                "Final joint-stage coefficient {} contradicts or duplicates its compiled three-way relation",
+                coefficient.relation_id
+            )]);
+        }
+        match relation.role() {
+            StructuralRelationRoleV4::Structural => ordinary_rows.push(CanonicalResultRow {
+                id: format!("joint_path_{:04}", ordinary_rows.len()),
+                cells: vec![
+                    text(&coefficient.relation_id),
+                    text(&coefficient.parameter_id),
+                    text(&coefficient.source_id),
+                    text(&coefficient.target_id),
+                    number(coefficient.estimate.estimate),
+                ],
+            }),
+            StructuralRelationRoleV4::Control => control_rows.push(CanonicalResultRow {
+                id: format!("joint_control_{:04}", control_rows.len()),
+                cells: vec![
+                    text(&coefficient.relation_id),
+                    text(&coefficient.parameter_id),
+                    text(&coefficient.source_id),
+                    text(&coefficient.target_id),
+                    text(parameter_label(model, &coefficient.parameter_id).unwrap_or("Control")),
+                    number(coefficient.estimate.estimate),
+                ],
+            }),
+        }
+    }
+    if observed_relation_ids != expected_relation_ids {
+        return Err(vec![
+            "The final three-way joint-stage ledger does not cover every compiled ordinary structural/control relation exactly once"
+                .into(),
+        ]);
+    }
+    replace_joint_stage_two_structural_tables_v1(
+        document,
+        ordinary_rows,
+        control_rows,
+        capability_cell,
+    )
+}
+
+fn replace_joint_stage_two_structural_tables_v1(
+    document: &mut CanonicalResultDocumentV2,
+    ordinary_rows: Vec<CanonicalResultRow>,
+    control_rows: Vec<CanonicalResultRow>,
+    capability_cell: &CapabilityCellReferenceV2,
+) -> Result<(), Vec<String>> {
     if ordinary_rows.is_empty() {
         return Err(vec![
             "The final joint stage-two result contains no ordinary structural coefficients".into(),
         ]);
     }
-
     let structural_table = document
         .tables
         .iter_mut()

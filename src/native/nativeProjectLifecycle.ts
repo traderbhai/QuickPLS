@@ -154,11 +154,27 @@ export function nativeProjectSignature(input: NativeProjectSignatureInput) {
   const activeModel = input.activeModelId
     ? input.projectModels.find((model) => model.id === input.activeModelId)
     : null;
-  const projectModels = activeModel
+  const semModelV4GraphOwnsInteractionScience = Boolean(activeModel && input.nodes.some((node) =>
+    node.data.semantic === "interaction" && node.data.interaction?.kind === "interaction_v2"));
+  const projectModels = activeModel && !semModelV4GraphOwnsInteractionScience
     ? input.projectModels.map((model) => model.id === activeModel.id
       ? buildNativeRecipeModel(model.id, model.name, input.nodes, input.edges)
       : model)
     : input.projectModels;
+  const activeScientificGraph = activeModel && semModelV4GraphOwnsInteractionScience
+    ? {
+        modelId: activeModel.id,
+        nodes: input.nodes.map((node) => ({ id: node.id, type: node.type ?? null, data: node.data })),
+        edges: input.edges.map((edge) => ({
+          id: edge.id,
+          source: edge.source,
+          target: edge.target,
+          sourceHandle: edge.sourceHandle ?? null,
+          targetHandle: edge.targetHandle ?? null,
+          data: edge.data ?? null,
+        })),
+      }
+    : null;
   const modelPresentations = activeModel
     ? {
         ...input.modelPresentations,
@@ -185,6 +201,7 @@ export function nativeProjectSignature(input: NativeProjectSignatureInput) {
       transformation: version.transformation ?? null,
     })),
     projectModels: [...projectModels].sort((left, right) => left.id.localeCompare(right.id)),
+    activeScientificGraph,
     modelPresentations: Object.fromEntries(Object.entries(modelPresentations)
       .sort(([left], [right]) => left.localeCompare(right))
       .map(([modelId, presentation]) => [modelId, persistedModelPresentationSignature(presentation)])),

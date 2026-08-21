@@ -1,7 +1,15 @@
 import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import {
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CELL_V1,
   preflightGeneralSemCbsemV1,
   preflightGeneralSemPlsV1,
+} from "./generalSemCapabilityPreflightV1";
+export {
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CELL_V1,
 } from "./generalSemCapabilityPreflightV1";
 import {
   buildGeneralSemModeratedMediationSelectionV1,
@@ -19,7 +27,11 @@ import type {
   SemCapabilityCellIdV1,
   SemCapabilityDecisionV1,
 } from "./semCapabilityDecisionV1";
-import type { SemModelV4 } from "./semModelV4";
+import type {
+  HigherOrderConstructionApproachV4,
+  HigherOrderMeasurementTypeV4,
+  SemModelV4,
+} from "./semModelV4";
 
 export type UnifiedSemCalculationMethodV1 = "pls_algorithm" | "pls_bootstrap" | "cbsem";
 export type UnifiedSemInferenceChoiceV1 = "point" | "case_bootstrap";
@@ -48,6 +60,7 @@ export interface UnifiedSemCalculationContextV1 {
 export interface UnifiedSemCanonicalFamilyInventoryV1 {
   readonly mediationRows: number;
   readonly moderationRows: number;
+  readonly threeWayModerationRows: number;
   readonly higherOrderStages: number;
   readonly moderatedMediationRows: number;
   readonly cbsemParameterRows: number;
@@ -63,12 +76,38 @@ export interface UnifiedSemFeatureInventoryV1 {
   readonly indirectPathCount: number;
   readonly indirectPathCountCapped: boolean;
   readonly twoWayInteractionCount: number;
+  readonly threeWayInteractionCount: number;
+  readonly interactions: readonly UnifiedSemInteractionFeatureV1[];
   readonly higherOrderConstructCount: number;
+  readonly higherOrderConstructs: readonly UnifiedSemHigherOrderFeatureV1[];
   readonly commonFactorCount: number;
   readonly requestedSpecificPathCount: number;
   readonly moderatedMediationCandidateCount: number;
   readonly moderatedMediationSelectedPath: GeneralSemModeratedMediationPathCandidateV1 | null;
   readonly resultFamilies: UnifiedSemCanonicalFamilyInventoryV1;
+}
+
+export interface UnifiedSemInteractionFeatureV1 {
+  readonly termId: string;
+  readonly outputId: string;
+  readonly order: "two_way" | "three_way";
+  readonly focalRelationId: string;
+  readonly predictorId: string;
+  readonly predictorLabel: string;
+  readonly moderatorIds: readonly string[];
+  readonly moderatorLabels: readonly string[];
+  readonly outcomeId: string;
+  readonly outcomeLabel: string;
+  readonly parentInteractionTermId: string | null;
+}
+
+export interface UnifiedSemHigherOrderFeatureV1 {
+  readonly termId: string;
+  readonly constructId: string;
+  readonly label: string;
+  readonly approach: HigherOrderConstructionApproachV4;
+  readonly measurementType: HigherOrderMeasurementTypeV4;
+  readonly componentCount: number;
 }
 
 export type UnifiedSemCalculationRouteV1 =
@@ -123,6 +162,13 @@ export type UnifiedSemCalculationActionV1 =
       readonly plan: UnifiedSemCalculationPlanV1;
       readonly candidates: readonly GeneralSemModeratedMediationPathCandidateV1[];
       readonly selectedPathId: string | null;
+    }
+  | {
+      readonly kind: "edit_higher_order";
+      readonly authorityKey: string;
+      readonly plan: UnifiedSemCalculationPlanV1;
+      readonly higherOrderTermId: string;
+      readonly higherOrderConstructId: string;
     };
 
 const INDIRECT_PATH_COUNT_LIMIT_V1 = 10_000;
@@ -131,26 +177,47 @@ const FIXED_MODERATED_MEDIATION_TARGET_SUMMARY_V1 =
 
 type StructuralRelationV1 = Extract<SemModelV4["relations"][number], { kind: "structural" }>;
 
+function scientificStructuralVariableIdsV1(model: SemModelV4): Set<string> {
+  const generatedVariableIds = new Set(model.derived_terms.map((term) => term.output));
+  return new Set(model.variables.flatMap((variable) => {
+    if (generatedVariableIds.has(variable.id)) return [];
+    if (variable.kind === "common_factor" || variable.kind === "composite") return [variable.id];
+    if (variable.kind === "observed" && (variable.role === "structural" || variable.role === "both")) return [variable.id];
+    return [];
+  }));
+}
+
 function scientificStructuralRelationsV1(model: SemModelV4): StructuralRelationV1[] {
-  const scientificVariables = new Set(model.variables
-    .filter((variable) => variable.kind !== "observed" || variable.role !== "indicator")
-    .filter((variable) => variable.kind !== "derived")
-    .map((variable) => variable.id));
+  const scientificVariables = scientificStructuralVariableIdsV1(model);
+  const generatedHierarchyRelationIds = new Set(model.annotations.flatMap((annotation) => (
+    annotation.kind === "note"
+      && annotation.id.startsWith("general-sem:v1:interaction-generated:")
+      ? [annotation.subject]
+      : []
+  )));
   return model.relations.filter((relation): relation is StructuralRelationV1 => (
     relation.kind === "structural"
     && (relation.role ?? "structural") === "structural"
+    && !generatedHierarchyRelationIds.has(relation.id)
     && scientificVariables.has(relation.source)
     && scientificVariables.has(relation.target)
   ));
 }
 
 function scientificStructuralRegressionsV1(model: SemModelV4): StructuralRelationV1[] {
+  const generatedHierarchyRelationIds = new Set(model.annotations.flatMap((annotation) => (
+    annotation.kind === "note"
+      && annotation.id.startsWith("general-sem:v1:interaction-generated:")
+      ? [annotation.subject]
+      : []
+  )));
   const scientificVariables = new Set(model.variables
     .filter((variable) => variable.kind !== "observed" || variable.role !== "indicator")
     .filter((variable) => variable.kind !== "derived")
     .map((variable) => variable.id));
   return model.relations.filter((relation): relation is StructuralRelationV1 => (
     relation.kind === "structural"
+    && !generatedHierarchyRelationIds.has(relation.id)
     && scientificVariables.has(relation.source)
     && scientificVariables.has(relation.target)
   ));
@@ -202,6 +269,9 @@ function canonicalFamilyInventoryV1(
       + (results?.aggregate_effects?.length ?? 0),
     moderationRows: (results?.interaction_effects?.length ?? 0)
       + (results?.conditional_effects?.length ?? 0),
+    threeWayModerationRows: (results?.three_way_interaction_effects?.length ?? 0)
+      + (results?.three_way_conditional_interaction_effects?.length ?? 0)
+      + (results?.three_way_simple_slopes?.length ?? 0),
     higherOrderStages: results?.higher_order_stages?.length ?? 0,
     moderatedMediationRows: (results?.conditional_indirect_effects?.length ?? 0)
       + (results?.moderated_mediation_indices?.length ?? 0),
@@ -220,6 +290,58 @@ export function detectUnifiedSemFeatureInventoryV1(
   context: UnifiedSemCalculationContextV1,
 ): UnifiedSemFeatureInventoryV1 {
   const indirect = countSpecificIndirectPathsV1(context.model);
+  const variableLabels = new Map(context.model.variables.map((variable) => [variable.id, variable.label]));
+  const relationsById = new Map(context.model.relations.map((relation) => [relation.id, relation]));
+  const allInteractionTerms = context.model.derived_terms.filter((term): term is Extract<
+    SemModelV4["derived_terms"][number],
+    { kind: "interaction_v2" }
+  > => term.kind === "interaction_v2");
+  const generatedHierarchyTermIds = new Set(context.model.annotations.flatMap((annotation) => (
+    annotation.kind === "note"
+      && annotation.id.startsWith("general-sem:v1:interaction-generated:")
+      ? [annotation.subject]
+      : []
+  )));
+  const interactionTerms = allInteractionTerms.filter((term) => !generatedHierarchyTermIds.has(term.id));
+  const interactions: UnifiedSemInteractionFeatureV1[] = interactionTerms
+    .filter((term) => term.operands.length === 2 || term.operands.length === 3)
+    .map((term) => {
+      const focal = relationsById.get(term.focal_relation);
+      const outcomeId = focal?.kind === "structural" ? focal.target : "";
+      const parentInteraction = term.operands.length === 3
+        ? allInteractionTerms.find((candidate) => (
+            candidate.id !== term.id
+            && candidate.operands.length === 2
+            && candidate.operands[0] === term.operands[0]
+            && candidate.operands[1] === term.operands[1]
+            && relationsById.get(candidate.focal_relation)?.kind === "structural"
+            && (relationsById.get(candidate.focal_relation) as StructuralRelationV1).target === outcomeId
+          ))
+        : undefined;
+      return {
+        termId: term.id,
+        outputId: term.output,
+        order: term.operands.length === 3 ? "three_way" : "two_way",
+        focalRelationId: term.focal_relation,
+        predictorId: term.operands[0]!,
+        predictorLabel: variableLabels.get(term.operands[0]!) ?? term.operands[0]!,
+        moderatorIds: term.operands.slice(1),
+        moderatorLabels: term.operands.slice(1).map((id) => variableLabels.get(id) ?? id),
+        outcomeId,
+        outcomeLabel: variableLabels.get(outcomeId) ?? outcomeId,
+        parentInteractionTermId: parentInteraction?.id ?? null,
+      };
+    });
+  const higherOrderConstructs: UnifiedSemHigherOrderFeatureV1[] = context.model.derived_terms
+    .filter((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "higher_order" }> => term.kind === "higher_order")
+    .map((term) => ({
+      termId: term.id,
+      constructId: term.output,
+      label: variableLabels.get(term.output) ?? term.id,
+      approach: term.approach,
+      measurementType: term.measurement_type,
+      componentCount: term.components.length,
+    }));
   let moderatedMediationCandidateCount = 0;
   let moderatedMediationSelectedPath: GeneralSemModeratedMediationPathCandidateV1 | null = null;
   try {
@@ -238,10 +360,11 @@ export function detectUnifiedSemFeatureInventoryV1(
     structuralRegressionCount: scientificStructuralRegressionsV1(context.model).length,
     indirectPathCount: indirect.count,
     indirectPathCountCapped: indirect.capped,
-    twoWayInteractionCount: context.model.derived_terms.filter((term) => (
-      term.kind === "interaction_v2" && term.operands.length === 2
-    )).length,
-    higherOrderConstructCount: context.model.derived_terms.filter((term) => term.kind === "higher_order").length,
+    twoWayInteractionCount: interactions.filter((interaction) => interaction.order === "two_way").length,
+    threeWayInteractionCount: interactions.filter((interaction) => interaction.order === "three_way").length,
+    interactions,
+    higherOrderConstructCount: higherOrderConstructs.length,
+    higherOrderConstructs,
     commonFactorCount: context.model.variables.filter((variable) => variable.kind === "common_factor").length,
     requestedSpecificPathCount: context.config.requested_effect_estimands.filter((estimand) => (
       estimand.kind === "specific_path"
@@ -284,7 +407,8 @@ function featureSummariesV1(
     return summaries;
   }
   if (inventory.indirectPathCount > 0) summaries.push(`${inventory.indirectPathCount}${inventory.indirectPathCountCapped ? "+" : ""} indirect path${inventory.indirectPathCount === 1 ? "" : "s"}`);
-  if (inventory.twoWayInteractionCount > 0) summaries.push(`${inventory.twoWayInteractionCount} two-way interaction${inventory.twoWayInteractionCount === 1 ? "" : "s"}`);
+  if (inventory.twoWayInteractionCount > 0) summaries.push(`${inventory.twoWayInteractionCount} two-way moderation effect${inventory.twoWayInteractionCount === 1 ? "" : "s"}`);
+  if (inventory.threeWayInteractionCount > 0) summaries.push(`${inventory.threeWayInteractionCount} three-way moderation effect${inventory.threeWayInteractionCount === 1 ? "" : "s"}`);
   if (inventory.higherOrderConstructCount > 0) summaries.push(`${inventory.higherOrderConstructCount} higher-order construct${inventory.higherOrderConstructCount === 1 ? "" : "s"}`);
   if (method === "pls_bootstrap" && moderatedMediation?.selectedPath) {
     summaries.push(`Moderated mediation (${moderatedMediation.selectedPath.moderatedStage === "first_stage" ? "first stage" : "second stage"})`);
@@ -314,6 +438,7 @@ function resultCategoriesV1(
     "Structural Model",
     ...(inventory.indirectPathCount > 0 ? ["Direct, Indirect, and Total Effects"] : []),
     ...(inventory.twoWayInteractionCount > 0 ? ["Moderation and Conditional Effects"] : []),
+    ...(inventory.threeWayInteractionCount > 0 ? ["Three-Way Moderation"] : []),
     ...(inventory.higherOrderConstructCount > 0 ? ["Higher-Order Constructs"] : []),
     ...(moderatedMediation?.selectedPath ? ["Moderated Mediation"] : []),
     ...(inference === "case_bootstrap" ? ["Bootstrap Inference"] : []),
@@ -400,10 +525,12 @@ export function resolveUnifiedSemCalculationV1(input: {
   const advancedPls = input.method === "pls_algorithm"
     ? inventory.indirectPathCount > 0
       || inventory.twoWayInteractionCount > 0
+      || inventory.threeWayInteractionCount > 0
       || inventory.higherOrderConstructCount > 0
       || strictOnlyPlsSemantics
     : inventory.indirectPathCount > 0
       || inventory.twoWayInteractionCount > 0
+      || inventory.threeWayInteractionCount > 0
       || inventory.higherOrderConstructCount > 0
       || strictOnlyPlsSemantics;
   if (input.method !== "cbsem" && !advancedPls) {
@@ -433,7 +560,9 @@ export function resolveUnifiedSemCalculationV1(input: {
     });
   }
   let moderatedMediation: UnifiedSemModeratedMediationSetupV1 | null = null;
-  if (input.method === "pls_bootstrap" && inventory.twoWayInteractionCount === 1) {
+  if (input.method === "pls_bootstrap"
+    && inventory.threeWayInteractionCount === 0
+    && inventory.twoWayInteractionCount === 1) {
     const selectedPathId = input.moderatedMediationPathId === undefined
       ? requestedSpecificPathIdV1(context.config)
       : input.moderatedMediationPathId;
@@ -497,6 +626,24 @@ export function resolveUnifiedSemCalculationV1(input: {
     .filter((diagnostic) => diagnostic.severity === "error")
     .map((diagnostic) => `${diagnostic.message}${diagnostic.corrections[0] ? ` ${diagnostic.corrections[0]}` : ""}`);
 
+  const routedCapabilityCells = input.method !== "cbsem" && inventory.higherOrderConstructCount === 0
+    ? inventory.threeWayInteractionCount > 0
+      ? [
+          GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CELL_V1,
+          ...(inference === "case_bootstrap"
+            ? [GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CELL_V1]
+            : []),
+        ]
+      : inventory.twoWayInteractionCount === 0
+        && inventory.indirectPathCount === 1
+        && inference === "case_bootstrap"
+        ? [
+            ...decision.capability_cells.filter((cell) => !cell.cell_id.includes("mediation_bootstrap")),
+            GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1,
+          ]
+        : decision.capability_cells
+    : decision.capability_cells;
+
   return {
     schemaVersion: 1,
     authorityKey: context.authorityKey,
@@ -507,7 +654,7 @@ export function resolveUnifiedSemCalculationV1(input: {
     featureSummaries: featureSummariesV1(input.method, inventory, moderatedMediation),
     expectedResultCategories: resultCategoriesV1(route, inventory, inference, moderatedMediation),
     decision,
-    capabilityCells: decision.capability_cells,
+    capabilityCells: routedCapabilityCells,
     requestedConfig,
     moderatedMediation,
     canStart: decision.status !== "blocked",

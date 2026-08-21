@@ -11,8 +11,8 @@ from validation import package_release_artifacts as release
 
 
 VERSION = "3.0.0"
-REPOSITORY_RELEASE_VERSION = "2.51.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_51_0_unified_workflow"
+REPOSITORY_RELEASE_VERSION = "2.53.0"
+REPOSITORY_ARTIFACT_LABEL = "v2_53_0_native_mediation_moderation"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -160,11 +160,11 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             "python validation/package_release_artifacts.py --channel unsigned-preview "
             f"--label {REPOSITORY_ARTIFACT_LABEL}",
         )
-        self.assertEqual(prototype.count('const releaseVersion = "2.51.0";'), 1)
+        self.assertEqual(prototype.count('const releaseVersion = "2.53.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
         self.assertIn(
-            "Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).",
+            "Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).",
             readme,
         )
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
@@ -174,7 +174,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             " ".join(readme.replace("**", "").split()),
         )
         self.assertIn(
-            "The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection "
+            "The Registry contains 41 scoped-Standard exact cells; its conservative compatibility projection "
             "is 27 Standard rows, 16 Labs rows, and two Legacy rows.",
             " ".join(readme.split()),
         )
@@ -183,7 +183,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
         self.assertIn(
-            "Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).",
+            "Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).",
             installation,
         )
         self.assertIn("_x64_cli.exe` for offline command-line and batch recipe execution.", installation)

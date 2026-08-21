@@ -6,6 +6,7 @@ import { useWorkspace } from "../store";
 import { convertLegacyBasicModelV4 } from "../domain/semModelV4";
 import {
   NativeModelInspector,
+  nativeHigherOrderPositionLabel,
   nativeModelInspectorPreflightPreview,
   nextNativeModelInspectorTab,
 } from "./NativeModelInspector";
@@ -62,6 +63,8 @@ describe("native model inspector customer workflow", () => {
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('id="nd-model-construct-name"');
     expect(html).not.toContain("Scientific representation");
+    expect(html).not.toContain("Experimental Labs");
+    expect(html).not.toContain("Scientific authoring remains in Experimental Labs.");
   });
 
   it("reveals scientific parameter controls only in Expert mode when Experimental Labs is enabled", () => {
@@ -86,7 +89,7 @@ describe("native model inspector customer workflow", () => {
     expect(html).toContain("Stable construct ID");
     expect(html).toContain("Bound indicators");
     expect(html).not.toContain("Scientific authoring remains in Experimental Labs.");
-    expect(html).not.toContain("Scientific representation");
+    expect(html).toContain("Scientific representation");
   });
 
   it("exposes the complete canonical document fallback only for Expert strict Standard models", () => {
@@ -291,21 +294,26 @@ describe("native model inspector customer workflow", () => {
       });
       const html = renderToStaticMarkup(<NativeModelInspector
         nodesOverride={[node]}
+        edgesOverride={[{ id: "component-to-hoc", source: "component-a", target: node.id }]}
         selectedNodeIdOverride={node.id}
         selectedEdgeIdOverride={null}
+        onEditHigherOrder={() => undefined}
       />);
 
       expect(html).toContain(`<dt>Type</dt><dd>${label}</dd>`);
-      expect(html).toContain("<dt>Method</dt><dd>Disjoint two-stage</dd>");
-      expect(html).toContain("<dt>Indicators</dt><dd>Generated component scores</dd>");
+      expect(html).toContain("<dt>Approach</dt><dd>Disjoint two-stage</dd>");
+      expect(html).toContain("<dt>Position</dt><dd>Endogenous</dd>");
+      expect(html).toContain("<dt>Inputs</dt><dd>Generated component scores</dd>");
+      expect(html).toContain(`aria-label="Edit higher-order construct ${node.data.label}"`);
+      expect(html).toContain(">Edit…</button>");
     }
 
-    for (const [canonicalApproach, label] of [
-      ["repeated_indicators", "Repeated indicators"],
-      ["extended_repeated_indicators", "Extended repeated indicators"],
-      ["embedded_two_stage", "Embedded two-stage"],
-      ["disjoint_two_stage", "Disjoint two-stage"],
-      ["hybrid", "Hybrid"],
+    for (const [canonicalApproach, label, inputs] of [
+      ["repeated_indicators", "Repeated indicators", "Repeated component indicators"],
+      ["extended_repeated_indicators", "Extended repeated indicators", "Extended repeated component indicators"],
+      ["embedded_two_stage", "Embedded two-stage", "Generated component scores"],
+      ["disjoint_two_stage", "Disjoint two-stage", "Generated component scores"],
+      ["hybrid", "Hybrid", "Component indicators and generated scores"],
     ] as const) {
       const node = projectedNode({
         semantic: "higher_order",
@@ -324,8 +332,23 @@ describe("native model inspector customer workflow", () => {
         selectedEdgeIdOverride={null}
       />);
 
-      expect(html).toContain(`<dt>Method</dt><dd>${label}</dd>`);
+      expect(html).toContain(`<dt>Approach</dt><dd>${label}</dd>`);
+      expect(html).toContain(`<dt>Inputs</dt><dd>${inputs}</dd>`);
     }
+  });
+
+  it("derives HOC structural position without treating covariance or visual membership as regressions", () => {
+    const decorative = { visualOnly: true };
+    expect(nativeHigherOrderPositionLabel("hoc", [
+      { id: "membership", source: "component", target: "hoc", data: decorative },
+      { id: "covariance", source: "peer", target: "hoc", data: { role: "covariance" } },
+    ])).toBe("Unconnected");
+    expect(nativeHigherOrderPositionLabel("hoc", [
+      { id: "hoc-outcome", source: "hoc", target: "outcome" },
+    ])).toBe("Exogenous");
+    expect(nativeHigherOrderPositionLabel("hoc", [
+      { id: "predictor-hoc", source: "predictor", target: "hoc", data: { role: "control" } },
+    ])).toBe("Endogenous");
   });
 
   it("cycles tab focus predictably with Windows keyboard conventions", () => {

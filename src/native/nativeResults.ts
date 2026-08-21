@@ -1,5 +1,10 @@
-import { methodResultTables, type ResultTable } from "../domain/resultTables";
+import {
+  methodResultTables,
+  type ResultTable,
+  type ResultTableAdvisory,
+} from "../domain/resultTables";
 import { parseParameterIdentity } from "../domain/inference";
+import type { ResultOverlaySelectionV1 } from "../domain/moderationDiagramProjectionV1";
 import type {
   AnalysisRun,
   CbsemAnalysis,
@@ -82,7 +87,7 @@ export {
   nativeProcessResultProjection,
 } from "./nativeProcessResults";
 
-export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "sample_size_power" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "quality_criteria" | "prediction" | "inference";
+export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "sample_size_power" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "three_way_moderation" | "quality_criteria" | "prediction" | "inference";
 
 export type NativeResultNavigationItem =
   | {
@@ -286,12 +291,12 @@ const MEDIATION_IDS = [
 ] as const;
 
 const HIGHER_ORDER_IDS = [
-  "general_sem_higher_order_targets",
-  "general_sem_higher_order_stages",
-  "general_sem_higher_order_bootstrap_receipt",
   "hoc_component_relationships",
   "hoc_structural_paths",
   "hoc_scope",
+  "general_sem_higher_order_targets",
+  "general_sem_higher_order_stages",
+  "general_sem_higher_order_bootstrap_receipt",
 ] as const;
 
 const QUALITY_CRITERIA_IDS = [
@@ -507,6 +512,19 @@ export const PLS_MODEL_FIT_METHOD_VERSION_V2 = "pls_model_fit_v2";
 export const PLS_MODEL_FIT_MATRIX_CONVENTION_V2 = "indicator_correlation_lower_triangle_including_diagonal";
 export const PLS_MODEL_FIT_GEODESIC_LOGARITHM_V2 = "natural_logarithm";
 export const PLS_MODEL_FIT_EXACT_INFERENCE_PROCEDURE_V2 = "adapted_bollen_stine_saturated_and_estimated";
+
+export interface NativeModelFitPresentationStateV2 {
+  mode:
+    | "higher_order_not_reported"
+    | "descriptive"
+    | "exact_available"
+    | "exact_partial"
+    | "exact_unavailable"
+    | "exact_failed";
+  aggregateStatus: PlsModelFitExactStatus | null;
+  detailValue: string;
+  advisory: ResultTableAdvisory;
+}
 
 export const NATIVE_IPMA_SCOPE_NOTE =
   "Performance uses 0–100 observed-range min–max scaling of listwise-standardized composite scores. No theoretical-range correction is applied.";
@@ -2319,6 +2337,121 @@ function aggregateExactStatus(statuses: PlsModelFitExactStatus[]): PlsModelFitEx
   return "unavailable";
 }
 
+/**
+ * Classifies model-fit presentation from validated result authority. Exact-fit
+ * tone is derived from the persisted aggregate status, never payload presence.
+ */
+export function nativeModelFitPresentationStateV2(
+  run: AnalysisRun | null | undefined,
+): NativeModelFitPresentationStateV2 | null {
+  if (!run) return null;
+  if (nativeHigherOrderProjection(run, constructDisplayLabelResolver(run))) {
+    return {
+      mode: "higher_order_not_reported",
+      aggregateStatus: null,
+      detailValue: "Not reported for this higher-order workflow",
+      advisory: {
+        tone: "neutral",
+        title: "Model fit not reported",
+        message: "QuickPLS does not report PLS model-fit measures for this supported higher-order construct workflow. Interpret the component relationships, structural paths, and method details instead.",
+      },
+    };
+  }
+
+  const hasExactMarker = run.provenance?.method_version
+    .split("+")
+    .includes(PLS_MODEL_FIT_EXACT_METHOD_VERSION_V1) ?? false;
+  const hasExactPayload = Boolean(run.bootstrap?.model_fit_exact_inference);
+  const fit = nativePlsModelFitV2Projection(run);
+  const storedFit = run.assessment?.model_fit;
+  if (!fit) {
+    if (hasExactMarker || hasExactPayload) {
+      return {
+        mode: "exact_failed",
+        aggregateStatus: null,
+        detailValue: "Run failed",
+        advisory: {
+          tone: "error",
+          title: "Exact-fit run failed",
+          message: "The requested exact-fit result did not pass its stored authority checks. Its decisions are hidden; review Run Details before retrying.",
+        },
+      };
+    }
+    if (!storedFit || storedFit.method_version) return null;
+    return {
+      mode: "descriptive",
+      aggregateStatus: null,
+      detailValue: "Historical descriptive measures",
+      advisory: {
+        tone: "neutral",
+        title: "About these measures",
+        message: "This historical result reports descriptive SRMR and d_ULS only. It remains under its original result identity and has not been relabelled as the current model-fit method.",
+      },
+    };
+  }
+
+  const exact = nativePlsModelFitExactProjection(run);
+  if (hasExactMarker !== hasExactPayload || (hasExactPayload && !exact)) {
+    return {
+      mode: "exact_failed",
+      aggregateStatus: null,
+      detailValue: "Run failed",
+      advisory: {
+        tone: "error",
+        title: "Exact-fit run failed",
+        message: "The requested exact-fit result did not pass its stored authority checks. Its decisions are hidden; review Run Details before retrying.",
+      },
+    };
+  }
+  if (!exact) {
+    return {
+      mode: "descriptive",
+      aggregateStatus: null,
+      detailValue: "Not run",
+      advisory: {
+        tone: "info",
+        title: "About these measures",
+        message: "SRMR and NFI summarize approximate fit. d_ULS and d_G are discrepancy values; treat them as descriptive unless this result also includes adapted Bollen-Stine exact-fit inference.",
+      },
+    };
+  }
+
+  if (exact.status === "available") {
+    return {
+      mode: "exact_available",
+      aggregateStatus: exact.status,
+      detailValue: "Results available",
+      advisory: {
+        tone: "info",
+        title: "Exact fit available",
+        message: "Adapted Bollen-Stine decisions for SRMR, d_ULS, and d_G are available under Model fit — exact inference.",
+      },
+    };
+  }
+  if (exact.status === "partial") {
+    return {
+      mode: "exact_partial",
+      aggregateStatus: exact.status,
+      detailValue: "Results partial",
+      advisory: {
+        tone: "warning",
+        title: "Exact fit partially available",
+        message: "The requested adapted Bollen-Stine run completed, but one or more criteria did not meet the usable-replicate requirement. Available decisions are shown and unavailable cells remain explicit.",
+      },
+    };
+  }
+  return {
+    mode: "exact_unavailable",
+    aggregateStatus: exact.status,
+    detailValue: "Results unavailable",
+    advisory: {
+      tone: "warning",
+      title: "Exact fit unavailable",
+      message: "The requested adapted Bollen-Stine run did not meet the usable-replicate requirement for either model. Review the replicate exceptions before interpreting d_ULS or d_G.",
+    },
+  };
+}
+
 function fitMatrixV2Valid(matrix: unknown, dimension: number): matrix is number[][] {
   if (!Array.isArray(matrix) || matrix.length !== dimension) return false;
   for (let row = 0; row < dimension; row += 1) {
@@ -2538,6 +2671,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
   const hasModelFitExactPayload = Boolean(run.bootstrap?.model_fit_exact_inference);
   if (hasModelFitExactVersion !== hasModelFitExactPayload
     || (hasModelFitExactPayload && !modelFitExact)) return [];
+  const modelFitPresentation = nativeModelFitPresentationStateV2(run);
   const posthocMinimumSampleSize = nativePlsPosthocMinimumSampleSizeProjection(run);
   if (result.posthoc_minimum_sample_size && !posthocMinimumSampleSize) return [];
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
@@ -2616,6 +2750,8 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     .map((row) => effectPairKey(row.source, row.target)));
   const substantivePaths = result.paths.filter((row) =>
     !controlPairs.has(effectPairKey(row.source, row.target))
+    && !technicalConstructIds.has(row.source)
+    && !technicalConstructIds.has(row.target)
     && !higherOrderConstructIds.has(row.source)
     && !higherOrderConstructIds.has(row.target));
   const specificIndirectEffects = deriveSpecificIndirectEffects(substantivePaths);
@@ -2647,8 +2783,11 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     });
     addTable(tables, {
       id: "hoc_scope",
-      title: "Higher-order run details",
+      title: "Higher-order method and run details",
       warning: null,
+      advisory: modelFitPresentation?.mode === "higher_order_not_reported"
+        ? modelFitPresentation.advisory
+        : null,
       columns: ["Higher-order construct", "Components", "Method", "Generated measurement"],
       rows: higherOrder.scopeRows,
     });
@@ -3143,12 +3282,13 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         : ["Model", "SRMR", "d_ULS"];
       addTable(tables, {
         id: "model_fit",
-        title: "Model fit",
+        title: "Model fit — descriptive",
         warning: modelFitV2
           ? modelFitExact
             ? "SRMR and NFI are approximate fit measures. Exact-fit decisions for SRMR, d_ULS, and d_G are reported separately from the adapted Bollen-Stine run."
             : "SRMR and NFI are approximate fit measures. Interpret d_ULS and d_G only with adapted Bollen-Stine inference; that inference is not available for this run."
           : null,
+        advisory: modelFitPresentation?.advisory ?? null,
         columns: fitColumns,
         rows: [
           fitRow("Saturated model", assessment.model_fit.saturated, Boolean(modelFitV2)),
@@ -3158,8 +3298,9 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       if (modelFitV2) {
         addTable(tables, {
           id: "model_fit_details",
-          title: "Model fit details",
+          title: "Model fit — method details",
           warning: null,
+          advisory: modelFitPresentation?.advisory ?? null,
           columns: ["Field", "Value"],
           rows: [
             ["Analyzed observations", String(modelFitV2.analytical_sample_size)],
@@ -3168,7 +3309,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
             ["Discrepancy cells", "Lower triangle, including the zero diagonal residuals"],
             ["d_G logarithm", "Natural logarithm"],
             ["Exact-fit procedure", "Adapted Bollen-Stine for saturated and estimated models"],
-            ["Exact-fit inference", modelFitExact ? "Available in this Experimental Labs run" : "Unavailable for this run"],
+            ["Exact-fit inference", modelFitPresentation?.detailValue ?? "Unavailable for this run"],
             ...(modelFitExact ? [
               ["Requested exact-fit replicates per model", String(modelFitExact.requested_replicates)],
               ["Exact-fit retry policy", "No retry or replacement"],
@@ -3178,9 +3319,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         if (modelFitExact) {
           addTable(tables, {
             id: "model_fit_exact",
-            title: "Exact overall model fit",
+            title: "Model fit — exact inference",
             status: "experimental",
             warning: "Experimental adapted Bollen-Stine inference. The fixed saturated and estimated ledgers are separate from ordinary parameter bootstrapping.",
+            advisory: modelFitPresentation?.advisory ?? null,
             columns: ["Model", "Criterion", "Original", "HI95", "HI99", "5% decision", "1% decision", "Empirical upper-tail probability", "Usable", "Failed"],
             rows: [modelFitExact.saturated, modelFitExact.estimated].flatMap((variant) =>
               variant.criteria.map((criterion) => [
@@ -3208,9 +3350,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
             ]));
           addTable(tables, {
             id: "model_fit_exact_failures",
-            title: "Exact-fit replicate ledger exceptions",
+            title: "Model fit — replicate exceptions",
             status: "experimental",
             warning: "Every partial or failed indexed draw is retained; no draw was retried or replaced.",
+            advisory: modelFitPresentation?.advisory ?? null,
             columns: ["Model", "Replicate", "Status", "Reason", "Details", "Sample-index digest"],
             rows: failureRows,
           });
@@ -3678,7 +3821,7 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "assessment", "Assessment", CCA_ASSESSMENT_IDS, byId);
   addTableGroup(groups, "assessment", "Assessment", CTA_PLS_ASSESSMENT_IDS, byId);
   addTableGroup(groups, "assessment", "Endogeneity diagnostics", ENDOGENEITY_ASSESSMENT_IDS, byId);
-  addTableGroup(groups, "higher_order", "Higher-order construct", HIGHER_ORDER_IDS, byId);
+  addTableGroup(groups, "higher_order", "Higher-order constructs", HIGHER_ORDER_IDS, byId);
 
   const hasMediation = MEDIATION_IDS.some((id) => id !== "total_effects" && byId.has(id));
   addTableGroup(
@@ -3844,6 +3987,153 @@ function deriveMediatedPairs(adjacency: ReadonlyMap<string, readonly NativeStruc
     }
   }
   return pairs;
+}
+
+function nativeResultRelationIdV1(run: AnalysisRun, source: string, target: string): string | null {
+  const edge = run.modelSnapshot?.edges.find((candidate) => (
+    candidate.source === source
+    && candidate.target === target
+    && (candidate.data as { role?: string } | undefined)?.role !== "control"
+    && (candidate.data as { role?: string } | undefined)?.role !== "covariance"
+  ));
+  const authorityId = (edge?.data as {
+    standardSemV4Authority?: { authorityObjectId?: string };
+  } | undefined)?.standardSemV4Authority?.authorityObjectId;
+  return authorityId?.trim() || edge?.id || null;
+}
+
+function nativeDistinctOverlayIdsV1(values: readonly (string | null | undefined)[]): string[] {
+  return [...new Set(values.filter((value): value is string => Boolean(value)))];
+}
+
+/** Derives a read-only result focus without changing the archived run or model. */
+export function nativeResultOverlaySelectionV1(
+  run: AnalysisRun | null | undefined,
+  selectedResultId: string | null | undefined,
+): ResultOverlaySelectionV1 | null {
+  if (!isCompletedResultRun(run) || !selectedResultId) return null;
+  const result = run.result;
+
+  if (/three_way|three-way/u.test(selectedResultId)) {
+    const interactions = run.modelSnapshot?.nodes.flatMap((node) => {
+      const interaction = node.data.interaction;
+      return interaction?.kind === "interaction_v2" && interaction.operands.length === 3
+        ? [{ interaction, nodeId: node.id }]
+        : [];
+    }) ?? [];
+    if (!interactions.length) return null;
+    const parentInteractions = interactions.flatMap(({ interaction }) => (
+      run.modelSnapshot?.nodes.flatMap((node) => {
+        const candidate = node.data.interaction;
+        return candidate?.kind === "interaction_v2"
+          && candidate.operands.length === 2
+          && candidate.focalRelationId === interaction.focalRelationId
+          && candidate.operands[0] === interaction.operands[0]
+          && candidate.operands[1] === interaction.operands[1]
+          ? [{ interaction: candidate, nodeId: node.id }]
+          : [];
+      }) ?? []
+    ));
+    return {
+      kind: "three_way_moderation",
+      nodeIds: nativeDistinctOverlayIdsV1(interactions.flatMap(({ interaction }) => [
+        ...interaction.operands,
+        interaction.outcome,
+      ])),
+      relationIds: nativeDistinctOverlayIdsV1(interactions.map(({ interaction }) => (
+        interaction.focalRelationId
+          || nativeResultRelationIdV1(run, interaction.operands[0], interaction.outcome)
+      ))),
+      interactionTermIds: nativeDistinctOverlayIdsV1([
+        ...interactions.map(({ interaction }) => interaction.termId),
+        ...parentInteractions.map(({ interaction }) => interaction.termId),
+      ]),
+      label: interactions.length === 1 ? "Three-way moderating effect" : `${interactions.length} three-way moderating effects`,
+    };
+  }
+
+  if (/moderated_mediation|conditional_indirect/u.test(selectedResultId)) {
+    const estimates = result.moderated_mediation?.estimates ?? [];
+    if (!estimates.length) return null;
+    return {
+      kind: "moderated_mediation",
+      nodeIds: nativeDistinctOverlayIdsV1(estimates.flatMap((estimate) => [
+        estimate.predictor,
+        estimate.mediator,
+        estimate.target,
+        estimate.moderator,
+      ])),
+      relationIds: nativeDistinctOverlayIdsV1(estimates.flatMap((estimate) => [
+        nativeResultRelationIdV1(run, estimate.predictor, estimate.mediator),
+        nativeResultRelationIdV1(run, estimate.mediator, estimate.target),
+      ])),
+      interactionTermIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => {
+        const node = run.modelSnapshot?.nodes.find((candidate) => (
+          candidate.data.semantic === "interaction"
+          && candidate.data.interaction?.outcome === estimate.target
+        ));
+        return node?.data.interaction?.termId ?? estimate.interaction;
+      })),
+      label: estimates.length === 1 ? "Moderated mediation path" : `${estimates.length} moderated mediation paths`,
+    };
+  }
+
+  if (/^moderation_/u.test(selectedResultId)) {
+    const estimates = result.moderation?.estimates ?? [];
+    if (!estimates.length) return null;
+    return {
+      kind: "moderation",
+      nodeIds: nativeDistinctOverlayIdsV1(estimates.flatMap((estimate) => [
+        estimate.predictor,
+        estimate.moderator,
+        estimate.outcome,
+      ])),
+      relationIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => (
+        nativeResultRelationIdV1(run, estimate.predictor, estimate.outcome)
+      ))),
+      interactionTermIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => {
+        const node = run.modelSnapshot?.nodes.find((candidate) => (
+          candidate.id === estimate.product_construct
+          || (candidate.data.semantic === "interaction"
+            && candidate.data.interaction?.outcome === estimate.outcome
+            && (candidate.data.interaction.kind === "interaction_v2"
+              ? candidate.data.interaction.operands[0] === estimate.predictor
+                && candidate.data.interaction.operands[1] === estimate.moderator
+              : candidate.data.interaction?.predictor === estimate.predictor
+                && candidate.data.interaction?.moderator === estimate.moderator))
+        ));
+        return node?.data.interaction?.termId ?? estimate.interaction;
+      })),
+      label: estimates.length === 1 ? "Moderating effect" : `${estimates.length} moderating effects`,
+    };
+  }
+
+  if (/indirect|mediation|total_effect/u.test(selectedResultId)) {
+    const technicalConstructIds = new Set(run.modelSnapshot?.nodes.flatMap((node) => (
+      node.data.semantic === "interaction" || node.data.semantic === "higher_order"
+        ? [node.id]
+        : []
+    )) ?? []);
+    const controlPairs = new Set((result.control_estimates ?? []).map((row) => (
+      effectPairKey(row.source, row.target)
+    )));
+    const paths = deriveSpecificIndirectEffects(result.paths.filter((row) => (
+      !controlPairs.has(effectPairKey(row.source, row.target))
+      && !technicalConstructIds.has(row.source)
+      && !technicalConstructIds.has(row.target)
+    ))).effects;
+    if (!paths.length) return null;
+    return {
+      kind: "mediation",
+      nodeIds: nativeDistinctOverlayIdsV1(paths.flatMap((path) => path.path)),
+      relationIds: nativeDistinctOverlayIdsV1(paths.flatMap((path) => path.path.slice(0, -1).map((source, index) => (
+        nativeResultRelationIdV1(run, source, path.path[index + 1]!)
+      )))),
+      interactionTermIds: [],
+      label: paths.length === 1 ? "Indirect path" : `${paths.length} indirect paths`,
+    };
+  }
+  return null;
 }
 
 function addAggregateMediationBootstrapTable(

@@ -2,6 +2,25 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [Unreleased — 2.53.0]
+
+- Moved mediation and moderation into the normal diagram-native Canvas → Calculate → Results workflow while preserving exactly 18 public methods.
+- Added a presentation-only moderation anchor with drag, context-menu, and keyboard entry points; generated interaction terms remain hidden in normal Canvas use.
+- Added separately versioned cells for exactly-one-path mediation bootstrap and bounded true three-way moderation point/bootstrap.
+- Promoted all three cells independently to scoped Standard after their compact reference, consolidated integration, and post-promotion archive checks passed.
+
+See the [2.53.0 release notes](docs/RELEASE_NOTES_V2_53_0.md). The unsigned Windows candidate and packaged save/fresh-reopen smoke passed; public release publication remains pending.
+
+## [2.52.0] - 2026-08-21
+
+- Made higher-order construct authoring diagram-native through the Model menu, context menu, Properties pane, and one compact create/edit dialog.
+- Added topology-aware RR/RF/FR/FF guidance, stable Save As Revision replacement, presentation-only component overlays, and compact Calculate routing without changing HOC engines or identities.
+- Replaced ordinary PLS model-fit warning banners with a neutral descriptive-fit presentation and payload-derived exact-fit status.
+- Refined categorized HOC Results and moved internal estimator/model/dataset identities to collapsed Run Details.
+- Built and verified one unsigned Windows candidate with an automated HOC create, calculate, Results, save, fresh-process reopen journey.
+
+See the [2.52.0 release notes](docs/RELEASE_NOTES_V2_52_0.md). Publication and code signing were not performed from this workspace.
+
 ## [2.51.0] - 2026-08-21
 
 - Made Canvas the only permanent model-authoring document.

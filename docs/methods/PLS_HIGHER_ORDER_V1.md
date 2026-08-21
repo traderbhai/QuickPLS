@@ -6,6 +6,12 @@ The Standard desktop/CLI contract uses PLS-SEM Algorithm, path weighting, standa
 
 Repeated-indicator and hybrid execution remain backend compatibility/reference capabilities. They are not part of the Standard product claim, and broader, formative, nested, multiple-HOC, incoming-HOC-path, and resampled HOC workflows remain excluded.
 
+## Current desktop entry point
+
+Version 2.52 authors an HOC directly on Canvas. Select at least two eligible constructs and open **Higher-Order Construct…** from the Model or context menu. The dialog derives RR/RF/FR/FF from the dimensions' existing measurement and the chosen conceptual direction, recommends a valid construction approach from the topology, and keeps manual approach selection under **Advanced**. The selected HOC can be edited from its context menu, Properties, or Enter; activated immutable projects use **Save As Revision**.
+
+This document continues to define only the narrower historical `ModelSpec.higher_order_constructs` cell described below. The separately bounded `SemModelV4` point/bootstrap workflow is documented in [General SEM PLS higher-order constructs v1](../GENERAL_SEM_PLS_HIGHER_ORDER_V1.md). The shared desktop entry point does not merge or broaden either scientific identity.
+
 ## Scope
 
 The `ModelSpec.higher_order_constructs` field records constructs that should later be estimated as higher-order constructs. The Standard product accepts exactly one `two_stage` entry in the shape above. The backend representation also preserves historical/reference declarations with these fields:

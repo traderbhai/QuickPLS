@@ -140,6 +140,12 @@ export function projectStandardSemModelV4DiagramV1(
   });
 
   const parameterLabels = new Map(model.parameters.map((parameter) => [parameter.id, parameter.label]));
+  const generatedHierarchySubjects = new Set(model.annotations.flatMap((annotation) => (
+    annotation.kind === "note"
+      && annotation.id.startsWith("general-sem:v1:interaction-generated:")
+      ? [annotation.subject]
+      : []
+  )));
   const edges: Edge[] = [];
   for (const relation of model.relations) {
     if (relation.kind === "measurement_effect" || relation.kind === "measurement_causal") continue;
@@ -156,6 +162,7 @@ export function projectStandardSemModelV4DiagramV1(
         label: parameterLabels.get(relation.parameter) ?? "Path",
         data: {
           ...(control ? { role: "control", controlLabel: parameterLabels.get(relation.parameter) ?? "Control" } : {}),
+          ...(generatedHierarchySubjects.has(relation.id) ? { technicalGenerated: true } : {}),
           semAuthorityObjectId: relation.id,
           standardSemV4Authority: {
             authorityObjectId: relation.id,
@@ -437,7 +444,7 @@ function standardSemPresentationSeed(model: SemModelV4): StandardSemPresentation
 function parseDiagramLayout(value: unknown): DiagramLayoutState {
   const layout = exact(
     value,
-    ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "diagramViewport", "diagramTheme", "showGrid", "layoutLocked", "standardSemPresentation"],
+    ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "diagramViewport", "diagramTheme", "showGrid", "layoutLocked", "standardSemPresentation", "moderationAnchorFractions", "moderationConnectorBendPoints"],
     ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "diagramTheme", "showGrid", "layoutLocked"],
     "layout.diagram_layout",
   );
@@ -474,6 +481,22 @@ function parseDiagramLayout(value: unknown): DiagramLayoutState {
   if (typeof layout.showGrid !== "boolean" || typeof layout.layoutLocked !== "boolean") fail("standard_sem_projection.boolean_invalid", "layout.diagram_layout", "Diagram flags must be boolean.");
   const showGrid = layout.showGrid as boolean;
   const layoutLocked = layout.layoutLocked as boolean;
+  const moderationAnchorFractions = layout.moderationAnchorFractions === undefined
+    ? undefined
+    : Object.fromEntries(Object.entries(object(layout.moderationAnchorFractions, "layout.diagram_layout.moderationAnchorFractions")).map(([termId, raw]) => {
+      exactStableId(termId, `layout.diagram_layout.moderationAnchorFractions.${termId}`);
+      const fraction = finite(raw, `layout.diagram_layout.moderationAnchorFractions.${termId}`);
+      if (fraction < 0.2 || fraction > 0.8) fail("standard_sem_projection.moderation_anchor_fraction_invalid", termId, "A moderation anchor fraction must be between 0.2 and 0.8.");
+      return [termId, fraction];
+    }));
+  const moderationConnectorBendPoints = layout.moderationConnectorBendPoints === undefined
+    ? undefined
+    : Object.fromEntries(Object.entries(object(layout.moderationConnectorBendPoints, "layout.diagram_layout.moderationConnectorBendPoints")).map(([connectorId, raw]) => {
+      exactStableId(connectorId, `layout.diagram_layout.moderationConnectorBendPoints.${connectorId}`);
+      const points = parsePoints(raw, `layout.diagram_layout.moderationConnectorBendPoints.${connectorId}`);
+      if (points.length > 8) fail("standard_sem_projection.moderation_connector_points_invalid", connectorId, "A moderation connector supports at most eight presentation bend points.");
+      return [connectorId, points];
+    }));
   return {
     diagramVersion: "sem_designer_v1",
     constructLayouts,
@@ -483,6 +506,8 @@ function parseDiagramLayout(value: unknown): DiagramLayoutState {
     diagramTheme: layout.diagramTheme as typeof themes[number],
     showGrid,
     layoutLocked,
+    ...(moderationAnchorFractions ? { moderationAnchorFractions } : {}),
+    ...(moderationConnectorBendPoints ? { moderationConnectorBendPoints } : {}),
     ...(layout.standardSemPresentation === undefined
       ? {}
       : { standardSemPresentation: parseStandardSemPresentationLayout(layout.standardSemPresentation) }),

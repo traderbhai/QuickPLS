@@ -12,13 +12,14 @@ const nodes: Array<Node<ConstructData>> = [
 const edges: Edge[] = [{ id: "x-y", source: "x", target: "y" }];
 
 describe("NativeModerationDialog", () => {
-  it("renders one compact native setup with the automatic main-effect disclosure", () => {
+  it("renders one compact native setup with qualified construction details", () => {
     const markup = renderToStaticMarkup(<NativeModerationDialog nodes={nodes} edges={edges} selectedEdgeId="x-y" create={vi.fn(() => ({ status: "created" as const, interactionId: "xm" }))} close={vi.fn()} />);
     expect(markup).toContain("Predictor → Outcome");
     expect(markup).toContain("Moderator");
-    expect(markup).toContain("Two-stage product score");
-    expect(markup).toContain("adds the moderator’s main-effect path");
-    expect(markup).toContain("Create moderating effect");
+    expect(markup).toContain("Two-way moderation");
+    expect(markup).toContain("Two-stage");
+    expect(markup).toContain("Strong");
+    expect(markup).toContain("Add moderating effect");
     expect(markup).toContain('for="nd-moderation-relationship"');
     expect(markup).toContain('id="nd-moderation-relationship"');
     expect(markup).toContain('for="nd-moderation-moderator"');
@@ -32,7 +33,7 @@ describe("NativeModerationDialog", () => {
     expect(markup).toMatch(/type="submit"[^>]*disabled/);
   });
 
-  it("announces multiple-interaction estimator gating and duplicate recovery in text", () => {
+  it("keeps technical construction details collapsed and duplicate recovery local", () => {
     const interaction = (id: string, moderator: string): Node<ConstructData> => ({
       id,
       position: { x: 100, y: 100 },
@@ -54,13 +55,99 @@ describe("NativeModerationDialog", () => {
       close={vi.fn()}
     />);
 
-    expect(markup).toContain('role="status"');
-    expect(markup).toContain('aria-live="polite"');
-    expect(markup).toContain("already contains 2 moderating effects");
-    expect(markup).toContain("Authoring does not mean every estimator can calculate it");
-    expect(markup).toContain("Calculation readiness is checked separately");
+    expect(markup).toContain("Advanced");
+    expect(markup).toContain("Construction");
+    expect(markup).toContain("Strong");
     expect(markup).toContain('role="alert"');
-    expect(markup).toContain("Choose another relationship or remove an existing moderating effect");
+    expect(markup).toContain("Add another measured construct");
+    expect(markup).toMatch(/type="submit"[^>]*disabled/);
+  });
+
+  it("uses the same compact dialog contract to edit an existing effect", () => {
+    const interaction: Node<ConstructData> = {
+      id: "xm",
+      position: { x: 100, y: 100 },
+      data: {
+        label: "X × M",
+        shortName: "XM",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "term:xm",
+          operands: ["x", "m"],
+          focalRelationId: "x-y",
+          outcome: "y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+        },
+      },
+    };
+    const markup = renderToStaticMarkup(<NativeModerationDialog
+      nodes={[...nodes, interaction]}
+      edges={edges}
+      request={{ kind: "edit", interactionTermId: "term:xm" }}
+      commit={vi.fn(() => ({ status: "updated" as const, interactionTermId: "term:xm" }))}
+      close={vi.fn()}
+    />);
+    expect(markup).toContain("Save changes");
+    expect(markup).toContain("Two-way moderation");
+    expect(markup).not.toContain("Moderating-effect editing is not connected");
+    expect(markup).toContain("Predictor → Outcome");
+    expect(markup).not.toMatch(/id="nd-moderation-relationship"[^>]*disabled/);
+  });
+
+  it("blocks a second three-way effect before submission", () => {
+    const interaction = (
+      id: string,
+      termId: string,
+      operands: [string, string, ...string[]],
+    ): Node<ConstructData> => ({
+      id,
+      position: { x: 100, y: 100 },
+      data: {
+        label: operands.join(" × "),
+        shortName: id.toUpperCase(),
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId,
+          operands,
+          focalRelationId: "x-y",
+          outcome: "y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+        },
+      },
+    });
+    const secondModerator: Node<ConstructData> = {
+      id: "z",
+      position: { x: 0, y: 200 },
+      data: { label: "Second moderator", shortName: "Z", mode: "reflective", indicators: ["z1"] },
+    };
+    const thirdModerator: Node<ConstructData> = {
+      id: "q",
+      position: { x: 0, y: 300 },
+      data: { label: "Another moderator", shortName: "Q", mode: "reflective", indicators: ["q1"] },
+    };
+    const markup = renderToStaticMarkup(<NativeModerationDialog
+      nodes={[
+        ...nodes,
+        secondModerator,
+        thirdModerator,
+        interaction("xm", "term:xm", ["x", "m"]),
+        interaction("xmz", "term:xmz", ["x", "m", "z"]),
+      ]}
+      edges={edges}
+      request={{ kind: "create", target: { kind: "parent_interaction", interactionTermId: "term:xm" } }}
+      commit={vi.fn(() => ({ status: "created" as const, interactionId: "xmq" }))}
+      close={vi.fn()}
+    />);
+
+    expect(markup).toContain("already has its supported three-way moderating effect");
     expect(markup).toMatch(/type="submit"[^>]*disabled/);
   });
 });

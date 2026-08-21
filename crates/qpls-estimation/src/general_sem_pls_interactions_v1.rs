@@ -20,14 +20,14 @@ pub const GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1: &str =
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct GeneralSemPlsProductScaleReceiptV1 {
-    scale_version: String,
-    interaction_id: String,
-    generated_product_column_id: String,
-    focal_predictor_id: String,
-    moderator_id: String,
-    observation_count: usize,
-    unstandardized_product_mean: f64,
-    unstandardized_product_sample_standard_deviation: f64,
+    pub(crate) scale_version: String,
+    pub(crate) interaction_id: String,
+    pub(crate) generated_product_column_id: String,
+    pub(crate) focal_predictor_id: String,
+    pub(crate) moderator_id: String,
+    pub(crate) observation_count: usize,
+    pub(crate) unstandardized_product_mean: f64,
+    pub(crate) unstandardized_product_sample_standard_deviation: f64,
 }
 
 impl GeneralSemPlsProductScaleReceiptV1 {
@@ -67,10 +67,10 @@ impl GeneralSemPlsProductScaleReceiptV1 {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct GeneralSemPlsStructuralCoefficientV1 {
-    relation_id: String,
-    source_id: String,
-    target_id: String,
-    estimate: f64,
+    pub(crate) relation_id: String,
+    pub(crate) source_id: String,
+    pub(crate) target_id: String,
+    pub(crate) estimate: f64,
 }
 
 impl GeneralSemPlsStructuralCoefficientV1 {
@@ -98,18 +98,18 @@ impl GeneralSemPlsStructuralCoefficientV1 {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct GeneralSemPlsInteractionCoefficientV1 {
-    interaction_id: String,
-    focal_relation_id: String,
-    interaction_effect_relation_id: String,
-    interaction_effect_parameter_id: String,
-    focal_predictor_id: String,
-    moderator_id: String,
-    outcome_id: String,
-    construction_method: InteractionMethodV4,
-    hierarchy_policy: InteractionHierarchyPolicyV2,
-    hierarchy_policy_version: String,
-    standardized_product_estimate: f64,
-    raw_product_estimate: f64,
+    pub(crate) interaction_id: String,
+    pub(crate) focal_relation_id: String,
+    pub(crate) interaction_effect_relation_id: String,
+    pub(crate) interaction_effect_parameter_id: String,
+    pub(crate) focal_predictor_id: String,
+    pub(crate) moderator_id: String,
+    pub(crate) outcome_id: String,
+    pub(crate) construction_method: InteractionMethodV4,
+    pub(crate) hierarchy_policy: InteractionHierarchyPolicyV2,
+    pub(crate) hierarchy_policy_version: String,
+    pub(crate) standardized_product_estimate: f64,
+    pub(crate) raw_product_estimate: f64,
 }
 
 impl GeneralSemPlsInteractionCoefficientV1 {

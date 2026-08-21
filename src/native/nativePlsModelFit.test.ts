@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
+import { tablesToCsv } from "../domain/resultTables";
 import type {
   AnalysisRun,
   PlsModelFit,
@@ -13,6 +14,7 @@ import {
   PLS_MODEL_FIT_GEODESIC_LOGARITHM_V2,
   PLS_MODEL_FIT_MATRIX_CONVENTION_V2,
   PLS_MODEL_FIT_METHOD_VERSION_V2,
+  nativeModelFitPresentationStateV2,
   nativePlsModelFitExactProjection,
   nativePlsModelFitV2Projection,
   nativeResultTables,
@@ -176,6 +178,51 @@ function currentExactFitRun(): AnalysisRun {
   return run;
 }
 
+function makeExactCriterionUnavailable(
+  variant: PlsModelFitExactVariantInference,
+  criterion: PlsModelFitExactCriterion,
+) {
+  for (const entry of variant.ledger) {
+    entry[criterion] = null;
+    entry.criterion_failures.push({
+      criterion,
+      reason_code: "model_fit_exact.test_criterion_unavailable",
+    });
+    const usable = [entry.srmr, entry.d_uls, entry.d_g]
+      .filter((value) => typeof value === "number").length;
+    entry.status = usable === 0 ? "failed" : "partial";
+  }
+  const summary = variant.criteria.find((candidate) => candidate.criterion === criterion)!;
+  Object.assign(summary, {
+    status: "unavailable",
+    usable_replicates: 0,
+    failed_replicates: variant.requested_replicates,
+    replicate_min: null,
+    replicate_max: null,
+    upper_95: null,
+    upper_99: null,
+    not_rejected_95: null,
+    not_rejected_99: null,
+    exceed_or_equal_count: 0,
+    empirical_upper_tail_probability: null,
+    unavailable_reason_code: "model_fit_exact.insufficient_usable_replicates",
+  });
+}
+
+function exactFitRunWithAggregateStatus(status: "partial" | "unavailable"): AnalysisRun {
+  const run = currentExactFitRun();
+  const exact = run.bootstrap!.model_fit_exact_inference!;
+  const criteria: PlsModelFitExactCriterion[] = status === "partial"
+    ? ["d_g"]
+    : ["srmr", "d_uls", "d_g"];
+  for (const variant of [exact.saturated, exact.estimated]) {
+    for (const criterion of criteria) makeExactCriterionUnavailable(variant, criterion);
+    variant.status = status;
+  }
+  exact.status = status;
+  return run;
+}
+
 describe("PLS model fit v2 native integration", () => {
   it("renders and exports the complete point-fit family without inventing exact-fit inference", () => {
     const run = currentModelFitRun();
@@ -184,6 +231,11 @@ describe("PLS model fit v2 native integration", () => {
     const tables = nativeResultTables(run);
     const summary = tables.find((table) => table.id === "model_fit");
     expect(summary).toMatchObject({
+      title: "Model fit — descriptive",
+      advisory: {
+        tone: "info",
+        title: "About these measures",
+      },
       columns: ["Model", "SRMR", "d_ULS", "d_G", "Chi-square", "df", "NFI"],
       rows: [
         ["Saturated model", "0.0000", "0.0000", "0.000000", "0.000000", "1.000000", "Unavailable"],
@@ -191,14 +243,20 @@ describe("PLS model fit v2 native integration", () => {
       ],
     });
     expect(summary?.warning).toContain("adapted Bollen-Stine inference");
+    expect(tablesToCsv([summary!])).toContain("adapted Bollen-Stine inference");
+    expect(nativeModelFitPresentationStateV2(run)).toMatchObject({
+      mode: "descriptive",
+      aggregateStatus: null,
+      detailValue: "Not run",
+    });
     expect(tables.find((table) => table.id === "model_fit_details")?.rows).toContainEqual([
       "Exact-fit inference",
-      "Unavailable for this run",
+      "Not run",
     ]);
 
     const runDetails = nativeRunProvenanceTable(run);
     expect(runDetails.rows).toContainEqual(["PLS model-fit method version", PLS_MODEL_FIT_METHOD_VERSION_V2]);
-    expect(runDetails.rows).toContainEqual(["PLS model-fit exact-fit inference", "Unavailable for this run"]);
+    expect(runDetails.rows).toContainEqual(["PLS model-fit exact-fit inference", "Not run"]);
   });
 
   it("keeps observed-indicator fit valid when a typed generated score has an outer estimate", () => {
@@ -251,7 +309,12 @@ describe("PLS model fit v2 native integration", () => {
     const tables = nativeResultTables(run);
     const exact = tables.find((table) => table.id === "model_fit_exact");
     expect(exact).toMatchObject({
+      title: "Model fit — exact inference",
       status: "experimental",
+      advisory: {
+        tone: "info",
+        title: "Exact fit available",
+      },
       columns: ["Model", "Criterion", "Original", "HI95", "HI99", "5% decision", "1% decision", "Empirical upper-tail probability", "Usable", "Failed"],
     });
     expect(exact?.rows).toHaveLength(6);
@@ -269,12 +332,32 @@ describe("PLS model fit v2 native integration", () => {
     ]);
     expect(tables.find((table) => table.id === "model_fit_details")?.rows).toContainEqual([
       "Exact-fit inference",
-      "Available in this Experimental Labs run",
+      "Results available",
     ]);
     expect(nativeRunProvenanceTable(run).rows).toContainEqual([
       "PLS model-fit exact method version",
       "pls_model_fit_exact_v1",
     ]);
+  });
+
+  it("uses the validated exact-fit aggregate status for compact partial and unavailable states", () => {
+    const partial = exactFitRunWithAggregateStatus("partial");
+    expect(nativePlsModelFitExactProjection(partial)?.status).toBe("partial");
+    expect(nativeModelFitPresentationStateV2(partial)).toMatchObject({
+      mode: "exact_partial",
+      aggregateStatus: "partial",
+      detailValue: "Results partial",
+      advisory: { tone: "warning", title: "Exact fit partially available" },
+    });
+
+    const unavailable = exactFitRunWithAggregateStatus("unavailable");
+    expect(nativePlsModelFitExactProjection(unavailable)?.status).toBe("unavailable");
+    expect(nativeModelFitPresentationStateV2(unavailable)).toMatchObject({
+      mode: "exact_unavailable",
+      aggregateStatus: "unavailable",
+      detailValue: "Results unavailable",
+      advisory: { tone: "warning", title: "Exact fit unavailable" },
+    });
   });
 
   it("fails closed on a changed exact-fit decision, ledger status, or provenance marker", () => {
@@ -291,6 +374,11 @@ describe("PLS model fit v2 native integration", () => {
     marker.provenance!.method_version = marker.provenance!.method_version
       .replace("+pls_model_fit_exact_v1", "");
     expect(nativeResultTables(marker)).toEqual([]);
+    expect(nativeModelFitPresentationStateV2(marker)).toMatchObject({
+      mode: "exact_failed",
+      detailValue: "Run failed",
+      advisory: { tone: "error", title: "Exact-fit run failed" },
+    });
   });
 
   it("keeps historical SRMR and d_ULS tables readable without relabelling them as v2", () => {

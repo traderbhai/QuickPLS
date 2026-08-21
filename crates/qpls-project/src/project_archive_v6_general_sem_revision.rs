@@ -17,12 +17,17 @@ use qpls_core::{
     CompiledPlsTwoWayModeratedMediationTargetV1, GeneralSemEffectEstimandV1,
     GeneralSemPlsRecipeCompilationErrorV1, HigherOrderConstructionApproachV4,
     HigherOrderMeasurementTypeV4, InteractionHierarchyPolicyV2, InteractionMethodV4,
-    SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4,
-    SemVariableV4, StructuralRelationRoleV4, capability_cell_reference_identity_v2,
-    compile_general_sem_pls_recipe_v1, pls_general_higher_order_bootstrap_capability_cell_v1,
+    SemAnnotationV4, SemDerivedTermV4, SemModelV4, SemParameterTargetV4, SemParameterV4,
+    SemRelationV4, SemVariableV4, StructuralRelationRoleV4, capability_cell_reference_identity_v2,
+    compile_general_sem_pls_recipe_v1, pls_general_bootstrap_capability_cell_v1,
+    pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
+    pls_general_recursive_effects_capability_cell_v1,
+    pls_general_single_mediation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_point_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1, sha256_serialized,
     specific_directed_path_identity_v1,
 };
@@ -44,6 +49,8 @@ pub const GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_LAYOUT_KEY: &str =
 pub const GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1: &str = "native_general_sem_pls_labs_v1";
 pub const GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1: &str =
     "native_general_sem_pls_standard_v1";
+const STANDARD_SEM_MODEL_V4_DIAGRAM_LAYOUTS_V1_KEY: &str =
+    "standard_sem_model_v4_diagram_layouts_v1";
 const MAX_SAFE_REVISION_NUMBER: u64 = 9_007_199_254_740_991;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -62,6 +69,19 @@ pub enum GeneralSemRevisionInteractionMethodV1 {
 #[serde(rename_all = "snake_case", deny_unknown_fields)]
 pub enum GeneralSemRevisionHierarchyPolicyV1 {
     Strong,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum GeneralSemModeratingEffectTargetV1 {
+    FocalRelation {
+        #[serde(rename = "relationId")]
+        relation_id: String,
+    },
+    ParentInteraction {
+        #[serde(rename = "interactionTermId")]
+        interaction_term_id: String,
+    },
 }
 
 /// Additive scientific mutations accepted by revision schema v1.
@@ -86,6 +106,42 @@ pub enum GeneralSemExecutionAuthorityRevisionIntentV1 {
         approach: HigherOrderConstructionApproachV4,
         measurement_type: HigherOrderMeasurementTypeV4,
         initial_path: GeneralSemRevisionHigherOrderPathV1,
+    },
+    ReplaceHigherOrder {
+        term_id: String,
+        output_id: String,
+        label: String,
+        components: Vec<String>,
+        approach: HigherOrderConstructionApproachV4,
+        measurement_type: HigherOrderMeasurementTypeV4,
+    },
+    AddModeratingEffectV3 {
+        intent_version: u32,
+        sem_generation: GeneralSemRevisionGenerationV1,
+        label: String,
+        operands: Vec<String>,
+        target: GeneralSemModeratingEffectTargetV1,
+        outcome: String,
+        method: GeneralSemRevisionInteractionMethodV1,
+        hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1,
+    },
+    ReplaceModeratingEffect {
+        intent_version: u32,
+        sem_generation: GeneralSemRevisionGenerationV1,
+        term_id: String,
+        output_id: String,
+        label: String,
+        operands: Vec<String>,
+        target: GeneralSemModeratingEffectTargetV1,
+        outcome: String,
+        method: GeneralSemRevisionInteractionMethodV1,
+        hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1,
+    },
+    RemoveModeratingEffect {
+        intent_version: u32,
+        sem_generation: GeneralSemRevisionGenerationV1,
+        term_id: String,
+        output_id: String,
     },
 }
 
@@ -373,6 +429,78 @@ pub fn create_general_sem_execution_authority_revision_v2(
     }
 }
 
+fn rekey_standard_sem_diagram_layout_lane(
+    source: &ProjectArchiveDocumentV6,
+    source_model_id: &str,
+    revised_model_id: &str,
+) -> Result<Option<serde_json::Value>, GeneralSemExecutionAuthorityRevisionErrorV1> {
+    let Some(source_lane) = source
+        .layouts
+        .get(STANDARD_SEM_MODEL_V4_DIAGRAM_LAYOUTS_V1_KEY)
+    else {
+        return Ok(None);
+    };
+    let mut revised_lane = source_lane.clone();
+    let lane = revised_lane.as_object_mut().ok_or_else(|| {
+        GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+            "the Standard diagram-layout lane is not an object".into(),
+        )
+    })?;
+    if lane
+        .get("schema_version")
+        .and_then(serde_json::Value::as_u64)
+        != Some(1)
+    {
+        return Err(
+            GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+                "the Standard diagram-layout lane has an unsupported schema version".into(),
+            ),
+        );
+    }
+    let models = lane
+        .get_mut("models")
+        .and_then(serde_json::Value::as_object_mut)
+        .ok_or_else(|| {
+            GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+                "the Standard diagram-layout lane has no model map".into(),
+            )
+        })?;
+    if models.len() != 1 {
+        return Err(
+            GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+                "the General SEM source diagram-layout lane must contain exactly one model".into(),
+            ),
+        );
+    }
+    let mut model_layout = models.remove(source_model_id).ok_or_else(|| {
+        GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+            "the Standard diagram-layout lane does not match the pinned source model".into(),
+        )
+    })?;
+    let layout_record = model_layout.as_object_mut().ok_or_else(|| {
+        GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+            "the Standard diagram-layout model record is not an object".into(),
+        )
+    })?;
+    if layout_record
+        .get("model_id")
+        .and_then(serde_json::Value::as_str)
+        != Some(source_model_id)
+    {
+        return Err(
+            GeneralSemExecutionAuthorityRevisionErrorV1::SourceAuthorityMismatch(
+                "the Standard diagram-layout record does not match its source model key".into(),
+            ),
+        );
+    }
+    layout_record.insert(
+        "model_id".into(),
+        serde_json::Value::String(revised_model_id.to_owned()),
+    );
+    models.insert(revised_model_id.to_owned(), model_layout);
+    Ok(Some(revised_lane))
+}
+
 #[cfg(windows)]
 fn create_general_sem_execution_authority_revision_windows_v1(
     source: &Path,
@@ -442,33 +570,46 @@ fn create_general_sem_execution_authority_revision_windows_v1(
     revised_recipe
         .metadata
         .insert("general_sem_generation".into(), "general_sem_v1".into());
-    let higher_order_revision = matches!(
-        &request.intent,
-        GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. }
-    );
-    let selected_execution_cell = match (
-        higher_order_revision,
-        revised_recipe
-            .general_sem_config
-            .as_ref()
-            .map(|config| config.inference),
-    ) {
-        (true, Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. })) => {
+    let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
+    let inference = revised_recipe
+        .general_sem_config
+        .as_ref()
+        .map(|config| config.inference)
+        .ok_or_else(|| {
+            GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
+                "revised RecipeV4 must retain one GeneralSemConfigV1 inference authority".into(),
+            )
+        })?;
+    let plan = compiled.plan();
+    let selected_execution_cell = match inference {
+        qpls_core::GeneralSemInferenceV1::None => compiled.capability_cell().clone(),
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }
+            if !plan.higher_order_stage_plans().is_empty() =>
+        {
             pls_general_higher_order_bootstrap_capability_cell_v1()
         }
-        (true, Some(qpls_core::GeneralSemInferenceV1::None)) => {
-            pls_general_higher_order_point_capability_cell_v1()
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }
+            if plan.three_way_interaction().is_some() =>
+        {
+            pls_general_three_way_moderation_bootstrap_capability_cell_v1()
         }
-        (false, Some(qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. })) => {
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }
+            if plan.two_way_moderated_mediation_target().is_some() =>
+        {
+            pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1()
+        }
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }
+            if !plan.two_way_interactions().is_empty() =>
+        {
             pls_general_multiple_moderation_bootstrap_capability_cell_v1()
         }
-        (false, Some(qpls_core::GeneralSemInferenceV1::None)) => {
-            pls_general_multiple_moderation_point_capability_cell_v1()
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. }
+            if plan.topology().specific_directed_paths().len() == 1 =>
+        {
+            pls_general_single_mediation_bootstrap_capability_cell_v1()
         }
-        (_, None) => {
-            return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
-                "revised RecipeV4 must retain one GeneralSemConfigV1 inference authority".into(),
-            ));
+        qpls_core::GeneralSemInferenceV1::CaseBootstrap { .. } => {
+            pls_general_bootstrap_capability_cell_v1()
         }
     };
     if selected_execution_cell != request.expected_capability_cell {
@@ -477,11 +618,14 @@ fn create_general_sem_execution_authority_revision_windows_v1(
                 .into(),
         ));
     }
-    let compiled = compile_general_sem_pls_recipe_v1(&revised_recipe, Some(&revised_model))?;
-    let expected_primary_cell = if higher_order_revision {
+    let expected_primary_cell = if !plan.higher_order_stage_plans().is_empty() {
         pls_general_higher_order_point_capability_cell_v1()
-    } else {
+    } else if plan.three_way_interaction().is_some() {
+        pls_general_three_way_moderation_point_capability_cell_v1()
+    } else if !plan.two_way_interactions().is_empty() {
         pls_general_multiple_moderation_point_capability_cell_v1()
+    } else {
+        pls_general_recursive_effects_capability_cell_v1()
     };
     if compiled.capability_cell() != &expected_primary_cell {
         return Err(GeneralSemExecutionAuthorityRevisionErrorV1::InvalidRequest(
@@ -536,6 +680,11 @@ fn create_general_sem_execution_authority_revision_windows_v1(
             "source must expose exactly one validated resident dataset",
         ));
     };
+    let revised_layout_lane = rekey_standard_sem_diagram_layout_lane(
+        &loaded.document,
+        &source_identity.model_id,
+        &revised_model.id,
+    )?;
     let mut document = ProjectArchiveDocumentV6::new_general_sem_v1(
         request.revision.project_id,
         request.revision.project_name.clone(),
@@ -550,6 +699,12 @@ fn create_general_sem_execution_authority_revision_windows_v1(
         },
     });
     document.recipes.push(revised_recipe);
+    if let Some(layout_lane) = revised_layout_lane {
+        document.layouts.insert(
+            STANDARD_SEM_MODEL_V4_DIAGRAM_LAYOUTS_V1_KEY.into(),
+            layout_lane,
+        );
+    }
     document.layouts.insert(
         GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V1_LAYOUT_KEY.into(),
         serde_json::to_value(&lineage)?,
@@ -762,6 +917,11 @@ fn create_general_sem_execution_authority_revision_windows_v2(
             "source must expose exactly one validated resident dataset",
         ));
     };
+    let revised_layout_lane = rekey_standard_sem_diagram_layout_lane(
+        &loaded.document,
+        &source_identity.model_id,
+        &revised_model.id,
+    )?;
     let mut document = ProjectArchiveDocumentV6::new_general_sem_v1(
         request.revision.project_id,
         request.revision.project_name.clone(),
@@ -776,6 +936,12 @@ fn create_general_sem_execution_authority_revision_windows_v2(
         },
     });
     document.recipes.push(revised_recipe);
+    if let Some(layout_lane) = revised_layout_lane {
+        document.layouts.insert(
+            STANDARD_SEM_MODEL_V4_DIAGRAM_LAYOUTS_V1_KEY.into(),
+            layout_lane,
+        );
+    }
     document.layouts.insert(
         GENERAL_SEM_EXECUTION_AUTHORITY_REVISION_V2_LAYOUT_KEY.into(),
         serde_json::to_value(&lineage)?,
@@ -1308,6 +1474,53 @@ fn apply_general_sem_revision_intent(
             measurement_type,
             initial_path,
         ),
+        GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceHigherOrder {
+            term_id,
+            output_id,
+            label,
+            components,
+            approach,
+            measurement_type,
+        } => apply_higher_order_replacement(
+            model,
+            term_id,
+            output_id,
+            label,
+            components,
+            approach,
+            measurement_type,
+        ),
+        GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 { .. } => {
+            apply_moderating_effect_revision_v3(model, intent, None)
+        }
+        GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceModeratingEffect {
+            term_id,
+            output_id,
+            ..
+        } => {
+            remove_moderating_effect_revision_v3(model, term_id, output_id)?;
+            apply_moderating_effect_revision_v3(
+                model,
+                intent,
+                Some((term_id.clone(), output_id.clone())),
+            )
+        }
+        GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect {
+            intent_version,
+            sem_generation,
+            term_id,
+            output_id,
+        } => {
+            if *intent_version != 3
+                || *sem_generation != GeneralSemRevisionGenerationV1::GeneralSemV1
+            {
+                return Err(unsupported_intent(
+                    "remove_moderating_effect requires intent_version=3 and general_sem_v1",
+                ));
+            }
+            remove_moderating_effect_revision_v3(model, term_id, output_id)?;
+            Ok((term_id.clone(), output_id.clone()))
+        }
     }
 }
 
@@ -1483,6 +1696,635 @@ fn apply_interaction_v2_revision(
     Ok((term_id, output_id))
 }
 
+fn moderation_dependency_annotation_id(owner: &str, subject: &str) -> String {
+    format!(
+        "general-sem:v1:interaction-dependency:{}:{}",
+        encode_uri_component(owner),
+        encode_uri_component(subject)
+    )
+}
+
+fn moderation_generated_annotation_id(subject: &str) -> String {
+    format!(
+        "general-sem:v1:interaction-generated:{}",
+        encode_uri_component(subject)
+    )
+}
+
+fn add_moderation_note(model: &mut SemModelV4, id: String, subject: String, text: String) {
+    if !model
+        .annotations
+        .iter()
+        .any(|annotation| annotation.id() == id)
+    {
+        model
+            .annotations
+            .push(SemAnnotationV4::Note { id, subject, text });
+    }
+}
+
+fn mark_generated_hierarchy(model: &mut SemModelV4, subject: &str) {
+    add_moderation_note(
+        model,
+        moderation_generated_annotation_id(subject),
+        subject.to_owned(),
+        "QuickPLS-generated strong-hierarchy dependency.".into(),
+    );
+}
+
+fn reference_hierarchy(model: &mut SemModelV4, owner: &str, subject: &str) {
+    add_moderation_note(
+        model,
+        moderation_dependency_annotation_id(owner, subject),
+        subject.to_owned(),
+        format!("Required by moderating effect {owner}."),
+    );
+}
+
+fn moderating_effect_fields(
+    intent: &GeneralSemExecutionAuthorityRevisionIntentV1,
+) -> Result<
+    (
+        u32,
+        &GeneralSemRevisionGenerationV1,
+        &str,
+        &[String],
+        &GeneralSemModeratingEffectTargetV1,
+        &str,
+        &GeneralSemRevisionInteractionMethodV1,
+        &GeneralSemRevisionHierarchyPolicyV1,
+    ),
+    GeneralSemExecutionAuthorityRevisionErrorV1,
+> {
+    match intent {
+        GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+            intent_version,
+            sem_generation,
+            label,
+            operands,
+            target,
+            outcome,
+            method,
+            hierarchy_policy,
+        }
+        | GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceModeratingEffect {
+            intent_version,
+            sem_generation,
+            label,
+            operands,
+            target,
+            outcome,
+            method,
+            hierarchy_policy,
+            ..
+        } => Ok((
+            *intent_version,
+            sem_generation,
+            label,
+            operands,
+            target,
+            outcome,
+            method,
+            hierarchy_policy,
+        )),
+        _ => Err(unsupported_intent(
+            "diagram-native moderating-effect intent required",
+        )),
+    }
+}
+
+fn structural_relation_parts(model: &SemModelV4, relation_id: &str) -> Option<(String, String)> {
+    model.relations.iter().find_map(|relation| match relation {
+        SemRelationV4::Structural {
+            id,
+            source,
+            target,
+            role: StructuralRelationRoleV4::Structural,
+            ..
+        } if id == relation_id => Some((source.clone(), target.clone())),
+        _ => None,
+    })
+}
+
+fn ensure_moderation_main_effect(
+    model: &mut SemModelV4,
+    operand: &str,
+    outcome: &str,
+    owner: &str,
+) -> Result<String, GeneralSemExecutionAuthorityRevisionErrorV1> {
+    if let Some(relation) = model.relations.iter().find(|relation| {
+        matches!(relation, SemRelationV4::Structural { source, target, .. }
+            if source == operand && target == outcome)
+    }) {
+        if matches!(
+            relation,
+            SemRelationV4::Structural {
+                role: StructuralRelationRoleV4::Control,
+                ..
+            }
+        ) {
+            return Err(unsupported_intent(
+                "a required moderator main effect is currently a control path",
+            ));
+        }
+        let id = relation.id().to_owned();
+        reference_hierarchy(model, owner, &id);
+        return Ok(id);
+    }
+    let id = format!(
+        "general-sem:v1:interaction-main:{}:{}",
+        encode_uri_component(owner),
+        encode_uri_component(operand)
+    );
+    add_structural_relation(
+        model,
+        id.clone(),
+        operand.to_owned(),
+        outcome.to_owned(),
+        "Moderator main effect",
+    )?;
+    mark_generated_hierarchy(model, &id);
+    reference_hierarchy(model, owner, &id);
+    Ok(id)
+}
+
+fn interaction_matches_pair(
+    model: &SemModelV4,
+    term: &SemDerivedTermV4,
+    first: &str,
+    second: &str,
+    focal_relation: &str,
+    outcome: &str,
+) -> bool {
+    let SemDerivedTermV4::InteractionV2 {
+        output,
+        operands,
+        focal_relation: candidate_focal,
+        method: InteractionMethodV4::TwoStage,
+        hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+        ..
+    } = term
+    else {
+        return false;
+    };
+    operands.as_slice() == [first, second]
+        && candidate_focal == focal_relation
+        && model.relations.iter().any(|relation| {
+            matches!(relation, SemRelationV4::Structural {
+                source,
+                target,
+                role: StructuralRelationRoleV4::Structural,
+                ..
+            } if source == output && target == outcome)
+        })
+}
+
+fn ensure_pair_interaction(
+    model: &mut SemModelV4,
+    first: &str,
+    second: &str,
+    focal_relation: &str,
+    outcome: &str,
+    owner: &str,
+) -> Result<String, GeneralSemExecutionAuthorityRevisionErrorV1> {
+    if let Some(id) = model.derived_terms.iter().find_map(|term| {
+        interaction_matches_pair(model, term, first, second, focal_relation, outcome)
+            .then(|| term.id().to_owned())
+    }) {
+        reference_hierarchy(model, owner, &id);
+        return Ok(id);
+    }
+    let term_id = general_sem_interaction_v2_term_id(focal_relation, first, second);
+    let output_id = format!(
+        "general-sem:v1:interaction-output:{}",
+        encode_uri_component(&term_id)
+    );
+    if model.derived_terms.iter().any(|term| term.id() == term_id)
+        || model
+            .variables
+            .iter()
+            .any(|variable| variable.id() == output_id)
+    {
+        return Err(unsupported_intent(
+            "a required lower-order interaction identity is occupied by incompatible content",
+        ));
+    }
+    let first_label = model
+        .variables
+        .iter()
+        .find(|variable| variable.id() == first)
+        .map(|variable| variable.label().to_owned())
+        .ok_or_else(|| unsupported_intent(format!("unknown lower-order operand {first}")))?;
+    let second_label = model
+        .variables
+        .iter()
+        .find(|variable| variable.id() == second)
+        .map(|variable| variable.label().to_owned())
+        .ok_or_else(|| unsupported_intent(format!("unknown lower-order operand {second}")))?;
+    model.variables.push(SemVariableV4::Derived {
+        id: output_id.clone(),
+        label: format!("{first_label} × {second_label}"),
+    });
+    model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+        id: term_id.clone(),
+        output: output_id.clone(),
+        operands: vec![first.to_owned(), second.to_owned()],
+        focal_relation: focal_relation.to_owned(),
+        method: InteractionMethodV4::TwoStage,
+        hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+        product_indicator: None,
+    });
+    add_structural_relation(
+        model,
+        format!(
+            "general-sem:v1:interaction-effect:{}",
+            encode_uri_component(&term_id)
+        ),
+        output_id,
+        outcome.to_owned(),
+        "Lower-order interaction effect",
+    )?;
+    mark_generated_hierarchy(model, &term_id);
+    reference_hierarchy(model, owner, &term_id);
+    Ok(term_id)
+}
+
+fn apply_moderating_effect_revision_v3(
+    model: &mut SemModelV4,
+    intent: &GeneralSemExecutionAuthorityRevisionIntentV1,
+    preserved_identity: Option<(String, String)>,
+) -> Result<(String, String), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    let (intent_version, generation, label, operands, target, outcome, method, hierarchy) =
+        moderating_effect_fields(intent)?;
+    if intent_version != 3
+        || *generation != GeneralSemRevisionGenerationV1::GeneralSemV1
+        || *method != GeneralSemRevisionInteractionMethodV1::TwoStage
+        || *hierarchy != GeneralSemRevisionHierarchyPolicyV1::Strong
+        || !matches!(operands.len(), 2 | 3)
+        || operands
+            .iter()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            != operands.len()
+    {
+        return Err(unsupported_intent(
+            "moderating-effect v3 requires two or three distinct operands, two_stage, and strong hierarchy",
+        ));
+    }
+    for (field, value) in std::iter::once(("label", label))
+        .chain(std::iter::once(("outcome", outcome)))
+        .chain(operands.iter().map(|operand| ("operand", operand.as_str())))
+    {
+        if value.is_empty() || value.trim() != value {
+            return Err(unsupported_intent(format!(
+                "{field} must be nonempty without surrounding whitespace"
+            )));
+        }
+    }
+    if operands.iter().any(|operand| operand == outcome) {
+        return Err(unsupported_intent(
+            "moderation operands and outcome must be distinct",
+        ));
+    }
+    if operands.len() == 3
+        && model.derived_terms.iter().any(|term| {
+            matches!(term, SemDerivedTermV4::InteractionV2 { operands, .. } if operands.len() == 3)
+        })
+    {
+        return Err(unsupported_intent(
+            "the bounded moderation workflow supports one three-way interaction per model",
+        ));
+    }
+    for operand in operands {
+        let variable = model
+            .variables
+            .iter()
+            .find(|variable| variable.id() == operand)
+            .ok_or_else(|| unsupported_intent(format!("unknown moderation operand {operand}")))?;
+        ensure_structural_role(variable, "source")?;
+    }
+    let outcome_variable = model
+        .variables
+        .iter()
+        .find(|variable| variable.id() == outcome)
+        .ok_or_else(|| unsupported_intent(format!("unknown moderation outcome {outcome}")))?;
+    ensure_structural_role(outcome_variable, "target")?;
+
+    let (focal_relation, parent_term_id) = match target {
+        GeneralSemModeratingEffectTargetV1::FocalRelation { relation_id } => {
+            if operands.len() != 2 {
+                return Err(unsupported_intent(
+                    "three-way moderation must target an existing two-way interaction",
+                ));
+            }
+            let Some((source, target)) = structural_relation_parts(model, relation_id) else {
+                return Err(unsupported_intent(
+                    "unknown or non-structural focal relation",
+                ));
+            };
+            if source != operands[0] || target != outcome {
+                return Err(unsupported_intent(
+                    "the focal relation does not match the requested predictor and outcome",
+                ));
+            }
+            (relation_id.clone(), None)
+        }
+        GeneralSemModeratingEffectTargetV1::ParentInteraction {
+            interaction_term_id,
+        } => {
+            if operands.len() != 3 {
+                return Err(unsupported_intent(
+                    "extending an interaction requires exactly three operands",
+                ));
+            }
+            let parent = model
+                .derived_terms
+                .iter()
+                .find(|term| term.id() == interaction_term_id)
+                .ok_or_else(|| unsupported_intent("unknown parent interaction"))?;
+            let SemDerivedTermV4::InteractionV2 {
+                operands: parent_operands,
+                focal_relation,
+                method: InteractionMethodV4::TwoStage,
+                hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+                ..
+            } = parent
+            else {
+                return Err(unsupported_intent(
+                    "parent interaction is not the qualified two-way authority",
+                ));
+            };
+            if parent_operands.as_slice() != &operands[..2] {
+                return Err(unsupported_intent(
+                    "three-way operands do not extend the selected parent interaction",
+                ));
+            }
+            let Some((source, target)) = structural_relation_parts(model, focal_relation) else {
+                return Err(unsupported_intent("parent focal relation is unavailable"));
+            };
+            if source != operands[0] || target != outcome {
+                return Err(unsupported_intent(
+                    "parent interaction no longer matches the requested outcome",
+                ));
+            }
+            (focal_relation.clone(), Some(interaction_term_id.clone()))
+        }
+    };
+
+    let (term_id, output_id) = preserved_identity.unwrap_or_else(|| {
+        let term = if let Some(parent) = &parent_term_id {
+            format!(
+                "general-sem:v1:interaction-three-way:{}:{}",
+                encode_uri_component(parent),
+                encode_uri_component(&operands[2])
+            )
+        } else {
+            general_sem_interaction_v2_term_id(&focal_relation, &operands[0], &operands[1])
+        };
+        let output = format!(
+            "general-sem:v1:interaction-output:{}",
+            encode_uri_component(&term)
+        );
+        (term, output)
+    });
+    if model.derived_terms.iter().any(|term| term.id() == term_id)
+        || model
+            .variables
+            .iter()
+            .any(|variable| variable.id() == output_id)
+    {
+        return Err(unsupported_intent(
+            "moderating-effect term or output identity already exists",
+        ));
+    }
+    if model.derived_terms.iter().any(|term| {
+        matches!(term,
+            SemDerivedTermV4::InteractionV2 {
+                operands: existing,
+                focal_relation: existing_focal,
+                ..
+            } if existing == operands && existing_focal == &focal_relation
+        )
+    }) {
+        return Err(unsupported_intent(
+            "the same moderating effect already exists",
+        ));
+    }
+
+    let mut main_relations = Vec::with_capacity(operands.len());
+    for operand in operands {
+        main_relations.push(ensure_moderation_main_effect(
+            model, operand, outcome, &term_id,
+        )?);
+    }
+    if let Some(parent) = &parent_term_id {
+        reference_hierarchy(model, &term_id, parent);
+        ensure_pair_interaction(
+            model,
+            &operands[0],
+            &operands[2],
+            &focal_relation,
+            outcome,
+            &term_id,
+        )?;
+        ensure_pair_interaction(
+            model,
+            &operands[1],
+            &operands[2],
+            &main_relations[1],
+            outcome,
+            &term_id,
+        )?;
+    }
+
+    model.variables.push(SemVariableV4::Derived {
+        id: output_id.clone(),
+        label: label.to_owned(),
+    });
+    model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+        id: term_id.clone(),
+        output: output_id.clone(),
+        operands: operands.to_vec(),
+        focal_relation,
+        method: InteractionMethodV4::TwoStage,
+        hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+        product_indicator: None,
+    });
+    add_structural_relation(
+        model,
+        format!(
+            "general-sem:v1:interaction-effect:{}",
+            encode_uri_component(&term_id)
+        ),
+        output_id.clone(),
+        outcome.to_owned(),
+        if operands.len() == 3 {
+            "Three-way interaction effect"
+        } else {
+            "Interaction effect"
+        },
+    )?;
+    Ok((term_id, output_id))
+}
+
+fn remove_interaction_output(model: &mut SemModelV4, term_id: &str, output_id: &str) {
+    model.derived_terms.retain(|term| term.id() != term_id);
+    model
+        .variables
+        .retain(|variable| variable.id() != output_id);
+    let removed_parameters = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::Structural {
+                source,
+                target,
+                parameter,
+                intercept_parameter,
+                ..
+            } if source == output_id || target == output_id => Some(
+                std::iter::once(parameter.clone())
+                    .chain(intercept_parameter.clone())
+                    .collect::<Vec<_>>(),
+            ),
+            _ => None,
+        })
+        .flatten()
+        .collect::<std::collections::BTreeSet<_>>();
+    let removed_relations = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::Structural {
+                id, source, target, ..
+            } if source == output_id || target == output_id => Some(id.clone()),
+            _ => None,
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    model
+        .relations
+        .retain(|relation| !removed_relations.contains(relation.id()));
+    model
+        .parameters
+        .retain(|parameter| !removed_parameters.contains(parameter.id()));
+    if let qpls_core::SemPresentationV4::Canvas { nodes, edges, .. } = &mut model.presentation {
+        nodes.retain(|node| node.variable != output_id);
+        edges.retain(|edge| !removed_relations.contains(&edge.relation));
+    }
+}
+
+fn remove_generated_relation(model: &mut SemModelV4, relation_id: &str) {
+    let removed_parameters = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::Structural {
+                id,
+                parameter,
+                intercept_parameter,
+                ..
+            } if id == relation_id => Some(
+                std::iter::once(parameter.clone())
+                    .chain(intercept_parameter.clone())
+                    .collect::<Vec<_>>(),
+            ),
+            _ => None,
+        })
+        .flatten()
+        .collect::<std::collections::BTreeSet<_>>();
+    model
+        .relations
+        .retain(|relation| relation.id() != relation_id);
+    model
+        .parameters
+        .retain(|parameter| !removed_parameters.contains(parameter.id()));
+    if let qpls_core::SemPresentationV4::Canvas { edges, .. } = &mut model.presentation {
+        edges.retain(|edge| edge.relation != relation_id);
+    }
+}
+
+fn remove_moderating_effect_revision_v3(
+    model: &mut SemModelV4,
+    term_id: &str,
+    output_id: &str,
+) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    if !model.derived_terms.iter().any(|term| {
+        matches!(term, SemDerivedTermV4::InteractionV2 { id, output, .. }
+            if id == term_id && output == output_id)
+    }) {
+        return Err(unsupported_intent(
+            "the moderating-effect term/output identity is absent or stale",
+        ));
+    }
+    let incoming_reference = model.annotations.iter().any(|annotation| match annotation {
+        SemAnnotationV4::Note { id, subject, .. } => {
+            subject == term_id && id.starts_with("general-sem:v1:interaction-dependency:")
+        }
+        _ => false,
+    });
+    if incoming_reference {
+        return Err(unsupported_intent(
+            "this two-way moderating effect is required by a three-way effect; remove the dependent effect first",
+        ));
+    }
+    let prefix = format!(
+        "general-sem:v1:interaction-dependency:{}:",
+        encode_uri_component(term_id)
+    );
+    let subjects = model
+        .annotations
+        .iter()
+        .filter_map(|annotation| match annotation {
+            SemAnnotationV4::Note { id, subject, .. } if id.starts_with(&prefix) => {
+                Some(subject.clone())
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    model
+        .annotations
+        .retain(|annotation| !annotation.id().starts_with(&prefix));
+    remove_interaction_output(model, term_id, output_id);
+
+    for subject in subjects {
+        let still_referenced = model.annotations.iter().any(|annotation| match annotation {
+            SemAnnotationV4::Note {
+                id,
+                subject: candidate,
+                ..
+            } => candidate == &subject && id.starts_with("general-sem:v1:interaction-dependency:"),
+            _ => false,
+        });
+        let origin = moderation_generated_annotation_id(&subject);
+        if still_referenced
+            || !model
+                .annotations
+                .iter()
+                .any(|annotation| annotation.id() == origin)
+        {
+            continue;
+        }
+        if let Some(output) = model
+            .derived_terms
+            .iter()
+            .find(|term| term.id() == subject)
+            .map(|term| term.output().to_owned())
+        {
+            remove_interaction_output(model, &subject, &output);
+        } else if model
+            .relations
+            .iter()
+            .any(|relation| relation.id() == subject)
+        {
+            remove_generated_relation(model, &subject);
+        }
+        model
+            .annotations
+            .retain(|annotation| annotation.id() != origin);
+    }
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn apply_higher_order_revision(
     model: &mut SemModelV4,
@@ -1595,6 +2437,94 @@ fn apply_higher_order_revision(
         initial_path.target.clone(),
         &initial_path.label,
     )?;
+    Ok((term_id.to_owned(), output_id.to_owned()))
+}
+
+fn apply_higher_order_replacement(
+    model: &mut SemModelV4,
+    term_id: &str,
+    output_id: &str,
+    label: &str,
+    components: &[String],
+    approach: &HigherOrderConstructionApproachV4,
+    measurement_type: &HigherOrderMeasurementTypeV4,
+) -> Result<(String, String), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    for (field, value) in [
+        ("term id", term_id),
+        ("output id", output_id),
+        ("label", label),
+    ] {
+        if value.is_empty() || value.trim() != value {
+            return Err(unsupported_intent(format!(
+                "higher-order replacement {field} must be nonempty without surrounding whitespace"
+            )));
+        }
+    }
+    if components.len() < 2
+        || components
+            .iter()
+            .collect::<std::collections::BTreeSet<_>>()
+            .len()
+            != components.len()
+    {
+        return Err(unsupported_intent(
+            "higher-order replacement requires at least two distinct lower-order components",
+        ));
+    }
+    for component in components {
+        if !matches!(
+            model
+                .variables
+                .iter()
+                .find(|variable| variable.id() == component),
+            Some(SemVariableV4::Composite { .. })
+        ) {
+            return Err(unsupported_intent(format!(
+                "higher-order component {component} is not an ordinary composite"
+            )));
+        }
+    }
+    let Some(term_index) = model.derived_terms.iter().position(|term| {
+        matches!(term, SemDerivedTermV4::HigherOrder { id, output, .. }
+            if id == term_id && output == output_id)
+    }) else {
+        return Err(unsupported_intent(
+            "the resident higher-order term/output identity does not match the replacement request",
+        ));
+    };
+    if model.derived_terms.iter().enumerate().any(|(index, term)| {
+        index != term_index && matches!(term, SemDerivedTermV4::HigherOrder { .. })
+    }) {
+        return Err(unsupported_intent(
+            "higher-order replacement requires exactly one resident non-nested HOC",
+        ));
+    }
+    let Some(output_index) = model.variables.iter().position(
+        |variable| matches!(variable, SemVariableV4::Derived { id, .. } if id == output_id),
+    ) else {
+        return Err(unsupported_intent(
+            "the resident higher-order output variable is absent",
+        ));
+    };
+    let SemDerivedTermV4::HigherOrder {
+        id,
+        output,
+        components: resident_components,
+        approach: resident_approach,
+        measurement_type: resident_measurement_type,
+    } = &mut model.derived_terms[term_index]
+    else {
+        unreachable!("term index was matched as a higher-order term")
+    };
+    *id = term_id.to_owned();
+    *output = output_id.to_owned();
+    *resident_components = components.to_vec();
+    *resident_approach = approach.clone();
+    *resident_measurement_type = measurement_type.clone();
+    model.variables[output_index] = SemVariableV4::Derived {
+        id: output_id.to_owned(),
+        label: label.to_owned(),
+    };
     Ok((term_id.to_owned(), output_id.to_owned()))
 }
 
@@ -1780,6 +2710,56 @@ mod tests {
     }
 
     #[test]
+    fn general_sem_revision_rekeys_the_presentation_layout_without_changing_its_contents() {
+        let mut source =
+            ProjectArchiveDocumentV6::new_general_sem_v1(Uuid::from_u128(1), "Source", Utc::now());
+        source.layouts.insert(
+            STANDARD_SEM_MODEL_V4_DIAGRAM_LAYOUTS_V1_KEY.into(),
+            serde_json::json!({
+                "schema_version": 1,
+                "models": {
+                    "model:source": {
+                        "schema_version": 1,
+                        "model_id": "model:source",
+                        "diagram_layout": {
+                            "diagramVersion": "sem_designer_v1",
+                            "constructLayouts": { "x": { "x": 18, "y": 24 } },
+                            "indicatorLayouts": {},
+                            "edgeLayouts": {},
+                            "diagramTheme": "smartpls_like",
+                            "showGrid": true,
+                            "layoutLocked": false,
+                            "moderationAnchorFractions": { "term:xw": 0.64 },
+                            "moderationConnectorBendPoints": {
+                                "moderation-connector::term%3Axw::w": [{ "x": 91, "y": 52 }]
+                            }
+                        }
+                    }
+                }
+            }),
+        );
+
+        let revised =
+            rekey_standard_sem_diagram_layout_lane(&source, "model:source", "model:revision")
+                .unwrap()
+                .unwrap();
+        assert!(revised["models"].get("model:source").is_none());
+        assert_eq!(
+            revised["models"]["model:revision"]["model_id"],
+            "model:revision"
+        );
+        assert_eq!(
+            revised["models"]["model:revision"]["diagram_layout"]["moderationAnchorFractions"]["term:xw"],
+            0.64
+        );
+        assert_eq!(
+            revised["models"]["model:revision"]["diagram_layout"]["moderationConnectorBendPoints"]
+                ["moderation-connector::term%3Axw::w"][0]["x"],
+            91
+        );
+    }
+
+    #[test]
     fn exact_intent_rejects_wrong_version_before_mutation() {
         let mut model = SemModelV4 {
             schema_version: 4,
@@ -1820,6 +2800,155 @@ mod tests {
             Err(GeneralSemExecutionAuthorityRevisionErrorV1::UnsupportedIntent(_))
         ));
         assert_eq!(model, before);
+    }
+
+    #[test]
+    fn moderating_effect_v3_add_retarget_extend_and_remove_preserves_shared_hierarchy() {
+        let composite = |id: &str| SemVariableV4::Composite {
+            id: id.into(),
+            label: id.to_uppercase(),
+            weighting: qpls_core::CompositeWeightingV4::ModeA,
+        };
+        let mut model = SemModelV4 {
+            schema_version: 4,
+            id: "model:moderation-revision".into(),
+            name: "Moderation revision".into(),
+            variables: ["x", "w", "z", "y", "y2"]
+                .into_iter()
+                .map(composite)
+                .collect(),
+            relations: Vec::new(),
+            parameters: Vec::new(),
+            constraints: Vec::new(),
+            derived_terms: Vec::new(),
+            group: qpls_core::SemGroupV4::SingleGroup,
+            data_binding: qpls_core::SemDataBindingV4::Raw {
+                dataset_id: Uuid::from_u128(1).to_string(),
+                missing_data: qpls_core::MissingDataPolicyV4::ListwiseDeletion,
+                weight: None,
+                cluster_variable: None,
+                strata_variable: None,
+            },
+            annotations: Vec::new(),
+            presentation: qpls_core::SemPresentationV4::None,
+        };
+        add_structural_relation(
+            &mut model,
+            "relation:x-y".into(),
+            "x".into(),
+            "y".into(),
+            "X to Y",
+        )
+        .unwrap();
+        add_structural_relation(
+            &mut model,
+            "relation:x-y2".into(),
+            "x".into(),
+            "y2".into(),
+            "X to Y2",
+        )
+        .unwrap();
+
+        let create = GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            label: "X by W".into(),
+            operands: vec!["x".into(), "w".into()],
+            target: GeneralSemModeratingEffectTargetV1::FocalRelation {
+                relation_id: "relation:x-y".into(),
+            },
+            outcome: "y".into(),
+            method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+            hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+        };
+        let (parent_term_id, parent_output_id) =
+            apply_general_sem_revision_intent(&mut model, &create).unwrap();
+
+        let retarget = GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceModeratingEffect {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            term_id: parent_term_id.clone(),
+            output_id: parent_output_id.clone(),
+            label: "X by W, retargeted".into(),
+            operands: vec!["x".into(), "w".into()],
+            target: GeneralSemModeratingEffectTargetV1::FocalRelation {
+                relation_id: "relation:x-y2".into(),
+            },
+            outcome: "y2".into(),
+            method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+            hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+        };
+        assert_eq!(
+            apply_general_sem_revision_intent(&mut model, &retarget).unwrap(),
+            (parent_term_id.clone(), parent_output_id.clone())
+        );
+        assert!(!model.relations.iter().any(|relation| matches!(relation,
+            SemRelationV4::Structural { source, target, .. } if source == "w" && target == "y"
+        )));
+
+        let extend = GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            label: "X by W by Z".into(),
+            operands: vec!["x".into(), "w".into(), "z".into()],
+            target: GeneralSemModeratingEffectTargetV1::ParentInteraction {
+                interaction_term_id: parent_term_id.clone(),
+            },
+            outcome: "y2".into(),
+            method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+            hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+        };
+        let (three_way_term_id, three_way_output_id) =
+            apply_general_sem_revision_intent(&mut model, &extend).unwrap();
+        assert_eq!(
+            model
+                .derived_terms
+                .iter()
+                .filter(|term| matches!(term,
+                    SemDerivedTermV4::InteractionV2 { operands, .. } if operands.len() == 3
+                ))
+                .count(),
+            1
+        );
+
+        let remove_three_way =
+            GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect {
+                intent_version: 3,
+                sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                term_id: three_way_term_id,
+                output_id: three_way_output_id,
+            };
+        apply_general_sem_revision_intent(&mut model, &remove_three_way).unwrap();
+        assert!(
+            model
+                .derived_terms
+                .iter()
+                .any(|term| term.id() == parent_term_id)
+        );
+        assert!(model.relations.iter().any(|relation| matches!(relation,
+            SemRelationV4::Structural { source, target, .. } if source == "w" && target == "y2"
+        )));
+        assert!(!model.relations.iter().any(|relation| matches!(relation,
+            SemRelationV4::Structural { source, target, .. } if source == "z" && target == "y2"
+        )));
+
+        let remove_parent = GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            term_id: parent_term_id,
+            output_id: parent_output_id,
+        };
+        apply_general_sem_revision_intent(&mut model, &remove_parent).unwrap();
+        assert!(model.derived_terms.is_empty());
+        assert!(
+            model
+                .relations
+                .iter()
+                .any(|relation| relation.id() == "relation:x-y2")
+        );
+        assert!(!model.relations.iter().any(|relation| matches!(relation,
+            SemRelationV4::Structural { source, target, .. } if source == "w" && target == "y2"
+        )));
     }
 
     #[test]
@@ -1878,6 +3007,35 @@ mod tests {
             relation,
             SemRelationV4::Structural { id, source, target, .. }
                 if id == "hoc:path" && source == "hoc:output" && target == "y"
+        )));
+
+        let relations_before = model.relations.clone();
+        let replaced = apply_general_sem_revision_intent(
+            &mut model,
+            &GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceHigherOrder {
+                term_id: "hoc:term".into(),
+                output_id: "hoc:output".into(),
+                label: "Service quality".into(),
+                components: vec!["b".into(), "a".into()],
+                approach: HigherOrderConstructionApproachV4::EmbeddedTwoStage,
+                measurement_type: HigherOrderMeasurementTypeV4::ReflectiveFormative,
+            },
+        )
+        .unwrap();
+
+        assert_eq!(replaced, ("hoc:term".into(), "hoc:output".into()));
+        assert_eq!(model.relations, relations_before);
+        assert!(model.variables.iter().any(|variable| matches!(
+            variable,
+            SemVariableV4::Derived { id, label }
+                if id == "hoc:output" && label == "Service quality"
+        )));
+        assert!(model.derived_terms.iter().any(|term| matches!(
+            term,
+            SemDerivedTermV4::HigherOrder { id, output, components, approach: HigherOrderConstructionApproachV4::EmbeddedTwoStage, measurement_type: HigherOrderMeasurementTypeV4::ReflectiveFormative }
+                if id == "hoc:term"
+                    && output == "hoc:output"
+                    && components.iter().map(String::as_str).eq(["b", "a"])
         )));
     }
 
@@ -2436,7 +3594,11 @@ mod tests {
                         && operands[1] == "construct:w"
                         && focal_relation == match &fixture.request.intent {
                             GeneralSemExecutionAuthorityRevisionIntentV1::AddGeneralSemInteractionV2 { focal_relation, .. } => focal_relation,
-                            GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. } => unreachable!("interaction fixture"),
+                            GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. }
+                            | GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceHigherOrder { .. }
+                            | GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 { .. }
+                            | GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceModeratingEffect { .. }
+                            | GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect { .. } => unreachable!("interaction fixture"),
                         })
             }));
 

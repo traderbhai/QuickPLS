@@ -46,9 +46,21 @@ Stored v2 results are semantically checked by recomputing matrix-derived values.
 
 ## Interpretation boundary
 
-SRMR and NFI are approximate fit measures. Raw `d_ULS` and `d_G` values do not by themselves establish exact fit. QuickPLS now has a separately versioned bounded Labs implementation of the adapted Bollen-Stine workflow for supported raw-data PLS-PM and PLSc recipes. The explicit recipe selector runs independent saturated and estimated null transformations, fixed indexed full refits, Type-7 HI95 and HI99 bounds, empirical upper-tail proportions, and decisions for SRMR, `d_ULS`, and `d_G`. Ordinary parameter-bootstrap intervals are never relabelled as exact-fit inference.
+SRMR and NFI are approximate fit measures. Raw `d_ULS` and `d_G` values do not by themselves establish exact fit. QuickPLS has a separately versioned bounded Labs implementation of the adapted Bollen-Stine workflow for supported raw-data PLS-PM and PLSc recipes. Its internal explicit recipe selector runs independent saturated and estimated null transformations, fixed indexed full refits, Type-7 HI95 and HI99 bounds, empirical upper-tail proportions, and decisions for SRMR, `d_ULS`, and `d_G`. Ordinary parameter-bootstrap intervals are never relabelled as exact-fit inference.
 
 The point-fit object remains a descriptive matrix-and-criterion payload and does not embed the resampling result. Availability comes only from a linked `pls_model_fit_exact_v1` bundle and provenance marker. A missing selector or bundle therefore means that exact-fit inference was not run; it does not authorize a substitute statistic.
+
+## Version 2.52 desktop presentation
+
+The ordinary Results entry is titled **Model fit — descriptive**. Its interpretation appears behind a neutral information button and in Model Fit Details instead of as a persistent amber warning. The compact exact-fit state is derived from the linked payload's aggregate status and uses one of these labels:
+
+- **Exact-fit bootstrap: Not run**;
+- **Exact-fit results available**;
+- **Exact-fit results partial**;
+- **Exact-fit results unavailable**; or
+- **Exact-fit run failed**.
+
+Amber or red is used only when exact-fit inference was requested but incomplete or failed. The bounded adapted Bollen–Stine Registry cell remains unqualified and is not exposed as a Calculate option in Version 2.52. Historical stored reason codes and result identities remain unchanged; presentation translates them without rewriting the archive. Full interpretation text remains available in Model Fit Details and exports.
 
 Consequently, the active capability remains partial. A transparent independent
 NumPy/SciPy oracle now performs complete recursive PLS-PM refits for every

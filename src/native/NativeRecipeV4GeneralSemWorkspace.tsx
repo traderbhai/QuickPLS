@@ -130,7 +130,6 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
-  adoptActiveProject: openNativeProjectAt,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,
@@ -310,6 +309,28 @@ export function generalSemResultCanAppendV1(input: {
     && !input.sessionDirty
     && !input.operationPending
     && generalSemPersistenceNextActionV1(input.appendSucceeded, input.resultIntegrityInvalid) === "append";
+}
+
+export function generalSemAutomaticPersistenceNextActionV1(input: {
+  completed: boolean;
+  appendSucceeded: boolean;
+  persistedArchiveAvailable: boolean;
+  reopened: boolean;
+  authorityCurrent: boolean;
+  sessionDirty: boolean;
+  resultIntegrityInvalid: boolean;
+  executionReady: boolean;
+  appendStarted: boolean;
+  reopenStarted: boolean;
+}): "append" | "reopen" | null {
+  if (!input.completed
+    || !input.authorityCurrent
+    || input.sessionDirty
+    || input.resultIntegrityInvalid
+    || !input.executionReady) return null;
+  if (!input.appendSucceeded) return input.appendStarted ? null : "append";
+  if (!input.persistedArchiveAvailable || input.reopened || input.reopenStarted) return null;
+  return "reopen";
 }
 
 export function generalSemTemporaryResultBlocksCloseV1(input: {
@@ -1572,22 +1593,24 @@ export function NativeRecipeV4GeneralSemWorkspace({
       void start();
       return;
     }
-    if (completed
-      && !appendOutcome
-      && resultAuthorityCurrent
-      && !generalSemSessionDirty
-      && !resultIntegrityInvalid
-      && !journey.appendStarted) {
+    const persistenceAction = generalSemAutomaticPersistenceNextActionV1({
+      completed: Boolean(completed),
+      appendSucceeded: appendOutcome?.status === "ok",
+      persistedArchiveAvailable: Boolean(persistedArchiveSha256),
+      reopened: Boolean(reopenedEntry),
+      authorityCurrent: resultAuthorityCurrent,
+      sessionDirty: generalSemSessionDirty,
+      resultIntegrityInvalid,
+      executionReady: nativeExecution !== null,
+      appendStarted: journey.appendStarted,
+      reopenStarted: journey.reopenStarted,
+    });
+    if (persistenceAction === "append") {
       journey.appendStarted = true;
       void appendResult();
       return;
     }
-    if (completed
-      && appendOutcome?.status === "ok"
-      && persistedArchiveSha256
-      && !reopenedEntry
-      && !resultIntegrityInvalid
-      && !journey.reopenStarted) {
+    if (persistenceAction === "reopen") {
       journey.reopenStarted = true;
       void reopenResult();
     }
@@ -1603,6 +1626,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     localPreflight.ready,
     markedGeneralSemProjectMode,
     nativePreflightReady,
+    nativeExecution,
     operationBusy,
     persistedArchiveSha256,
     receipt,
@@ -1666,6 +1690,8 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const moderationBootstrapInputDisabled = running
     || operationBusy
     || markedGeneralSemProjectMode;
+  const compactCalculationProgress = calculationPresentation
+    && Boolean(snapshot || completed || reopenedEntry);
 
   return <section
     id={calculationPresentation ? "nd-unified-sem-calculation-panel" : "nd-model-general-sem-labs-panel"}
@@ -1675,7 +1701,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     aria-labelledby={calculationPresentation ? undefined : "nd-model-general-sem-labs-tab"}
   >
     <header className="nd-cbsem-v4-header"><div><h2>{calculationPresentation ? "Advanced model calculation" : "General SEM in QuickPLS"}</h2><p>One graphical model · Registry-authorized PLS-SEM and CB-SEM · calculation, progress, Results, export, and reopen in one workflow</p></div><FlaskConical size={24} aria-hidden="true" /></header>
-    <p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
+    {!compactCalculationProgress ? <><p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
       ? "This new calculation-ready project is not yet activated. Review the detected model and settings, then save and activate its scientific authority before calculating."
       : markedGeneralSemProjectMode
         ? "This canvas is bound to its activated scientific model and calculation recipe."
@@ -1769,9 +1795,10 @@ export function NativeRecipeV4GeneralSemWorkspace({
         </div>
         {generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
       </section>
-    </div>
+    </div></> : null}
 
     {GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1
+      && !calculationPresentation
       && (!GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_REQUIRES_LABS_V1 || experimentalLabsEnabled)
       && markedGeneralSemProjectMode
       && model

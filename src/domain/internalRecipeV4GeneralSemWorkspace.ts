@@ -17,12 +17,15 @@ import {
   GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1,
   GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
   GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1,
   GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
   GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
   GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
@@ -77,6 +80,13 @@ export const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const satisfies CapabilityCellReferenceV2);
 
+export const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_single_mediation_bootstrap",
+  capability_version: "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
 export const GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1 = Object.freeze({
   registry_schema_version: 2,
   capability_id: "smartpls.cbsem",
@@ -97,6 +107,20 @@ export const GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1 =
 export const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1 =
   GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1;
 
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_point",
+  capability_version: "general_sem_pls_three_way_moderation_point_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+  capability_version: "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+} as const satisfies CapabilityCellReferenceV2);
+
 export const GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1 =
   GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CELL_V1;
 
@@ -113,8 +137,11 @@ const GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1 = Object.freeze({
 const GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1 = "general_sem_effects_v1" as const;
 const GENERAL_SEM_PLS_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_point_execution_v1" as const;
 const GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_percentile_bootstrap_execution_v1" as const;
+const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_single_mediation_percentile_bootstrap_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1" as const;
 const GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_percentile_bootstrap_execution_v1" as const;
+const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_three_way_moderation_point_execution_v1" as const;
+const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_general_sem_pls_recipe_v1_three_way_moderation_percentile_bootstrap_execution_v1" as const;
 export const GENERAL_SEM_CBSEM_POINT_ADAPTER_VERSION_V1 = "compiled_recipe_v4_cbsem_plan_v3_point_execution_v1" as const;
 export const GENERAL_SEM_CBSEM_BOOTSTRAP_ADAPTER_VERSION_V1 = "compiled_recipe_v4_cbsem_plan_v3_recursive_sem_case_bootstrap_execution_v1" as const;
 
@@ -294,8 +321,11 @@ export function generalSemWorkspaceProductAccessV1(
   const cells = [
     GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
     GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
     GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
@@ -393,6 +423,82 @@ export function generalSemConfigFromEngineV1(
   });
 }
 
+function exactFiniteDecimalV1(value: string): number | null {
+  const normalized = value.trim();
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function exactZeroOneCategoriesV1(categories: readonly string[]): boolean {
+  if (categories.length !== 2) return false;
+  const values = categories.map(exactFiniteDecimalV1);
+  if (values.some((value) => value == null)) return false;
+  const sorted = (values as number[]).sort((left, right) => left - right);
+  return Object.is(sorted[0], 0) && Object.is(sorted[1], 1);
+}
+
+function threeWayModeratorObservedIdsV1(model: SemModelV4): ReadonlySet<string> {
+  const terms = model.derived_terms.filter((term): term is Extract<SemModelV4["derived_terms"][number], { kind: "interaction_v2" }> => (
+    term.kind === "interaction_v2" && term.operands.length === 3
+  ));
+  if (terms.length !== 1) return new Set();
+  const term = terms[0];
+  if (term.method !== "two_stage"
+    || term.hierarchy_policy !== "strong"
+    || term.product_indicator != null) return new Set();
+  const focal = model.relations.find((relation): relation is Extract<SemModelV4["relations"][number], { kind: "structural" }> => (
+    relation.kind === "structural"
+    && relation.id === term.focal_relation
+    && relation.source === term.operands[0]
+    && (relation.role ?? "structural") === "structural"
+  ));
+  if (!focal) return new Set();
+  const focalTarget = focal.target;
+  if (!model.relations.some((relation) => relation.kind === "structural"
+    && relation.source === term.output
+    && relation.target === focalTarget
+    && (relation.role ?? "structural") === "structural")) return new Set();
+  const requiredPairs = [[0, 1], [0, 2], [1, 2]] as const;
+  if (!requiredPairs.every(([left, right]) => model.derived_terms.some((candidate) => (
+    candidate.kind === "interaction_v2"
+    && candidate.operands.length === 2
+    && candidate.method === "two_stage"
+    && candidate.hierarchy_policy === "strong"
+    && candidate.product_indicator == null
+    && candidate.operands.includes(term.operands[left])
+    && candidate.operands.includes(term.operands[right])
+  )))) return new Set();
+
+  return new Set(term.operands.slice(1).flatMap((moderatorId) => {
+    const indicatorIds = model.relations.flatMap((relation) => {
+      if (relation.kind === "measurement_effect" && relation.construct === moderatorId) return [relation.indicator];
+      if (relation.kind === "measurement_causal" && relation.composite === moderatorId) return [relation.indicator];
+      return [];
+    });
+    const observedId = indicatorIds.length === 1 ? indicatorIds[0] : moderatorId;
+    return model.variables.some((variable) => variable.kind === "observed" && variable.id === observedId)
+      ? [observedId]
+      : [];
+  }));
+}
+
+function exactBinaryZeroOneMetadataV1(
+  metadata: NonNullable<Dataset["columnMetadata"]>[number],
+): boolean {
+  const exactOptionalBound = (value: number | null, expected: number): boolean => (
+    value == null || Object.is(value, expected)
+  );
+  return metadata.column_type === "numeric"
+    && metadata.scale_type === "binary"
+    && exactOptionalBound(metadata.theoretical_min, 0)
+    && exactOptionalBound(metadata.theoretical_max, 1)
+    && Object.keys(metadata.value_labels).every((value) => {
+      const numeric = exactFiniteDecimalV1(value);
+      return numeric != null && (Object.is(numeric, 0) || Object.is(numeric, 1));
+    });
+}
+
 export function preflightGeneralSemWorkspaceV1(input: {
   experimentalLabsEnabled: boolean;
   capabilityRegistry?: GeneralSemCapabilityRegistryReaderV1;
@@ -446,6 +552,7 @@ export function preflightGeneralSemWorkspaceV1(input: {
     ));
   }
   if (input.dataset && input.model) {
+    const threeWayModeratorObservedIds = threeWayModeratorObservedIdsV1(input.model);
     if (input.model.data_binding.kind !== "raw"
       || input.model.data_binding.dataset_id !== input.dataset.id) issues.push(issue(
       "general_sem.dataset.binding_mismatch",
@@ -465,11 +572,25 @@ export function preflightGeneralSemWorkspaceV1(input: {
         continue;
       }
       const metadata = input.dataset.columnMetadata?.find((column) => column.name === variable.source_column);
-      if (!metadata || metadata.column_type !== "numeric" || metadata.scale_type !== "continuous") issues.push(issue(
-        "general_sem.dataset.continuous_numeric_required",
+      const binaryZeroOneModerator = threeWayModeratorObservedIds.has(variable.id)
+        && variable.scale === "binary"
+        && exactZeroOneCategoriesV1(variable.categories)
+        && metadata != null
+        && exactBinaryZeroOneMetadataV1(metadata);
+      const continuous = variable.scale === "continuous"
+        && metadata?.column_type === "numeric"
+        && metadata.scale_type === "continuous";
+      if (!continuous && !binaryZeroOneModerator) issues.push(issue(
+        threeWayModeratorObservedIds.has(variable.id)
+          ? "general_sem.dataset.three_way_binary_zero_one_required"
+          : "general_sem.dataset.continuous_numeric_required",
         variable.id,
-        `Observed source column ${variable.source_column} must have continuous numeric metadata for this exact General SEM cell.`,
-        "Correct the column metadata through an explicit dataset operation, or use a future qualified estimator cell.",
+        threeWayModeratorObservedIds.has(variable.id)
+          ? `Observed three-way moderator column ${variable.source_column} must be continuous numeric or carry exact binary 0/1 model categories and dataset metadata.`
+          : `Observed source column ${variable.source_column} must have continuous numeric metadata for this exact General SEM cell.`,
+        threeWayModeratorObservedIds.has(variable.id)
+          ? "Recode this moderator to exact numeric 0 and 1, or restore it as continuous, then create a calculation-ready revision."
+          : "Correct the column metadata through an explicit dataset operation, or use a future qualified estimator cell.",
       ));
     }
   }
@@ -1459,9 +1580,12 @@ function compareCapabilityCellsV1(
 
 export type GeneralSemPlsExecutionKindV1 =
   | "mediation_point"
+  | "single_mediation_bootstrap"
   | "mediation_bootstrap"
   | "multiple_two_way_moderation_point"
   | "multiple_two_way_moderation_bootstrap"
+  | "three_way_moderation_point"
+  | "three_way_moderation_bootstrap"
   | "two_way_moderated_mediation_bootstrap"
   | "higher_order_point"
   | "higher_order_bootstrap";
@@ -1572,6 +1696,37 @@ function requireSameCompletedInteractionMappingV1(
   }
 }
 
+function generalSemScientificIndirectPathCountV1(model: SemModelV4): number {
+  const variables = new Set(model.variables.flatMap((variable) => {
+    if (variable.kind === "common_factor" || variable.kind === "composite") return [variable.id];
+    if (variable.kind === "observed" && (variable.role === "structural" || variable.role === "both")) {
+      return [variable.id];
+    }
+    return [];
+  }));
+  const outgoing = new Map<string, string[]>();
+  for (const relation of model.relations) {
+    if (relation.kind !== "structural"
+      || (relation.role ?? "structural") !== "structural"
+      || !variables.has(relation.source)
+      || !variables.has(relation.target)) continue;
+    const targets = outgoing.get(relation.source) ?? [];
+    targets.push(relation.target);
+    outgoing.set(relation.source, targets);
+  }
+  let count = 0;
+  const visit = (source: string, visited: ReadonlySet<string>, depth: number): void => {
+    for (const target of outgoing.get(source) ?? []) {
+      if (visited.has(target)) continue;
+      const nextDepth = depth + 1;
+      if (nextDepth >= 2) count += 1;
+      visit(target, new Set([...visited, target]), nextDepth);
+    }
+  };
+  for (const source of outgoing.keys()) visit(source, new Set([source]), 0);
+  return count;
+}
+
 /**
  * Chooses a runnable cell only from the exact native estimator decision and the
  * unchanged compiled-graph shape. A config toggle alone can never promote a
@@ -1589,7 +1744,12 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     .slice()
     .sort((left, right) => compareUtf8StringsV1(left.id, right.id));
   const moderation = interactionTerms.length > 0;
+  const threeWayModeration = interactionTerms.some((term) => term.operands.length === 3);
+  const indirectPathCount = moderation || input.model.derived_terms.some((term) => term.kind === "higher_order")
+    ? 0
+    : generalSemScientificIndirectPathCountV1(input.model);
   const moderatedMediation = moderation
+    && !threeWayModeration
     && input.config.inference.kind === "case_bootstrap"
     && input.config.requested_effect_estimands.length === 1;
   const higherOrder = input.model.derived_terms.some((term) => term.kind === "higher_order");
@@ -1607,16 +1767,22 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
     higherOrder
       ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
       : moderation
-        ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+        ? threeWayModeration
+          ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1
+          : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
         : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
     ...(input.config.inference.kind === "case_bootstrap"
       ? [higherOrder
         ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
         : moderation
-          ? moderatedMediation
-            ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
-            : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-          : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+          ? threeWayModeration
+            ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+            : moderatedMediation
+              ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
+              : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+          : indirectPathCount === 1
+            ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1
+            : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
       : []),
   ].sort(compareCapabilityCellsV1);
   if (input.decision.capability_cells.length !== expectedCapabilityCells.length
@@ -1637,12 +1803,18 @@ export function selectGeneralSemPlsExecutionCapabilityV1(input: {
         : "higher_order_point"
       : moderation
       ? input.config.inference.kind === "case_bootstrap"
-        ? moderatedMediation
-          ? "two_way_moderated_mediation_bootstrap"
-          : "multiple_two_way_moderation_bootstrap"
-        : "multiple_two_way_moderation_point"
+        ? threeWayModeration
+          ? "three_way_moderation_bootstrap"
+          : moderatedMediation
+            ? "two_way_moderated_mediation_bootstrap"
+            : "multiple_two_way_moderation_bootstrap"
+        : threeWayModeration
+          ? "three_way_moderation_point"
+          : "multiple_two_way_moderation_point"
       : input.config.inference.kind === "case_bootstrap"
-        ? "mediation_bootstrap"
+        ? indirectPathCount === 1
+          ? "single_mediation_bootstrap"
+          : "mediation_bootstrap"
         : "mediation_point",
     capabilityCell,
     interactionIds: interactionTerms.map((term) => term.id),
@@ -1656,6 +1828,9 @@ export function generalSemPlsRequestedCapabilityCellV1(
   config: GeneralSemConfigV1,
 ): CapabilityCellReferenceV2 {
   const moderation = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  const threeWayModeration = model.derived_terms.some((term) => (
+    term.kind === "interaction_v2" && term.operands.length === 3
+  ));
   const higherOrder = model.derived_terms.some((term) => term.kind === "higher_order");
   if (higherOrder) {
     return config.inference.kind === "case_bootstrap"
@@ -1663,16 +1838,23 @@ export function generalSemPlsRequestedCapabilityCellV1(
       : GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1;
   }
   const moderatedMediation = moderation
+    && !threeWayModeration
     && config.inference.kind === "case_bootstrap"
     && config.requested_effect_estimands.length === 1;
   return moderation
     ? config.inference.kind === "case_bootstrap"
-      ? moderatedMediation
-        ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
-        : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
-      : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+      ? threeWayModeration
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : moderatedMediation
+          ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
+          : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
+      : threeWayModeration
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
     : config.inference.kind === "case_bootstrap"
-      ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+      ? generalSemScientificIndirectPathCountV1(model) === 1
+        ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
       : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
 }
 
@@ -2197,6 +2379,10 @@ export function validateGeneralSemPlsCompletedExecutionV1(
       "moderated_mediation_joint_stage_structural_coefficients",
     ]
     : [];
+  const threeWayAnalyticalFields = execution.kind === "three_way_moderation_point"
+    || execution.kind === "three_way_moderation_bootstrap"
+    ? ["three_way_joint_stage_structural_coefficients"]
+    : [];
   exactKeysAt(analytical, [
     "schema_version", "adapter_version", "capability_cell",
     "compilation_artifact_identity_sha256", "compiled_plan_sha256",
@@ -2204,6 +2390,8 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     "stage_one_model_scientific_sha256", "source_dataset_fingerprint",
     "general_sem_config_sha256", "point_estimation", "requested_effects",
     "interaction_point_estimation", "bootstrap_inference", "moderation_bootstrap_inference",
+    "three_way_point_estimation", "three_way_bootstrap_inference",
+    ...threeWayAnalyticalFields,
     ...rankTwoAnalyticalFields,
     "higher_order_point_estimation", "higher_order_bootstrap_inference",
   ], "completed.analyticalResult");
@@ -2259,6 +2447,14 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     analytical,
     "moderated_mediation_bootstrap_inference",
   ) && analytical.moderated_mediation_bootstrap_inference !== null;
+  const hasThreeWayPointResult = Object.prototype.hasOwnProperty.call(
+    analytical,
+    "three_way_point_estimation",
+  ) && analytical.three_way_point_estimation !== null;
+  const hasThreeWayBootstrapResult = Object.prototype.hasOwnProperty.call(
+    analytical,
+    "three_way_bootstrap_inference",
+  ) && analytical.three_way_bootstrap_inference !== null;
   const hasHigherOrderPointResult = Object.prototype.hasOwnProperty.call(
     analytical,
     "higher_order_point_estimation",
@@ -2270,17 +2466,23 @@ export function validateGeneralSemPlsCompletedExecutionV1(
   const expectedInteractionResult = execution.kind === "multiple_two_way_moderation_point"
     || execution.kind === "multiple_two_way_moderation_bootstrap"
     || execution.kind === "two_way_moderated_mediation_bootstrap";
-  const expectedBootstrapResult = execution.kind === "mediation_bootstrap";
+  const expectedBootstrapResult = execution.kind === "mediation_bootstrap"
+    || execution.kind === "single_mediation_bootstrap";
   const expectedModerationBootstrapResult = execution.kind === "multiple_two_way_moderation_bootstrap";
   const expectedModeratedMediationBootstrapResult = execution.kind
     === "two_way_moderated_mediation_bootstrap";
   const expectedHigherOrderPointResult = execution.kind === "higher_order_point"
     || execution.kind === "higher_order_bootstrap";
   const expectedHigherOrderBootstrapResult = execution.kind === "higher_order_bootstrap";
+  const expectedThreeWayPointResult = execution.kind === "three_way_moderation_point"
+    || execution.kind === "three_way_moderation_bootstrap";
+  const expectedThreeWayBootstrapResult = execution.kind === "three_way_moderation_bootstrap";
   if (hasInteractionResult !== expectedInteractionResult
     || hasBootstrapResult !== expectedBootstrapResult
     || hasModerationBootstrapResult !== expectedModerationBootstrapResult
     || hasModeratedMediationBootstrapResult !== expectedModeratedMediationBootstrapResult
+    || hasThreeWayPointResult !== expectedThreeWayPointResult
+    || hasThreeWayBootstrapResult !== expectedThreeWayBootstrapResult
     || hasHigherOrderPointResult !== expectedHigherOrderPointResult
     || hasHigherOrderBootstrapResult !== expectedHigherOrderBootstrapResult) {
     completedExecutionMismatchV1("completed.analyticalResult", "The analytical interaction/bootstrap payload shape contradicts the selected execution kind.");
@@ -2301,6 +2503,15 @@ export function validateGeneralSemPlsCompletedExecutionV1(
     && generalSemResults.interaction_effects !== undefined
     && generalSemResults.interaction_effects !== null,
   );
+  const hasCanonicalThreeWayPayload = Boolean(
+    generalSemResults
+    && Array.isArray(generalSemResults.three_way_interaction_effects)
+    && generalSemResults.three_way_interaction_effects.length > 0
+    && Array.isArray(generalSemResults.three_way_conditional_interaction_effects)
+    && generalSemResults.three_way_conditional_interaction_effects.length > 0
+    && Array.isArray(generalSemResults.three_way_simple_slopes)
+    && generalSemResults.three_way_simple_slopes.length > 0,
+  );
   const hasCanonicalHigherOrderPayload = Boolean(
     generalSemResults
     && Array.isArray(generalSemResults.higher_order_stages)
@@ -2314,6 +2525,29 @@ export function validateGeneralSemPlsCompletedExecutionV1(
         "A higher-order execution requires its canonical staged payload and no interaction identities.",
       );
     }
+    return;
+  }
+
+  if (expectedThreeWayPointResult) {
+    if (!hasCanonicalThreeWayPayload
+      || expectedInteractionIds.length === 0
+      || expectedFocalRelationIds.length === 0
+      || !hasCanonicalInteractionPayload
+      || !Array.isArray(analytical.three_way_joint_stage_structural_coefficients)
+      || analytical.three_way_joint_stage_structural_coefficients.length === 0) {
+      completedExecutionMismatchV1(
+        "completed.canonicalDocument.general_sem_results.three_way_interaction_effects",
+        "A three-way execution requires typed coefficient, lower-order interaction, joint-stage structural, conditional-interaction, and simple-slope sections with exact interaction identities.",
+      );
+    }
+    const hasReceipt = Boolean(
+      generalSemResults
+      && generalSemResults.three_way_moderation_bootstrap_receipt != null,
+    );
+    if (hasReceipt !== expectedThreeWayBootstrapResult) completedExecutionMismatchV1(
+      "completed.canonicalDocument.general_sem_results.three_way_moderation_bootstrap_receipt",
+      "The typed three-way bootstrap receipt contradicts the selected point-or-bootstrap execution kind.",
+    );
     return;
   }
 
@@ -2452,15 +2686,25 @@ export function validateGeneralSemCbsemCompletedExecutionV1(
 function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKindV1) {
   const moderation = kind === "multiple_two_way_moderation_point"
     || kind === "multiple_two_way_moderation_bootstrap"
-    || kind === "two_way_moderated_mediation_bootstrap";
+    || kind === "two_way_moderated_mediation_bootstrap"
+    || kind === "three_way_moderation_point"
+    || kind === "three_way_moderation_bootstrap";
+  const threeWay = kind === "three_way_moderation_point"
+    || kind === "three_way_moderation_bootstrap";
   const higherOrder = kind === "higher_order_point" || kind === "higher_order_bootstrap";
   const primaryDocumentCell = higherOrder
     ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
     : moderation
-      ? GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
+      ? threeWay
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1
+        : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1
       : GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
-  const requestCell = kind === "mediation_bootstrap"
+  const requestCell = kind === "single_mediation_bootstrap"
+    ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1
+    : kind === "mediation_bootstrap"
     ? GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1
+    : kind === "three_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1
     : kind === "two_way_moderated_mediation_bootstrap"
       ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
     : kind === "multiple_two_way_moderation_bootstrap"
@@ -2471,8 +2715,12 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
   const documentCells = [
     GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
     primaryDocumentCell,
-    ...(kind === "mediation_bootstrap"
+    ...(kind === "single_mediation_bootstrap"
+      ? [GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1]
+      : kind === "mediation_bootstrap"
       ? [GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1]
+      : kind === "three_way_moderation_bootstrap"
+        ? [GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1]
       : kind === "two_way_moderated_mediation_bootstrap"
         ? [GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1]
       : kind === "multiple_two_way_moderation_bootstrap"
@@ -2486,12 +2734,18 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
     requestCell,
     analyticalCell: primaryDocumentCell,
     documentCells,
-    methodVersion: kind === "multiple_two_way_moderation_bootstrap"
+    methodVersion: kind === "three_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+      : kind === "three_way_moderation_point"
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+      : kind === "multiple_two_way_moderation_bootstrap"
       ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
       : kind === "two_way_moderated_mediation_bootstrap"
         ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
       : kind === "multiple_two_way_moderation_point"
         ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+      : kind === "single_mediation_bootstrap"
+        ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
       : kind === "higher_order_bootstrap"
@@ -2499,12 +2753,18 @@ function expectedGeneralSemExecutionAuthorityV1(kind: GeneralSemPlsExecutionKind
       : kind === "higher_order_point"
         ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1.capability_version
         : GENERAL_SEM_PLS_POINT_METHOD_VERSION_V1,
-    adapterVersion: kind === "multiple_two_way_moderation_bootstrap"
+    adapterVersion: kind === "three_way_moderation_bootstrap"
+      ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1
+      : kind === "three_way_moderation_point"
+        ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_ADAPTER_VERSION_V1
+      : kind === "multiple_two_way_moderation_bootstrap"
       ? GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_ADAPTER_VERSION_V1
       : kind === "two_way_moderated_mediation_bootstrap"
         ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_ADAPTER_VERSION_V1
       : kind === "multiple_two_way_moderation_point"
         ? GENERAL_SEM_PLS_MODERATION_POINT_ADAPTER_VERSION_V1
+      : kind === "single_mediation_bootstrap"
+        ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_ADAPTER_VERSION_V1
       : kind === "mediation_bootstrap"
         ? GENERAL_SEM_PLS_BOOTSTRAP_ADAPTER_VERSION_V1
       : kind === "higher_order_bootstrap"

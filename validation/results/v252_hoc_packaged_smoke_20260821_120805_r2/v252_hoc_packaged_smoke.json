@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "version": "2.52.0",
+  "runtime": "Packaged Tauri WebView2 over local CDP",
+  "projectPath": "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/quickpls-v252-hoc.qpls",
+  "generatedAt": "2026-08-21T12:09:52.086Z",
+  "complete": true,
+  "passed": true,
+  "screenshots": [
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/01-hoc-dialog.png",
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/02-canvas.png",
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/03-calculate.png",
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/04-progress.png",
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/05-results.png",
+    "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/06-reopen.png"
+  ],
+  "observations": [
+    {
+      "id": "01-hoc-dialog",
+      "observation": "The compact native Create HOC dialog derives RR and recommends disjoint two-stage for two measurement-only dimensions."
+    },
+    {
+      "id": "02-canvas",
+      "observation": "Canvas shows the edited HOC, its two dimensions, and one authored HOC-to-outcome structural path; membership is a visual overlay only."
+    },
+    {
+      "id": "03-calculate",
+      "observation": "Calculate keeps the 18-method catalogue and exposes one compact RR disjoint-two-stage HOC route row under PLS-SEM Algorithm."
+    },
+    {
+      "id": "04-progress",
+      "observation": "The packaged HOC calculation is monitored through the native advanced-calculation progress surface."
+    },
+    {
+      "id": "05-results",
+      "observation": "The completed HOC calculation opens categorized Results with researcher-facing component relationships and retained canonical identity."
+    },
+    {
+      "id": "06-reopen",
+      "observation": "A newly launched packaged process reopens the saved archive and restores the same canonical HOC Results identity."
+    }
+  ],
+  "phases": {
+    "execute": {
+      "passed": true,
+      "checks": {
+        "fixture": {
+          "columns": [
+            "capability_1",
+            "capability_2",
+            "resources_1",
+            "resources_2",
+            "performance_1",
+            "performance_2"
+          ],
+          "rowCount": 1500
+        },
+        "hocId": "hoc-oc",
+        "hocRoute": "Higher-order constructEnterprise Capability · RR · disjoint two-stage Edit…",
+        "progress": "Calculation progressqueued0 of 1queued: 0 of 1",
+        "terminalState": "completed",
+        "save": {
+          "phase": "file_completion",
+          "target": "D:\\QuickPLS\\validation\\results\\v252_hoc_packaged_smoke_20260821_120805_r2\\quickpls-v252-hoc.qpls"
+        },
+        "results": {
+          "identity": {
+            "documentId": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "runId": "f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "methodVersion": "general_sem_pls_higher_order_point_v1",
+            "datasetFingerprint": "v2:0490bb5659d35fdb8fc920ff190fe743d0e5ff140c746f1f5fcdb5e875497f07",
+            "tableIds": [
+              "general_sem_higher_order_targets"
+            ],
+            "chartIds": [
+              "quickpls_export_higher_order_target_estimates_v2"
+            ]
+          },
+          "treeGroups": 6,
+          "selectedResult": "Higher-order PLS point estimatesModel diagramRead-only view of the active Canvas model used by this verified result.CapabilityResourcesPerformanceHOCEnterprise Capabilitycapability_1capability_2resources_1resources_2performance_1performance_2Add captionAdd noteAdd shapeAdd imageAdd linePresentation only · excluded from scientific hashReact FlowPress enter or space to select a node. You can then use the arrow keys to move the node around. Press delete to remove it and escape to cancel.Press enter or space to select an edge. You can then press delete to remove it or escape to cancel.General SEM disjoint two-stage higher-order PLS point estimatesReopened immutable schema-6 documentHigher-order construct stages and targetsExact approach-specific stage projections, generated mappings, component loadings or weights, authored HOC paths, and separated technical effects.Higher-order component and structural targetsComponent loadings or weights, authored structural paths, collinearity, and optional shared-ledger bootstrap inference.Relation IDParameter IDKindSourceTargetEstimateVIFBootstrap meanBiasSELowerUpperP valueUsableExceedancesqpls_hoc_component_relation_v1_cb4bf818582148fc22d91b5744a9a7fc8164ed136488fa0d885a38e6f55bdf0fqpls_hoc_component_parameter_v1_9365ba212fe759a87a5b2c72f168bc514192d247eaa87ae3aba67077b7563382component_loadingderived:hoc-occonstruct:construct-17873141195360.8087—————————qpls_hoc_component_relation_v1_ef65eeafb461581491e6df38112e5f4cb2ed4f380b416516badb34c716971aaaqpls_hoc_component_parameter_v1_f9307a910410febedc9a542a246203e8af899eb094a2a280e27bcf2c665b67f5component_loadingderived:hoc-occonstruct:construct-17873141199380.6152—————————structural_relation_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d31373837333134313233363031structural_parameter_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d31373837333134313233363031authored_structuralderived:hoc-occonstruct:construct-17873141202850.9923—————————Run and compilation detailsRunf8764ca8-2a97-4e82-9d0d-649e9c3970ccProject970b1610-ba5d-478a-993a-a2d034391335Model668534dd-5a77-462e-9900-234a59bb7921Dataset24c97eed-7ed0-4f5c-98ff-d963da3bc181Methodgeneral_sem_pls_higher_order_point_v1Export verified canonical resultChoose exact canonical tables once, then export every format through the same provenance-bound semantic dispatcher.Tables to includeSelect all tablesClear table selectionEstimation summaryStable table ID: estimation_summaryOuter modelStable table ID: outer_modelStructural pathsStable table ID: structural_pathsEffectsStable table ID: effectsR-squaredStable table ID: r_squaredPoint-estimate attributionStable table ID: point_estimate_attributionPLS algorithm convergenceStable table ID: algorithm_convergence_receiptPLS algorithm block orderStable table ID: algorithm_block_orderHigher-order stage receiptsStable table ID: general_sem_higher_order_stagesHigher-order component and structural targetsStable table ID: general_sem_higher_order_targetsChart for SVG or PNGHigher-order target estimates · derived from canonical table · quickpls_export_higher_order_target_estimates_v2Selected canonical export chart previewHigher-order target estimatesExport-only visual derived exactly from canonical table general_sem_higher_order_targets. Target index follows canonical row order; every point retains its relation_id and estimate without creating a new estimand.Export-derived bar chart with 1 series and 3 exact points. Keyboard focus is available here; the exact values follow in a table.123Target indexEstimateDerived visual only; the resident canonical result and its scientific identities are unchanged.Higher-order target estimates accessible dataExact table fallback in stable chart order.IndexSeriesEffect or point identityXEstimateLowerUpperSource table1Estimateqpls_hoc_component_relation_v1_cb4bf818582148fc22d91b5744a9a7fc8164ed136488fa0d885a38e6f55bdf0f10.8087Not reportedNot reportedgeneral_sem_higher_order_targets2Estimateqpls_hoc_component_relation_v1_ef65eeafb461581491e6df38112e5f4cb2ed4f380b416516badb34c716971aaa20.6152Not reportedNot reportedgeneral_sem_higher_order_targets3Estimatestructural_relation_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d3137383733313431323336303130.9923Not reportedNot reportedgeneral_sem_higher_order_targets10 of 10 canonical tables selected. Derived chart quickpls_export_higher_order_target_estimates_v2.Export CSVExport XLSXExport HTMLExport PDFExport SVGExport PNGExport identityDocumentresult_f8764ca8-2a97-4e82-9d0d-649e9c3970ccRunf8764ca8-2a97-4e82-9d0d-649e9c3970ccMethodgeneral_sem_pls_higher_order_point_v1Dataset fingerprintv2:0490bb5659d35fdb8fc920ff190fe743d0e5ff140c746f1f5fcdb5e875497f07",
+          "tableId": "general_sem_higher_order_targets"
+        },
+        "processClose": "The packaged supervisor closes this execute process before the reopen phase."
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 36,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    },
+    "reopen": {
+      "passed": true,
+      "checks": {
+        "results": {
+          "identity": {
+            "documentId": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "runId": "f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "methodVersion": "general_sem_pls_higher_order_point_v1",
+            "datasetFingerprint": "v2:0490bb5659d35fdb8fc920ff190fe743d0e5ff140c746f1f5fcdb5e875497f07",
+            "tableIds": [
+              "general_sem_higher_order_targets"
+            ],
+            "chartIds": [
+              "quickpls_export_higher_order_target_estimates_v2"
+            ]
+          },
+          "treeGroups": 6,
+          "selectedResult": "Higher-order PLS point estimatesModel diagramRead-only view of the active Canvas model used by this verified result.CapabilityResourcesPerformanceHOCEnterprise Capabilitycapability_1capability_2resources_1resources_2performance_1performance_2Add captionAdd noteAdd shapeAdd imageAdd linePresentation only · excluded from scientific hashReact FlowPress enter or space to select a node. You can then use the arrow keys to move the node around. Press delete to remove it and escape to cancel.Press enter or space to select an edge. You can then press delete to remove it or escape to cancel.General SEM disjoint two-stage higher-order PLS point estimatesReopened immutable schema-6 documentHigher-order construct stages and targetsExact approach-specific stage projections, generated mappings, component loadings or weights, authored HOC paths, and separated technical effects.Higher-order component and structural targetsComponent loadings or weights, authored structural paths, collinearity, and optional shared-ledger bootstrap inference.Relation IDParameter IDKindSourceTargetEstimateVIFBootstrap meanBiasSELowerUpperP valueUsableExceedancesqpls_hoc_component_relation_v1_cb4bf818582148fc22d91b5744a9a7fc8164ed136488fa0d885a38e6f55bdf0fqpls_hoc_component_parameter_v1_9365ba212fe759a87a5b2c72f168bc514192d247eaa87ae3aba67077b7563382component_loadingderived:hoc-occonstruct:construct-17873141195360.8087—————————qpls_hoc_component_relation_v1_ef65eeafb461581491e6df38112e5f4cb2ed4f380b416516badb34c716971aaaqpls_hoc_component_parameter_v1_f9307a910410febedc9a542a246203e8af899eb094a2a280e27bcf2c665b67f5component_loadingderived:hoc-occonstruct:construct-17873141199380.6152—————————structural_relation_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d31373837333134313233363031structural_parameter_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d31373837333134313233363031authored_structuralderived:hoc-occonstruct:construct-17873141202850.9923—————————Run and compilation detailsRunf8764ca8-2a97-4e82-9d0d-649e9c3970ccProject970b1610-ba5d-478a-993a-a2d034391335Model668534dd-5a77-462e-9900-234a59bb7921Dataset24c97eed-7ed0-4f5c-98ff-d963da3bc181Methodgeneral_sem_pls_higher_order_point_v1Export verified canonical resultChoose exact canonical tables once, then export every format through the same provenance-bound semantic dispatcher.Tables to includeSelect all tablesClear table selectionEstimation summaryStable table ID: estimation_summaryOuter modelStable table ID: outer_modelStructural pathsStable table ID: structural_pathsEffectsStable table ID: effectsR-squaredStable table ID: r_squaredPoint-estimate attributionStable table ID: point_estimate_attributionPLS algorithm convergenceStable table ID: algorithm_convergence_receiptPLS algorithm block orderStable table ID: algorithm_block_orderHigher-order stage receiptsStable table ID: general_sem_higher_order_stagesHigher-order component and structural targetsStable table ID: general_sem_higher_order_targetsChart for SVG or PNGHigher-order target estimates · derived from canonical table · quickpls_export_higher_order_target_estimates_v2Selected canonical export chart previewHigher-order target estimatesExport-only visual derived exactly from canonical table general_sem_higher_order_targets. Target index follows canonical row order; every point retains its relation_id and estimate without creating a new estimand.Export-derived bar chart with 1 series and 3 exact points. Keyboard focus is available here; the exact values follow in a table.123Target indexEstimateDerived visual only; the resident canonical result and its scientific identities are unchanged.Higher-order target estimates accessible dataExact table fallback in stable chart order.IndexSeriesEffect or point identityXEstimateLowerUpperSource table1Estimateqpls_hoc_component_relation_v1_cb4bf818582148fc22d91b5744a9a7fc8164ed136488fa0d885a38e6f55bdf0f10.8087Not reportedNot reportedgeneral_sem_higher_order_targets2Estimateqpls_hoc_component_relation_v1_ef65eeafb461581491e6df38112e5f4cb2ed4f380b416516badb34c716971aaa20.6152Not reportedNot reportedgeneral_sem_higher_order_targets3Estimatestructural_relation_706174682d686f632d6f632d636f6e7374727563742d313738373331343132303238352d3137383733313431323336303130.9923Not reportedNot reportedgeneral_sem_higher_order_targets10 of 10 canonical tables selected. Derived chart quickpls_export_higher_order_target_estimates_v2.Export CSVExport XLSXExport HTMLExport PDFExport SVGExport PNGExport identityDocumentresult_f8764ca8-2a97-4e82-9d0d-649e9c3970ccRunf8764ca8-2a97-4e82-9d0d-649e9c3970ccMethodgeneral_sem_pls_higher_order_point_v1Dataset fingerprintv2:0490bb5659d35fdb8fc920ff190fe743d0e5ff140c746f1f5fcdb5e875497f07",
+          "tableId": "general_sem_higher_order_targets"
+        },
+        "sameCanonicalIdentity": true
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 17,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    }
+  },
+  "failures": []
+}

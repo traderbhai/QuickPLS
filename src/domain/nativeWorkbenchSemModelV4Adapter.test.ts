@@ -141,6 +141,42 @@ function moderationInput(): NativeWorkbenchToSemModelV4Input {
   return input;
 }
 
+function higherOrderInput(): NativeWorkbenchToSemModelV4Input {
+  const input = baseInput();
+  input.nodes = [
+    construct("x", ["x1", "x2"], { x: 0, y: 0 }),
+    construct("w", ["w1", "w2"], { x: 0, y: 180 }),
+    construct("y", ["y1", "y2"], { x: 440, y: 90 }),
+    {
+      id: "hoc-quality",
+      type: "construct",
+      position: { x: 220, y: 90 },
+      data: {
+        label: "Service quality",
+        shortName: "SQ",
+        mode: "reflective",
+        indicators: [],
+        semantic: "higher_order",
+        higherOrder: {
+          id: "higher-order:service-quality",
+          components: ["x", "w"],
+          method: "two_stage",
+          canonicalApproach: "disjoint_two_stage",
+          measurementType: "reflective_reflective",
+          stage_one_recipe: null,
+        },
+      },
+    },
+  ];
+  input.edges = [{ id: "path-hoc-y", source: "hoc-quality", target: "y" }];
+  input.construct_estimands = {
+    x: { kind: "composite" },
+    w: { kind: "composite" },
+    y: { kind: "composite" },
+  };
+  return input;
+}
+
 describe("native workbench to SemModelV4 adapter", () => {
   it("never infers or silently accepts reserved CB-SEM Special Assumptions", () => {
     const input = baseInput();
@@ -498,6 +534,95 @@ describe("native workbench to SemModelV4 adapter", () => {
     expect(authoredResult.ok, authoredResult.ok ? undefined : JSON.stringify(authoredResult.diagnostics)).toBe(true);
     if (!authoredResult.ok) throw new Error(authoredResult.diagnostics[0]?.message);
     expect(authoredResult.model).toEqual(first.model);
+  });
+
+  it("maps a complete higher-order node to one stable derived term and preserves its structural path", () => {
+    const first = successful(higherOrderInput());
+    const outputId = nativeWorkbenchDerivedVariableIdV4("hoc-quality");
+    expect(first.model.derived_terms).toContainEqual({
+      kind: "higher_order",
+      id: "higher-order:service-quality",
+      output: outputId,
+      components: ["construct:w", "construct:x"],
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+    });
+    expect(first.model.variables).toContainEqual({
+      kind: "derived",
+      id: outputId,
+      label: "Service quality",
+    });
+    expect(first.model.relations).toContainEqual(expect.objectContaining({
+      kind: "structural",
+      source: outputId,
+      target: "construct:y",
+    }));
+    expect(first.trace.construct_variables["hoc-quality"]).toBe(outputId);
+
+    const reordered = higherOrderInput();
+    reordered.nodes = [...reordered.nodes].reverse();
+    reordered.edges = [...reordered.edges].reverse();
+    expect(successful(reordered).model).toEqual(first.model);
+
+    const authored = higherOrderInput();
+    authored.nodes = authored.nodes.map((node) => node.data.semantic === "higher_order"
+      ? node
+      : withNativeConstructEstimandV4(node, { kind: "composite" }));
+    const {
+      construct_estimands: _constructEstimands,
+      covariance_semantics: _covarianceSemantics,
+      ...authoredInput
+    } = authored;
+    const authoredResult = adaptAuthoredNativeWorkbenchToSemModelV4(authoredInput);
+    expect(authoredResult.ok, authoredResult.ok ? undefined : JSON.stringify(authoredResult.diagnostics)).toBe(true);
+    if (!authoredResult.ok) throw new Error(authoredResult.diagnostics[0]?.message);
+    expect(authoredResult.model).toEqual(first.model);
+  });
+
+  it("rejects incomplete higher-order metadata and invalid components before scientific conversion", () => {
+    const incomplete = higherOrderInput();
+    incomplete.nodes = incomplete.nodes.map((node) => node.id === "hoc-quality"
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            higherOrder: {
+              ...node.data.higherOrder!,
+              canonicalApproach: undefined,
+              measurementType: undefined,
+            },
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(incomplete)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.higher_order_approach_invalid", subject: "hoc-quality" }),
+        expect.objectContaining({ code: "native_workbench.higher_order_measurement_type_invalid", subject: "hoc-quality" }),
+      ]),
+    });
+
+    const malformed = higherOrderInput();
+    malformed.nodes = malformed.nodes.map((node) => node.id === "hoc-quality"
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            higherOrder: {
+              ...node.data.higherOrder!,
+              components: ["x", "x"],
+              measurementType: "formative_reflective",
+            },
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(malformed)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.higher_order_components_invalid", subject: "hoc-quality" }),
+        expect.objectContaining({ code: "native_workbench.higher_order_component_mode_mismatch", subject: "hoc-quality" }),
+      ]),
+    });
   });
 
   it("rejects legacy or malformed interaction metadata instead of silently downgrading it", () => {

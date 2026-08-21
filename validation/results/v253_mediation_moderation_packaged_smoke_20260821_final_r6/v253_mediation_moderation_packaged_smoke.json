@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "version": "2.53.0",
+  "runtime": "Packaged Tauri WebView2 over local CDP",
+  "projectPath": "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/quickpls-v253-moderation.qpls",
+  "generatedAt": "2026-08-21T16:02:59.786Z",
+  "complete": true,
+  "passed": true,
+  "screenshots": [
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/01-moderation-dialog.png",
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/02-canvas.png",
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/03-calculate.png",
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/04-progress.png",
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/05-results.png",
+    "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/06-reopen.png"
+  ],
+  "observations": [
+    {
+      "id": "01-moderation-dialog",
+      "observation": "The compact path-scoped dialog binds W to X -> Y and keeps construction details collapsed."
+    },
+    {
+      "id": "02-canvas",
+      "observation": "Canvas shows a compact x anchor and dashed W connector while the generated interaction construct stays hidden."
+    },
+    {
+      "id": "03-calculate",
+      "observation": "Calculate retains exactly 18 methods and shows one concise W-moderates-X-to-Y route row."
+    },
+    {
+      "id": "04-progress",
+      "observation": "The packaged moderation calculation uses the shared native progress surface."
+    },
+    {
+      "id": "05-results",
+      "observation": "The completed calculation opens categorized Moderation Results backed by the canonical interaction table."
+    },
+    {
+      "id": "06-reopen",
+      "observation": "A new packaged process reopens the saved project with the same moderation result identity."
+    }
+  ],
+  "phases": {
+    "execute": {
+      "passed": true,
+      "checks": {
+        "fixture": {
+          "columns": [
+            "x_1",
+            "x_2",
+            "w_1",
+            "w_2",
+            "y_1",
+            "y_2"
+          ],
+          "rowCount": 600
+        },
+        "anchorLabel": "Moderating effect: W moderates X to Y",
+        "route": "ModerationW moderates X → Y",
+        "progress": "Calculation progressqueued0 of 1queued: 0 of 1",
+        "terminalState": "completed",
+        "save": {
+          "phase": "file_completion",
+          "target": "D:\\QuickPLS\\validation\\results\\v253_mediation_moderation_packaged_smoke_20260821_final_r6\\quickpls-v253-moderation.qpls"
+        },
+        "results": {
+          "identity": {
+            "documentId": "result_61d1a1e0-b522-46eb-a94a-35d78a624c60",
+            "runId": "61d1a1e0-b522-46eb-a94a-35d78a624c60",
+            "methodVersion": "qpls.general-sem-pls.multiple-two-way.point.v1",
+            "datasetFingerprint": "v2:54873995fcfafd4cbd2b803114ddf5c4de20bb67672460e97e8ebb9e09f0e0f1",
+            "tableIds": [
+              "general_sem_interaction_effects"
+            ],
+            "chartIds": [
+              "general_sem_interaction_chart_0000"
+            ]
+          },
+          "tableId": "general_sem_interaction_effects",
+          "treeText": "OverviewComplete verified resultMeasurement ModelStage-one outer modelStructural ModelJoint stage-two structural pathsModeration and Conditional EffectsStage-one estimation summaryStage-one pls algorithm convergenceStage-one pls algorithm block orderInteraction effects and product scalingConditional focal slopesInteraction plot pointsInteraction interaction-term:interaction-construct-1787328109260-construct-1787328109675-construct-1787328110024Diagnostics and Run DetailsNotices, boundaries and notes",
+          "overlayAnchorCount": 1
+        }
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 36,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    },
+    "reopen": {
+      "passed": true,
+      "checks": {
+        "results": {
+          "identity": {
+            "documentId": "result_61d1a1e0-b522-46eb-a94a-35d78a624c60",
+            "runId": "61d1a1e0-b522-46eb-a94a-35d78a624c60",
+            "methodVersion": "qpls.general-sem-pls.multiple-two-way.point.v1",
+            "datasetFingerprint": "v2:54873995fcfafd4cbd2b803114ddf5c4de20bb67672460e97e8ebb9e09f0e0f1",
+            "tableIds": [
+              "general_sem_interaction_effects"
+            ],
+            "chartIds": [
+              "general_sem_interaction_chart_0000"
+            ]
+          },
+          "tableId": "general_sem_interaction_effects",
+          "treeText": "OverviewComplete verified resultMeasurement ModelStage-one outer modelStructural ModelJoint stage-two structural pathsModeration and Conditional EffectsStage-one estimation summaryStage-one pls algorithm convergenceStage-one pls algorithm block orderInteraction effects and product scalingConditional focal slopesInteraction plot pointsInteraction interaction-term:interaction-construct-1787328109260-construct-1787328109675-construct-1787328110024Diagnostics and Run DetailsNotices, boundaries and notes",
+          "overlayAnchorCount": 1
+        },
+        "sameCanonicalIdentity": true
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 17,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    }
+  },
+  "failures": []
+}

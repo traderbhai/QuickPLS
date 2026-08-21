@@ -39,6 +39,13 @@ const PLS_BOOTSTRAP_CELL = {
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 } as const;
 
+export const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_single_mediation_bootstrap",
+  capability_version: "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+} as const);
+
 export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 = Object.freeze({
   registry_schema_version: 2,
   capability_id: "smartpls.moderation",
@@ -58,6 +65,20 @@ export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1 = Obj
   capability_id: "smartpls.mediation",
   cell_id: "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
   capability_version: "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
+} as const);
+
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_point",
+  capability_version: "general_sem_pls_three_way_moderation_point_v1",
+} as const);
+
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CELL_V1 = Object.freeze({
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+  capability_version: "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
 } as const);
 
 const CBSEM_CELL = {
@@ -111,6 +132,11 @@ const PLS_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
   description: "Capability Registry V2 exposes this exact multiple-mediation, full-model percentile case-bootstrap combination.",
 };
 
+const PLS_SINGLE_MEDIATION_BOOTSTRAP_EVIDENCE: SemCapabilityEvidenceV1 = {
+  evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_single_mediation_bootstrap:general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+  description: "Capability Registry V2 exposes the exact single-mediation full-model percentile case-bootstrap combination.",
+};
+
 const PLS_BOOTSTRAP_MECHANISM_EVIDENCE: SemCapabilityEvidenceV1 = {
   evidence_id: "capability_dependency:smartpls.pls_bootstrapping:qpls3.inference.bootstrap:indexed_resampling_v4",
   description: "The exact General SEM cell uses the separately governed indexed case-resampling mechanism without inheriting that mechanism cell's release maturity.",
@@ -151,6 +177,28 @@ const PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE: readonly SemCapability
   {
     evidence_id: "capability_registry_v2:smartpls.mediation:qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap:general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1",
     description: "Capability Registry V2 exposes the exact conditional-process full-model case-bootstrap option on its current authorized surface.",
+  },
+];
+
+const PLS_THREE_WAY_MODERATION_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
+  {
+    evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_three_way_moderation_point_v1",
+    description: "The bounded compiler preserves strong hierarchy and jointly binds main, pairwise, and one three-way product to one stage-two solve.",
+  },
+  {
+    evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_three_way_moderation_point:general_sem_pls_three_way_moderation_point_v1",
+    description: "Capability Registry V2 exposes the exact bounded three-way moderation point cell.",
+  },
+];
+
+const PLS_THREE_WAY_MODERATION_BOOTSTRAP_EVIDENCE: readonly SemCapabilityEvidenceV1[] = [
+  {
+    evidence_id: "compiler:recipe_v4_to_compiled_pls_plan_v3_three_way_moderation_bootstrap_v1",
+    description: "The bootstrap compiler binds one indexed full-model traversal and a shared three-way conditional-effects ledger.",
+  },
+  {
+    evidence_id: "capability_registry_v2:smartpls.moderation:qpls3.pls.general_sem_three_way_moderation_bootstrap:general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+    description: "Capability Registry V2 exposes the exact bounded three-way full-model case-bootstrap cell.",
   },
 ];
 
@@ -407,12 +455,22 @@ function plsShapeDiagnostics(
 ): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
   if (hasInteractions) {
+    const threeWayTerms = model.derived_terms.filter((term) => (
+      term.kind === "interaction_v2" && term.operands.length === 3
+    ));
+    if (threeWayTerms.length > 1) diagnostics.push(errorDiagnostic(
+      "sem.capability.pls.multiple_three_way_interactions_not_executable",
+      `The bounded three-way cell accepts one three-way term; received ${threeWayTerms.length}.`,
+      "Keep one qualified three-way moderating effect in this calculation.",
+    ));
     for (const term of model.derived_terms) {
-      if (term.kind === "interaction_v2" && term.operands.length !== 2) {
+      if (term.kind === "interaction_v2"
+        && term.operands.length !== 2
+        && term.operands.length !== 3) {
         diagnostics.push(errorDiagnostic(
           "sem.capability.pls.interaction_order_not_executable",
-          `Interaction ${term.id} requires exactly two operands; received ${term.operands.length}.`,
-          "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+          `Interaction ${term.id} requires two or three operands; received ${term.operands.length}.`,
+          "Use a qualified two-way or bounded three-way interaction; fourth-order interactions remain unsupported.",
           term.id,
         ));
       }
@@ -516,6 +574,86 @@ export function interactionProductColumnIdentityV1(input: {
   return `qpls_pls_product_v1_${sha256HexBytesV1(bytes)}`;
 }
 
+function threeWayInteractionProductColumnIdentityV1(input: {
+  interactionId: string;
+  outputId: string;
+  operands: readonly [string, string, string];
+  focalRelationId: string;
+  effectRelationId: string;
+}): string {
+  const encoded = new TextEncoder().encode([
+    "qpls.compiled-pls-plan-v3.three-way-product-v1",
+    input.interactionId,
+    input.outputId,
+    ...input.operands,
+    input.focalRelationId,
+    input.effectRelationId,
+  ].join("\0"));
+  return `qpls_pls_three_way_product_v1_${sha256HexBytesV1(encoded)}`;
+}
+
+function exactBinaryZeroOneCategoriesV1(categories: readonly string[]): boolean {
+  if (categories.length !== 2) return false;
+  const values = categories.map((category) => {
+    const normalized = category.trim();
+    if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(normalized)) return null;
+    const value = Number(normalized);
+    return Number.isFinite(value) ? value : null;
+  });
+  if (values.some((value) => value == null)) return false;
+  const sorted = (values as number[]).sort((left, right) => left - right);
+  return Object.is(sorted[0], 0) && Object.is(sorted[1], 1);
+}
+
+function qualifiedThreeWayModeratorObservedIdsV1(model: SemModelV4): ReadonlySet<string> {
+  const terms = model.derived_terms.filter((term): term is Extract<typeof term, { kind: "interaction_v2" }> => (
+    term.kind === "interaction_v2" && term.operands.length === 3
+  ));
+  if (terms.length !== 1) return new Set();
+  const term = terms[0]!;
+  if (term.method !== "two_stage"
+    || term.hierarchy_policy !== "strong"
+    || term.product_indicator != null) return new Set();
+  const focal = model.relations.find((relation): relation is StructuralRelation => (
+    relation.kind === "structural"
+    && (relation.role ?? "structural") === "structural"
+    && relation.id === term.focal_relation
+    && relation.source === term.operands[0]
+  ));
+  if (!focal) return new Set();
+  if (!model.relations.some((relation) => relation.kind === "structural"
+    && (relation.role ?? "structural") === "structural"
+    && relation.source === term.output
+    && relation.target === focal.target)) return new Set();
+  if (!term.operands.every((operand) => model.relations.some((relation) => (
+    relation.kind === "structural"
+    && (relation.role ?? "structural") === "structural"
+    && relation.source === operand
+    && relation.target === focal.target
+  )))) return new Set();
+  const pairs = [[0, 1], [0, 2], [1, 2]] as const;
+  if (!pairs.every(([left, right]) => model.derived_terms.some((candidate) => (
+    candidate.kind === "interaction_v2"
+    && candidate.operands.length === 2
+    && candidate.method === "two_stage"
+    && candidate.hierarchy_policy === "strong"
+    && candidate.product_indicator == null
+    && candidate.operands.includes(term.operands[left]!)
+    && candidate.operands.includes(term.operands[right]!)
+  )))) return new Set();
+
+  return new Set(term.operands.slice(1).flatMap((moderatorId) => {
+    const moderator = model.variables.find((variable) => variable.id === moderatorId);
+    if (moderator?.kind === "observed") return [moderator.id];
+    const indicators = model.relations.flatMap((relation) => {
+      if (relation.kind === "measurement_effect" && relation.construct === moderatorId) return [relation.indicator];
+      if (relation.kind === "measurement_causal" && relation.composite === moderatorId) return [relation.indicator];
+      return [];
+    });
+    return indicators.length === 1 ? [indicators[0]!] : [];
+  }));
+}
+
 function compileInteractionProjectionV1(
   model: SemModelV4,
 ): { value: CompiledInteractionProjectionV1 | null; diagnostics: SemCapabilityDiagnosticV1[] } {
@@ -560,11 +698,11 @@ function compileInteractionProjectionV1(
   )));
 
   for (const term of interactionTerms) {
-    if (term.operands.length !== 2) {
+    if (term.operands.length !== 2 && term.operands.length !== 3) {
       diagnostics.push(errorDiagnostic(
         "sem.capability.pls.interaction_order_not_executable",
-        `Interaction ${term.id} requires exactly two operands; received ${term.operands.length}.`,
-        "Use exactly two operands per interaction_v2 term; three-way and higher-order moderation remain blocked.",
+        `Interaction ${term.id} requires two or three operands; received ${term.operands.length}.`,
+        "Use a qualified two-way or bounded three-way interaction; fourth-order interactions remain unsupported.",
         term.id,
       ));
       continue;
@@ -660,25 +798,33 @@ function compileInteractionProjectionV1(
     }
 
     const sortedOperands = [...term.operands].sort(compareUtf8StringsV1);
-    const productDesign = `${sortedOperands[0]}\0${sortedOperands[1]}\0${focal.target}`;
+    const productDesign = `${sortedOperands.join("\0")}\0${focal.target}`;
     const duplicate = productDesigns.get(productDesign);
     if (duplicate) {
       diagnostics.push(errorDiagnostic(
         "sem.capability.pls.duplicate_interaction_product_design",
         `Interactions ${duplicate} and ${term.id} compile to the same fixed product design for outcome ${focal.target}.`,
-        "Keep one two-way product per operand pair and outcome; operand order still defines focal and moderator roles.",
+        "Keep one product per operand set and outcome; operand order still defines focal and moderator roles.",
         term.id,
       ));
       continue;
     }
     productDesigns.set(productDesign, term.id);
-    const generatedColumn = interactionProductColumnIdentityV1({
-      interactionId: term.id,
-      outputId: term.output,
-      operands: [term.operands[0]!, term.operands[1]!],
-      focalRelationId: term.focal_relation,
-      effectRelationId: effectRelation.id,
-    });
+    const generatedColumn = term.operands.length === 3
+      ? threeWayInteractionProductColumnIdentityV1({
+        interactionId: term.id,
+        outputId: term.output,
+        operands: [term.operands[0]!, term.operands[1]!, term.operands[2]!],
+        focalRelationId: term.focal_relation,
+        effectRelationId: effectRelation.id,
+      })
+      : interactionProductColumnIdentityV1({
+        interactionId: term.id,
+        outputId: term.output,
+        operands: [term.operands[0]!, term.operands[1]!],
+        focalRelationId: term.focal_relation,
+        effectRelationId: effectRelation.id,
+      });
     if (sourceColumns.has(generatedColumn) || generatedColumns.has(generatedColumn)) {
       diagnostics.push(errorDiagnostic(
         "sem.capability.pls.interaction_shape_not_executable",
@@ -694,9 +840,17 @@ function compileInteractionProjectionV1(
   }
 
   if (diagnostics.length > 0) return { value: null, diagnostics };
+  const qualifiedThreeWayModeratorObservedIds = qualifiedThreeWayModeratorObservedIdsV1(model);
   const projectedModel = canonicalizeSemModelV4({
     ...structuredClone(model),
-    variables: model.variables.filter((variable) => !outputIds.has(variable.id)),
+    variables: model.variables
+      .filter((variable) => !outputIds.has(variable.id))
+      .map((variable) => variable.kind === "observed"
+        && variable.scale === "binary"
+        && qualifiedThreeWayModeratorObservedIds.has(variable.id)
+        && exactBinaryZeroOneCategoriesV1(variable.categories)
+        ? { ...variable, scale: "continuous" as const, categories: [], value_labels: {} }
+        : variable),
     relations: model.relations.filter((relation) => !effectRelationIds.has(relation.id)),
     parameters: model.parameters.filter((parameter) => !effectParameterIds.has(parameter.id)),
     derived_terms: [],
@@ -828,6 +982,7 @@ function requestedEffectDiagnostics(
 
 function plsDataScopeDiagnostics(model: SemModelV4): SemCapabilityDiagnosticV1[] {
   const diagnostics: SemCapabilityDiagnosticV1[] = [];
+  const threeWayModeratorObservedIds = qualifiedThreeWayModeratorObservedIdsV1(model);
   if (model.data_binding.kind !== "raw") {
     diagnostics.push(errorDiagnostic(
       "sem.capability.pls.raw_data_required",
@@ -859,11 +1014,14 @@ function plsDataScopeDiagnostics(model: SemModelV4): SemCapabilityDiagnosticV1[]
   ));
   for (const variable of model.variables) {
     if (variable.kind !== "observed") continue;
-    if (variable.scale !== "continuous"
+    const boundedBinaryModerator = variable.scale === "binary"
+      && threeWayModeratorObservedIds.has(variable.id)
+      && exactBinaryZeroOneCategoriesV1(variable.categories);
+    if ((variable.scale !== "continuous" && !boundedBinaryModerator)
       || variable.missing_markers.length > 0
       || variable.transformation_lineage.length > 0) diagnostics.push(errorDiagnostic(
       "sem.capability.pls.observed_semantics_not_executable",
-      "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell.",
+      "This observed variable carries scale, missing-marker, or transformation semantics outside the exact General SEM PLS cell. Binary 0/1 coding is admitted only for a bounded three-way moderator.",
       "Keep the authored semantics unchanged and use an explicit, lineage-recorded dataset transformation or a future qualified cell.",
       variable.id,
     ));
@@ -880,9 +1038,17 @@ export function preflightGeneralSemPlsV1(
   config: GeneralSemConfigV1,
 ): SemCapabilityDecisionV1 {
   const validatedConfig = parseGeneralSemConfigV1(config);
-  const hasInteractions = model.derived_terms.some((term) => term.kind === "interaction_v2");
+  const interactionTerms = model.derived_terms.filter((term) => term.kind === "interaction_v2");
+  const hasInteractions = interactionTerms.length > 0;
+  const hasThreeWayInteraction = interactionTerms.some((term) => term.operands.length === 3);
   const hasHigherOrder = model.derived_terms.some((term) => term.kind === "higher_order");
   const bootstrapRequested = validatedConfig.inference.kind === "case_bootstrap";
+  const initialIndirectPathCount = !hasInteractions && !hasHigherOrder
+    ? enumerateSpecificDirectedPaths(
+      model,
+      validatedConfig.output_policy.max_materialized_specific_paths,
+    ).paths.length
+    : 0;
   const requestsModeratedMediation = hasInteractions
     && bootstrapRequested
     && validatedConfig.requested_effect_estimands.length > 0;
@@ -890,28 +1056,47 @@ export function preflightGeneralSemPlsV1(
   const capabilityCells = hasHigherOrder
     ? hocContract.capabilityCells
     : [
-      hasInteractions ? GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1 : PLS_CELL,
+      hasInteractions
+        ? hasThreeWayInteraction
+          ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CELL_V1
+          : GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CELL_V1
+        : PLS_CELL,
       ...(bootstrapRequested
         ? [hasInteractions
-          ? requestsModeratedMediation
-            ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
-            : GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
-          : PLS_BOOTSTRAP_CELL]
+          ? hasThreeWayInteraction
+            ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CELL_V1
+            : requestsModeratedMediation
+              ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1
+              : GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CELL_V1
+          : initialIndirectPathCount === 1
+            ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CELL_V1
+            : PLS_BOOTSTRAP_CELL]
         : []),
     ];
   const evidence = [
     PLS_EVIDENCE.find((item) => item.evidence_id === "compiler:recipe_v4_to_compiled_pls_plan_v3_v1")!,
-    ...(hasHigherOrder ? hocContract.evidence : hasInteractions ? PLS_MULTIPLE_MODERATION_EVIDENCE : PLS_EVIDENCE.filter((item) => (
+    ...(hasHigherOrder ? hocContract.evidence : hasInteractions
+      ? hasThreeWayInteraction
+        ? PLS_THREE_WAY_MODERATION_EVIDENCE
+        : PLS_MULTIPLE_MODERATION_EVIDENCE
+      : PLS_EVIDENCE.filter((item) => (
       item.evidence_id !== "compiler:recipe_v4_to_compiled_pls_plan_v3_v1"
     ))),
     ...(bootstrapRequested ? [
       ...(hasHigherOrder
         ? []
         : hasInteractions
-          ? requestsModeratedMediation
-            ? PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE
-            : PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
-        : [PLS_BOOTSTRAP_COMPILER_EVIDENCE, PLS_BOOTSTRAP_EVIDENCE]),
+          ? hasThreeWayInteraction
+            ? PLS_THREE_WAY_MODERATION_BOOTSTRAP_EVIDENCE
+            : requestsModeratedMediation
+              ? PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_EVIDENCE
+              : PLS_MULTIPLE_MODERATION_BOOTSTRAP_EVIDENCE
+        : [
+          PLS_BOOTSTRAP_COMPILER_EVIDENCE,
+          initialIndirectPathCount === 1
+            ? PLS_SINGLE_MEDIATION_BOOTSTRAP_EVIDENCE
+            : PLS_BOOTSTRAP_EVIDENCE,
+        ]),
       PLS_BOOTSTRAP_MECHANISM_EVIDENCE,
     ] : []),
   ];
@@ -1008,11 +1193,11 @@ export function preflightGeneralSemPlsV1(
           "The PLS mediation point cell requires at least one compiled specific indirect path; this graph has none.",
           "Add a supported mediator path, or use the existing ordinary PLS workflow for a direct-only recursive model.",
         ));
-      } else if (!hasHigherOrder && bootstrapRequested && eligiblePaths.length < 2) {
+      } else if (!hasHigherOrder && bootstrapRequested && eligiblePaths.length === 0) {
         diagnostics.push(errorDiagnostic(
-          "sem.capability.pls.multiple_mediation_requires_two_indirect_paths",
-          `The exact multiple-mediation bootstrap cell requires at least two compiled specific indirect paths; this graph has ${eligiblePaths.length}.`,
-          "Add a second supported parallel or serial mediation path, or use point inference under the mediation cell until a single-mediation bootstrap cell is separately governed.",
+          "sem.capability.pls.mediation_bootstrap_requires_indirect_path",
+          "The mediation bootstrap cells require at least one compiled specific indirect path; this graph has none.",
+          "Add a supported mediator path, or use the ordinary PLS workflow for a direct-only recursive model.",
         ));
       }
       if (!hasInteractions) diagnostics.push(...requestedEffectDiagnostics(model, validatedConfig, eligiblePaths));
@@ -1047,12 +1232,18 @@ export function preflightGeneralSemPlsV1(
           : "General SEM higher-order point estimation passes the bounded exact-cell compiler preflight."
         : hasInteractions
         ? bootstrapRequested
-          ? requestsModeratedMediation
-            ? "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
-            : "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
-          : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
+          ? hasThreeWayInteraction
+            ? "General SEM three-way full-model percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+            : requestsModeratedMediation
+              ? "General SEM two-way moderated-mediation five-target percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+              : "General SEM simultaneous two-way moderation gamma-only percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          : hasThreeWayInteraction
+            ? "General SEM bounded three-way moderation point estimation passes the exact-cell compiler preflight."
+            : "General SEM simultaneous two-way moderation point estimation passes the bounded exact-cell compiler preflight."
         : bootstrapRequested
-          ? "General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+          ? initialIndirectPathCount === 1
+            ? "General single-mediation percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
+            : "General multiple-mediation percentile case-bootstrap inference passes the bounded exact-cell compiler preflight."
           : "General recursive PLS point estimation and path-specific effects pass the bounded exact-cell compiler preflight.",
       corrections: [],
     }],
@@ -1066,12 +1257,16 @@ export function preflightGeneralSemPlsV1(
         : "The compiler binds the authored HOC to its approach-specific stages, generated identities, component loading-or-weight interpretation, authored paths, and canonical stage receipts."
       : hasInteractions
       ? bootstrapRequested
-        ? requestsModeratedMediation
-          ? "The point moderation cell remains the primary artifact authority and the exact Registry-authorized supplemental cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
-          : "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
-        : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
+        ? hasThreeWayInteraction
+          ? "The bounded three-way point authority and supplemental bootstrap cell jointly bind strong hierarchy, fixed moderator probes, complete-model refits, and one shared usable/failure ledger."
+          : requestsModeratedMediation
+            ? "The point moderation cell remains the primary artifact authority and the exact Registry-authorized supplemental cell adds scientific gamma, fixed -1/0/+1 conditional indirect effects, and the index of moderated mediation from one shared full-model replicate ledger. Runtime validation remains authoritative before publication."
+            : "The point moderation cell remains the primary artifact authority and the supplemental exact cell authorizes percentile, two-sided full-model case-bootstrap inference for scientific rescaled gamma only. A runtime must retain indexed-resampling and complete-model re-estimation receipts before publication."
+        : hasThreeWayInteraction
+          ? "The compiler binds one three-way product, its strong-hierarchy lower-order terms, and the fixed two-dimensional simple-slope probe grid to one joint stage-two solve."
+          : "The compiler binds the source model to one stage-one projection, a joint stage-two solve, explicit product-scale receipts, and fixed -1/0/+1 conditional-slope provenance. Runtime validation remains authoritative before publication."
       : bootstrapRequested
-      ? "The compiler binds percentile, two-sided case resampling to the exact multiple-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication."
+      ? `The compiler binds percentile, two-sided case resampling to the exact ${initialIndirectPathCount === 1 ? "single" : "multiple"}-mediation bootstrap cell and records the indexed-resampling mechanism as a dependency. Runtime inference must carry a matching complete-model re-estimation receipt before publication.`
       : "The compiler binds the proven PLS scoring plan to stable relation-path identities. Runtime validation remains authoritative before a result can be published.",
   });
 }

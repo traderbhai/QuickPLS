@@ -9,6 +9,10 @@ pub const GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1: &str =
     "general_sem_pls_full_model_case_bootstrap_v1";
 pub const GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
     "general_sem_pls_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "general_sem_pls_single_mediation_full_model_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_single_mediation_case_bootstrap_v1";
 pub const GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1: &str =
     "indexed_case_resampling_v1";
 pub const GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1: &str = "type7_quantile_v1";
@@ -25,6 +29,14 @@ pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V
     "qpls.general-sem-pls.multiple-two-way.full-model-case-bootstrap.v1";
 pub const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
     "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1: &str =
+    "qpls.general-sem-pls.three-way.point.v1";
+pub const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    "qpls.general-sem-pls.three-way.full-model-case-bootstrap.v1";
+pub const GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
+    "general_sem_pls_three_way_moderation_case_bootstrap_v1";
+pub const GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1: &str =
+    "qpls.general-sem-pls.three-way.fixed-probes.v1";
 pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
     "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1";
 pub const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1: &str =
@@ -400,6 +412,7 @@ pub enum CanonicalGeneralSemFailedReplicateReasonV1 {
     IsolatedConstruct,
     EstimationNonconvergence,
     NumericalFailure,
+    TargetInventoryMismatch,
 }
 
 /// Exact resampling and identity receipt for inferred General SEM effect rows.
@@ -771,6 +784,117 @@ pub struct CanonicalInteractionEffectResultV1 {
     pub unstandardized_product_sample_standard_deviation: f64,
     pub standardized_product_coefficient: CanonicalGeneralSemEstimateV1,
     pub scientific_rescaled_gamma: CanonicalGeneralSemEstimateV1,
+}
+
+/// Point and optional bootstrap authority for the single bounded ordered
+/// X-by-W-by-Z interaction. Lower-order interactions remain in the existing
+/// two-way collection; this row owns only the scientific three-way delta.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalThreeWayInteractionEffectResultV1 {
+    pub effect_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub interaction_effect_relation_id: String,
+    pub interaction_effect_parameter_id: String,
+    pub operand_ids: [String; 3],
+    pub outcome_id: String,
+    pub generated_product_column_id: String,
+    pub stage_one_model_scientific_sha256: String,
+    pub method_version: String,
+    pub product_scale_version: String,
+    pub hierarchy_policy: CanonicalInteractionHierarchyPolicyV1,
+    pub hierarchy_policy_version: String,
+    pub observation_count: u32,
+    pub unstandardized_product_mean: f64,
+    pub unstandardized_product_sample_standard_deviation: f64,
+    pub standardized_product_coefficient: CanonicalGeneralSemEstimateV1,
+    pub scientific_rescaled_delta: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CanonicalThreeWayModeratorProbeKindV1 {
+    ContinuousStandardized,
+    BinaryZeroOne,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalThreeWayConditionalInteractionEffectResultV1 {
+    pub effect_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub first_moderator_id: String,
+    pub second_moderator_id: String,
+    pub second_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1,
+    pub second_moderator_probe_index: u32,
+    pub second_moderator_value: f64,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalThreeWaySimpleSlopeResultV1 {
+    pub effect_id: String,
+    pub trace: CanonicalGeneralSemResultTraceV1,
+    pub interaction_id: String,
+    pub focal_relation_id: String,
+    pub first_moderator_id: String,
+    pub second_moderator_id: String,
+    pub first_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1,
+    pub first_probe_index: u32,
+    pub first_moderator_value: f64,
+    pub second_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1,
+    pub second_probe_index: u32,
+    pub second_moderator_value: f64,
+    pub value: CanonicalGeneralSemEstimateV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct CanonicalThreeWayModerationBootstrapReceiptV1 {
+    pub capability_cell: CapabilityCellReferenceV2,
+    pub capability_dependencies: Vec<CapabilityCellReferenceV2>,
+    pub method_version: String,
+    pub point_method_version: String,
+    pub resampling_operation_version: String,
+    pub resampling_stream_version: String,
+    pub quantile_method_version: String,
+    pub standard_error_method_version: String,
+    pub summation_method_version: String,
+    pub p_value_method_version: String,
+    pub failure_policy_version: String,
+    pub sign_alignment_method_version: String,
+    pub product_scale_version: String,
+    pub probe_policy_version: String,
+    pub compiled_plan_sha256: String,
+    pub general_sem_config_sha256: String,
+    pub model_scientific_sha256: String,
+    pub stage_one_model_scientific_sha256: String,
+    pub source_dataset_fingerprint: String,
+    pub complete_case_frame_sha256: String,
+    pub usable_replicate_indices_sha256: String,
+    pub target_identity_set_sha256: String,
+    pub target_ids: Vec<String>,
+    pub interval: CanonicalGeneralSemBootstrapIntervalV1,
+    pub tail: CanonicalGeneralSemInferenceTailV1,
+    pub confidence_level: f64,
+    pub resamples_requested: u32,
+    pub resamples_usable: u32,
+    pub minimum_usable_resamples: u32,
+    pub seed: String,
+    pub workers: u32,
+    pub complete_model_reestimated_per_replicate: bool,
+    pub shared_stage_one_reestimated_per_replicate: bool,
+    pub score_vectors_sign_aligned_before_products: bool,
+    pub all_lower_order_and_three_way_products_recomputed_per_replicate: bool,
+    pub joint_stage_two_reestimated_per_replicate: bool,
+    pub complete_joint_point_contract_validated_per_replicate: bool,
+    pub all_three_way_targets_share_one_replicate_ledger: bool,
+    pub failed_replicates: Vec<CanonicalGeneralSemFailedReplicateV1>,
 }
 
 /// Scientific role of an ordinary coefficient in the final simultaneous
@@ -1344,6 +1468,16 @@ pub struct CanonicalGeneralSemResultsV1 {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub interaction_effects: Vec<CanonicalInteractionEffectResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub three_way_interaction_effects: Vec<CanonicalThreeWayInteractionEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub three_way_conditional_interaction_effects:
+        Vec<CanonicalThreeWayConditionalInteractionEffectResultV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub three_way_simple_slopes: Vec<CanonicalThreeWaySimpleSlopeResultV1>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub three_way_moderation_bootstrap_receipt:
+        Option<CanonicalThreeWayModerationBootstrapReceiptV1>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_effect_probes: Vec<CanonicalConditionalEffectProbeResultV1>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub conditional_effects: Vec<CanonicalConditionalEffectResultV1>,
@@ -1793,8 +1927,11 @@ fn validate_general_sem_inference_receipt_v1(
         &receipt.capability_cell,
         &format!("{context}.capability_cell"),
     );
-    let mediation_bootstrap =
-        receipt.capability_cell == general_sem_pls_bootstrap_capability_cell_v1();
+    let single_mediation_bootstrap = receipt.capability_cell
+        == crate::pls_general_single_mediation_bootstrap_capability_cell_v1();
+    let mediation_bootstrap = receipt.capability_cell
+        == general_sem_pls_bootstrap_capability_cell_v1()
+        || single_mediation_bootstrap;
     let moderation_bootstrap = receipt.capability_cell
         == crate::pls_general_multiple_moderation_bootstrap_capability_cell_v1();
     let moderated_mediation_bootstrap = receipt.capability_cell
@@ -1907,6 +2044,8 @@ fn validate_general_sem_inference_receipt_v1(
         GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
     } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+    } else if single_mediation_bootstrap {
+        GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
     };
@@ -1914,6 +2053,8 @@ fn validate_general_sem_inference_receipt_v1(
         GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     } else if moderation_bootstrap {
         GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    } else if single_mediation_bootstrap {
+        GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     } else {
         GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     };
@@ -3242,6 +3383,565 @@ fn validate_hoc_inference_receipt_v1(
     }
 }
 
+fn validate_three_way_moderation_results_v1(
+    errors: &mut Vec<String>,
+    results: &CanonicalGeneralSemResultsV1,
+    provenance: &CanonicalResultProvenanceV2,
+    document_capability_ids: Option<&HashSet<String>>,
+) {
+    let context = "general_sem_results.three_way_moderation";
+    let has_rows = !results.three_way_interaction_effects.is_empty()
+        || !results.three_way_conditional_interaction_effects.is_empty()
+        || !results.three_way_simple_slopes.is_empty();
+    if !has_rows {
+        if results.three_way_moderation_bootstrap_receipt.is_some() {
+            errors.push(format!(
+                "{context} receipt requires typed three-way result rows"
+            ));
+        }
+        return;
+    }
+    if results.three_way_interaction_effects.len() != 1 {
+        errors.push(format!(
+            "{context} requires exactly one bounded three-way interaction row"
+        ));
+    }
+    let point_cell = crate::pls_general_three_way_moderation_point_capability_cell_v1();
+    let authority = results.three_way_interaction_effects.first();
+    let mut target_ids = Vec::new();
+    let mut interaction_id = None;
+    for (index, effect) in results.three_way_interaction_effects.iter().enumerate() {
+        let item = format!("{context}.interaction_effects[{index}]");
+        target_ids.push(effect.effect_id.clone());
+        for (name, id) in [
+            ("effect_id", effect.effect_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("focal_relation_id", effect.focal_relation_id.as_str()),
+            (
+                "interaction_effect_relation_id",
+                effect.interaction_effect_relation_id.as_str(),
+            ),
+            (
+                "interaction_effect_parameter_id",
+                effect.interaction_effect_parameter_id.as_str(),
+            ),
+            ("outcome_id", effect.outcome_id.as_str()),
+            (
+                "generated_product_column_id",
+                effect.generated_product_column_id.as_str(),
+            ),
+        ] {
+            require_stable_id(errors, id, &format!("{item}.{name}"));
+        }
+        for (operand_index, operand_id) in effect.operand_ids.iter().enumerate() {
+            require_stable_id(
+                errors,
+                operand_id,
+                &format!("{item}.operand_ids[{operand_index}]"),
+            );
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            &provenance.model_id,
+            document_capability_ids,
+            &format!("{item}.trace"),
+        );
+        if effect.trace.capability_cell != point_cell {
+            errors.push(format!(
+                "{item}.trace must use the exact three-way point cell"
+            ));
+        }
+        if effect.operand_ids.iter().collect::<BTreeSet<_>>().len() != 3 {
+            errors.push(format!(
+                "{item}.operand_ids must contain ordered distinct X, W, and Z"
+            ));
+        }
+        if effect
+            .operand_ids
+            .iter()
+            .any(|operand| operand == &effect.outcome_id)
+        {
+            errors.push(format!(
+                "{item}.outcome_id must be distinct from ordered X, W, and Z"
+            ));
+        }
+        if effect.effect_id != format!("three_way_delta:{}", effect.interaction_id) {
+            errors.push(format!(
+                "{item}.effect_id must be the canonical three-way delta target"
+            ));
+        }
+        interaction_id = Some(effect.interaction_id.as_str());
+        if effect.method_version != GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+            || effect.product_scale_version != GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+            || effect.hierarchy_policy_version != GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1
+            || effect.hierarchy_policy != CanonicalInteractionHierarchyPolicyV1::Strong
+        {
+            errors.push(format!(
+                "{item} method, product scale, or hierarchy version is not the exact v1 contract"
+            ));
+        }
+        if !is_lowercase_sha256(&effect.stage_one_model_scientific_sha256)
+            || effect.stage_one_model_scientific_sha256 == provenance.model_digest
+        {
+            errors.push(format!("{item}.stage_one_model_scientific_sha256 must identify the projected stage-one model"));
+        }
+        if effect.observation_count < 3
+            || !effect.unstandardized_product_mean.is_finite()
+            || !effect
+                .unstandardized_product_sample_standard_deviation
+                .is_finite()
+            || effect.unstandardized_product_sample_standard_deviation <= f64::EPSILON
+        {
+            errors.push(format!("{item} product-scale receipt is invalid"));
+        }
+        validate_general_sem_estimate(
+            errors,
+            &effect.standardized_product_coefficient,
+            &format!("{item}.standardized_product_coefficient"),
+        );
+        validate_general_sem_estimate(
+            errors,
+            &effect.scientific_rescaled_delta,
+            &format!("{item}.scientific_rescaled_delta"),
+        );
+        if general_sem_estimate_has_inference(&effect.standardized_product_coefficient) {
+            errors.push(format!(
+                "{item}.standardized_product_coefficient must remain point-only"
+            ));
+        }
+        if !approximately_equal(
+            effect.standardized_product_coefficient.estimate
+                / effect.unstandardized_product_sample_standard_deviation,
+            effect.scientific_rescaled_delta.estimate,
+        ) {
+            errors.push(format!(
+                "{item}.scientific_rescaled_delta has inconsistent scaling"
+            ));
+        }
+    }
+    let mut second_probe_rows = BTreeMap::new();
+    for (index, effect) in results
+        .three_way_conditional_interaction_effects
+        .iter()
+        .enumerate()
+    {
+        let item = format!("{context}.conditional_interaction_effects[{index}]");
+        target_ids.push(effect.effect_id.clone());
+        for (name, id) in [
+            ("effect_id", effect.effect_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("focal_relation_id", effect.focal_relation_id.as_str()),
+            ("first_moderator_id", effect.first_moderator_id.as_str()),
+            ("second_moderator_id", effect.second_moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            &provenance.model_id,
+            document_capability_ids,
+            &format!("{item}.trace"),
+        );
+        if effect.trace.capability_cell != point_cell
+            || interaction_id.is_some_and(|id| effect.interaction_id != id)
+            || authority.is_some_and(|row| {
+                effect.focal_relation_id != row.focal_relation_id
+                    || effect.first_moderator_id != row.operand_ids[1]
+                    || effect.second_moderator_id != row.operand_ids[2]
+            })
+            || effect.effect_id
+                != format!(
+                    "three_way_conditional_xw:{}:z{}",
+                    effect.interaction_id, effect.second_moderator_probe_index
+                )
+            || !probe_value_matches_kind(
+                effect.second_moderator_probe_kind,
+                effect.second_moderator_probe_index,
+                effect.second_moderator_value,
+            )
+            || second_probe_rows
+                .insert(
+                    effect.second_moderator_probe_index,
+                    (
+                        effect.second_moderator_probe_kind,
+                        effect.second_moderator_value,
+                    ),
+                )
+                .is_some()
+        {
+            errors.push(format!(
+                "{item} authority, identity, or fixed probe is invalid"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item}.value"));
+    }
+    validate_complete_probe_axis(
+        errors,
+        &second_probe_rows,
+        &format!("{context}.conditional_interaction_effects"),
+    );
+    let mut slope_grid = BTreeMap::new();
+    for (index, effect) in results.three_way_simple_slopes.iter().enumerate() {
+        let item = format!("{context}.simple_slopes[{index}]");
+        target_ids.push(effect.effect_id.clone());
+        for (name, id) in [
+            ("effect_id", effect.effect_id.as_str()),
+            ("interaction_id", effect.interaction_id.as_str()),
+            ("focal_relation_id", effect.focal_relation_id.as_str()),
+            ("first_moderator_id", effect.first_moderator_id.as_str()),
+            ("second_moderator_id", effect.second_moderator_id.as_str()),
+        ] {
+            require_stable_id(errors, id, &format!("{item}.{name}"));
+        }
+        validate_general_sem_trace(
+            errors,
+            &effect.trace,
+            &provenance.model_id,
+            document_capability_ids,
+            &format!("{item}.trace"),
+        );
+        if effect.trace.capability_cell != point_cell
+            || interaction_id.is_some_and(|id| effect.interaction_id != id)
+            || authority.is_some_and(|row| {
+                effect.focal_relation_id != row.focal_relation_id
+                    || effect.first_moderator_id != row.operand_ids[1]
+                    || effect.second_moderator_id != row.operand_ids[2]
+            })
+            || effect.effect_id
+                != format!(
+                    "three_way_simple_x:{}:w{}:z{}",
+                    effect.interaction_id, effect.first_probe_index, effect.second_probe_index
+                )
+            || !probe_value_matches_kind(
+                effect.first_moderator_probe_kind,
+                effect.first_probe_index,
+                effect.first_moderator_value,
+            )
+            || !probe_value_matches_kind(
+                effect.second_moderator_probe_kind,
+                effect.second_probe_index,
+                effect.second_moderator_value,
+            )
+            || slope_grid
+                .insert(
+                    (effect.first_probe_index, effect.second_probe_index),
+                    (
+                        effect.first_moderator_probe_kind,
+                        effect.first_moderator_value,
+                        effect.second_moderator_probe_kind,
+                        effect.second_moderator_value,
+                    ),
+                )
+                .is_some()
+        {
+            errors.push(format!(
+                "{item} authority, identity, or fixed probe is invalid"
+            ));
+        }
+        validate_general_sem_estimate(errors, &effect.value, &format!("{item}.value"));
+    }
+    let first_probe_rows = slope_grid
+        .iter()
+        .map(|((first, _), (_, value, _, _))| (*first, *value))
+        .collect::<BTreeMap<_, _>>();
+    let first_probe_kind = slope_grid.values().next().map(|(kind, _, _, _)| *kind);
+    let second_slope_probe_rows = slope_grid
+        .iter()
+        .map(|((_, second), (_, _, _, value))| (*second, *value))
+        .collect::<BTreeMap<_, _>>();
+    let second_slope_probe_kind = slope_grid.values().next().map(|(_, _, kind, _)| *kind);
+    if !probe_axis_is_complete(&first_probe_rows, first_probe_kind)
+        || !probe_axis_is_complete(&second_slope_probe_rows, second_slope_probe_kind)
+        || slope_grid.len() != first_probe_rows.len() * second_slope_probe_rows.len()
+        || slope_grid.values().any(|(first_kind, _, second_kind, _)| {
+            Some(*first_kind) != first_probe_kind || Some(*second_kind) != second_slope_probe_kind
+        })
+    {
+        errors.push(format!(
+            "{context}.simple_slopes must contain one complete fixed W-by-Z probe grid"
+        ));
+    }
+    target_ids.sort();
+    let inferred = results
+        .three_way_interaction_effects
+        .iter()
+        .any(|row| general_sem_estimate_has_inference(&row.scientific_rescaled_delta))
+        || results
+            .three_way_conditional_interaction_effects
+            .iter()
+            .any(|row| general_sem_estimate_has_inference(&row.value))
+        || results
+            .three_way_simple_slopes
+            .iter()
+            .any(|row| general_sem_estimate_has_inference(&row.value));
+    let Some(receipt) = &results.three_way_moderation_bootstrap_receipt else {
+        if inferred {
+            errors.push(format!(
+                "{context} inference fields require the shared bootstrap receipt"
+            ));
+        }
+        return;
+    };
+    if receipt.capability_cell
+        != crate::pls_general_three_way_moderation_bootstrap_capability_cell_v1()
+        || receipt.method_version
+            != GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
+        || receipt.point_method_version
+            != GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+        || receipt.resampling_operation_version
+            != GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+        || receipt.resampling_stream_version
+            != GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1
+        || receipt.quantile_method_version != GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1
+        || receipt.standard_error_method_version
+            != GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1
+        || receipt.summation_method_version != GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1
+        || receipt.p_value_method_version
+            != GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1
+        || receipt.failure_policy_version != GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1
+        || receipt.sign_alignment_method_version != "sampled_original_construct_score_covariance_v1"
+        || receipt.product_scale_version != GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1
+        || receipt.probe_policy_version != GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1
+        || receipt.target_ids != target_ids
+        || receipt.target_identity_set_sha256 != crate::sha256_serialized(&target_ids)
+        || !receipt.complete_model_reestimated_per_replicate
+        || !receipt.shared_stage_one_reestimated_per_replicate
+        || !receipt.score_vectors_sign_aligned_before_products
+        || !receipt.all_lower_order_and_three_way_products_recomputed_per_replicate
+        || !receipt.joint_stage_two_reestimated_per_replicate
+        || !receipt.complete_joint_point_contract_validated_per_replicate
+        || !receipt.all_three_way_targets_share_one_replicate_ledger
+    {
+        errors.push(format!(
+            "{context} shared bootstrap receipt differs from the exact v1 contract"
+        ));
+    }
+    validate_capability_reference(
+        errors,
+        &receipt.capability_cell,
+        &format!("{context}.receipt.capability_cell"),
+    );
+    let receipt_identity = capability_cell_reference_identity_v2(&receipt.capability_cell);
+    if document_capability_ids.is_none_or(|ids| !ids.contains(&receipt_identity)) {
+        errors.push(format!(
+            "{context}.receipt.capability_cell must be declared by document capability_cells"
+        ));
+    }
+    let dependency_ids = validate_capability_set(
+        errors,
+        &receipt.capability_dependencies,
+        &format!("{context}.receipt.capability_dependencies"),
+    );
+    let mut expected_dependencies = vec![
+        crate::RecipeV4CompilerTarget::PlsPlanV2.capability_cell(),
+        point_cell,
+    ];
+    expected_dependencies.sort_by_key(capability_cell_reference_identity_v2);
+    if dependency_ids
+        != expected_dependencies
+            .iter()
+            .map(capability_cell_reference_identity_v2)
+            .collect::<Vec<_>>()
+    {
+        errors.push(format!(
+            "{context}.receipt capability dependencies must be base PLS plus three-way point"
+        ));
+    }
+    if let Some(document_ids) = document_capability_ids {
+        for dependency_id in &dependency_ids {
+            if !document_ids.contains(dependency_id) {
+                errors.push(format!(
+                    "{context}.receipt dependency {dependency_id} is undeclared"
+                ));
+            }
+        }
+    }
+    if receipt.resamples_usable as usize + receipt.failed_replicates.len()
+        != receipt.resamples_requested as usize
+        || receipt.resamples_usable < receipt.minimum_usable_resamples
+        || receipt.minimum_usable_resamples
+            != ((f64::from(receipt.resamples_requested) * 0.9).ceil() as u32).max(2)
+        || !(2..=10_000).contains(&receipt.resamples_requested)
+        || !(1..=64).contains(&receipt.workers)
+        || receipt.interval != CanonicalGeneralSemBootstrapIntervalV1::PercentileType7
+        || receipt.tail != CanonicalGeneralSemInferenceTailV1::TwoSided
+        || !receipt.confidence_level.is_finite()
+        || !(0.0..1.0).contains(&receipt.confidence_level)
+    {
+        errors.push(format!(
+            "{context}.receipt failure ledger contradicts its counts"
+        ));
+    }
+    for (name, digest) in [
+        (
+            "compiled_plan_sha256",
+            receipt.compiled_plan_sha256.as_str(),
+        ),
+        (
+            "general_sem_config_sha256",
+            receipt.general_sem_config_sha256.as_str(),
+        ),
+        (
+            "model_scientific_sha256",
+            receipt.model_scientific_sha256.as_str(),
+        ),
+        (
+            "stage_one_model_scientific_sha256",
+            receipt.stage_one_model_scientific_sha256.as_str(),
+        ),
+        (
+            "complete_case_frame_sha256",
+            receipt.complete_case_frame_sha256.as_str(),
+        ),
+        (
+            "usable_replicate_indices_sha256",
+            receipt.usable_replicate_indices_sha256.as_str(),
+        ),
+        (
+            "target_identity_set_sha256",
+            receipt.target_identity_set_sha256.as_str(),
+        ),
+    ] {
+        if !is_lowercase_sha256(digest) {
+            errors.push(format!(
+                "{context}.receipt.{name} must be a lowercase SHA-256"
+            ));
+        }
+    }
+    if receipt.model_scientific_sha256 != provenance.model_digest
+        || receipt.source_dataset_fingerprint != provenance.dataset_fingerprint
+        || receipt.seed.parse::<i64>().ok() != provenance.seed
+        || i64::from(receipt.workers) != provenance.workers
+    {
+        errors.push(format!(
+            "{context}.receipt model, dataset, seed, or workers differ from provenance"
+        ));
+    }
+    let mut previous_failure = None;
+    let mut failed_indices = BTreeSet::new();
+    for failure in &receipt.failed_replicates {
+        if failure.replicate_index >= receipt.resamples_requested
+            || previous_failure.is_some_and(|previous| previous >= failure.replicate_index)
+            || failure.message.trim().is_empty()
+        {
+            errors.push(format!(
+                "{context}.receipt.failed_replicates is not canonical"
+            ));
+        }
+        previous_failure = Some(failure.replicate_index);
+        failed_indices.insert(failure.replicate_index);
+    }
+    let usable_indices = (0..receipt.resamples_requested)
+        .filter(|index| !failed_indices.contains(index))
+        .collect::<Vec<_>>();
+    if crate::sha256_serialized(&usable_indices) != receipt.usable_replicate_indices_sha256 {
+        errors.push(format!(
+            "{context}.receipt usable-replicate digest contradicts its failure ledger"
+        ));
+    }
+    let all_complete = results
+        .three_way_interaction_effects
+        .iter()
+        .all(|row| general_sem_estimate_has_complete_inference(&row.scientific_rescaled_delta))
+        && results
+            .three_way_conditional_interaction_effects
+            .iter()
+            .all(|row| general_sem_estimate_has_complete_inference(&row.value))
+        && results
+            .three_way_simple_slopes
+            .iter()
+            .all(|row| general_sem_estimate_has_complete_inference(&row.value));
+    if !inferred || !all_complete {
+        errors.push(format!(
+            "{context} bootstrap receipt requires complete inferred target rows"
+        ));
+    }
+    for (target_id, value) in results
+        .three_way_interaction_effects
+        .iter()
+        .map(|row| (row.effect_id.as_str(), &row.scientific_rescaled_delta))
+        .chain(
+            results
+                .three_way_conditional_interaction_effects
+                .iter()
+                .map(|row| (row.effect_id.as_str(), &row.value)),
+        )
+        .chain(
+            results
+                .three_way_simple_slopes
+                .iter()
+                .map(|row| (row.effect_id.as_str(), &row.value)),
+        )
+    {
+        if value.bootstrap_usable_replicates != Some(receipt.resamples_usable) {
+            errors.push(format!(
+                "{context} target {target_id} usable count differs from the shared receipt"
+            ));
+        }
+        if let (Some(exceedances), Some(p_value)) =
+            (value.bootstrap_two_sided_exceedances, value.p_value)
+        {
+            let expected = f64::from(exceedances + 1) / f64::from(receipt.resamples_usable + 1);
+            if exceedances > receipt.resamples_usable || !approximately_equal(p_value, expected) {
+                errors.push(format!("{context} target {target_id} contradicts the shared plus-one probability ledger"));
+            }
+        }
+    }
+}
+
+fn probe_value_matches_kind(
+    kind: CanonicalThreeWayModeratorProbeKindV1,
+    index: u32,
+    value: f64,
+) -> bool {
+    let expected: Option<f64> = match kind {
+        CanonicalThreeWayModeratorProbeKindV1::ContinuousStandardized => {
+            [-1.0, 0.0, 1.0].get(index as usize).copied()
+        }
+        CanonicalThreeWayModeratorProbeKindV1::BinaryZeroOne => {
+            [0.0, 1.0].get(index as usize).copied()
+        }
+    };
+    expected.is_some_and(|expected| value.to_bits() == expected.to_bits())
+}
+
+fn validate_complete_probe_axis(
+    errors: &mut Vec<String>,
+    rows: &BTreeMap<u32, (CanonicalThreeWayModeratorProbeKindV1, f64)>,
+    context: &str,
+) {
+    let kind = rows.values().next().map(|(kind, _)| *kind);
+    let values = rows
+        .iter()
+        .map(|(index, (_, value))| (*index, *value))
+        .collect::<BTreeMap<_, _>>();
+    if rows.values().any(|(candidate, _)| Some(*candidate) != kind)
+        || !probe_axis_is_complete(&values, kind)
+    {
+        errors.push(format!(
+            "{context} must contain one complete fixed probe axis"
+        ));
+    }
+}
+
+fn probe_axis_is_complete(
+    rows: &BTreeMap<u32, f64>,
+    kind: Option<CanonicalThreeWayModeratorProbeKindV1>,
+) -> bool {
+    let expected: &[f64] = match kind {
+        Some(CanonicalThreeWayModeratorProbeKindV1::ContinuousStandardized) => &[-1.0, 0.0, 1.0],
+        Some(CanonicalThreeWayModeratorProbeKindV1::BinaryZeroOne) => &[0.0, 1.0],
+        None => return false,
+    };
+    rows.len() == expected.len()
+        && expected.iter().enumerate().all(|(index, expected)| {
+            rows.get(&(index as u32))
+                .is_some_and(|value| value.to_bits() == expected.to_bits())
+        })
+}
+
 fn validate_general_sem_results_v1(
     errors: &mut Vec<String>,
     results: &CanonicalGeneralSemResultsV1,
@@ -3256,11 +3956,16 @@ fn validate_general_sem_results_v1(
         ));
     }
     validate_general_sem_inference_receipt_v1(errors, results, provenance, document_capability_ids);
+    validate_three_way_moderation_results_v1(errors, results, provenance, document_capability_ids);
     validate_hoc_inference_receipt_v1(errors, results, provenance, document_capability_ids);
     if results.specific_indirect_effects.is_empty()
         && results.aggregate_effects.is_empty()
         && results.joint_stage_structural_coefficients.is_empty()
         && results.interaction_effects.is_empty()
+        && results.three_way_interaction_effects.is_empty()
+        && results.three_way_conditional_interaction_effects.is_empty()
+        && results.three_way_simple_slopes.is_empty()
+        && results.three_way_moderation_bootstrap_receipt.is_none()
         && results.conditional_effect_probes.is_empty()
         && results.conditional_effects.is_empty()
         && results.conditional_indirect_effects.is_empty()
@@ -3293,6 +3998,30 @@ fn validate_general_sem_results_v1(
             .iter()
             .map(|item| item.effect_id.as_str()),
         &format!("{context}.interaction_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .three_way_interaction_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.three_way_interaction_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .three_way_conditional_interaction_effects
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.three_way_conditional_interaction_effects"),
+    );
+    require_canonical_stable_ids(
+        errors,
+        results
+            .three_way_simple_slopes
+            .iter()
+            .map(|item| item.effect_id.as_str()),
+        &format!("{context}.three_way_simple_slopes"),
     );
     require_canonical_stable_ids(
         errors,
@@ -3557,7 +4286,22 @@ fn validate_general_sem_results_v1(
         ));
     }
 
-    let moderation_cell = crate::pls_general_multiple_moderation_point_capability_cell_v1();
+    let three_way_joint_stage = !results.three_way_interaction_effects.is_empty();
+    let moderation_cell = if three_way_joint_stage {
+        crate::pls_general_three_way_moderation_point_capability_cell_v1()
+    } else {
+        crate::pls_general_multiple_moderation_point_capability_cell_v1()
+    };
+    let joint_stage_method_version = if three_way_joint_stage {
+        GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+    } else {
+        GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+    };
+    let pairwise_conditioning_policy_version = if three_way_joint_stage {
+        GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1
+    } else {
+        GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1
+    };
     let mut joint_stage_parameter_ids = BTreeSet::new();
     let mut joint_stage_relation_ids = BTreeSet::new();
     for (index, coefficient) in results
@@ -3584,7 +4328,7 @@ fn validate_general_sem_results_v1(
         );
         if coefficient.trace.capability_cell != moderation_cell {
             errors.push(format!(
-                "{item_context}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
+                "{item_context}.trace.capability_cell must equal the exact joint-stage moderation point option cell"
             ));
         }
         if coefficient.source_id == coefficient.target_id {
@@ -3598,9 +4342,9 @@ fn validate_general_sem_results_v1(
         if !joint_stage_parameter_ids.insert(coefficient.parameter_id.as_str()) {
             errors.push(format!("{item_context}.parameter_id is duplicated"));
         }
-        if coefficient.method_version != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 {
+        if coefficient.method_version != joint_stage_method_version {
             errors.push(format!(
-                "{item_context}.method_version must equal {GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}"
+                "{item_context}.method_version must equal {joint_stage_method_version}"
             ));
         }
         validate_general_sem_estimate(
@@ -3680,11 +4424,9 @@ fn validate_general_sem_results_v1(
             document_capability_ids,
             &format!("{item_context}.trace"),
         );
-        if effect.trace.capability_cell
-            != crate::pls_general_multiple_moderation_point_capability_cell_v1()
-        {
+        if effect.trace.capability_cell != moderation_cell {
             errors.push(format!(
-                "{item_context}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell"
+                "{item_context}.trace.capability_cell must equal the exact joint-stage moderation point option cell"
             ));
         }
         if effect.effect_id != effect.interaction_effect_relation_id {
@@ -3728,9 +4470,9 @@ fn validate_general_sem_results_v1(
                 "{item_context}.observation_count must be at least three"
             ));
         }
-        if effect.method_version != GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1 {
+        if effect.method_version != joint_stage_method_version {
             errors.push(format!(
-                "{item_context}.method_version must equal {GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}"
+                "{item_context}.method_version must equal {joint_stage_method_version}"
             ));
         }
         if effect.product_scale_version != GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 {
@@ -3743,9 +4485,9 @@ fn validate_general_sem_results_v1(
                 "{item_context}.hierarchy_policy_version must equal {GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1}"
             ));
         }
-        if effect.conditioning_policy_version != GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1 {
+        if effect.conditioning_policy_version != pairwise_conditioning_policy_version {
             errors.push(format!(
-                "{item_context}.conditioning_policy_version must equal {GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1}"
+                "{item_context}.conditioning_policy_version must equal {pairwise_conditioning_policy_version}"
             ));
         }
         if !effect.unstandardized_product_mean.is_finite() {
@@ -4152,6 +4894,12 @@ fn validate_general_sem_results_v1(
     }
 
     for effect in &results.interaction_effects {
+        if three_way_joint_stage {
+            // Pairwise strong-hierarchy coefficients are point rows under the
+            // three-way authority. Their conditional interpretation is owned
+            // by the typed two-dimensional three-way probe grid below.
+            continue;
+        }
         let indices = interaction_conditional_indices
             .get(&effect.effect_id)
             .cloned()
@@ -5455,6 +6203,10 @@ mod tests {
             ],
             joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
+            three_way_interaction_effects: Vec::new(),
+            three_way_conditional_interaction_effects: Vec::new(),
+            three_way_simple_slopes: Vec::new(),
+            three_way_moderation_bootstrap_receipt: None,
             conditional_effect_probes: vec![
                 CanonicalConditionalEffectProbeResultV1 {
                     probe_id: "probe_data".to_string(),
@@ -6994,6 +7746,10 @@ mod tests {
             aggregate_effects: Vec::new(),
             joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
+            three_way_interaction_effects: Vec::new(),
+            three_way_conditional_interaction_effects: Vec::new(),
+            three_way_simple_slopes: Vec::new(),
+            three_way_moderation_bootstrap_receipt: None,
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
             conditional_indirect_effects: Vec::new(),
@@ -7309,6 +8065,10 @@ mod tests {
             aggregate_effects: Vec::new(),
             joint_stage_structural_coefficients: Vec::new(),
             interaction_effects: Vec::new(),
+            three_way_interaction_effects: Vec::new(),
+            three_way_conditional_interaction_effects: Vec::new(),
+            three_way_simple_slopes: Vec::new(),
+            three_way_moderation_bootstrap_receipt: None,
             conditional_effect_probes: Vec::new(),
             conditional_effects: Vec::new(),
             conditional_indirect_effects: Vec::new(),

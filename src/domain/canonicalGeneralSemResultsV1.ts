@@ -11,7 +11,9 @@ import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
 
 export const CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION = 1 as const;
 export const GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1 = "general_sem_pls_full_model_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1 = "general_sem_pls_single_mediation_full_model_case_bootstrap_v1" as const;
 export const GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_single_mediation_case_bootstrap_v1" as const;
 export const GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1 = "indexed_case_resampling_v1" as const;
 export const GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1 = "type7_quantile_v1" as const;
 export const GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1 = "sample_standard_error_b_minus_1_v1" as const;
@@ -23,6 +25,10 @@ export const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSIO
 export const GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_multiple_two_way_moderation_case_bootstrap_v1" as const;
 export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1 = "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1" as const;
 export const GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_two_way_moderated_mediation_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1 = "qpls.general-sem-pls.three-way.point.v1" as const;
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1 = "qpls.general-sem-pls.three-way.full-model-case-bootstrap.v1" as const;
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1 = "general_sem_pls_three_way_moderation_case_bootstrap_v1" as const;
+export const GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1 = "qpls.general-sem-pls.three-way.fixed-probes.v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1 = "sampled_original_construct_score_covariance_v1" as const;
 export const GENERAL_SEM_PLS_MULTIPLE_MODERATION_GAMMA_TARGET_VERSION_V1 = "compiled_interaction_scientific_rescaled_gamma_v1" as const;
 export const GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1 = "qpls.general-sem-pls.two-stage-product.sample-standardized.v1" as const;
@@ -69,6 +75,7 @@ export type CanonicalGeneralSemFailedReplicateReasonV1 =
   | "joint_stage_rank_deficient"
   | "isolated_construct"
   | "estimation_nonconvergence"
+  | "target_inventory_mismatch"
   | "numerical_failure";
 
 export interface CanonicalGeneralSemFailedReplicateV1 {
@@ -83,10 +90,12 @@ export interface CanonicalGeneralSemInferenceReceiptV1 {
   capability_dependencies?: CapabilityCellReferenceV2[];
   method_version:
     | typeof GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1
+    | typeof GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
     | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
     | typeof GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1;
   resampling_operation_version:
     | typeof GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+    | typeof GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
     | typeof GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
   resampling_stream_version: typeof GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1;
@@ -251,6 +260,103 @@ export interface CanonicalInteractionEffectResultV1 {
   scientific_rescaled_gamma: CanonicalGeneralSemEstimateV1;
 }
 
+export interface CanonicalThreeWayInteractionEffectResultV1 {
+  effect_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  interaction_id: string;
+  focal_relation_id: string;
+  interaction_effect_relation_id: string;
+  interaction_effect_parameter_id: string;
+  operand_ids: [string, string, string];
+  outcome_id: string;
+  generated_product_column_id: string;
+  stage_one_model_scientific_sha256: string;
+  method_version: typeof GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1;
+  product_scale_version: string;
+  hierarchy_policy: CanonicalInteractionHierarchyPolicyV1;
+  hierarchy_policy_version: string;
+  observation_count: number;
+  unstandardized_product_mean: number;
+  unstandardized_product_sample_standard_deviation: number;
+  standardized_product_coefficient: CanonicalGeneralSemEstimateV1;
+  scientific_rescaled_delta: CanonicalGeneralSemEstimateV1;
+}
+
+export type CanonicalThreeWayModeratorProbeKindV1 =
+  | "continuous_standardized"
+  | "binary_zero_one";
+
+export interface CanonicalThreeWayConditionalInteractionEffectResultV1 {
+  effect_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  interaction_id: string;
+  focal_relation_id: string;
+  first_moderator_id: string;
+  second_moderator_id: string;
+  second_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1;
+  second_moderator_probe_index: number;
+  second_moderator_value: number;
+  value: CanonicalGeneralSemEstimateV1;
+}
+
+export interface CanonicalThreeWaySimpleSlopeResultV1 {
+  effect_id: string;
+  trace: CanonicalGeneralSemResultTraceV1;
+  interaction_id: string;
+  focal_relation_id: string;
+  first_moderator_id: string;
+  second_moderator_id: string;
+  first_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1;
+  second_moderator_probe_kind: CanonicalThreeWayModeratorProbeKindV1;
+  first_probe_index: number;
+  first_moderator_value: number;
+  second_probe_index: number;
+  second_moderator_value: number;
+  value: CanonicalGeneralSemEstimateV1;
+}
+
+export interface CanonicalThreeWayModerationBootstrapReceiptV1 {
+  capability_cell: CapabilityCellReferenceV2;
+  capability_dependencies: CapabilityCellReferenceV2[];
+  method_version: typeof GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1;
+  point_method_version: typeof GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1;
+  resampling_operation_version: typeof GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
+  resampling_stream_version: typeof GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1;
+  quantile_method_version: typeof GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1;
+  standard_error_method_version: typeof GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1;
+  summation_method_version: typeof GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1;
+  p_value_method_version: typeof GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1;
+  failure_policy_version: typeof GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1;
+  sign_alignment_method_version: typeof GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1;
+  product_scale_version: typeof GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1;
+  probe_policy_version: typeof GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1;
+  compiled_plan_sha256: string;
+  general_sem_config_sha256: string;
+  model_scientific_sha256: string;
+  stage_one_model_scientific_sha256: string;
+  source_dataset_fingerprint: string;
+  complete_case_frame_sha256: string;
+  usable_replicate_indices_sha256: string;
+  target_identity_set_sha256: string;
+  target_ids: string[];
+  interval: CanonicalGeneralSemBootstrapIntervalV1;
+  tail: CanonicalGeneralSemInferenceTailV1;
+  confidence_level: number;
+  resamples_requested: number;
+  resamples_usable: number;
+  minimum_usable_resamples: number;
+  seed: string;
+  workers: number;
+  complete_model_reestimated_per_replicate: boolean;
+  shared_stage_one_reestimated_per_replicate: true;
+  score_vectors_sign_aligned_before_products: true;
+  all_lower_order_and_three_way_products_recomputed_per_replicate: true;
+  joint_stage_two_reestimated_per_replicate: true;
+  complete_joint_point_contract_validated_per_replicate: true;
+  all_three_way_targets_share_one_replicate_ledger: true;
+  failed_replicates: CanonicalGeneralSemFailedReplicateV1[];
+}
+
 export type CanonicalStructuralRelationRoleV1 = "structural" | "control";
 export type CanonicalStructuralEstimateStageV1 = "joint_stage_two";
 
@@ -263,7 +369,9 @@ export interface CanonicalJointStageStructuralCoefficientResultV1 {
   role: CanonicalStructuralRelationRoleV1;
   estimate: CanonicalGeneralSemEstimateV1;
   stage: CanonicalStructuralEstimateStageV1;
-  method_version: typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
+  method_version:
+    | typeof GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1
+    | typeof GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1;
 }
 
 export interface CanonicalConditionalEffectResultV1 {
@@ -643,6 +751,10 @@ export interface CanonicalGeneralSemResultsV1 {
   aggregate_effects?: CanonicalAggregateEffectResultV1[];
   joint_stage_structural_coefficients?: CanonicalJointStageStructuralCoefficientResultV1[];
   interaction_effects?: CanonicalInteractionEffectResultV1[];
+  three_way_interaction_effects?: CanonicalThreeWayInteractionEffectResultV1[];
+  three_way_conditional_interaction_effects?: CanonicalThreeWayConditionalInteractionEffectResultV1[];
+  three_way_simple_slopes?: CanonicalThreeWaySimpleSlopeResultV1[];
+  three_way_moderation_bootstrap_receipt?: CanonicalThreeWayModerationBootstrapReceiptV1 | null;
   conditional_effect_probes?: CanonicalConditionalEffectProbeResultV1[];
   conditional_effects?: CanonicalConditionalEffectResultV1[];
   conditional_indirect_effects?: CanonicalConditionalIndirectEffectResultV1[];
@@ -706,6 +818,12 @@ const GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = 
   cell_id: "qpls3.pls.general_sem_multiple_mediation_bootstrap",
   capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
 };
+export const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.general_sem_single_mediation_bootstrap",
+  capability_version: "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+};
 const GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
   registry_schema_version: 2,
   capability_id: "smartpls.moderation",
@@ -717,6 +835,18 @@ const GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1: Capabili
   capability_id: "smartpls.moderation",
   cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
   capability_version: "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1",
+};
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_point",
+  capability_version: "general_sem_pls_three_way_moderation_point_v1",
+};
+export const GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
+  registry_schema_version: 2,
+  capability_id: "smartpls.moderation",
+  cell_id: "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+  capability_version: "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
 };
 const CBSEM_GENERAL_SEM_ML_CAPABILITY_CELL_V1: CapabilityCellReferenceV2 = {
   registry_schema_version: 2,
@@ -1236,6 +1366,381 @@ function wireGeneralSemDecimalSafeSeed(value: unknown, path: string): string {
   return value;
 }
 
+function validateThreeWayModerationResultsV1(
+  interactionValues: readonly unknown[],
+  conditionalValues: readonly unknown[],
+  slopeValues: readonly unknown[],
+  receiptValue: unknown,
+  context: GeneralSemWireContext,
+): void {
+  const pointCellIdentity = capabilityCellIdentity(
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
+  );
+  const interactions = interactionValues.map((item, index) => {
+    const path = `general_sem_results.three_way_interaction_effects[${index}]`;
+    const effect = exactWireRecord(item, [
+      "effect_id", "trace", "interaction_id", "focal_relation_id",
+      "interaction_effect_relation_id", "interaction_effect_parameter_id", "operand_ids",
+      "outcome_id", "generated_product_column_id", "stage_one_model_scientific_sha256",
+      "method_version", "product_scale_version", "hierarchy_policy", "hierarchy_policy_version",
+      "observation_count", "unstandardized_product_mean",
+      "unstandardized_product_sample_standard_deviation", "standardized_product_coefficient",
+      "scientific_rescaled_delta",
+    ], [], path);
+    const effectId = wireStableId(effect.effect_id, `${path}.effect_id`);
+    const trace = validateGeneralSemTrace(effect.trace, `${path}.trace`, context);
+    if (capabilityCellIdentity(trace) !== pointCellIdentity) {
+      wireFail("document.invalid", `${path}.trace.capability_cell`, `${path} must use the exact three-way point cell.`);
+    }
+    const interactionId = wireStableId(effect.interaction_id, `${path}.interaction_id`);
+    if (effectId !== `three_way_delta:${interactionId}`) {
+      wireFail("document.invalid", `${path}.effect_id`, `${path}.effect_id must be the canonical three-way delta target.`);
+    }
+    const focalRelationId = wireStableId(effect.focal_relation_id, `${path}.focal_relation_id`);
+    for (const field of ["interaction_effect_relation_id", "interaction_effect_parameter_id", "outcome_id", "generated_product_column_id"] as const) {
+      wireStableId(effect[field], `${path}.${field}`);
+    }
+    const operands = validateStableIdArray(effect.operand_ids, `${path}.operand_ids`, { minimum: 3 });
+    if (operands.length !== 3 || new Set(operands).size !== 3) {
+      wireFail("document.invalid", `${path}.operand_ids`, `${path}.operand_ids must contain exactly three unique IDs in authored order.`);
+    }
+    if (operands.includes(effect.outcome_id as string)) {
+      wireFail("document.invalid", `${path}.outcome_id`, `${path}.outcome_id must be distinct from all interaction operands.`);
+    }
+    wireGeneralSemSha256(effect.stage_one_model_scientific_sha256, `${path}.stage_one_model_scientific_sha256`);
+    if (effect.method_version !== GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1) {
+      wireFail("document.invalid", `${path}.method_version`, `${path}.method_version does not identify the bounded three-way point estimator.`);
+    }
+    if (effect.product_scale_version !== GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1) {
+      wireFail("document.invalid", `${path}.product_scale_version`, `${path}.product_scale_version is not the qualified two-stage product scale.`);
+    }
+    if (effect.hierarchy_policy !== "strong"
+      || effect.hierarchy_policy_version !== GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1) {
+      wireFail("document.invalid", `${path}.hierarchy_policy`, `${path} requires the exact strong-hierarchy policy.`);
+    }
+    if (wireU32(effect.observation_count, `${path}.observation_count`) < 2) {
+      wireFail("document.invalid", `${path}.observation_count`, `${path}.observation_count must be at least two.`);
+    }
+    wireFinite(effect.unstandardized_product_mean, `${path}.unstandardized_product_mean`);
+    if (wireFinite(effect.unstandardized_product_sample_standard_deviation, `${path}.unstandardized_product_sample_standard_deviation`) <= 0) {
+      wireFail("document.invalid", `${path}.unstandardized_product_sample_standard_deviation`, `${path} requires a positive product standard deviation.`);
+    }
+    validateGeneralSemEstimate(effect.standardized_product_coefficient, `${path}.standardized_product_coefficient`);
+    validateGeneralSemEstimate(effect.scientific_rescaled_delta, `${path}.scientific_rescaled_delta`);
+    const standardized = strictWireRecord(effect.standardized_product_coefficient, `${path}.standardized_product_coefficient`);
+    const delta = strictWireRecord(effect.scientific_rescaled_delta, `${path}.scientific_rescaled_delta`);
+    if (!approximatelyEqualGeneralSem(
+      wireFinite(standardized.estimate, `${path}.standardized_product_coefficient.estimate`)
+        / (effect.unstandardized_product_sample_standard_deviation as number),
+      wireFinite(delta.estimate, `${path}.scientific_rescaled_delta.estimate`),
+    )) {
+      wireFail("document.invalid", `${path}.scientific_rescaled_delta.estimate`, `${path}.scientific_rescaled_delta must equal the standardized-product coefficient divided by product SD.`);
+    }
+    return {
+      effectId,
+      interactionId,
+      focalRelationId,
+      operands,
+      outcomeId: effect.outcome_id as string,
+      stageOneModelScientificSha256: effect.stage_one_model_scientific_sha256 as string,
+      estimate: effect.scientific_rescaled_delta,
+    };
+  });
+
+  if (interactions.length > 1) {
+    wireFail("document.invalid", "general_sem_results.three_way_interaction_effects", "The bounded v1 cell supports exactly one three-way interaction per model.");
+  }
+  const authority = interactions[0];
+  if (!authority && (conditionalValues.length || slopeValues.length || receiptValue != null)) {
+    wireFail("document.invalid", "general_sem_results.three_way_interaction_effects", "Three-way conditional results require one authoritative interaction-effect row.");
+  }
+  const ensureAuthority = (record: StrictWireRecord, path: string) => {
+    if (!authority) return;
+    if (record.interaction_id !== authority.interactionId
+      || record.focal_relation_id !== authority.focalRelationId
+      || record.first_moderator_id !== authority.operands[1]
+      || record.second_moderator_id !== authority.operands[2]) {
+      wireFail("document.invalid", path, `${path} contradicts the authoritative three-way interaction.`);
+    }
+    const trace = validateGeneralSemTrace(record.trace, `${path}.trace`, context);
+    if (capabilityCellIdentity(trace) !== pointCellIdentity) {
+      wireFail("document.invalid", `${path}.trace.capability_cell`, `${path} must use the exact three-way point cell.`);
+    }
+  };
+  const probeValue = (
+    kindValue: unknown,
+    probeIndex: number,
+    actualValue: unknown,
+    path: string,
+  ): CanonicalThreeWayModeratorProbeKindV1 => {
+    const kind = wireEnum(
+      kindValue,
+      ["continuous_standardized", "binary_zero_one"] as const,
+      `${path}_probe_kind`,
+    );
+    const expected = kind === "continuous_standardized"
+      ? [-1, 0, 1][probeIndex]
+      : [0, 1][probeIndex];
+    const actual = wireFinite(actualValue, `${path}_value`);
+    if (expected === undefined || !Object.is(actual, expected)) {
+      wireFail("document.invalid", `${path}_value`, `${path} contradicts the fixed ${kind} probe grid.`);
+    }
+    return kind;
+  };
+
+  const conditionalIndices = new Set<number>();
+  const conditionalKinds = new Set<CanonicalThreeWayModeratorProbeKindV1>();
+  const conditional = conditionalValues.map((item, index) => {
+    const path = `general_sem_results.three_way_conditional_interaction_effects[${index}]`;
+    const effect = exactWireRecord(item, [
+      "effect_id", "trace", "interaction_id", "focal_relation_id", "first_moderator_id",
+      "second_moderator_id", "second_moderator_probe_kind", "second_moderator_probe_index",
+      "second_moderator_value", "value",
+    ], [], path);
+    const effectId = wireStableId(effect.effect_id, `${path}.effect_id`);
+    for (const field of ["interaction_id", "focal_relation_id", "first_moderator_id", "second_moderator_id"] as const) {
+      wireStableId(effect[field], `${path}.${field}`);
+    }
+    ensureAuthority(effect, path);
+    const probeIndex = wireU32(effect.second_moderator_probe_index, `${path}.second_moderator_probe_index`);
+    if (probeIndex > 2 || conditionalIndices.has(probeIndex)) {
+      wireFail("document.invalid", `${path}.second_moderator_probe_index`, `${path} uses a duplicate or unsupported probe index.`);
+    }
+    conditionalIndices.add(probeIndex);
+    conditionalKinds.add(probeValue(
+      effect.second_moderator_probe_kind,
+      probeIndex,
+      effect.second_moderator_value,
+      `${path}.second_moderator`,
+    ));
+    validateGeneralSemEstimate(effect.value, `${path}.value`);
+    return { effectId, estimate: effect.value };
+  });
+  const conditionalGridSize = conditionalKinds.has("continuous_standardized") ? 3 : 2;
+  if (authority && (conditionalKinds.size !== 1
+    || conditional.length !== conditionalGridSize
+    || [...conditionalIndices].some((probeIndex) => probeIndex >= conditional.length))) {
+    wireFail("document.invalid", "general_sem_results.three_way_conditional_interaction_effects", "Three-way conditional interaction effects must form one contiguous two- or three-probe grid.");
+  }
+
+  const slopePairs = new Set<string>();
+  const firstProbeIndices = new Set<number>();
+  const secondProbeIndices = new Set<number>();
+  const firstProbeKinds = new Set<CanonicalThreeWayModeratorProbeKindV1>();
+  const secondProbeKinds = new Set<CanonicalThreeWayModeratorProbeKindV1>();
+  const slopes = slopeValues.map((item, index) => {
+    const path = `general_sem_results.three_way_simple_slopes[${index}]`;
+    const effect = exactWireRecord(item, [
+      "effect_id", "trace", "interaction_id", "focal_relation_id", "first_moderator_id",
+      "second_moderator_id", "first_moderator_probe_kind", "second_moderator_probe_kind",
+      "first_probe_index", "first_moderator_value", "second_probe_index", "second_moderator_value",
+      "value",
+    ], [], path);
+    const effectId = wireStableId(effect.effect_id, `${path}.effect_id`);
+    for (const field of ["interaction_id", "focal_relation_id", "first_moderator_id", "second_moderator_id"] as const) {
+      wireStableId(effect[field], `${path}.${field}`);
+    }
+    ensureAuthority(effect, path);
+    const firstProbe = wireU32(effect.first_probe_index, `${path}.first_probe_index`);
+    const secondProbe = wireU32(effect.second_probe_index, `${path}.second_probe_index`);
+    if (firstProbe > 2 || secondProbe > 2 || slopePairs.has(`${firstProbe}:${secondProbe}`)) {
+      wireFail("document.invalid", path, `${path} uses a duplicate or unsupported moderator-probe pair.`);
+    }
+    slopePairs.add(`${firstProbe}:${secondProbe}`);
+    firstProbeIndices.add(firstProbe);
+    secondProbeIndices.add(secondProbe);
+    firstProbeKinds.add(probeValue(
+      effect.first_moderator_probe_kind,
+      firstProbe,
+      effect.first_moderator_value,
+      `${path}.first_moderator`,
+    ));
+    secondProbeKinds.add(probeValue(
+      effect.second_moderator_probe_kind,
+      secondProbe,
+      effect.second_moderator_value,
+      `${path}.second_moderator`,
+    ));
+    validateGeneralSemEstimate(effect.value, `${path}.value`);
+    return { effectId, estimate: effect.value };
+  });
+  const firstGridSize = firstProbeKinds.has("continuous_standardized") ? 3 : 2;
+  const secondGridSize = secondProbeKinds.has("continuous_standardized") ? 3 : 2;
+  if (authority && (firstProbeKinds.size !== 1 || secondProbeKinds.size !== 1
+    || firstProbeIndices.size !== firstGridSize
+    || secondProbeIndices.size !== secondGridSize
+    || slopes.length !== firstProbeIndices.size * secondProbeIndices.size
+    || [...firstProbeIndices].some((probeIndex) => probeIndex >= firstProbeIndices.size)
+    || [...secondProbeIndices].some((probeIndex) => probeIndex >= secondProbeIndices.size))) {
+    wireFail("document.invalid", "general_sem_results.three_way_simple_slopes", "Three-way simple slopes must form one complete 2x2, 2x3, 3x2, or 3x3 probe grid.");
+  }
+  if (authority && [...conditionalKinds][0] !== [...secondProbeKinds][0]) {
+    wireFail("document.invalid", "general_sem_results.three_way_simple_slopes", "Three-way conditional effects and simple slopes must share the same second-moderator probe kind.");
+  }
+
+  const publishedEffectIds = [
+    ...interactions.map((item) => item.effectId),
+    ...conditional.map((item) => item.effectId),
+    ...slopes.map((item) => item.effectId),
+  ];
+  if (new Set(publishedEffectIds).size !== publishedEffectIds.length) {
+    wireFail("document.invalid", "general_sem_results", "Three-way target IDs must be unique across delta, conditional-interaction, and simple-slope sections.");
+  }
+
+  const allTargets = [
+    ...(authority ? [authority.estimate] : []),
+    ...conditional.map((item) => item.estimate),
+    ...slopes.map((item) => item.estimate),
+  ];
+  const anyInference = allTargets.some(generalSemEstimateHasInference);
+  if (receiptValue == null) {
+    if (anyInference) wireFail("document.invalid", "general_sem_results.three_way_moderation_bootstrap_receipt", "Three-way bootstrap fields require the shared-ledger receipt.");
+    return;
+  }
+  if (!allTargets.length || allTargets.some((estimate) => !generalSemEstimateHasInference(estimate))) {
+    wireFail("document.invalid", "general_sem_results.three_way_moderation_bootstrap_receipt", "A three-way bootstrap receipt requires inference on every published target.");
+  }
+  const path = "general_sem_results.three_way_moderation_bootstrap_receipt";
+  const receipt = exactWireRecord(receiptValue, [
+    "capability_cell", "capability_dependencies", "method_version", "point_method_version",
+    "resampling_operation_version",
+    "resampling_stream_version", "quantile_method_version", "standard_error_method_version",
+    "summation_method_version", "p_value_method_version", "failure_policy_version",
+    "sign_alignment_method_version", "product_scale_version", "probe_policy_version",
+    "compiled_plan_sha256", "general_sem_config_sha256", "model_scientific_sha256",
+    "stage_one_model_scientific_sha256", "source_dataset_fingerprint", "complete_case_frame_sha256",
+    "usable_replicate_indices_sha256", "target_identity_set_sha256", "target_ids",
+    "interval", "tail", "confidence_level", "resamples_requested", "resamples_usable",
+    "minimum_usable_resamples", "seed", "workers", "complete_model_reestimated_per_replicate",
+    "shared_stage_one_reestimated_per_replicate", "score_vectors_sign_aligned_before_products",
+    "all_lower_order_and_three_way_products_recomputed_per_replicate",
+    "joint_stage_two_reestimated_per_replicate",
+    "complete_joint_point_contract_validated_per_replicate",
+    "failed_replicates", "all_three_way_targets_share_one_replicate_ledger",
+  ], [], path);
+  const receiptCell = validateWireCapabilityCell(receipt.capability_cell, `${path}.capability_cell`);
+  const receiptIdentity = capabilityCellIdentity(receiptCell);
+  if (receiptIdentity !== capabilityCellIdentity(GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1)
+    || !context.capabilityIds.has(receiptIdentity)) {
+    wireFail("document.invalid", `${path}.capability_cell`, `${path} must use the declared exact three-way bootstrap cell.`);
+  }
+  const exactVersions = [
+    ["method_version", GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1],
+    ["point_method_version", GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1],
+    ["resampling_operation_version", GENERAL_SEM_PLS_THREE_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1],
+    ["resampling_stream_version", GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1],
+    ["quantile_method_version", GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1],
+    ["standard_error_method_version", GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1],
+    ["summation_method_version", GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1],
+    ["p_value_method_version", GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1],
+    ["failure_policy_version", GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1],
+    ["sign_alignment_method_version", GENERAL_SEM_PLS_MULTIPLE_MODERATION_SIGN_ALIGNMENT_VERSION_V1],
+    ["product_scale_version", GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1],
+    ["probe_policy_version", GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1],
+    ["interval", "percentile_type7"],
+    ["tail", "two_sided"],
+  ] as const;
+  for (const [field, expected] of exactVersions) {
+    if (receipt[field] !== expected) wireFail("document.invalid", `${path}.${field}`, `${path}.${field} must equal ${expected}.`);
+  }
+  if (receipt.all_three_way_targets_share_one_replicate_ledger !== true
+    || receipt.complete_model_reestimated_per_replicate !== true
+    || receipt.shared_stage_one_reestimated_per_replicate !== true
+    || receipt.score_vectors_sign_aligned_before_products !== true
+    || receipt.all_lower_order_and_three_way_products_recomputed_per_replicate !== true
+    || receipt.joint_stage_two_reestimated_per_replicate !== true
+    || receipt.complete_joint_point_contract_validated_per_replicate !== true) {
+    wireFail("document.invalid", path, `${path} must prove one shared full-model replicate ledger.`);
+  }
+  for (const field of [
+    "compiled_plan_sha256", "general_sem_config_sha256", "model_scientific_sha256",
+    "stage_one_model_scientific_sha256", "complete_case_frame_sha256",
+    "usable_replicate_indices_sha256", "target_identity_set_sha256",
+  ] as const) wireGeneralSemSha256(receipt[field], `${path}.${field}`);
+  if (receipt.model_scientific_sha256 !== context.modelDigest
+    || receipt.stage_one_model_scientific_sha256 !== authority?.stageOneModelScientificSha256
+    || wireGeneralSemDatasetFingerprint(receipt.source_dataset_fingerprint, `${path}.source_dataset_fingerprint`) !== context.datasetFingerprint) {
+    wireFail("document.invalid", path, `${path} provenance digests must match the result document.`);
+  }
+  const expectedEffectIds = [
+    ...interactions.map((item) => item.effectId),
+    ...conditional.map((item) => item.effectId),
+    ...slopes.map((item) => item.effectId),
+  ].sort();
+  const targetIds = validateStableIdArray(receipt.target_ids, `${path}.target_ids`, { minimum: 1, canonical: true });
+  if (targetIds.length !== expectedEffectIds.length
+    || targetIds.some((effectId, index) => effectId !== expectedEffectIds[index])) {
+    wireFail("document.invalid", `${path}.target_ids`, `${path}.target_ids must exactly cover delta, conditional-interaction, and simple-slope targets.`);
+  }
+  if (receipt.target_identity_set_sha256 !== generalSemSerializedSha256(targetIds)) {
+    wireFail("document.invalid", `${path}.target_identity_set_sha256`, `${path}.target_identity_set_sha256 must bind the ordered target IDs.`);
+  }
+  const confidence = wireFinite(receipt.confidence_level, `${path}.confidence_level`);
+  if (confidence <= 0 || confidence >= 1) wireFail("document.invalid", `${path}.confidence_level`, `${path}.confidence_level must be between zero and one.`);
+  const requested = wireU32(receipt.resamples_requested, `${path}.resamples_requested`);
+  const usable = wireU32(receipt.resamples_usable, `${path}.resamples_usable`);
+  const minimum = wireU32(receipt.minimum_usable_resamples, `${path}.minimum_usable_resamples`);
+  if (requested < 2 || requested > 10_000 || minimum !== Math.max(2, Math.ceil(requested * 0.9))
+    || usable < minimum || usable > requested) {
+    wireFail("document.invalid", path, `${path} bootstrap counts violate the bounded 90 percent usable-replicate contract.`);
+  }
+  const receiptWorkers = wireU32(receipt.workers, `${path}.workers`);
+  if (wireGeneralSemDecimalSafeSeed(receipt.seed, `${path}.seed`) !== String(context.seed)
+    || receiptWorkers < 1 || receiptWorkers > 64 || receiptWorkers !== context.workers) {
+    wireFail("document.invalid", path, `${path} seed and workers must match provenance.`);
+  }
+  const dependencies = wireArray(receipt.capability_dependencies, `${path}.capability_dependencies`).map((item, index) => (
+    capabilityCellIdentity(validateWireCapabilityCell(item, `${path}.capability_dependencies[${index}]`))
+  ));
+  const expectedDependencies = [
+    GENERAL_SEM_PLS_BASE_CAPABILITY_CELL_V1,
+    GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
+  ].map(capabilityCellIdentity).sort();
+  if (dependencies.length !== expectedDependencies.length
+    || dependencies.some((identity, index) => identity !== expectedDependencies[index])
+    || dependencies.some((identity) => !context.capabilityIds.has(identity))) {
+    wireFail("document.invalid", `${path}.capability_dependencies`, `${path}.capability_dependencies must exactly declare the base PLS and three-way point cells.`);
+  }
+  const failures = wireArray(receipt.failed_replicates, `${path}.failed_replicates`);
+  if (usable + failures.length !== requested) wireFail("document.invalid", path, `${path} usable plus failed counts must equal requested resamples.`);
+  const failedIndices = new Set<number>();
+  let previous = -1;
+  failures.forEach((item, index) => {
+    const failurePath = `${path}.failed_replicates[${index}]`;
+    const failure = exactWireRecord(item, ["replicate_index", "reason_code", "message"], [], failurePath);
+    const replicateIndex = wireU32(failure.replicate_index, `${failurePath}.replicate_index`);
+    if (replicateIndex <= previous || replicateIndex >= requested) wireFail("document.invalid", `${failurePath}.replicate_index`, `${path}.failed_replicates must be ordered and in range.`);
+    previous = replicateIndex;
+    failedIndices.add(replicateIndex);
+    wireEnum(failure.reason_code, [
+      "insufficient_observations", "constant_indicator", "stage_one_rank_deficient",
+      "stage_one_nonconvergence", "indeterminate_score_sign", "constant_construct_score",
+      "constant_interaction_product", "rank_deficient", "joint_stage_rank_deficient",
+      "isolated_construct", "estimation_nonconvergence", "target_inventory_mismatch",
+      "numerical_failure",
+    ] as const, `${failurePath}.reason_code`);
+    wireText(failure.message, `${failurePath}.message`);
+  });
+  const usableIndices = Array.from({ length: requested }, (_, index) => index)
+    .filter((index) => !failedIndices.has(index));
+  if (receipt.usable_replicate_indices_sha256 !== generalSemSerializedSha256(usableIndices)) {
+    wireFail("document.invalid", `${path}.usable_replicate_indices_sha256`, `${path}.usable_replicate_indices_sha256 contradicts the failure ledger.`);
+  }
+  for (const estimateValue of allTargets) {
+    const estimate = strictWireRecord(estimateValue, path);
+    const exceedances = wireU32(
+      estimate.bootstrap_two_sided_exceedances,
+      `${path}.target.bootstrap_two_sided_exceedances`,
+    );
+    const pValue = wireFinite(estimate.p_value, `${path}.target.p_value`);
+    if (estimate.bootstrap_usable_replicates !== usable
+      || exceedances > usable
+      || !approximatelyEqualGeneralSem(pValue, (exceedances + 1) / (usable + 1))) {
+      wireFail("document.invalid", path, `${path} must use the same usable replicate ledger for every target.`);
+    }
+  }
+}
+
 function validateGeneralSemInferenceReceiptV1(
   receiptValue: unknown,
   hocReceiptValue: unknown,
@@ -1383,7 +1888,9 @@ function validateGeneralSemInferenceReceiptV1(
   wireEnum(receipt.kind, ["case_bootstrap"] as const, `${path}.kind`);
   const capabilityCell = validateWireCapabilityCell(receipt.capability_cell, `${path}.capability_cell`);
   const capabilityIdentity = capabilityCellIdentity(capabilityCell);
-  const mediationBootstrap = capabilityIdentity
+  const singleMediationBootstrap = capabilityIdentity
+    === capabilityCellIdentity(GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1);
+  const mediationBootstrap = singleMediationBootstrap || capabilityIdentity
     === capabilityCellIdentity(GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1);
   const moderationBootstrap = capabilityIdentity
     === capabilityCellIdentity(GENERAL_SEM_PLS_MULTIPLE_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1);
@@ -1500,7 +2007,9 @@ function validateGeneralSemInferenceReceiptV1(
         ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
         : moderationBootstrap
           ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_BOOTSTRAP_METHOD_VERSION_V1
-          : GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+          : singleMediationBootstrap
+            ? GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1
+            : GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
     ],
     [
       "resampling_operation_version",
@@ -1508,7 +2017,9 @@ function validateGeneralSemInferenceReceiptV1(
         ? GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
         : moderationBootstrap
           ? GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_MODERATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
-          : GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+          : singleMediationBootstrap
+            ? GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1
+            : GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
     ],
     ["resampling_stream_version", GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1],
     ["quantile_method_version", GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1],
@@ -1717,6 +2228,7 @@ function validateGeneralSemInferenceReceiptV1(
       "joint_stage_rank_deficient",
       "isolated_construct",
       "estimation_nonconvergence",
+      "target_inventory_mismatch",
       "numerical_failure",
     ] as const, `${failurePath}.reason_code`);
     wireText(failure.message, `${failurePath}.message`);
@@ -2282,6 +2794,10 @@ export function parseCanonicalGeneralSemResultsV1(
       "aggregate_effects",
       "joint_stage_structural_coefficients",
       "interaction_effects",
+      "three_way_interaction_effects",
+      "three_way_conditional_interaction_effects",
+      "three_way_simple_slopes",
+      "three_way_moderation_bootstrap_receipt",
       "conditional_effect_probes",
       "conditional_effects",
       "conditional_indirect_effects",
@@ -2341,6 +2857,21 @@ export function parseCanonicalGeneralSemResultsV1(
     "general_sem_results",
   );
   const interactionEffects = optionalWireArray(results, "interaction_effects", "general_sem_results");
+  const threeWayInteractionEffects = optionalWireArray(
+    results,
+    "three_way_interaction_effects",
+    "general_sem_results",
+  );
+  const threeWayConditionalEffects = optionalWireArray(
+    results,
+    "three_way_conditional_interaction_effects",
+    "general_sem_results",
+  );
+  const threeWaySimpleSlopes = optionalWireArray(
+    results,
+    "three_way_simple_slopes",
+    "general_sem_results",
+  );
   const probes = optionalWireArray(results, "conditional_effect_probes", "general_sem_results");
   const conditional = optionalWireArray(results, "conditional_effects", "general_sem_results");
   const conditionalIndirect = optionalWireArray(
@@ -2365,10 +2896,17 @@ export function parseCanonicalGeneralSemResultsV1(
   );
   const hasCbsemBootstrapReceipt = Object.prototype.hasOwnProperty.call(results, "cbsem_bootstrap_receipt")
     && results.cbsem_bootstrap_receipt != null;
-  if ([specific, aggregate, jointStageCoefficients, interactionEffects, probes, conditional,
+  const hasThreeWayBootstrapReceipt = Object.prototype.hasOwnProperty.call(
+    results,
+    "three_way_moderation_bootstrap_receipt",
+  ) && results.three_way_moderation_bootstrap_receipt != null;
+  if ([specific, aggregate, jointStageCoefficients, interactionEffects, threeWayInteractionEffects,
+    threeWayConditionalEffects, threeWaySimpleSlopes, probes, conditional,
     conditionalIndirect, moderatedMediationIndices, plots, hocStages, cbsemParameters, fits,
     identification, cbsemBootstrapInference]
-    .every((collection) => collection.length === 0) && !hasCbsemBootstrapReceipt) {
+    .every((collection) => collection.length === 0)
+    && !hasCbsemBootstrapReceipt
+    && !hasThreeWayBootstrapReceipt) {
     return wireFail("document.invalid", "general_sem_results", "general_sem_results must contain at least one typed result section.");
   }
 
@@ -2380,6 +2918,21 @@ export function parseCanonicalGeneralSemResultsV1(
     "general_sem_results.joint_stage_structural_coefficients",
   );
   validateCanonicalWireIds(interactionEffects, "effect_id", "general_sem_results.interaction_effects");
+  validateCanonicalWireIds(
+    threeWayInteractionEffects,
+    "effect_id",
+    "general_sem_results.three_way_interaction_effects",
+  );
+  validateCanonicalWireIds(
+    threeWayConditionalEffects,
+    "effect_id",
+    "general_sem_results.three_way_conditional_interaction_effects",
+  );
+  validateCanonicalWireIds(
+    threeWaySimpleSlopes,
+    "effect_id",
+    "general_sem_results.three_way_simple_slopes",
+  );
   validateCanonicalWireIds(probes, "probe_id", "general_sem_results.conditional_effect_probes");
   validateCanonicalWireIds(conditional, "effect_id", "general_sem_results.conditional_effects");
   validateCanonicalWireIds(
@@ -2496,6 +3049,13 @@ export function parseCanonicalGeneralSemResultsV1(
       "general_sem_results.joint_stage_structural_coefficients and interaction_effects must both be present for the exact joint-stage moderation cell.",
     );
   }
+  const threeWayJointPoint = threeWayInteractionEffects.length > 0;
+  const expectedJointPointCell = threeWayJointPoint
+    ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1
+    : GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const expectedJointPointMethod = threeWayJointPoint
+    ? GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1
+    : GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1;
   const jointStageParameterIds = new Set<string>();
   const jointStageEstimatesByRelation = new Map<string, number>();
   jointStageCoefficients.forEach((item, index) => {
@@ -2519,11 +3079,11 @@ export function parseCanonicalGeneralSemResultsV1(
     jointStageParameterIds.add(parameterId);
     const traceCapability = validateGeneralSemTrace(coefficient.trace, `${path}.trace`, wireContext);
     if (capabilityCellIdentity(traceCapability)
-      !== capabilityCellIdentity(GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1)) {
+      !== capabilityCellIdentity(expectedJointPointCell)) {
       wireFail(
         "document.invalid",
         `${path}.trace.capability_cell`,
-        `${path}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell.`,
+        `${path}.trace.capability_cell must equal the exact joint moderation point option cell.`,
       );
     }
     const sourceId = wireStableId(coefficient.source_id, `${path}.source_id`);
@@ -2549,11 +3109,11 @@ export function parseCanonicalGeneralSemResultsV1(
     }
     wireEnum(coefficient.stage, ["joint_stage_two"] as const, `${path}.stage`);
     const methodVersion = wireStableId(coefficient.method_version, `${path}.method_version`);
-    if (methodVersion !== GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1) {
+    if (methodVersion !== expectedJointPointMethod) {
       wireFail(
         "document.invalid",
         `${path}.method_version`,
-        `${path}.method_version must equal ${GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1}.`,
+        `${path}.method_version must equal ${expectedJointPointMethod}.`,
       );
     }
   });
@@ -2590,11 +3150,11 @@ export function parseCanonicalGeneralSemResultsV1(
     effectIds.add(effectId);
     const traceCapability = validateGeneralSemTrace(effect.trace, `${path}.trace`, wireContext);
     if (capabilityCellIdentity(traceCapability)
-      !== capabilityCellIdentity(GENERAL_SEM_PLS_MULTIPLE_MODERATION_POINT_CAPABILITY_CELL_V1)) {
+      !== capabilityCellIdentity(expectedJointPointCell)) {
       wireFail(
         "document.invalid",
         `${path}.trace.capability_cell`,
-        `${path}.trace.capability_cell must equal the General SEM multiple two-way moderation point option cell.`,
+        `${path}.trace.capability_cell must equal the exact joint moderation point option cell.`,
       );
     }
     const interactionId = wireStableId(effect.interaction_id, `${path}.interaction_id`);
@@ -2635,10 +3195,12 @@ export function parseCanonicalGeneralSemResultsV1(
     wireEnum(effect.construction_method, ["two_stage"] as const, `${path}.construction_method`);
     wireEnum(effect.hierarchy_policy, ["strong"] as const, `${path}.hierarchy_policy`);
     const exactPolicyVersions = {
-      method_version: GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+      method_version: expectedJointPointMethod,
       product_scale_version: GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
       hierarchy_policy_version: GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
-      conditioning_policy_version: GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+      conditioning_policy_version: threeWayJointPoint
+        ? GENERAL_SEM_PLS_THREE_WAY_PROBE_POLICY_VERSION_V1
+        : GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
     } as const;
     for (const [key, expected] of Object.entries(exactPolicyVersions)) {
       if (effect[key] !== expected) {
@@ -3287,7 +3849,7 @@ export function parseCanonicalGeneralSemResultsV1(
     }
   });
 
-  interactionAuthorities.forEach((_authority, effectId) => {
+  if (!threeWayJointPoint) interactionAuthorities.forEach((_authority, effectId) => {
     const indices = interactionConditionalIndices.get(effectId) ?? [];
     if (indices.length !== 3
       || new Set(indices).size !== 3
@@ -3517,6 +4079,13 @@ export function parseCanonicalGeneralSemResultsV1(
     results.higher_order_inference_receipt,
     results.inference_receipt,
     hocStages,
+    wireContext,
+  );
+  validateThreeWayModerationResultsV1(
+    threeWayInteractionEffects,
+    threeWayConditionalEffects,
+    threeWaySimpleSlopes,
+    results.three_way_moderation_bootstrap_receipt,
     wireContext,
   );
 

@@ -2,38 +2,38 @@
   "schema_version": 2,
   "target": "QuickPLS unsigned preview artifact preservation",
   "passed": true,
-  "version": "2.51.0",
+  "version": "2.53.0",
   "version_contract": {
-    "package_json": "2.51.0",
+    "package_json": "2.53.0",
     "package_lock": {
-      "document": "2.51.0",
-      "root_package": "2.51.0"
+      "document": "2.53.0",
+      "root_package": "2.53.0"
     },
-    "cargo_workspace": "2.51.0",
+    "cargo_workspace": "2.53.0",
     "cargo_members": {
-      "qpls-assessment": "2.51.0",
-      "qpls-cli": "2.51.0",
-      "qpls-core": "2.51.0",
-      "qpls-data": "2.51.0",
-      "qpls-estimation": "2.51.0",
-      "qpls-project": "2.51.0",
-      "qpls-resampling": "2.51.0",
-      "qpls-runner": "2.51.0",
-      "quickpls-desktop": "2.51.0"
+      "qpls-assessment": "2.53.0",
+      "qpls-cli": "2.53.0",
+      "qpls-core": "2.53.0",
+      "qpls-data": "2.53.0",
+      "qpls-estimation": "2.53.0",
+      "qpls-project": "2.53.0",
+      "qpls-resampling": "2.53.0",
+      "qpls-runner": "2.53.0",
+      "quickpls-desktop": "2.53.0"
     },
     "cargo_lock_quickpls_packages": {
-      "qpls-assessment": "2.51.0",
-      "qpls-cli": "2.51.0",
-      "qpls-core": "2.51.0",
-      "qpls-data": "2.51.0",
-      "qpls-estimation": "2.51.0",
-      "qpls-project": "2.51.0",
-      "qpls-resampling": "2.51.0",
-      "qpls-runner": "2.51.0",
-      "quickpls-desktop": "2.51.0"
+      "qpls-assessment": "2.53.0",
+      "qpls-cli": "2.53.0",
+      "qpls-core": "2.53.0",
+      "qpls-data": "2.53.0",
+      "qpls-estimation": "2.53.0",
+      "qpls-project": "2.53.0",
+      "qpls-resampling": "2.53.0",
+      "qpls-runner": "2.53.0",
+      "quickpls-desktop": "2.53.0"
     },
-    "tauri": "2.51.0",
-    "release_channels": "2.51.0"
+    "tauri": "2.53.0",
+    "release_channels": "2.53.0"
   },
   "release_channel": "unsigned-preview",
   "channel_policy": {
@@ -52,38 +52,38 @@
     "stable_eligible": false,
     "competitor_claims_authorized": false
   },
-  "label": "v2_51_0_unified_workflow",
-  "timestamp_utc": "20260821-083501",
+  "label": "v2_53_0_native_mediation_moderation",
+  "timestamp_utc": "20260821-160048",
   "artifact_directory": "target/release/artifacts",
   "artifacts": [
     {
       "role": "portable",
       "source": "target/release/quickpls-desktop.exe",
-      "source_bytes": 61504000,
-      "source_sha256": "31A519B625B242D0175A88746CB27CA4C43FF648DAD0639960FB5364869C04DC",
-      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_portable.exe",
-      "bytes": 61504000,
-      "sha256": "31A519B625B242D0175A88746CB27CA4C43FF648DAD0639960FB5364869C04DC",
+      "source_bytes": 63576064,
+      "source_sha256": "8D5C2FA199A429FFE2D14044399234E0AA564CE89BA1CA77F60E96DFD65DE1BE",
+      "path": "target/release/artifacts/QuickPLS_2.53.0_unsigned-preview_v2_53_0_native_mediation_moderation_20260821-160048_x64_portable.exe",
+      "bytes": 63576064,
+      "sha256": "8D5C2FA199A429FFE2D14044399234E0AA564CE89BA1CA77F60E96DFD65DE1BE",
       "copy_verified": true
     },
     {
       "role": "cli",
       "source": "target/release/qpls.exe",
-      "source_bytes": 32458752,
-      "source_sha256": "E441C6185245228D81D595F267657731BC33F24FC651989FD394C91A0CED75E2",
-      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_cli.exe",
-      "bytes": 32458752,
-      "sha256": "E441C6185245228D81D595F267657731BC33F24FC651989FD394C91A0CED75E2",
+      "source_bytes": 32476160,
+      "source_sha256": "FA1ECE10226B67A89B303054F9CABA0CC3CEE971EB6D0E9C8357830A983D1D50",
+      "path": "target/release/artifacts/QuickPLS_2.53.0_unsigned-preview_v2_53_0_native_mediation_moderation_20260821-160048_x64_cli.exe",
+      "bytes": 32476160,
+      "sha256": "FA1ECE10226B67A89B303054F9CABA0CC3CEE971EB6D0E9C8357830A983D1D50",
       "copy_verified": true
     },
     {
       "role": "setup",
-      "source": "target/release/bundle/nsis/QuickPLS_2.51.0_x64-setup.exe",
-      "source_bytes": 228091455,
-      "source_sha256": "D8684050E2BC1532DD08DAA1183F2917E386B5E054F914C1F2EC582EBBD3EEC8",
-      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_setup.exe",
-      "bytes": 228091455,
-      "sha256": "D8684050E2BC1532DD08DAA1183F2917E386B5E054F914C1F2EC582EBBD3EEC8",
+      "source": "target/release/bundle/nsis/QuickPLS_2.53.0_x64-setup.exe",
+      "source_bytes": 228424853,
+      "source_sha256": "C8E42BCFCF7B89D027440D76610CDA94ED0A21B69211B1705C76181C6C1ED8B0",
+      "path": "target/release/artifacts/QuickPLS_2.53.0_unsigned-preview_v2_53_0_native_mediation_moderation_20260821-160048_x64_setup.exe",
+      "bytes": 228424853,
+      "sha256": "C8E42BCFCF7B89D027440D76610CDA94ED0A21B69211B1705C76181C6C1ED8B0",
       "copy_verified": true
     },
     {
@@ -91,9 +91,9 @@
       "source": null,
       "source_bytes": null,
       "source_sha256": null,
-      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_checksums.txt",
-      "bytes": 463,
-      "sha256": "DD428AB424739D1E11C9C1F1FF98D7C269398D0FD1264996100D9300FCFD3A3E",
+      "path": "target/release/artifacts/QuickPLS_2.53.0_unsigned-preview_v2_53_0_native_mediation_moderation_20260821-160048_x64_checksums.txt",
+      "bytes": 496,
+      "sha256": "EBF7B37E7EF65C6F31E0E028A98F841F19B33D7035FD966144D2134C346CC471",
       "copy_verified": true
     }
   ],

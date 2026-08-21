@@ -1,0 +1,372 @@
+{
+  "schema_version": 1,
+  "governance": {
+    "contract_frozen_at_utc": "2026-08-21T00:00:00Z",
+    "manifest_path": "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json",
+    "schema_path": "validation/methods/method_promotion_manifest.schema.json",
+    "validator_path": "validation/method_promotion_manifest.py",
+    "focused_test_path": "validation/test_method_promotion_manifest.py"
+  },
+  "feature": {
+    "id": "qpls3.pls.general_sem_three_way_moderation_point",
+    "label": "General SEM PLS Three-Way Moderation Point Estimates",
+    "method_version": "general_sem_pls_three_way_moderation_point_v1",
+    "method_kind": "deterministic",
+    "catalogue_snapshot_date": "2026-08-21",
+    "catalogue_url": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/"
+  },
+  "claim": {
+    "supported_scope": "One true three-way interaction in a recursive, single-group composite PLS model using two-stage construction, strong hierarchy, and fixed continuous or exact 0/1 binary probes.",
+    "estimand": "The jointly estimated coefficient for the sample-standardized X-by-W-by-Z score product, conditional X-by-W effects at the fixed Z probes, and simple slopes of X over the fixed W-by-Z probe grid.",
+    "assumptions": [
+      "Exactly one three-way term is bound to an original focal relation and a parent two-way interaction.",
+      "The model contains all X, W and Z main effects and all X-by-W, X-by-Z and W-by-Z lower-order terms under strong hierarchy.",
+      "Continuous moderators use standardized minus-one, zero and plus-one probes; binary moderators are coded exactly zero and one."
+    ],
+    "exclusions": [
+      "A second three-way term, fourth-order interactions, HOC interactions and three-way moderated mediation are excluded.",
+      "Bootstrap, permutation, Johnson-Neyman, groups, weights, clusters and non-listwise inputs are excluded from this point cell.",
+      "The observed-variable PROCESS workflow is separate and is not claimed by this latent-variable PLS cell."
+    ],
+    "warnings": [
+      "This exact bounded cell is scoped Standard under quickpls_v253_streamlined_integration_v1; all exclusions and corrective fail-closed behavior remain in force.",
+      "SmartPLS documentation is used only as a terminology and observable-workflow benchmark; QuickPLS is independently implemented."
+    ]
+  },
+  "scientific_contract": {
+    "equations": [
+      {
+        "id": "joint_three_way_equation",
+        "expression": "eta_y = b0 + bx*x + bw*w + bz*z + bxw*xw + bxz*xz + bwz*wz + bxwz*xwz + epsilon",
+        "variables": [
+          "eta_y",
+          "x",
+          "w",
+          "z",
+          "xw",
+          "xz",
+          "wz",
+          "xwz",
+          "bxwz",
+          "epsilon"
+        ],
+        "source_reference_id": "dawson_richter_2006"
+      },
+      {
+        "id": "conditional_interaction_and_slope",
+        "expression": "effect_xw(z0) = bxw + bxwz*z0; slope_x(w0,z0) = bx + bxw*w0 + bxz*z0 + bxwz*w0*z0",
+        "variables": [
+          "effect_xw",
+          "z0",
+          "bxw",
+          "bxwz",
+          "slope_x",
+          "w0",
+          "bx",
+          "bxz"
+        ],
+        "source_reference_id": "independent_v253_reference"
+      }
+    ],
+    "references": [
+      {
+        "id": "dawson_richter_2006",
+        "kind": "primary_paper",
+        "citation": "Dawson and Richter (2006), Probing Three-Way Interactions in Moderated Multiple Regression: Development and Application of a Slope Difference Test",
+        "locator": "https://doi.org/10.1037/0021-9010.91.4.917",
+        "independence_group": "published_three_way_moderation_method",
+        "runtime_policy": "no_runtime_dependency"
+      },
+      {
+        "id": "independent_v253_reference",
+        "kind": "independent_python",
+        "citation": "QuickPLS 2.53 validation-only single-path and three-way compact reference matrix",
+        "locator": "validation/general_sem_v253_reference.py",
+        "independence_group": "python_v253_reference",
+        "runtime_policy": "development_validation_only"
+      }
+    ],
+    "simulations": [
+      {
+        "id": "three_way_joint_point_recovery",
+        "purpose": "recovery",
+        "design": "Compact continuous-continuous and binary-continuous strong-hierarchy fixtures with known joint coefficients, fixed probes, reordered declarations, a missing lower-order term and singular product design.",
+        "seed_policy": "Frozen deterministic score columns and scenario identities; no runtime network or external package dependency.",
+        "metrics": [
+          "joint_coefficient_error",
+          "conditional_interaction_error",
+          "simple_slope_error",
+          "binary_probe_error",
+          "hierarchy_rejection"
+        ],
+        "acceptance_rule": "Every admitted point and probe agrees within 1e-10; missing hierarchy and singular designs are rejected without a completed result."
+      }
+    ],
+    "boundaries": [
+      {
+        "id": "singular_three_way_design",
+        "category": "data_pathology",
+        "case": "A main score, pairwise product or three-way product is constant, nonfinite or makes the joint equation singular.",
+        "expected_behavior": "Fail with the affected term or equation identified and publish no completed result."
+      },
+      {
+        "id": "unsupported_three_way_scope",
+        "category": "unsupported_scope",
+        "case": "The model requests another three-way term, missing hierarchy, HOC interaction, moderated mediation or unsupported binary coding.",
+        "expected_behavior": "Preserve the model and return one corrective blocked decision without silently simplifying it."
+      },
+      {
+        "id": "operand_and_row_reorder",
+        "category": "metamorphic",
+        "case": "Rows and eligible declarations are consistently reordered while ordered scientific operand identities are preserved.",
+        "expected_behavior": "Mapped coefficients and probe results remain scientifically equivalent."
+      },
+      {
+        "id": "point_replay",
+        "category": "determinism",
+        "case": "The same resident authority, data and compiled plan are executed repeatedly.",
+        "expected_behavior": "The scientific payload is identical apart from operational identifiers and timestamps."
+      },
+      {
+        "id": "three_way_archive_tamper",
+        "category": "tamper",
+        "case": "A term, hierarchy relation, coefficient, probe, method version, cell identity or visual-only flag is altered.",
+        "expected_behavior": "Strict validation rejects scientific tampering; presentation anchors never become scientific edges."
+      }
+    ],
+    "numerical_tolerance": 1e-10
+  },
+  "product_contract": {
+    "persistence": {
+      "recipe_schema_version": 4,
+      "result_schema_version": 2,
+      "payload_kind": "canonical_result_document_v2",
+      "tamper_tests": [
+        {
+          "category": "feature_identity",
+          "expected_behavior": "Reject a result whose three-way point cell differs from its compiled authority."
+        },
+        {
+          "category": "method_version",
+          "expected_behavior": "Reject a result relabelled with a two-way or bootstrap method version."
+        },
+        {
+          "category": "dataset_fingerprint",
+          "expected_behavior": "Reject a result whose resident dataset fingerprint differs."
+        },
+        {
+          "category": "checksum",
+          "expected_behavior": "Reject a changed archive member, presentation mapping or canonical attachment digest."
+        },
+        {
+          "category": "malformed_payload",
+          "expected_behavior": "Reject duplicate keys, nonfinite values, missing hierarchy rows or incoherent probe identities."
+        },
+        {
+          "category": "legacy_reinterpretation",
+          "expected_behavior": "Never reinterpret a historical visible interaction node as this method without a valid preserved interaction authority."
+        }
+      ],
+      "legacy_policy": "Older interaction archives preserve their original scientific identities and coordinates; compatibility projection may show a visual anchor but never rewrites the archive."
+    },
+    "native": {
+      "setup_controls": [
+        "Moderator-on-path authoring",
+        "Parent interaction selection",
+        "Read-only three-way order",
+        "Qualified two-stage strong-hierarchy construction",
+        "Fixed probe policy"
+      ],
+      "applicability_blockers": [
+        "Missing main or pairwise hierarchy",
+        "More than one three-way term",
+        "Unsupported binary coding",
+        "HOC interaction or three-way moderated mediation",
+        "Unsupported data setting"
+      ],
+      "result_surfaces": [
+        "Three-Way Moderation",
+        "Conditional Effects",
+        "Simple Slopes",
+        "Two-dimensional simple-slope chart",
+        "Run Details"
+      ],
+      "gui_cli_parity_rule": "For the same resident authority, data and compiled plan, every surface reads the same canonical joint coefficients, probes and exact cell identity.",
+      "accessibility_rules": [
+        "Context menu and M shortcut provide non-drag alternatives; anchors have descriptive accessible names.",
+        "Dash and marker shape supplement color, and every chart has an accessible source table."
+      ]
+    },
+    "export": {
+      "formats": [
+        "csv",
+        "xlsx",
+        "html",
+        "pdf",
+        "svg",
+        "png"
+      ],
+      "tables": [
+        "Joint hierarchy coefficients",
+        "Three-way interaction effect",
+        "Conditional interaction effects",
+        "Simple slopes",
+        "Run provenance"
+      ],
+      "same_run_required": true,
+      "provenance_required": true
+    },
+    "packaged": {
+      "platforms": [
+        "windows"
+      ],
+      "workflow_steps": [
+        "setup",
+        "invalid_setup_blocked",
+        "execute",
+        "inspect_results",
+        "export",
+        "save",
+        "close",
+        "reopen_same_run",
+        "cleanup"
+      ],
+      "viewports": [
+        "1024x700",
+        "1280x720",
+        "1440x900"
+      ],
+      "offline_required": true,
+      "cancellation_required": false,
+      "process_cleanup_required": true
+    },
+    "audit": {
+      "exact_identity_fields": [
+        "passed",
+        "feature_id",
+        "method_version",
+        "catalogue_snapshot_date"
+      ],
+      "source_hashes_required": true,
+      "freshness_required": true,
+      "reports_must_pass": true
+    }
+  },
+  "qualification": {
+    "declared_state": "release_qualified",
+    "target_state": "release_qualified",
+    "source_requirements": {
+      "method_spec": [
+        "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md"
+      ],
+      "independent_reference": [
+        "validation/general_sem_v253_reference.py"
+      ],
+      "simulation_report": [
+        "validation/general_sem_v253_reference.py"
+      ],
+      "boundary_report": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "persistence_report": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "frontend_report": [
+        "src/domain/moderationDiagramProjectionV1.test.ts",
+        "src/domain/unifiedSemCalculationV1.test.ts"
+      ],
+      "export_report": [
+        "src/native/nativeExportTables.ts"
+      ],
+      "method_audit": [
+        "validation/v253_mediation_moderation_release_audit.py"
+      ],
+      "packaged_acceptance": [
+        "validation/run_v253_mediation_moderation_packaged_smoke.ps1"
+      ]
+    },
+    "evidence": {
+      "engine_only": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_spec",
+            "independent_reference",
+            "simulation_report",
+            "boundary_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "archive_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "persistence_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "native_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "frontend_report",
+            "export_report"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ],
+      "release_qualified": [
+        {
+          "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "roles": [
+            "method_audit",
+            "packaged_acceptance"
+          ],
+          "verification": {
+            "kind": "identity_report",
+            "identity_pointers": {
+              "passed": "/passed",
+              "feature_id": "/feature_id",
+              "method_version": "/method_version",
+              "catalogue_snapshot_date": "/catalogue_snapshot_date"
+            },
+            "source_artifacts_pointer": "/source_artifacts",
+            "generated_at_pointer": "/generated_at_utc"
+          }
+        }
+      ]
+    }
+  }
+}

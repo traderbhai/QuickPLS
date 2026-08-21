@@ -5,7 +5,7 @@
 the registry at application-module load and fails closed before any capability
 can be advertised.
 
-The adapter enforces the 45-row/43-active catalogue contract and parses 56
+The adapter enforces the 45-row/43-active catalogue contract and parses 59
 authoritative option cells. Every cell independently owns coverage, evidence,
 surface, predicates, schemas, differences, and one exact four-field
 qualification link. Retained row state is checked as a conservative legacy
@@ -36,6 +36,11 @@ while previously established native workflows may remain visible in Labs under
 their recorded bounded identities. Method-specific readiness and runtime
 validation still reject invalid setups, and the allowance never promotes a
 workflow to Standard.
+
+The three additive 2.53 mediation/moderation cells are independently parsed as
+scoped Standard with `evidence_state=release_qualified` under
+`quickpls_v253_streamlined_integration_v1`. Their exact predicates remain fail-closed, and the existing
+two-way and multiple-mediation cells continue to resolve by their own identities.
 
 The optional `requireFrozenStateDistribution: false` parser setting exists only
 for testing coverage-state revisions. Surface counts evolve as methods are

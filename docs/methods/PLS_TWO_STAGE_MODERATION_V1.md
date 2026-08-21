@@ -8,7 +8,7 @@ Planned method version: `pls_two_stage_moderation_v1`
 
 The current slice freezes the model contract and implements deterministic two-stage product-score estimation for complete-data PLS-PM recipes.
 
-The `ModelSpec.interactions` array stores:
+The scientific interaction authority stores:
 
 - `id`
 - `predictor`
@@ -17,7 +17,22 @@ The `ModelSpec.interactions` array stores:
 - `outcome`
 - `method = two_stage_product_score`
 
-The desktop editor can create an interaction placeholder construct and a product-to-outcome path. The placeholder persists in the workspace and is serialized into native recipes.
+In the 2.53 Canvas workflow, users attach a moderator to the focal structural
+path by drag-and-drop, the path context menu, or the `M` shortcut. A compact `×`
+anchor and dashed moderator connector are presentation-only projections. The
+generated interaction construct is hidden from the ordinary Canvas and
+Constructs list, but remains inspectable in Expert/Diagnostics. The anchor is
+never serialized as a scientific relationship, never changes scientific hashes,
+and never participates in mediation discovery.
+
+Select the anchor and press Enter to edit the effect or Delete to remove only
+that effect. Legacy projects with visible generated interaction nodes remain
+readable under their original identities and coordinates.
+
+The separately versioned 2.53 three-way point/bootstrap cells extend one parent
+two-way interaction with a second moderator under strong hierarchy. They are independently scoped Standard under the streamlined 2.53 profile;
+this established single-interaction method did not lend them qualification
+evidence.
 
 ## Estimation Contract
 
@@ -53,7 +68,11 @@ For missing data, stage 1 uses the ordinary model-wide complete-case rows. Stage
 
 `qpls-core` validates interaction metadata and, when applicable, returns `interaction.product_indicator.generated`. Generated product constructs may start without dataset indicators because the estimator supplies the product-score indicator between stage 1 and stage 2.
 
-The v1.2.1 promotion gate validates this bounded two-stage moderation scope. Moderated mediation, multiple unqualified interaction systems, higher-order generated constructs, and unsupported weighting/preprocessing combinations remain outside the promoted scope.
+The v1.2.1 promotion gate validates this bounded two-stage moderation scope.
+Three-way moderation has separate exact identities. Fourth-order effects,
+three-way moderated mediation, HOC interactions, other unqualified interaction
+systems, and unsupported weighting/preprocessing combinations remain outside
+this promoted scope.
 
 ## Compatibility
 

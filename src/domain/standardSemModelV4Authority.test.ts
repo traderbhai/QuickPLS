@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { convertLegacyBasicModelV4, parseSemModelV4AuthoringDraft, type LegacyBasicModelV4Input, type SemModelV4, type SemVariableV4 } from "./semModelV4";
 import {
+  GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
   GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1,
   parseStandardSemModelV4AuthorityRecordV1,
   reduceStandardSemModelV4AuthorityV1,
@@ -9,6 +10,7 @@ import {
   standardSemGeneralSemInteractionV2ModeratorMainRelationIdV1,
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
+  standardSemGeneralSemThreeWayInteractionTermIdV1,
   standardSemMeasurementRelationIdV1,
   type AddGeneralSemInteractionV2EditorIntentV1,
   type StandardSemModelV4AuthorityRecordV1,
@@ -185,6 +187,43 @@ describe("StandardSemModelV4 authority", () => {
     });
     expect(candidate.model.variables).toContainEqual(expect.objectContaining({ id: "construct:z", identification: { kind: "fixed_variance" } }));
     expect(candidate.model.parameters).toContainEqual(expect.objectContaining({ kind: "fixed", value: 1 }));
+  });
+
+  it("replaces a HOC atomically while preserving its term, output, and structural relationships", () => {
+    const source = authority(convertLegacyBasicModelV4(legacy, "pls_composite"));
+    const added = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "add_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:hoc",
+      label: "Corporate standing",
+      components: ["construct:x", "construct:y"],
+      approach: "embedded_two_stage",
+      measurement_type: "reflective_reflective",
+    });
+    const relationBytes = JSON.stringify(added.model.relations);
+    const replaced = reduceStandardSemModelV4AuthorityV1(authority(added.model, "b".repeat(64)), {
+      kind: "replace_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:hoc",
+      label: "Corporate standing revised",
+      components: ["construct:x", "construct:y"],
+      approach: "embedded_two_stage",
+      measurement_type: "reflective_formative",
+    });
+
+    expect(replaced.model.derived_terms).toContainEqual(expect.objectContaining({
+      kind: "higher_order",
+      id: "term:hoc",
+      output: "derived:hoc",
+      approach: "embedded_two_stage",
+      measurement_type: "reflective_formative",
+    }));
+    expect(replaced.model.variables).toContainEqual(expect.objectContaining({
+      kind: "derived",
+      id: "derived:hoc",
+      label: "Corporate standing revised",
+    }));
+    expect(JSON.stringify(replaced.model.relations)).toBe(relationBytes);
   });
 
   it("strictly replaces the complete canonical document without mutating the source authority", () => {
@@ -575,5 +614,83 @@ describe("StandardSemModelV4 authority", () => {
     });
     expect(withoutFocal.model.variables.some((variable) => variable.id === term.output)).toBe(false);
     expect(withoutFocal.model.derived_terms.some((candidate) => candidate.id === term.id)).toBe(false);
+  });
+
+  it("authors and removes a strong-hierarchy three-way moderation without persisting a path target", () => {
+    const base = generalSemModerationBase();
+    const withSecondModerator = reduceStandardSemModelV4AuthorityV1(base.source, {
+      kind: "add_construct",
+      variable_id: "construct:w",
+      label: "Second moderator",
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+      indicators: [observed("observed:w1")],
+    });
+    const twoWay = reduceStandardSemModelV4AuthorityV1(authority(withSecondModerator.model, "e".repeat(64)), {
+      kind: "add_moderating_effect_v3",
+      intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
+      sem_generation: "general_sem_v1",
+      label: "X × Z",
+      operands: ["construct:x", "construct:z"],
+      target: { kind: "focal_relation", relationId: base.focalRelationId },
+      outcome: "construct:y",
+      method: "two_stage",
+      hierarchy_policy: "strong",
+    });
+    const parent = twoWay.model.derived_terms.find((term) => term.kind === "interaction_v2");
+    if (parent?.kind !== "interaction_v2") throw new Error("Expected the parent interaction.");
+
+    const threeWay = reduceStandardSemModelV4AuthorityV1(authority(twoWay.model, "f".repeat(64)), {
+      kind: "add_moderating_effect_v3",
+      intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
+      sem_generation: "general_sem_v1",
+      label: "X × Z × W",
+      operands: ["construct:x", "construct:z", "construct:w"],
+      target: { kind: "parent_interaction", interactionTermId: parent.id },
+      outcome: "construct:y",
+      method: "two_stage",
+      hierarchy_policy: "strong",
+    });
+    const topId = standardSemGeneralSemThreeWayInteractionTermIdV1(parent.id, "construct:w");
+    const top = threeWay.model.derived_terms.find((term) => term.id === topId);
+    expect(top).toEqual(expect.objectContaining({
+      kind: "interaction_v2",
+      operands: ["construct:x", "construct:z", "construct:w"],
+      focal_relation: base.focalRelationId,
+      hierarchy_policy: "strong",
+    }));
+    expect(threeWay.model.derived_terms.filter((term) => term.kind === "interaction_v2")).toHaveLength(4);
+    expect(threeWay.model.relations.every((relation) => !Object.hasOwn(relation, "target_relation"))).toBe(true);
+
+    expect(() => reduceStandardSemModelV4AuthorityV1(authority(threeWay.model, "9".repeat(64)), {
+      kind: "add_moderating_effect_v3",
+      intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
+      sem_generation: "general_sem_v1",
+      label: "Second three-way effect",
+      operands: ["construct:x", "construct:z", "construct:w"],
+      target: { kind: "parent_interaction", interactionTermId: parent.id },
+      outcome: "construct:y",
+      method: "two_stage",
+      hierarchy_policy: "strong",
+    })).toThrow(/one three-way moderating effect per model/i);
+
+    expect(() => reduceStandardSemModelV4AuthorityV1(authority(threeWay.model, "0".repeat(64)), {
+      kind: "remove_moderating_effect",
+      intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
+      sem_generation: "general_sem_v1",
+      term_id: parent.id,
+      output_id: parent.output,
+    })).toThrow(/required by a three-way effect/i);
+
+    if (top?.kind !== "interaction_v2") throw new Error("Expected the three-way interaction.");
+    const removed = reduceStandardSemModelV4AuthorityV1(authority(threeWay.model, "1".repeat(64)), {
+      kind: "remove_moderating_effect",
+      intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
+      sem_generation: "general_sem_v1",
+      term_id: top.id,
+      output_id: top.output,
+    });
+    expect(removed.model.derived_terms).toContainEqual(expect.objectContaining({ id: parent.id }));
+    expect(removed.model.derived_terms.some((term) => term.id === top.id)).toBe(false);
+    expect(removed.model.derived_terms.filter((term) => term.kind === "interaction_v2")).toHaveLength(1);
   });
 });

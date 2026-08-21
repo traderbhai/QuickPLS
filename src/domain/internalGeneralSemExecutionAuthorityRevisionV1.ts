@@ -1,12 +1,18 @@
 import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import {
+  GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1,
   GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
 } from "./internalRecipeV4GeneralSemWorkspace";
+import { GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1 } from "./generalSemCapabilityPreflightV1";
 export {
   GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_LABS_REVISION_RECIPE_EXECUTION_SURFACE_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1 as GENERAL_SEM_PLS_STANDARD_REVISION_RECIPE_EXECUTION_SURFACE_V1,
@@ -14,10 +20,15 @@ export {
 import type {
   AddGeneralSemHigherOrderEditorIntentV1,
   AddGeneralSemInteractionV2EditorIntentV1,
+  AddModeratingEffectIntentV3,
+  RemoveModeratingEffectIntentV1,
+  ReplaceModeratingEffectIntentV1,
+  ReplaceGeneralSemHigherOrderEditorIntentV1,
 } from "./standardSemModelV4Authority";
 import {
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
+  standardSemGeneralSemThreeWayInteractionTermIdV1,
 } from "./standardSemModelV4Authority";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
@@ -49,7 +60,11 @@ export interface GeneralSemExecutionAuthorityRevisionIdentityV1 {
 
 export type GeneralSemExecutionAuthorityRevisionEditorIntentV1 =
   | AddGeneralSemInteractionV2EditorIntentV1
-  | AddGeneralSemHigherOrderEditorIntentV1;
+  | AddModeratingEffectIntentV3
+  | ReplaceModeratingEffectIntentV1
+  | RemoveModeratingEffectIntentV1
+  | AddGeneralSemHigherOrderEditorIntentV1
+  | ReplaceGeneralSemHigherOrderEditorIntentV1;
 
 export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
   surface:
@@ -189,6 +204,102 @@ function timestampAt(value: unknown, path: string): string {
 
 function parseIntent(value: unknown, path: string): GeneralSemExecutionAuthorityRevisionEditorIntentV1 {
   const candidate = recordAt(value, path);
+  if (candidate.kind === "add_moderating_effect_v3" || candidate.kind === "replace_moderating_effect") {
+    const replacing = candidate.kind === "replace_moderating_effect";
+    const intent = exactRecordAt(candidate, [
+      "kind", "intent_version", "sem_generation",
+      ...(replacing ? ["term_id", "output_id"] : []),
+      "label", "operands", "target", "outcome", "method", "hierarchy_policy",
+    ], path);
+    if (intent.intent_version !== 3
+      || intent.sem_generation !== "general_sem_v1"
+      || intent.method !== "two_stage"
+      || intent.hierarchy_policy !== "strong"
+      || !Array.isArray(intent.operands)
+      || (intent.operands.length !== 2 && intent.operands.length !== 3)) {
+      fail("schema6_general_sem_revision.intent_invalid", path, "Moderating-effect v3 requires two or three operands, two_stage, and strong hierarchy.");
+    }
+    const operands = intent.operands.map((operand, index) => textAt(operand, `${path}.operands[${index}]`));
+    if (new Set(operands).size !== operands.length) {
+      fail("schema6_general_sem_revision.operands_invalid", `${path}.operands`, "Moderating-effect operands must be distinct.");
+    }
+    const rawTarget = recordAt(intent.target, `${path}.target`);
+    const target = rawTarget.kind === "focal_relation"
+      ? (() => {
+        const parsed = exactRecordAt(rawTarget, ["kind", "relationId"], `${path}.target`);
+        return { kind: "focal_relation" as const, relationId: textAt(parsed.relationId, `${path}.target.relationId`) };
+      })()
+      : rawTarget.kind === "parent_interaction"
+        ? (() => {
+          const parsed = exactRecordAt(rawTarget, ["kind", "interactionTermId"], `${path}.target`);
+          return { kind: "parent_interaction" as const, interactionTermId: textAt(parsed.interactionTermId, `${path}.target.interactionTermId`) };
+        })()
+        : fail("schema6_general_sem_revision.target_invalid", `${path}.target`, "The moderation target must be a focal relation or parent interaction.");
+    if (operands.length === 2 && target.kind !== "focal_relation"
+      || operands.length === 3 && target.kind !== "parent_interaction") {
+      fail("schema6_general_sem_revision.target_invalid", `${path}.target`, "Two-way moderation targets a focal relation; three-way moderation targets a parent interaction.");
+    }
+    const common = {
+      intent_version: 3 as const,
+      sem_generation: "general_sem_v1" as const,
+      label: textAt(intent.label, `${path}.label`),
+      operands: operands as [string, string] | [string, string, string],
+      target,
+      outcome: textAt(intent.outcome, `${path}.outcome`),
+      method: "two_stage" as const,
+      hierarchy_policy: "strong" as const,
+    };
+    return replacing
+      ? {
+        kind: "replace_moderating_effect",
+        term_id: textAt(intent.term_id, `${path}.term_id`),
+        output_id: textAt(intent.output_id, `${path}.output_id`),
+        ...common,
+      }
+      : { kind: "add_moderating_effect_v3", ...common };
+  }
+  if (candidate.kind === "remove_moderating_effect") {
+    const intent = exactRecordAt(candidate, [
+      "kind", "intent_version", "sem_generation", "term_id", "output_id",
+    ], path);
+    if (intent.intent_version !== 3 || intent.sem_generation !== "general_sem_v1") {
+      fail("schema6_general_sem_revision.intent_invalid", path, "Removing moderation requires the exact version-3 General SEM intent.");
+    }
+    return {
+      kind: "remove_moderating_effect",
+      intent_version: 3,
+      sem_generation: "general_sem_v1",
+      term_id: textAt(intent.term_id, `${path}.term_id`),
+      output_id: textAt(intent.output_id, `${path}.output_id`),
+    };
+  }
+  if (candidate.kind === "replace_higher_order") {
+    const intent = exactRecordAt(candidate, [
+      "kind", "term_id", "output_id", "label", "components", "approach", "measurement_type",
+    ], path);
+    if (!Array.isArray(intent.components) || intent.components.length < 2) {
+      fail("schema6_general_sem_revision.components_invalid", `${path}.components`, "A HOC replacement requires at least two lower-order components.");
+    }
+    const components = intent.components.map((component, index) => textAt(component, `${path}.components[${index}]`));
+    if (new Set(components).size !== components.length) {
+      fail("schema6_general_sem_revision.components_invalid", `${path}.components`, "HOC components must be distinct.");
+    }
+    const approaches = ["repeated_indicators", "extended_repeated_indicators", "embedded_two_stage", "disjoint_two_stage", "hybrid"] as const;
+    const measurementTypes = ["reflective_reflective", "reflective_formative", "formative_reflective", "formative_formative"] as const;
+    if (!approaches.includes(intent.approach as typeof approaches[number])
+      || !measurementTypes.includes(intent.measurement_type as typeof measurementTypes[number])) {
+      fail("schema6_general_sem_revision.intent_invalid", path, "The HOC approach or measurement type is invalid.");
+    }
+    return {
+      kind: "replace_higher_order",
+      term_id: textAt(intent.term_id, `${path}.term_id`),
+      output_id: textAt(intent.output_id, `${path}.output_id`),
+      label: textAt(intent.label, `${path}.label`),
+      components,
+      approach: intent.approach as ReplaceGeneralSemHigherOrderEditorIntentV1["approach"],
+      measurement_type: intent.measurement_type as ReplaceGeneralSemHigherOrderEditorIntentV1["measurement_type"],
+    };
+  }
   if (candidate.kind === "add_higher_order") {
     const intent = exactRecordAt(candidate, [
       "kind", "term_id", "output_id", "label", "components", "approach", "measurement_type",
@@ -328,19 +439,21 @@ export function parseInternalGeneralSemExecutionAuthorityRevisionRequestV1(
       "Revision recipe execution metadata must match its selected Registry surface.",
     );
   }
-  const higherOrderIntent = parsed.revision.intent.kind === "add_higher_order";
-  const allowedPoint = higherOrderIntent
-    ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
-    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
-  const allowedBootstrap = higherOrderIntent
-    ? GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1
-    : GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1;
-  if (!sameCapabilityCell(parsed.revision.expectedCapabilityCell, allowedPoint)
-    && !sameCapabilityCell(parsed.revision.expectedCapabilityCell, allowedBootstrap)) {
+  const higherOrderIntent = parsed.revision.intent.kind === "add_higher_order"
+    || parsed.revision.intent.kind === "replace_higher_order";
+  const allowedExecutionCells = higherOrderIntent
+    ? [
+      GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
+      GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
+    ]
+    : GENERAL_SEM_REVISION_EXECUTION_CELLS_V1;
+  if (!allowedExecutionCells.some((cell) => (
+    sameCapabilityCell(parsed.revision.expectedCapabilityCell, cell)
+  ))) {
     fail(
       "schema6_general_sem_revision.capability_invalid",
       "request.revision.expectedCapabilityCell",
-      "The revision requires the exact point or supplemental bootstrap cell for its scientific editor intent.",
+      "The revision requires the exact point or supplemental bootstrap cell for its resulting scientific authority.",
     );
   }
   if (parsed.sourceArchivePath.toLocaleLowerCase() === parsed.destinationArchivePath.toLocaleLowerCase()) {
@@ -375,6 +488,71 @@ function sameCapabilityCell(
     && left.capability_id === right.capability_id
     && left.cell_id === right.cell_id
     && left.capability_version === right.capability_version;
+}
+
+const GENERAL_SEM_REVISION_EXECUTION_CELLS_V1: readonly CapabilityCellReferenceV2[] = [
+  GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1,
+];
+
+function primaryCapabilityCellForExecutionV1(
+  executionCell: CapabilityCellReferenceV2,
+): CapabilityCellReferenceV2 {
+  if (sameCapabilityCell(executionCell, GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1)
+    || sameCapabilityCell(executionCell, GENERAL_SEM_PLS_HIGHER_ORDER_BOOTSTRAP_CAPABILITY_CELL_V1)) {
+    return GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1;
+  }
+  if (sameCapabilityCell(executionCell, GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1)
+    || sameCapabilityCell(executionCell, GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1)) {
+    return GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_CAPABILITY_CELL_V1;
+  }
+  if (sameCapabilityCell(executionCell, GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1)
+    || sameCapabilityCell(executionCell, GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1)
+    || sameCapabilityCell(executionCell, GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1)) {
+    return GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  }
+  return GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1;
+}
+
+function revisionReceiptIdentityV1(
+  intent: GeneralSemExecutionAuthorityRevisionEditorIntentV1,
+): { termId: string; outputId: string } {
+  switch (intent.kind) {
+    case "add_higher_order":
+    case "replace_higher_order":
+    case "replace_moderating_effect":
+    case "remove_moderating_effect":
+      return { termId: intent.term_id, outputId: intent.output_id };
+    case "add_general_sem_interaction_v2": {
+      const termId = standardSemGeneralSemInteractionV2TermIdV1(
+        intent.focal_relation,
+        intent.operands[0],
+        intent.operands[1],
+      );
+      return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
+    }
+    case "add_moderating_effect_v3": {
+      const termId = intent.target.kind === "parent_interaction"
+        ? standardSemGeneralSemThreeWayInteractionTermIdV1(
+          intent.target.interactionTermId,
+          intent.operands[2]!,
+        )
+        : standardSemGeneralSemInteractionV2TermIdV1(
+          intent.target.relationId,
+          intent.operands[0],
+          intent.operands[1],
+        );
+      return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
+    }
+  }
 }
 
 function parseReceipt(
@@ -437,16 +615,10 @@ function parseReceipt(
     interactionOutputId: textAt(receipt.interactionOutputId, `${path}.interactionOutputId`),
   };
   const { source, revision, intent } = request.revision;
-  const higherOrderIntent = intent.kind === "add_higher_order";
-  const termId = higherOrderIntent
-    ? intent.term_id
-    : standardSemGeneralSemInteractionV2TermIdV1(intent.focal_relation, intent.operands[0], intent.operands[1]);
-  const outputId = higherOrderIntent
-    ? intent.output_id
-    : standardSemGeneralSemInteractionV2OutputIdV1(termId);
-  const expectedPrimaryCell = higherOrderIntent
-    ? GENERAL_SEM_PLS_HIGHER_ORDER_POINT_CAPABILITY_CELL_V1
-    : GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1;
+  const { termId, outputId } = revisionReceiptIdentityV1(intent);
+  const expectedPrimaryCell = primaryCapabilityCellForExecutionV1(
+    request.revision.expectedCapabilityCell,
+  );
   if (parsed.sourceArchivePath !== request.sourceArchivePath
     || parsed.sourceArchiveSha256 !== request.expectedSourceArchiveSha256
     || parsed.sourceProjectId !== source.projectId

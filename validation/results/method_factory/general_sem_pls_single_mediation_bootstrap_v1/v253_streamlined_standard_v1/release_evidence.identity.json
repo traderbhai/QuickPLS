@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_v253_streamlined_method_identity_v1",
+  "passed": true,
+  "feature_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+  "method_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+  "catalogue_snapshot_date": "2026-08-21",
+  "generated_at_utc": "2026-08-21T14:52:12Z",
+  "qualification_profile_id": "quickpls_v253_streamlined_integration_v1",
+  "representative_integration_evidence_acknowledged": true,
+  "postpromotion_archive_verification_required": false,
+  "prepromotion_deferred_step_ids": [
+    "rust_project_single_mediation_archive",
+    "rust_project_three_way_archive"
+  ],
+  "cell_identity": {
+    "capability_id": "smartpls.mediation",
+    "cell_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+    "capability_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+    "analytical_method_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+    "operation_version": "general_sem_pls_single_mediation_case_bootstrap_v1"
+  },
+  "accepted_evidence": {
+    "consolidated": {
+      "path": "validation/results/v253_consolidated_labs_pass2_20260821/v253_consolidated_diagnostics.json",
+      "size": 53587,
+      "sha256": "31ebab8cb2ddb3ba3a216a4e1681f9aa601c240451e287fdefc49dbb7ad8e381"
+    },
+    "reference": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_reference.json",
+      "size": 50369,
+      "sha256": "76d11d979c7bbde9cd2874fa82af9f0e7f22db083996bc02ff5ac0879a41dc72"
+    },
+    "product": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_product_reference.json",
+      "size": 265446,
+      "sha256": "2842037cc41e93896501d5d9d7ef4eb1789b8a949ac1373172ce51a77d3bd332"
+    },
+    "remediation": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.json",
+      "size": 418592,
+      "sha256": "700cc3c5746506eca2a524c1a43ca78ecfd1c08701d6db8ecc2ea27c40746ed5"
+    },
+    "remediation_receipt": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.receipt.json",
+      "size": 333,
+      "sha256": "9893dd2488a1beb3e1bb6ce2a2757d00dc749a9c3716e66d8a9702476de7b05c"
+    },
+    "postpromotion_archive": {
+      "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.json",
+      "size": 387269,
+      "sha256": "a9a7a8b5d8abdd108043ad90c9472bb7b2d2c3bc6591a5e2e52716e8d52002a8"
+    },
+    "postpromotion_archive_receipt": {
+      "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.receipt.json",
+      "size": 353,
+      "sha256": "6d48a910cc51618c096b00e3f14f846ff51dd26f5d5938754ab42b0798b037f8"
+    }
+  },
+  "source_artifacts": [
+    {
+      "path": "docs/methods/GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_V1.md",
+      "size": 2870,
+      "sha256": "4042359ca76ca4c2fbf7029bf8f11ffe4ed385d51e855b2e96bb445d2287a70a"
+    },
+    {
+      "path": "src/domain/unifiedSemCalculationV1.test.ts",
+      "size": 18680,
+      "sha256": "a2696a7d7ea151ee89891fdadb65ca417431d331cdbf963ceecba9b4747fdda5"
+    },
+    {
+      "path": "src/native/NativeResultsSurface.test.tsx",
+      "size": 18034,
+      "sha256": "de5cab0c5363cec138129c475fc8f32b1f6850549b6f34c57d88a2f6431d8145"
+    },
+    {
+      "path": "src/native/nativeExportTables.ts",
+      "size": 43235,
+      "sha256": "75109a41a359beb4698be5e90f9b915cae7a66b084a26c9a19efb5fcfad2d0a8"
+    },
+    {
+      "path": "validation/capabilities/capability_registry_v2.json",
+      "size": 364523,
+      "sha256": "9a2c5d69e42178768a9c7d6c857d3df0b4aa30a28eccc993d0eea9aeacb34ab7"
+    },
+    {
+      "path": "validation/capabilities/general_sem_pls_single_mediation_full_model_case_bootstrap_v1.cell.manifest.json",
+      "size": 3222,
+      "sha256": "5462f67f1f31ba04a499ec51f455a5640b4c11bc1924c9ce90a8c7813ef6fc70"
+    },
+    {
+      "path": "validation/general_sem_v253_reference.py",
+      "size": 48533,
+      "sha256": "4c68d861ff006601a64a52273c3b082fe01cc26a7301a675d62de19bba335a11"
+    },
+    {
+      "path": "validation/method_promotion_manifest.py",
+      "size": 34283,
+      "sha256": "e98914f8043f0f917b0ca4529f574ff2daa974d5521c25d6b615c2fde6dc2865"
+    },
+    {
+      "path": "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json",
+      "size": 14302,
+      "sha256": "fa0e466f8384a8349905b7a8595e4b3527e312597f829245de367b05c7fd8a77"
+    },
+    {
+      "path": "validation/methods/method_promotion_manifest.schema.json",
+      "size": 15836,
+      "sha256": "dd3c686210f9baf28dc23e4d3dccd8154af448cadd5053d37813f141c048c743"
+    },
+    {
+      "path": "validation/run_v253_mediation_moderation_packaged_smoke.ps1",
+      "size": 6703,
+      "sha256": "ca6f79e9a2500633ee5e61e3192f56a73cea1d178b8877ca3ca26ed8cb0d9633"
+    },
+    {
+      "path": "validation/test_method_promotion_manifest.py",
+      "size": 21368,
+      "sha256": "8df3d172745c109f762649d4f7eb25e484438f48933e9a67204aba698abd6926"
+    },
+    {
+      "path": "validation/v253_mediation_moderation_release_audit.py",
+      "size": 20506,
+      "sha256": "2a36f192324e090a32536d1c8203a362591cae68b7778eb3528a011f3215fd25"
+    }
+  ],
+  "excluded_repetition": [
+    "historical two-way moderation qualification matrices",
+    "historical multiple-mediation qualification matrices",
+    "per-cell packaged and performance matrices"
+  ],
+  "postpromotion_archive_verification_complete": true,
+  "finalized_at_utc": "2026-08-21T15:03:20Z"
+}

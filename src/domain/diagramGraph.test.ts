@@ -35,6 +35,149 @@ describe("SEM diagram graph", () => {
     expect(graph.edges.find((edge) => edge.id === "x-y")).toBeTruthy();
   });
 
+  it("expands a presentation-only mediation relation chain to its intermediate nodes", () => {
+    const mediationNodes: Array<Node<ConstructData>> = [
+      { id: "x", type: "construct", position: { x: 0, y: 0 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: [] } },
+      { id: "m", type: "construct", position: { x: 250, y: 0 }, data: { label: "Mediator", shortName: "M", mode: "reflective", indicators: [] } },
+      { id: "y", type: "construct", position: { x: 500, y: 0 }, data: { label: "Outcome", shortName: "Y", mode: "reflective", indicators: [] } },
+    ];
+    const mediationEdges: Edge[] = [
+      { id: "relation:x_m", source: "x", target: "m" },
+      { id: "relation:m_y", source: "m", target: "y" },
+    ];
+    const before = structuredClone({ mediationNodes, mediationEdges });
+
+    const graph = buildDiagramGraph(mediationNodes, mediationEdges, "smartpls_result", "model", undefined, {
+      resultOverlay: {
+        kind: "mediation",
+        nodeIds: ["x", "y"],
+        relationIds: ["relation:x_m", "relation:m_y"],
+        interactionTermIds: [],
+        label: "Indirect path",
+      },
+    });
+
+    expect(graph.nodes.filter((node) => ["x", "m", "y"].includes(node.id))
+      .every((node) => node.className?.includes("result-overlay-highlight"))).toBe(true);
+    expect(graph.edges.filter((edge) => mediationEdges.some((source) => source.id === edge.id))
+      .every((edge) => edge.className?.includes("result-overlay-edge-highlight"))).toBe(true);
+    expect({ mediationNodes, mediationEdges }).toEqual(before);
+  });
+
+  it("projects selected HOC membership as arrowless non-persisted presentation edges", () => {
+    const hocNodes: Array<Node<ConstructData>> = [
+      { id: "a", type: "construct", position: { x: 100, y: 40 }, data: { label: "Component A", shortName: "A", mode: "reflective", indicators: ["a1"] } },
+      { id: "b", type: "construct", position: { x: 100, y: 180 }, data: { label: "Component B", shortName: "B", mode: "reflective", indicators: ["b1"] } },
+      {
+        id: "hoc",
+        type: "construct",
+        position: { x: 380, y: 110 },
+        data: {
+          label: "Organizational strength",
+          shortName: "HOC",
+          mode: "reflective",
+          indicators: [],
+          semantic: "higher_order",
+          higherOrder: {
+            id: "term:hoc",
+            components: ["a", "b"],
+            method: "two_stage",
+            canonicalApproach: "disjoint_two_stage",
+            measurementType: "reflective_reflective",
+          },
+        },
+      },
+    ];
+    const modelEdges: Edge[] = [];
+    const before = structuredClone(modelEdges);
+
+    const unselected = buildDiagramGraph(hocNodes, modelEdges, "sem", "model");
+    const selected = buildDiagramGraph(hocNodes, modelEdges, "sem", "model", undefined, { selectedHigherOrderId: "hoc" });
+    const membership = selected.edges.filter((edge) => edge.id.startsWith("hoc-membership::"));
+
+    expect(unselected.edges.some((edge) => edge.id.startsWith("hoc-membership::"))).toBe(false);
+    expect(membership).toHaveLength(2);
+    expect(membership.map((edge) => [edge.source, edge.target])).toEqual([["a", "hoc"], ["b", "hoc"]]);
+    expect(selected.nodes.filter((node) => ["a", "b"].includes(node.id)).every((node) => node.className?.includes("hoc-component-highlight"))).toBe(true);
+    for (const edge of membership) {
+      expect(edge).toMatchObject({ selectable: false, deletable: false, focusable: false, reconnectable: false });
+      expect(edge.markerStart).toBeUndefined();
+      expect(edge.markerEnd).toBeUndefined();
+      expect(edge.style?.strokeDasharray).toBe("5 4");
+      expect(edge.data).toMatchObject({ visualOnly: true, relationshipKind: "higher_order_membership" });
+    }
+    expect(modelEdges).toEqual(before);
+  });
+
+  it("hides generated interaction constructs and projects visual-only path anchors", () => {
+    const moderationNodes: Array<Node<ConstructData>> = [
+      ...nodes,
+      { id: "w", type: "construct", position: { x: 350, y: -80 }, data: { label: "Moderator", shortName: "W", mode: "reflective", indicators: ["w1"] } },
+      {
+        id: "xw",
+        type: "construct",
+        position: { x: 360, y: 240 },
+        data: {
+          label: "X × W",
+          shortName: "XW",
+          mode: "formative",
+          indicators: [],
+          semantic: "interaction",
+          interaction: {
+            kind: "interaction_v2",
+            termId: "term:xw",
+            operands: ["x", "w"],
+            focalRelationId: "x-y",
+            outcome: "y",
+            canonicalMethod: "two_stage",
+            hierarchyPolicy: "strong",
+          },
+        },
+      },
+    ];
+    const moderationEdges: Edge[] = [
+      ...edges,
+      { id: "w-y", source: "w", target: "y", label: "Main effect" },
+      { id: "xw-y", source: "xw", target: "y", label: "Interaction" },
+    ];
+    const beforeNodes = structuredClone(moderationNodes);
+    const beforeEdges = structuredClone(moderationEdges);
+
+    const graph = buildDiagramGraph(moderationNodes, moderationEdges, "sem", "model");
+    const anchor = graph.nodes.find((node) => node.type === "moderationAnchor");
+    const connector = graph.edges.find((edge) => edge.data?.relationshipKind === "moderation_connector");
+
+    expect(graph.nodes.some((node) => node.id === "xw")).toBe(false);
+    expect(graph.edges.some((edge) => edge.id === "xw-y")).toBe(false);
+    expect(anchor?.data).toMatchObject({
+      visualOnly: true,
+      interactionTermId: "term:xw",
+      focalRelationId: "x-y",
+      moderatorIds: ["w"],
+      order: 2,
+    });
+    expect(connector).toMatchObject({ source: "w", target: anchor?.id, deletable: false, reconnectable: false });
+    expect(connector?.data).toMatchObject({ visualOnly: true, relationshipKind: "moderation_connector" });
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.className).toContain("moderated-focal-edge");
+    expect(moderationNodes).toEqual(beforeNodes);
+    expect(moderationEdges).toEqual(beforeEdges);
+
+    const layout = defaultDiagramLayout(moderationNodes, moderationEdges);
+    layout.moderationAnchorFractions = { "term:xw": 0.7 };
+    const connectorId = connector!.id;
+    layout.moderationConnectorBendPoints = { [connectorId]: [{ x: 85, y: 64 }] };
+    const restored = buildDiagramGraph(moderationNodes, moderationEdges, "sem", "model", undefined, { layout });
+    expect(restored.nodes.find((node) => node.type === "moderationAnchor")?.data.fraction).toBe(0.7);
+    expect(restored.edges.find((edge) => edge.id === connectorId)?.data).toMatchObject({
+      routing: "polyline",
+      bendPoints: [{ x: 85, y: 64 }],
+    });
+
+    const expert = buildDiagramGraph(moderationNodes, moderationEdges, "sem", "model", undefined, { showGeneratedInteractionTerms: true });
+    expect(expert.nodes.some((node) => node.id === "xw")).toBe(true);
+    expect(expert.edges.some((edge) => edge.id === "xw-y")).toBe(true);
+  });
+
   it("orients reflective and formative measurement arrows differently", () => {
     const graph = buildDiagramGraph(nodes, edges, "sem", "model");
     const reflective = graph.edges.find((edge) => edge.id === "measurement::x::x1")!;
@@ -209,6 +352,33 @@ describe("SEM diagram graph", () => {
     layout.indicatorLayouts.x.x1 = { side: "free", x: 44, y: 55, order: 0, pinned: true };
     const graph = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
     expect(graph.nodes.find((node) => node.id === indicatorNodeId("x", "x1"))?.position).toEqual({ x: 44, y: 55 });
+  });
+
+  it("preserves Standard presentation objects while synchronizing scientific nodes", () => {
+    const layout = defaultDiagramLayout(nodes, edges, {
+      standardSemPresentation: {
+        schemaVersion: 1,
+        objects: [{
+          kind: "note",
+          id: "generated-hierarchy-note",
+          subject: "x-y",
+          text: "Generated strong-hierarchy dependency.",
+          x: 40,
+          y: 40,
+        }],
+      },
+    });
+    expect(layout.standardSemPresentation).toEqual({
+      schemaVersion: 1,
+      objects: [{
+        kind: "note",
+        id: "generated-hierarchy-note",
+        subject: "x-y",
+        text: "Generated strong-hierarchy dependency.",
+        x: 40,
+        y: 40,
+      }],
+    });
   });
 
   it("can export result diagrams from current canvas positions instead of forcing tidy layout", () => {

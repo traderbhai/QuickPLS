@@ -58,6 +58,10 @@
       "objective": "Add model comparison/selection and advanced CB-SEM workflows."
     },
     {
+      "id": "2.53.0",
+      "objective": "Refine diagram-native mediation and moderation, then independently qualify the bounded single-path and true three-way cells."
+    },
+    {
       "id": "3.0.0-beta.1",
       "objective": "Run the signed external competitor beta."
     },
@@ -575,40 +579,55 @@
       "priority": "P1",
       "target_release": "2.49.0",
       "competitor_scope": true,
-      "quickpls_scope": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow, an Experimental Labs General SEM point cell that jointly estimates one or more interaction_v2 terms on a direct-only graph, and a connected supplemental full-model indexed case-bootstrap cell that publishes two-sided Type-7 inference for scientific rescaled interaction gamma only.",
+      "quickpls_scope": "Bounded standardized two-stage PLS moderation: scoped Standard single, simultaneous two-way, and one-term true three-way point/full-model bootstrap cells. Diagram anchors remain presentation-only and interaction_v2 remains the scientific authority.",
       "quickpls_capability_ids": [
         "qpls3.pls.moderation",
         "qpls3.pls.general_sem_multiple_two_way_moderation_point",
-        "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+        "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+        "qpls3.pls.general_sem_three_way_moderation_point",
+        "qpls3.pls.general_sem_three_way_moderation_bootstrap"
       ],
-      "implementation_evidence": [],
+      "implementation_evidence": [
+        "validation/general_sem_v253_reference.py",
+        "validation/v253_mediation_moderation_release_audit.py",
+        "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md",
+        "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md",
+        "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+        "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json"
+      ],
       "dependencies": [
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "The connected General SEM point and supplemental scientific-gamma bootstrap cells remain partial, engine-only, and opt-in Labs. Standardized-product beta, ordinary-coefficient, fixed-slope, and plot inference remain excluded, while independent full-PLS qualification, semantic export/readback, packaged Windows, performance/soak, and review evidence remain pending; three-way interactions, authored arbitrary probes, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+      "remaining_gap": "Fourth-order or multiple three-way terms, HOC interactions, three-way moderated mediation, arbitrary probes, Johnson-Neyman output, groups, weights, and broader missing-data handling remain excluded."
     },
     {
       "id": "smartpls.mediation",
       "catalogue_position": 27,
       "official_family": "Extended Relationships",
       "official_method": "Mediation",
-      "status": "engine-preview",
+      "status": "release-qualified",
       "priority": "P1",
-      "target_release": "2.49.0",
+      "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
+      "quickpls_scope": "Diagram-derived single, parallel and serial mediation over substantive directed paths in a supported recursive PLS model, with separately governed single-path and multiple-path full-model bootstrap cells.",
       "quickpls_capability_ids": [
         "qpls3.pls.mediation",
         "qpls3.pls.general_sem_multiple_mediation_bootstrap",
-        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
+        "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+        "qpls3.pls.general_sem_single_mediation_bootstrap"
       ],
-      "implementation_evidence": [],
+      "implementation_evidence": [
+        "validation/general_sem_v253_reference.py",
+        "validation/v253_mediation_moderation_release_audit.py",
+        "docs/methods/GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_V1.md",
+        "validation/results/method_factory/general_sem_pls_single_mediation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json"
+      ],
       "dependencies": [
         "smartpls.pls_algorithm",
         "smartpls.pls_bootstrapping"
       ],
-      "remaining_gap": "Create independent qualification and packaged-release evidence for the bounded two-way moderated-mediation cell; causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
+      "remaining_gap": "Causal identification, broader counterfactual mediation, cyclic paths, groups, weights, and unsupported missing-data handling remain excluded."
     },
     {
       "id": "smartpls.nonlinear_relationships",
@@ -806,7 +825,7 @@
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM remains available under its existing identity. Labs additionally offers a schema-6 resident SemModelV4 recursive common-factor ML workflow; the separate CompiledCbsemPlanV2 matrix-input cell remains unqualified.",
+      "quickpls_scope": "Scoped Standard raw-data single-group continuous reflective maximum-likelihood CFA or recursive SEM remains available under its existing identity. Standard also offers the bounded schema-6 resident SemModelV4 recursive common-factor ML workflow; the separate CompiledCbsemPlanV2 matrix-input cell remains unqualified.",
       "quickpls_capability_ids": [
         "qpls3.cbsem.ml",
         "qpls3.cbsem.ml.matrix_input",
@@ -814,18 +833,18 @@
       ],
       "implementation_evidence": [],
       "dependencies": [],
-      "remaining_gap": "Qualify the General SEM V3 ML cell independently before Standard promotion. Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance remain excluded."
+      "remaining_gap": "Matrix input, robust ML, ordinal/WLSMV, FIML, broad constraints, interactions, HOCs, and unrestricted multigroup/invariance remain excluded."
     },
     {
       "id": "smartpls.cbsem_bootstrapping",
       "catalogue_position": 39,
       "official_family": "CB-SEM and CFA",
       "official_method": "CB-SEM Bootstrapping",
-      "status": "engine-preview",
+      "status": "release-qualified",
       "priority": "P0",
       "target_release": "current",
       "competitor_scope": true,
-      "quickpls_scope": "Standard retains exact case bootstrap for raw continuous single-group reflective CFA. Labs additionally offers fixed 95% two-sided percentile Type-7 full-ML case bootstrap for the bounded schema-6 recursive common-factor SEM cell.",
+      "quickpls_scope": "Standard provides exact case bootstrap for raw continuous single-group reflective CFA and fixed 95% two-sided percentile Type-7 full-ML case bootstrap for the bounded schema-6 recursive common-factor SEM cell.",
       "quickpls_capability_ids": [
         "qpls3.cbsem.bootstrap",
         "qpls3.cbsem.bootstrap.recursive_sem"
@@ -834,7 +853,7 @@
       "dependencies": [
         "smartpls.cbsem"
       ],
-      "remaining_gap": "Maintain the qualified CFA bootstrap and qualify the recursive-SEM bootstrap independently before Standard promotion; broader CB-SEM bootstrap variants remain excluded."
+      "remaining_gap": "Broader CB-SEM bootstrap variants remain excluded."
     },
     {
       "id": "smartpls.cbsem_model_comparison",

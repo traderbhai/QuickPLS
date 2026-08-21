@@ -30,6 +30,10 @@ pub const GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1: &str =
     qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
 pub const GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1: &str =
     qpls_core::GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1;
+pub const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_OPERATION_V1: &str =
+    qpls_core::GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_OPERATION_VERSION_V1;
+pub const GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1: &str =
+    qpls_core::GENERAL_SEM_PLS_SINGLE_MEDIATION_CASE_BOOTSTRAP_METHOD_VERSION_V1;
 pub const GENERAL_SEM_PLS_BOOTSTRAP_STREAM_VERSION_V1: &str =
     qpls_core::GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1;
 pub const GENERAL_SEM_PLS_BOOTSTRAP_QUANTILE_VERSION_V1: &str =
@@ -347,9 +351,21 @@ impl GeneralSemPlsBootstrapResultV1 {
         let invalid = |message: &str| {
             GeneralSemPlsBootstrapErrorV1::InvalidResultContract(message.to_string())
         };
+        let exact_bootstrap_identity = (
+            self.method_version.as_str(),
+            self.resampling_operation_version.as_str(),
+        );
         if self.schema_version != GENERAL_SEM_PLS_BOOTSTRAP_RESULT_SCHEMA_VERSION_V1
-            || self.method_version != GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1
-            || self.resampling_operation_version != GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1
+            || !matches!(
+                exact_bootstrap_identity,
+                (
+                    GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1,
+                    GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1
+                ) | (
+                    GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
+                    GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_OPERATION_V1
+                )
+            )
             || self.resampling_stream_version != GENERAL_SEM_PLS_BOOTSTRAP_STREAM_VERSION_V1
             || self.quantile_method_version != GENERAL_SEM_PLS_BOOTSTRAP_QUANTILE_VERSION_V1
             || self.standard_error_method_version
@@ -1337,6 +1353,10 @@ pub enum GeneralSemPlsBootstrapErrorV1 {
     #[error("General SEM PLS bootstrap result contract is invalid: {0}")]
     InvalidResultContract(String),
     #[error(
+        "single-mediation bootstrap requires exactly one compiled specific indirect path; found {found}"
+    )]
+    SingleMediationPathCardinality { found: usize },
+    #[error(
         "General SEM PLS bootstrap replicate {replicate_index} violated the execution contract: {message}"
     )]
     ReplicateContract {
@@ -1456,6 +1476,68 @@ pub fn bootstrap_general_sem_pls_v1(
     config: &GeneralSemConfigV1,
     initialization: Option<&PlsAlgorithmConfigV2>,
     workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<GeneralSemPlsBootstrapResultV1, GeneralSemPlsBootstrapErrorV1> {
+    bootstrap_general_sem_pls_with_contract_v1(
+        dataset,
+        point_execution,
+        plan,
+        original,
+        config,
+        initialization,
+        workers,
+        GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1,
+        GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+/// Distinct governed route for a graph containing exactly one scientific
+/// indirect path. Its estimator and indexed scheduler are shared with the
+/// multiple-path cell, but its method/operation identities are not aliases.
+pub fn bootstrap_general_sem_pls_single_mediation_v1(
+    dataset: &Dataset,
+    point_execution: &ValidatedExecutionRecipe,
+    plan: &CompiledPlsPlanV3,
+    original: &PlsResult,
+    config: &GeneralSemConfigV1,
+    initialization: Option<&PlsAlgorithmConfigV2>,
+    workers: usize,
+    is_cancelled: impl Fn() -> bool + Sync,
+    report_progress: impl Fn(ResamplingProgress) + Sync,
+) -> Result<GeneralSemPlsBootstrapResultV1, GeneralSemPlsBootstrapErrorV1> {
+    let found = plan.topology().specific_directed_paths().len();
+    if found != 1 {
+        return Err(GeneralSemPlsBootstrapErrorV1::SingleMediationPathCardinality { found });
+    }
+    bootstrap_general_sem_pls_with_contract_v1(
+        dataset,
+        point_execution,
+        plan,
+        original,
+        config,
+        initialization,
+        workers,
+        GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
+        GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_OPERATION_V1,
+        is_cancelled,
+        report_progress,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn bootstrap_general_sem_pls_with_contract_v1(
+    dataset: &Dataset,
+    point_execution: &ValidatedExecutionRecipe,
+    plan: &CompiledPlsPlanV3,
+    original: &PlsResult,
+    config: &GeneralSemConfigV1,
+    initialization: Option<&PlsAlgorithmConfigV2>,
+    workers: usize,
+    method_version: &'static str,
+    operation_version: &'static str,
     is_cancelled: impl Fn() -> bool + Sync,
     report_progress: impl Fn(ResamplingProgress) + Sync,
 ) -> Result<GeneralSemPlsBootstrapResultV1, GeneralSemPlsBootstrapErrorV1> {
@@ -1610,7 +1692,7 @@ pub fn bootstrap_general_sem_pls_v1(
     let bootstrap_plan = BootstrapPlan {
         replicates: resamples,
         master_seed: seed,
-        operation: GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1.to_string(),
+        operation: operation_version.to_string(),
     };
     let cancellation = &is_cancelled;
     let run = run_bootstrap(
@@ -1742,8 +1824,8 @@ pub fn bootstrap_general_sem_pls_v1(
 
     let result = GeneralSemPlsBootstrapResultV1 {
         schema_version: GENERAL_SEM_PLS_BOOTSTRAP_RESULT_SCHEMA_VERSION_V1,
-        method_version: GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1.to_string(),
-        resampling_operation_version: GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1.to_string(),
+        method_version: method_version.to_string(),
+        resampling_operation_version: operation_version.to_string(),
         resampling_stream_version: GENERAL_SEM_PLS_BOOTSTRAP_STREAM_VERSION_V1.to_string(),
         quantile_method_version: GENERAL_SEM_PLS_BOOTSTRAP_QUANTILE_VERSION_V1.to_string(),
         standard_error_method_version: GENERAL_SEM_PLS_BOOTSTRAP_STANDARD_ERROR_VERSION_V1
@@ -1793,7 +1875,7 @@ enum GeneralSemPlsModerationBootstrapReplicateRecordV1 {
 }
 
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
-enum GeneralSemPlsModerationScoreAlignmentErrorV1 {
+pub(crate) enum GeneralSemPlsModerationScoreAlignmentErrorV1 {
     #[error("score sign alignment was cancelled")]
     Cancelled,
     #[error("replicate and original construct-score domains differ")]
@@ -2767,7 +2849,7 @@ fn estimate_moderation_bootstrap_replicate_v1(
     Ok(point)
 }
 
-fn align_general_sem_pls_moderation_score_vectors_v1(
+pub(crate) fn align_general_sem_pls_moderation_score_vectors_v1(
     replicate_scores: &mut BTreeMap<String, Vec<f64>>,
     original_scores: &BTreeMap<String, Vec<f64>>,
     sampled_positions: &[usize],
@@ -3243,7 +3325,7 @@ fn target_id_for_moderated_mediation_inference_v1(
     }
 }
 
-fn validate_point_execution_plan_domain_v1(
+pub(crate) fn validate_point_execution_plan_domain_v1(
     dataset: &Dataset,
     point_execution: &ValidatedExecutionRecipe,
     plan: &CompiledPlsPlanV3,
@@ -3723,6 +3805,22 @@ mod tests {
     const FAILURE_BOUNDARY_RESAMPLES: u32 = 20;
     const FAILURE_BOUNDARY_PUBLISHABLE_SEED: u64 = 2;
     const FAILURE_BOUNDARY_REJECTED_SEED: u64 = 8;
+
+    #[test]
+    fn single_mediation_bootstrap_identity_does_not_relabel_the_historical_cell() {
+        assert_ne!(
+            GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
+            GENERAL_SEM_PLS_BOOTSTRAP_METHOD_VERSION_V1,
+        );
+        assert_ne!(
+            GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_OPERATION_V1,
+            GENERAL_SEM_PLS_BOOTSTRAP_OPERATION_V1,
+        );
+        assert_ne!(
+            qpls_core::pls_general_single_mediation_bootstrap_capability_cell_v1().cell_id,
+            qpls_core::pls_general_bootstrap_capability_cell_v1().cell_id,
+        );
+    }
 
     struct ModerationBootstrapFixtureV1 {
         dataset: Dataset,

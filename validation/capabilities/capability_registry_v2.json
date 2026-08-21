@@ -183,6 +183,10 @@
           "objective": "Add model comparison/selection and advanced CB-SEM workflows."
         },
         {
+          "id": "2.53.0",
+          "objective": "Refine diagram-native mediation and moderation, then independently qualify the bounded single-path and true three-way cells."
+        },
+        {
           "id": "3.0.0-beta.1",
           "objective": "Run the signed external competitor beta."
         },
@@ -4906,7 +4910,7 @@
           "scope:bounded"
         ]
       },
-      "scope_statement": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow, an Experimental Labs General SEM point cell that jointly estimates one or more interaction_v2 terms on a direct-only graph, and a connected supplemental full-model indexed case-bootstrap cell that publishes two-sided Type-7 inference for scientific rescaled interaction gamma only.",
+      "scope_statement": "Bounded standardized two-stage PLS moderation: scoped Standard single, simultaneous two-way, and one-term true three-way point/full-model bootstrap cells. Diagram anchors remain presentation-only and interaction_v2 remains the scientific authority.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/"
       ],
@@ -4927,7 +4931,9 @@
       "qualification_references": [
         "validation/methods/moderation_v1.manifest.json",
         "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
-        "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+        "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json",
+        "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json",
+        "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -4947,13 +4953,27 @@
           "capability_id": "smartpls.moderation",
           "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
           "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+          "capability_version": "general_sem_pls_three_way_moderation_point_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+          "capability_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1"
         }
       ],
       "qualification_spec": {
         "references": [
           "validation/methods/moderation_v1.manifest.json",
           "validation/methods/general_sem_pls_multiple_moderation_point_v1.manifest.json",
-          "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json"
+          "validation/methods/general_sem_pls_multiple_moderation_bootstrap_v1.manifest.json",
+          "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json",
+          "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -4973,11 +4993,24 @@
             "capability_id": "smartpls.moderation",
             "cell_id": "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
             "capability_version": "general_sem_pls_multiple_two_way_moderation_full_model_case_bootstrap_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.moderation",
+            "cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+            "capability_version": "general_sem_pls_three_way_moderation_point_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.moderation",
+            "cell_id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+            "capability_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1"
           }
         ]
       },
       "known_differences": [
-        "The exact Rank 0 cells are independently Standard under rank0_streamlined_plan4b_v1; other cells under this row retain their own state."
+        "The one-term three-way point and bootstrap cells are independently scoped Standard under quickpls_v253_streamlined_integration_v1; established two-way identities and evidence are unchanged.",
+        "The historical single-interaction qpls3.pls.moderation cell remains separately archive-qualified in Labs, so the mixed parent row still projects conservatively to Labs."
       ],
       "legacy_row": {
         "id": "smartpls.moderation",
@@ -4988,18 +5021,27 @@
         "priority": "P1",
         "target_release": "2.49.0",
         "competitor_scope": true,
-        "quickpls_scope": "Bounded standardized two-stage PLS moderation: the established single-interaction workflow, an Experimental Labs General SEM point cell that jointly estimates one or more interaction_v2 terms on a direct-only graph, and a connected supplemental full-model indexed case-bootstrap cell that publishes two-sided Type-7 inference for scientific rescaled interaction gamma only.",
+        "quickpls_scope": "Bounded standardized two-stage PLS moderation: scoped Standard single, simultaneous two-way, and one-term true three-way point/full-model bootstrap cells. Diagram anchors remain presentation-only and interaction_v2 remains the scientific authority.",
         "quickpls_capability_ids": [
           "qpls3.pls.moderation",
           "qpls3.pls.general_sem_multiple_two_way_moderation_point",
-          "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap"
+          "qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap",
+          "qpls3.pls.general_sem_three_way_moderation_point",
+          "qpls3.pls.general_sem_three_way_moderation_bootstrap"
         ],
-        "implementation_evidence": [],
+        "implementation_evidence": [
+          "validation/general_sem_v253_reference.py",
+          "validation/v253_mediation_moderation_release_audit.py",
+          "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md",
+          "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md",
+          "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+          "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json"
+        ],
         "dependencies": [
           "smartpls.pls_algorithm",
           "smartpls.pls_bootstrapping"
         ],
-        "remaining_gap": "The connected General SEM point and supplemental scientific-gamma bootstrap cells remain partial, engine-only, and opt-in Labs. Standardized-product beta, ordinary-coefficient, fixed-slope, and plot inference remain excluded, while independent full-PLS qualification, semantic export/readback, packaged Windows, performance/soak, and review evidence remain pending; three-way interactions, authored arbitrary probes, moderated mediation, directed chains, and higher-order interaction systems remain blocked."
+        "remaining_gap": "Fourth-order or multiple three-way terms, HOC interactions, three-way moderated mediation, arbitrary probes, Johnson-Neyman output, groups, weights, and broader missing-data handling remain excluded."
       },
       "option_cells": [
         {
@@ -5217,6 +5259,165 @@
           "known_differences": [
             "This bounded cell is Standard under rank0_streamlined_plan4b_v1. Package and performance evidence is representative rather than per-cell; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made."
           ]
+        },
+        {
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+          "capability_version": "general_sem_pls_three_way_moderation_point_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "relationship:interaction"
+            ],
+            "quickpls": [
+              "project_schema:6",
+              "sem_generation:general_sem_v1",
+              "estimator:qpls.pls_sem.v3",
+              "derived_term:interaction_v2",
+              "interaction_order:three_way",
+              "three_way_term_count:exactly_one",
+              "construction:two_stage",
+              "hierarchy:strong",
+              "required_lower_order_terms:all_main_and_pairwise",
+              "structural_topology:recursive_dag",
+              "higher_order_constructs:none",
+              "moderated_mediation:none",
+              "probe_policy:continuous_standardized_minus_one_zero_plus_one_or_binary_zero_one",
+              "inference:point_only"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_numeric",
+              "missing_data:listwise_deletion",
+              "weight:none",
+              "group:single"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md",
+              "validation/capabilities/general_sem_pls_three_way_moderation_point_v1.cell.manifest.json"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "crates/qpls-core/src/canonical_result_v2.rs",
+              "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_V1.md",
+              "validation/capabilities/general_sem_pls_three_way_moderation_point_v1.cell.manifest.json"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.moderation",
+                "cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+                "capability_version": "general_sem_pls_three_way_moderation_point_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Scoped Standard under quickpls_v253_streamlined_integration_v1 for only the exact documented predicate; this is not unrestricted SmartPLS breadth or a numerical-identity claim.",
+            "All exclusions in the linked capability-cell and method contracts remain in force."
+          ]
+        },
+        {
+          "capability_id": "smartpls.moderation",
+          "cell_id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+          "capability_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "relationship:interaction"
+            ],
+            "quickpls": [
+              "project_schema:6",
+              "sem_generation:general_sem_v1",
+              "estimator:qpls.pls_sem.v3",
+              "derived_term:interaction_v2",
+              "interaction_order:three_way",
+              "three_way_term_count:exactly_one",
+              "construction:two_stage",
+              "hierarchy:strong",
+              "required_lower_order_terms:all_main_and_pairwise",
+              "structural_topology:recursive_dag",
+              "higher_order_constructs:none",
+              "moderated_mediation:none",
+              "probe_policy:continuous_standardized_minus_one_zero_plus_one_or_binary_zero_one",
+              "inference:full_model_case_bootstrap",
+              "resampling_unit:case",
+              "replacement:with_replacement",
+              "interval:percentile_type7",
+              "tail:two_sided",
+              "resamples:2..10000",
+              "seed:indexed_fixed",
+              "usable_replicates:min_max_2_ceil_0_9_b"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_numeric",
+              "missing_data:listwise_deletion",
+              "weight:none",
+              "group:single"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+              "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md",
+              "validation/capabilities/general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+              "crates/qpls-core/src/canonical_result_v2.rs",
+              "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md",
+              "validation/capabilities/general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1.cell.manifest.json"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.moderation",
+                "cell_id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+                "capability_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Scoped Standard under quickpls_v253_streamlined_integration_v1 for only the exact documented predicate; this is not unrestricted SmartPLS breadth or a numerical-identity claim.",
+            "All exclusions in the linked capability-cell and method contracts remain in force."
+          ]
         }
       ]
     },
@@ -5278,7 +5479,7 @@
           "scope:bounded"
         ]
       },
-      "scope_statement": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
+      "scope_statement": "Diagram-derived single, parallel and serial mediation over substantive directed paths in a supported recursive PLS model, with separately governed single-path and multiple-path full-model bootstrap cells.",
       "settings_references": [
         "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/"
       ],
@@ -5299,7 +5500,8 @@
       "qualification_references": [
         "validation/methods/mediation_v1.manifest.json",
         "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json",
-        "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json"
+        "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json",
+        "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json"
       ],
       "qualification_links": [
         {
@@ -5319,13 +5521,20 @@
           "capability_id": "smartpls.mediation",
           "cell_id": "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
           "capability_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
+        },
+        {
+          "registry_schema_version": 2,
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+          "capability_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
         }
       ],
       "qualification_spec": {
         "references": [
           "validation/methods/mediation_v1.manifest.json",
           "validation/methods/general_sem_pls_multiple_mediation_bootstrap_v1.manifest.json",
-          "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json"
+          "validation/capabilities/general_sem_pls_two_way_moderated_mediation_bootstrap_v1.cell.manifest.json",
+          "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json"
         ],
         "links": [
           {
@@ -5345,12 +5554,18 @@
             "capability_id": "smartpls.mediation",
             "cell_id": "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
             "capability_version": "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
+          },
+          {
+            "registry_schema_version": 2,
+            "capability_id": "smartpls.mediation",
+            "cell_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+            "capability_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
           }
         ]
       },
       "known_differences": [
-        "The exact Rank 0 cells and bounded two-way moderated-mediation cell are Standard under the user-approved streamlined Version 2.50 integration profile; documented exclusions remain unchanged and no SmartPLS numerical-identity claim is made.",
-        "Causal identification, counterfactual mediation beyond the exact registered two-way conditional-process cell, and cyclic paths remain excluded."
+        "The exact single-path bootstrap cell is independently scoped Standard under quickpls_v253_streamlined_integration_v1; existing point, multiple-path, and moderated-mediation identities are unchanged.",
+        "Causal identification, broader counterfactual mediation, cyclic paths, groups, weights, and unsupported missing-data handling remain excluded."
       ],
       "legacy_row": {
         "id": "smartpls.mediation",
@@ -5361,18 +5576,24 @@
         "priority": "P1",
         "target_release": "current",
         "competitor_scope": true,
-        "quickpls_scope": "Bounded direct, total-indirect, and total-effect decomposition over directed paths in a supported recursive PLS model.",
+        "quickpls_scope": "Diagram-derived single, parallel and serial mediation over substantive directed paths in a supported recursive PLS model, with separately governed single-path and multiple-path full-model bootstrap cells.",
         "quickpls_capability_ids": [
           "qpls3.pls.mediation",
           "qpls3.pls.general_sem_multiple_mediation_bootstrap",
-          "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap"
+          "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
+          "qpls3.pls.general_sem_single_mediation_bootstrap"
         ],
-        "implementation_evidence": [],
+        "implementation_evidence": [
+          "validation/general_sem_v253_reference.py",
+          "validation/v253_mediation_moderation_release_audit.py",
+          "docs/methods/GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_V1.md",
+          "validation/results/method_factory/general_sem_pls_single_mediation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json"
+        ],
         "dependencies": [
           "smartpls.pls_algorithm",
           "smartpls.pls_bootstrapping"
         ],
-        "remaining_gap": "Causal identification, broader counterfactual mediation, and cyclic paths remain excluded."
+        "remaining_gap": "Causal identification, broader counterfactual mediation, cyclic paths, groups, weights, and unsupported missing-data handling remain excluded."
       },
       "option_cells": [
         {
@@ -5588,6 +5809,90 @@
           "known_differences": [
             "This bounded Standard cell is connected from exact path authoring through source-preserving schema-6 revision v2, shared-replicate full-model execution, canonical five-target results, strict archive persistence, reopen, and canonical-table export under the user-approved streamlined Version 2.50 integration profile.",
             "Only one selected two-relation X-to-M-to-Y path and one first- or second-stage two-way interaction are admitted. Arbitrary probes, both-stage moderation, multiple interactions, longer paths, causal identification claims, BCa, one-sided, studentized, multigroup, weighted, clustered, transformed, and non-listwise inputs remain excluded."
+          ]
+        },
+        {
+          "capability_id": "smartpls.mediation",
+          "cell_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+          "capability_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1",
+          "coverage_state": "partial",
+          "evidence_state": "release_qualified",
+          "surface": "standard",
+          "supported_model_predicate": {
+            "official": [
+              "model_family:pls_sem",
+              "relationship:indirect"
+            ],
+            "quickpls": [
+              "project_schema:6",
+              "sem_generation:general_sem_v1",
+              "estimator:qpls.pls_sem.v3",
+              "topology:recursive_dag",
+              "constructs:composite_only",
+              "indirect_paths:exactly_one",
+              "specific_path_materialization:eager_only",
+              "interactions:none",
+              "higher_order_constructs:none",
+              "conditional_effect_probes:none",
+              "inference:full_model_case_bootstrap",
+              "interval:percentile_type7",
+              "tail:two_sided",
+              "resamples:2..10000",
+              "seed:indexed_fixed",
+              "usable_replicates:min_max_2_ceil_0_9_b"
+            ]
+          },
+          "supported_data_predicate": {
+            "official": [
+              "input:raw_numeric",
+              "missing_data:method_defined"
+            ],
+            "quickpls": [
+              "input:raw_numeric",
+              "observed_scale:continuous",
+              "missing_data:listwise_deletion",
+              "weight:none",
+              "cluster_variable:none",
+              "strata_variable:none",
+              "observed_missing_markers:none",
+              "transformation_lineage:none",
+              "group:single"
+            ]
+          },
+          "settings_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+              "docs/methods/GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_V1.md",
+              "validation/capabilities/general_sem_pls_single_mediation_full_model_case_bootstrap_v1.cell.manifest.json"
+            ]
+          },
+          "result_schema": {
+            "references": [
+              "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+              "https://smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+              "crates/qpls-core/src/canonical_result_v2.rs",
+              "docs/methods/GENERAL_SEM_PLS_SINGLE_MEDIATION_BOOTSTRAP_V1.md",
+              "validation/capabilities/general_sem_pls_single_mediation_full_model_case_bootstrap_v1.cell.manifest.json"
+            ]
+          },
+          "documentation_reference": "https://smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+          "qualification_spec": {
+            "references": [
+              "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json"
+            ],
+            "links": [
+              {
+                "registry_schema_version": 2,
+                "capability_id": "smartpls.mediation",
+                "cell_id": "qpls3.pls.general_sem_single_mediation_bootstrap",
+                "capability_version": "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
+              }
+            ]
+          },
+          "known_differences": [
+            "Scoped Standard under quickpls_v253_streamlined_integration_v1 for only the exact documented predicate; this is not unrestricted SmartPLS breadth or a numerical-identity claim.",
+            "All exclusions in the linked capability-cell and method contracts remain in force."
           ]
         }
       ]

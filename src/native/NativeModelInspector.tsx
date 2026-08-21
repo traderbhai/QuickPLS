@@ -237,17 +237,51 @@ function interactionRequiredPaths(
   return paths;
 }
 
+function higherOrderApproach(higherOrder: HigherOrderConstructData): NonNullable<HigherOrderConstructData["canonicalApproach"]> {
+  if (higherOrder.canonicalApproach) return higherOrder.canonicalApproach;
+  if (higherOrder.method === "repeated_indicators") return "repeated_indicators";
+  if (higherOrder.method === "hybrid") return "hybrid";
+  return "disjoint_two_stage";
+}
+
 function higherOrderApproachLabel(higherOrder: HigherOrderConstructData): string {
-  if (higherOrder.canonicalApproach) return HIGHER_ORDER_APPROACH_LABELS[higherOrder.canonicalApproach];
-  if (higherOrder.method === "repeated_indicators") return "Repeated indicators";
-  if (higherOrder.method === "hybrid") return "Hybrid";
-  return "Disjoint two-stage";
+  return HIGHER_ORDER_APPROACH_LABELS[higherOrderApproach(higherOrder)];
 }
 
 function higherOrderMeasurementLabel(higherOrder: HigherOrderConstructData): string {
   return higherOrder.measurementType
     ? HIGHER_ORDER_MEASUREMENT_LABELS[higherOrder.measurementType]
     : "Reflective–reflective higher-order construct";
+}
+
+function higherOrderInputsLabel(higherOrder: HigherOrderConstructData): string {
+  const approach = higherOrderApproach(higherOrder);
+  if (approach === "repeated_indicators") return "Repeated component indicators";
+  if (approach === "extended_repeated_indicators") return "Extended repeated component indicators";
+  if (approach === "hybrid") return "Component indicators and generated scores";
+  return "Generated component scores";
+}
+
+function higherOrderDataBindingNote(higherOrder: HigherOrderConstructData): string {
+  const approach = higherOrderApproach(higherOrder);
+  if (approach === "repeated_indicators" || approach === "extended_repeated_indicators") {
+    return "Indicators are managed on the lower-order components and repeated for this construct during estimation.";
+  }
+  if (approach === "hybrid") {
+    return "Indicators remain bound to the lower-order components; this approach combines component indicators and generated scores.";
+  }
+  return "Indicators remain bound to the lower-order components; this construct is estimated from generated component scores.";
+}
+
+export function nativeHigherOrderPositionLabel(nodeId: string, edges: readonly Edge[]): "Exogenous" | "Endogenous" | "Unconnected" {
+  const structuralEdges = edges.filter((edge) => (
+    !edge.id.startsWith("measurement::")
+    && edge.data?.role !== "covariance"
+    && edge.data?.visualOnly !== true
+  ));
+  if (structuralEdges.some((edge) => edge.target === nodeId)) return "Endogenous";
+  if (structuralEdges.some((edge) => edge.source === nodeId)) return "Exogenous";
+  return "Unconnected";
 }
 
 export function nextNativeModelInspectorTab(
@@ -309,27 +343,31 @@ export interface NativeModelInspectorProps {
   initialMode?: NativeModelInspectorMode;
   initialTab?: NativeModelInspectorTab;
   nodesOverride?: Array<Node<ConstructData>>;
+  edgesOverride?: readonly Edge[];
   selectedNodeIdOverride?: string | null;
   selectedEdgeIdOverride?: string | null;
   experimentalLabsEnabledOverride?: boolean;
   strictAuthorityOverride?: StandardSemModelV4AuthorityRecordV1 | null;
   readiness?: NativePlsReadiness;
+  onEditHigherOrder?: (request: { nodeId: string; termId: string }) => void;
 }
 
 export function NativeModelInspector({
   initialMode = "basic",
   initialTab = "model",
   nodesOverride,
+  edgesOverride,
   selectedNodeIdOverride,
   selectedEdgeIdOverride,
   experimentalLabsEnabledOverride,
   strictAuthorityOverride,
   readiness,
+  onEditHigherOrder,
 }: NativeModelInspectorProps = {}) {
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
   const storeNodes = useWorkspace((state) => state.nodes);
-  const edges = useWorkspace((state) => state.edges);
+  const storeEdges = useWorkspace((state) => state.edges);
   const storeSelectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const storeSelectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const storeExperimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
@@ -356,6 +394,7 @@ export function NativeModelInspector({
   const constructRepresentationAuthoringEnabled = experimentalSemAuthoringEnabled
     || standardCbsemConstructAuthoringAvailable;
   const nodes = nodesOverride ?? storeNodes;
+  const edges = edgesOverride ?? storeEdges;
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedInteraction = selected?.data.semantic === "interaction"
     ? selected.data.interaction
@@ -553,9 +592,10 @@ export function NativeModelInspector({
             <div><dt>Outcome</dt><dd>{nodes.find((node) => node.id === selectedInteraction.outcome)?.data.label ?? selectedInteraction.outcome}</dd></div>
           </dl> : selected.data.semantic === "higher_order" && selected.data.higherOrder ? <dl className="nd-property-list">
             <div><dt>Type</dt><dd>{higherOrderMeasurementLabel(selected.data.higherOrder)}</dd></div>
-            <div><dt>Method</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div>
+            <div><dt>Approach</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div>
             <div><dt>Components</dt><dd>{selected.data.higherOrder.components.map((component) => nodes.find((node) => node.id === component)?.data.label ?? component).join(", ")}</dd></div>
-            <div><dt>Indicators</dt><dd>Generated component scores</dd></div>
+            <div><dt>Position</dt><dd>{nativeHigherOrderPositionLabel(selected.id, edges)}</dd></div>
+            <div><dt>Inputs</dt><dd>{higherOrderInputsLabel(selected.data.higherOrder)}</dd></div>
           </dl> : <dl className="nd-property-list"><div><dt>Object</dt><dd>Construct</dd></div><div><dt>Indicators</dt><dd>{selected.data.indicators.length}</dd></div></dl>}
         </> : selectedPath ? <>
           <dl className="nd-property-list"><div><dt>Source</dt><dd>{source}</dd></div><div><dt>Target</dt><dd>{target}</dd></div></dl>
@@ -586,8 +626,8 @@ export function NativeModelInspector({
           <dl className="nd-property-list"><div><dt>Parameter</dt><dd>{interactionMethodLabel(selectedInteraction)}</dd></div><div><dt>Manifest indicators</dt><dd>Not applicable</dd></div></dl>
           <p className="nd-property-note">The interaction parameter is derived from its ordered operand scores.</p>
         </> : selected?.data.semantic === "higher_order" && selected.data.higherOrder ? <>
-          <dl className="nd-property-list"><div><dt>Method</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div><div><dt>Indicators</dt><dd>Generated component scores</dd></div></dl>
-          <p className="nd-property-note">The higher-order construct remains indicator-free in the editable model.</p>
+          <dl className="nd-property-list"><div><dt>Approach</dt><dd>{higherOrderApproachLabel(selected.data.higherOrder)}</dd></div><div><dt>Inputs</dt><dd>{higherOrderInputsLabel(selected.data.higherOrder)}</dd></div></dl>
+          <p className="nd-property-note">{higherOrderDataBindingNote(selected.data.higherOrder)}</p>
         </> : selected ? <>
           <fieldset><legend>Measurement model</legend><label><input type="radio" checked={selected.data.mode === "reflective"} onChange={() => setMeasurementMode("reflective")} />Reflective</label><label><input type="radio" checked={selected.data.mode === "formative"} onChange={() => setMeasurementMode("formative")} />Formative</label></fieldset>
           {mode === "expert" ? <dl className="nd-property-list"><div><dt>Stable construct ID</dt><dd>{selected.id}</dd></div><div><dt>Bound indicators</dt><dd>{selected.data.indicators.length}</dd></div></dl> : null}
@@ -623,11 +663,21 @@ export function NativeModelInspector({
             {selected.data.indicators.map((indicator) => <div key={indicator}><span>{indicator}</span><button type="button" aria-label={`Remove ${indicator} from ${selected.data.label}`} onClick={() => removeDatasetIndicator(indicator)}>Remove</button></div>)}
             {!selected.data.indicators.length ? <p>No variables are bound to this construct.</p> : null}
           </div>
-        </> : selected ? <p className="nd-property-note">{selected.data.semantic === "interaction" ? "Generated interactions do not accept manifest indicators." : "Higher-order constructs use generated component scores and do not accept manifest indicators."}</p> : selectedPath ? <p className="nd-property-note">Relationships do not bind directly to dataset variables.</p> : <dl className="nd-property-list"><div><dt>Dataset</dt><dd>{dataset.name}</dd></div><div><dt>Input</dt><dd>{dataset.kind}</dd></div><div><dt>Variables</dt><dd>{dataset.columns.length}</dd></div><div><dt>Cases</dt><dd>{dataset.rows.length}</dd></div></dl>}
+        </> : selected ? <p className="nd-property-note">{selected.data.semantic === "interaction"
+          ? "Generated interactions do not accept manifest indicators."
+          : selected.data.higherOrder
+            ? higherOrderDataBindingNote(selected.data.higherOrder)
+            : "This generated construct does not accept manifest indicators."}</p> : selectedPath ? <p className="nd-property-note">Relationships do not bind directly to dataset variables.</p> : <dl className="nd-property-list"><div><dt>Dataset</dt><dd>{dataset.name}</dd></div><div><dt>Input</dt><dd>{dataset.kind}</dd></div><div><dt>Variables</dt><dd>{dataset.columns.length}</dd></div><div><dt>Cases</dt><dd>{dataset.rows.length}</dd></div></dl>}
       </form> : null}
     </section>
     {selected || selectedPath ? <div className="nd-property-actions nd-inspector-object-actions">
       {selectedPath ? <button type="button" disabled={selectedPathSupportsModeration} onClick={reversePath}>Reverse</button> : null}
+      {selected?.data.semantic === "higher_order" && selected.data.higherOrder ? <button
+        type="button"
+        disabled={!onEditHigherOrder}
+        aria-label={`Edit higher-order construct ${selected.data.label}`}
+        onClick={() => onEditHigherOrder?.({ nodeId: selected.id, termId: selected.data.higherOrder!.id })}
+      >Edit…</button> : null}
       <button type="button" className="danger" onClick={deleteSelection}>{selectedPathSupportsModeration ? "Delete relationship and interaction" : selected?.data.semantic === "interaction" ? "Delete interaction" : selected?.data.semantic === "higher_order" ? "Delete higher-order construct" : selected ? "Delete construct" : "Delete relationship"}</button>
     </div> : null}
     </fieldset>

@@ -10,6 +10,20 @@ Method version: `pls_mediation_v1`
 
 This method classifies mediation from the already estimated PLS path model effects. It does not change the PLS algorithm, latent scores, measurement estimates, or structural path coefficients.
 
+## Canvas and Calculate workflow
+
+Mediation is derived from the diagram rather than authored as a special node.
+Draw substantive structural paths such as `X -> M -> Y`; parallel and serial
+chains are discovered from the same model. Discovery excludes covariance,
+control, measurement, generated, interaction-hierarchy, indicator-endpoint, and
+generated-variable-endpoint relationships.
+
+PLS Algorithm uses the applicable point-effect cell. Bootstrapping routes one
+eligible indirect path to the separately versioned
+`qpls3.pls.general_sem_single_mediation_bootstrap` cell and multiple paths to
+the existing multiple-mediation bootstrap cell. The single-path cell is independently scoped Standard under the streamlined
+2.53 profile; it does not change this established point identity.
+
 The slice covers:
 
 - direct effect from construct `i` to construct `j`
@@ -19,7 +33,9 @@ The slice covers:
 - descriptive class labels for no effect, direct-only, indirect-only, complementary partial, and competitive partial patterns
 - bootstrap percentile, BCa, and bootstrap-t rows for `indirect_effect` parameters when the run includes the corresponding inference artifacts
 
-The slice does not yet cover PROCESS-style covariate workflows, moderated mediation, a formal indirect-effect permutation estimator, broader mediation decision rules, or publication-ready mediation decisions.
+The slice does not yet cover PROCESS-style covariate workflows, unregistered
+moderated-mediation shapes, a formal indirect-effect permutation estimator,
+broader mediation decision rules, or publication-ready causal mediation decisions.
 
 ## Definitions
 

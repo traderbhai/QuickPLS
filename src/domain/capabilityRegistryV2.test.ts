@@ -16,13 +16,13 @@ describe("Capability Registry V2 frontend adapter", () => {
       row_count: 45,
       active_row_count: 43,
       coverage: { full: 0, partial: 32, absent: 11, intentionally_excluded: 2 },
-      surfaces: { standard: 27, labs: 16, legacy: 2, internal: 0 },
-      option_cell_count: 56,
-      option_cell_coverage: { full: 0, partial: 43, absent: 11, intentionally_excluded: 2 },
-      option_cell_surfaces: { standard: 38, labs: 16, legacy: 2, internal: 0 },
+      surfaces: { standard: 26, labs: 17, legacy: 2, internal: 0 },
+      option_cell_count: 59,
+      option_cell_coverage: { full: 0, partial: 46, absent: 11, intentionally_excluded: 2 },
+      option_cell_surfaces: { standard: 38, labs: 19, legacy: 2, internal: 0 },
     });
-    expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
-    expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
+    expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(26);
+    expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(27);
   });
 
   it("authorizes the exact two-way moderated-mediation cell as scoped Standard", () => {

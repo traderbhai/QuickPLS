@@ -1,0 +1,1666 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v253_consolidated_diagnostics_v1",
+  "version": "2.53.0",
+  "passed": false,
+  "repository_root": "D:\\QuickPLS",
+  "evidence_directory": "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821",
+  "started_at": "2026-08-21T14:08:54.4993473Z",
+  "ended_at": "2026-08-21T14:14:37.6840074Z",
+  "duration_ms": 343185.0,
+  "policy": {
+    "ordinary_command_failures": "record and continue",
+    "disk_safety_failures": "skip disk-intensive commands",
+    "minimum_free_gib_exclusive": 20.0,
+    "cargo_incremental": 0,
+    "cargo_target_dir": "D:\\QuickPLS\\target",
+    "repeated_historical_scientific_matrices": false,
+    "packaged_or_browser_execution": false,
+    "expected_registry_surface": "labs"
+  },
+  "summary": {
+    "total": 19,
+    "passed": 9,
+    "failed": 10,
+    "skipped": 0,
+    "failed_step_ids": [
+      "production_reference",
+      "reference",
+      "rust_core_three_way",
+      "rust_core_single_mediation",
+      "rust_project_three_way_archive",
+      "rust_project_single_mediation_archive",
+      "rust_project_moderation_revision",
+      "frontend_workflows",
+      "frontend_typecheck",
+      "release_audit"
+    ],
+    "skipped_step_ids": []
+  },
+  "evidence": {
+    "production_reference": "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_product_reference.json",
+    "compact_reference": "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_reference.json",
+    "release_audit": "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\v253_mediation_moderation_release_audit.json"
+  },
+  "disk_snapshots": [
+    {
+      "label": "before_consolidated_pass",
+      "captured_at": "2026-08-21T14:08:54.6943835Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.736,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.982,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_production_reference",
+      "captured_at": "2026-08-21T14:08:54.7238624Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.736,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.982,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_production_reference",
+      "captured_at": "2026-08-21T14:09:57.8579477Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.711,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.182,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_check",
+      "captured_at": "2026-08-21T14:10:04.1259219Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.711,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.182,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_check",
+      "captured_at": "2026-08-21T14:10:48.4621179Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.711,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.157,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_core_three_way",
+      "captured_at": "2026-08-21T14:10:48.4743401Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.711,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 31.157,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_core_three_way",
+      "captured_at": "2026-08-21T14:11:25.9761130Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.71,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.9,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_core_single_mediation",
+      "captured_at": "2026-08-21T14:11:25.9872083Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.71,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.9,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_core_single_mediation",
+      "captured_at": "2026-08-21T14:11:27.5580647Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.71,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.9,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_estimation_three_way",
+      "captured_at": "2026-08-21T14:11:27.5699071Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.71,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.9,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_estimation_three_way",
+      "captured_at": "2026-08-21T14:12:13.1363804Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.559,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_resampling_three_way",
+      "captured_at": "2026-08-21T14:12:13.1465859Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 30.559,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_resampling_three_way",
+      "captured_at": "2026-08-21T14:12:58.2014985Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.985,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_resampling_single_mediation",
+      "captured_at": "2026-08-21T14:12:58.2131332Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.985,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_resampling_single_mediation",
+      "captured_at": "2026-08-21T14:13:00.0871749Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.985,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_project_three_way_archive",
+      "captured_at": "2026-08-21T14:13:00.0990517Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.985,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_project_three_way_archive",
+      "captured_at": "2026-08-21T14:13:25.5235674Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.651,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_project_single_mediation_archive",
+      "captured_at": "2026-08-21T14:13:25.5358044Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.651,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_project_single_mediation_archive",
+      "captured_at": "2026-08-21T14:13:43.7323440Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.051,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_rust_project_moderation_revision",
+      "captured_at": "2026-08-21T14:13:43.7423287Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.051,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_rust_project_moderation_revision",
+      "captured_at": "2026-08-21T14:13:53.3916927Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.051,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_frontend_workflows",
+      "captured_at": "2026-08-21T14:13:53.4025545Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.709,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.051,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_frontend_workflows",
+      "captured_at": "2026-08-21T14:14:04.9066299Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_frontend_typecheck",
+      "captured_at": "2026-08-21T14:14:04.9175912Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_frontend_typecheck",
+      "captured_at": "2026-08-21T14:14:29.3992548Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "before_frontend_build",
+      "captured_at": "2026-08-21T14:14:29.4096754Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_frontend_build",
+      "captured_at": "2026-08-21T14:14:37.3254070Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "label": "after_consolidated_pass",
+      "captured_at": "2026-08-21T14:14:37.6838963Z",
+      "passed": true,
+      "drives": [
+        {
+          "name": "C",
+          "free_gib": 27.707,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        },
+        {
+          "name": "D",
+          "free_gib": 29.05,
+          "threshold_gib_exclusive": 20.0,
+          "passed": true
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "steps": [
+    {
+      "id": "production_reference",
+      "description": "Bounded qpls-runner production point, probe, and indexed-bootstrap product",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo run --locked -p qpls-runner --example general_sem_v253_product_reference -- --output D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_product_reference.json --workers 1",
+      "executable": "cargo",
+      "arguments": [
+        "run",
+        "--locked",
+        "-p",
+        "qpls-runner",
+        "--example",
+        "general_sem_v253_product_reference",
+        "--",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_product_reference.json",
+        "--workers",
+        "1"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:08:54.7295880Z",
+      "ended_at": "2026-08-21T14:09:57.7854583Z",
+      "duration_ms": 63054,
+      "exit_code": 1,
+      "stdout": "logs/production_reference.stdout.log",
+      "stderr": "logs/production_reference.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ffc2e11369f2a88048522584ce88f3435b6e808063d06fa09b11125e8d79def9",
+      "disk_gate": {
+        "before": {
+          "label": "before_production_reference",
+          "captured_at": "2026-08-21T14:08:54.7238624Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.736,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 31.982,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_production_reference",
+          "captured_at": "2026-08-21T14:09:57.8579477Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.711,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 31.182,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "reference",
+      "description": "Compact independent three-way and single-mediation reference",
+      "status": "failed",
+      "reason": null,
+      "command": "python validation/general_sem_v253_reference.py --product-json D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_product_reference.json --require-product --output D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_reference.json --rscript C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\x64\\Rscript.exe --require-r",
+      "executable": "python",
+      "arguments": [
+        "validation/general_sem_v253_reference.py",
+        "--product-json",
+        "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_product_reference.json",
+        "--require-product",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_reference.json",
+        "--rscript",
+        "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\R\\R-4.6.1\\bin\\x64\\Rscript.exe",
+        "--require-r"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:09:57.8593212Z",
+      "ended_at": "2026-08-21T14:09:58.7635545Z",
+      "duration_ms": 904,
+      "exit_code": 1,
+      "stdout": "logs/reference.stdout.log",
+      "stderr": "logs/reference.stderr.log",
+      "stdout_sha256": "b9ca931c4ea31e56221fe319cda820fcc49cbd5bc339396ab4b4b61414f92f6b",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": null
+    },
+    {
+      "id": "registry",
+      "description": "Capability Registry V2 structure and legacy projection validation",
+      "status": "passed",
+      "reason": null,
+      "command": "python validation/capability_registry_v2.py --check-legacy --skip-reference-check",
+      "executable": "python",
+      "arguments": [
+        "validation/capability_registry_v2.py",
+        "--check-legacy",
+        "--skip-reference-check"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:09:58.7722871Z",
+      "ended_at": "2026-08-21T14:09:58.9662650Z",
+      "duration_ms": 193,
+      "exit_code": 0,
+      "stdout": "logs/registry.stdout.log",
+      "stderr": "logs/registry.stderr.log",
+      "stdout_sha256": "7759a6b3063bafc3594a8a5fb9fff951b730e82f68d9a8ef16c35e4d0d6f1eda",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": null
+    },
+    {
+      "id": "manifests",
+      "description": "New exact-cell promotion-manifest validation",
+      "status": "passed",
+      "reason": null,
+      "command": "python validation/method_promotion_manifest.py validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json --json",
+      "executable": "python",
+      "arguments": [
+        "validation/method_promotion_manifest.py",
+        "validation/methods/general_sem_pls_single_mediation_bootstrap_v1.manifest.json",
+        "validation/methods/general_sem_pls_three_way_moderation_point_v1.manifest.json",
+        "validation/methods/general_sem_pls_three_way_moderation_bootstrap_v1.manifest.json",
+        "--json"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:09:58.9739338Z",
+      "ended_at": "2026-08-21T14:09:59.1895187Z",
+      "duration_ms": 215,
+      "exit_code": 0,
+      "stdout": "logs/manifests.stdout.log",
+      "stderr": "logs/manifests.stderr.log",
+      "stdout_sha256": "3599bfd2fd83e1ef3e356d234b8a5abfdcb447e000919442f71773784abf1b71",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": null
+    },
+    {
+      "id": "rustfmt",
+      "description": "Rust formatting check",
+      "status": "passed",
+      "reason": null,
+      "command": "cargo fmt --all -- --check",
+      "executable": "cargo",
+      "arguments": [
+        "fmt",
+        "--all",
+        "--",
+        "--check"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:09:59.1988375Z",
+      "ended_at": "2026-08-21T14:10:03.6357959Z",
+      "duration_ms": 4436,
+      "exit_code": 0,
+      "stdout": "logs/rustfmt.stdout.log",
+      "stderr": "logs/rustfmt.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": null
+    },
+    {
+      "id": "diff_check",
+      "description": "Git whitespace-error check",
+      "status": "passed",
+      "reason": null,
+      "command": "git diff --check",
+      "executable": "git",
+      "arguments": [
+        "diff",
+        "--check"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:10:03.6399295Z",
+      "ended_at": "2026-08-21T14:10:04.1045684Z",
+      "duration_ms": 464,
+      "exit_code": 0,
+      "stdout": "logs/diff_check.stdout.log",
+      "stderr": "logs/diff_check.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "9040401f7a80952d94213ce181b2ffc7ab5e1de8131a2a62e1a5f58607017fa2",
+      "disk_gate": null
+    },
+    {
+      "id": "rust_check",
+      "description": "Consolidated Rust compilation",
+      "status": "passed",
+      "reason": null,
+      "command": "cargo check --locked -p qpls-core -p qpls-estimation -p qpls-resampling -p qpls-project -p qpls-runner -p quickpls-desktop",
+      "executable": "cargo",
+      "arguments": [
+        "check",
+        "--locked",
+        "-p",
+        "qpls-core",
+        "-p",
+        "qpls-estimation",
+        "-p",
+        "qpls-resampling",
+        "-p",
+        "qpls-project",
+        "-p",
+        "qpls-runner",
+        "-p",
+        "quickpls-desktop"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:10:04.1262515Z",
+      "ended_at": "2026-08-21T14:10:48.4428308Z",
+      "duration_ms": 44316,
+      "exit_code": 0,
+      "stdout": "logs/rust_check.stdout.log",
+      "stderr": "logs/rust_check.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "227f62a2eae2ab4b8b43a8a63b55384b5a840eab3b50c85cb9982e468788de04",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_check",
+          "captured_at": "2026-08-21T14:10:04.1259219Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.711,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 31.182,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_check",
+          "captured_at": "2026-08-21T14:10:48.4621179Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.711,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 31.157,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_core_three_way",
+      "description": "Focused core three-way contracts",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-core three_way -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-core",
+        "three_way",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:10:48.4746025Z",
+      "ended_at": "2026-08-21T14:11:25.9460317Z",
+      "duration_ms": 37471,
+      "exit_code": 101,
+      "stdout": "logs/rust_core_three_way.stdout.log",
+      "stderr": "logs/rust_core_three_way.stderr.log",
+      "stdout_sha256": "70b49c041101901f8d08c0cdfb6094618c714a8ef072c841a2f87c56b152a342",
+      "stderr_sha256": "7d9e4311f6cd17715068877ef857ba6dcb56162a7a818fc3623eb2a865a83143",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_core_three_way",
+          "captured_at": "2026-08-21T14:10:48.4743401Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.711,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 31.157,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_core_three_way",
+          "captured_at": "2026-08-21T14:11:25.9761130Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.71,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.9,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_core_single_mediation",
+      "description": "Focused core single-mediation routing",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-core single_indirect_path -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-core",
+        "single_indirect_path",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:11:25.9874232Z",
+      "ended_at": "2026-08-21T14:11:27.5387542Z",
+      "duration_ms": 1551,
+      "exit_code": 101,
+      "stdout": "logs/rust_core_single_mediation.stdout.log",
+      "stderr": "logs/rust_core_single_mediation.stderr.log",
+      "stdout_sha256": "cb02bb010efbcef5adaf793f3e0f5c94de2210b0b55a26addb8ab5ee3f900e43",
+      "stderr_sha256": "cb7f230eb3be653f7484ebb040bf9a8b9d8b6aee24ec426ab466a2f77c01d48c",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_core_single_mediation",
+          "captured_at": "2026-08-21T14:11:25.9872083Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.71,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.9,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_core_single_mediation",
+          "captured_at": "2026-08-21T14:11:27.5580647Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.71,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.9,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_estimation_three_way",
+      "description": "Focused three-way point estimator",
+      "status": "passed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-estimation general_sem_pls_three_way_v1::tests -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-estimation",
+        "general_sem_pls_three_way_v1::tests",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:11:27.5700954Z",
+      "ended_at": "2026-08-21T14:12:13.1138632Z",
+      "duration_ms": 45543,
+      "exit_code": 0,
+      "stdout": "logs/rust_estimation_three_way.stdout.log",
+      "stderr": "logs/rust_estimation_three_way.stderr.log",
+      "stdout_sha256": "0eaa6b49d6a38c4d7659ec29a34022d3a26a84a43108993f1274ee3c07ed647c",
+      "stderr_sha256": "c381c06b6b8b3d1537d1b47b38ce5233339c1de82705ef70b40bc3844e98c98b",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_estimation_three_way",
+          "captured_at": "2026-08-21T14:11:27.5699071Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.71,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.9,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_estimation_three_way",
+          "captured_at": "2026-08-21T14:12:13.1363804Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.559,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_resampling_three_way",
+      "description": "Focused three-way complete-refit bootstrap",
+      "status": "passed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-resampling three_way_bootstrap -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-resampling",
+        "three_way_bootstrap",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:12:13.1467966Z",
+      "ended_at": "2026-08-21T14:12:58.1766952Z",
+      "duration_ms": 45029,
+      "exit_code": 0,
+      "stdout": "logs/rust_resampling_three_way.stdout.log",
+      "stderr": "logs/rust_resampling_three_way.stderr.log",
+      "stdout_sha256": "504bc8033e2be47d69ef38f45789212dc649a5d3f7dc09e6ee010b26fd55e7b9",
+      "stderr_sha256": "b28c6185080afb8a9e5dfefe5dbe95ac9282c05bbcb0780a90ee688d9c5bacda",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_resampling_three_way",
+          "captured_at": "2026-08-21T14:12:13.1465859Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 30.559,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_resampling_three_way",
+          "captured_at": "2026-08-21T14:12:58.2014985Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.985,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_resampling_single_mediation",
+      "description": "Distinct single-mediation bootstrap identity",
+      "status": "passed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-resampling single_mediation_bootstrap_identity -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-resampling",
+        "single_mediation_bootstrap_identity",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:12:58.2133414Z",
+      "ended_at": "2026-08-21T14:13:00.0636049Z",
+      "duration_ms": 1850,
+      "exit_code": 0,
+      "stdout": "logs/rust_resampling_single_mediation.stdout.log",
+      "stderr": "logs/rust_resampling_single_mediation.stderr.log",
+      "stdout_sha256": "b308a291d2b67779eab2e8d7bc0152d3114e10b42ef473b4e222bf14d1cd24cc",
+      "stderr_sha256": "a3a1239dc7a4c412a3eaf343f3427eb897892374cf52473ee4a02025d41f2b0b",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_resampling_single_mediation",
+          "captured_at": "2026-08-21T14:12:58.2131332Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.985,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_resampling_single_mediation",
+          "captured_at": "2026-08-21T14:13:00.0871749Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.985,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_project_three_way_archive",
+      "description": "Focused three-way canonical append, reopen, and tamper rejection",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-project three_way_canonical_append_reopen_and_tamper_fail_closed -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-project",
+        "three_way_canonical_append_reopen_and_tamper_fail_closed",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:13:00.0993423Z",
+      "ended_at": "2026-08-21T14:13:25.5054719Z",
+      "duration_ms": 25406,
+      "exit_code": 101,
+      "stdout": "logs/rust_project_three_way_archive.stdout.log",
+      "stderr": "logs/rust_project_three_way_archive.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "34e6ec965cd46ccb96305da0f0081593a981522766bc90ec9681553067d9ad61",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_project_three_way_archive",
+          "captured_at": "2026-08-21T14:13:00.0990517Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.985,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_project_three_way_archive",
+          "captured_at": "2026-08-21T14:13:25.5235674Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.651,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_project_single_mediation_archive",
+      "description": "Focused single-mediation exact-cell reopen and identity",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-project single_mediation_exact_cell_reopens_with_stable_identity -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-project",
+        "single_mediation_exact_cell_reopens_with_stable_identity",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:13:25.5360550Z",
+      "ended_at": "2026-08-21T14:13:43.7133639Z",
+      "duration_ms": 18177,
+      "exit_code": 101,
+      "stdout": "logs/rust_project_single_mediation_archive.stdout.log",
+      "stderr": "logs/rust_project_single_mediation_archive.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2f03e869dad6d3a7764ae99f91984d030d73386cd1e6ed4bf20b8227c974c9ad",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_project_single_mediation_archive",
+          "captured_at": "2026-08-21T14:13:25.5358044Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.651,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_project_single_mediation_archive",
+          "captured_at": "2026-08-21T14:13:43.7323440Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.051,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "rust_project_moderation_revision",
+      "description": "Focused moderation add, retarget, extend, and remove lifecycle",
+      "status": "failed",
+      "reason": null,
+      "command": "cargo test --locked -p qpls-project moderating_effect_v3_add_retarget_extend_and_remove_preserves_shared_hierarchy -- --nocapture",
+      "executable": "cargo",
+      "arguments": [
+        "test",
+        "--locked",
+        "-p",
+        "qpls-project",
+        "moderating_effect_v3_add_retarget_extend_and_remove_preserves_shared_hierarchy",
+        "--",
+        "--nocapture"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:13:43.7425531Z",
+      "ended_at": "2026-08-21T14:13:53.3758599Z",
+      "duration_ms": 9633,
+      "exit_code": 101,
+      "stdout": "logs/rust_project_moderation_revision.stdout.log",
+      "stderr": "logs/rust_project_moderation_revision.stderr.log",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "2f03e869dad6d3a7764ae99f91984d030d73386cd1e6ed4bf20b8227c974c9ad",
+      "disk_gate": {
+        "before": {
+          "label": "before_rust_project_moderation_revision",
+          "captured_at": "2026-08-21T14:13:43.7423287Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.051,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_rust_project_moderation_revision",
+          "captured_at": "2026-08-21T14:13:53.3916927Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.051,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "frontend_workflows",
+      "description": "Focused Canvas, Calculate, Results, persistence, and compatibility workflows",
+      "status": "failed",
+      "reason": null,
+      "command": "npm.cmd run test -- src/domain/moderationDiagramProjectionV1.test.ts src/domain/diagramGraph.test.ts src/components/ModelCanvas.standardAuthority.test.ts src/components/ConstructNode.presentation.test.ts src/native/nativeModeration.test.ts src/native/NativeModerationDialog.test.tsx src/native/NativeDesktopApp.test.ts src/native/nativeCommandAccessibilityContracts.test.ts src/domain/standardSemModelV4Authority.test.ts src/domain/nativeWorkbenchSemModelV4Adapter.test.ts src/domain/unifiedSemCalculationV1.test.ts src/domain/generalSemCapabilityPreflightV1.test.ts src/domain/generalSemModeratedMediationAuthoringV1.test.ts src/domain/canonicalGeneralSemThreeWayV1.test.ts src/domain/canonicalThreeWayModerationPresentationV1.test.ts src/domain/canonicalResultNavigationV1.test.ts src/native/NativeCalculationDialog.test.ts src/native/nativeCommands.test.ts src/native/nativeResults.test.ts src/native/nativeCanonicalResultDocumentV2.test.ts src/native/NativeResultsSurface.test.tsx src/domain/internalProjectSchema6ResultRead.test.ts src/domain/internalGeneralSemExecutionAuthorityRevisionV1.test.ts src/domain/internalRecipeV4GeneralSemWorkspace.test.ts src/services/internalGeneralSemExecutionAuthorityRevisionService.test.ts src/store.test.ts",
+      "executable": "npm.cmd",
+      "arguments": [
+        "run",
+        "test",
+        "--",
+        "src/domain/moderationDiagramProjectionV1.test.ts",
+        "src/domain/diagramGraph.test.ts",
+        "src/components/ModelCanvas.standardAuthority.test.ts",
+        "src/components/ConstructNode.presentation.test.ts",
+        "src/native/nativeModeration.test.ts",
+        "src/native/NativeModerationDialog.test.tsx",
+        "src/native/NativeDesktopApp.test.ts",
+        "src/native/nativeCommandAccessibilityContracts.test.ts",
+        "src/domain/standardSemModelV4Authority.test.ts",
+        "src/domain/nativeWorkbenchSemModelV4Adapter.test.ts",
+        "src/domain/unifiedSemCalculationV1.test.ts",
+        "src/domain/generalSemCapabilityPreflightV1.test.ts",
+        "src/domain/generalSemModeratedMediationAuthoringV1.test.ts",
+        "src/domain/canonicalGeneralSemThreeWayV1.test.ts",
+        "src/domain/canonicalThreeWayModerationPresentationV1.test.ts",
+        "src/domain/canonicalResultNavigationV1.test.ts",
+        "src/native/NativeCalculationDialog.test.ts",
+        "src/native/nativeCommands.test.ts",
+        "src/native/nativeResults.test.ts",
+        "src/native/nativeCanonicalResultDocumentV2.test.ts",
+        "src/native/NativeResultsSurface.test.tsx",
+        "src/domain/internalProjectSchema6ResultRead.test.ts",
+        "src/domain/internalGeneralSemExecutionAuthorityRevisionV1.test.ts",
+        "src/domain/internalRecipeV4GeneralSemWorkspace.test.ts",
+        "src/services/internalGeneralSemExecutionAuthorityRevisionService.test.ts",
+        "src/store.test.ts"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:13:53.4027565Z",
+      "ended_at": "2026-08-21T14:14:04.8634201Z",
+      "duration_ms": 11460,
+      "exit_code": 1,
+      "stdout": "logs/frontend_workflows.stdout.log",
+      "stderr": "logs/frontend_workflows.stderr.log",
+      "stdout_sha256": "174098c818e2fba88888b27fcd8ccbae89416b3a122699c497631fb69bd21b75",
+      "stderr_sha256": "e7865279a2024e5faaebee8d49f08c902c90ed812c5559ae1a1b8eb81a2061f7",
+      "disk_gate": {
+        "before": {
+          "label": "before_frontend_workflows",
+          "captured_at": "2026-08-21T14:13:53.4025545Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.709,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.051,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_frontend_workflows",
+          "captured_at": "2026-08-21T14:14:04.9066299Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.707,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.05,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "frontend_typecheck",
+      "description": "One full frontend typecheck",
+      "status": "failed",
+      "reason": null,
+      "command": "npm.cmd run typecheck:full",
+      "executable": "npm.cmd",
+      "arguments": [
+        "run",
+        "typecheck:full"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:14:04.9178072Z",
+      "ended_at": "2026-08-21T14:14:29.3827653Z",
+      "duration_ms": 24464,
+      "exit_code": 1,
+      "stdout": "logs/frontend_typecheck.stdout.log",
+      "stderr": "logs/frontend_typecheck.stderr.log",
+      "stdout_sha256": "157d94cf904aa152c51f7d9d4a75fe581cc3ec73cba4c130654b814506f26e6d",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": {
+        "before": {
+          "label": "before_frontend_typecheck",
+          "captured_at": "2026-08-21T14:14:04.9175912Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.707,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.05,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_frontend_typecheck",
+          "captured_at": "2026-08-21T14:14:29.3992548Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.707,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.05,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "frontend_build",
+      "description": "One production frontend bundle",
+      "status": "passed",
+      "reason": null,
+      "command": "npm.cmd run build:bundle",
+      "executable": "npm.cmd",
+      "arguments": [
+        "run",
+        "build:bundle"
+      ],
+      "disk_intensive": true,
+      "started_at": "2026-08-21T14:14:29.4098559Z",
+      "ended_at": "2026-08-21T14:14:37.3051193Z",
+      "duration_ms": 7895,
+      "exit_code": 0,
+      "stdout": "logs/frontend_build.stdout.log",
+      "stderr": "logs/frontend_build.stderr.log",
+      "stdout_sha256": "08a134a6dbb1ad1a38b79fb322a729f9747b57d10bcc86ed515906ea097bdd85",
+      "stderr_sha256": "20c09a156b731d2dbcd4d197f3cf178d0c80e9b8b064ce5ca8be9cc36ae87864",
+      "disk_gate": {
+        "before": {
+          "label": "before_frontend_build",
+          "captured_at": "2026-08-21T14:14:29.4096754Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.707,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.05,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        },
+        "after": {
+          "label": "after_frontend_build",
+          "captured_at": "2026-08-21T14:14:37.3254070Z",
+          "passed": true,
+          "drives": [
+            {
+              "name": "C",
+              "free_gib": 27.707,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            },
+            {
+              "name": "D",
+              "free_gib": 29.05,
+              "threshold_gib_exclusive": 20.0,
+              "passed": true
+            }
+          ],
+          "errors": []
+        }
+      }
+    },
+    {
+      "id": "release_audit",
+      "description": "2.53 source, exact routing, Registry, manifests, and reference-evidence audit",
+      "status": "failed",
+      "reason": null,
+      "command": "python validation/v253_mediation_moderation_release_audit.py --expect-surface labs --reference-report D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_reference.json --output D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\v253_mediation_moderation_release_audit.json",
+      "executable": "python",
+      "arguments": [
+        "validation/v253_mediation_moderation_release_audit.py",
+        "--expect-surface",
+        "labs",
+        "--reference-report",
+        "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\general_sem_v253_reference.json",
+        "--output",
+        "D:\\QuickPLS\\validation\\results\\v253_consolidated_labs_pass2_20260821\\v253_mediation_moderation_release_audit.json"
+      ],
+      "disk_intensive": false,
+      "started_at": "2026-08-21T14:14:37.3256444Z",
+      "ended_at": "2026-08-21T14:14:37.6449179Z",
+      "duration_ms": 319,
+      "exit_code": 1,
+      "stdout": "logs/release_audit.stdout.log",
+      "stderr": "logs/release_audit.stderr.log",
+      "stdout_sha256": "25af2c9399d24a3ba6683cb7296ded4e6b803eb61464f5bf8e7f373f43f96f68",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "disk_gate": null
+    }
+  ]
+}

@@ -13,7 +13,9 @@ describe("native command accessibility contracts", () => {
     expect(source).toContain("canAddModeration: contextMenu.canAddModeration");
     expect(source).toContain("const onModelCanvasContextMenuRequest");
     expect(source).toContain('request.target.kind === "path" ? canAddNativeModeration(nodes, edges, request.target.id) : false');
-    expect(source).toContain("<ModelCanvas onContextMenuRequest={onContextMenuRequest} />");
+    expect(source).toContain("<ModelCanvas onContextMenuRequest={onContextMenuRequest} showGeneratedInteractionTerms={showGeneratedInteractionTerms} />");
+    expect(source).toContain('label: "Add Second Moderator…"');
+    expect(canvas).toContain('target: { kind: "parent_interaction", interactionTermId: selectedInteractionTermId }');
     expect(canvas).toContain("requestNativeContextMenu(event");
     expect(canvas).toContain("event.stopPropagation()");
     expect(source).toContain("onContextMenu={onWorkspaceContextMenu}");

@@ -4,6 +4,7 @@ import {
   buildCanonicalResultNavigationV1,
   canonicalResultDocumentForItemV1,
   canonicalResultNavigationItemV1,
+  canonicalResultOverlaySelectionV1,
   filterCanonicalResultNavigationV1,
 } from "./canonicalResultNavigationV1";
 
@@ -47,6 +48,7 @@ function documentFixture(): CanonicalResultDocumentV2 {
       { id: "structural_model", title: "Structural model", table_ids: ["structural_paths"], chart_ids: [] },
       { id: "general_sem_effects", title: "Mediation effects", table_ids: ["general_sem_specific_indirect_effects"], chart_ids: [] },
       { id: "general_sem_moderation", title: "Moderation effects", table_ids: ["general_sem_interaction_effects", "general_sem_interaction_plots"], chart_ids: ["general_sem_interaction_chart_0000"] },
+      { id: "general_sem_three_way_moderation", title: "Three-way moderation", table_ids: ["general_sem_three_way_effect", "general_sem_three_way_simple_slopes"], chart_ids: ["general_sem_three_way_simple_slope_chart"] },
       { id: "general_sem_higher_order", title: "Higher-order constructs", table_ids: ["general_sem_higher_order_targets"], chart_ids: [] },
       { id: "general_sem_moderated_mediation_bootstrap", title: "Moderated-mediation bootstrap", table_ids: ["general_sem_conditional_indirect_effects", "general_sem_moderated_mediation_bootstrap_receipt"], chart_ids: [] },
       { id: "cbsem_general_sem_point", title: "CB-SEM ML estimates", table_ids: ["cbsem_general_sem_parameters", "cbsem_general_sem_fit", "cbsem_general_sem_identification"], chart_ids: [] },
@@ -57,6 +59,8 @@ function documentFixture(): CanonicalResultDocumentV2 {
       table("general_sem_specific_indirect_effects", "Specific indirect effects"),
       table("general_sem_interaction_effects", "Interaction effects"),
       table("general_sem_interaction_plots", "Interaction plot points"),
+      table("general_sem_three_way_effect", "Three-way interaction effect"),
+      table("general_sem_three_way_simple_slopes", "Three-way simple slopes"),
       table("general_sem_higher_order_targets", "Higher-order targets"),
       table("general_sem_conditional_indirect_effects", "Conditional indirect effects"),
       table("general_sem_moderated_mediation_bootstrap_receipt", "Moderated-mediation bootstrap receipt"),
@@ -64,15 +68,26 @@ function documentFixture(): CanonicalResultDocumentV2 {
       table("cbsem_general_sem_fit", "CB-SEM fit"),
       table("cbsem_general_sem_identification", "Identification"),
     ],
-    charts: [{
-      id: "general_sem_interaction_chart_0000",
-      title: "Interaction x by w",
-      description: "Conditional outcome plot.",
-      kind: "line",
-      series: [{ id: "low", label: "Low W", points: [{ x: -1, y: -0.2 }, { x: 1, y: 0.4 }] }],
-      source_table_id: "general_sem_interaction_plots",
-      display: {},
-    }],
+    charts: [
+      {
+        id: "general_sem_interaction_chart_0000",
+        title: "Interaction x by w",
+        description: "Conditional outcome plot.",
+        kind: "line",
+        series: [{ id: "low", label: "Low W", points: [{ x: -1, y: -0.2 }, { x: 1, y: 0.4 }] }],
+        source_table_id: "general_sem_interaction_plots",
+        display: {},
+      },
+      {
+        id: "general_sem_three_way_simple_slope_chart",
+        title: "Simple slopes across moderator probes",
+        description: "Accessible two-dimensional simple-slope chart.",
+        kind: "line",
+        series: [{ id: "z_low", label: "Low Z", points: [{ x: -1, y: -0.1 }, { x: 1, y: 0.3 }] }],
+        source_table_id: "general_sem_three_way_simple_slopes",
+        display: {},
+      },
+    ],
     notices: [{ id: "notice:test", code: "bounded", severity: "information", message: "Bounded method.", section_ids: [], table_ids: [] }],
     exclusions: [{ id: "exclusion:test", title: "Deferred feature", reason: "Outside this cell." }],
     footnotes: [{ id: "effect_note", text: "Effects are associational." }],
@@ -96,6 +111,7 @@ describe("canonical result navigation V1", () => {
       "Structural Model",
       "Direct, Indirect and Total Effects",
       "Moderation and Conditional Effects",
+      "Three-Way Moderation",
       "Higher-Order Constructs",
       "Moderated Mediation",
       "CB-SEM Parameters",
@@ -107,6 +123,44 @@ describe("canonical result navigation V1", () => {
     expect(navigation.groups.flatMap((group) => group.items).map((item) => item.id)).toContain(
       "canonical:chart:general_sem_interaction_chart_0000",
     );
+    expect(navigation.groups.find((group) => group.id === "higher_order")?.items)
+      .toContainEqual(expect.objectContaining({
+        id: "canonical:table:general_sem_higher_order_targets",
+        title: "Component and structural estimates",
+      }));
+  });
+
+  it("derives a presentation-only three-way model focus from typed result identities", () => {
+    const document = documentFixture();
+    document.general_sem_results = {
+      interaction_effects: [{
+        focal_relation_id: "relation:x_y",
+        focal_predictor_id: "construct:x",
+        moderator_id: "construct:w",
+        interaction_effect_relation_id: "relation:x_w_y",
+        interaction_id: "term:x_w",
+      }],
+      three_way_interaction_effects: [{
+        operand_ids: ["construct:x", "construct:w", "construct:z"],
+        outcome_id: "construct:y",
+        focal_relation_id: "relation:x_y",
+        interaction_effect_relation_id: "relation:x_w_z_y",
+        interaction_id: "term:x_w_z",
+      }],
+    } as unknown as NonNullable<CanonicalResultDocumentV2["general_sem_results"]>;
+    const navigation = buildCanonicalResultNavigationV1(document);
+    const item = canonicalResultNavigationItemV1(
+      navigation,
+      "canonical:chart:general_sem_three_way_simple_slope_chart",
+    );
+
+    expect(canonicalResultOverlaySelectionV1(document, item)).toEqual({
+      kind: "three_way_moderation",
+      nodeIds: ["construct:x", "construct:w", "construct:z", "construct:y"],
+      relationIds: ["relation:x_y", "relation:x_w_z_y", "relation:x_w_y"],
+      interactionTermIds: ["term:x_w_z", "term:x_w"],
+      label: "Three-way moderating effect",
+    });
   });
 
   it("searches titles, descriptions, section context and column descriptions", () => {

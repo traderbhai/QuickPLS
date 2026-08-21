@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "report_kind": "general_sem_v253_streamlined_standard_finalization_v1",
+  "passed": true,
+  "promotion_eligible": true,
+  "promotion_completed": true,
+  "release_complete": true,
+  "postpromotion_verification_required": false,
+  "postpromotion_verification_complete": true,
+  "qualification_profile_id": "quickpls_v253_streamlined_integration_v1",
+  "generated_at_utc": "2026-08-21T15:03:20Z",
+  "cell_atomic": true,
+  "standard_active_cell_ids": [
+    "qpls3.pls.general_sem_single_mediation_bootstrap",
+    "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    "qpls3.pls.general_sem_three_way_moderation_point"
+  ],
+  "promotion_report": {
+    "path": "validation/results/general_sem_v253_standard_v1/promotion-report.json",
+    "size": 3375,
+    "sha256": "60907eccb85084c306d4c5af54cd25019451b7255ed9a2eca120735197ac29e3"
+  },
+  "postpromotion_archive_report": {
+    "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.json",
+    "size": 387269,
+    "sha256": "a9a7a8b5d8abdd108043ad90c9472bb7b2d2c3bc6591a5e2e52716e8d52002a8"
+  },
+  "postpromotion_archive_receipt": {
+    "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.receipt.json",
+    "size": 353,
+    "sha256": "6d48a910cc51618c096b00e3f14f846ff51dd26f5d5938754ab42b0798b037f8"
+  },
+  "accepted_evidence": {
+    "consolidated": {
+      "path": "validation/results/v253_consolidated_labs_pass2_20260821/v253_consolidated_diagnostics.json",
+      "size": 53587,
+      "sha256": "31ebab8cb2ddb3ba3a216a4e1681f9aa601c240451e287fdefc49dbb7ad8e381"
+    },
+    "reference": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_reference.json",
+      "size": 50369,
+      "sha256": "76d11d979c7bbde9cd2874fa82af9f0e7f22db083996bc02ff5ac0879a41dc72"
+    },
+    "product": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/general_sem_v253_product_reference.json",
+      "size": 265446,
+      "sha256": "2842037cc41e93896501d5d9d7ef4eb1789b8a949ac1373172ce51a77d3bd332"
+    },
+    "remediation": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.json",
+      "size": 418592,
+      "sha256": "700cc3c5746506eca2a524c1a43ca78ecfd1c08701d6db8ecc2ea27c40746ed5"
+    },
+    "remediation_receipt": {
+      "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.receipt.json",
+      "size": 333,
+      "sha256": "9893dd2488a1beb3e1bb6ce2a2757d00dc749a9c3716e66d8a9702476de7b05c"
+    },
+    "postpromotion_archive": {
+      "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.json",
+      "size": 387269,
+      "sha256": "a9a7a8b5d8abdd108043ad90c9472bb7b2d2c3bc6591a5e2e52716e8d52002a8"
+    },
+    "postpromotion_archive_receipt": {
+      "path": "validation/results/v253_postpromotion_archive_20260821_r2/v253_postpromotion_archive_verification.receipt.json",
+      "size": 353,
+      "sha256": "6d48a910cc51618c096b00e3f14f846ff51dd26f5d5938754ab42b0798b037f8"
+    }
+  },
+  "method_reports": {
+    "qpls3.pls.general_sem_single_mediation_bootstrap": {
+      "path": "validation/results/method_factory/general_sem_pls_single_mediation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 5650,
+      "sha256": "79b34c68b60a7aafeec3091cb9737c75341a6cb01588facab678e9790c959a1a"
+    },
+    "qpls3.pls.general_sem_three_way_moderation_point": {
+      "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_point_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 5540,
+      "sha256": "666f4745f70b9e155bd07a375d9cfff8f13068966d39b0a93b0d6c6aa8e2ddb2"
+    },
+    "qpls3.pls.general_sem_three_way_moderation_bootstrap": {
+      "path": "validation/results/method_factory/general_sem_pls_three_way_moderation_bootstrap_v1/v253_streamlined_standard_v1/release_evidence.identity.json",
+      "size": 5863,
+      "sha256": "6a87ea39824eaecc2954a532ef7d92c4ca52d785c2b8fbc855139282116d13cf"
+    }
+  },
+  "remaining_release_steps": [
+    "promote product version authorities to 2.53.0",
+    "build one unsigned Windows candidate",
+    "run one automated packaged create-to-reopen smoke journey"
+  ]
+}

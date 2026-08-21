@@ -54,7 +54,7 @@ import {
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
 import { convertLegacyBasicModelV4, type SemModelV4 } from "./semModelV4";
 import { sha256HexBytesV1, sha256HexUtf8V1 } from "./sha256V1";
-import type { Dataset } from "../types";
+import type { ColumnMetadata, Dataset } from "../types";
 
 const PROJECT_ID = "00000000-0000-4000-8000-000000000001";
 const RECIPE_ID = "00000000-0000-4000-8000-000000000002";
@@ -86,11 +86,10 @@ function rawDataset(): Dataset {
     rowCount: 24,
     missing: 0,
     fingerprint: DIGEST_B,
-    columnMetadata: columns.map((name) => ({
+    columnMetadata: columns.map((name): ColumnMetadata => ({
       name,
       label: null,
       column_type: "numeric",
-      role: "unassigned",
       scale_type: "continuous",
       missing_markers: [],
       theoretical_min: null,
@@ -162,6 +161,46 @@ function addTwoWayInteraction(
   });
 }
 
+function addThreeWayInteraction(
+  value: SemModelV4,
+  id: string,
+  operands: readonly [string, string, string],
+  outcome = "construct:y",
+): void {
+  const focal = value.relations.find((relation) => relation.kind === "structural"
+    && relation.source === operands[0]
+    && relation.target === outcome);
+  if (!focal) throw new Error(`Missing focal relation ${operands[0]} -> ${outcome}`);
+  const output = `derived:${id}`;
+  const relationId = `relation:${id}:effect`;
+  const parameterId = `parameter:${id}:effect`;
+  value.variables.push({ kind: "derived", id: output, label: operands.join(" × ") });
+  value.relations.push({
+    kind: "structural",
+    id: relationId,
+    source: output,
+    target: outcome,
+    parameter: parameterId,
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameterId,
+    label: `${id} effect`,
+    target: { kind: "regression", source: output, target: outcome },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "interaction_v2",
+    id,
+    output,
+    operands: [...operands],
+    focal_relation: focal.id,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+}
+
 function multipleModerationModel(layout: "same_focal" | "different_focal"): SemModelV4 {
   const value = convertLegacyBasicModelV4({
     id: "model:general-sem",
@@ -183,6 +222,54 @@ function multipleModerationModel(layout: "same_focal" | "different_focal"): SemM
     layout === "same_focal" ? "construct:z" : "construct:w",
   );
   return value;
+}
+
+function binaryThreeWayModerationFixture(): { dataset: Dataset; model: SemModelV4 } {
+  const model = multipleModerationModel("same_focal");
+  const removedRelation = model.relations.find((relation) => (
+    relation.kind === "measurement_effect" && relation.indicator === "observed:z2"
+  ));
+  if (!removedRelation) throw new Error("Missing Z2 measurement relation");
+  model.relations = model.relations.filter((relation) => relation.id !== removedRelation.id);
+  model.parameters = model.parameters.filter((parameter) => parameter.id !== removedRelation.parameter);
+  model.variables = model.variables.filter((variable) => variable.id !== "observed:z2");
+  const z1 = model.variables.find((variable) => variable.kind === "observed" && variable.id === "observed:z1");
+  if (!z1 || z1.kind !== "observed") throw new Error("Missing Z1 observed variable");
+  z1.scale = "binary";
+  z1.categories = ["0", "1"];
+  z1.value_labels = { "0": "No", "1": "Yes" };
+  addTwoWayInteraction(model, "interaction:w:z", "construct:w", "construct:z");
+  addThreeWayInteraction(
+    model,
+    "interaction:x:w:z",
+    ["construct:x", "construct:w", "construct:z"],
+  );
+
+  const columns = ["x1", "x2", "w1", "w2", "z1", "y1", "y2"];
+  const dataset: Dataset = {
+    id: "dataset:three-way-binary",
+    name: "Three-way binary moderator",
+    kind: "raw",
+    columns,
+    rows: Array.from({ length: 24 }, (_, index) => Object.fromEntries(columns.map((column, offset) => [
+      column,
+      column === "z1" ? index % 2 : index + offset / 10,
+    ]))),
+    rowCount: 24,
+    missing: 0,
+    fingerprint: DIGEST_B,
+    columnMetadata: columns.map((name): ColumnMetadata => ({
+      name,
+      label: null,
+      column_type: "numeric" as const,
+      scale_type: name === "z1" ? "binary" as const : "continuous" as const,
+      missing_markers: [],
+      theoretical_min: name === "z1" ? 0 : null,
+      theoretical_max: name === "z1" ? 1 : null,
+      value_labels: name === "z1" ? { "0": "No", "1": "Yes" } : {},
+    })),
+  };
+  return { dataset, model: bindGeneralSemPlsModelToDatasetV1(model, dataset) };
 }
 
 function receipt(): GeneralSemProjectBootstrapReceiptV1 {
@@ -1659,6 +1746,49 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       expect(decision.ready).toBe(false);
       expect(decision.issues.map((item) => item.code)).toContain(expectedCode);
     }
+  });
+
+  it("admits exact binary zero-one metadata only for a qualified three-way moderator", () => {
+    const { dataset, model } = binaryThreeWayModerationFixture();
+    const engine = defaultGeneralSemPlsEngineOptionsV1();
+    const config = generalSemConfigFromEngineV1(engine);
+    const run = (candidateDataset: Dataset, candidateModel = model) => preflightGeneralSemWorkspaceV1({
+      experimentalLabsEnabled: true,
+      sourceProjectId: PROJECT_ID,
+      dataset: candidateDataset,
+      model: candidateModel,
+      config,
+      engine,
+    });
+
+    const admitted = run(dataset);
+    const admittedCodes = admitted.issues.map((item) => item.code);
+    expect(admittedCodes).not.toContain("general_sem.dataset.three_way_binary_zero_one_required");
+    expect(admittedCodes).not.toContain("sem.capability.pls.observed_semantics_not_executable");
+    expect(admittedCodes).not.toContain("sem.capability.pls.model_shape_not_executable");
+
+    const wrongModeratorCategories = structuredClone(model);
+    const z1 = wrongModeratorCategories.variables.find((variable) => (
+      variable.kind === "observed" && variable.id === "observed:z1"
+    ));
+    if (!z1 || z1.kind !== "observed") throw new Error("Missing Z1 observed variable");
+    z1.categories = ["1", "2"];
+    expect(run(dataset, wrongModeratorCategories).issues.map((item) => item.code))
+      .toContain("general_sem.dataset.three_way_binary_zero_one_required");
+
+    const unrelatedBinary = {
+      ...dataset,
+      columnMetadata: dataset.columnMetadata?.map((metadata) => metadata.name === "x1"
+        ? {
+            ...metadata,
+            scale_type: "binary" as const,
+            theoretical_min: 0,
+            theoretical_max: 1,
+          }
+        : metadata),
+    };
+    expect(run(unrelatedBinary).issues.map((item) => item.code))
+      .toContain("general_sem.dataset.continuous_numeric_required");
   });
 
   it("fails closed on model digest and resident-dataset authority mismatches", () => {

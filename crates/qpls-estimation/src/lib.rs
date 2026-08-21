@@ -7,6 +7,7 @@ mod cbsem_product_indicator_moderation;
 mod continuous_raw_mean_replacement_v1;
 mod general_sem_pls_higher_order_v1;
 mod general_sem_pls_interactions_v1;
+mod general_sem_pls_three_way_v1;
 mod pls;
 mod pls_model_comparison;
 
@@ -22,5 +23,6 @@ pub use cbsem_product_indicator_moderation::*;
 pub use continuous_raw_mean_replacement_v1::*;
 pub use general_sem_pls_higher_order_v1::*;
 pub use general_sem_pls_interactions_v1::*;
+pub use general_sem_pls_three_way_v1::*;
 pub use pls::*;
 pub use pls_model_comparison::*;

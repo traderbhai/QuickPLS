@@ -17,7 +17,7 @@ export type NativeSelectionKind =
   | "project-report"
   | "multiple";
 
-export type NativeMenuId = "file" | "edit" | "view" | "calculate" | "tools" | "help";
+export type NativeMenuId = "file" | "edit" | "view" | "model" | "calculate" | "tools" | "help";
 
 export interface NativeCommandContext {
   surface: NativeSurface;
@@ -51,6 +51,7 @@ export interface NativeCommandContext {
    */
   moderationMutationAuthority?: NativeModerationMutationAuthorityV1;
   canAddHigherOrder: boolean;
+  selectedHigherOrder?: boolean;
   propertiesOpen: boolean;
   selection: {
     kind: NativeSelectionKind;
@@ -176,6 +177,7 @@ export type NativeCommandId =
   | "add-construct"
   | "path-tool"
   | "add-higher-order"
+  | "edit-higher-order"
   | "add-moderating-effect"
   | "edit-selection"
   | "delete-selection"
@@ -226,6 +228,22 @@ const canInvokeHigherOrder: ContextRule = (context) => {
     || (authority.kind === "general_sem_revision" && authority.available)
   );
 };
+
+const canEditHigherOrder: ContextRule = (context) => {
+  if (!context.selectedHigherOrder || isNativeCalculationActive(context.calculationStatus)) return false;
+  const authority = moderationMutationAuthority(context);
+  return modelIsMutable(context)
+    || (authority.kind === "general_sem_revision" && authority.available);
+};
+
+function higherOrderEditDisabledReason(context: Readonly<NativeCommandContext>): string {
+  const authority = moderationMutationAuthority(context);
+  if (authority.kind === "general_sem_revision") {
+    return authority.disabledReason ?? "The HOC revision is not currently available.";
+  }
+  if (authority.kind === "blocked") return authority.disabledReason;
+  return "This higher-order construct cannot be edited in the current model state.";
+}
 
 const canInvokeModeration: ContextRule = (context) => {
   if (context.surface !== "model"
@@ -531,7 +549,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
       ? "Higher-Order Construct (Save As Revision)…"
       : "Higher-Order Construct…",
     action: { id: "model.add-higher-order" },
-    toolbar: [{ surface: "model", order: 53 }],
+    menu: { menu: "model", order: 10 },
     contextMenu: [{ surface: "model", selections: ["multiple"], order: 6 }],
     enabledWhen: canInvokeHigherOrder,
     disabledReason: (context) => {
@@ -543,26 +561,42 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     },
   },
   {
+    id: "edit-higher-order",
+    label: "Edit Higher-Order Construct…",
+    action: { id: "model.edit-selection" },
+    menu: { menu: "model", order: 20 },
+    visibleWhen: (context) => context.surface === "model" && Boolean(context.selectedHigherOrder),
+    enabledWhen: canEditHigherOrder,
+    disabledReason: higherOrderEditDisabledReason,
+  },
+  {
     id: "add-moderating-effect",
     label: (context) => moderationMutationAuthority(context).kind === "general_sem_revision"
       ? "Moderating Effect (Save As Revision)…"
       : "Moderating Effect…",
     action: { id: "model.add-moderating-effect" },
     shortcut: { key: "m" },
-    toolbar: [{ surface: "model", order: 55 }],
+    menu: { menu: "model", order: 30 },
     contextMenu: [{ surface: "model", selections: ["path"], order: 7 }],
     enabledWhen: canInvokeModeration,
     disabledReason: moderationDisabledReason,
   },
   {
     id: "edit-selection",
-    label: (context) => context.selection.kind === "path" ? "Edit Path Properties…" : "Edit Construct Properties…",
+    label: (context) => context.selection.kind === "path"
+      ? "Edit Path Properties…"
+      : context.selectedHigherOrder
+        ? "Edit Higher-Order Construct…"
+        : "Edit Construct Properties…",
     action: { id: "model.edit-selection" },
     shortcut: { key: "enter" },
     menu: { menu: "edit", order: 30, separatorBefore: true },
     contextMenu: [{ surface: "model", selections: ["construct", "path"], order: 5 }],
     visibleWhen: (context) => context.surface === "model" && ["construct", "path"].includes(context.selection.kind),
-    enabledWhen: modelIsMutable,
+    enabledWhen: (context) => context.selectedHigherOrder ? canEditHigherOrder(context) : modelIsMutable(context),
+    disabledReason: (context) => context.selectedHigherOrder
+      ? higherOrderEditDisabledReason(context)
+      : "This project does not permit direct model mutations.",
   },
   {
     id: "delete-selection",

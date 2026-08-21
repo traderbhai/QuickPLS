@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "receipt_kind": "quickpls_v253_failed_step_remediation_sha256_v1",
+  "report": {
+    "path": "validation/results/v253_failed_step_remediation_20260821_r3/v253_failed_step_remediation.json",
+    "size": 418592,
+    "sha256": "700cc3c5746506eca2a524c1a43ca78ecfd1c08701d6db8ecc2ea27c40746ed5"
+  }
+}

@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { completedSamplePlsRun } from "../data/smokeRun";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { ResultTable } from "../domain/resultTables";
 import type { AnalysisRun } from "../types";
@@ -38,6 +39,36 @@ const navigation: NativeResultNavigation = {
   ],
   tables: [],
 };
+
+function completedHigherOrderRun(): AnalysisRun {
+  const run = completedSamplePlsRun();
+  run.id = "results-surface-hoc";
+  run.name = "Higher-order construct run";
+  run.modelSnapshot = {
+    nodes: [
+      { id: "competence", position: { x: 0, y: 0 }, data: { label: "Competence", shortName: "COMP", mode: "reflective", indicators: ["COMP1", "COMP2", "COMP3"] } },
+      { id: "likeability", position: { x: 0, y: 160 }, data: { label: "Likeability", shortName: "LIKE", mode: "reflective", indicators: ["LIKE1", "LIKE2"] } },
+      {
+        id: "hoc",
+        position: { x: 240, y: 80 },
+        data: {
+          label: "Corporate standing",
+          shortName: "HOC",
+          mode: "reflective",
+          indicators: [],
+          semantic: "higher_order",
+          higherOrder: { id: "hoc", components: ["competence", "likeability"], method: "two_stage", stage_one_recipe: null },
+        },
+      },
+    ],
+    edges: [],
+  };
+  run.result!.outer_estimates.push(
+    { construct: "hoc", indicator: "__qpls_hoc_hoc_competence", loading: 0.91, weight: 0.58 },
+    { construct: "hoc", indicator: "__qpls_hoc_hoc_likeability", loading: 0.89, weight: 0.55 },
+  );
+  return run;
+}
 
 describe("native Results tree accessibility", () => {
   it("renders a searchable categorized tree for a selected schema-6 canonical output", () => {
@@ -265,6 +296,76 @@ describe("native Results tree accessibility", () => {
     expect(gridCells.filter((cell) => cell.includes('aria-selected="true"'))).toHaveLength(1);
     expect(gridCells.filter((cell) => cell.includes('tabindex="0"'))).toHaveLength(1);
     expect(gridCells.filter((cell) => cell.includes('tabindex="-1"'))).toHaveLength(1);
+  });
+
+  it("renders presentation advisories as compact keyboard-accessible details and hides the legacy warning ribbon", () => {
+    const run: AnalysisRun = {
+      id: "run-advisory",
+      name: "PLS Algorithm",
+      method: "PLS Algorithm",
+      createdAt: "2026-08-21T00:00:00Z",
+      seed: 42,
+      status: "completed",
+      warnings: [],
+      fingerprint: "fixture",
+    };
+    const table: ResultTable = {
+      id: "path_coefficients",
+      title: "Model fit — descriptive",
+      status: "validated",
+      warning: "Legacy export warning remains authoritative.",
+      advisory: {
+        tone: "info",
+        title: "About these measures",
+        message: "Full interpretation is available on demand.",
+      },
+      columns: ["Model", "SRMR"],
+      rows: [["Estimated", "0.0700"]],
+    };
+    const selectedItem = navigation.groups[1].items[0];
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[run]}
+      selectedRun={run}
+      selectedRunId={run.id}
+      setSelectedRunId={vi.fn()}
+      navigation={navigation}
+      selectedItem={selectedItem}
+      selectedTable={table}
+      setSelectedTableId={vi.fn()}
+      propertiesOpen={false}
+    />);
+
+    expect(markup).toContain('class="nd-result-advisory"');
+    expect(markup).toContain('data-result-advisory-tone="info"');
+    expect(markup).toContain('aria-label="About these measures. Show explanation"');
+    expect(markup).toContain("Full interpretation is available on demand.");
+    expect(markup).not.toContain("Legacy export warning remains authoritative.");
+    expect(markup).not.toContain('class="nd-inline-warning"');
+  });
+
+  it("shows the bounded HOC model-fit note in researcher-facing run details", () => {
+    const run = completedHigherOrderRun();
+    const hocNavigation = buildNativeResultNavigation(run);
+    const group = hocNavigation.groups.find((candidate) => candidate.id === "higher_order")!;
+    const selectedItem = group.items.find((item) => item.id === "hoc_scope")!;
+    const selectedTable = resultTableForItem(hocNavigation, selectedItem.id)!;
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[run]}
+      selectedRun={run}
+      selectedRunId={run.id}
+      setSelectedRunId={vi.fn()}
+      navigation={hocNavigation}
+      selectedItem={selectedItem}
+      selectedTable={selectedTable}
+      setSelectedTableId={vi.fn()}
+      propertiesOpen
+    />);
+
+    expect(markup).toContain("Higher-order constructs");
+    expect(markup).toContain("Higher-order method and run details");
+    expect(markup).toContain('data-result-advisory-tone="neutral"');
+    expect(markup).toContain("Model fit not reported");
+    expect(markup).toContain("Model fit</dt><dd>Not reported for this higher-order workflow");
   });
 
   it("moves among only visible entries with arrows and Home/End", () => {

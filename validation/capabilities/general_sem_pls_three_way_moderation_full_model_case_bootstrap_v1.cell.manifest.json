@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.moderation",
+  "execution_context": "recipe_v4_compiled_pls_plan_v3_general_sem_bootstrap_execution",
+  "feature": {
+    "id": "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    "label": "General SEM three-way PLS moderation full-model case bootstrap",
+    "method_version": "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1",
+    "analytical_method_version": "qpls.general-sem-pls.three-way.full-model-case-bootstrap.v1",
+    "method_kind": "full_model_case_bootstrap_three_way_conditional_effect_inference"
+  },
+  "coverage_state": "partial",
+  "evidence_state": "release_qualified",
+  "surface": "standard",
+  "availability": "standard",
+  "qualification_ready": true,
+  "promotion_allowed": true,
+  "primary_artifact_cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/extended-relationships/moderation/",
+  "official_bootstrap_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/resampling-and-inference/bootstrapping/",
+  "method_contract": "docs/methods/GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_V1.md",
+  "exact_predicate": {
+    "project_schema": 6,
+    "sem_generation": "general_sem_v1",
+    "estimator": "qpls.pls_sem.v3",
+    "derived_term": "interaction_v2",
+    "interaction_order": "three_way",
+    "three_way_term_count": "exactly_one",
+    "construction": "two_stage",
+    "hierarchy": "strong",
+    "required_lower_order_terms": "all_main_and_pairwise",
+    "structural_topology": "recursive_dag",
+    "higher_order_constructs": "none",
+    "moderated_mediation": "none",
+    "probe_policy": "continuous_standardized_minus_one_zero_plus_one_or_binary_zero_one",
+    "inference": "full_model_case_bootstrap",
+    "resampling_unit": "case",
+    "replacement": "with_replacement",
+    "interval": "percentile_type7",
+    "tail": "two_sided",
+    "resamples": "2..10000",
+    "seed": "indexed_fixed",
+    "usable_replicates": "min_max_2_ceil_0_9_b",
+    "input": "raw_numeric",
+    "missing_data": "listwise_deletion",
+    "weights": "none",
+    "groups": "single"
+  },
+  "implemented_contracts": [
+    "one indexed case-bootstrap traversal with complete stage-one and stage-two refit per replicate",
+    "joint strong-hierarchy estimation of main, pairwise and three-way terms in every usable replicate",
+    "one shared usable/failure ledger for three-way, conditional-interaction and simple-slope inference",
+    "two-sided percentile Type-7 intervals with deterministic seed and worker-independent replicate indexing",
+    "typed accessible tables and two-dimensional simple-slope chart source values"
+  ],
+  "blocked_contracts": [
+    "a second three-way term, fourth-order interaction or weak/no hierarchy",
+    "HOC interactions, three-way moderated mediation and Johnson-Neyman regions",
+    "BCa, studentized, one-sided, permutation, group, weighted, clustered and non-listwise inference",
+    "binary moderators not coded exactly zero and one"
+  ],
+  "remaining_qualification": [
+    "Scoped Standard under quickpls_v253_streamlined_integration_v1; the compact independent product/reference report and one consolidated automated integration pass replace repeated historical matrices and per-cell packaged matrices."
+  ]
+}

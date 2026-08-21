@@ -1,6 +1,9 @@
 # QuickPLS User Guide
 
-This guide describes the Version 2.51 Windows workflow. QuickPLS runs analyses locally without an account, cloud service, R, or Python at runtime.
+This guide describes the verified Version 2.53 Windows workflow.
+QuickPLS runs analyses locally without an account, cloud service, R, or Python
+at runtime. The consolidated checks and unsigned packaged save/fresh-reopen
+journey have passed.
 
 ## Projects and scientific authority
 
@@ -22,13 +25,16 @@ The Parameter Table is no longer a permanent workspace tab. Open the resizable *
 
 The same Canvas supports bounded advanced authoring:
 
-- **Mediation:** draw the component paths. QuickPLS detects eligible indirect paths automatically.
-- **Simultaneous moderation:** use **Add Moderating Effect** to select the focal path and moderator.
-- **Higher-order constructs:** author one non-nested second-order HOC using an eligible repeated, extended-repeated, embedded two-stage, or disjoint two-stage combination.
+- **Mediation:** draw the component paths. QuickPLS detects eligible indirect paths automatically from substantive directed structural relationships. Covariance, control, measurement, generated, and interaction-hierarchy relations do not count.
+- **Moderation:** drag a moderator onto an eligible structural path, use the path context menu, or select the path and press `M`. QuickPLS shows a compact `×` anchor and dashed moderator connector. Enter edits the selected effect; Delete removes only that effect. The anchor is presentation-only and never becomes a persisted scientific relationship.
+- **Three-way moderation:** add a second moderator to an eligible parent two-way interaction. The bounded source cell requires one three-way term, two-stage construction, strong hierarchy, all main and pairwise lower-order effects, and supported continuous or `0/1` binary moderators. Its point/bootstrap Registry cells are scoped Standard for this exact predicate.
+- **Higher-order constructs:** select at least two eligible constructs, then open **Higher-Order Construct…** from the Model menu or the selection context menu. Choose whether the HOC explains its dimensions or the dimensions form the HOC. QuickPLS derives the RR/RF/FR/FF type from that direction and the dimensions' existing Mode A/B measurement, then recommends a construction approach from the current topology. Use **Edit Higher-Order Construct…** from the HOC context menu, Properties, or Enter key to revise it.
 - **Moderated mediation:** in PLS Bootstrapping setup, choose one eligible two-relation path and one first- or second-stage interaction. Probes are fixed at standardized `−1`, `0`, and `+1`.
 - **CB-SEM:** use common-factor constructs and the Advanced Parameter Table for bounded recursive ML or recursive case bootstrap.
 
-Advanced changes use **Save As Revision**. An older project can create a calculation-ready revision while retaining the original project unchanged. Historical General SEM and Exact CB-SEM payloads remain readable through hidden compatibility adapters; they are not separate workspace tabs.
+The HOC dialog keeps construction approach and the optional legacy short code under **Advanced**. Measurement-only dimensions default to disjoint two-stage when eligible; dimensions already in structural relationships prefer embedded two-stage. Repeated and extended-repeated approaches appear only for combinations supported by the current bounded workflow; hybrid remains read-only compatibility.
+
+Advanced changes use **Save As Revision**. Creating or editing an HOC in an activated immutable project writes one atomic versioned revision while retaining the original project unchanged. Its existing scientific term/output identities and authored structural paths are preserved when the HOC is edited. Historical General SEM and Exact CB-SEM payloads remain readable through hidden compatibility adapters; they are not separate workspace tabs.
 
 ## Calculate and preflight
 
@@ -38,7 +44,7 @@ Use the generic `Calculate` command. Its 18-method catalogue is unchanged. Prefl
 - `Experimental` — a matching Labs cell can run only after Labs opt-in; or
 - `Blocked` — the setup is incompatible, with a corrective explanation.
 
-The setup shows detected features, expected result groups, and direct correction actions. Starting a run opens native progress. Cancellation publishes no partial analytical result.
+The setup shows detected features, expected result groups, and direct correction actions. An eligible HOC appears as one compact row with its name, RR/RF/FR/FF type, approach, and an **Edit…** action. PLS Algorithm routes to the existing HOC point cell; PLS Bootstrapping routes to the existing point plus full-model case-bootstrap cells. Starting a run opens native progress. Cancellation publishes no partial analytical result.
 
 ## Results
 
@@ -47,12 +53,19 @@ Verified results open in the normal Results workspace and remain available after
 - measurement loadings, weights, and collinearity;
 - structural paths and effects;
 - mediation and moderation output;
+- three-way conditional effects and two-dimensional simple-slope output for the exact scoped Standard cell;
 - higher-order stages and generated-variable mappings;
 - conditional indirect effects and moderated-mediation indices;
 - CB-SEM parameters, standardized estimates, fit, and identification; and
 - bootstrap inference and ordered failure accounting.
 
-Researcher-authored paths remain distinguishable from generated technical paths. Reflective HOC relationships report loadings; formative relationships report weights.
+Researcher-authored paths remain distinguishable from generated technical paths. Reflective HOC relationships report loadings; formative relationships report weights. HOC results are grouped as component relationships, HOC structural paths, extended effects when applicable, and bootstrap inference. Selecting an HOC result highlights the HOC and its dimensions without adding stored scientific edges.
+
+### PLS model fit
+
+PLS point-fit output is titled **Model fit — descriptive**. SRMR and NFI are approximate fit measures; `d_ULS` and `d_G` remain descriptive unless the completed result contains separately linked exact-fit inference. Use the title's information button or Model Fit Details for the full interpretation.
+
+The Properties pane reports exactly one state: **Exact-fit bootstrap: Not run**, **Exact-fit results available**, **Exact-fit results partial**, **Exact-fit results unavailable**, or **Exact-fit run failed**. Amber or red is reserved for an exact-fit run that was requested but incomplete or failed. Adapted Bollen–Stine is not offered as a Calculate option in Version 2.52.
 
 ## Export
 
@@ -74,5 +87,6 @@ Always review Method Details and the exact supported predicate before reporting 
 - [Quick Start](QUICK_START.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
 - [Known Differences](KNOWN_DIFFERENCES.md)
-- [Version 2.51 Release Notes](RELEASE_NOTES_V2_51_0.md)
+- [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md)
+- [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md)
 - [FAQ](FAQ.md)

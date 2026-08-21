@@ -1,5 +1,10 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { ConstructData, DiagramLayoutState, InteractionV2Data } from "../types";
+import type {
+  ConstructData,
+  DiagramLayoutState,
+  HigherOrderConstructData,
+  InteractionV2Data,
+} from "../types";
 import {
   inspectNativeConstructAuthoringV4,
   inspectNativeCovarianceAuthoringV4,
@@ -132,8 +137,18 @@ type ExplicitInteractionV2Node = Node<ConstructData & {
   interaction: InteractionV2Data;
 }>;
 
+type ExplicitHigherOrderNode = Node<ConstructData & {
+  semantic: "higher_order";
+  higherOrder: HigherOrderConstructData;
+}>;
+
 const isExplicitInteractionV2Node = (node: Node<ConstructData>): node is ExplicitInteractionV2Node =>
   node.data?.semantic === "interaction" && node.data.interaction?.kind === "interaction_v2";
+
+const isExplicitHigherOrderNode = (node: Node<ConstructData>): node is ExplicitHigherOrderNode =>
+  node.data?.semantic === "higher_order"
+  && node.data.higherOrder !== null
+  && typeof node.data.higherOrder === "object";
 
 /**
  * Converts the live editable graph without passing through NativeRecipeModel, whose
@@ -166,7 +181,7 @@ export function adaptAuthoredNativeWorkbenchToSemModelV4(
   const diagnostics: NativeWorkbenchSemModelV4Diagnostic[] = [];
   const construct_estimands: Record<string, NativeWorkbenchConstructEstimandV4> = {};
   for (const node of input.nodes) {
-    if (isExplicitInteractionV2Node(node)) continue;
+    if (isExplicitInteractionV2Node(node) || isExplicitHigherOrderNode(node)) continue;
     const inspection = inspectNativeConstructAuthoringV4(node);
     if (inspection.state === "invalid") {
       diagnostics.push(diagnostic(
@@ -258,6 +273,7 @@ function buildNativeWorkbenchSemModelV4(
 
   const nodesById = new Map<string, Node<ConstructData>>();
   const explicitInteractionNodesById = new Map<string, ExplicitInteractionV2Node>();
+  const explicitHigherOrderNodesById = new Map<string, ExplicitHigherOrderNode>();
   const indicatorOwner = new Map<string, string>();
   const nodeIds = new Set(input.nodes.map((node) => node.id));
   for (const node of input.nodes) {
@@ -277,7 +293,10 @@ function buildNativeWorkbenchSemModelV4(
       diagnostics.push(diagnostic("native_workbench.construct_label_required", "schema", node.id, `Construct ${node.id} needs a name and short name.`, "Enter both construct labels before conversion."));
     }
     const explicitInteractionV2 = isExplicitInteractionV2Node(node);
-    if ((node.data?.semantic === "interaction" || node.data?.semantic === "higher_order") && !explicitInteractionV2) {
+    const explicitHigherOrder = isExplicitHigherOrderNode(node);
+    if ((node.data?.semantic === "interaction" || node.data?.semantic === "higher_order")
+      && !explicitInteractionV2
+      && !explicitHigherOrder) {
       diagnostics.push(diagnostic(
         "native_workbench.derived_construct_requires_explicit_v4_definition",
         "semantics",
@@ -295,6 +314,19 @@ function buildNativeWorkbenchSemModelV4(
           node.id,
           `Explicit interaction ${node.id} cannot own measurement indicators.`,
           "Remove indicators from the generated interaction while preserving its operands and focal path.",
+        ));
+      }
+      continue;
+    }
+    if (explicitHigherOrder) {
+      explicitHigherOrderNodesById.set(node.id, node);
+      if (!Array.isArray(node.data.indicators) || node.data.indicators.length !== 0) {
+        diagnostics.push(diagnostic(
+          "native_workbench.higher_order_indicators_forbidden",
+          "semantics",
+          node.id,
+          `Higher-order construct ${node.id} cannot own measurement indicators directly.`,
+          "Remove direct indicators from the higher-order construct; its lower-order components supply the measurement information.",
         ));
       }
       continue;
@@ -330,16 +362,16 @@ function buildNativeWorkbenchSemModelV4(
       `An estimand decision references unknown construct ${configuredId}.`,
       "Remove the stale decision or restore the referenced construct.",
     ));
-    else if (explicitInteractionNodesById.has(configuredId)) diagnostics.push(diagnostic(
+    else if (explicitInteractionNodesById.has(configuredId) || explicitHigherOrderNodesById.has(configuredId)) diagnostics.push(diagnostic(
       "native_workbench.derived_estimand_forbidden",
       "semantics",
       configuredId,
-      `Derived interaction ${configuredId} cannot have a factor-versus-composite estimand.`,
-      "Remove the construct estimand from the generated interaction.",
+      `Derived construct ${configuredId} cannot have a factor-versus-composite estimand.`,
+      "Remove the construct estimand from the generated term.",
     ));
   }
   for (const node of nodesById.values()) {
-    if (explicitInteractionNodesById.has(node.id)) continue;
+    if (explicitInteractionNodesById.has(node.id) || explicitHigherOrderNodesById.has(node.id)) continue;
     const estimand = input.construct_estimands[node.id];
     if (!estimand || estimand.kind === "legacy_estimand_unspecified") {
       diagnostics.push(diagnostic(
@@ -429,11 +461,11 @@ function buildNativeWorkbenchSemModelV4(
     ));
   }
 
-  const interactionTermIds = new Set<string>();
+  const derivedTermIds = new Set<string>();
   for (const node of explicitInteractionNodesById.values()) {
     const interaction = node.data.interaction!;
     const termId = requiredText(interaction.termId);
-    if (!termId || interactionTermIds.has(termId)) {
+    if (!termId || derivedTermIds.has(termId)) {
       diagnostics.push(diagnostic(
         "native_workbench.interaction_v2_term_id_invalid",
         "schema",
@@ -441,7 +473,7 @@ function buildNativeWorkbenchSemModelV4(
         `Explicit interaction ${node.id} needs a unique non-empty scientific term id.`,
         "Recreate the interaction so it receives a stable unique term identity.",
       ));
-    } else interactionTermIds.add(termId);
+    } else derivedTermIds.add(termId);
 
     const operands = Array.isArray(interaction.operands) ? interaction.operands : [];
     if (operands.length < 2
@@ -539,11 +571,131 @@ function buildNativeWorkbenchSemModelV4(
     }
   }
 
+  const higherOrderApproaches = [
+    "repeated_indicators",
+    "extended_repeated_indicators",
+    "embedded_two_stage",
+    "disjoint_two_stage",
+    "hybrid",
+  ] as const;
+  const higherOrderMeasurementTypes = [
+    "reflective_reflective",
+    "reflective_formative",
+    "formative_reflective",
+    "formative_formative",
+  ] as const;
+  for (const node of explicitHigherOrderNodesById.values()) {
+    const higherOrder = node.data.higherOrder;
+    const termId = requiredText(higherOrder.id);
+    if (!termId || derivedTermIds.has(termId)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.higher_order_term_id_invalid",
+        "schema",
+        node.id,
+        `Higher-order construct ${node.id} needs a unique non-empty scientific term id.`,
+        "Recreate the higher-order construct so it receives a stable unique term identity.",
+      ));
+    } else derivedTermIds.add(termId);
+
+    const approach = higherOrder.canonicalApproach;
+    if (!approach || !higherOrderApproaches.includes(approach)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.higher_order_approach_invalid",
+        "semantics",
+        node.id,
+        `Higher-order construct ${node.id} has no supported canonical construction approach.`,
+        "Open Higher-Order Construct and choose one of the available construction approaches.",
+      ));
+    }
+    const measurementType = higherOrder.measurementType;
+    if (!measurementType || !higherOrderMeasurementTypes.includes(measurementType)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.higher_order_measurement_type_invalid",
+        "semantics",
+        node.id,
+        `Higher-order construct ${node.id} has no supported RR, RF, FR, or FF measurement type.`,
+        "Open Higher-Order Construct and choose the conceptual direction again.",
+      ));
+    }
+
+    if (approach && higherOrderApproaches.includes(approach)) {
+      const expectedMethod = approach === "repeated_indicators" || approach === "extended_repeated_indicators"
+        ? "repeated_indicators"
+        : approach === "hybrid" ? "hybrid" : "two_stage";
+      if (higherOrder.method !== expectedMethod) diagnostics.push(diagnostic(
+        "native_workbench.higher_order_method_mismatch",
+        "semantics",
+        node.id,
+        `Higher-order construct ${node.id} carries a legacy method that conflicts with its canonical approach.`,
+        "Open Higher-Order Construct and save the selected approach again.",
+      ));
+    }
+
+    const components = Array.isArray(higherOrder.components) ? higherOrder.components : [];
+    const uniqueComponents = new Set(components);
+    if (components.length < 2
+      || uniqueComponents.size !== components.length
+      || components.some((component) => !requiredText(component) || component === node.id)) {
+      diagnostics.push(diagnostic(
+        "native_workbench.higher_order_components_invalid",
+        "semantics",
+        node.id,
+        `Higher-order construct ${node.id} needs at least two unique non-self components.`,
+        "Choose at least two distinct lower-order constructs.",
+      ));
+    }
+    for (const componentId of uniqueComponents) {
+      const component = nodesById.get(componentId);
+      if (!component
+        || explicitInteractionNodesById.has(componentId)
+        || explicitHigherOrderNodesById.has(componentId)
+        || component.data.semantic !== undefined) {
+        diagnostics.push(diagnostic(
+          "native_workbench.higher_order_component_invalid",
+          "semantics",
+          node.id,
+          `Higher-order component ${componentId || "(empty)"} is not an existing ordinary construct.`,
+          "Choose existing non-derived lower-order constructs as components.",
+        ));
+        continue;
+      }
+      if (!Array.isArray(component.data.indicators) || component.data.indicators.length === 0) {
+        diagnostics.push(diagnostic(
+          "native_workbench.higher_order_component_unmeasured",
+          "semantics",
+          node.id,
+          `Higher-order component ${componentId} has no measurement indicators.`,
+          "Assign indicators to every lower-order component.",
+        ));
+      }
+      if (measurementType && higherOrderMeasurementTypes.includes(measurementType)) {
+        const requiredComponentMode = measurementType.startsWith("reflective_") ? "reflective" : "formative";
+        if (component.data.mode !== requiredComponentMode) diagnostics.push(diagnostic(
+          "native_workbench.higher_order_component_mode_mismatch",
+          "semantics",
+          node.id,
+          `Higher-order component ${componentId} does not match the first part of measurement type ${measurementType}.`,
+          `Change every lower-order component to ${requiredComponentMode} or choose the matching HCM type.`,
+        ));
+      }
+    }
+    if (measurementType && higherOrderMeasurementTypes.includes(measurementType)) {
+      const requiredHigherOrderMode = measurementType.endsWith("_reflective") ? "reflective" : "formative";
+      if (node.data.mode !== requiredHigherOrderMode) diagnostics.push(diagnostic(
+        "native_workbench.higher_order_mode_mismatch",
+        "semantics",
+        node.id,
+        `Higher-order construct ${node.id} does not match the second part of measurement type ${measurementType}.`,
+        `Change the higher-order construct to ${requiredHigherOrderMode} or choose the matching HCM type.`,
+      ));
+    }
+  }
+
   if (diagnostics.length) return sortDiagnostics(diagnostics);
 
   const constructVariables = sortedRecord([...nodesById.keys()].map((id) => [
     id,
-    explicitInteractionNodesById.has(id)
+    explicitInteractionNodesById.has(id) || explicitHigherOrderNodesById.has(id)
       ? nativeWorkbenchDerivedVariableIdV4(id)
       : nativeWorkbenchConstructVariableIdV4(id),
   ]));
@@ -581,7 +733,7 @@ function buildNativeWorkbenchSemModelV4(
 
   for (const node of [...nodesById.values()].sort((left, right) => left.id.localeCompare(right.id))) {
     const constructId = constructVariables[node.id];
-    if (explicitInteractionNodesById.has(node.id)) {
+    if (explicitInteractionNodesById.has(node.id) || explicitHigherOrderNodesById.has(node.id)) {
       variables.push({ kind: "derived", id: constructId, label: node.data.label });
       continue;
     }
@@ -681,6 +833,14 @@ function buildNativeWorkbenchSemModelV4(
       const source = constructVariables[edge.source];
       const target = constructVariables[edge.target];
       relations.push({ kind: "structural", id: relationId, source, target, parameter: parameterId, intercept_parameter: null });
+      if ((edge.data as { technicalGenerated?: boolean } | undefined)?.technicalGenerated === true) {
+        annotations.push({
+          kind: "note",
+          id: `general-sem:v1:interaction-generated:${encodeURIComponent(relationId)}`,
+          subject: relationId,
+          text: "QuickPLS-generated strong-hierarchy dependency.",
+        });
+      }
       const controlLabel = edgeRole(edge) === "control" ? edgeDataText(edge, "controlLabel") : null;
       parameters.push(freeParameter(parameterId, controlLabel || edgeTextLabel(edge) || `${edge.source} -> ${edge.target}`, { kind: "regression", source, target }));
       trace.edge_objects[edge.id] = { kind: "scientific_relation", sem_id: relationId, parameter_id: parameterId };
@@ -731,9 +891,8 @@ function buildNativeWorkbenchSemModelV4(
 
   if (diagnostics.length) return sortDiagnostics(diagnostics);
 
-  const derivedTerms: SemDerivedTermV4[] = [...explicitInteractionNodesById.values()]
-    .sort((left, right) => left.id.localeCompare(right.id))
-    .map((node) => {
+  const derivedTerms: SemDerivedTermV4[] = [
+    ...[...explicitInteractionNodesById.values()].map((node) => {
       const interaction = node.data.interaction!;
       const term: Extract<SemDerivedTermV4, { kind: "interaction_v2" }> = {
         kind: "interaction_v2",
@@ -748,7 +907,16 @@ function buildNativeWorkbenchSemModelV4(
         term.product_indicator = serializableClone(interaction.productIndicator);
       }
       return term;
-    });
+    }),
+    ...[...explicitHigherOrderNodesById.values()].map((node) => ({
+      kind: "higher_order" as const,
+      id: node.data.higherOrder.id,
+      output: constructVariables[node.id],
+      components: node.data.higherOrder.components.map((component) => constructVariables[component]),
+      approach: node.data.higherOrder.canonicalApproach!,
+      measurement_type: node.data.higherOrder.measurementType!,
+    })),
+  ].sort((left, right) => left.id.localeCompare(right.id));
 
   const authoredParameters = applyNativeSemModelParameterAuthoringV4({
     nodes: [...nodesById.values()],

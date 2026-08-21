@@ -44,9 +44,19 @@ Final readiness also requires the evidence-derived external-beta gate in [`valid
 
 ## Gap inventory
 
-### Version 2.50 checkpoint
+### Current Version 2.53 checkpoint
 
-Capability Registry V2 currently projects 38 scoped-Standard exact cells across
+Capability Registry V2 now projects 41 scoped-Standard exact cells across 27
+catalogue rows, 16 Labs cells across 16 rows, and two Legacy cells/rows. The
+three additive Version 2.53 cells independently qualify exactly-one-path
+mediation bootstrap and bounded true three-way moderation point/bootstrap.
+Their promotion does not broaden or relabel existing mediation or moderation
+identities.
+
+### Version 2.50 historical checkpoint
+
+At the Version 2.50 checkpoint, Capability Registry V2 projected 38
+scoped-Standard exact cells across
 27 catalogue rows, 16 Labs cells across 16 rows, and two Legacy cells/rows. The
 Rank 0–3 General SEM cells are Standard for their documented bounded predicates:
 mediation, simultaneous moderation, higher-order PLS, two-way moderated

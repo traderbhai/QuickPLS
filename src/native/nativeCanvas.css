@@ -88,6 +88,7 @@
 .nd-canvas-host .canvas-action-feedback,
 .nd-canvas-host .canvas-drop-guide,
 .nd-canvas-host .canvas-drop-hint,
+.nd-canvas-host .canvas-moderation-drop-hint,
 .nd-canvas-host .canvas-snap-hint {
   font-size: 11px;
   line-height: 1.35;
@@ -150,6 +151,24 @@
 .nd-canvas-host .canvas-drop-guide strong,
 .nd-canvas-host .canvas-drop-hint strong { color: #704800; font-size: 11px; }
 
+.nd-canvas-host .canvas-moderation-drop-hint {
+  position: fixed;
+  z-index: 9;
+  min-width: 190px;
+  max-width: 300px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--nd-color-selection-strong);
+  border-left: 3px solid var(--nd-canvas-accent-dark);
+  color: var(--nd-canvas-text);
+  background: rgb(244 251 253 / 98%);
+  box-shadow: var(--nd-shadow-menu);
+  pointer-events: none;
+}
+.nd-canvas-host .canvas-moderation-drop-hint strong { color: var(--nd-canvas-accent-dark); font-size: 11px; }
+
 .nd-canvas-host .canvas-alignment-guide {
   position: fixed;
   z-index: 7;
@@ -193,6 +212,10 @@
 }
 
 .nd-canvas-host .construct-node.selected { border-color: var(--nd-canvas-accent); outline: 2px solid rgb(8 107 157 / 20%); }
+.nd-canvas-host .react-flow__node.hoc-component-highlight .construct-node {
+  border-color: #607d8b;
+  box-shadow: 0 0 0 2px rgb(96 125 139 / 16%);
+}
 .nd-canvas-host .construct-node.drop-target { border-color: #b8790f; box-shadow: 0 0 0 3px rgb(215 154 25 / 22%); }
 .nd-canvas-host .construct-node .react-flow__handle { width: 9px; height: 9px; border: 2px solid white; background: #53656c; opacity: .72; }
 .nd-canvas-host .construct-node:hover .react-flow__handle,
@@ -256,7 +279,8 @@
 .nd-canvas-host .smartpls-latent-node { width: 104px; height: 94px; display: flex; flex-direction: column; align-items: center; gap: 5px; color: var(--nd-canvas-text); text-align: center; font-family: var(--nd-font-ui); }
 .nd-canvas-host .smartpls-result-canvas:not(.locked-result-canvas) .smartpls-latent-node { cursor: grab; }
 .nd-canvas-host .smartpls-result-canvas:not(.locked-result-canvas) .smartpls-latent-node:active { cursor: grabbing; }
-.nd-canvas-host .smartpls-latent-ellipse { width: 104px; height: 68px; display: grid; place-items: center; border: 1px solid #60676b; border-radius: 50%; color: white; background: #707779; }
+.nd-canvas-host .smartpls-latent-ellipse { position: relative; width: 104px; height: 68px; display: grid; place-items: center; border: 1px solid #60676b; border-radius: 50%; color: white; background: #707779; }
+.nd-canvas-host .smartpls-hoc-marker { position: absolute; top: 5px; right: 10px; padding: 0 3px; border: 1px solid rgb(255 255 255 / 72%); border-radius: 2px; font: 600 9px/14px "Segoe UI Variable", "Segoe UI", sans-serif; letter-spacing: .04em; color: inherit; background: rgb(0 0 0 / 12%); }
 .nd-canvas-host .smartpls-result-canvas:not(.locked-result-canvas) .smartpls-latent-ellipse { border-color: #446f72; background: #668f92; }
 .nd-canvas-host .smartpls-latent-node.selected .smartpls-latent-ellipse { outline: 3px solid var(--nd-canvas-accent); outline-offset: 4px; box-shadow: 0 0 0 7px rgb(8 107 157 / 14%), 0 8px 20px rgb(23 45 52 / 18%); }
 .nd-canvas-host .smartpls-latent-node.selected .smartpls-latent-label { color: var(--nd-canvas-accent-dark); font-weight: 700; }
@@ -300,6 +324,23 @@
 .nd-canvas-host .react-flow__edge.selected .react-flow__edge-path { stroke: var(--nd-canvas-accent-dark); stroke-width: 2.4; }
 .nd-canvas-host .react-flow__edge-text { fill: var(--nd-canvas-text); font-size: 10px; }
 .nd-canvas-host .react-flow__edge-textbg { fill: var(--nd-canvas-surface); }
+
+.nd-canvas-host .react-flow__node-moderationAnchor { width: 22px; height: 22px; z-index: 8 !important; }
+.nd-canvas-host .moderation-anchor { position: relative; display: grid; width: 22px; height: 22px; place-items: center; border: 1.5px solid var(--nd-canvas-accent-dark); border-radius: 50%; color: var(--nd-canvas-accent-dark); background: var(--nd-canvas-surface); box-shadow: 0 0 0 2px rgb(255 255 255 / 88%); font: 700 14px/1 var(--nd-font-ui); cursor: pointer; user-select: none; }
+.nd-canvas-host .moderation-anchor:hover,
+.nd-canvas-host .moderation-anchor.selected { background: var(--nd-blue-50); box-shadow: 0 0 0 3px rgb(8 107 157 / 22%); }
+.nd-canvas-host .moderation-anchor:focus-visible { outline: 2px solid var(--nd-color-focus); outline-offset: 3px; }
+.nd-canvas-host .moderation-anchor .moderation-anchor-handle { width: 1px; height: 1px; min-width: 1px; min-height: 1px; border: 0; opacity: 0; pointer-events: none; }
+.nd-canvas-host .moderation-connector-edge .react-flow__edge-path { stroke: #526b75; stroke-width: 1.45; stroke-dasharray: 5 4; }
+.nd-canvas-host .moderation-connector-edge.three-way .react-flow__edge-path { stroke-dasharray: 2 3 7 3; }
+.nd-canvas-host .moderation-connector-edge.selected .react-flow__edge-path,
+.nd-canvas-host .moderation-connector-edge:hover .react-flow__edge-path { stroke: var(--nd-canvas-accent-dark); stroke-width: 2; }
+.nd-canvas-host .moderated-focal-edge .react-flow__edge-path { stroke-width: 2.15; }
+.nd-canvas-host .moderation-drop-target-edge .react-flow__edge-path { stroke: #8a5a00; stroke-width: 3; stroke-dasharray: 7 3; }
+.nd-canvas-host .react-flow__node.result-overlay-highlight .construct-node,
+.nd-canvas-host .react-flow__node.result-overlay-highlight .smartpls-latent-ellipse { outline: 3px solid var(--nd-canvas-accent); outline-offset: 4px; box-shadow: 0 0 0 7px rgb(8 107 157 / 14%); }
+.nd-canvas-host .result-overlay-edge-highlight .react-flow__edge-path { stroke: var(--nd-canvas-accent-dark); stroke-width: 2.7; }
+.nd-canvas-host .moderation-result-highlight .moderation-anchor { background: var(--nd-blue-50); box-shadow: 0 0 0 4px rgb(8 107 157 / 24%); }
 
 .nd-canvas-host .sem-edge-label { position: absolute; padding: 2px 5px; border-radius: var(--nd-radius-1); color: var(--nd-canvas-text); background: rgb(255 255 255 / 94%); box-shadow: 0 0 0 1px rgb(184 193 200 / 78%); font: 600 9.5px var(--nd-font-ui); cursor: grab; pointer-events: all; user-select: none; white-space: nowrap; }
 .nd-canvas-host .sem-edge-label.generic-path-label { color: var(--nd-canvas-muted); }

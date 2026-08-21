@@ -42,6 +42,41 @@ function context(value: SemModelV4): UnifiedSemCalculationContextV1 {
   };
 }
 
+function disjointHigherOrderModel(): SemModelV4 {
+  const value = model([
+    ["x", "m1"], ["x", "m2"], ["x", "y"],
+    ["m1", "m2"], ["m1", "y"], ["m2", "y"],
+  ]);
+  const output = "derived:hoc";
+  const parameter = "parameter:hoc_y";
+  value.variables.push({ kind: "derived", id: output, label: "Organizational strength" });
+  value.relations.push({
+    kind: "structural",
+    id: "relation:hoc_y",
+    source: output,
+    target: "construct:y",
+    parameter,
+    role: "structural",
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: parameter,
+    label: "HOC -> Y",
+    target: { kind: "regression", source: output, target: "construct:y" },
+    group_overrides: [],
+  });
+  value.derived_terms.push({
+    kind: "higher_order",
+    id: "term:hoc",
+    output,
+    components: ["construct:m1", "construct:m2"],
+    approach: "disjoint_two_stage",
+    measurement_type: "reflective_reflective",
+  });
+  return value;
+}
+
 function addTwoWayInteraction(
   value: SemModelV4,
   focalSource: string,
@@ -76,6 +111,46 @@ function addTwoWayInteraction(
     kind: "free",
     id: "parameter:interaction-effect",
     label: "Interaction effect",
+    target: { kind: "regression", source: output, target },
+    group_overrides: [],
+  });
+}
+
+function addThreeWayInteraction(
+  value: SemModelV4,
+  focalSource: string,
+  firstModerator: string,
+  secondModerator: string,
+  target: string,
+): void {
+  const focal = value.relations.find((relation) => relation.kind === "structural"
+    && relation.source === focalSource
+    && relation.target === target);
+  if (!focal || focal.kind !== "structural") throw new Error("Missing focal path");
+  const output = "derived:three-way-interaction";
+  value.variables.push({ kind: "derived", id: output, label: "Three-way interaction" });
+  value.derived_terms.push({
+    kind: "interaction_v2",
+    id: "term:three-way-interaction",
+    output,
+    operands: [focalSource, firstModerator, secondModerator],
+    focal_relation: focal.id,
+    method: "two_stage",
+    hierarchy_policy: "strong",
+  });
+  value.relations.push({
+    kind: "structural",
+    id: "relation:three-way-interaction-effect",
+    source: output,
+    target,
+    parameter: "parameter:three-way-interaction-effect",
+    role: "structural",
+    intercept_parameter: null,
+  });
+  value.parameters.push({
+    kind: "free",
+    id: "parameter:three-way-interaction-effect",
+    label: "Three-way interaction effect",
     target: { kind: "regression", source: output, target },
     group_overrides: [],
   });
@@ -135,7 +210,58 @@ describe("unified SEM Calculate routing", () => {
     });
   });
 
-  it("blocks unsupported single-path mediation bootstrap instead of silently running ordinary bootstrap", () => {
+  it("counts mediation only across authored scientific paths", () => {
+    const value = model([["x", "m"], ["m", "y"]]);
+    value.variables.push(
+      { kind: "composite", id: "construct:c", label: "Control", weighting: { kind: "mode_a" } },
+      { kind: "derived", id: "derived:technical", label: "Generated score" },
+      { kind: "observed", id: "observed:technical", label: "Technical indicator", source_column: "technical", scale: "continuous", role: "indicator", categories: [], value_labels: {}, missing_markers: [], transformation_lineage: [] },
+    );
+    value.relations.push(
+      { kind: "structural", id: "relation:control_m", source: "construct:c", target: "construct:m", parameter: "parameter:control_m", role: "control", intercept_parameter: null },
+      { kind: "structural", id: "relation:x_generated", source: "construct:x", target: "derived:technical", parameter: "parameter:x_generated", role: "structural", intercept_parameter: null },
+      { kind: "structural", id: "relation:generated_y", source: "derived:technical", target: "construct:y", parameter: "parameter:generated_y", role: "structural", intercept_parameter: null },
+      { kind: "structural", id: "relation:technical_m", source: "observed:technical", target: "construct:m", parameter: "parameter:technical_m", role: "structural", intercept_parameter: null },
+      { kind: "structural", id: "relation:generated_main", source: "construct:c", target: "construct:x", parameter: "parameter:generated_main", role: "structural", intercept_parameter: null },
+      { kind: "covariance", id: "relation:x_y_covariance", left: { kind: "variable", id: "construct:x" }, right: { kind: "variable", id: "construct:y" }, parameter: "parameter:x_y_covariance" },
+    );
+    value.annotations.push({
+      kind: "note",
+      id: "general-sem:v1:interaction-generated:relation%3Agenerated_main",
+      subject: "relation:generated_main",
+      text: "QuickPLS-generated strong-hierarchy dependency.",
+    });
+
+    const inventory = detectUnifiedSemFeatureInventoryV1(context(value));
+
+    expect(inventory.indirectPathCount).toBe(1);
+    expect(inventory.structuralRelationCount).toBe(2);
+    expect(inventory.structuralRegressionCount).toBe(3);
+  });
+
+  it("preserves the exact HOC point/bootstrap cells and exposes compact edit metadata", () => {
+    const strict = context(disjointHigherOrderModel());
+    const point = resolveUnifiedSemCalculationV1({ method: "pls_algorithm", context: strict, bootstrap });
+    const inference = resolveUnifiedSemCalculationV1({ method: "pls_bootstrap", context: strict, bootstrap });
+
+    expect(point.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_higher_order_point",
+    ]);
+    expect(inference.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_higher_order_full_model_case_bootstrap",
+      "qpls3.pls.general_sem_higher_order_point",
+    ]);
+    expect(point.inventory?.higherOrderConstructs).toEqual([{
+      termId: "term:hoc",
+      constructId: "derived:hoc",
+      label: "Organizational strength",
+      approach: "disjoint_two_stage",
+      measurementType: "reflective_reflective",
+      componentCount: 2,
+    }]);
+  });
+
+  it("routes a single-path mediation bootstrap through its distinct exact cell", () => {
     const single = context(model([["x", "m"], ["m", "y"], ["x", "y"]]));
 
     const inference = resolveUnifiedSemCalculationV1({
@@ -144,8 +270,60 @@ describe("unified SEM Calculate routing", () => {
       bootstrap,
     });
 
-    expect(inference).toMatchObject({ route: "general_sem_pls", canStart: false });
-    expect(inference.blockers.join(" ")).toContain("requires at least two compiled specific indirect paths");
+    expect(inference.route).toBe("general_sem_pls");
+    expect(inference.capabilityCells.map((cell) => cell.cell_id)).toContain(
+      "qpls3.pls.general_sem_single_mediation_bootstrap",
+    );
+    expect(inference.capabilityCells.map((cell) => cell.cell_id)).not.toContain(
+      "qpls3.pls.general_sem_multiple_mediation_bootstrap",
+    );
+  });
+
+  it("detects a three-way term and routes point/bootstrap through distinct bounded cells", () => {
+    const value = model([["x", "y"], ["w", "y"], ["z", "y"]]);
+    addTwoWayInteraction(value, "construct:x", "construct:w", "construct:y");
+    addThreeWayInteraction(value, "construct:x", "construct:w", "construct:z", "construct:y");
+    value.variables.push({ kind: "derived", id: "derived:x_z", label: "Generated X × Z" });
+    value.derived_terms.push({
+      kind: "interaction_v2",
+      id: "term:x_z",
+      output: "derived:x_z",
+      operands: ["construct:x", "construct:z"],
+      focal_relation: "relation:x_y",
+      method: "two_stage",
+      hierarchy_policy: "strong",
+    });
+    value.annotations.push({
+      kind: "note",
+      id: "general-sem:v1:interaction-generated:term%3Ax_z",
+      subject: "term:x_z",
+      text: "QuickPLS-generated strong-hierarchy dependency.",
+    });
+    const strict = context(value);
+
+    const point = resolveUnifiedSemCalculationV1({ method: "pls_algorithm", context: strict, bootstrap });
+    const inference = resolveUnifiedSemCalculationV1({ method: "pls_bootstrap", context: strict, bootstrap });
+
+    expect(point.inventory).toMatchObject({
+      twoWayInteractionCount: 1,
+      threeWayInteractionCount: 1,
+    });
+    expect(point.inventory?.interactions.find((interaction) => interaction.order === "three_way"))
+      .toMatchObject({
+        predictorId: "construct:x",
+        moderatorIds: ["construct:w", "construct:z"],
+        outcomeId: "construct:y",
+        parentInteractionTermId: "term:interaction",
+      });
+    expect(point.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_three_way_moderation_point",
+    ]);
+    expect(inference.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_three_way_moderation_point",
+      "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    ]);
+    expect(inference.expectedResultCategories).toContain("Three-Way Moderation");
+    expect(inference.moderatedMediation).toBeNull();
   });
 
   it("offers fixed five-target moderated mediation only from PLS bootstrapping", () => {
@@ -288,6 +466,7 @@ describe("unified SEM Calculate routing", () => {
     expect(inventory.resultFamilies).toEqual({
       mediationRows: 2,
       moderationRows: 4,
+      threeWayModerationRows: 0,
       higherOrderStages: 2,
       moderatedMediationRows: 4,
       cbsemParameterRows: 2,

@@ -19,6 +19,7 @@ const resetUiPreferences: UiPreferences = {
   defaultPrecision: 4,
   showAdvancedHelp: true,
   experimentalLabsEnabled: false,
+  showGeneratedInteractionTerms: false,
   recentPanels: ["models", "runs", "reports"],
   methodScopeDrawerOpen: false,
   showThresholdColors: true,
@@ -40,6 +41,9 @@ function parseImportedPreferences(value: unknown): Partial<UiPreferences> {
   }
   if (typeof record.showAdvancedHelp === "boolean") next.showAdvancedHelp = record.showAdvancedHelp;
   if (typeof record.experimentalLabsEnabled === "boolean") next.experimentalLabsEnabled = record.experimentalLabsEnabled;
+  if (typeof record.showGeneratedInteractionTerms === "boolean") {
+    next.showGeneratedInteractionTerms = record.showGeneratedInteractionTerms;
+  }
   if (Array.isArray(record.recentPanels)) {
     const panels = record.recentPanels.filter((panel): panel is WorkspaceView => typeof panel === "string" && workspaceViews.has(panel as WorkspaceView));
     if (panels.length > 0) next.recentPanels = panels;

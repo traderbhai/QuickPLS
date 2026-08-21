@@ -1275,6 +1275,10 @@ mod tests {
             }],
             conditional_indirect_effects: Vec::new(),
             moderated_mediation_indices: Vec::new(),
+            three_way_interaction_effects: Vec::new(),
+            three_way_conditional_interaction_effects: Vec::new(),
+            three_way_simple_slopes: Vec::new(),
+            three_way_moderation_bootstrap_receipt: None,
             interaction_plots: vec![CanonicalInteractionPlotResultV1 {
                 plot_id: "plot_1".into(),
                 trace: trace(),

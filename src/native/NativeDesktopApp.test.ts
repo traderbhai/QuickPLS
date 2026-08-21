@@ -15,6 +15,7 @@ import {
   completedRunNavigationTarget,
   Launcher,
   nativeGeneralSemRevisionCommandDisabledReasonV1,
+  nativeCanvasFeatureInventory,
   NATIVE_BUNDLED_SAMPLE_PROJECTS,
   NewProjectDialog,
   openNativeSampleProject,
@@ -27,6 +28,21 @@ import { buildNativeResultNavigation, completedResultRuns, nativeResultTables } 
 import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
 
 describe("native desktop result contracts", () => {
+  it("counts single, parallel, and serial mediation paths without technical relations", () => {
+    const nodes = ["x", "m1", "m2", "y"].map((id) => ({ id, data: {} }));
+    const edges = [
+      { id: "x-m1", source: "x", target: "m1" },
+      { id: "m1-y", source: "m1", target: "y" },
+      { id: "x-m2", source: "x", target: "m2" },
+      { id: "m2-y", source: "m2", target: "y" },
+      { id: "m1-m2", source: "m1", target: "m2" },
+      { id: "technical", source: "x", target: "y", data: { role: "control" } },
+      { id: "generated-main", source: "x", target: "m2", data: { technicalGenerated: true } },
+    ];
+
+    expect(nativeCanvasFeatureInventory(nodes, edges).indirectPaths).toBe(5);
+  });
+
   it("navigates once for each unique completed run even without an observed intermediate status", () => {
     expect(completedRunNavigationTarget("completed", "run-a", null)).toBe("run-a");
     expect(completedRunNavigationTarget("completed", "run-a", "run-a")).toBeNull();
@@ -98,7 +114,7 @@ describe("native desktop multi-model shell contracts", () => {
     expect(markup).not.toContain('type="radio"');
   });
 
-  it("routes only strict General SEM moderation through the versioned interaction_v2 intent", () => {
+  it("routes strict General SEM moderation through the diagram-native version-3 intent", () => {
     const common = {
       label: "X × W",
       predictor: "construct:x",
@@ -139,12 +155,12 @@ describe("native desktop multi-model shell contracts", () => {
     });
     expect(generalSem).toEqual({
       intent: {
-        kind: "add_general_sem_interaction_v2",
-        intent_version: 1,
+        kind: "add_moderating_effect_v3",
+        intent_version: 3,
         sem_generation: "general_sem_v1",
         label: common.label,
         operands: [common.predictor, common.moderator],
-        focal_relation: common.focalRelation,
+        target: { kind: "focal_relation", relationId: common.focalRelation },
         outcome: common.outcome,
         method: "two_stage",
         hierarchy_policy: "strong",
@@ -159,23 +175,23 @@ describe("native desktop multi-model shell contracts", () => {
 
   it("routes post-activation General SEM moderation through the versioned model-and-Recipe revision transaction", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
-    const moderationCase = source.indexOf('case "model.add-moderating-effect"');
-    const dialogOpen = source.indexOf('openDialog("moderation")', moderationCase);
 
+    expect(source).toContain('case "model.add-moderating-effect"');
+    expect(source).toContain('kind: "add_moderating_effect_v3"');
     expect(source).toContain("supportsGeneralSemV1(schema6Session.project)");
     expect(source).toContain("schema6Session?.standardActivation?.modelIds.includes(activeModelId)");
     expect(source).toContain("strictScientificEditLocks[activeModelId] || !projectWritable");
     expect(source).toContain("Safe revision required.");
     expect(source).toContain("the current project remains unchanged");
-    expect(source).toContain("reviseGeneralSemExecutionAuthority({ intent: built.intent })");
-    expect(source).toContain("preserve the current archive and revise the model and RecipeV4 together");
+    expect(source).toContain("reviseGeneralSemExecutionAuthority({ intent })");
+    expect(source).toContain("QuickPLS will preserve the current archive");
+    expect(source).toContain("the moderating effect in one revision.");
     expect(source).toContain('data-testid="general-sem-scientific-revision-required"');
     expect(source).toContain('kind: "general_sem_revision"');
     expect(source).toContain("available: generalSemRevisionDisabledReason === null");
     expect(source).toContain("const currentGeneralSemRevisionDisabledReason = () =>");
     expect(source).toContain("const authorityState = useInternalProjectArchiveV6Session.getState()");
     expect(source).toContain("const workspaceState = useWorkspace.getState()");
-    expect(dialogOpen).toBeGreaterThan(moderationCase);
   });
 
   it("reports every General SEM revision operation lock and allows only an exact clean idle authority", () => {

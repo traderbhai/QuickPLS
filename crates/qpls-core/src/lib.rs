@@ -14,6 +14,7 @@ mod general_sem_capability_preflight_v1;
 mod general_sem_config_v1;
 mod general_sem_effects_v1;
 mod general_sem_pls_moderated_mediation_v1;
+mod general_sem_pls_three_way_v1;
 mod general_sem_recipe_compiler_v1;
 pub mod generated {
     mod established_method_contracts_v1;
@@ -49,6 +50,7 @@ pub use general_sem_capability_preflight_v1::*;
 pub use general_sem_config_v1::*;
 pub use general_sem_effects_v1::*;
 pub use general_sem_pls_moderated_mediation_v1::*;
+pub use general_sem_pls_three_way_v1::*;
 pub use general_sem_recipe_compiler_v1::*;
 pub use methods::*;
 pub use recipe_v4_compiler::*;

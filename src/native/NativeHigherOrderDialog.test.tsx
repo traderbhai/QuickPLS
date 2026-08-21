@@ -1,50 +1,141 @@
+import type { Node } from "@xyflow/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import type { ConstructData } from "../types";
 import NativeHigherOrderDialog from "./NativeHigherOrderDialog";
 
+const ordinaryNodes: Array<Node<ConstructData>> = [
+  { id: "x", position: { x: 0, y: 0 }, data: { label: "Capability", shortName: "CAP", mode: "reflective", indicators: ["x1"] } },
+  { id: "z", position: { x: 0, y: 180 }, data: { label: "Reputation", shortName: "REP", mode: "reflective", indicators: ["z1"] } },
+  { id: "f", position: { x: 0, y: 360 }, data: { label: "Formative block", shortName: "FORM", mode: "formative", indicators: ["f1"] } },
+  { id: "y", position: { x: 360, y: 90 }, data: { label: "Outcome", shortName: "OUT", mode: "reflective", indicators: ["y1"] } },
+];
+
+const applied = () => ({ status: "applied" as const, constructId: "derived:hoc" });
+
 describe("NativeHigherOrderDialog", () => {
-  it("renders the bounded approach/type controls and eligible component checklist", () => {
+  it("uses compact conceptual controls, derives RR, and hides approach choice under Advanced", () => {
     const html = renderToStaticMarkup(<NativeHigherOrderDialog
-      nodes={[
-        { id: "x", position: { x: 0, y: 0 }, data: { label: "Capability", shortName: "CAP", mode: "reflective", indicators: ["x1"] } },
-        { id: "z", position: { x: 0, y: 180 }, data: { label: "Reputation", shortName: "REP", mode: "reflective", indicators: ["z1"] } },
-        { id: "f", position: { x: 0, y: 360 }, data: { label: "Formative block", shortName: "FORM", mode: "formative", indicators: ["f1"] } },
-      ]}
+      nodes={ordinaryNodes}
       edges={[]}
-      selectedComponentIds={["x", "z"]}
-      create={vi.fn(() => ({ status: "created" as const, constructId: "hoc" }))}
+      request={{ kind: "create", selectedComponentIds: ["x", "z"] }}
+      commit={vi.fn(applied)}
       close={vi.fn()}
     />);
-    expect(html).toContain("Repeated indicators");
-    expect(html).toContain("Extended repeated indicators");
-    expect(html).toContain("Embedded two-stage");
-    expect(html).toContain("Disjoint two-stage");
-    expect(html).toContain("Reflective–reflective (RR)");
-    expect(html).toContain("Mode A loadings");
-    expect(html).toContain("Component loadings");
-    expect(html).toContain("After creation, connect the HOC to one or more ordinary constructs.");
-    expect(html).toContain("Capability");
-    expect(html).toContain("Formative block");
-    expect(html).toContain("This HCM type requires reflective (Mode A) lower-order components.");
-    expect(html).toContain("Create higher-order construct");
+
+    expect(html).toContain("Conceptual direction");
+    expect(html).toContain("HOC explains its dimensions");
+    expect(html).toContain("Dimensions form the HOC");
+    expect(html).toContain("<dt>Type</dt><dd>RR</dd>");
+    expect(html).toContain("Disjoint two-stage (Recommended)");
+    expect(html).toContain("<summary>Advanced</summary>");
+    expect(html).toContain("Construction approach");
+    expect(html).toContain("Formative block [FORM]");
+    expect(html).toContain("Mode B · Choose Mode B dimensions in a separate HOC.");
+    expect(html).not.toContain("Short name");
+    expect(html).not.toContain("<dt>Execution</dt>");
+    expect(html).toContain(">Create</button>");
     expect(html.match(/type="checkbox" checked=""/g)).toHaveLength(2);
   });
 
-  it("requires an initial structural path when creating an immutable General SEM revision", () => {
+  it("retains a mixed preselection so the user can correct it locally", () => {
     const html = renderToStaticMarkup(<NativeHigherOrderDialog
-      nodes={[
-        { id: "x", position: { x: 0, y: 0 }, data: { label: "Capability", shortName: "CAP", mode: "reflective", indicators: ["x1"] } },
-        { id: "z", position: { x: 0, y: 180 }, data: { label: "Reputation", shortName: "REP", mode: "reflective", indicators: ["z1"] } },
-        { id: "y", position: { x: 360, y: 90 }, data: { label: "Outcome", shortName: "OUT", mode: "reflective", indicators: ["y1"] } },
-      ]}
+      nodes={ordinaryNodes}
       edges={[]}
-      selectedComponentIds={["x", "z"]}
-      requireInitialPath
-      create={vi.fn(() => ({ status: "created" as const, constructId: "hoc" }))}
+      request={{ kind: "create", selectedComponentIds: ["x", "f"] }}
+      commit={vi.fn(applied)}
       close={vi.fn()}
     />);
-    expect(html).toContain("Initial structural path for the saved revision");
+
+    expect(html.match(/type="checkbox" checked=""/g)).toHaveLength(2);
+    expect(html).toContain("<dt>Type</dt><dd>Choose dimensions</dd>");
+  });
+
+  it("shows the bounded initial path only for calculation-ready creation", () => {
+    const html = renderToStaticMarkup(<NativeHigherOrderDialog
+      nodes={ordinaryNodes}
+      edges={[]}
+      request={{ kind: "create", selectedComponentIds: ["x", "z"], requireInitialPath: true }}
+      commit={vi.fn(applied)}
+      close={vi.fn()}
+    />);
+
+    expect(html).toContain("Initial model path");
     expect(html).toContain("HOC → construct");
     expect(html).toContain("Outcome [OUT]");
+  });
+
+  it("opens an editable strict HOC by output identity while retaining its term identity", () => {
+    const hoc: Node<ConstructData> = {
+      id: "derived:hoc",
+      position: { x: 220, y: 90 },
+      data: {
+        label: "Corporate standing",
+        shortName: "STAND",
+        mode: "reflective",
+        indicators: [],
+        semantic: "higher_order",
+        higherOrder: {
+          id: "term:hoc",
+          components: ["x", "z"],
+          method: "two_stage",
+          canonicalApproach: "embedded_two_stage",
+          measurementType: "reflective_reflective",
+          stage_one_recipe: null,
+        },
+      },
+    };
+    const html = renderToStaticMarkup(<NativeHigherOrderDialog
+      nodes={[...ordinaryNodes, hoc]}
+      edges={[
+        { id: "x-y", source: "x", target: "y" },
+        { id: "hoc-y", source: hoc.id, target: "y" },
+      ]}
+      request={{ kind: "edit", constructId: hoc.id }}
+      commit={vi.fn(applied)}
+      close={vi.fn()}
+    />);
+
+    expect(html).toContain('value="Corporate standing"');
+    expect(html).toContain("<dt>Approach</dt><dd>Embedded two-stage");
+    expect(html).toContain(">Save</button>");
+    expect(html).not.toContain("Initial model path");
+    expect(html).not.toContain("Short name");
+    expect(html.match(/type="checkbox" checked=""/g)).toHaveLength(2);
+  });
+
+  it("keeps a legacy hybrid HOC readable but not editable", () => {
+    const hybrid: Node<ConstructData> = {
+      id: "derived:hybrid",
+      position: { x: 220, y: 90 },
+      data: {
+        label: "Legacy standing",
+        shortName: "LEG",
+        mode: "reflective",
+        indicators: [],
+        semantic: "higher_order",
+        higherOrder: {
+          id: "term:hybrid",
+          components: ["x", "z"],
+          method: "hybrid",
+          canonicalApproach: "hybrid",
+          measurementType: "reflective_reflective",
+          stage_one_recipe: null,
+        },
+      },
+    };
+    const html = renderToStaticMarkup(<NativeHigherOrderDialog
+      nodes={[...ordinaryNodes, hybrid]}
+      edges={[]}
+      request={{ kind: "edit", constructId: "term:hybrid" }}
+      commit={vi.fn(applied)}
+      close={vi.fn()}
+    />);
+
+    expect(html).toContain("Legacy standing");
+    expect(html).toContain("<dt>Approach</dt><dd>Hybrid</dd>");
+    expect(html).toContain("compatibility-only");
+    expect(html).toContain(">Close</button>");
+    expect(html).not.toContain(">Save</button>");
   });
 });

@@ -10,7 +10,7 @@ import {
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import type { MethodCapabilityRegistryReaderV2 } from "../domain/methodCapabilityRegistryV2";
 import { defaultGeneralSemConfigV1 } from "../domain/generalSemConfigV1";
-import { convertLegacyBasicModelV4 } from "../domain/semModelV4";
+import { convertLegacyBasicModelV4, type SemModelV4 } from "../domain/semModelV4";
 import { resolveUnifiedSemCalculationV1 } from "../domain/unifiedSemCalculationV1";
 import {
   default as NativeCalculationDialog,
@@ -24,6 +24,7 @@ import {
   retryNativeProcessProfileState,
   shouldStartNativeProcessProfile,
   scrollNativeMethodOptionIntoView,
+  unifiedInteractionSummaryV1,
 } from "./NativeCalculationDialog";
 import {
   NATIVE_ANALYSIS_CATALOG,
@@ -1181,6 +1182,51 @@ describe("NativeCalculationDialog contracts", () => {
 });
 
 describe("NativeCalculationDialog unified SEM setup", () => {
+  function higherOrderModel(): SemModelV4 {
+    const value = convertLegacyBasicModelV4({
+      id: "model:dialog-hoc",
+      name: "Higher-order model",
+      constructs: ["x", "m1", "m2", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`],
+      })),
+      paths: [
+        { source: "x", target: "m1" }, { source: "x", target: "m2" },
+        { source: "m1", target: "m2" }, { source: "m1", target: "y" },
+        { source: "m2", target: "y" }, { source: "x", target: "y" },
+      ],
+    }, "pls_composite");
+    value.variables.push({ kind: "derived", id: "derived:hoc", label: "Organizational strength" });
+    value.relations.push({
+      kind: "structural",
+      id: "relation:hoc_y",
+      source: "derived:hoc",
+      target: "construct:y",
+      parameter: "parameter:hoc_y",
+      role: "structural",
+      intercept_parameter: null,
+    });
+    value.parameters.push({
+      kind: "free",
+      id: "parameter:hoc_y",
+      label: "HOC -> Y",
+      target: { kind: "regression", source: "derived:hoc", target: "construct:y" },
+      group_overrides: [],
+    });
+    value.derived_terms.push({
+      kind: "higher_order",
+      id: "term:hoc",
+      output: "derived:hoc",
+      components: ["construct:m1", "construct:m2"],
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+    });
+    return value;
+  }
+
   function renderUnified(
     kind: "pls_algorithm" | "pls_bootstrap" | "cbsem",
     model: ReturnType<typeof convertLegacyBasicModelV4>,
@@ -1244,9 +1290,39 @@ describe("NativeCalculationDialog unified SEM setup", () => {
     });
 
     expect(markup).toContain('data-unified-sem-calculation="general_sem_pls"');
-    expect(markup).toContain("2 indirect paths");
-    expect(markup).toContain("Direct, Indirect, and Total Effects");
+    expect(markup).toContain("Indirect paths</span><strong>2 detected");
+    expect(markup).not.toContain("Detected model features");
+    expect(markup).not.toContain("Expected result categories");
+    expect(markup).not.toContain("Estimator setup");
     expect(markup.match(/id="nd-calculation-method-[^"]+" type="button" role="option"/g)).toHaveLength(18);
+  });
+
+  it("uses one concise researcher-facing row for two- and three-way moderation", () => {
+    const common = {
+      outputId: "derived:interaction",
+      focalRelationId: "relation:x_y",
+      predictorId: "construct:x",
+      predictorLabel: "Motivation",
+      outcomeId: "construct:y",
+      outcomeLabel: "Performance",
+      parentInteractionTermId: null,
+    } as const;
+
+    expect(unifiedInteractionSummaryV1({
+      ...common,
+      termId: "term:x_w",
+      order: "two_way",
+      moderatorIds: ["construct:w"],
+      moderatorLabels: ["Gender"],
+    })).toBe("Gender moderates Motivation → Performance");
+    expect(unifiedInteractionSummaryV1({
+      ...common,
+      termId: "term:x_w_z",
+      order: "three_way",
+      moderatorIds: ["construct:w", "construct:z"],
+      moderatorLabels: ["Ability", "Group"],
+      parentInteractionTermId: "term:x_w",
+    })).toBe("Group extends Motivation × Ability → Performance");
   });
 
   it("moves strict CB-SEM inference and the Advanced Parameter Table action into Calculate", () => {
@@ -1279,7 +1355,7 @@ describe("NativeCalculationDialog unified SEM setup", () => {
     }, config, false);
 
     expect(markup).toContain('data-unified-sem-calculation="general_sem_cbsem"');
-    expect(markup).toContain("2 common-factor constructs");
+    expect(markup).not.toContain("common-factor constructs");
     expect(markup).toContain('id="nd-calculation-cbsem-inference"');
     expect(markup).toContain('<option value="case_bootstrap" selected="">Case-resampling bootstrap</option>');
     expect(markup).toContain(">Advanced Parameter Table</button>");
@@ -1288,5 +1364,35 @@ describe("NativeCalculationDialog unified SEM setup", () => {
     expect(markup).not.toContain("Exact CB-SEM model tab");
     expect(markup).not.toContain("Use the removed Exact CB-SEM tab.");
     expect(markup).toMatch(/class="primary" type="submit">/);
+  });
+
+  it("shows one compact HOC row with a calculation-time edit action", () => {
+    const markup = renderUnified("pls_algorithm", higherOrderModel(), settings);
+
+    expect(markup).toContain('id="nd-calculation-higher-order"');
+    expect(markup).toContain("Organizational strength · RR · disjoint two-stage");
+    expect(markup).toContain('aria-label="Edit higher-order construct Organizational strength"');
+    expect(markup).toContain(">Edit…</button>");
+    expect(markup.match(/id="nd-calculation-method-[^"]+" type="button" role="option"/g)).toHaveLength(18);
+  });
+
+  it("presents a single-mediation bootstrap through the unified setup without a false blocker", () => {
+    const singleMediation = convertLegacyBasicModelV4({
+      id: "model:dialog-single-mediation",
+      name: "Single mediation",
+      constructs: ["x", "m", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`],
+      })),
+      paths: [{ source: "x", target: "m" }, { source: "m", target: "y" }, { source: "x", target: "y" }],
+    }, "pls_composite");
+    const markup = renderUnified("pls_bootstrap", singleMediation, { ...settings, bootstrapSamples: 500 });
+
+    expect(markup).toContain("Indirect paths</span><strong>1 detected");
+    expect(markup).not.toContain("requires at least two compiled specific indirect paths");
+    expect(markup).not.toMatch(/class="nd-blocker"[\s\S]*?<ul>/);
   });
 });

@@ -20,6 +20,7 @@ import {
   nativeLegacyLogisticResultProjection,
   nativeRegressionBootstrapResultProjection,
   nativeProcessResultProjection,
+  nativeModelFitPresentationStateV2,
   nativePlsModelFitExactProjection,
   nativePlsModelFitV2Projection,
 } from "./nativeResults";
@@ -89,6 +90,7 @@ export function nativeRunProvenanceTable(
   const htmtInference = currentHtmtBootstrapInference(run);
   const plsModelFit = nativePlsModelFitV2Projection(run);
   const plsModelFitExact = nativePlsModelFitExactProjection(run);
+  const plsModelFitPresentation = nativeModelFitPresentationStateV2(run);
   const effectiveStatus = consistentPermutation || cbsem?.analysis.bootstrap_v2
     || cbsem?.analysis.exact_case_bootstrap || cbsem?.analysis.exact_case_bootstrap_studentized
     || cbsem?.analysis.exact_case_bootstrap_bca
@@ -109,7 +111,11 @@ export function nativeRunProvenanceTable(
       ["PLS model-fit analytical observations", String(plsModelFit.analytical_sample_size)],
       ["PLS model-fit d_G logarithm", "Natural logarithm"],
       ["PLS model-fit exact-fit procedure", "Adapted Bollen-Stine for saturated and estimated models"],
-      ["PLS model-fit exact-fit inference", plsModelFitExact ? "Available in this Experimental Labs run" : "Unavailable for this run"],
+      ["PLS model-fit exact-fit inference", plsModelFitPresentation?.detailValue ?? "Not run"],
+      ...(plsModelFitPresentation ? [[
+        "PLS model-fit interpretation",
+        plsModelFitPresentation.advisory.message,
+      ]] : []),
     );
     if (plsModelFitExact) {
       rows.push(
@@ -121,6 +127,11 @@ export function nativeRunProvenanceTable(
         ["PLS model-fit estimated exact status", plsModelFitExact.estimated.status],
       );
     }
+  } else if (plsModelFitPresentation?.mode === "higher_order_not_reported") {
+    rows.push(
+      ["PLS model-fit reporting", plsModelFitPresentation.detailValue],
+      ["PLS model-fit interpretation", plsModelFitPresentation.advisory.message],
+    );
   }
   if (run.provenance) {
     rows.push(

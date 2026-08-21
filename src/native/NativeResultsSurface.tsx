@@ -4,19 +4,22 @@ import {
   ChevronRight,
   FileSpreadsheet,
   FolderOpen,
+  Info,
   Maximize2,
 } from "lucide-react";
 import { useId, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { publicationDiagramSvg } from "../domain/publicationDiagram";
-import type { ResultTable } from "../domain/resultTables";
+import type { ResultTable, ResultTableAdvisory } from "../domain/resultTables";
 import { ModelCanvas } from "../components/ModelCanvas";
 import {
   buildCanonicalResultNavigationV1,
   canonicalResultDocumentForItemV1,
   canonicalResultNavigationItemV1,
+  canonicalResultOverlaySelectionV1,
   filterCanonicalResultNavigationV1,
   type CanonicalResultNavigationGroupV1,
 } from "../domain/canonicalResultNavigationV1";
+import { canonicalThreeWayModerationPresentationV1 } from "../domain/canonicalThreeWayModerationPresentationV1";
 import { useWorkspace } from "../store";
 import type { AnalysisRun, ProcessConditionalPlot, ProcessJohnsonNeymanAnalysis } from "../types";
 import type {
@@ -33,12 +36,14 @@ import {
   nativeCbsemResultProjection,
   nativeGscaResultProjection,
   nativeIpmaPlot,
+  nativeModelFitPresentationStateV2,
   nativeModerationPlot,
   nativeNcaCeilingLabel,
   nativeNcaPlot,
   nativeNcaResultProjection,
   nativePlsSampleSizePowerResultProjection,
   nativeProcessResultProjection,
+  nativeResultOverlaySelectionV1,
   type NativeIpmaPlot,
   type NativeModerationPlot,
   type NativeNcaPlot,
@@ -146,6 +151,17 @@ export interface NativeResultsSurfaceProps {
   openMethodDetails?: () => void;
 }
 
+export function canonicalResultPresentationTitleV2(document: CanonicalResultDocumentV2): string {
+  const method = document.provenance.method_version;
+  if (method.includes("higher_order")) {
+    return method.includes("bootstrap")
+      ? "Higher-order PLS bootstrap results"
+      : "Higher-order PLS point estimates";
+  }
+  const title = document.title.replace(/^General SEM\s+/i, "");
+  return title.length > 0 ? `${title[0].toUpperCase()}${title.slice(1)}` : "Verified calculation result";
+}
+
 export default function NativeResultsSurface({
   runs,
   selectedRun,
@@ -163,10 +179,19 @@ export default function NativeResultsSurface({
   propertiesOpen,
   openMethodDetails,
 }: NativeResultsSurfaceProps) {
+  const modelNodes = useWorkspace((state) => state.nodes);
+  const selectedModelNodeId = useWorkspace((state) => state.selectedNodeId);
+  const setSelectedModelNode = useWorkspace((state) => state.setSelectedNode);
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
-  const canonicalNavigation = useMemo(
-    () => canonicalDocument ? buildCanonicalResultNavigationV1(canonicalDocument) : null,
+  const canonicalPresentationDocument = useMemo(
+    () => canonicalDocument ? canonicalThreeWayModerationPresentationV1(canonicalDocument) : null,
     [canonicalDocument],
+  );
+  const canonicalNavigation = useMemo(
+    () => canonicalPresentationDocument
+      ? buildCanonicalResultNavigationV1(canonicalPresentationDocument)
+      : null,
+    [canonicalPresentationDocument],
   );
   const [canonicalSearch, setCanonicalSearch] = useState({
     documentId: canonicalNavigation?.documentId ?? null,
@@ -194,9 +219,15 @@ export default function NativeResultsSurface({
           : canonicalNavigation.defaultItemId),
     )
     : null;
+  const canonicalResultOverlay = useMemo(
+    () => canonicalPresentationDocument
+      ? canonicalResultOverlaySelectionV1(canonicalPresentationDocument, canonicalItem)
+      : null,
+    [canonicalPresentationDocument, canonicalItem],
+  );
   const selectedCanonicalItemId = canonicalItem?.id ?? "";
-  const displayedCanonicalDocument = canonicalDocument && canonicalItem
-    ? canonicalResultDocumentForItemV1(canonicalDocument, canonicalItem)
+  const displayedCanonicalDocument = canonicalPresentationDocument && canonicalItem
+    ? canonicalResultDocumentForItemV1(canonicalPresentationDocument, canonicalItem)
     : null;
   const canonicalActive = Boolean(canonicalDocument && canonicalSelected);
   const [focusedTreeItemId, setFocusedTreeItemId] = useState(
@@ -222,6 +253,10 @@ export default function NativeResultsSurface({
   const cbsemResult = selectedRun ? nativeCbsemResultProjection(selectedRun) : null;
   const gscaResult = selectedRun ? nativeGscaResultProjection(selectedRun) : null;
   const powerResult = selectedRun ? nativePlsSampleSizePowerResultProjection(selectedRun) : null;
+  const modelFitPresentation = useMemo(
+    () => nativeModelFitPresentationStateV2(selectedRun),
+    [selectedRun],
+  );
   const predictionV2 = selectedRun?.result?.predict?.method_version === CURRENT_PLS_PREDICT_METHOD_VERSION
     && selectedRun.result.predict.repeated_kfold?.method_version === CURRENT_PLS_PREDICT_REPEATED_METHOD_VERSION
     && /^sha256:[0-9a-f]{64}$/.test(selectedRun.result.predict.repeated_kfold.assignment_digest ?? "")
@@ -232,7 +267,14 @@ export default function NativeResultsSurface({
     : null;
   const processResult = selectedRun ? nativeProcessResultProjection(selectedRun) : null;
   const canonicalOptionId = canonicalDocument ? `canonical:${canonicalDocument.document_id}` : "";
+  const canonicalDisplayTitle = canonicalDocument
+    ? canonicalResultPresentationTitleV2(canonicalDocument)
+    : "";
   const activeResultId = canonicalActive ? canonicalOptionId : selectedRun?.id ?? selectedRunId;
+  const nativeResultOverlay = useMemo(
+    () => nativeResultOverlaySelectionV1(selectedRun, selectedItem?.id),
+    [selectedItem?.id, selectedRun],
+  );
 
   const toggleGroup = (groupId: string) => {
     setCollapsedGroupIds((current) => {
@@ -247,6 +289,17 @@ export default function NativeResultsSurface({
     const item = Array.from(tree.querySelectorAll<HTMLElement>('[role="treeitem"]'))
       .find((candidate) => candidate.dataset.resultTreeItemId === itemId);
     item?.focus();
+  };
+  const selectCanonicalDiagramSubject = (itemId: string) => {
+    const group = canonicalNavigation?.groups.find((candidate) => candidate.items.some((item) => item.id === itemId));
+    if (group?.id === "higher_order") {
+      const higherOrder = modelNodes.find((node) => node.data.semantic === "higher_order");
+      if (higherOrder) setSelectedModelNode(higherOrder.id);
+      return;
+    }
+    if (modelNodes.find((node) => node.id === selectedModelNodeId)?.data.semantic === "higher_order") {
+      setSelectedModelNode(null);
+    }
   };
   const handleTreeKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
     const target = (event.target as HTMLElement).closest?.<HTMLElement>('[role="treeitem"]');
@@ -263,6 +316,7 @@ export default function NativeResultsSurface({
           documentId: canonicalNavigation?.documentId ?? null,
           itemId: action.activateItemId,
         });
+        selectCanonicalDiagramSubject(action.activateItemId);
         onCanonicalNavigationItemChange?.(action.activateItemId);
       } else {
         setSelectedTableId(action.activateItemId);
@@ -275,6 +329,7 @@ export default function NativeResultsSurface({
       documentId: canonicalNavigation?.documentId ?? null,
       itemId,
     });
+    selectCanonicalDiagramSubject(itemId);
     onCanonicalNavigationItemChange?.(itemId);
   };
 
@@ -285,7 +340,7 @@ export default function NativeResultsSurface({
         if (event.target.value === canonicalOptionId) selectCanonicalDocument?.();
         else setSelectedRunId(event.target.value);
       }}>
-        {canonicalDocument ? <option value={canonicalOptionId}>{canonicalDocument.title}</option> : null}
+        {canonicalDocument ? <option value={canonicalOptionId}>{canonicalDisplayTitle}</option> : null}
         {runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}
       </select></label> : null}
       {canonicalActive && filteredCanonicalNavigation ? <>
@@ -328,26 +383,26 @@ export default function NativeResultsSurface({
       </div> : null}
     </aside>
     <section className="nd-document nd-results-document">
-      <div className="nd-document-tab"><BarChart3 size={14} /><span>{canonicalActive ? canonicalDocument?.title : selectedRun?.name ?? "Results"}</span>{selectedRun && !canonicalActive && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
+      <div className="nd-document-tab"><BarChart3 size={14} /><span>{canonicalActive ? canonicalDisplayTitle : selectedRun?.name ?? "Results"}</span>{selectedRun && !canonicalActive && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
       {canonicalActive && canonicalDocument ? <div className="nd-general-sem-canonical-results-workspace nd-cbsem-v4-workspace">
-        <CanonicalResultModelDiagram document={canonicalDocument} />
+        <CanonicalResultModelDiagram document={canonicalPresentationDocument ?? canonicalDocument} resultOverlay={canonicalResultOverlay} />
         {canonicalItem?.kind === "diagnostics"
-          ? <CanonicalResultDiagnostics document={canonicalDocument} />
+          ? <CanonicalResultDiagnostics document={canonicalPresentationDocument ?? canonicalDocument} />
           : displayedCanonicalDocument
             ? <CanonicalResultDocumentV2View document={displayedCanonicalDocument} reopened compilationReceipt={null} />
             : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected saved result does not contain this output.</span></div>}
-        <CanonicalResultExportPanelV2 document={canonicalDocument} />
-      </div> : !selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <ResultTableView table={selectedTable} run={selectedRun} /> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
+        <CanonicalResultExportPanelV2 document={canonicalPresentationDocument ?? canonicalDocument} />
+      </div> : !selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <div className="nd-result-selection-workspace">
+        {nativeResultOverlay ? <ResultOverlayModelDiagram overlay={nativeResultOverlay} run={selectedRun} /> : null}
+        <ResultTableView table={selectedTable} run={selectedRun} />
+      </div> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
     </section>
     {propertiesOpen ? <aside className="nd-properties" aria-label="Result properties">
       <PaneTitle title="Run information" />
       {canonicalActive && canonicalDocument ? <dl className="nd-property-list">
-        <div><dt>Method</dt><dd>{canonicalDocument.provenance.method_version}</dd></div>
+        <div><dt>Method</dt><dd>{canonicalDisplayTitle}</dd></div>
         <div><dt>Status</dt><dd>Verified and saved</dd></div>
-        <div><dt>Estimator cell</dt><dd>{canonicalDocument.provenance.capability_cell.cell_id}</dd></div>
         <div><dt>Selected output</dt><dd>{canonicalItem?.title ?? "Complete verified result"}</dd></div>
-        <div><dt>Model</dt><dd>{canonicalDocument.provenance.model_id}</dd></div>
-        <div><dt>Dataset</dt><dd>{canonicalDocument.provenance.dataset_id}</dd></div>
         <div><dt>Completed</dt><dd>{new Date(canonicalDocument.provenance.completed_at).toLocaleString()}</dd></div>
       </dl> : powerResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Prospective PLS-SEM sample size and power</dd></div>
@@ -418,6 +473,11 @@ export default function NativeResultsSurface({
         <div><dt>Status</dt><dd>Completed</dd></div>
         <div><dt>Observations</dt><dd>{selectedRun.result.used_observations}</dd></div>
         <div><dt>Iterations</dt><dd>{selectedRun.result.iterations}</dd></div>
+        {modelFitPresentation?.mode === "higher_order_not_reported"
+          ? <div><dt>Model fit</dt><dd>{modelFitPresentation.detailValue}</dd></div>
+          : modelFitPresentation
+            ? <div><dt>Exact-fit bootstrap</dt><dd>{modelFitPresentation.detailValue}</dd></div>
+            : null}
         {settingApplicability?.usesSeed ? <div><dt>Recorded seed</dt><dd>{selectedRun.provenance?.seed ?? selectedRun.seed}</dd></div> : null}
         <div><dt>Completed</dt><dd>{new Date(selectedRun.createdAt).toLocaleString()}</dd></div>
       </dl> : <div className="nd-pane-empty">No run selected.</div>}
@@ -437,7 +497,13 @@ function CanonicalResultDiagnostics({ document }: { document: CanonicalResultDoc
   </section>;
 }
 
-function CanonicalResultModelDiagram({ document }: { document: CanonicalResultDocumentV2 }) {
+function CanonicalResultModelDiagram({
+  document,
+  resultOverlay,
+}: {
+  document: CanonicalResultDocumentV2;
+  resultOverlay: import("../domain/moderationDiagramProjectionV1").ResultOverlaySelectionV1 | null;
+}) {
   const currentModelMatches = useWorkspace((state) => (
     state.activeModelId === document.provenance.model_id
     && Boolean(state.standardSemModelV4Authorities[document.provenance.model_id])
@@ -461,11 +527,40 @@ function CanonicalResultModelDiagram({ document }: { document: CanonicalResultDo
         border: "1px solid var(--nd-color-border)",
         borderRadius: "var(--nd-radius-2)",
       }}
-    ><ModelCanvas presentation="results_readonly" /></div> : <div className="nd-empty" role="status">
+    ><ModelCanvas presentation="results_readonly" resultOverlay={resultOverlay} /></div> : <div className="nd-empty" role="status">
       <BarChart3 size={28} aria-hidden="true" />
       <strong>Model diagram unavailable</strong>
       <span>Open the matching Canvas model revision to view this saved result with its diagram.</span>
     </div>}
+  </section>;
+}
+
+function ResultOverlayModelDiagram({
+  overlay,
+  run,
+}: {
+  overlay: import("../domain/moderationDiagramProjectionV1").ResultOverlaySelectionV1;
+  run: AnalysisRun;
+}) {
+  const activeModelId = useWorkspace((state) => state.activeModelId);
+  const currentModelAvailable = Boolean(
+    run.modelId
+    && run.modelId === activeModelId,
+  );
+  const descriptionId = `nd-result-overlay-${run.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+  if (!currentModelAvailable) return null;
+  return <section className="nd-result-overlay-model" aria-label="Selected result model context">
+    <h2 className="nd-sr-only">Selected result model context</h2>
+    <p className="nd-sr-only" id={descriptionId}>{overlay.label}. Highlighted in the read-only model diagram.</p>
+    <div
+      className="nd-canvas-host"
+      role="region"
+      tabIndex={0}
+      aria-label={`Read-only model diagram: ${overlay.label}`}
+      aria-describedby={descriptionId}
+      data-result-overlay-kind={overlay.kind}
+      style={{ position: "relative", height: "clamp(230px, 34vh, 360px)", minHeight: 230, overflow: "hidden" }}
+    ><ModelCanvas presentation="results_readonly" resultOverlay={overlay} /></div>
   </section>;
 }
 
@@ -513,8 +608,11 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
   const headingId = `nd-result-heading-${table.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const instructionsId = `${headingId}-grid-instructions`;
   return <section className="nd-result-table-view" data-result-table-id={table.id}>
-    <header><h1 id={headingId}>{table.title}</h1><span>{table.rows.length} row{table.rows.length === 1 ? "" : "s"}</span></header>
-    {table.warning ? <div className="nd-inline-warning" role="status">{table.warning}</div> : null}
+    <header>
+      <div className="nd-result-heading"><h1 id={headingId}>{table.title}</h1>{table.advisory ? <ResultTableAdvisoryView advisory={table.advisory} /> : null}</div>
+      <span>{table.rows.length} row{table.rows.length === 1 ? "" : "s"}</span>
+    </header>
+    {!table.advisory && table.warning ? <div className="nd-inline-warning" role="status">{table.warning}</div> : null}
     {moderationPlot ? <ModerationSlopePlot plot={moderationPlot} /> : null}
     {ipmaPlot ? <IpmaScatterPlot plot={ipmaPlot} /> : null}
     {ncaPlot ? <NcaCeilingPlot plot={ncaPlot} /> : null}
@@ -545,6 +643,27 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
     <span className="nd-sr-only" id={instructionsId}>Use the arrow keys to move between cells. Press Control+C to copy the selected cell.</span>
     <span className="nd-sr-only" role="status" aria-live="polite">{grid.announcement}</span>
   </section>;
+}
+
+function ResultTableAdvisoryView({ advisory }: { advisory: ResultTableAdvisory }) {
+  const messageRole = advisory.tone === "error"
+    ? "alert"
+    : advisory.tone === "warning"
+      ? "status"
+      : "note";
+  return <details
+    className="nd-result-advisory"
+    data-result-advisory-tone={advisory.tone}
+  >
+    <summary
+      aria-label={`${advisory.title}. Show explanation`}
+      title={advisory.title}
+    ><Info size={14} aria-hidden="true" /><span className="nd-sr-only">{advisory.title}</span></summary>
+    <p
+      role={messageRole}
+      className="nd-result-advisory-popover"
+    ><strong>{advisory.title}</strong><span>{advisory.message}</span></p>
+  </details>;
 }
 
 function processProbeLabel(values: readonly { variable: string; raw_value: number }[]): string {
