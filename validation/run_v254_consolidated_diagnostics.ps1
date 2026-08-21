@@ -205,8 +205,11 @@ function Invoke-DiagnosticStep {
         ended_at = $ended.ToString("o")
         duration_ms = $stopwatch.ElapsedMilliseconds
         exit_code = $exitCode
-        stdout = [System.IO.Path]::GetRelativePath($resolvedEvidenceDir, $stdoutPath).Replace("\", "/")
-        stderr = [System.IO.Path]::GetRelativePath($resolvedEvidenceDir, $stderrPath).Replace("\", "/")
+        # Windows PowerShell 5.1 runs on .NET Framework, which does not expose
+        # System.IO.Path.GetRelativePath. These files are always direct children
+        # of the report's logs directory, so construct their stable report paths.
+        stdout = "logs/$([System.IO.Path]::GetFileName($stdoutPath))"
+        stderr = "logs/$([System.IO.Path]::GetFileName($stderrPath))"
         stdout_sha256 = Get-Sha256OrNull -LiteralPath $stdoutPath
         stderr_sha256 = Get-Sha256OrNull -LiteralPath $stderrPath
         disk_gate = $null
