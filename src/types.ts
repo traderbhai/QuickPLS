@@ -130,6 +130,111 @@ export interface DiagramLayoutState {
   moderationConnectorBendPoints?: Record<string, Array<{ x: number; y: number }>>;
 }
 
+export type ModelEditHigherOrderApproachV1 =
+  | "repeated_indicators"
+  | "extended_repeated_indicators"
+  | "embedded_two_stage"
+  | "disjoint_two_stage";
+
+export type ModelEditHigherOrderMeasurementTypeV1 =
+  | "reflective_reflective"
+  | "reflective_formative"
+  | "formative_reflective"
+  | "formative_formative";
+
+/** Authority-neutral HOC input. IDs remain outside the draft so edits cannot replace them. */
+export interface ModelEditHigherOrderDraftV1 {
+  name: string;
+  shortName: string;
+  components: string[];
+  approach: ModelEditHigherOrderApproachV1;
+  measurementType: ModelEditHigherOrderMeasurementTypeV1;
+  initialPath?: {
+    direction: "hoc_to_construct" | "construct_to_hoc";
+    constructId: string;
+    relationshipId: string;
+    label?: string;
+  };
+}
+
+export type ModelEditModeratingEffectTargetV1 =
+  | { kind: "focal_relation"; relationId: string }
+  | { kind: "parent_interaction"; interactionTermId: string };
+
+export interface ModelEditModeratingEffectSpecV1 {
+  label: string;
+  operands: [predictor: string, moderator: string] | [predictor: string, firstModerator: string, secondModerator: string];
+  target: ModelEditModeratingEffectTargetV1;
+  outcomeId: string;
+}
+
+/**
+ * One authority-aware model edit accepted by the native workbench gateway.
+ * Scientific edits change the model authority; presentation edits only change
+ * the stable diagram layout bound to that authority.
+ */
+export type ModelEditCommandV1 =
+  | { kind: "add_construct"; constructId: string; label: string; columns?: string[]; position?: DiagramPoint }
+  | { kind: "rename_construct"; constructId: string; label: string }
+  | { kind: "invert_measurement_model"; constructId: string }
+  | { kind: "assign_indicators"; constructId: string; columns: string[] }
+  | { kind: "unassign_indicator"; constructId: string; column: string; replacementMarkerColumn?: string | null }
+  | { kind: "add_path"; relationId: string; sourceId: string; targetId: string; label?: string }
+  | { kind: "reverse_path"; relationId: string }
+  | { kind: "remove_path"; relationId: string }
+  | { kind: "create_higher_order"; termId: string; outputId: string; draft: ModelEditHigherOrderDraftV1 }
+  | { kind: "edit_higher_order"; termId: string; outputId: string; draft: Omit<ModelEditHigherOrderDraftV1, "initialPath"> }
+  | { kind: "remove_higher_order"; termId: string; outputId: string }
+  | { kind: "create_moderating_effect"; effect: ModelEditModeratingEffectSpecV1 }
+  | { kind: "edit_moderating_effect"; termId: string; outputId: string; effect: ModelEditModeratingEffectSpecV1 }
+  | { kind: "remove_moderating_effect"; termId: string; outputId: string }
+  | { kind: "move_construct"; constructId: string; position: DiagramPoint }
+  | { kind: "set_construct_indicator_side"; constructId: string; side: Exclude<IndicatorSide, "free"> }
+  | { kind: "set_indicator_side"; constructId: string; column: string; side: IndicatorSide }
+  | { kind: "move_indicator"; constructId: string; column: string; position: DiagramPoint }
+  | { kind: "reset_indicator_layout"; constructId: string; column?: string }
+  | { kind: "set_path_routing"; relationId: string; routing: EdgeRouteStyle }
+  | { kind: "reset_path_route"; relationId: string }
+  | { kind: "nudge_path_label"; relationId: string; offset: DiagramPoint }
+  | { kind: "reset_path_label"; relationId: string }
+  | { kind: "set_standard_sem_presentation"; presentation: StandardSemPresentationLayoutV1 }
+  | { kind: "set_construct_pinned"; constructId: string; pinned: boolean }
+  | { kind: "align_constructs"; constructIds: string[]; target: "left" | "centerX" | "right" | "top" | "centerY" | "bottom" }
+  | { kind: "distribute_constructs"; constructIds: string[]; axis: "horizontal" | "vertical" }
+  | { kind: "tidy_constructs"; constructIds: string[] }
+  | { kind: "arrange_model"; direction: "horizontal" | "vertical" | "smartpls" };
+
+export type ModelEditTransactionClassV1 = "scientific" | "presentation";
+export type ModelEditAuthorityKindV1 = "legacy_graph" | "standard_sem_model_v4";
+
+export interface ModelEditAffectedIdentitiesV1 {
+  constructIds: string[];
+  indicatorIds: string[];
+  relationshipIds: string[];
+}
+
+export type ModelEditCommandResultV1 =
+  | {
+      status: "applied";
+      command: ModelEditCommandV1["kind"];
+      transaction: ModelEditTransactionClassV1;
+      authority: ModelEditAuthorityKindV1;
+      modelId: string | null;
+      affected: ModelEditAffectedIdentitiesV1;
+      undoable: true;
+      stableIdsPreserved: true;
+    }
+  | {
+      status: "blocked";
+      command: ModelEditCommandV1["kind"];
+      transaction: ModelEditTransactionClassV1;
+      authority: ModelEditAuthorityKindV1;
+      modelId: string | null;
+      code: string;
+      message: string;
+      correctiveAction: string;
+    };
+
 export interface UiPreferences {
   density: UiDensity;
   tableDensity: UiDensity;

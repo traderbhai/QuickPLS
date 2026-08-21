@@ -23,12 +23,15 @@ import {
   MODERATION_FOCUS_EVENT,
   type ResultOverlaySelectionV1,
 } from "../domain/moderationDiagramProjectionV1";
-import type { StandardSemModelV4AuthorityRecordV1, StandardSemModelV4EditorIntentV1 } from "../domain/standardSemModelV4Authority";
-import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
 import { SEM_SIZES, boxCenter, semNodeBox } from "../domain/semGeometry";
 import { nearestNativeModerationDropTarget, type NativeModerationDropTarget } from "../native/nativeModeration";
+import {
+  nativeCanvasSemanticZoomLevelV1,
+  planNativeCanvasConnectionV1,
+  projectNativeCanvasSemanticZoomV1,
+} from "../native/nativeCanvasBehaviorV1";
 import { useWorkspace } from "../store";
-import type { ConstructData, Dataset, DiagramToolMode, StandardSemPresentationLayoutV1 } from "../types";
+import type { ConstructData, DiagramToolMode, ModelEditCommandV1, StandardSemPresentationLayoutV1 } from "../types";
 import { ConstructNode } from "./ConstructNode";
 import { IndicatorNode } from "./IndicatorNode";
 import { LatentNode } from "./LatentNode";
@@ -119,30 +122,22 @@ export function ModelCanvas({
   const diagramTool = useWorkspace((state) => state.diagramTool);
   const diagramOverlaySettings = useWorkspace((state) => state.diagramOverlaySettings);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
-  const dataset = useWorkspace((state) => state.dataset);
   const generalSemPublicationPending = useWorkspace((state) => state.generalSemPublicationPending);
   const strictAuthority = useWorkspace((state) => state.activeModelId
     ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
     : null);
-  const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const onNodesChange = useWorkspace((state) => state.onNodesChange);
   const onEdgesChange = useWorkspace((state) => state.onEdgesChange);
-  const onConnect = useWorkspace((state) => state.onConnect);
   const reconnectPath = useWorkspace((state) => state.reconnectPath);
-  const addPath = useWorkspace((state) => state.addPath);
   const addCovariance = useWorkspace((state) => state.addCovariance);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setDiagramTool = useWorkspace((state) => state.setDiagramTool);
-  const checkpoint = useWorkspace((state) => state.checkpoint);
-  const addConstruct = useWorkspace((state) => state.addConstruct);
+  const setDiagramViewport = useWorkspace((state) => state.setDiagramViewport);
   const removeSelection = useWorkspace((state) => state.removeSelection);
-  const autoLayout = useWorkspace((state) => state.autoLayout);
-  const moveIndicator = useWorkspace((state) => state.moveIndicator);
-  const assignIndicator = useWorkspace((state) => state.assignIndicator);
-  const assignIndicators = useWorkspace((state) => state.assignIndicators);
   const undo = useWorkspace((state) => state.undo);
   const redo = useWorkspace((state) => state.redo);
   const readOnlyResultsPresentation = presentation === "results_readonly";
@@ -156,36 +151,32 @@ export function ModelCanvas({
   const [selectedInteractionTermId, setSelectedInteractionTermId] = useState<string | null>(null);
   const [moderationDropTarget, setModerationDropTarget] = useState<null | (NativeModerationDropTarget & { clientX: number; clientY: number })>(null);
   const moderationDropTargetRef = useRef<typeof moderationDropTarget>(null);
-  const moderationDragOrigin = useRef<null | { id: string; position: { x: number; y: number } }>(null);
+  const connectSourceRef = useRef<string | null>(null);
+  const connectCompletedRef = useRef(false);
+  const [semanticZoom, setSemanticZoom] = useState<"far" | "medium" | "near">("near");
+  const [isolatedNodeIds, setIsolatedNodeIds] = useState<Set<string> | null>(null);
   const [draggingVariableCount, setDraggingVariableCount] = useState(0);
   const [hoverDropTargetId, setHoverDropTargetId] = useState<string | null>(null);
   const strictIdCounter = useRef(0);
-  const nextStrictId = (kind: string) => `standard:editor:${kind}:${Date.now()}:${++strictIdCounter.current}`;
-  const commitStrict = (intent: StandardSemModelV4EditorIntentV1) => {
-    if (generalSemPublicationPending) {
-      setActionFeedback({ message: "Wait for the calculation-ready project file to finish publishing before editing the model." });
-      return;
-    }
-    setActionFeedback({ message: "Committing strict Standard model edit…" });
-    void commitStandardIntent(intent).then((result) => {
-      if (result.status === "committed") setActionFeedback({ message: "Committed to the strict Standard model authority." });
-      else if (result.status === "blocked") setActionFeedback({ message: `Blocked: ${result.diagnostic.message} ${result.diagnostic.correctiveAction}` });
-      else if (result.status === "stale") setActionFeedback({ message: "Stale edit ignored because the active authority changed." });
-      else setActionFeedback({ message: `Rejected: ${result.error instanceof Error ? result.error.message : String(result.error)}` });
+  const nextStableId = (kind: string) => `model:${kind}:${Date.now()}:${++strictIdCounter.current}`;
+  const addCanvasConstruct = (position?: { x: number; y: number }, indicators: string[] = []) => {
+    runModelEditCommand({
+      kind: "add_construct",
+      constructId: nextStableId("construct"),
+      label: `Construct ${nodes.length + 1}`,
+      columns: indicators,
+      ...(position ? { position } : {}),
     });
   };
-  const addStrictConstruct = (indicators: string[] = []) => commitStrict({
-    kind: "add_construct",
-    variable_id: nextStrictId("construct"),
-    label: `Construct ${nodes.length + 1}`,
-    representation: { kind: "composite", weighting: { kind: "mode_a" } },
-    indicators: indicators.map((column) => observedForStrictCanvas(strictAuthority!, dataset, column)),
-  });
-  const assignStrictIndicators = (constructId: string, indicators: string[]) => commitStrict({
-    kind: "assign_indicators",
-    construct_id: constructId,
-    indicators: indicators.map((column) => observedForStrictCanvas(strictAuthority!, dataset, column)),
-  });
+  const assignCanvasIndicators = (constructId: string, indicators: string[]) => {
+    void executeModelEditCommand({ kind: "assign_indicators", constructId, columns: indicators }).then((result) => {
+      setActionFeedback({
+        message: result.status === "applied"
+          ? `${indicators.length} indicator${indicators.length === 1 ? "" : "s"} assigned.`
+          : `${result.message} ${result.correctiveAction}`,
+      });
+    });
+  };
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
   const canvasDiagramMode = readOnlyResultsPresentation ? "smartpls_result" : diagramMode;
@@ -217,23 +208,24 @@ export function ModelCanvas({
   const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
   const updateStandardPresentation = (presentation: StandardSemPresentationLayoutV1) => {
     if (!strictAuthority || !canEditLayout) return;
-    checkpoint();
-    useWorkspace.setState((state) => ({
-      diagramLayout: { ...state.diagramLayout, standardSemPresentation: presentation },
-    }));
+    runModelEditCommand({ kind: "set_standard_sem_presentation", presentation });
   };
+  const semanticGraph = useMemo(() => ({
+    ...graph,
+    ...projectNativeCanvasSemanticZoomV1(graph.nodes, graph.edges, semanticZoom, isolatedNodeIds),
+  }), [graph, isolatedNodeIds, semanticZoom]);
   const visibleGraph = useMemo(() => {
     const hoveredRelationshipId = moderationDropTarget?.relationship.edgeId;
-    if (!hoveredRelationshipId) return graph;
+    if (!hoveredRelationshipId) return semanticGraph;
     return {
-      ...graph,
-      edges: graph.edges.map((edge) => {
+      ...semanticGraph,
+      edges: semanticGraph.edges.map((edge) => {
         if (edge.id !== hoveredRelationshipId) return edge;
         const className = [edge.className, "moderation-drop-target-edge"].filter(Boolean).join(" ");
         return { ...edge, className, data: { ...edge.data, edgeClassName: className } };
       }),
     };
-  }, [graph, moderationDropTarget?.relationship.edgeId]);
+  }, [moderationDropTarget?.relationship.edgeId, semanticGraph]);
   const updateModerationDropTarget = (target: typeof moderationDropTarget) => {
     moderationDropTargetRef.current = target;
     setModerationDropTarget(target);
@@ -242,15 +234,16 @@ export function ModelCanvas({
     const node = dragged?.id === nodeId ? dragged : canvasNodes.find((candidate) => candidate.id === nodeId);
     return node ? boxCenter(semNodeBox(node)) : undefined;
   };
-  const moderationTargetForDraggedNode = (node: Node) => {
-    const modelNode = nodes.find((candidate) => candidate.id === node.id);
+  const moderationTargetForPointer = (moderatorId: string, clientX: number, clientY: number) => {
+    if (!flow) return null;
+    const modelNode = nodes.find((candidate) => candidate.id === moderatorId);
     if (!modelNode || modelNode.data.semantic || modelNode.data.indicators.length === 0) return null;
     return nearestNativeModerationDropTarget(
       nodes,
       edges,
-      node.id,
-      boxCenter(semNodeBox(node)),
-      (id) => visualNodeCenter(id, node),
+      moderatorId,
+      flow.screenToFlowPosition({ x: clientX, y: clientY }),
+      (id) => visualNodeCenter(id),
     );
   };
   useEffect(() => {
@@ -261,10 +254,23 @@ export function ModelCanvas({
     window.addEventListener(MODERATION_FOCUS_EVENT, handleModerationFocus);
     return () => window.removeEventListener(MODERATION_FOCUS_EVENT, handleModerationFocus);
   }, []);
+  useEffect(() => {
+    const handleModelEditResult = (event: Event) => {
+      const result = (event as CustomEvent<{ status?: string; message?: string; correctiveAction?: string }>).detail;
+      if (!result) return;
+      setActionFeedback({
+        message: result.status === "applied"
+          ? "Model updated."
+          : `${result.message ?? "The edit could not be applied."} ${result.correctiveAction ?? "Review the selection and retry."}`,
+      });
+    };
+    window.addEventListener("quickpls:model-edit-result", handleModelEditResult);
+    return () => window.removeEventListener("quickpls:model-edit-result", handleModelEditResult);
+  }, []);
 
   useEffect(() => {
-    if (draggingNodeId.current === null) setCanvasNodes(graph.nodes);
-  }, [graph.nodes]);
+    if (draggingNodeId.current === null) setCanvasNodes(semanticGraph.nodes);
+  }, [semanticGraph.nodes]);
   useEffect(() => {
     if (!selectedInteractionTermId) return;
     if (!graph.nodes.some((node) => isModerationAnchorData(node.data)
@@ -272,14 +278,97 @@ export function ModelCanvas({
       setSelectedInteractionTermId(null);
     }
   }, [graph.nodes, selectedInteractionTermId]);
+  const runModelEditCommand = (command: ModelEditCommandV1) => {
+    void executeModelEditCommand(command).then((result) => {
+      setActionFeedback({
+        message: result.status === "applied"
+          ? "Diagram updated."
+          : `${result.message} ${result.correctiveAction}`,
+      });
+    });
+  };
+  const selectedConstructIds = () => [...new Set([
+    ...nodes.filter((node) => node.selected && node.data.semantic !== "interaction").map((node) => node.id),
+    ...(selectedNodeId && nodes.some((node) => node.id === selectedNodeId && node.data.semantic !== "interaction") ? [selectedNodeId] : []),
+  ])];
   const arrangeModel = (direction: "horizontal" | "vertical" | "smartpls") => {
-    autoLayout(direction);
-    window.setTimeout(() => { void flow?.fitView({ padding: 0.2, duration: animationDuration(220) }); }, 0);
+    runModelEditCommand({ kind: "arrange_model", direction });
+    window.setTimeout(() => { void fitCanvas("structure"); }, 0);
+  };
+  const selectionScopeNodeIds = () => {
+    const selected = new Set(selectedConstructIds());
+    const selectedEdge = selectedEdgeId ? edges.find((edge) => edge.id === selectedEdgeId) : undefined;
+    if (selectedEdge) {
+      selected.add(selectedEdge.source);
+      selected.add(selectedEdge.target);
+    }
+    if (selectedInteractionTermId) {
+      const anchor = graph.nodes.find((node) => isModerationAnchorData(node.data)
+        && node.data.interactionTermId === selectedInteractionTermId);
+      if (anchor && isModerationAnchorData(anchor.data)) {
+        selected.add(anchor.id);
+        selected.add(anchor.data.predictorId);
+        selected.add(anchor.data.outcomeId);
+        anchor.data.moderatorIds.forEach((id) => selected.add(id));
+      }
+    }
+    return selected;
+  };
+  const fitCanvas = (scope: "structure" | "all" | "selection") => {
+    if (!flow) return;
+    const candidateIds = scope === "all"
+      ? new Set(graph.nodes.map((node) => node.id))
+      : scope === "selection"
+        ? selectionScopeNodeIds()
+        : new Set(graph.nodes.filter((node) => !isIndicatorNodeId(node.id)).map((node) => node.id));
+    const fitNodes = graph.nodes.filter((node) => candidateIds.has(node.id));
+    if (!fitNodes.length) {
+      setActionFeedback({ message: scope === "selection" ? "Select a construct, path, or moderating effect to fit." : "The model has no visible objects to fit." });
+      return;
+    }
+    void flow.fitView({
+      nodes: fitNodes,
+      padding: scope === "selection" ? 0.32 : 0.18,
+      minZoom: scope === "all" ? 0.25 : 0.55,
+      maxZoom: scope === "selection" ? 1.25 : 1,
+      duration: animationDuration(220),
+    });
+  };
+  const toggleSelectionIsolation = () => {
+    if (isolatedNodeIds) {
+      setIsolatedNodeIds(null);
+      setActionFeedback({ message: "Showing the complete model." });
+      window.setTimeout(() => fitCanvas("structure"), 0);
+      return;
+    }
+    const scope = selectionScopeNodeIds();
+    if (!scope.size) {
+      setActionFeedback({ message: "Select a construct, path, or moderating effect before using Focus selection." });
+      return;
+    }
+    const expanded = new Set(scope);
+    for (const edge of graph.edges) {
+      if (edge.id.startsWith("measurement::") && (scope.has(edge.source) || scope.has(edge.target))) {
+        expanded.add(edge.source);
+        expanded.add(edge.target);
+      }
+    }
+    setIsolatedNodeIds(expanded);
+    setActionFeedback({ message: "Focused on the selected model region. Use Focus selection again to show all." });
+    window.setTimeout(() => {
+      void flow.fitView({
+        nodes: graph.nodes.filter((node) => expanded.has(node.id)),
+        padding: 0.28,
+        minZoom: 0.65,
+        maxZoom: 1.25,
+        duration: animationDuration(220),
+      });
+    }, 0);
   };
   useEffect(() => {
     if (nodes.length > previousNodeCount.current) {
       if (preserveViewportForDrop.current) preserveViewportForDrop.current = false;
-      else window.setTimeout(() => { void flow?.fitView({ padding: 0.16, duration: animationDuration(220) }); }, 0);
+      else window.setTimeout(() => { fitCanvas("structure"); }, 0);
     }
     previousNodeCount.current = nodes.length;
   }, [flow, nodes.length]);
@@ -363,12 +452,13 @@ export function ModelCanvas({
         setActionFeedback({ message: "That structural path already exists. Select the path to edit, reverse, or delete it.", ...point });
         return false;
       }
-      if (strictAuthority) commitStrict({
-        kind: "add_relationship",
-        relationship_id: nextStrictId("relationship"),
-        definition: { kind: "structural", source, target, label: "Path" },
+      runModelEditCommand({
+        kind: "add_path",
+        relationId: nextStableId("relationship"),
+        sourceId: source,
+        targetId: target,
+        label: "Path",
       });
-      else addPath(source, target);
       setActionFeedback(null);
       return true;
     }
@@ -376,12 +466,11 @@ export function ModelCanvas({
       setActionFeedback({ message: "That covariance already exists between these constructs.", ...point });
       return false;
     }
-    if (strictAuthority) commitStrict({
-      kind: "add_relationship",
-      relationship_id: nextStrictId("covariance"),
-      definition: { kind: "covariance", left: { kind: "variable", id: source }, right: { kind: "variable", id: target }, label: "Covariance" },
-    });
-    else addCovariance(source, target);
+    if (strictAuthority) {
+      setActionFeedback({ message: "Covariance creation requires the calculation-ready revision workflow. Use Advanced Parameter Table to add it safely.", ...point });
+      return false;
+    }
+    addCovariance(source, target);
     setActionFeedback(null);
     return true;
   };
@@ -393,9 +482,11 @@ export function ModelCanvas({
       permittedChanges as Array<NodeChange<Node>>,
       draggingNodeId.current !== null,
     );
-    if (plan.checkpointBeforePersisting) checkpoint();
+    for (const change of plan.constructKeyboardPositions) {
+      runModelEditCommand({ kind: "move_construct", constructId: change.constructId, position: change.position });
+    }
     for (const change of plan.indicatorKeyboardPositions) {
-      moveIndicator(change.constructId, change.indicator, change.position);
+      runModelEditCommand({ kind: "move_indicator", constructId: change.constructId, column: change.indicator, position: change.position });
     }
     if (plan.modelChanges.length) {
       onNodesChange(plan.modelChanges as Array<NodeChange<Node<ConstructData>>>);
@@ -535,18 +626,56 @@ export function ModelCanvas({
         setActionFeedback({ message: layoutLocked ? "Unlock layout before adding a construct." : "Switch to Edit model before adding a construct." });
         return;
       }
-      if (strictAuthority) addStrictConstruct();
-      else addConstruct();
+      addCanvasConstruct();
     };
     const handleArrange = (event: Event) => {
-      const direction = (event as CustomEvent<{ direction?: "horizontal" | "vertical" | "smartpls" }>).detail?.direction ?? "smartpls";
+      const strategy = (event as CustomEvent<{ direction?: string }>).detail?.direction ?? "model-horizontal";
       if (!canEditLayout) {
         setActionFeedback({ message: layoutLocked ? "Unlock layout before arranging the diagram." : "Switch to Edit model before arranging the diagram." });
         return;
       }
-      arrangeModel(direction);
+      const constructIds = selectedConstructIds();
+      if (strategy === "model-horizontal" || strategy === "model-vertical") {
+        arrangeModel(strategy === "model-horizontal" ? "horizontal" : "vertical");
+        return;
+      }
+      if (strategy === "tidy-selection") {
+        runModelEditCommand({ kind: "tidy_constructs", constructIds });
+        return;
+      }
+      if (strategy === "distribute-horizontal" || strategy === "distribute-vertical") {
+        runModelEditCommand({
+          kind: "distribute_constructs",
+          constructIds,
+          axis: strategy === "distribute-horizontal" ? "horizontal" : "vertical",
+        });
+        return;
+      }
+      const alignTargets = {
+        "align-left": "left",
+        "align-center": "centerX",
+        "align-right": "right",
+        "align-top": "top",
+        "align-middle": "centerY",
+        "align-bottom": "bottom",
+      } as const;
+      const target = alignTargets[strategy as keyof typeof alignTargets];
+      if (target) runModelEditCommand({ kind: "align_constructs", constructIds, target });
     };
-    const handleFit = () => { void flow?.fitView({ padding: 0.22, duration: animationDuration(220) }); };
+    const handleFit = (event: Event) => {
+      const scope = (event as CustomEvent<{ scope?: "structure" | "all" | "selection" }>).detail?.scope ?? "structure";
+      fitCanvas(scope);
+    };
+    const handleTogglePin = () => {
+      const id = selectedNodeId;
+      if (!id) {
+        setActionFeedback({ message: "Select one construct before changing its pin state." });
+        return;
+      }
+      const current = diagramLayout.constructLayouts[id]?.pinned ?? false;
+      runModelEditCommand({ kind: "set_construct_pinned", constructId: id, pinned: !current });
+    };
+    const handleFocusSelection = () => toggleSelectionIsolation();
     const handleDeleteSelection = () => {
       if (!canEditLayout) {
         setActionFeedback({ message: generalSemPublicationPending
@@ -558,11 +687,14 @@ export function ModelCanvas({
         dispatchModerationCanvasRequest({ action: "remove", interactionTermId: selectedInteractionTermId, origin: "menu" });
         return;
       }
-      if (strictAuthority) {
-        const state = useWorkspace.getState();
-        if (state.selectedNodeId) commitStrict({ kind: "delete_construct", variable_id: state.selectedNodeId });
-        else if (state.selectedEdgeId) commitStrict({ kind: "delete_relationship", relationship_id: state.selectedEdgeId });
-      } else removeSelection();
+      const state = useWorkspace.getState();
+      if (state.selectedEdgeId) {
+        runModelEditCommand({ kind: "remove_path", relationId: state.selectedEdgeId });
+      } else if (!strictAuthority) {
+        removeSelection();
+      } else {
+        setActionFeedback({ message: "Construct deletion needs a calculation-ready revision. Use Model > Create Calculation-Ready Revision…" });
+      }
     };
     const handleUndo = () => { if (canEditLayout) undo(); };
     const handleRedo = () => { if (canEditLayout) redo(); };
@@ -571,6 +703,8 @@ export function ModelCanvas({
     window.addEventListener("quickpls:model-add-construct", handleAddConstruct);
     window.addEventListener("quickpls:model-arrange", handleArrange);
     window.addEventListener("quickpls:model-fit", handleFit);
+    window.addEventListener("quickpls:model-toggle-pin", handleTogglePin);
+    window.addEventListener("quickpls:model-focus-selection", handleFocusSelection);
     window.addEventListener("quickpls:model-delete-selection", handleDeleteSelection);
     window.addEventListener("quickpls:model-undo", handleUndo);
     window.addEventListener("quickpls:model-redo", handleRedo);
@@ -579,11 +713,13 @@ export function ModelCanvas({
       window.removeEventListener("quickpls:model-add-construct", handleAddConstruct);
       window.removeEventListener("quickpls:model-arrange", handleArrange);
       window.removeEventListener("quickpls:model-fit", handleFit);
+      window.removeEventListener("quickpls:model-toggle-pin", handleTogglePin);
+      window.removeEventListener("quickpls:model-focus-selection", handleFocusSelection);
       window.removeEventListener("quickpls:model-delete-selection", handleDeleteSelection);
       window.removeEventListener("quickpls:model-undo", handleUndo);
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
-  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, selectedInteractionTermId, strictAuthority, undo]);
+  }, [arrangeModel, canEditLayout, diagramLayout.constructLayouts, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, selectedInteractionTermId, selectedNodeId, strictAuthority, undo]);
   const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
     setSelectedInteractionTermId(null);
     setSelectedNode(constructId);
@@ -632,10 +768,20 @@ export function ModelCanvas({
         return;
       }
     }
-    if (event.key === "Escape" && selectedInteractionTermId) {
-      event.preventDefault();
-      setSelectedInteractionTermId(null);
-      return;
+    if (event.key === "Escape") {
+      if (connectSourceRef.current || moderationDropTargetRef.current) {
+        event.preventDefault();
+        connectSourceRef.current = null;
+        connectCompletedRef.current = false;
+        updateModerationDropTarget(null);
+        setActionFeedback({ message: "Connection cancelled." });
+        return;
+      }
+      if (selectedInteractionTermId) {
+        event.preventDefault();
+        setSelectedInteractionTermId(null);
+        return;
+      }
     }
     if (!canEditLayout || event.key.toLowerCase() !== "m" || !selectedEdgeId) return;
     const selectedEdge = edges.find((edge) => edge.id === selectedEdgeId);
@@ -652,9 +798,15 @@ export function ModelCanvas({
     onContextMenuRequest({ clientX: event.clientX, clientY: event.clientY, returnFocus, target });
   };
   return <div
-    className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}
+    className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}${isolatedNodeIds ? " isolating-neighborhood" : ""} semantic-zoom-${semanticZoom}`}
     data-model-canvas-presentation={presentation}
     onKeyDownCapture={handleCanvasKeyDown}
+    onPointerMove={(event) => {
+      const moderatorId = connectSourceRef.current;
+      if (!moderatorId || connectCompletedRef.current || !canEditLayout) return;
+      const target = moderationTargetForPointer(moderatorId, event.clientX, event.clientY);
+      updateModerationDropTarget(target ? { ...target, clientX: event.clientX, clientY: event.clientY } : null);
+    }}
   >
     {resultDiagramMode && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
     {generalSemPublicationPending && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning" role="status">Calculation-ready project publication is in progress. Canvas editing is temporarily locked.</div> : null}
@@ -690,94 +842,125 @@ export function ModelCanvas({
       edges={visibleGraph.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
-      onInit={setFlow}
+      onInit={(instance) => {
+        setFlow(instance);
+        window.setTimeout(() => {
+          void instance.fitView({
+            nodes: graph.nodes.filter((node) => !isIndicatorNodeId(node.id)),
+            padding: 0.18,
+            minZoom: 0.55,
+            maxZoom: 1,
+            duration: animationDuration(180),
+          });
+        }, 0);
+      }}
       defaultEdgeOptions={{ type: "smoothstep", markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 } }}
       onNodesChange={!canEditLayout ? undefined : onVisualNodesChange}
       onEdgesChange={!canEditLayout ? undefined : onVisualEdgesChange}
+      onConnectStart={(_, params) => {
+        connectCompletedRef.current = false;
+        updateModerationDropTarget(null);
+        const source = params.nodeId ? nodes.find((node) => node.id === params.nodeId) : null;
+        connectSourceRef.current = source && !source.data.semantic && source.data.indicators.length > 0
+          ? source.id
+          : null;
+      }}
       onConnect={(connection) => {
         if (!canEditLayout) return;
+        connectCompletedRef.current = true;
         if (!connection.source || !connection.target || isIndicatorNodeId(connection.source) || isIndicatorNodeId(connection.target)) return;
+        const anchor = graph.nodes.find((node) => node.id === connection.target && isModerationAnchorData(node.data));
         if (diagramTool === "covariance") {
           createPathOrCovariance(connection.source, connection.target);
           return;
         }
-        if (connection.source === connection.target) {
-          setActionFeedback({ message: "Self-paths are not valid. Connect two different constructs." });
-          return;
-        }
-        if (structuralPathExists(connection.source, connection.target)) {
-          setActionFeedback({ message: "That structural path already exists. Select the path to edit, reverse, or delete it." });
+        const plan = planNativeCanvasConnectionV1({
+          sourceConstructId: connection.source,
+          target: anchor && isModerationAnchorData(anchor.data)
+            ? {
+              kind: "moderation_anchor",
+              visualNodeId: anchor.id,
+              interactionTermId: anchor.data.interactionTermId,
+              order: anchor.data.order,
+            }
+            : { kind: "construct", constructId: connection.target },
+          relationId: nextStableId("relationship"),
+          structuralPathExists: anchor ? false : structuralPathExists(connection.source, connection.target),
+          origin: "drag",
+        });
+        if (plan.status === "blocked") {
+          setActionFeedback({ message: plan.message });
           return;
         }
         setActionFeedback(null);
-        if (strictAuthority) commitStrict({
-          kind: "add_relationship",
-          relationship_id: nextStrictId("relationship"),
-          definition: { kind: "structural", source: connection.source, target: connection.target, label: "Path" },
-        });
-        else onConnect(connection);
+        if (plan.operation === "moderating_effect") {
+          dispatchModerationCanvasRequest(plan.request);
+          setActionFeedback({ message: `Three-way moderating effect setup opened for ${anchor && isModerationAnchorData(anchor.data) ? anchor.data.label : "the selected path"}.` });
+          return;
+        }
+        runModelEditCommand(plan.command);
+      }}
+      onConnectEnd={(event) => {
+        const source = connectSourceRef.current;
+        const completed = connectCompletedRef.current;
+        const point = "changedTouches" in event
+          ? event.changedTouches.item(0)
+          : event;
+        const clientX = Number(point?.clientX ?? 0);
+        const clientY = Number(point?.clientY ?? 0);
+        const target = source && !completed
+          ? moderationDropTargetRef.current ?? moderationTargetForPointer(source, clientX, clientY)
+          : null;
+        if (source && target && !completed) {
+          const plan = planNativeCanvasConnectionV1({
+            sourceConstructId: source,
+            target: { kind: "focal_relation", relationId: target.relationship.edgeId },
+            origin: "drag",
+          });
+          if (plan.status === "ready" && plan.operation === "moderating_effect") {
+            dispatchModerationCanvasRequest(plan.request);
+            setActionFeedback({ message: `Moderating effect setup opened for ${target.relationship.label}.` });
+          } else if (plan.status === "blocked") {
+            setActionFeedback({ message: plan.message });
+          }
+        }
+        connectSourceRef.current = null;
+        connectCompletedRef.current = false;
+        updateModerationDropTarget(null);
       }}
       onReconnect={!canEditLayout ? undefined : (edge, connection) => {
         if (!strictAuthority) {
           reconnectPath(edge, connection);
           return;
         }
-        if (!connection.source || !connection.target) return;
-        const relation = strictAuthority.model.relations.find((candidate) => candidate.id === edge.id);
-        const label = relation ? strictAuthority.model.parameters.find((parameter) => parameter.id === relation.parameter)?.label ?? "Relationship" : "Relationship";
-        commitStrict({
-          kind: "replace_relationship",
-          relationship_id: edge.id,
-          definition: relation?.kind === "covariance"
-            ? { kind: "covariance", left: { kind: "variable", id: connection.source }, right: { kind: "variable", id: connection.target }, label }
-            : relation?.kind === "structural" && relation.role === "control"
-              ? { kind: "control", source: connection.source, target: connection.target, label }
-              : { kind: "structural", source: connection.source, target: connection.target, label },
+        setActionFeedback({
+          message: "Retargeting a calculation-ready relationship needs a versioned revision. Reverse or remove the path here, or create a calculation-ready revision first.",
         });
       }}
       onNodeDragStart={!canEditLayout ? undefined : (_, node) => {
         draggingNodeId.current = node.id;
-        moderationDragOrigin.current = { id: node.id, position: { ...node.position } };
         updateModerationDropTarget(null);
-        checkpoint();
       }}
-      onNodeDrag={!canEditLayout ? undefined : (event, node) => {
+      onNodeDrag={!canEditLayout ? undefined : (_event, node) => {
         scheduleDragGuide(node);
-        const target = moderationTargetForDraggedNode(node);
-        updateModerationDropTarget(target ? {
-          ...target,
-          clientX: "clientX" in event ? Number(event.clientX) : 0,
-          clientY: "clientY" in event ? Number(event.clientY) : 0,
-        } : null);
       }}
       onNodeDragStop={!canEditLayout ? undefined : (_, node) => {
         draggingNodeId.current = null;
         cancelPendingDragGuide();
         setDragGuide(null);
-        const moderationTarget = moderationDropTargetRef.current;
-        const dragOrigin = moderationDragOrigin.current;
         updateModerationDropTarget(null);
-        moderationDragOrigin.current = null;
-        if (moderationTarget && dragOrigin?.id === node.id) {
-          const restored = { id: node.id, type: "position" as const, position: dragOrigin.position, dragging: false };
-          setCanvasNodes((current) => applyNodeChanges([restored] as NodeChange<(typeof current)[number]>[], current));
-          onNodesChange([restored] as Array<NodeChange<Node<ConstructData>>>);
-          setSelectedNode(node.id);
-          requestCreateModeratingEffect(moderationTarget.relationship.edgeId, node.id, "drag");
-          setActionFeedback({ message: `Moderating effect setup opened for ${moderationTarget.relationship.label}.` });
-          return;
-        }
         const indicator = parseIndicatorNodeId(node.id);
         if (!indicator) {
-          onNodesChange([{ id: node.id, type: "position", position: node.position, dragging: false }]);
+          if (!isModerationAnchorData(node.data)) {
+            runModelEditCommand({ kind: "move_construct", constructId: node.id, position: node.position });
+          }
           return;
         }
         const target = nearestConstructForIndicator(node, indicator.constructId);
         if (target) {
-          if (strictAuthority) assignStrictIndicators(target.id, [indicator.indicator]);
-          else assignIndicator(target.id, indicator.indicator);
+          assignCanvasIndicators(target.id, [indicator.indicator]);
         }
-        else moveIndicator(indicator.constructId, indicator.indicator, node.position);
+        else runModelEditCommand({ kind: "move_indicator", constructId: indicator.constructId, column: indicator.indicator, position: node.position });
       }}
       onNodeClick={(event, node) => {
         if (isModerationAnchorData(node.data)) {
@@ -796,7 +979,14 @@ export function ModelCanvas({
         chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
       }}
       onNodeDoubleClick={(event, node) => {
-        if (!canEditLayout || !isModerationAnchorData(node.data)) return;
+        if (!canEditLayout) return;
+        if (node.data.semantic === "higher_order") {
+          event.preventDefault();
+          setSelectedNode(node.id);
+          window.dispatchEvent(new CustomEvent("quickpls:edit-higher-order", { detail: { constructId: node.id } }));
+          return;
+        }
+        if (!isModerationAnchorData(node.data)) return;
         event.preventDefault();
         selectModeratingEffect(node.data.interactionTermId);
         dispatchModerationCanvasRequest({
@@ -858,14 +1048,12 @@ export function ModelCanvas({
         if (!canEditLayout) return;
         if (!flow) return;
         if (diagramTool === "construct") {
-          if (strictAuthority) addStrictConstruct();
-          else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+          addCanvasConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
           return;
         }
         if (diagramTool === "indicator" || diagramTool === "residual" || diagramTool === "caption") return;
         if (event.detail !== 2) return;
-        if (strictAuthority) addStrictConstruct();
-        else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+        addCanvasConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }));
       }}
       onDragOver={(event) => {
         if (!canEditLayout) return;
@@ -890,17 +1078,18 @@ export function ModelCanvas({
         if (indicators.length > 0) {
           const targetConstructId = dropTargetConstructId(event);
           if (targetConstructId) {
-            if (strictAuthority) assignStrictIndicators(targetConstructId, indicators);
-            else assignIndicators(targetConstructId, indicators);
+            assignCanvasIndicators(targetConstructId, indicators);
             return;
           }
           preserveViewportForDrop.current = true;
-          if (strictAuthority) addStrictConstruct(indicators);
-          else addConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }), indicators);
+          addCanvasConstruct(flow.screenToFlowPosition({ x: event.clientX, y: event.clientY }), indicators);
         }
       }}
-      fitView
-      fitViewOptions={{ padding: 0.2 }}
+      onMove={(_, viewport) => {
+        const level = nativeCanvasSemanticZoomLevelV1(viewport.zoom);
+        setSemanticZoom((current) => current === level ? current : level);
+      }}
+      onMoveEnd={(_, viewport) => setDiagramViewport({ x: viewport.x, y: viewport.y, zoom: viewport.zoom })}
       minZoom={0.25}
       maxZoom={2.2}
       selectionOnDrag
@@ -923,27 +1112,4 @@ export function ModelCanvas({
       <Controls showInteractive={false} />
     </ReactFlow>
   </div>;
-}
-
-function observedForStrictCanvas(
-  authority: StandardSemModelV4AuthorityRecordV1,
-  dataset: Dataset,
-  column: string,
-): Extract<SemVariableV4, { kind: "observed" }> {
-  const existing = authority.model.variables.find((variable): variable is Extract<SemVariableV4, { kind: "observed" }> =>
-    variable.kind === "observed" && variable.source_column === column);
-  if (existing) return structuredClone(existing);
-  const metadata = dataset.columnMetadata?.find((item) => item.name === column);
-  return {
-    kind: "observed",
-    id: `observed:${column}`,
-    label: metadata?.label?.trim() || column,
-    source_column: column,
-    scale: metadata?.scale_type ?? "continuous",
-    role: "indicator",
-    categories: Object.keys(metadata?.value_labels ?? {}).sort(compareUtf8StringsV1),
-    value_labels: { ...(metadata?.value_labels ?? {}) },
-    missing_markers: [...new Set((metadata?.missing_markers ?? []).map((value) => value.trim()).filter(Boolean))].sort(compareUtf8StringsV1),
-    transformation_lineage: [],
-  };
 }

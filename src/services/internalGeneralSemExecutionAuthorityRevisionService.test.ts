@@ -140,6 +140,29 @@ describe("General SEM revision persistence service", () => {
       capabilityRegistry: standardRegistry,
     }).expectedCapabilityCell.cell_id).toBe("qpls3.pls.general_sem_higher_order_point");
 
+    const hocSource = structuredClone(point);
+    const hocPayload = hocSource.project.models[0]?.payload;
+    if (!hocPayload || hocPayload.kind !== "sem_model_v4") throw new Error("HOC test requires SemModelV4.");
+    hocPayload.model.variables = [{ kind: "derived", id: "derived:hoc", label: "HOC" }];
+    hocPayload.model.derived_terms = [{
+      kind: "higher_order",
+      id: "term:hoc",
+      output: "derived:hoc",
+      components: ["construct:a", "construct:b"],
+      approach: "disjoint_two_stage",
+      measurement_type: "reflective_reflective",
+    }];
+    expect(selectGeneralSemRevisionExecutionV1({
+      snapshot: hocSource,
+      intent: {
+        kind: "remove_higher_order",
+        term_id: "term:hoc",
+        output_id: "derived:hoc",
+      },
+      experimentalLabsEnabled: false,
+      capabilityRegistry: standardRegistry,
+    }).expectedCapabilityCell.cell_id).toBe("qpls3.pls.mediation");
+
     const bootstrap = structuredClone(point);
     bootstrap.generalSemExecutionAuthority!.recipe.general_sem_config = {
       ...defaultGeneralSemConfigV1(),

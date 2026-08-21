@@ -3,6 +3,7 @@
 use crate::general_sem_registry_access_v1::{
     GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
     general_sem_recipe_execution_surface_v1, is_general_sem_execution_cell_v1,
+    is_pls_general_sem_execution_cell_v1,
 };
 
 use qpls_project::{
@@ -143,7 +144,7 @@ fn map_revision_error(
         GeneralSemExecutionAuthorityRevisionErrorV1::UnsupportedIntent(message) => blocked(
             "interaction_unsupported",
             message,
-            "Select a qualified predictor-to-outcome path and distinct moderator, then retry the exact two-stage strong-hierarchy intent.",
+            "Refresh the current model authority, correct the identified scientific edit, and retry the exact versioned intent.",
         ),
         GeneralSemExecutionAuthorityRevisionErrorV1::Model(message) => blocked(
             "model_invalid",
@@ -312,15 +313,23 @@ where
     ) -> Result<(), GeneralSemRegistryAccessErrorV1>,
 {
     let capability_cell = &request.revision.expected_capability_cell;
-    if !is_general_sem_execution_cell_v1(capability_cell)
-        || !matches!(
-            capability_cell.capability_id.as_str(),
-            "smartpls.moderation" | "smartpls.higher_order_models"
-        )
-    {
+    let removing_higher_order = matches!(
+        &request.revision.intent,
+        qpls_project::GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder { .. }
+    );
+    let revision_cell_supported = if removing_higher_order {
+        is_pls_general_sem_execution_cell_v1(capability_cell)
+    } else {
+        is_general_sem_execution_cell_v1(capability_cell)
+            && matches!(
+                capability_cell.capability_id.as_str(),
+                "smartpls.moderation" | "smartpls.higher_order_models"
+            )
+    };
+    if !revision_cell_supported {
         return blocked(
             "capability_unavailable",
-            "General SEM scientific revision requires an exact bounded moderation or higher-order point/bootstrap cell.",
+            "General SEM scientific revision requires the exact point/bootstrap cell selected for its resulting model.",
             "Refresh the marked General SEM workflow before choosing a destination.",
         );
     }
@@ -604,6 +613,35 @@ mod tests {
                 Ok(())
             },
         );
+        assert!(matches!(
+            outcome,
+            GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code.ends_with("path_invalid")
+        ));
+    }
+
+    #[test]
+    fn higher_order_removal_accepts_the_resulting_base_pls_cell_before_path_access() {
+        let mut request = request(
+            "standard",
+            qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        );
+        request.revision.intent =
+            GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
+                term_id: "hoc:term".into(),
+                output_id: "hoc:output".into(),
+            };
+        request.revision.expected_capability_cell =
+            qpls_core::pls_general_recursive_effects_capability_cell_v1();
+        let outcome = revise_using(request, |surface, enabled, cell| {
+            assert_eq!(surface, "standard");
+            assert!(!enabled);
+            assert_eq!(
+                cell,
+                &qpls_core::pls_general_recursive_effects_capability_cell_v1()
+            );
+            Ok(())
+        });
         assert!(matches!(
             outcome,
             GeneralSemExecutionAuthorityRevisionOutcomeV1::Blocked { diagnostic }

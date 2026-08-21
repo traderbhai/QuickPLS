@@ -25,6 +25,8 @@ export interface LatentNodeData extends ConstructData {
   displayMode: DiagramMode;
   overlayMode: DiagramOverlayMode;
   pathCount: number;
+  /** Presentation-only detail level derived from the live Canvas zoom. */
+  semanticZoomLevel?: "far" | "medium" | "near";
 }
 
 export type ModerationAnchorNodeData = ModerationAnchorProjectionV1;
@@ -172,7 +174,7 @@ export function buildDiagramGraph(
       position,
       data: { ...anchor, editable: !lockedResultMode },
       draggable: false,
-      connectable: false,
+      connectable: !lockedResultMode && anchor.order === 2,
       deletable: false,
       selectable: true,
       focusable: false,
@@ -415,6 +417,29 @@ export function indicatorPositions(position: XYPosition, count: number): XYPosit
       y: position.y + LATENT_HEIGHT / 2 - INDICATOR_HEIGHT / 2 - stackHeight / 2 + sideIndex * INDICATOR_ROW_GAP,
     };
   });
+}
+
+function compactIndicatorPositions(
+  position: XYPosition,
+  count: number,
+  side: "left" | "right" | "top" | "bottom",
+): XYPosition[] {
+  if (count === 0) return [];
+  if (side === "left" || side === "right") {
+    const stackHeight = Math.max(0, count - 1) * INDICATOR_ROW_GAP;
+    return Array.from({ length: count }, (_, index) => ({
+      x: position.x + LATENT_WIDTH / 2 + (side === "left" ? -MEASUREMENT_GAP - INDICATOR_WIDTH : MEASUREMENT_GAP),
+      y: position.y + LATENT_HEIGHT / 2 - INDICATOR_HEIGHT / 2 - stackHeight / 2 + index * INDICATOR_ROW_GAP,
+    }));
+  }
+  const columnGap = INDICATOR_WIDTH + 14;
+  const stackWidth = INDICATOR_WIDTH + Math.max(0, count - 1) * columnGap;
+  return Array.from({ length: count }, (_, index) => ({
+    x: position.x + LATENT_WIDTH / 2 - stackWidth / 2 + index * columnGap,
+    y: side === "top"
+      ? position.y - MEASUREMENT_GAP - INDICATOR_HEIGHT
+      : position.y + LATENT_HEIGHT + MEASUREMENT_GAP,
+  }));
 }
 
 export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, modelEdges: Edge[], existing?: Partial<DiagramLayoutState>): DiagramLayoutState {
@@ -664,7 +689,10 @@ function indicatorPositionsForConstruct(
   const next = [...defaults];
   for (const [side, entries] of bySide) {
     const ordered = [...entries].sort((left, right) => (left.layout.order ?? left.index) - (right.layout.order ?? right.index) || left.indicator.localeCompare(right.indicator));
-    const generated = paperStyle ? smartplsIndicatorPositions(position, ordered.length, side === "free" ? "left" : side) : indicatorPositions(position, ordered.length);
+    const exactSide = side === "free" ? "left" : side;
+    const generated = paperStyle
+      ? smartplsIndicatorPositions(position, ordered.length, exactSide)
+      : compactIndicatorPositions(position, ordered.length, exactSide);
     ordered.forEach((entry, sideIndex) => { next[entry.index] = generated[sideIndex]; });
   }
   node.data.indicators.forEach((indicator, index) => {

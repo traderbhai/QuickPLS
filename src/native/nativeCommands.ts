@@ -51,6 +51,11 @@ export interface NativeCommandContext {
    */
   moderationMutationAuthority?: NativeModerationMutationAuthorityV1;
   canAddHigherOrder: boolean;
+  hasActiveModel?: boolean;
+  calculationReady?: boolean;
+  canConfigureConditionalProcess?: boolean;
+  canOpenAdvancedParameters?: boolean;
+  selectedConstructPinned?: boolean;
   selectedHigherOrder?: boolean;
   propertiesOpen: boolean;
   selection: {
@@ -102,10 +107,29 @@ export type NativeCommandAction =
   | { id: "model.add-construct" }
   | { id: "model.add-higher-order" }
   | { id: "model.add-moderating-effect" }
+  | { id: "model.prepare-calculation-ready" }
+  | { id: "model.open-conditional-process" }
+  | { id: "model.open-advanced-parameters" }
   | { id: "model.edit-selection" }
   | { id: "model.delete-selection" }
-  | { id: "model.arrange"; strategy: "smartpls" }
-  | { id: "model.fit" }
+  | {
+    id: "model.arrange";
+    strategy:
+      | "tidy-selection"
+      | "align-left"
+      | "align-center"
+      | "align-right"
+      | "align-top"
+      | "align-middle"
+      | "align-bottom"
+      | "distribute-horizontal"
+      | "distribute-vertical"
+      | "model-horizontal"
+      | "model-vertical";
+  }
+  | { id: "model.fit"; scope: "structure" | "all" | "selection" }
+  | { id: "model.toggle-pin" }
+  | { id: "model.focus-selection" }
   | { id: "calculation.open" }
   | { id: "calculation.cancel" }
   | { id: "results.export" }
@@ -179,10 +203,15 @@ export type NativeCommandId =
   | "add-higher-order"
   | "edit-higher-order"
   | "add-moderating-effect"
+  | "prepare-calculation-ready"
+  | "open-conditional-process"
+  | "open-advanced-parameters"
   | "edit-selection"
   | "delete-selection"
   | "arrange-model"
   | "fit-model"
+  | "toggle-pin"
+  | "focus-selection"
   | "open-calculation"
   | "cancel-calculation"
   | "export-results"
@@ -207,6 +236,11 @@ const projectIsMutable: ContextRule = (context) =>
   context.projectOpen && context.projectWritable && !isNativeCalculationActive(context.calculationStatus);
 const modelIsMutable: ContextRule = (context) =>
   context.surface === "model" && context.hasDataset && projectIsMutable(context);
+const modelPresentationAvailable: ContextRule = (context) =>
+  context.surface === "model"
+  && context.projectOpen
+  && context.hasDataset
+  && !isNativeCalculationActive(context.calculationStatus);
 const canOpenCalculation: ContextRule = (context) =>
   context.projectOpen
   && (context.projectWritable || Boolean(context.generalSemCalculationAvailable))
@@ -397,10 +431,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     action: { id: "project.save" },
     shortcut: { key: "s", ctrl: true, allowInEditable: true },
     menu: { menu: "file", order: 40 },
-    toolbar: [
-      { surface: "data", order: 30 },
-      { surface: "model", order: 10 },
-    ],
+    toolbar: [{ surface: "data", order: 30 }],
     visibleWhen: (context) => context.projectOpen,
     enabledWhen: projectIsMutable,
   },
@@ -517,7 +548,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     action: { id: "model.set-tool", tool: "select" },
     shortcut: { key: "v" },
     toolbar: [{ surface: "model", order: 20 }],
-    enabledWhen: modelIsMutable,
+    enabledWhen: modelPresentationAvailable,
   },
   {
     id: "pan-tool",
@@ -525,7 +556,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     action: { id: "model.set-tool", tool: "pan" },
     shortcut: { key: "h" },
     toolbar: [{ surface: "model", order: 30 }],
-    enabledWhen: modelIsMutable,
+    enabledWhen: modelPresentationAvailable,
   },
   {
     id: "add-construct",
@@ -537,7 +568,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
   {
     id: "path-tool",
-    label: "Path",
+    label: "Connect",
     action: { id: "model.set-tool", tool: "path" },
     shortcut: { key: "p" },
     toolbar: [{ surface: "model", order: 50 }],
@@ -582,6 +613,35 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     disabledReason: moderationDisabledReason,
   },
   {
+    id: "prepare-calculation-ready",
+    label: "Create Calculation-Ready Revision…",
+    action: { id: "model.prepare-calculation-ready" },
+    menu: { menu: "model", order: 35, separatorBefore: true },
+    visibleWhen: (context) => context.surface === "model" && Boolean(context.hasActiveModel) && !context.calculationReady,
+    enabledWhen: (context) => !isNativeCalculationActive(context.calculationStatus),
+    disabledReason: "Finish or cancel the active calculation before creating a revision.",
+  },
+  {
+    id: "open-conditional-process",
+    label: "Configure Moderated Mediation…",
+    action: { id: "model.open-conditional-process" },
+    menu: { menu: "model", order: 40 },
+    visibleWhen: (context) => context.surface === "model" && Boolean(context.hasActiveModel),
+    enabledWhen: (context) => Boolean(context.canConfigureConditionalProcess)
+      && !isNativeCalculationActive(context.calculationStatus),
+    disabledReason: "Add a moderating effect before configuring moderated mediation.",
+  },
+  {
+    id: "open-advanced-parameters",
+    label: "Advanced Parameter Table…",
+    action: { id: "model.open-advanced-parameters" },
+    menu: { menu: "model", order: 45 },
+    visibleWhen: (context) => context.surface === "model" && Boolean(context.hasActiveModel),
+    enabledWhen: (context) => Boolean(context.canOpenAdvancedParameters)
+      && !isNativeCalculationActive(context.calculationStatus),
+    disabledReason: "Open an active model and finish the current calculation before editing parameters.",
+  },
+  {
     id: "edit-selection",
     label: (context) => context.selection.kind === "path"
       ? "Edit Path Properties…"
@@ -610,19 +670,38 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   {
     id: "arrange-model",
     label: "Arrange",
-    action: { id: "model.arrange", strategy: "smartpls" },
+    action: { id: "model.arrange", strategy: "model-horizontal" },
     toolbar: [{ surface: "model", order: 60 }],
     contextMenu: [{ surface: "model", order: 20, separatorBefore: true }],
-    enabledWhen: modelIsMutable,
+    enabledWhen: modelPresentationAvailable,
   },
   {
     id: "fit-model",
     label: "Fit",
-    action: { id: "model.fit" },
+    action: { id: "model.fit", scope: "structure" },
     shortcut: { key: "f" },
     toolbar: [{ surface: "model", order: 70 }],
     contextMenu: [{ surface: "model", order: 30 }],
-    enabledWhen: (context) => context.surface === "model" && context.hasDataset,
+    enabledWhen: modelPresentationAvailable,
+  },
+  {
+    id: "toggle-pin",
+    label: (context) => context.selectedConstructPinned ? "Unpin Construct" : "Pin Construct",
+    action: { id: "model.toggle-pin" },
+    menu: { menu: "model", order: 65, separatorBefore: true },
+    contextMenu: [{ surface: "model", selections: ["construct"], order: 25, separatorBefore: true }],
+    visibleWhen: (context) => context.surface === "model" && context.selection.kind === "construct",
+    enabledWhen: modelPresentationAvailable,
+  },
+  {
+    id: "focus-selection",
+    label: "Focus Selection",
+    action: { id: "model.focus-selection" },
+    menu: { menu: "view", order: 55 },
+    contextMenu: [{ surface: "model", selections: ["construct", "path", "multiple"], order: 32 }],
+    visibleWhen: (context) => context.surface === "model" && hasModelSelection(context),
+    enabledWhen: (context) => modelPresentationAvailable(context) && hasModelSelection(context),
+    disabledReason: "Select a construct or relationship to focus.",
   },
   {
     id: "open-calculation",

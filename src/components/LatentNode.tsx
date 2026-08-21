@@ -4,14 +4,14 @@ import { useWorkspace } from "../store";
 import type { LatentNodeData } from "../domain/diagramGraph";
 
 export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData>>) {
-  const updateConstruct = useWorkspace((state) => state.updateConstruct);
-  const assignIndicators = useWorkspace((state) => state.assignIndicators);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(data.label);
   const [dropTarget, setDropTarget] = useState(false);
   const commit = () => {
     const label = draft.trim();
-    if (label && label !== data.label) updateConstruct(id, { label });
+    if (label && label !== data.label) void executeModelEditCommand({ kind: "rename_construct", constructId: id, label })
+      .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })));
     setEditing(false);
   };
   const beginEditing = () => {
@@ -49,7 +49,8 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
             if (Array.isArray(parsed)) indicators = parsed.filter((value): value is string => typeof value === "string");
           } catch { return; }
         }
-        if (indicators.length) assignIndicators(id, indicators);
+        if (indicators.length) void executeModelEditCommand({ kind: "assign_indicators", constructId: id, columns: indicators })
+          .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })));
       }}
     >
       <Handle className={editablePaperMode ? "smartpls-edit-handle" : "smartpls-hidden-handle"} id="target-left" type="target" position={Position.Left} />
@@ -75,6 +76,9 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
           if (event.key === "Escape") { setDraft(data.label); setEditing(false); }
         }}
       /> : <div className="smartpls-latent-label" role={lockedResultMode ? undefined : "button"} tabIndex={lockedResultMode ? undefined : 0} title={lockedResultMode ? "Result construct" : "Double-click, Enter, or F2 to rename; drag the oval to move"} onDoubleClick={() => { if (!lockedResultMode) beginEditing(); }} onKeyDown={(event) => { if (!lockedResultMode && (event.key === "Enter" || event.key === "F2")) { event.preventDefault(); beginEditing(); } }}>{data.label}</div>}
+      {data.semanticZoomLevel === "medium" && data.indicators.length
+        ? <span className="smartpls-indicator-summary" aria-label={`${data.indicators.length} indicators`}>{data.indicators.length} indicators</span>
+        : null}
     </div>;
   }
 
@@ -98,7 +102,8 @@ export function LatentNode({ id, data, selected }: NodeProps<Node<LatentNodeData
           if (Array.isArray(parsed)) indicators = parsed.filter((value): value is string => typeof value === "string");
         } catch { return; }
       }
-      if (indicators.length) assignIndicators(id, indicators);
+      if (indicators.length) void executeModelEditCommand({ kind: "assign_indicators", constructId: id, columns: indicators })
+        .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })));
     }}
   >
     <Handle id="target-left" type="target" position={Position.Left} />

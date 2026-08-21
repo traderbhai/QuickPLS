@@ -38,13 +38,14 @@ export type NativeHigherOrderDialogSubmission =
 
 export type NativeHigherOrderDialogCommitResult =
   | { status: "applied"; constructId: string }
-  | { status: "blocked"; detail: string };
+  | { status: "blocked" | "cancelled" | "stale" | "rejected"; detail: string };
 
 export interface NativeHigherOrderDialogProps {
   nodes: readonly Node<ConstructData>[];
   edges: readonly Edge[];
   request: NativeHigherOrderDialogRequest;
-  commit: (submission: NativeHigherOrderDialogSubmission) => NativeHigherOrderDialogCommitResult;
+  commit: (submission: NativeHigherOrderDialogSubmission) => Promise<NativeHigherOrderDialogCommitResult>;
+  onPendingChange?: (pending: boolean) => void;
   close: () => void;
 }
 
@@ -71,6 +72,13 @@ function FieldError({ message }: { message: string | null }) {
   return message ? <div className="nd-form-error" role="alert">{message}</div> : null;
 }
 
+function higherOrderCommitMessage(result: Exclude<NativeHigherOrderDialogCommitResult, { status: "applied" }>): string {
+  if (result.status === "cancelled") return `Save cancelled: ${result.detail}`;
+  if (result.status === "stale") return `Model changed: ${result.detail}`;
+  if (result.status === "rejected") return `Save rejected: ${result.detail}`;
+  return `Unable to save: ${result.detail}`;
+}
+
 function ReadOnlyHigherOrder({ node, close }: { node: Node<ConstructData>; close: () => void }) {
   const declaration = node.data.higherOrder!;
   const measurementLabel = declaration.measurementType
@@ -88,7 +96,7 @@ function ReadOnlyHigherOrder({ node, close }: { node: Node<ConstructData>; close
   </div>;
 }
 
-export default function NativeHigherOrderDialog({ nodes, edges, request, commit, close }: NativeHigherOrderDialogProps) {
+export default function NativeHigherOrderDialog({ nodes, edges, request, commit, onPendingChange, close }: NativeHigherOrderDialogProps) {
   const editingNode = useMemo(() => {
     if (request.kind !== "edit") return null;
     return nodes.find((node) => node.id === request.constructId)
@@ -134,7 +142,8 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
   const [pathConstructId, setPathConstructId] = useState(initialPathConstruct);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const [creationError, setCreationError] = useState<string | null>(null);
+  const [commitIssue, setCommitIssue] = useState<Exclude<NativeHigherOrderDialogCommitResult, { status: "applied" }> | null>(null);
+  const [commitPending, setCommitPending] = useState(false);
 
   if (request.kind === "edit" && (!editingNode || !editingDeclaration)) {
     return <div className="nd-dialog-form nd-higher-order-dialog">
@@ -207,23 +216,40 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
 
   return <form
     className="nd-dialog-form nd-higher-order-dialog"
-    onSubmit={(event) => {
+    aria-busy={commitPending}
+    onSubmit={async (event) => {
       event.preventDefault();
+      if (commitPending) return;
       setSubmitted(true);
-      setCreationError(null);
+      setCommitIssue(null);
       if (issues.some((issue) => issue.field === "approach") || !selectedApproach?.valid) setAdvancedOpen(true);
       if (blocker || issues.length || !selectedApproach?.valid) return;
-      const result = request.kind === "create"
-        ? commit({ kind: "create", draft })
-        : commit({
-            kind: "edit",
-            constructId: request.constructId,
-            outputId: editingNode!.id,
-            termId: editingDeclaration!.id,
-            draft,
-          });
-      if (result.status === "applied") close();
-      else setCreationError(result.detail);
+      setCommitPending(true);
+      onPendingChange?.(true);
+      try {
+        const result = await (request.kind === "create"
+          ? commit({ kind: "create", draft })
+          : commit({
+              kind: "edit",
+              constructId: request.constructId,
+              outputId: editingNode!.id,
+              termId: editingDeclaration!.id,
+              draft,
+            }));
+        if (result.status === "applied") {
+          close();
+          return;
+        }
+        setCommitIssue(result);
+      } catch (error) {
+        setCommitIssue({
+          status: "rejected",
+          detail: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        setCommitPending(false);
+        onPendingChange?.(false);
+      }
     }}
   >
     <label htmlFor="nd-hoc-name">Name
@@ -235,7 +261,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
         onChange={(event) => {
           setName(event.target.value);
           setSubmitted(false);
-          setCreationError(null);
+          setCommitIssue(null);
         }}
       />
     </label>
@@ -252,7 +278,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
           onChange={() => {
             setConceptualDirection("hoc_explains_components");
             setSubmitted(false);
-            setCreationError(null);
+            setCommitIssue(null);
           }}
         />
         <span>HOC explains its dimensions</span>
@@ -266,7 +292,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
           onChange={() => {
             setConceptualDirection("components_form_hoc");
             setSubmitted(false);
-            setCreationError(null);
+            setCommitIssue(null);
           }}
         />
         <span>Dimensions form the HOC</span>
@@ -292,7 +318,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
             disabled={disabled || Boolean(blocker)}
             onChange={(event) => {
               setSubmitted(false);
-              setCreationError(null);
+              setCommitIssue(null);
               setComponents((current) => event.target.checked
                 ? [...current, option.id]
                 : current.filter((component) => component !== option.id));
@@ -313,7 +339,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
         <select id="nd-hoc-path-direction" value={pathDirection} onChange={(event) => {
           setPathDirection(event.target.value as "hoc_to_construct" | "construct_to_hoc");
           setSubmitted(false);
-          setCreationError(null);
+          setCommitIssue(null);
         }}>
           <option value="hoc_to_construct">HOC → construct</option>
           <option value="construct_to_hoc">Construct → HOC</option>
@@ -323,7 +349,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
         <select id="nd-hoc-path-construct" value={pathConstructId} onChange={(event) => {
           setPathConstructId(event.target.value);
           setSubmitted(false);
-          setCreationError(null);
+          setCommitIssue(null);
         }}>
           <option value="">Choose a construct</option>
           {pathOptions.map((node) => <option key={node.id} value={node.id}>{node.data.label} [{node.data.shortName}]</option>)}
@@ -348,7 +374,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
           onChange={(event) => {
             setShortNameOverride(event.target.value);
             setSubmitted(false);
-            setCreationError(null);
+            setCommitIssue(null);
           }}
         />
       </label>
@@ -359,7 +385,7 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
           onChange={(event) => {
             setApproachOverride(event.target.value as NativeHigherOrderEditableApproach);
             setSubmitted(false);
-            setCreationError(null);
+            setCommitIssue(null);
           }}
         >
           {approachOptions.filter((option) => option.valid || option.approach === approach).map((option) => <option key={option.approach} value={option.approach} disabled={!option.valid}>
@@ -370,10 +396,16 @@ export default function NativeHigherOrderDialog({ nodes, edges, request, commit,
       <FieldError message={!selectedApproach?.valid ? selectedApproach?.reason ?? "Choose a valid construction approach." : issueFor(visibleIssues, "approach")} />
     </details>
 
-    {blocker || creationError ? <div className="nd-form-error" role="alert">{blocker ?? creationError}</div> : null}
+    {blocker ? <div className="nd-form-error" role="alert">{blocker}</div> : null}
+    {commitIssue ? <div
+      className={commitIssue.status === "cancelled" ? "nd-dialog-note" : "nd-form-error"}
+      role={commitIssue.status === "cancelled" ? "status" : "alert"}
+      data-commit-status={commitIssue.status}
+    >{higherOrderCommitMessage(commitIssue)}</div> : null}
+    {commitPending ? <div className="nd-dialog-note" role="status" aria-live="polite">Saving the model change…</div> : null}
     <footer>
-      <button type="button" onClick={close}>Cancel</button>
-      <button className="primary" type="submit" disabled={Boolean(blocker)}>{request.kind === "edit" ? "Save" : "Create"}</button>
+      <button type="button" onClick={close} disabled={commitPending}>Cancel</button>
+      <button className="primary" type="submit" disabled={Boolean(blocker) || commitPending}>{commitPending ? "Saving…" : request.kind === "edit" ? "Save" : "Create"}</button>
     </footer>
   </form>;
 }

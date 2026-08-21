@@ -22,6 +22,7 @@ import type {
   AddGeneralSemInteractionV2EditorIntentV1,
   AddModeratingEffectIntentV3,
   RemoveModeratingEffectIntentV1,
+  RemoveGeneralSemHigherOrderEditorIntentV1,
   ReplaceModeratingEffectIntentV1,
   ReplaceGeneralSemHigherOrderEditorIntentV1,
 } from "./standardSemModelV4Authority";
@@ -64,7 +65,8 @@ export type GeneralSemExecutionAuthorityRevisionEditorIntentV1 =
   | ReplaceModeratingEffectIntentV1
   | RemoveModeratingEffectIntentV1
   | AddGeneralSemHigherOrderEditorIntentV1
-  | ReplaceGeneralSemHigherOrderEditorIntentV1;
+  | ReplaceGeneralSemHigherOrderEditorIntentV1
+  | RemoveGeneralSemHigherOrderEditorIntentV1;
 
 export interface InternalGeneralSemExecutionAuthorityRevisionRequestV1 {
   surface:
@@ -269,6 +271,14 @@ function parseIntent(value: unknown, path: string): GeneralSemExecutionAuthority
       kind: "remove_moderating_effect",
       intent_version: 3,
       sem_generation: "general_sem_v1",
+      term_id: textAt(intent.term_id, `${path}.term_id`),
+      output_id: textAt(intent.output_id, `${path}.output_id`),
+    };
+  }
+  if (candidate.kind === "remove_higher_order") {
+    const intent = exactRecordAt(candidate, ["kind", "term_id", "output_id"], path);
+    return {
+      kind: "remove_higher_order",
       term_id: textAt(intent.term_id, `${path}.term_id`),
       output_id: textAt(intent.output_id, `${path}.output_id`),
     };
@@ -528,6 +538,7 @@ function revisionReceiptIdentityV1(
   switch (intent.kind) {
     case "add_higher_order":
     case "replace_higher_order":
+    case "remove_higher_order":
     case "replace_moderating_effect":
     case "remove_moderating_effect":
       return { termId: intent.term_id, outputId: intent.output_id };

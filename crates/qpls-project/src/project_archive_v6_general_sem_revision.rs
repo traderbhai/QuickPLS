@@ -84,7 +84,7 @@ pub enum GeneralSemModeratingEffectTargetV1 {
     },
 }
 
-/// Additive scientific mutations accepted by revision schema v1.
+/// Versioned scientific mutations accepted by revision schema v1.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 pub enum GeneralSemExecutionAuthorityRevisionIntentV1 {
@@ -114,6 +114,10 @@ pub enum GeneralSemExecutionAuthorityRevisionIntentV1 {
         components: Vec<String>,
         approach: HigherOrderConstructionApproachV4,
         measurement_type: HigherOrderMeasurementTypeV4,
+    },
+    RemoveHigherOrder {
+        term_id: String,
+        output_id: String,
     },
     AddModeratingEffectV3 {
         intent_version: u32,
@@ -501,6 +505,37 @@ fn rekey_standard_sem_diagram_layout_lane(
     Ok(Some(revised_lane))
 }
 
+fn remove_higher_order_from_rekeyed_diagram_layout_lane(
+    lane: &mut serde_json::Value,
+    revised_model_id: &str,
+    output_id: &str,
+    removed_relation_ids: &std::collections::BTreeSet<String>,
+) {
+    let Some(diagram_layout) = lane
+        .get_mut("models")
+        .and_then(serde_json::Value::as_object_mut)
+        .and_then(|models| models.get_mut(revised_model_id))
+        .and_then(|model| model.get_mut("diagram_layout"))
+        .and_then(serde_json::Value::as_object_mut)
+    else {
+        return;
+    };
+    for lane_name in ["constructLayouts", "indicatorLayouts"] {
+        if let Some(layouts) = diagram_layout
+            .get_mut(lane_name)
+            .and_then(serde_json::Value::as_object_mut)
+        {
+            layouts.remove(output_id);
+        }
+    }
+    if let Some(edge_layouts) = diagram_layout
+        .get_mut("edgeLayouts")
+        .and_then(serde_json::Value::as_object_mut)
+    {
+        edge_layouts.retain(|relation_id, _| !removed_relation_ids.contains(relation_id));
+    }
+}
+
 #[cfg(windows)]
 fn create_general_sem_execution_authority_revision_windows_v1(
     source: &Path,
@@ -540,6 +575,22 @@ fn create_general_sem_execution_authority_revision_windows_v1(
         })?;
 
     let source_model = sole_source_model(&loaded.document)?;
+    let removed_higher_order_layout = match &request.intent {
+        GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder { output_id, .. } => {
+            let removed_relation_ids = source_model
+                .relations
+                .iter()
+                .filter_map(|relation| match relation {
+                    SemRelationV4::Structural {
+                        id, source, target, ..
+                    } if source == output_id || target == output_id => Some(id.clone()),
+                    _ => None,
+                })
+                .collect::<std::collections::BTreeSet<_>>();
+            Some((output_id.clone(), removed_relation_ids))
+        }
+        _ => None,
+    };
     let mut revised_model = source_model.clone();
     revised_model.id = request.revision.model_id.clone();
     revised_model.name = request.revision.model_name.clone();
@@ -680,11 +731,22 @@ fn create_general_sem_execution_authority_revision_windows_v1(
             "source must expose exactly one validated resident dataset",
         ));
     };
-    let revised_layout_lane = rekey_standard_sem_diagram_layout_lane(
+    let mut revised_layout_lane = rekey_standard_sem_diagram_layout_lane(
         &loaded.document,
         &source_identity.model_id,
         &revised_model.id,
     )?;
+    if let (Some(layout_lane), Some((output_id, removed_relation_ids))) = (
+        revised_layout_lane.as_mut(),
+        removed_higher_order_layout.as_ref(),
+    ) {
+        remove_higher_order_from_rekeyed_diagram_layout_lane(
+            layout_lane,
+            &revised_model.id,
+            output_id,
+            removed_relation_ids,
+        );
+    }
     let mut document = ProjectArchiveDocumentV6::new_general_sem_v1(
         request.revision.project_id,
         request.revision.project_name.clone(),
@@ -1490,6 +1552,13 @@ fn apply_general_sem_revision_intent(
             approach,
             measurement_type,
         ),
+        GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
+            term_id,
+            output_id,
+        } => {
+            remove_higher_order_revision(model, term_id, output_id)?;
+            Ok((term_id.clone(), output_id.clone()))
+        }
         GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 { .. } => {
             apply_moderating_effect_revision_v3(model, intent, None)
         }
@@ -2325,6 +2394,77 @@ fn remove_moderating_effect_revision_v3(
     Ok(())
 }
 
+fn remove_higher_order_revision(
+    model: &mut SemModelV4,
+    term_id: &str,
+    output_id: &str,
+) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    for (field, value) in [("term id", term_id), ("output id", output_id)] {
+        if value.is_empty() || value.trim() != value {
+            return Err(unsupported_intent(format!(
+                "higher-order removal {field} must be nonempty without surrounding whitespace"
+            )));
+        }
+    }
+    if !model.derived_terms.iter().any(|term| {
+        matches!(term, SemDerivedTermV4::HigherOrder { id, output, .. }
+            if id == term_id && output == output_id)
+    }) || !model.variables.iter().any(|variable| {
+        matches!(variable, SemVariableV4::Derived { id, .. } if id == output_id)
+    }) {
+        return Err(unsupported_intent(
+            "the resident higher-order term/output identity is absent or stale",
+        ));
+    }
+    let incident_relation_ids = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::Structural {
+                id, source, target, ..
+            } if source == output_id || target == output_id => Some(id.as_str()),
+            _ => None,
+        })
+        .collect::<std::collections::BTreeSet<_>>();
+    let dependent = model.derived_terms.iter().find(|term| {
+        if term.id() == term_id {
+            return false;
+        }
+        match term {
+            SemDerivedTermV4::Interaction {
+                predictor,
+                moderator,
+                focal_relation,
+                ..
+            } => {
+                predictor == output_id
+                    || moderator == output_id
+                    || incident_relation_ids.contains(focal_relation.as_str())
+            }
+            SemDerivedTermV4::InteractionV2 {
+                operands,
+                focal_relation,
+                ..
+            } => {
+                operands.iter().any(|operand| operand == output_id)
+                    || incident_relation_ids.contains(focal_relation.as_str())
+            }
+            SemDerivedTermV4::HigherOrder { components, .. } => {
+                components.iter().any(|component| component == output_id)
+            }
+            SemDerivedTermV4::Polynomial { source, .. } => source == output_id,
+        }
+    });
+    if let Some(dependent) = dependent {
+        return Err(unsupported_intent(format!(
+            "higher-order construct {term_id} is still required by derived term {}",
+            dependent.id()
+        )));
+    }
+    remove_interaction_output(model, term_id, output_id);
+    Ok(())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn apply_higher_order_revision(
     model: &mut SemModelV4,
@@ -2723,9 +2863,15 @@ mod tests {
                         "model_id": "model:source",
                         "diagram_layout": {
                             "diagramVersion": "sem_designer_v1",
-                            "constructLayouts": { "x": { "x": 18, "y": 24 } },
-                            "indicatorLayouts": {},
-                            "edgeLayouts": {},
+                            "constructLayouts": {
+                                "x": { "x": 18, "y": 24 },
+                                "hoc:output": { "x": 90, "y": 24 }
+                            },
+                            "indicatorLayouts": { "hoc:output": {} },
+                            "edgeLayouts": {
+                                "ordinary:path": { "routing": "straight" },
+                                "hoc:path": { "routing": "curved" }
+                            },
                             "diagramTheme": "smartpls_like",
                             "showGrid": true,
                             "layoutLocked": false,
@@ -2756,6 +2902,51 @@ mod tests {
             revised["models"]["model:revision"]["diagram_layout"]["moderationConnectorBendPoints"]
                 ["moderation-connector::term%3Axw::w"][0]["x"],
             91
+        );
+
+        let mut after_removal = revised;
+        remove_higher_order_from_rekeyed_diagram_layout_lane(
+            &mut after_removal,
+            "model:revision",
+            "hoc:output",
+            &std::collections::BTreeSet::from(["hoc:path".to_owned()]),
+        );
+        let layout = &after_removal["models"]["model:revision"]["diagram_layout"];
+        assert!(layout["constructLayouts"].get("hoc:output").is_none());
+        assert!(layout["indicatorLayouts"].get("hoc:output").is_none());
+        assert!(layout["edgeLayouts"].get("hoc:path").is_none());
+        assert_eq!(layout["constructLayouts"]["x"]["x"], 18);
+        assert_eq!(layout["edgeLayouts"]["ordinary:path"]["routing"], "straight");
+        assert_eq!(layout["moderationAnchorFractions"]["term:xw"], 0.64);
+    }
+
+    #[test]
+    fn higher_order_removal_wire_is_exact_and_backward_compatible() {
+        let intent: GeneralSemExecutionAuthorityRevisionIntentV1 = serde_json::from_value(
+            serde_json::json!({
+                "kind": "remove_higher_order",
+                "term_id": "hoc:term",
+                "output_id": "hoc:output"
+            }),
+        )
+        .unwrap();
+        assert_eq!(
+            intent,
+            GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
+                term_id: "hoc:term".into(),
+                output_id: "hoc:output".into(),
+            }
+        );
+        assert!(
+            serde_json::from_value::<GeneralSemExecutionAuthorityRevisionIntentV1>(
+                serde_json::json!({
+                    "kind": "remove_higher_order",
+                    "term_id": "hoc:term",
+                    "output_id": "hoc:output",
+                    "label": "not accepted"
+                })
+            )
+            .is_err()
         );
     }
 
@@ -2952,7 +3143,7 @@ mod tests {
     }
 
     #[test]
-    fn higher_order_revision_adds_the_hoc_and_initial_path_atomically() {
+    fn higher_order_revision_adds_replaces_and_removes_the_exact_hoc_atomically() {
         let composite = |id: &str| SemVariableV4::Composite {
             id: id.into(),
             label: id.to_uppercase(),
@@ -2978,6 +3169,14 @@ mod tests {
             annotations: Vec::new(),
             presentation: qpls_core::SemPresentationV4::None,
         };
+        add_structural_relation(
+            &mut model,
+            "ordinary:path".into(),
+            "a".into(),
+            "y".into(),
+            "A -> Y",
+        )
+        .unwrap();
         let intent = GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder {
             term_id: "hoc:term".into(),
             output_id: "hoc:output".into(),
@@ -3037,6 +3236,23 @@ mod tests {
                     && output == "hoc:output"
                     && components.iter().map(String::as_str).eq(["b", "a"])
         )));
+
+        let removed = apply_general_sem_revision_intent(
+            &mut model,
+            &GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
+                term_id: "hoc:term".into(),
+                output_id: "hoc:output".into(),
+            },
+        )
+        .unwrap();
+
+        assert_eq!(removed, ("hoc:term".into(), "hoc:output".into()));
+        assert!(model.derived_terms.is_empty());
+        assert!(!model.variables.iter().any(|variable| variable.id() == "hoc:output"));
+        assert!(model.variables.iter().any(|variable| variable.id() == "a"));
+        assert!(model.variables.iter().any(|variable| variable.id() == "b"));
+        assert!(model.relations.iter().any(|relation| relation.id() == "ordinary:path"));
+        assert!(!model.relations.iter().any(|relation| relation.id() == "hoc:path"));
     }
 
     #[cfg(windows)]
@@ -3596,6 +3812,7 @@ mod tests {
                             GeneralSemExecutionAuthorityRevisionIntentV1::AddGeneralSemInteractionV2 { focal_relation, .. } => focal_relation,
                             GeneralSemExecutionAuthorityRevisionIntentV1::AddHigherOrder { .. }
                             | GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceHigherOrder { .. }
+                            | GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder { .. }
                             | GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 { .. }
                             | GeneralSemExecutionAuthorityRevisionIntentV1::ReplaceModeratingEffect { .. }
                             | GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect { .. } => unreachable!("interaction fixture"),

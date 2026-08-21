@@ -35,7 +35,9 @@ import {
   nativeLegacyLogisticResultProjection,
   nativeModelFitPresentationStateV2,
   nativeRegressionBootstrapResultProjection,
+  nativeResultConfidenceLevel,
   nativeResultOverlaySelectionV1,
+  nativeResultRowOverlaySelectionV1,
   nativeResultTables,
   resolveSelectedCompletedRun,
   resultTableForItem,
@@ -2294,6 +2296,7 @@ describe("native result navigation", () => {
       "CI upper",
     ]);
     expect(table("mediation_bootstrap")?.title).toBe("Aggregate mediation effects bootstrap inference");
+    expect(nativeResultConfidenceLevel(run, "mediation_bootstrap")).toBe(0.95);
     expect(table("mediation_bootstrap")?.rows).toEqual([
       ["Direct effect", "competence → loyalty", "0.116000", "0.120000", "0.030000", "3.867", "0.0020", "0.060000", "0.180000"],
       ["Total indirect effect (aggregate)", "competence → loyalty", "0.219000", "0.218000", "0.057000", "3.842", "0.0040", "0.101000", "0.328000"],
@@ -2306,6 +2309,14 @@ describe("native result navigation", () => {
     expect(table("bootstrap_bca")?.rows[0]?.[0]).toBe("Indirect effect: competence → loyalty");
     expect(table("bootstrap_studentized")?.rows[0]?.[0]).toBe("Indirect effect: competence → loyalty");
     expect(navigation.tables.some((candidate) => candidate.id === "path_coefficients")).toBe(false);
+
+    expect(nativeResultRowOverlaySelectionV1(run, "specific_indirect_effects", 0)).toEqual({
+      kind: "mediation",
+      nodeIds: ["competence", "satisfaction", "loyalty"],
+      relationIds: [],
+      interactionTermIds: [],
+      label: "Competence → Satisfaction → Loyalty",
+    });
 
     const csv = tablesToCsv(navigation.tables);
     expect(csv).toContain("Direct effects");
@@ -2427,10 +2438,10 @@ describe("native result navigation", () => {
     };
     const labelledPaths = nativeResultTables(labelledRun).find((table) => table.id === "path_coefficients")?.rows ?? [];
 
-    expect(labelledPaths[0]?.[0]).toBe("Shared construct [competence] → Customer Fulfilment");
-    expect(labelledPaths[1]?.[0]).toBe("Ｓｈａｒｅｄ construct [likeability] → Customer Fulfilment");
+    expect(labelledPaths[0]?.[0]).toBe("Shared construct (C1) → Customer Fulfilment");
+    expect(labelledPaths[1]?.[0]).toBe("Ｓｈａｒｅｄ construct (C2) → Customer Fulfilment");
     expect(nativeResultTables({ ...labelledRun, modelSnapshot: undefined })
-      .find((table) => table.id === "path_coefficients")?.rows[0]?.[0]).toBe("competence → satisfaction");
+      .find((table) => table.id === "path_coefficients")?.rows[0]?.[0]).toBe("Competence → Satisfaction");
   });
 
   it("falls back for conflicting duplicate IDs and disambiguates a label from an unmatched raw ID", () => {
@@ -2447,7 +2458,7 @@ describe("native result navigation", () => {
       result: { ...base.result!, mediation: undefined },
     };
     expect(nativeResultTables(conflictingRun).find((table) => table.id === "path_coefficients")?.rows[0]?.[0])
-      .toBe("competence → Customer Fulfilment");
+      .toBe("Competence → Customer Fulfilment");
 
     const labelVsFallbackRun: AnalysisRun = {
       ...conflictingRun,
@@ -2458,7 +2469,7 @@ describe("native result navigation", () => {
       }),
     };
     expect(nativeResultTables(labelVsFallbackRun).find((table) => table.id === "path_coefficients")?.rows[0]?.[0])
-      .toBe("satisfaction [competence] → satisfaction");
+      .toBe("satisfaction → Satisfaction (unmatched saved construct)");
   });
 
   it("enumerates parallel and serial specific indirect paths from genuine structural coefficients", () => {
@@ -2763,7 +2774,7 @@ describe("native result navigation", () => {
       nodeIds: ["x", "w", "z", "y"],
       relationIds: ["relation:x_y"],
       interactionTermIds: ["term:x_w_z", "term:x_w"],
-      label: "Three-way moderating effect",
+      label: "X × W × Z → Y",
     });
   });
 
@@ -3354,12 +3365,20 @@ describe("native result navigation", () => {
     expect(navigation.groups.find((group) => group.id === "higher_order")?.items.map((item) => item.id)).toEqual([
       "hoc_component_relationships",
       "hoc_structural_paths",
-      "hoc_scope",
     ]);
+    expect(navigation.groups.find((group) => group.id === "run_details")?.items.map((item) => item.id))
+      .toContain("hoc_scope");
     expect(table("hoc_component_relationships")?.rows).toEqual([
       ["Organizational strength", "Capability", "Disjoint two-stage", "0.930000", "0.580000"],
       ["Organizational strength", "Resources", "Disjoint two-stage", "0.900000", "0.550000"],
     ]);
+    expect(nativeResultRowOverlaySelectionV1(run, "hoc_component_relationships", 0)).toEqual({
+      kind: "generic",
+      nodeIds: ["hoc", "x"],
+      relationIds: [],
+      interactionTermIds: [],
+      label: "Capability component of Organizational strength",
+    });
     expect(table("hoc_structural_paths")?.rows).toEqual([["Organizational strength → Performance", "0.740000"]]);
     expect(table("hoc_scope")?.title).toBe("Higher-order method and run details");
     expect(table("hoc_scope")?.advisory).toMatchObject({
@@ -3545,11 +3564,18 @@ describe("native result navigation", () => {
     expect(nativeModerationPlot(run)).toEqual(expect.objectContaining({
       title: "Predictor × Moderator → Outcome",
       slopes: [
-        { moderatorScore: -1, effect: 0.04, label: "Moderator = -1.000000" },
-        { moderatorScore: 0, effect: 0.31, label: "Moderator = 0.000000" },
-        { moderatorScore: 1, effect: 0.58, label: "Moderator = 1.000000" },
+        { moderatorScore: -1, effect: 0.04, label: "Moderator = −1 SD" },
+        { moderatorScore: 0, effect: 0.31, label: "Moderator = mean" },
+        { moderatorScore: 1, effect: 0.58, label: "Moderator = +1 SD" },
       ],
     }));
+    expect(nativeResultRowOverlaySelectionV1(run, "moderation_effects", 2)).toEqual({
+      kind: "moderation",
+      nodeIds: ["x", "m", "y"],
+      relationIds: [],
+      interactionTermIds: ["x_by_m_to_y"],
+      label: "Predictor × Moderator → Outcome",
+    });
   });
 
   it("returns no navigation for failed or payload-free runs", () => {

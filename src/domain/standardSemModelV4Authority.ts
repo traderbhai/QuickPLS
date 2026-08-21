@@ -153,6 +153,12 @@ export interface ReplaceGeneralSemHigherOrderEditorIntentV1 {
   readonly measurement_type: HigherOrderMeasurementTypeV4;
 }
 
+export interface RemoveGeneralSemHigherOrderEditorIntentV1 {
+  readonly kind: "remove_higher_order";
+  readonly term_id: string;
+  readonly output_id: string;
+}
+
 export type StandardSemModelV4EditorIntentV1 =
   | { kind: "set_model_name"; name: string }
   | { kind: "replace_complete_model"; model: SemModelV4 }
@@ -207,6 +213,7 @@ export type StandardSemModelV4EditorIntentV1 =
   | { kind: "replace_polynomial"; term_id: string; source: string; degree: number }
   | AddGeneralSemHigherOrderEditorIntentV1
   | ReplaceGeneralSemHigherOrderEditorIntentV1
+  | RemoveGeneralSemHigherOrderEditorIntentV1
   | { kind: "set_group"; group: SemGroupV4 }
   | { kind: "set_data_binding"; data_binding: SemDataBindingV4 };
 
@@ -455,6 +462,9 @@ function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntent
       return;
     case "replace_higher_order":
       replaceHigherOrder(model, intent);
+      return;
+    case "remove_higher_order":
+      removeHigherOrder(model, intent);
       return;
     case "set_group":
       model.group = structuredClone(intent.group);
@@ -1486,6 +1496,42 @@ function replaceHigherOrder(model: MutableModel, intent: Extract<StandardSemMode
   const output = model.variables[outputIndex] as Extract<SemVariableV4, { kind: "derived" }>;
   model.variables[outputIndex] = { ...output, label: requiredText(intent.label, "intent.label") };
   model.derived_terms[index] = { ...current, components: distinctExistingConstructs(model, intent.components, intent.term_id), approach: intent.approach, measurement_type: intent.measurement_type };
+}
+
+function removeHigherOrder(model: MutableModel, intent: Extract<StandardSemModelV4EditorIntentV1, { kind: "remove_higher_order" }>) {
+  const termId = stableId(intent.term_id, "intent.term_id");
+  const outputId = stableId(intent.output_id, "intent.output_id");
+  const term = model.derived_terms.find((candidate) => candidate.id === termId && candidate.kind === "higher_order");
+  if (!term || term.output !== outputId) {
+    fail(
+      "standard_sem_authority.higher_order_identity_mismatch",
+      termId,
+      "The resident higher-order term/output identity differs from the removal request.",
+      "Refresh the authority and remove the exact current higher-order construct.",
+    );
+  }
+  if (!model.variables.some((variable) => variable.kind === "derived" && variable.id === outputId)) {
+    missing("higher-order output", outputId);
+  }
+  const outputIds = new Set([outputId]);
+  const incidentRelationIds = new Set(model.relations
+    .filter((relation) => relationReferencesAny(relation, outputIds))
+    .map((relation) => relation.id));
+  const referencedBy = model.derived_terms.find((candidate) => (
+    candidate.id !== termId && (
+      derivedReferencesAny(candidate, outputIds)
+      || isInteractionTerm(candidate) && incidentRelationIds.has(candidate.focal_relation)
+    )
+  ));
+  if (referencedBy) {
+    fail(
+      "standard_sem_authority.higher_order_still_referenced",
+      termId,
+      `Higher-order construct ${termId} is required by derived term ${referencedBy.id}.`,
+      "Remove the dependent derived term before removing this higher-order construct.",
+    );
+  }
+  removeVariablesCascade(model, outputIds);
 }
 
 function normalizeRepresentation(

@@ -29,7 +29,7 @@ export interface NativeModerationDialogSubmissionV1 {
 export type NativeModerationDialogCommitResult =
   | AddTwoStageInteractionResult
   | { status: "updated"; interactionTermId: string }
-  | { status: "blocked"; reason: AddTwoStageInteractionBlockReason | string };
+  | { status: "blocked" | "cancelled" | "stale" | "rejected"; reason: AddTwoStageInteractionBlockReason | string };
 
 export interface NativeModerationDialogProps {
   nodes: readonly Node<ConstructData>[];
@@ -39,7 +39,8 @@ export interface NativeModerationDialogProps {
   request?: NativeModerationDialogRequest;
   create?: (predictor: string, moderator: string, outcome: string) => AddTwoStageInteractionResult;
   /** Unified 2.53 create/edit seam; preferred when supplied. */
-  commit?: (submission: NativeModerationDialogSubmissionV1) => NativeModerationDialogCommitResult;
+  commit?: (submission: NativeModerationDialogSubmissionV1) => Promise<NativeModerationDialogCommitResult>;
+  onPendingChange?: (pending: boolean) => void;
   close: () => void;
 }
 
@@ -57,6 +58,19 @@ function creationMessage(reason: AddTwoStageInteractionBlockReason | string): st
   }
 }
 
+type NativeModerationDialogFailure = Extract<
+  NativeModerationDialogCommitResult,
+  { status: "blocked" | "cancelled" | "stale" | "rejected" }
+>;
+
+function moderationCommitMessage(result: NativeModerationDialogFailure): string {
+  const detail = creationMessage(result.reason);
+  if (result.status === "cancelled") return `Save cancelled: ${detail}`;
+  if (result.status === "stale") return `Model changed: ${detail}`;
+  if (result.status === "rejected") return `Save rejected: ${detail}`;
+  return `Unable to save: ${detail}`;
+}
+
 export default function NativeModerationDialog({
   nodes,
   edges,
@@ -64,6 +78,7 @@ export default function NativeModerationDialog({
   request,
   create,
   commit,
+  onPendingChange,
   close,
 }: NativeModerationDialogProps) {
   const relationships = useMemo(() => nativeModerationRelationships(nodes, edges), [edges, nodes]);
@@ -110,7 +125,8 @@ export default function NativeModerationDialog({
   const requestedModeratorId = resolvedRequest.kind === "create" ? resolvedRequest.moderatorId : undefined;
   const initialModeratorId = editing?.moderatorIds.at(-1) ?? requestedModeratorId ?? moderators[0]?.id ?? "";
   const [moderatorId, setModeratorId] = useState(initialModeratorId);
-  const [creationError, setCreationError] = useState<string | null>(null);
+  const [commitIssue, setCommitIssue] = useState<NativeModerationDialogFailure | null>(null);
+  const [commitPending, setCommitPending] = useState(false);
   const selectedModerator = moderators.some((candidate) => candidate.id === moderatorId)
     ? moderatorId
     : moderators[0]?.id ?? "";
@@ -143,9 +159,10 @@ export default function NativeModerationDialog({
 
   return <form
     className="nd-dialog-form nd-moderation-dialog"
-    onSubmit={(event) => {
+    aria-busy={commitPending}
+    onSubmit={async (event) => {
       event.preventDefault();
-      if (!relationship || !selectedModerator || blocker) return;
+      if (commitPending || !relationship || !selectedModerator || blocker) return;
       const submission: NativeModerationDialogSubmissionV1 = {
         mode: editing ? "edit" : "create",
         target,
@@ -156,11 +173,27 @@ export default function NativeModerationDialog({
         interactionTermId: editing?.interactionTermId,
         order,
       };
-      const result = commit
-        ? commit(submission)
-        : create!(relationship.predictor, selectedModerator, relationship.outcome);
-      if (result.status === "created" || result.status === "updated") close();
-      else setCreationError(creationMessage(result.reason));
+      setCommitIssue(null);
+      setCommitPending(true);
+      onPendingChange?.(true);
+      try {
+        const result = commit
+          ? await commit(submission)
+          : await Promise.resolve(create!(relationship.predictor, selectedModerator, relationship.outcome));
+        if (result.status === "created" || result.status === "updated") {
+          close();
+          return;
+        }
+        setCommitIssue(result);
+      } catch (error) {
+        setCommitIssue({
+          status: "rejected",
+          reason: error instanceof Error ? error.message : String(error),
+        });
+      } finally {
+        setCommitPending(false);
+        onPendingChange?.(false);
+      }
     }}
   >
     <label htmlFor="nd-moderation-relationship">Relationship
@@ -179,7 +212,7 @@ export default function NativeModerationDialog({
             editing?.interactionTermId,
             Boolean(parent || editing?.order === 3),
           )[0]?.id ?? "");
-          setCreationError(null);
+          setCommitIssue(null);
         }}
       >
         {relationships.map((candidate) => <option key={candidate.edgeId} value={candidate.edgeId}>{candidate.label}</option>)}
@@ -192,7 +225,7 @@ export default function NativeModerationDialog({
         disabled={Boolean(globalBlocker) || moderators.length === 0}
         onChange={(event) => {
           setModeratorId(event.target.value);
-          setCreationError(null);
+          setCommitIssue(null);
         }}
       >
         {moderators.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.label}</option>)}
@@ -209,11 +242,17 @@ export default function NativeModerationDialog({
         <div><dt>Hierarchy</dt><dd>Strong</dd></div>
       </dl>
     </details>
-    {blocker || creationError ? <div className="nd-form-error" role="alert">{blocker ?? creationError}</div> : null}
+    {blocker ? <div className="nd-form-error" role="alert">{blocker}</div> : null}
+    {commitIssue ? <div
+      className={commitIssue.status === "cancelled" ? "nd-dialog-note" : "nd-form-error"}
+      role={commitIssue.status === "cancelled" ? "status" : "alert"}
+      data-commit-status={commitIssue.status}
+    >{moderationCommitMessage(commitIssue)}</div> : null}
+    {commitPending ? <div className="nd-dialog-note" role="status" aria-live="polite">Saving the moderating effect…</div> : null}
     <footer>
-      <button type="button" onClick={close}>Cancel</button>
-      <button className="primary" type="submit" disabled={Boolean(blocker) || !relationship || !selectedModerator}>
-        {editing ? "Save changes" : order === 3 ? "Add three-way effect" : "Add moderating effect"}
+      <button type="button" onClick={close} disabled={commitPending}>Cancel</button>
+      <button className="primary" type="submit" disabled={Boolean(blocker) || !relationship || !selectedModerator || commitPending}>
+        {commitPending ? "Saving…" : editing ? "Save changes" : order === 3 ? "Add three-way effect" : "Add moderating effect"}
       </button>
     </footer>
   </form>;

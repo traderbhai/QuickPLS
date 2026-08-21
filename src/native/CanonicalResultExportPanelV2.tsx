@@ -15,10 +15,15 @@ import { publishNativeCanonicalResultExportV2 } from "../services/canonicalResul
 import { isNativeDesktop } from "../services/projectService";
 
 export interface CanonicalResultExportPanelV2Props {
+  /** Immutable scientific/export authority. */
   document: CanonicalResultDocumentV2;
+  /** Optional label-only projection; never used as the export authority. */
+  presentationDocument?: CanonicalResultDocumentV2;
   /** Optional writer overrides keep the shared dispatcher independently testable. */
   writers?: CanonicalResultExportWritersV2;
   nativeDesktop?: boolean;
+  /** Hides stable implementation identities from the ordinary researcher view. */
+  researcherFacing?: boolean;
 }
 
 interface ExportFeedbackV2 {
@@ -85,7 +90,15 @@ function displayChartValue(value: number | null | undefined): string {
     : value.toFixed(4).replace(/\.?0+$/u, "");
 }
 
-function CanonicalExportChartPreviewV2({ entry }: { entry: CanonicalResultExportChartV2 }) {
+function CanonicalExportChartPreviewV2({
+  entry,
+  researcherFacing,
+  sourceTableTitle,
+}: {
+  entry: CanonicalResultExportChartV2;
+  researcherFacing: boolean;
+  sourceTableTitle?: string;
+}) {
   const { chart, origin } = entry;
   const domId = `nd-canonical-export-preview-${chartDomToken(chart.id)}`;
   const rows = chart.series.flatMap((series) => series.points.map((point, pointIndex) => ({
@@ -112,7 +125,7 @@ function CanonicalExportChartPreviewV2({ entry }: { entry: CanonicalResultExport
   const zeroY = y(0);
   const step = rows.length ? plotWidth / rows.length : plotWidth;
   const barWidth = Math.max(4, Math.min(36, step * 0.62));
-  const summary = `${origin === "derived_from_canonical_table" ? "Export-derived" : "Persisted"} ${chart.kind} chart with ${chart.series.length} series and ${rows.length} exact ${rows.length === 1 ? "point" : "points"}.`;
+  const summary = `${origin === "derived_from_canonical_table" ? "Export-derived" : researcherFacing ? "Saved" : "Persisted"} ${chart.kind} chart with ${chart.series.length} series and ${rows.length} exact ${rows.length === 1 ? "point" : "points"}.`;
 
   return <section aria-labelledby={`${domId}-region-title`}>
     <h4 id={`${domId}-region-title`} className="nd-sr-only">Selected canonical export chart preview</h4>
@@ -161,7 +174,9 @@ function CanonicalExportChartPreviewV2({ entry }: { entry: CanonicalResultExport
           <text className="nd-canonical-chart__axis-label" x={12} y={height / 2} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{chart.display.y_axis_label ?? "Estimate"}</text>
         </svg>
       </div>
-      {origin === "derived_from_canonical_table" ? <p className="nd-canonical-chart__source">Derived visual only; the resident canonical result and its scientific identities are unchanged.</p> : null}
+      {origin === "derived_from_canonical_table" ? <p className="nd-canonical-chart__source">{researcherFacing
+        ? "Derived visual only; the saved scientific result is unchanged."
+        : "Derived visual only; the resident canonical result and its scientific identities are unchanged."}</p> : null}
     </figure>
     <div className="nd-cbsem-v4-table-wrap" data-canonical-chart-table-fallback={chart.id}>
       <table>
@@ -170,12 +185,16 @@ function CanonicalExportChartPreviewV2({ entry }: { entry: CanonicalResultExport
         <tbody>{rows.map(({ seriesId, seriesLabel, pointIndex, point }, index) => <tr key={`${seriesId}:${pointIndex}`}>
           <th scope="row">{index + 1}</th>
           <td>{seriesLabel}</td>
-          <td><code>{point.label ?? `${seriesId}:${pointIndex}`}</code></td>
+          <td>{researcherFacing
+            ? point.label ?? `Point ${index + 1}`
+            : <code>{point.label ?? `${seriesId}:${pointIndex}`}</code>}</td>
           <td>{String(point.x)}</td>
           <td>{displayChartValue(point.y)}</td>
           <td>{displayChartValue(point.lower)}</td>
           <td>{displayChartValue(point.upper)}</td>
-          <td><code>{chart.source_table_id ?? "No source table"}</code></td>
+          <td>{researcherFacing
+            ? sourceTableTitle ?? "No source table"
+            : <code>{chart.source_table_id ?? "No source table"}</code>}</td>
         </tr>)}</tbody>
       </table>
     </div>
@@ -184,11 +203,17 @@ function CanonicalExportChartPreviewV2({ entry }: { entry: CanonicalResultExport
 
 export function CanonicalResultExportPanelV2({
   document,
+  presentationDocument,
   writers,
   nativeDesktop = isNativeDesktop(),
+  researcherFacing = false,
 }: CanonicalResultExportPanelV2Props) {
-  const tableIds = useMemo(() => document.tables.map((table) => table.id), [document]);
-  const exportCharts = useMemo(() => canonicalResultExportChartsV2(document), [document]);
+  const displayedDocument = researcherFacing
+    && presentationDocument?.document_id === document.document_id
+    ? presentationDocument
+    : document;
+  const tableIds = useMemo(() => displayedDocument.tables.map((table) => table.id), [displayedDocument]);
+  const exportCharts = useMemo(() => canonicalResultExportChartsV2(displayedDocument), [displayedDocument]);
   const chartIds = useMemo(() => exportCharts.map((entry) => entry.chart.id), [exportCharts]);
   const [selectedTableIds, setSelectedTableIds] = useState<string[]>(tableIds);
   const [selectedChartId, setSelectedChartId] = useState<string>(chartIds[0] ?? "");
@@ -196,6 +221,9 @@ export function CanonicalResultExportPanelV2({
   const [feedback, setFeedback] = useState<ExportFeedbackV2 | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const selectedChart = exportCharts.find((entry) => entry.chart.id === selectedChartId) ?? null;
+  const selectedChartSourceTitle = selectedChart?.chart.source_table_id
+    ? displayedDocument.tables.find((table) => table.id === selectedChart.chart.source_table_id)?.title
+    : undefined;
 
   useEffect(() => {
     setSelectedTableIds(tableIds);
@@ -204,7 +232,7 @@ export function CanonicalResultExportPanelV2({
     abortRef.current?.abort();
     abortRef.current = null;
     setBusy(null);
-  }, [chartIds, document.document_id, tableIds]);
+  }, [chartIds, displayedDocument.document_id, tableIds]);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
@@ -262,28 +290,36 @@ export function CanonicalResultExportPanelV2({
   const feedbackRole = feedback?.tone === "error" ? "alert" : "status";
 
   return <section className="nd-cbsem-v4-card nd-canonical-export-v2" aria-labelledby="nd-canonical-export-v2-heading" aria-busy={busy !== null}>
-    <header><div><h3 id="nd-canonical-export-v2-heading"><Download size={17} aria-hidden="true" />Export verified canonical result</h3><p>Choose exact canonical tables once, then export every format through the same provenance-bound semantic dispatcher.</p></div></header>
+    <header><div><h3 id="nd-canonical-export-v2-heading"><Download size={17} aria-hidden="true" />{researcherFacing ? "Export verified result" : "Export verified canonical result"}</h3><p>{researcherFacing
+      ? "Choose result tables once, then export each format from the same saved scientific result."
+      : "Choose exact canonical tables once, then export every format through the same provenance-bound semantic dispatcher."}</p></div></header>
     <fieldset className="nd-canonical-export-v2__tables" disabled={busy !== null} aria-describedby="nd-canonical-export-v2-selection-summary">
       <legend>Tables to include</legend>
       <div className="nd-cbsem-v4-actions">
         <button type="button" disabled={busy !== null || selectedTableIds.length === tableIds.length} onClick={() => setSelectedTableIds(tableIds)}>Select all tables</button>
         <button type="button" disabled={busy !== null || selectedTableIds.length === 0} onClick={() => setSelectedTableIds([])}>Clear table selection</button>
       </div>
-      {document.tables.map((table) => {
+      {displayedDocument.tables.map((table) => {
         const inputId = `nd-canonical-export-table-${Array.from(new TextEncoder().encode(table.id), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
         return <label className="nd-checkbox-row" htmlFor={inputId} key={table.id}>
           <input id={inputId} type="checkbox" checked={selectedTableIds.includes(table.id)} onChange={(event) => toggleTable(table.id, event.target.checked)} />
-          <span><strong>{table.title}</strong><small>Stable table ID: <code>{table.id}</code></small></span>
+          <span><strong>{table.title}</strong>{researcherFacing ? null : <small>Stable table ID: <code>{table.id}</code></small>}</span>
         </label>;
       })}
     </fieldset>
     {exportCharts.length ? <label htmlFor="nd-canonical-export-v2-chart">Chart for SVG or PNG
       <select id="nd-canonical-export-v2-chart" value={selectedChartId} disabled={busy !== null} onChange={(event) => setSelectedChartId(event.target.value)}>
-        {exportCharts.map(({ chart, origin }) => <option value={chart.id} key={chart.id}>{chart.title} · {origin === "persisted" ? "persisted" : "derived from canonical table"} · {chart.id}</option>)}
+        {exportCharts.map(({ chart, origin }) => <option value={chart.id} key={chart.id}>{chart.title} · {origin === "persisted"
+          ? researcherFacing ? "saved" : "persisted"
+          : researcherFacing ? "derived from result table" : "derived from canonical table"}{researcherFacing ? "" : ` · ${chart.id}`}</option>)}
       </select>
     </label> : <p role="note">This canonical result contains no persisted chart and no exact effect table from which QuickPLS can derive a truthful visual, so SVG and PNG chart export are unavailable.</p>}
-    {selectedChart ? <CanonicalExportChartPreviewV2 entry={selectedChart} /> : null}
-    <p id="nd-canonical-export-v2-selection-summary" role="status" aria-live="polite">{selectedTableIds.length} of {tableIds.length} canonical tables selected. {chartIds.length ? `${selectedChart?.origin === "derived_from_canonical_table" ? "Derived" : "Persisted"} chart ${selectedChartId || "not selected"}.` : "No exportable chart."}</p>
+    {selectedChart ? <CanonicalExportChartPreviewV2
+      entry={selectedChart}
+      researcherFacing={researcherFacing}
+      sourceTableTitle={selectedChartSourceTitle}
+    /> : null}
+    <p id="nd-canonical-export-v2-selection-summary" role="status" aria-live="polite">{selectedTableIds.length} of {tableIds.length} {researcherFacing ? "result" : "canonical"} tables selected. {chartIds.length ? `${selectedChart?.origin === "derived_from_canonical_table" ? "Derived" : researcherFacing ? "Saved" : "Persisted"} chart${researcherFacing ? " selected" : ` ${selectedChartId || "not selected"}`}.` : "No exportable chart."}</p>
     <div className="nd-cbsem-v4-actions" aria-label="Canonical result export formats">
       {(["csv", "xlsx", "html", "pdf", "svg", "png"] as const).map((format) => {
         const chartFormat = format === "svg" || format === "png";
@@ -302,7 +338,7 @@ export function CanonicalResultExportPanelV2({
       {busy ? <button type="button" className="danger" onClick={cancelExport}><X size={15} aria-hidden="true" />Cancel export</button> : null}
     </div>
     {feedback ? <p className={`nd-export-feedback ${feedback.tone}`} role={feedbackRole} aria-live="polite" aria-atomic="true">{feedback.message}</p> : null}
-    <details><summary>Export identity</summary><dl><div><dt>Document</dt><dd>{document.document_id}</dd></div><div><dt>Run</dt><dd>{document.provenance.run_id}</dd></div><div><dt>Method</dt><dd>{document.provenance.method_version}</dd></div><div><dt>Dataset fingerprint</dt><dd>{document.provenance.dataset_fingerprint}</dd></div></dl></details>
+    <details><summary>Export identity</summary><dl><div><dt>Document</dt><dd>{document.document_id}</dd></div><div><dt>Run</dt><dd>{document.provenance.run_id}</dd></div><div><dt>Method</dt><dd>{document.provenance.method_version}</dd></div><div><dt>Dataset fingerprint</dt><dd>{document.provenance.dataset_fingerprint}</dd></div>{researcherFacing ? <><div><dt>Selected table IDs</dt><dd>{selectedTableIds.join(", ") || "None"}</dd></div><div><dt>Selected chart ID</dt><dd>{selectedChartId || "None"}</dd></div></> : null}</dl></details>
   </section>;
 }
 

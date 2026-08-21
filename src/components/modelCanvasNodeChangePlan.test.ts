@@ -21,21 +21,24 @@ describe("ModelCanvas node-change persistence plan", () => {
   it("keeps pointer position updates local until the drag-stop commit", () => {
     expect(planModelCanvasNodeChanges([constructPosition, indicatorPosition], true)).toEqual({
       modelChanges: [],
+      constructKeyboardPositions: [],
       indicatorKeyboardPositions: [],
-      checkpointBeforePersisting: false,
     });
   });
 
-  it("persists React Flow keyboard positions with one undo checkpoint", () => {
+  it("routes React Flow keyboard positions through the model-edit gateway", () => {
     const plan = planModelCanvasNodeChanges([constructPosition, indicatorPosition], false);
 
-    expect(plan.modelChanges).toEqual([constructPosition]);
+    expect(plan.modelChanges).toEqual([]);
+    expect(plan.constructKeyboardPositions).toEqual([{
+      constructId: "construct-1",
+      position: { x: 40, y: 20 },
+    }]);
     expect(plan.indicatorKeyboardPositions).toEqual([{
       constructId: "construct-1",
       indicator: "item 1",
       position: { x: 75, y: 90 },
     }]);
-    expect(plan.checkpointBeforePersisting).toBe(true);
   });
 
   it("does not create history for selection-only changes", () => {
@@ -43,8 +46,8 @@ describe("ModelCanvas node-change persistence plan", () => {
 
     expect(planModelCanvasNodeChanges([selection], false)).toEqual({
       modelChanges: [selection],
+      constructKeyboardPositions: [],
       indicatorKeyboardPositions: [],
-      checkpointBeforePersisting: false,
     });
   });
 });

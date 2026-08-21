@@ -100,6 +100,23 @@ describe("CanonicalResultExportPanelV2 accessibility", () => {
     expect(html).toMatch(/<button(?=[^>]*disabled="")(?=[^>]*title="Select a canonical export chart first\.")[^>]*>[\s\S]*?Export PNG<\/button>/u);
   });
 
+  it("hides stable table, chart and fallback point IDs from the researcher-facing panel", () => {
+    const html = renderToStaticMarkup(<CanonicalResultExportPanelV2
+      document={documentWithChart()}
+      nativeDesktop
+      researcherFacing
+    />);
+
+    expect(html).toContain("Export verified result");
+    expect(html).toContain("2 of 2 result tables selected");
+    expect(html).not.toContain("Stable table ID:");
+    expect(html).not.toContain("Interaction plot · saved · plot");
+    expect(html).toContain("Point 1");
+    expect(html).toContain("<summary>Export identity</summary>");
+    expect(html).toContain("Selected table IDs</dt><dd>effects, scope");
+    expect(html).toContain("Selected chart ID</dt><dd>plot");
+  });
+
   it("exposes a keyboard-reachable accessible preview and exact table fallback for mediation-derived charts", () => {
     const document = documentWithChart();
     const capability = {
@@ -155,6 +172,7 @@ describe("CanonicalResultExportPanelV2 accessibility", () => {
     expect(source).not.toContain("canonicalResultDocumentV2ExportTables(displayedDocument)");
     expect(source).not.toContain(">Export XLSX</button>");
     expect(panel).toContain("publishNativeCanonicalResultExportV2(artifact, signal)");
+    expect(panel).toContain("dispatchCanonicalResultExportV2(document");
     expect(panel).not.toContain("exportNativeTextFile");
     expect(panel).not.toContain("exportNativeXlsxTables");
   });

@@ -4,7 +4,7 @@ import { useWorkspace } from "../store";
 import type { IndicatorNodeData } from "../domain/diagramGraph";
 
 export function IndicatorNode({ data, selected }: NodeProps<Node<IndicatorNodeData>>) {
-  const unassignIndicator = useWorkspace((state) => state.unassignIndicator);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const statistic = data.mode === "reflective" ? data.loading : data.weight;
   const paperStyle = data.displayMode === "sem" || data.displayMode === "publication" || data.displayMode === "smartpls_result";
   if (paperStyle) {
@@ -29,6 +29,10 @@ export function IndicatorNode({ data, selected }: NodeProps<Node<IndicatorNodeDa
     <Handle id="source" type="source" position={Position.Right} />
     <span title={data.indicator}>{data.indicator}</span>
     {statistic !== undefined ? <b>{statistic.toFixed(3)}</b> : null}
-    <button type="button" aria-label={`Remove ${data.indicator}`} title={`Remove ${data.indicator}`} onClick={(event) => { event.stopPropagation(); unassignIndicator(data.constructId, data.indicator); }}><Trash2 size={12} aria-hidden="true" /></button>
+    <button type="button" aria-label={`Remove ${data.indicator}`} title={`Remove ${data.indicator}`} onClick={(event) => {
+      event.stopPropagation();
+      void executeModelEditCommand({ kind: "unassign_indicator", constructId: data.constructId, column: data.indicator })
+        .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })));
+    }}><Trash2 size={12} aria-hidden="true" /></button>
   </div>;
 }

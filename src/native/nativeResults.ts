@@ -3,6 +3,10 @@ import {
   type ResultTable,
   type ResultTableAdvisory,
 } from "../domain/resultTables";
+import {
+  createAuthoredResultIdentityResolver,
+  type AuthoredResultIdentityResolver,
+} from "../domain/authoredResultIdentity";
 import { parseParameterIdentity } from "../domain/inference";
 import type { ResultOverlaySelectionV1 } from "../domain/moderationDiagramProjectionV1";
 import type {
@@ -87,7 +91,7 @@ export {
   nativeProcessResultProjection,
 } from "./nativeProcessResults";
 
-export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "sample_size_power" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "three_way_moderation" | "quality_criteria" | "prediction" | "inference";
+export type NativeResultGroupId = "graphical" | "groups" | "assessment" | "covariance_sem" | "gsca_component_model" | "sample_size_power" | "importance_performance" | "necessary_conditions" | "components" | "process" | "regression" | "higher_order" | "final_results" | "mediation" | "moderation" | "three_way_moderation" | "quality_criteria" | "prediction" | "inference" | "run_details";
 
 export type NativeResultNavigationItem =
   | {
@@ -288,15 +292,29 @@ const MEDIATION_IDS = [
   "total_indirect_effects",
   "total_effects",
   "mediation_bootstrap",
+  "moderated_mediation",
 ] as const;
 
 const HIGHER_ORDER_IDS = [
   "hoc_component_relationships",
   "hoc_structural_paths",
-  "hoc_scope",
   "general_sem_higher_order_targets",
+] as const;
+
+const RUN_DETAILS_IDS = [
+  "hoc_scope",
   "general_sem_higher_order_stages",
   "general_sem_higher_order_bootstrap_receipt",
+  "model_fit_exact_failures",
+  "plsc_bootstrap_accounting",
+  "plsc_bootstrap_failures",
+  "plsc_bootstrap_jackknife_failures",
+  "plsc_permutation_accounting",
+  "plsc_permutation_failures",
+  "bootstrap_accounting",
+  "bootstrap_failures",
+  "bootstrap_bca_unavailable",
+  "plsc_bootstrap_bca_unavailable",
 ] as const;
 
 const QUALITY_CRITERIA_IDS = [
@@ -322,27 +340,17 @@ const QUALITY_CRITERIA_IDS = [
 
 const INFERENCE_IDS = [
   "model_fit_exact",
-  "model_fit_exact_failures",
-  "plsc_bootstrap_accounting",
-  "plsc_bootstrap_failures",
-  "plsc_bootstrap_jackknife_failures",
-  "plsc_permutation_accounting",
   "plsc_permutation_groups",
   "plsc_permutation_paths",
   "plsc_permutation_outer_loadings",
   "plsc_permutation_construct_criteria",
-  "plsc_permutation_failures",
   "control_bootstrap",
   "control_bca",
   "control_studentized",
   "control_randomization",
-  "bootstrap_accounting",
-  "bootstrap_failures",
   "bootstrap_percentile",
   "bootstrap_one_sided_test_tail",
   "bootstrap_bca",
-  "bootstrap_bca_unavailable",
-  "plsc_bootstrap_bca_unavailable",
   "bootstrap_studentized",
   "permutation",
 ] as const;
@@ -972,7 +980,8 @@ export function nativeModerationPlot(run: AnalysisRun | null | undefined): Nativ
     && candidate.simple_slopes.filter((slope) => isFiniteNumber(slope.moderator_score) && isFiniteNumber(slope.effect)).length >= 2,
   );
   if (!estimate) return null;
-  const constructLabel = constructDisplayLabelResolver(run);
+  const identity = createAuthoredResultIdentityResolver(run.modelSnapshot);
+  const constructLabel = identity.construct;
   const predictorLabel = constructLabel(estimate.predictor);
   const moderatorLabel = constructLabel(estimate.moderator);
   const outcomeLabel = constructLabel(estimate.outcome);
@@ -982,7 +991,7 @@ export function nativeModerationPlot(run: AnalysisRun | null | undefined): Nativ
     .map((slope) => ({
       moderatorScore: slope.moderator_score,
       effect: slope.effect,
-      label: `${moderatorLabel} = ${formatNumber(slope.moderator_score)}`,
+      label: `${moderatorLabel} = ${moderatorProbeLabel(slope.moderator_score)}`,
     }));
   return {
     title: `${predictorLabel} × ${moderatorLabel} → ${outcomeLabel}`,
@@ -991,6 +1000,13 @@ export function nativeModerationPlot(run: AnalysisRun | null | undefined): Nativ
     outcomeLabel,
     slopes,
   };
+}
+
+function moderatorProbeLabel(score: number): string {
+  if (numbersClose(score, -1)) return "−1 SD";
+  if (numbersClose(score, 0)) return "mean";
+  if (numbersClose(score, 1)) return "+1 SD";
+  return formatNumber(score);
 }
 
 export function nativeIpmaPlot(run: AnalysisRun | null | undefined): NativeIpmaPlot | null {
@@ -1003,7 +1019,8 @@ export function nativeIpmaPlot(run: AnalysisRun | null | undefined): NativeIpmaP
   if (!run.modelSnapshot.nodes.some((node) => node.id === targetId)) return null;
 
   const predecessors = nativeIpmaPredecessorIds(run.modelSnapshot.edges, targetId);
-  const constructLabel = constructDisplayLabelResolver(run);
+  const authoredIdentity = createAuthoredResultIdentityResolver(run.modelSnapshot);
+  const constructLabel = authoredIdentity.construct;
   const pointsByConstruct = new Map<string, NativeIpmaPlot["points"][number]>();
   for (const row of ipma.constructs) {
     if (row.target !== targetId || !predecessors.has(row.construct) || pointsByConstruct.has(row.construct)) continue;
@@ -2369,7 +2386,7 @@ export function nativeModelFitPresentationStateV2(
       return {
         mode: "exact_failed",
         aggregateStatus: null,
-        detailValue: "Run failed",
+        detailValue: "Failed",
         advisory: {
           tone: "error",
           title: "Exact-fit run failed",
@@ -2381,7 +2398,7 @@ export function nativeModelFitPresentationStateV2(
     return {
       mode: "descriptive",
       aggregateStatus: null,
-      detailValue: "Historical descriptive measures",
+      detailValue: "Not run",
       advisory: {
         tone: "neutral",
         title: "About these measures",
@@ -2395,7 +2412,7 @@ export function nativeModelFitPresentationStateV2(
     return {
       mode: "exact_failed",
       aggregateStatus: null,
-      detailValue: "Run failed",
+      detailValue: "Failed",
       advisory: {
         tone: "error",
         title: "Exact-fit run failed",
@@ -2420,7 +2437,7 @@ export function nativeModelFitPresentationStateV2(
     return {
       mode: "exact_available",
       aggregateStatus: exact.status,
-      detailValue: "Results available",
+      detailValue: "Available",
       advisory: {
         tone: "info",
         title: "Exact fit available",
@@ -2432,7 +2449,7 @@ export function nativeModelFitPresentationStateV2(
     return {
       mode: "exact_partial",
       aggregateStatus: exact.status,
-      detailValue: "Results partial",
+      detailValue: "Partial",
       advisory: {
         tone: "warning",
         title: "Exact fit partially available",
@@ -2443,7 +2460,7 @@ export function nativeModelFitPresentationStateV2(
   return {
     mode: "exact_unavailable",
     aggregateStatus: exact.status,
-    detailValue: "Results unavailable",
+    detailValue: "Unavailable",
     advisory: {
       tone: "warning",
       title: "Exact fit unavailable",
@@ -2712,7 +2729,8 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     const endogeneity = methodResultTables(result).find((table) => table.id === "endogeneity_copula");
     if (endogeneity) tables.push(endogeneity);
   }
-  const constructLabel = constructDisplayLabelResolver(run);
+  const authoredIdentity = createAuthoredResultIdentityResolver(run.modelSnapshot);
+  const constructLabel = authoredIdentity.construct;
   const hasHtmtBootstrapVersion = run.provenance?.method_version
     .split("+")
     .includes("htmt_bias_corrected_bootstrap_inference_v1") ?? false;
@@ -2870,7 +2888,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     rows: primaryOuterEstimates
       .filter((row) => hasText(row.construct) && hasText(row.indicator) && isFiniteNumber(row.loading)
         && !technicalConstructIds.has(row.construct) && !isGeneratedTechnicalIndicator(row.indicator))
-      .map((row) => [constructLabel(row.construct), row.indicator, formatNumber(row.loading)]),
+      .map((row) => [constructLabel(row.construct), authoredIdentity.indicator(row.indicator, row.construct), formatNumber(row.loading)]),
   });
 
   addTable(tables, {
@@ -2881,7 +2899,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
     rows: primaryOuterEstimates
       .filter((row) => hasText(row.construct) && hasText(row.indicator) && isFiniteNumber(row.weight)
         && !technicalConstructIds.has(row.construct) && !isGeneratedTechnicalIndicator(row.indicator))
-      .map((row) => [constructLabel(row.construct), row.indicator, formatNumber(row.weight)]),
+      .map((row) => [constructLabel(row.construct), authoredIdentity.indicator(row.indicator, row.construct), formatNumber(row.weight)]),
   });
 
   addTable(tables, {
@@ -2974,6 +2992,24 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       ])),
   });
 
+  if (result.moderated_mediation) {
+    addTable(tables, {
+      id: "moderated_mediation",
+      title: "Moderated mediation",
+      warning: [...new Set(result.moderated_mediation.warnings.map((warning) => warning.trim()).filter(Boolean))].join(" ") || null,
+      columns: ["Conditional indirect path", "Moderator", "Moderated stage", "Index", "Conditional indirect effects"],
+      rows: result.moderated_mediation.estimates.map((row) => [
+        authoredIdentity.mediation([row.predictor, row.mediator, row.target]),
+        constructLabel(row.moderator),
+        sentenceCase(row.moderated_stage.replaceAll("_", " ")),
+        formatNumber(row.index_of_moderated_mediation),
+        row.conditional_indirect_effects.map((effect) => (
+          `${constructLabel(row.moderator)} = ${moderatorProbeLabel(effect.moderator_score)}: ${formatNumber(effect.indirect_effect)}`
+        )).join("; "),
+      ]),
+    });
+  }
+
   if (result.plsc) {
     addTable(tables, {
       id: "plsc_reliability",
@@ -3063,7 +3099,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       columns: ["Construct", "Indicators", "Four-indicator subsets", "Tetrads", "Maximum absolute tetrad"],
       rows: ctaPls.blocks.map((block) => [
         constructLabel(block.constructId),
-        block.indicators.join(", "),
+        block.indicators.map((indicator) => authoredIdentity.indicator(indicator, block.constructId)).join(", "),
         String(block.quadruples),
         String(block.tetrads),
         formatNumber(ctaPls.maxAbsoluteTetradByConstruct[block.constructId]),
@@ -3077,10 +3113,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       columns: ["Construct", "Indicator A", "Indicator B", "Indicator C", "Indicator D", "Pairing", "Tetrad", "Absolute tetrad"],
       rows: ctaPls.estimates.map((row) => [
         constructLabel(row.construct),
-        row.indicator_a,
-        row.indicator_b,
-        row.indicator_c,
-        row.indicator_d,
+        authoredIdentity.indicator(row.indicator_a, row.construct),
+        authoredIdentity.indicator(row.indicator_b, row.construct),
+        authoredIdentity.indicator(row.indicator_c, row.construct),
+        authoredIdentity.indicator(row.indicator_d, row.construct),
         sentenceCase(row.pairing.replaceAll("_", " ")),
         formatNumber(row.tetrad),
         formatNumber(row.absolute_tetrad),
@@ -3133,7 +3169,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           .map((row) => [
             targetLabel,
             constructLabel(row.construct),
-            row.indicator,
+            authoredIdentity.indicator(row.indicator, row.construct),
             formatNumber(row.construct_importance),
             formatNumber(row.loading),
             formatNumber(row.performance, 4),
@@ -3185,7 +3221,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           && !isGeneratedTechnicalIndicator(row.indicator)
           && !technicalConstructIds.has(row.assigned_construct)
           && !technicalConstructIds.has(row.construct))
-        .map((row) => [row.indicator, constructLabel(row.assigned_construct), constructLabel(row.construct), formatNumber(row.loading)]),
+        .map((row) => [authoredIdentity.indicator(row.indicator, row.assigned_construct), constructLabel(row.assigned_construct), constructLabel(row.construct), formatNumber(row.loading)]),
     });
 
     addTable(tables, {
@@ -3256,7 +3292,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       rows: assessment.formative_indicator_vif
         .filter((row) => hasText(row.construct) && hasText(row.indicator) && isFiniteNumber(row.vif)
           && !technicalConstructIds.has(row.construct) && !isGeneratedTechnicalIndicator(row.indicator))
-        .map((row) => [constructLabel(row.construct), row.indicator, formatOptionalNumber(row.vif)]),
+        .map((row) => [constructLabel(row.construct), authoredIdentity.indicator(row.indicator, row.construct), formatOptionalNumber(row.vif)]),
     });
 
     const fSquaredRows = assessment.f_squared.filter((row) =>
@@ -3476,7 +3512,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         warning: null,
         columns: ["Parameter", "Selected exceedances", "Selected p", "Usable assignments"],
         rows: selectedTail.parameters.map((parameter) => [
-          parameterLabel(parameter.parameter, constructLabel),
+          parameterLabel(parameter.parameter, authoredIdentity),
           String(parameter.selected_exceedances),
           formatOptionalPValue(parameter.selected_p_value),
           String(parameter.permutations),
@@ -3502,7 +3538,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         .map((parameter) => {
           const directional = directionalByParameter.get(parameter.parameter);
           return [
-            parameterLabel(parameter.parameter, constructLabel),
+            parameterLabel(parameter.parameter, authoredIdentity),
             formatOptionalNumber(parameter.estimate_a),
             formatOptionalNumber(parameter.estimate_b),
             formatNumber(parameter.original),
@@ -3641,7 +3677,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         : null,
       columns: ["Parameter", "Original", "Mean", "STDEV", ...(hasTStatistic ? ["t"] : []), ...(hasPValue ? ["p"] : []), "CI lower", "CI upper"],
       rows: percentileRows.map((row) => [
-        parameterLabel(row.parameter, constructLabel),
+        parameterLabel(row.parameter, authoredIdentity),
         formatNumber(row.original),
         formatNumber(row.bootstrap_mean),
         formatNumber(row.standard_error),
@@ -3666,7 +3702,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           greater ? "p (greater, plus-one)" : "p (less, plus-one)",
         ],
         rows: testTail.rows.map((row) => [
-          parameterLabel(row.parameter, constructLabel),
+          parameterLabel(row.parameter, authoredIdentity),
           String(row.selectedExceedances),
           String(row.usableReplicates),
           formatPValue(row.selectedProbability),
@@ -3690,7 +3726,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         warning: null,
         columns: ["Parameter", ...(hasBiasCorrection ? ["Bias correction"] : []), ...(hasAcceleration ? ["Acceleration"] : []), "CI lower", "CI upper"],
         rows: rows.map((row) => [
-          parameterLabel(row.parameter, constructLabel),
+          parameterLabel(row.parameter, authoredIdentity),
           ...(hasBiasCorrection ? [formatOptionalNumber(row.bias_correction)] : []),
           ...(hasAcceleration ? [formatOptionalNumber(row.acceleration)] : []),
           formatOptionalNumber(row.lower),
@@ -3705,7 +3741,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           columns: ["Parameter", "Reason"],
           rows: run.bootstrap.bca.parameters
             .filter((row) => hasText(row.unavailable_reason))
-            .map((row) => [parameterLabel(row.parameter, constructLabel), row.unavailable_reason!]),
+            .map((row) => [parameterLabel(row.parameter, authoredIdentity), row.unavailable_reason!]),
         });
       } else {
         addTable(tables, {
@@ -3716,7 +3752,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
           rows: run.bootstrap.bca.parameters
             .filter((row) => hasText(row.unavailable_reason))
             .map((row) => [
-              parameterLabel(row.parameter, constructLabel),
+              parameterLabel(row.parameter, authoredIdentity),
               "Unavailable",
               row.unavailable_reason!,
             ]),
@@ -3740,7 +3776,7 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
         warning: run.bootstrap.studentized.failure?.message ?? null,
         columns: ["Parameter", "Original", "Outer STDEV", "CI lower", "CI upper", "Usable replicates"],
         rows: rows.map((row) => [
-          parameterLabel(row.parameter, constructLabel),
+          parameterLabel(row.parameter, authoredIdentity),
           formatNumber(row.original),
           formatNumber(row.outer_standard_error),
           formatOptionalNumber(row.lower),
@@ -3760,6 +3796,23 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
   }
 
   return tables;
+}
+
+/** Presentation-only confidence authority for result-table headings. */
+export function nativeResultConfidenceLevel(
+  run: AnalysisRun | null | undefined,
+  tableId: string | null | undefined,
+): number | null {
+  if (!run || !tableId) return null;
+  const preferred = /(?:bca)/iu.test(tableId)
+    ? run.bootstrap?.bca?.confidence_level
+    : /(?:studentized)/iu.test(tableId)
+      ? run.bootstrap?.studentized?.confidence_level
+      : run.bootstrap?.percentile.confidence_level;
+  const candidates = [preferred, run.provenance?.settings.confidence_level];
+  return candidates.find((value): value is number => (
+    isFiniteNumber(value) && value > 0 && value < 1
+  )) ?? null;
 }
 
 export function buildNativeResultTree(run: AnalysisRun | null | undefined, tables = nativeResultTables(run)): NativeResultNavigationGroup[] {
@@ -3836,6 +3889,7 @@ export function buildNativeResultTree(run: AnalysisRun | null | undefined, table
   addTableGroup(groups, "quality_criteria", "Quality criteria", QUALITY_CRITERIA_IDS, byId);
   addTableGroup(groups, "prediction", "Prediction", PREDICTION_IDS, byId);
   addTableGroup(groups, "inference", "Inference", INFERENCE_IDS, byId);
+  addTableGroup(groups, "run_details", "Run Details", RUN_DETAILS_IDS, byId);
   return groups;
 }
 
@@ -4006,13 +4060,247 @@ function nativeDistinctOverlayIdsV1(values: readonly (string | null | undefined)
   return [...new Set(values.filter((value): value is string => Boolean(value)))];
 }
 
+function nativePathOverlayV1(
+  run: AnalysisRun,
+  path: readonly string[],
+  label: string,
+  kind: ResultOverlaySelectionV1["kind"] = "generic",
+): ResultOverlaySelectionV1 | null {
+  if (path.length < 2) return null;
+  return {
+    kind,
+    nodeIds: nativeDistinctOverlayIdsV1(path),
+    relationIds: nativeDistinctOverlayIdsV1(path.slice(0, -1).map((source, index) => (
+      nativeResultRelationIdV1(run, source, path[index + 1]!)
+    ))),
+    interactionTermIds: [],
+    label,
+  };
+}
+
+function nativeModerationTermIdV1(run: AnalysisRun, estimate: NativeModerationEstimate): string {
+  const node = run.modelSnapshot?.nodes.find((candidate) => (
+    candidate.id === estimate.product_construct
+    || (candidate.data.semantic === "interaction"
+      && candidate.data.interaction?.outcome === estimate.outcome
+      && (candidate.data.interaction.kind === "interaction_v2"
+        ? candidate.data.interaction.operands[0] === estimate.predictor
+          && candidate.data.interaction.operands[1] === estimate.moderator
+        : candidate.data.interaction.predictor === estimate.predictor
+          && candidate.data.interaction.moderator === estimate.moderator))
+  ));
+  return node?.data.interaction?.termId ?? estimate.interaction;
+}
+
+/**
+ * Resolves a researcher-selected result row to its precise read-only Canvas
+ * focus. Row indexes are presentation-local and are never persisted.
+ */
+export function nativeResultRowOverlaySelectionV1(
+  run: AnalysisRun | null | undefined,
+  selectedResultId: string | null | undefined,
+  rowIndex: number | null | undefined,
+): ResultOverlaySelectionV1 | null {
+  if (!isCompletedResultRun(run) || !selectedResultId || !Number.isInteger(rowIndex) || rowIndex! < 0) return null;
+  const result = run.result;
+  const identity = createAuthoredResultIdentityResolver(run.modelSnapshot);
+
+  if (selectedResultId === "specific_indirect_effects") {
+    const technical = new Set(run.modelSnapshot?.nodes.flatMap((node) => (
+      node.data.semantic === "interaction" || node.data.semantic === "higher_order" ? [node.id] : []
+    )) ?? []);
+    const controls = new Set((result.control_estimates ?? []).map((row) => effectPairKey(row.source, row.target)));
+    const selected = deriveSpecificIndirectEffects(result.paths.filter((row) => (
+      !controls.has(effectPairKey(row.source, row.target))
+      && !technical.has(row.source)
+      && !technical.has(row.target)
+    ))).effects[rowIndex!];
+    return selected ? nativePathOverlayV1(run, selected.path, identity.mediation(selected.path), "mediation") : null;
+  }
+
+  if (["direct_effects", "total_indirect_effects", "total_effects", "mediation_bootstrap"].includes(selectedResultId)) {
+    const technical = new Set([
+      ...(result.moderation?.estimates ?? []).map((row) => row.product_construct),
+      ...(run.modelSnapshot?.nodes.filter((node) => node.data.semantic === "higher_order").map((node) => node.id) ?? []),
+    ]);
+    const controls = new Set((result.control_estimates ?? []).map((row) => effectPairKey(row.source, row.target)));
+    const substantivePaths = result.paths.filter((row) => (
+      !controls.has(effectPairKey(row.source, row.target))
+      && !technical.has(row.source)
+      && !technical.has(row.target)
+    ));
+    const specific = deriveSpecificIndirectEffects(substantivePaths);
+    const direct = substantivePaths.map((row) => ({ path: [row.source, row.target], kind: "Direct effect" }));
+    const totalIndirect = (result.mediation?.estimates ?? [])
+      .filter((row) => specific.mediatedPairs.has(effectPairKey(row.source, row.target)))
+      .map((row) => ({ path: [row.source, row.target], kind: "Total indirect effect" }));
+    const total = result.effects
+      .filter((row) => !controls.has(effectPairKey(row.source, row.target)) && !technical.has(row.source) && !technical.has(row.target))
+      .map((row) => ({ path: [row.source, row.target], kind: "Total effect" }));
+    const mediationBootstrap = (run.bootstrap?.percentile.parameters ?? []).flatMap((parameter) => {
+      const parameterIdentity = effectParameterIdentity(parameter.parameter);
+      if (!parameterIdentity || parameterIdentity.parts.length !== 2) return [];
+      if (![parameter.original, parameter.bootstrap_mean, parameter.standard_error, parameter.lower, parameter.upper].every(isFiniteNumber)) {
+        return [];
+      }
+      const pair = effectPairKey(parameterIdentity.parts[0], parameterIdentity.parts[1]);
+      const kind = parameterIdentity.kind === "direct_effect" && substantivePaths.some((row) => effectPairKey(row.source, row.target) === pair)
+        ? "Direct effect"
+        : parameterIdentity.kind === "indirect_effect" && totalIndirect.some((row) => effectPairKey(row.path[0], row.path[1]) === pair)
+          ? "Total indirect effect"
+          : parameterIdentity.kind === "total_effect" && total.some((row) => effectPairKey(row.path[0], row.path[1]) === pair)
+            ? "Total effect"
+            : null;
+      return kind ? [{ path: parameterIdentity.parts, kind }] : [];
+    });
+    const rows = selectedResultId === "direct_effects"
+      ? direct
+      : selectedResultId === "total_indirect_effects"
+        ? totalIndirect
+        : selectedResultId === "total_effects"
+          ? total
+          : mediationBootstrap;
+    const selected = rows[rowIndex!];
+    return selected
+      ? nativePathOverlayV1(run, selected.path, `${selected.kind}: ${identity.relation({ source: selected.path[0], target: selected.path[1] })}`, "mediation")
+      : null;
+  }
+
+  const moderationEstimates = (result.moderation?.estimates ?? []).filter((row) => (
+    hasText(row.predictor) && hasText(row.moderator) && hasText(row.outcome) && isFiniteNumber(row.interaction_effect)
+  ));
+  if (/^moderation_/u.test(selectedResultId)) {
+    const estimatesByProductPath = new Map(moderationEstimates.map((estimate) => [
+      effectPairKey(estimate.product_construct, estimate.outcome),
+      estimate,
+    ]));
+    const inferenceParameters: readonly { parameter: string }[] = selectedResultId === "moderation_bca"
+      ? run.bootstrap?.bca?.parameters ?? []
+      : selectedResultId === "moderation_studentized"
+        ? run.bootstrap?.studentized?.parameters ?? []
+        : selectedResultId === "moderation_randomization"
+          ? run.permutation?.parameters ?? []
+          : selectedResultId === "moderation_bootstrap"
+            ? run.bootstrap?.percentile.parameters ?? []
+            : [];
+    const inferenceRows = inferenceParameters.flatMap((parameter) => {
+      const parameterIdentity = effectParameterIdentity(parameter.parameter);
+      if (parameterIdentity?.kind !== "path" || parameterIdentity.parts.length !== 2) return [];
+      const estimate = estimatesByProductPath.get(effectPairKey(parameterIdentity.parts[0], parameterIdentity.parts[1]));
+      return estimate ? [{ estimate, role: "interaction" as const }] : [];
+    });
+    const rows = selectedResultId === "moderation_effects"
+      ? moderationEstimates.flatMap((estimate) => [
+          ...(isFiniteNumber(estimate.predictor_main_effect) ? [{ estimate, role: "predictor" as const }] : []),
+          ...(isFiniteNumber(estimate.moderator_main_effect) ? [{ estimate, role: "moderator" as const }] : []),
+          { estimate, role: "interaction" as const },
+        ])
+      : selectedResultId === "moderation_simple_slopes"
+        ? moderationEstimates.flatMap((estimate) => estimate.simple_slopes
+            .filter((slope) => isFiniteNumber(slope.moderator_score) && isFiniteNumber(slope.effect))
+            .map(() => ({ estimate, role: "interaction" as const })))
+        : inferenceRows;
+    const selected = rows[rowIndex!];
+    if (!selected) return null;
+    if (selected.role !== "interaction") {
+      const source = selected.role === "predictor" ? selected.estimate.predictor : selected.estimate.moderator;
+      return nativePathOverlayV1(
+        run,
+        [source, selected.estimate.outcome],
+        `${selected.role === "predictor" ? "Predictor" : "Moderator"} main effect: ${identity.relation({ source, target: selected.estimate.outcome })}`,
+      );
+    }
+    return {
+      kind: "moderation",
+      nodeIds: nativeDistinctOverlayIdsV1([
+        selected.estimate.predictor,
+        selected.estimate.moderator,
+        selected.estimate.outcome,
+      ]),
+      relationIds: nativeDistinctOverlayIdsV1([
+        nativeResultRelationIdV1(run, selected.estimate.predictor, selected.estimate.outcome),
+      ]),
+      interactionTermIds: nativeDistinctOverlayIdsV1([nativeModerationTermIdV1(run, selected.estimate)]),
+      label: identity.interaction({
+        predictor: selected.estimate.predictor,
+        moderator: selected.estimate.moderator,
+        outcome: selected.estimate.outcome,
+      }),
+    };
+  }
+
+  if (selectedResultId === "moderated_mediation") {
+    const selected = result.moderated_mediation?.estimates[rowIndex!];
+    if (!selected) return null;
+    return {
+      kind: "moderated_mediation",
+      nodeIds: nativeDistinctOverlayIdsV1([selected.predictor, selected.moderator, selected.mediator, selected.target]),
+      relationIds: nativeDistinctOverlayIdsV1([
+        nativeResultRelationIdV1(run, selected.predictor, selected.mediator),
+        nativeResultRelationIdV1(run, selected.mediator, selected.target),
+      ]),
+      interactionTermIds: nativeDistinctOverlayIdsV1([selected.interaction]),
+      label: `${identity.mediation([selected.predictor, selected.mediator, selected.target])}, moderated by ${identity.construct(selected.moderator)}`,
+    };
+  }
+
+  if (/^hoc_/u.test(selectedResultId)) {
+    const declarations = run.modelSnapshot?.nodes.flatMap((node) => (
+      node.data.semantic === "higher_order" && node.data.higherOrder
+        ? [{ hocId: node.id, componentIds: node.data.higherOrder.components }]
+        : []
+    )) ?? [];
+    if (selectedResultId === "hoc_component_relationships") {
+      const selected = declarations.flatMap((declaration) => declaration.componentIds.flatMap((componentId) => {
+        const generatedIndicator = generatedHigherOrderIndicatorName(declaration.hocId, componentId);
+        const estimate = result.outer_estimates.find((row) => (
+          row.construct === declaration.hocId && row.indicator === generatedIndicator
+        ));
+        return estimate && isFiniteNumber(estimate.loading) && isFiniteNumber(estimate.weight)
+          ? [{ ...declaration, componentId }]
+          : [];
+      }))[rowIndex!];
+      return selected ? {
+        kind: "generic",
+        nodeIds: [selected.hocId, selected.componentId],
+        relationIds: [],
+        interactionTermIds: [],
+        label: identity.higherOrder(selected.hocId, selected.componentId),
+      } : null;
+    }
+    if (selectedResultId === "hoc_structural_paths") {
+      const hocIds = new Set(declarations.map((declaration) => declaration.hocId));
+      const selected = result.paths.filter((row) => hocIds.has(row.source) && !hocIds.has(row.target))[rowIndex!];
+      return selected
+        ? nativePathOverlayV1(run, [selected.source, selected.target], identity.relation({ source: selected.source, target: selected.target }))
+        : null;
+    }
+    const selected = declarations[rowIndex!];
+    return selected ? {
+      kind: "generic",
+      nodeIds: nativeDistinctOverlayIdsV1([selected.hocId, ...selected.componentIds]),
+      relationIds: [],
+      interactionTermIds: [],
+      label: `${identity.higherOrder(selected.hocId)} and its components`,
+    } : null;
+  }
+
+  return null;
+}
+
 /** Derives a read-only result focus without changing the archived run or model. */
 export function nativeResultOverlaySelectionV1(
   run: AnalysisRun | null | undefined,
   selectedResultId: string | null | undefined,
+  selectedRowIndex?: number | null,
 ): ResultOverlaySelectionV1 | null {
   if (!isCompletedResultRun(run) || !selectedResultId) return null;
+  if (Number.isInteger(selectedRowIndex)) {
+    const rowSelection = nativeResultRowOverlaySelectionV1(run, selectedResultId, selectedRowIndex);
+    if (rowSelection) return rowSelection;
+  }
   const result = run.result;
+  const identity = createAuthoredResultIdentityResolver(run.modelSnapshot);
 
   if (/three_way|three-way/u.test(selectedResultId)) {
     const interactions = run.modelSnapshot?.nodes.flatMap((node) => {
@@ -4048,7 +4336,9 @@ export function nativeResultOverlaySelectionV1(
         ...interactions.map(({ interaction }) => interaction.termId),
         ...parentInteractions.map(({ interaction }) => interaction.termId),
       ]),
-      label: interactions.length === 1 ? "Three-way moderating effect" : `${interactions.length} three-way moderating effects`,
+      label: interactions.length === 1
+        ? identity.interaction({ operands: interactions[0]!.interaction.operands, outcome: interactions[0]!.interaction.outcome })
+        : `${interactions.length} three-way moderating effects`,
     };
   }
 
@@ -4074,7 +4364,9 @@ export function nativeResultOverlaySelectionV1(
         ));
         return node?.data.interaction?.termId ?? estimate.interaction;
       })),
-      label: estimates.length === 1 ? "Moderated mediation path" : `${estimates.length} moderated mediation paths`,
+      label: estimates.length === 1
+        ? `${identity.mediation([estimates[0]!.predictor, estimates[0]!.mediator, estimates[0]!.target])}, moderated by ${identity.construct(estimates[0]!.moderator)}`
+        : `${estimates.length} moderated mediation paths`,
     };
   }
 
@@ -4091,20 +4383,10 @@ export function nativeResultOverlaySelectionV1(
       relationIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => (
         nativeResultRelationIdV1(run, estimate.predictor, estimate.outcome)
       ))),
-      interactionTermIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => {
-        const node = run.modelSnapshot?.nodes.find((candidate) => (
-          candidate.id === estimate.product_construct
-          || (candidate.data.semantic === "interaction"
-            && candidate.data.interaction?.outcome === estimate.outcome
-            && (candidate.data.interaction.kind === "interaction_v2"
-              ? candidate.data.interaction.operands[0] === estimate.predictor
-                && candidate.data.interaction.operands[1] === estimate.moderator
-              : candidate.data.interaction?.predictor === estimate.predictor
-                && candidate.data.interaction?.moderator === estimate.moderator))
-        ));
-        return node?.data.interaction?.termId ?? estimate.interaction;
-      })),
-      label: estimates.length === 1 ? "Moderating effect" : `${estimates.length} moderating effects`,
+      interactionTermIds: nativeDistinctOverlayIdsV1(estimates.map((estimate) => nativeModerationTermIdV1(run, estimate))),
+      label: estimates.length === 1
+        ? identity.interaction({ predictor: estimates[0]!.predictor, moderator: estimates[0]!.moderator, outcome: estimates[0]!.outcome })
+        : `${estimates.length} moderating effects`,
     };
   }
 
@@ -4130,7 +4412,7 @@ export function nativeResultOverlaySelectionV1(
         nativeResultRelationIdV1(run, source, path.path[index + 1]!)
       )))),
       interactionTermIds: [],
-      label: paths.length === 1 ? "Indirect path" : `${paths.length} indirect paths`,
+      label: paths.length === 1 ? identity.mediation(paths[0]!.path) : `${paths.length} indirect paths`,
     };
   }
   return null;
@@ -5472,15 +5754,16 @@ function addCbsemResultTables(
   const bcaBootstrap = analysis.exact_case_bootstrap_bca;
   const exactBootstrap = analysis.exact_case_bootstrap ?? studentizedBootstrap?.base ?? bcaBootstrap?.base ?? null;
   const rmseaIntervalAttribution = analysis.fit.rmsea_interval_attribution;
-  const constructLabel = constructDisplayLabelResolver(run);
+  const authoredIdentity = createAuthoredResultIdentityResolver(run.modelSnapshot);
+  const constructLabel = authoredIdentity.construct;
   const parameterLabel = (kind: string, lhs: string, rhs: string) => {
-    if (kind === "loading") return `${rhs} ← ${constructLabel(lhs)}`;
+    if (kind === "loading") return `${authoredIdentity.indicator(rhs, lhs)} ← ${constructLabel(lhs)}`;
     if (kind === "structural_path") return `${constructLabel(lhs)} ← ${constructLabel(rhs)}`;
     if (kind === "latent_covariance") return `${constructLabel(lhs)} ↔ ${constructLabel(rhs)}`;
     if (kind === "latent_variance") return `Variance: ${constructLabel(lhs)}`;
-    if (kind === "residual_variance") return `Residual variance: ${lhs}`;
-    if (kind === "residual_covariance") return `${lhs} ↔ ${rhs}`;
-    return `${lhs} / ${rhs}`;
+    if (kind === "residual_variance") return `Residual variance: ${authoredIdentity.indicator(lhs)}`;
+    if (kind === "residual_covariance") return `${authoredIdentity.indicator(lhs)} ↔ ${authoredIdentity.indicator(rhs)}`;
+    return `${authoredIdentity.text(lhs)} / ${authoredIdentity.text(rhs)}`;
   };
   addTable(tables, {
     id: "cbsem_fit",
@@ -5921,7 +6204,7 @@ function addCbsemResultTables(
     const index = new Map(order.map((name, position) => [name, position]));
     return cells
       .filter((cell) => (index.get(cell.row) ?? -1) <= (index.get(cell.column) ?? -1))
-      .map((cell) => [cell.row, cell.column, formatNumber(cell.value)]);
+      .map((cell) => [authoredIdentity.indicator(cell.row), authoredIdentity.indicator(cell.column), formatNumber(cell.value)]);
   };
   addTable(tables, {
     id: "cbsem_residual_correlations",
@@ -7692,141 +7975,48 @@ function exactFitDecisionLabel(value: boolean | null): string {
   return value === null ? "Unavailable" : value ? "Not rejected" : "Rejected";
 }
 
-function parameterLabel(value: string, constructLabel: ConstructDisplayLabel): string {
+function parameterLabel(value: string, identity: AuthoredResultIdentityResolver): string {
   try {
     const parsed: unknown = JSON.parse(value);
     if (Array.isArray(parsed) && typeof parsed[0] === "string" && Array.isArray(parsed[1])) {
       const kind = parsed[0].replaceAll("_", " ");
       const parts = parsed[1].filter((part): part is string => typeof part === "string");
-      const labelledParts = parameterPartsWithConstructLabels(parsed[0], parts, constructLabel);
+      const labelledParts = parameterPartsWithAuthoredIdentity(parsed[0], parts, identity);
       return labelledParts.length ? `${sentenceCase(kind)}: ${labelledParts.join(" → ")}` : sentenceCase(kind);
     }
   } catch {
     // Native result payloads from older engines may already contain a display label.
   }
-  return value;
+  return identity.text(value);
 }
 
-function parameterPartsWithConstructLabels(
+function parameterPartsWithAuthoredIdentity(
   kind: string,
   parts: readonly string[],
-  constructLabel: ConstructDisplayLabel,
+  identity: AuthoredResultIdentityResolver,
 ): string[] {
   const labelledParts = [...parts];
-  for (const index of constructParameterPartIndexes(kind)) {
-    if (labelledParts[index]) labelledParts[index] = constructLabel(labelledParts[index]);
+  const constructIndexes = new Set(constructParameterPartIndexes(kind));
+  for (let index = 0; index < labelledParts.length; index += 1) {
+    const part = labelledParts[index];
+    if (!part) continue;
+    if ((kind === "outer_loading" || kind === "outer_weight") && index === 1) {
+      labelledParts[index] = identity.indicator(part, parts[0]);
+      continue;
+    }
+    if (constructIndexes.has(index)) {
+      labelledParts[index] = identity.construct(part);
+      continue;
+    }
+    if (/^(?:__qpls_|construct:|interaction:|relation:|target:|parameter:)/u.test(part)) {
+      labelledParts[index] = identity.canonicalTarget(part);
+    }
   }
   return labelledParts;
 }
 
 function constructDisplayLabelResolver(run: AnalysisRun): ConstructDisplayLabel {
-  const labelsById = new Map<string, Set<string>>();
-  for (const node of run.modelSnapshot?.nodes ?? []) {
-    if (!hasText(node.id) || !hasText(node.data?.label)) continue;
-    const labels = labelsById.get(node.id) ?? new Set<string>();
-    labels.add(node.data.label.trim());
-    labelsById.set(node.id, labels);
-  }
-
-  const uniqueLabels = new Map<string, string>();
-  for (const [constructId, labels] of labelsById) {
-    if (labels.size !== 1) continue;
-    const label = [...labels][0];
-    uniqueLabels.set(constructId, label);
-  }
-
-  const idsByNormalizedDisplay = new Map<string, Set<string>>();
-  for (const constructId of constructIdsInRun(run)) {
-    const display = uniqueLabels.get(constructId) ?? constructId;
-    const normalizedDisplay = normalizeConstructDisplay(display);
-    const ids = idsByNormalizedDisplay.get(normalizedDisplay) ?? new Set<string>();
-    ids.add(constructId);
-    idsByNormalizedDisplay.set(normalizedDisplay, ids);
-  }
-
-  return (constructId) => {
-    const label = uniqueLabels.get(constructId);
-    if (!label) return constructId;
-    return (idsByNormalizedDisplay.get(normalizeConstructDisplay(label))?.size ?? 0) > 1
-      ? `${label} [${constructId}]`
-      : label;
-  };
-}
-
-function constructIdsInRun(run: AnalysisRun): ReadonlySet<string> {
-  const ids = new Set<string>();
-  const add = (value: unknown) => {
-    if (hasText(value)) ids.add(value);
-  };
-  const addPair = (source: unknown, target: unknown) => {
-    add(source);
-    add(target);
-  };
-
-  for (const node of run.modelSnapshot?.nodes ?? []) add(node.id);
-  for (const edge of run.modelSnapshot?.edges ?? []) addPair(edge.source, edge.target);
-
-  const result = run.result;
-  if (result) {
-    for (const row of result.paths) addPair(row.source, row.target);
-    for (const row of result.effects) addPair(row.source, row.target);
-    for (const row of result.outer_estimates) add(row.construct);
-    for (const construct of Object.keys(result.r_squared)) add(construct);
-    for (const row of result.mediation?.estimates ?? []) addPair(row.source, row.target);
-    for (const row of result.plsc?.reliabilities ?? []) add(row.construct);
-    for (const row of result.plsc?.construct_correlations ?? []) addPair(row.left, row.right);
-    for (const row of result.plsc?.corrected_paths ?? []) addPair(row.source, row.target);
-    for (const row of result.plsc?.corrected_outer_loadings ?? []) add(row.construct);
-    for (const construct of Object.keys(result.plsc?.corrected_r_squared ?? {})) add(construct);
-    for (const row of result.predict?.targets ?? []) add(row.construct);
-    for (const row of result.predict?.repeated_kfold?.targets ?? []) add(row.construct);
-    for (const row of result.predict?.repeated_kfold?.cvpat ?? []) add(row.target);
-    for (const row of result.cca?.correlations ?? []) addPair(row.left, row.right);
-    for (const row of result.cta_pls?.estimates ?? []) add(row.construct);
-    for (const target of result.ipma?.targets ?? []) add(target);
-    for (const row of result.ipma?.constructs ?? []) addPair(row.construct, row.target);
-    for (const row of result.ipma?.indicators ?? []) addPair(row.construct, row.target);
-    for (const group of result.mga?.groups ?? []) {
-      for (const row of group.paths) addPair(row.source, row.target);
-      for (const construct of Object.keys(group.r_squared)) add(construct);
-      for (const row of group.outer_estimates ?? []) add(row.construct);
-    }
-    for (const row of result.mga?.comparisons ?? []) addPair(row.source, row.target);
-    for (const row of result.mga?.measurement_comparisons ?? []) add(row.construct);
-    for (const row of result.mga_permutation?.comparisons ?? []) addPair(row.source, row.target);
-    for (const row of result.mga_permutation?.measurement_comparisons ?? []) add(row.construct);
-    for (const row of result.micom?.constructs ?? []) add(row.construct);
-  }
-
-  const assessment = run.assessment;
-  if (assessment) {
-    for (const row of assessment.construct_quality ?? []) add(row.construct);
-    for (const row of assessment.cross_loadings ?? []) {
-      add(row.assigned_construct);
-      add(row.construct);
-    }
-    for (const construct of assessment.fornell_larcker?.constructs ?? []) add(construct);
-    for (const construct of assessment.htmt_plus?.constructs ?? []) add(construct);
-    for (const construct of assessment.htmt_original?.constructs ?? []) add(construct);
-    for (const construct of assessment.htmt?.constructs ?? []) add(construct);
-    for (const construct of Object.keys(assessment.r_squared ?? {})) add(construct);
-    for (const row of assessment.structural_quality ?? []) add(row.construct);
-    for (const row of assessment.structural_vif ?? []) addPair(row.target_construct, row.predictor_construct);
-    for (const row of assessment.formative_indicator_vif ?? []) add(row.construct);
-    for (const row of assessment.f_squared ?? []) addPair(row.source_construct, row.target_construct);
-    for (const row of assessment.blindfolding?.constructs ?? []) add(row.construct);
-  }
-
-  const addParameterConstructs = (parameter: string) => {
-    const identity = effectParameterIdentity(parameter);
-    if (!identity) return;
-    for (const index of constructParameterPartIndexes(identity.kind)) add(identity.parts[index]);
-  };
-  for (const row of run.bootstrap?.percentile.parameters ?? []) addParameterConstructs(row.parameter);
-  for (const row of run.bootstrap?.bca?.parameters ?? []) addParameterConstructs(row.parameter);
-  for (const row of run.bootstrap?.studentized?.parameters ?? []) addParameterConstructs(row.parameter);
-  for (const row of nativeStructuralPathRandomizationProjection(run)?.parameters ?? []) addParameterConstructs(row.parameter);
-  return ids;
+  return createAuthoredResultIdentityResolver(run.modelSnapshot).construct;
 }
 
 function constructParameterPartIndexes(kind: string): readonly number[] {
@@ -7851,10 +8041,6 @@ function constructParameterPartIndexes(kind: string): readonly number[] {
     "plsc_r_squared",
   ].includes(kind)) return [0];
   return [];
-}
-
-function normalizeConstructDisplay(value: string): string {
-  return value.trim().normalize("NFKC").toLowerCase();
 }
 
 function constructPathLabel(constructIds: readonly string[], constructLabel: ConstructDisplayLabel): string {

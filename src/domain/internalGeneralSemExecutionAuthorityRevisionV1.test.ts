@@ -19,6 +19,12 @@ const moderationPointCell = {
   cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point",
   capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1",
 };
+const mediationPointCell = {
+  registry_schema_version: 2 as const,
+  capability_id: "smartpls.mediation",
+  cell_id: "qpls3.pls.mediation",
+  capability_version: "pls_mediation_v1",
+};
 const moderationBootstrapCell = {
   registry_schema_version: 2 as const,
   capability_id: "smartpls.moderation",
@@ -163,6 +169,34 @@ describe("General SEM execution-authority revision v1 wire", () => {
       approach: "disjoint_two_stage",
       measurement_type: "reflective_reflective",
     });
+  });
+
+  it("accepts only the exact HOC removal identity", () => {
+    const base = request();
+    const parsed = parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
+      ...base,
+      revision: {
+        ...base.revision,
+        intent: {
+          kind: "remove_higher_order",
+          term_id: "term:hoc",
+          output_id: "derived:hoc",
+        },
+        expectedCapabilityCell: mediationPointCell,
+      },
+    });
+    expect(parsed.revision.intent).toEqual({
+      kind: "remove_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:hoc",
+    });
+    expect(() => parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
+      ...parsed,
+      revision: {
+        ...parsed.revision,
+        intent: { ...parsed.revision.intent, label: "must not be accepted" },
+      },
+    })).toThrow(/label is not allowed/);
   });
 
   it("pins every authority and deterministic interaction identity in the receipt", () => {

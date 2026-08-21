@@ -90,6 +90,21 @@ pub(crate) fn is_pls_general_sem_execution_cell_v1(cell: &CapabilityCellReferenc
         ) | (
             2,
             "smartpls.mediation",
+            "qpls3.pls.general_sem_single_mediation_bootstrap",
+            "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"
+        ) | (
+            2,
+            "smartpls.moderation",
+            "qpls3.pls.general_sem_three_way_moderation_point",
+            "general_sem_pls_three_way_moderation_point_v1"
+        ) | (
+            2,
+            "smartpls.moderation",
+            "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+            "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1"
+        ) | (
+            2,
+            "smartpls.mediation",
             "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap",
             "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1"
         )
@@ -354,6 +369,17 @@ mod tests {
             selected_general_sem_execution_cell_for_topology_v1(true, &bootstrap_inference()),
             pls_general_multiple_moderation_bootstrap_capability_cell_v1()
         );
+    }
+
+    #[test]
+    fn bounded_pls_inventory_includes_single_mediation_and_three_way_cells() {
+        for cell in [
+            qpls_core::pls_general_single_mediation_bootstrap_capability_cell_v1(),
+            qpls_core::pls_general_three_way_moderation_point_capability_cell_v1(),
+            qpls_core::pls_general_three_way_moderation_bootstrap_capability_cell_v1(),
+        ] {
+            assert!(is_pls_general_sem_execution_cell_v1(&cell));
+        }
     }
 
     fn registry_with_cell_state(surface: &str, evidence_state: &str) -> CapabilityRegistryV2 {

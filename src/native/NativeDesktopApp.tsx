@@ -1,6 +1,7 @@
 import {
   Calculator,
   Check,
+  ChevronDown,
   ChevronRight,
   Circle,
   Database,
@@ -18,9 +19,7 @@ import {
   Replace,
   Save,
   Search,
-  Sparkles,
   Square,
-  TableProperties,
   UsersRound,
   X,
 } from "lucide-react";
@@ -81,6 +80,18 @@ import {
   type NativeDataContextTarget,
 } from "./nativeDataContext";
 import { NativeDesktopController } from "./NativeDesktopController";
+import {
+  nativeIndicatorDragLabelV1,
+  nativeIndicatorDragSelectionV1,
+  nextNativeIndicatorSelectionV1,
+  type NativeIndicatorSelectionV1,
+} from "./nativeIndicatorSelectionV1";
+import { planNativeIndicatorGroupActionV1 } from "./nativeIndicatorGroupActionV1";
+import {
+  NATIVE_CANVAS_ARRANGE_MENU_V1,
+  NATIVE_CANVAS_FIT_MENU_V1,
+} from "./nativeCanvasCommandMenusV1";
+import { nativeModelNavigatorRelationshipsV1 } from "./nativeModelNavigatorV1";
 import {
   NATIVE_ANALYSIS_CATALOG,
   isNativeEstablishedWorkingAnalysisKindV1,
@@ -175,17 +186,16 @@ import {
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
   standardSemGeneralSemThreeWayInteractionTermIdV1,
-  type StandardSemModelV4AuthorityRecordV1,
   type StandardSemModelV4EditorIntentV1,
 } from "../domain/standardSemModelV4Authority";
-import { compareUtf8StringsV1, type SemModelV4, type SemVariableV4 } from "../domain/semModelV4";
+import type { SemModelV4 } from "../domain/semModelV4";
 import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
-import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
+import { useWorkspace } from "../store";
 import type {
   AnalysisRun,
   AnalysisUiSettings,
-  Dataset,
   InteractionData,
+  ModelEditCommandV1,
   NativeCanonicalModelSpec,
   NativeExplorerSelection,
   NativeProjectExplorerMutation,
@@ -331,6 +341,7 @@ interface DesktopCommand {
   pressed?: boolean;
   primary?: boolean;
   action: () => void;
+  menuItems?: readonly MenuItem[];
 }
 
 interface MenuItem {
@@ -487,9 +498,6 @@ export function NativeDesktopApp() {
   const resetRunMonitor = useWorkspace((state) => state.resetRunMonitor);
   const addRun = useWorkspace((state) => state.addRun);
   const commitDatasetVersion = useWorkspace((state) => state.commitDatasetVersion);
-  const addTwoStageInteraction = useWorkspace((state) => state.addTwoStageInteraction);
-  const addHigherOrderConstruct = useWorkspace((state) => state.addHigherOrderConstruct);
-  const replaceHigherOrderConstruct = useWorkspace((state) => state.replaceHigherOrderConstruct);
   const pushToast = useWorkspace((state) => state.pushToast);
   const strictAuthority = useWorkspace((state) => state.activeModelId
     ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
@@ -519,6 +527,7 @@ export function NativeDesktopApp() {
     })
     : null;
   const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const loadProject = useWorkspace((state) => state.loadProject);
   const setProjectMeta = useWorkspace((state) => state.setProjectMeta);
   const setSelectedResultRun = useWorkspace((state) => state.setSelectedResultRun);
@@ -533,10 +542,39 @@ export function NativeDesktopApp() {
       else pushToast({ tone: "error", title: `${label} rejected`, detail: result.error instanceof Error ? result.error.message : String(result.error) });
     });
   };
+  const commitGatewayDesktopCommand = async (command: ModelEditCommandV1, label: string) => {
+    try {
+      const result = await executeModelEditCommand(command);
+      pushToast(result.status === "applied"
+        ? { tone: "success", title: `${label} updated`, detail: "Applied as one undoable model transaction." }
+        : { tone: "warning", title: `${label} unavailable`, detail: `${result.message} ${result.correctiveAction}` });
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      pushToast({ tone: "error", title: `${label} rejected`, detail: message });
+      return { status: "rejected" as const, message };
+    }
+  };
+  const dialogFailureForGatewayResult = (
+    result: { status: "blocked"; code: string; message: string; correctiveAction: string }
+      | { status: "rejected"; message: string },
+  ): { status: "blocked" | "stale" | "rejected"; detail: string } => {
+    if (result.status === "rejected") return { status: "rejected", detail: result.message };
+    return {
+      status: result.code === "model_edit.authority_stale"
+        ? "stale"
+        : result.code === "model_edit.authority_rejected"
+          ? "rejected"
+          : "blocked",
+      detail: `${result.message} ${result.correctiveAction}`,
+    };
+  };
   const [surface, setSurface] = useState<NativeSurface>("launcher");
   const [dialog, setDialog] = useState<NativeDialog>(null);
   const [higherOrderDialogRequest, setHigherOrderDialogRequest] = useState<NativeHigherOrderDialogRequest>({ kind: "create" });
   const [moderationDialogRequest, setModerationDialogRequest] = useState<NativeModerationDialogRequest>({ kind: "create" });
+  const [higherOrderCommitPending, setHigherOrderCommitPending] = useState(false);
+  const [moderationCommitPending, setModerationCommitPending] = useState(false);
   const [explorerDialog, setExplorerDialog] = useState<NativeExplorerDialog | null>(null);
   const explorerDialogReturnFocusRef = useRef<HTMLElement | null>(null);
   const currentDialogRef = useRef<NativeDialog>(null);
@@ -609,10 +647,12 @@ export function NativeDesktopApp() {
     restoreDialogFocus();
   }, [resetRunMonitor, restoreDialogFocus]);
   const openHigherOrderDialog = useCallback((request: NativeHigherOrderDialogRequest) => {
+    setHigherOrderCommitPending(false);
     setHigherOrderDialogRequest(request);
     openDialog("higher-order");
   }, [openDialog]);
   const openModerationDialog = useCallback((request: NativeModerationDialogRequest) => {
+    setModerationCommitPending(false);
     setModerationDialogRequest(request);
     openDialog("moderation");
   }, [openDialog]);
@@ -804,6 +844,10 @@ export function NativeDesktopApp() {
     () => nativePlsReadiness({ dataset, nodes, edges, settings: nativeAnalysisSettingsForWorkbenchKind(analysisSettings, "pls_algorithm"), nativeDesktop: isNativeDesktop() }),
     [analysisSettings, dataset, edges, nodes],
   );
+  const canvasFeatureInventory = useMemo(
+    () => nativeCanvasFeatureInventory(nodes, edges),
+    [edges, nodes],
+  );
   const calculationSettings = useMemo(
     () => nativeAnalysisSettingsForWorkbenchKind(calculationDraft, calculationKind),
     [calculationDraft, calculationKind],
@@ -864,13 +908,18 @@ export function NativeDesktopApp() {
         && canAddNativeModeration(nodes, edges, selectedEdgeId),
       moderationMutationAuthority,
       canAddHigherOrder: canCreateNativeHigherOrder(nodes, edges),
+      hasActiveModel: Boolean(activeModelId),
+      calculationReady: strictGeneralSemAuthority || Boolean(generalSemProjectDraftMode),
+      canConfigureConditionalProcess: Boolean(activeModelId) && canvasFeatureInventory.interactions > 0,
+      canOpenAdvancedParameters: Boolean(activeModelId),
+      selectedConstructPinned: Boolean(selectedNodeId && diagramLayout.constructLayouts[selectedNodeId]?.pinned),
       selectedHigherOrder: selectionCount === 1
         && Boolean(selectedNodeId && nodes.find((node) => node.id === selectedNodeId)?.data.semantic === "higher_order"),
       propertiesOpen,
       selection,
       calculationStatus: runMonitor.status,
     };
-  }, [analysisSettings.groupColumn, canOpenContextModel, completedRuns.length, dataset.columns.length, dataset.kind, explorerSelection, future.length, generalSemCanonicalResult, generalSemRevisionDisabledReason, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, strictGeneralSemRevisionRequired, surface]);
+  }, [activeModelId, analysisSettings.groupColumn, canOpenContextModel, canvasFeatureInventory.interactions, completedRuns.length, dataset.columns.length, dataset.kind, diagramLayout.constructLayouts, explorerSelection, future.length, generalSemCanonicalResult, generalSemProjectDraftMode, generalSemRevisionDisabledReason, modelReadiness.canRun, nodes, past.length, projectName, projectWritable, propertiesOpen, runMonitor.status, selectedColumn, selectedEdgeId, selectedNodeId, selectedResultSaved, selectedRun, strictAuthority, strictGeneralSemAuthority, strictGeneralSemRevisionRequired, surface]);
 
   const dataMutationsLocked = datasetDescriptorOnly
     || generalSemPublicationPending
@@ -1442,10 +1491,10 @@ export function NativeDesktopApp() {
     });
   };
 
-  const launchHigherOrderRevision = (
+  const launchHigherOrderRevision = async (
     intent: Extract<StandardSemModelV4EditorIntentV1, { kind: "add_higher_order" | "replace_higher_order" }>,
     operation: "created" | "updated",
-  ): NativeHigherOrderDialogCommitResult => {
+  ): Promise<NativeHigherOrderDialogCommitResult> => {
     const disabledReason = currentGeneralSemRevisionDisabledReason();
     if (disabledReason) return { status: "blocked", detail: disabledReason };
     pushToast({
@@ -1453,39 +1502,67 @@ export function NativeDesktopApp() {
       title: "Save calculation-ready revision",
       detail: `Choose a new .qpls filename. QuickPLS will preserve the current archive and ${operation === "created" ? "add" : "update"} the HOC in one revision.`,
     });
-    void useInternalProjectArchiveV6Session.getState()
-      .reviseGeneralSemExecutionAuthority({ intent })
-      .then((result) => {
-        const state = useInternalProjectArchiveV6Session.getState();
-        if (result === "saved") pushToast({
+    try {
+      const result = await useInternalProjectArchiveV6Session.getState()
+        .reviseGeneralSemExecutionAuthority({ intent });
+      const state = useInternalProjectArchiveV6Session.getState();
+      const detail = result === "cancelled"
+        ? state.revisionForkStatusMessage
+        : state.revisionForkFailure
+          ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
+          : state.revisionForkStatusMessage;
+      if (result === "saved") {
+        pushToast({
           tone: "success",
           title: `Higher-order construct ${operation}`,
           detail: state.revisionForkStatusMessage,
         });
-        else if (result === "cancelled") pushToast({
+        return { status: "applied", constructId: intent.output_id };
+      }
+      if (result === "cancelled") {
+        pushToast({
           tone: "info",
           title: "Higher-order revision cancelled",
           detail: state.revisionForkStatusMessage,
         });
-        else pushToast({
-          tone: "error",
-          title: "Higher-order revision blocked",
-          detail: state.revisionForkFailure
-            ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
-            : state.revisionForkStatusMessage,
+        return { status: "cancelled", detail };
+      }
+      if (result === "stale") {
+        pushToast({
+          tone: "warning",
+          title: "Higher-order revision stale",
+          detail,
         });
+        return { status: "stale", detail };
+      }
+      pushToast({
+        tone: "error",
+        title: "Higher-order revision blocked",
+        detail,
       });
-    return { status: "applied", constructId: intent.output_id };
+      return { status: "blocked", detail };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      pushToast({ tone: "error", title: "Higher-order revision rejected", detail });
+      return { status: "rejected", detail };
+    }
   };
 
-  const commitHigherOrderDialogSubmission = (
+  const commitHigherOrderDialogSubmission = async (
     submission: NativeHigherOrderDialogSubmission,
-  ): NativeHigherOrderDialogCommitResult => {
+  ): Promise<NativeHigherOrderDialogCommitResult> => {
     const draft = submission.draft;
     const approach = nativeHigherOrderDraftApproach(draft);
     const measurementType = nativeHigherOrderDraftMeasurementType(draft);
+    const gatewayDraft = {
+      name: draft.name.trim(),
+      shortName: draft.shortName.trim(),
+      components: [...draft.components],
+      approach,
+      measurementType,
+    };
     if (submission.kind === "edit") {
-      if (strictAuthority) {
+      if (strictGeneralSemRevisionRequired) {
         const intent: Extract<
           StandardSemModelV4EditorIntentV1,
           { kind: "replace_higher_order" }
@@ -1498,23 +1575,35 @@ export function NativeDesktopApp() {
           approach,
           measurement_type: measurementType,
         };
-        if (strictGeneralSemRevisionRequired) return launchHigherOrderRevision(intent, "updated");
-        commitStrictDesktopIntent(intent, "Higher-order construct");
-        return { status: "applied", constructId: submission.outputId };
+        return launchHigherOrderRevision(intent, "updated");
       }
-      const result = replaceHigherOrderConstruct(submission.outputId, draft);
-      if (result.status === "blocked") return { status: "blocked", detail: result.detail };
-      pushToast({
-        tone: "success",
-        title: "Higher-order construct updated",
-        detail: "The construct identity and structural paths were preserved.",
-      });
-      return { status: "applied", constructId: result.constructId };
+      const result = await commitGatewayDesktopCommand({
+        kind: "edit_higher_order",
+        termId: submission.termId,
+        outputId: submission.outputId,
+        draft: gatewayDraft,
+      }, "Higher-order construct");
+      return result.status === "applied"
+        ? { status: "applied", constructId: submission.outputId }
+        : dialogFailureForGatewayResult(result);
     }
 
-    if (strictAuthority) {
-      const termId = nextStrictIntentId("higher-order-term");
-      const outputId = nextStrictIntentId("higher-order-output");
+    const termId = nextStrictIntentId("higher-order-term");
+    const outputId = strictAuthority ? nextStrictIntentId("higher-order-output") : termId;
+    const initialRelationshipId = draft.initialPath ? nextStrictIntentId("higher-order-path") : undefined;
+    const gatewayCreateDraft = {
+      ...gatewayDraft,
+      ...(draft.initialPath && initialRelationshipId ? {
+        initialPath: {
+          ...draft.initialPath,
+          relationshipId: initialRelationshipId,
+          label: draft.initialPath.direction === "hoc_to_construct"
+            ? `${draft.name.trim()} effect`
+            : `${draft.name.trim()} antecedent`,
+        },
+      } : {}),
+    };
+    if (strictGeneralSemRevisionRequired) {
       const intent: Extract<
         StandardSemModelV4EditorIntentV1,
         { kind: "add_higher_order" }
@@ -1522,37 +1611,67 @@ export function NativeDesktopApp() {
         kind: "add_higher_order",
         term_id: termId,
         output_id: outputId,
-        label: draft.name.trim(),
-        components: [...draft.components],
-        approach,
-        measurement_type: measurementType,
-        initial_path: draft.initialPath
+        label: gatewayCreateDraft.name,
+        components: gatewayCreateDraft.components,
+        approach: gatewayCreateDraft.approach,
+        measurement_type: gatewayCreateDraft.measurementType,
+        initial_path: gatewayCreateDraft.initialPath
           ? {
-              relation_id: nextStrictIntentId("higher-order-path"),
-              source: draft.initialPath.direction === "hoc_to_construct"
+              relation_id: gatewayCreateDraft.initialPath.relationshipId,
+              source: gatewayCreateDraft.initialPath.direction === "hoc_to_construct"
                 ? outputId
-                : draft.initialPath.constructId,
-              target: draft.initialPath.direction === "hoc_to_construct"
-                ? draft.initialPath.constructId
+                : gatewayCreateDraft.initialPath.constructId,
+              target: gatewayCreateDraft.initialPath.direction === "hoc_to_construct"
+                ? gatewayCreateDraft.initialPath.constructId
                 : outputId,
-              label: draft.initialPath.direction === "hoc_to_construct"
-                ? `${draft.name.trim()} effect`
-                : `${draft.name.trim()} antecedent`,
+              label: gatewayCreateDraft.initialPath.label ?? "Path",
             }
           : undefined,
       };
-      if (strictGeneralSemRevisionRequired) return launchHigherOrderRevision(intent, "created");
-      commitStrictDesktopIntent(intent, "Higher-order construct");
-      return { status: "applied", constructId: outputId };
+      return launchHigherOrderRevision(intent, "created");
     }
-    const result = addHigherOrderConstruct(draft);
-    if (result.status === "blocked") return { status: "blocked", detail: result.detail };
-    pushToast({
-      tone: "success",
-      title: "Higher-order construct created",
-      detail: "Connect it to the model, then select PLS Algorithm or PLS Bootstrapping in Calculate.",
-    });
-    return { status: "applied", constructId: result.constructId };
+    const result = await commitGatewayDesktopCommand({
+      kind: "create_higher_order",
+      termId,
+      outputId,
+      draft: gatewayCreateDraft,
+    }, "Higher-order construct");
+    return result.status === "applied"
+      ? { status: "applied", constructId: outputId }
+      : dialogFailureForGatewayResult(result);
+  };
+
+  const removeHigherOrderConstruct = (termId: string, outputId: string) => {
+    if (strictGeneralSemRevisionRequired) {
+      const disabledReason = currentGeneralSemRevisionDisabledReason();
+      if (disabledReason) {
+        pushToast({ tone: "warning", title: "Higher-order removal unavailable", detail: disabledReason });
+        return;
+      }
+      pushToast({
+        tone: "info",
+        title: "Save calculation-ready revision",
+        detail: "Choose a new .qpls filename. QuickPLS will preserve the current archive and remove the HOC in one revision.",
+      });
+      void useInternalProjectArchiveV6Session.getState()
+        .reviseGeneralSemExecutionAuthority({ intent: { kind: "remove_higher_order", term_id: termId, output_id: outputId } })
+        .then((result) => {
+          const state = useInternalProjectArchiveV6Session.getState();
+          pushToast(result === "saved"
+            ? { tone: "success", title: "Higher-order construct removed", detail: state.revisionForkStatusMessage }
+            : result === "cancelled"
+              ? { tone: "info", title: "Higher-order revision cancelled", detail: state.revisionForkStatusMessage }
+              : {
+                  tone: "error",
+                  title: "Higher-order removal blocked",
+                  detail: state.revisionForkFailure
+                    ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
+                    : state.revisionForkStatusMessage,
+                });
+        });
+      return;
+    }
+    commitGatewayDesktopCommand({ kind: "remove_higher_order", termId, outputId }, "Higher-order construct");
   };
 
   type ModerationAuthorityIntentV3 = Extract<
@@ -1570,10 +1689,10 @@ export function NativeDesktopApp() {
     return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
   };
 
-  const launchModerationRevision = (
+  const launchModerationRevision = async (
     intent: ModerationAuthorityIntentV3,
     operation: "created" | "updated" | "removed",
-  ): NativeModerationDialogCommitResult => {
+  ): Promise<NativeModerationDialogCommitResult> => {
     const disabledReason = currentGeneralSemRevisionDisabledReason();
     if (disabledReason) return { status: "blocked", reason: disabledReason };
     pushToast({
@@ -1581,40 +1700,59 @@ export function NativeDesktopApp() {
       title: "Save calculation-ready revision",
       detail: `Choose a new .qpls filename. QuickPLS will preserve the current archive and ${operation === "created" ? "add" : operation === "updated" ? "update" : "remove"} the moderating effect in one revision.`,
     });
-    void useInternalProjectArchiveV6Session.getState()
-      .reviseGeneralSemExecutionAuthority({ intent })
-      .then((result) => {
-        const state = useInternalProjectArchiveV6Session.getState();
-        if (result === "saved") pushToast({
+    try {
+      const result = await useInternalProjectArchiveV6Session.getState()
+        .reviseGeneralSemExecutionAuthority({ intent });
+      const state = useInternalProjectArchiveV6Session.getState();
+      const detail = result === "cancelled"
+        ? state.revisionForkStatusMessage
+        : state.revisionForkFailure
+          ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
+          : state.revisionForkStatusMessage;
+      if (result === "saved") {
+        pushToast({
           tone: "success",
           title: `Moderating effect ${operation}`,
           detail: state.revisionForkStatusMessage,
         });
-        else if (result === "cancelled") pushToast({
+        if (intent.kind === "add_moderating_effect_v3") {
+          const identity = moderationIntentIdentity(intent.target, intent.operands);
+          return { status: "created", interactionId: identity.outputId };
+        }
+        return { status: "updated", interactionTermId: intent.term_id };
+      }
+      if (result === "cancelled") {
+        pushToast({
           tone: "info",
           title: "Moderation revision cancelled",
           detail: state.revisionForkStatusMessage,
         });
-        else pushToast({
-          tone: "error",
-          title: "Moderation revision blocked",
-          detail: state.revisionForkFailure
-            ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
-            : state.revisionForkStatusMessage,
+        return { status: "cancelled", reason: detail };
+      }
+      if (result === "stale") {
+        pushToast({
+          tone: "warning",
+          title: "Moderation revision stale",
+          detail,
         });
+        return { status: "stale", reason: detail };
+      }
+      pushToast({
+        tone: "error",
+        title: "Moderation revision blocked",
+        detail,
       });
-    if (intent.kind === "add_moderating_effect_v3") {
-      const identity = moderationIntentIdentity(intent.target, intent.operands);
-      return { status: "created", interactionId: identity.outputId };
+      return { status: "blocked", reason: detail };
+    } catch (error) {
+      const detail = error instanceof Error ? error.message : String(error);
+      pushToast({ tone: "error", title: "Moderation revision rejected", detail });
+      return { status: "rejected", reason: detail };
     }
-    return intent.kind === "replace_moderating_effect"
-      ? { status: "updated", interactionTermId: intent.term_id }
-      : { status: "updated", interactionTermId: intent.term_id };
   };
 
-  const commitModerationDialogSubmission = (
+  const commitModerationDialogSubmission = async (
     submission: NativeModerationDialogSubmissionV1,
-  ): NativeModerationDialogCommitResult => {
+  ): Promise<NativeModerationDialogCommitResult> => {
     const parent = submission.target.kind === "parent_interaction"
       ? nativeModeratingEffect(nodes, edges, submission.target.interactionTermId)
       : undefined;
@@ -1624,16 +1762,7 @@ export function NativeDesktopApp() {
     const operands = submission.order === 3
       ? [parent!.predictor, parent!.moderatorIds[0]!, submission.moderatorId] as const
       : [submission.predictorId, submission.moderatorId] as const;
-    if (!strictAuthority) {
-      if (submission.mode === "create" && submission.order === 2) {
-        const result = addTwoStageInteraction(submission.predictorId, submission.moderatorId, submission.outcomeId);
-        if (result.status === "created") pushToast({
-          tone: "success",
-          title: "Moderating effect created",
-          detail: "The path-mounted moderation anchor now represents the generated interaction term.",
-        });
-        return result;
-      }
+    if (!strictAuthority && (submission.mode !== "create" || submission.order !== 2)) {
       return {
         status: "blocked",
         reason: "Create a calculation-ready revision before editing or adding three-way moderation to this older project.",
@@ -1667,24 +1796,35 @@ export function NativeDesktopApp() {
     if (strictGeneralSemRevisionRequired) {
       return launchModerationRevision(intent, submission.mode === "edit" ? "updated" : "created");
     }
-    commitStrictDesktopIntent(intent, "Moderating effect");
+    const effect = {
+      label: common.label,
+      operands: [...common.operands] as [string, string] | [string, string, string],
+      target: common.target,
+      outcomeId: common.outcome,
+    };
     if (intent.kind === "replace_moderating_effect") {
-      return { status: "updated", interactionTermId: intent.term_id };
+      const result = await commitGatewayDesktopCommand({
+        kind: "edit_moderating_effect",
+        termId: intent.term_id,
+        outputId: intent.output_id,
+        effect,
+      }, "Moderating effect");
+      if (result.status === "applied") return { status: "updated", interactionTermId: intent.term_id };
+      const failure = dialogFailureForGatewayResult(result);
+      return { status: failure.status, reason: failure.detail };
     }
-    return { status: "created", interactionId: moderationIntentIdentity(intent.target, intent.operands).outputId };
+    const result = await commitGatewayDesktopCommand({ kind: "create_moderating_effect", effect }, "Moderating effect");
+    if (result.status === "applied") {
+      return { status: "created", interactionId: moderationIntentIdentity(intent.target, intent.operands).outputId };
+    }
+    const failure = dialogFailureForGatewayResult(result);
+    return { status: failure.status, reason: failure.detail };
   };
 
   const removeModeratingEffect = (requestedTermId: string) => {
     const resident = nativeModeratingEffect(nodes, edges, requestedTermId);
     if (!resident) {
       pushToast({ tone: "warning", title: "Moderating effect unavailable", detail: "Refresh the Canvas and select the effect again." });
-      return;
-    }
-    if (!strictAuthority) {
-      const workspace = useWorkspace.getState();
-      workspace.setSelectedNode(resident.interactionNodeId);
-      workspace.removeSelection();
-      pushToast({ tone: "success", title: "Moderating effect removed", detail: "Only the selected interaction and its unreferenced generated paths were removed." });
       return;
     }
     const intent: ModerationAuthorityIntentV3 = {
@@ -1698,7 +1838,11 @@ export function NativeDesktopApp() {
       launchModerationRevision(intent, "removed");
       return;
     }
-    commitStrictDesktopIntent(intent, "Moderating effect");
+    commitGatewayDesktopCommand({
+      kind: "remove_moderating_effect",
+      termId: resident.interactionTermId,
+      outputId: resident.interactionNodeId,
+    }, "Moderating effect");
   };
 
   const dispatchNativeAction = (action: NativeCommandAction, target?: NativeDataContextTarget) => {
@@ -1815,6 +1959,21 @@ export function NativeDesktopApp() {
           ...(selectedEdgeId ? { target: { kind: "focal_relation", relationId: selectedEdgeId } } : {}),
         });
         return;
+      case "model.prepare-calculation-ready":
+        void prepareCalculationReadyRevision();
+        return;
+      case "model.open-conditional-process":
+        setCalculationKind("pls_bootstrap");
+        setAdvancedCalculationPlan(null);
+        setCalculationDraft(nativeAnalysisSettingsForWorkbenchKind(analysisSettings, "pls_bootstrap"));
+        openDialog("calculation");
+        return;
+      case "model.open-advanced-parameters":
+        setPendingExactCbsemPlan(null);
+        if (strictGeneralSemRevisionRequired) void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
+        else if (strictGeneralSemAuthority || generalSemProjectDraftMode) openDialog("advanced-parameters");
+        else void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
+        return;
       case "model.edit-selection": {
         const selectedHigherOrder = selectedNodeId
           ? nodes.find((node) => node.id === selectedNodeId && node.data.semantic === "higher_order")
@@ -1845,7 +2004,9 @@ export function NativeDesktopApp() {
       }
       case "model.delete-selection": commandEvent("model-delete-selection"); return;
       case "model.arrange": commandEvent("model-arrange", { direction: action.strategy }); return;
-      case "model.fit": commandEvent("model-fit"); return;
+      case "model.fit": commandEvent("model-fit", { scope: action.scope }); return;
+      case "model.toggle-pin": commandEvent("model-toggle-pin"); return;
+      case "model.focus-selection": commandEvent("model-focus-selection"); return;
       case "calculation.open": openCalculation(); return;
       case "calculation.cancel": commandEvent("cancel-analysis"); return;
       case "results.export":
@@ -1860,6 +2021,18 @@ export function NativeDesktopApp() {
       case "utility.open": openDialog(({ "method-scope": "trust", preferences: "settings", shortcuts: "shortcuts", about: "about" } as const)[action.utility]); return;
     }
   };
+  const arrangeMenuItems: readonly MenuItem[] = NATIVE_CANVAS_ARRANGE_MENU_V1.map((item) => ({
+    id: item.id,
+    label: item.label,
+    separator: item.separatorBefore,
+    action: () => dispatchNativeAction(item.action),
+  }));
+  const fitMenuItems: readonly MenuItem[] = NATIVE_CANVAS_FIT_MENU_V1.map((item) => ({
+    id: item.id,
+    label: item.label,
+    separator: item.separatorBefore,
+    action: () => dispatchNativeAction(item.action),
+  }));
   const commands: DesktopCommand[] = nativeCommandsFor({ kind: "toolbar", surface }, commandContext).map((command) => ({
     id: command.id,
     label: command.label,
@@ -1869,6 +2042,8 @@ export function NativeDesktopApp() {
     pressed: command.action.id === "model.set-tool" ? diagramTool === command.action.tool : undefined,
     primary: command.toolbar?.some((placement) => placement.surface === surface && placement.primary),
     action: () => dispatchNativeAction(command.action),
+    ...(command.id === "arrange-model" ? { menuItems: arrangeMenuItems } : {}),
+    ...(command.id === "fit-model" ? { menuItems: fitMenuItems } : {}),
   }));
 
   const menus: Record<string, MenuItem[]> = {};
@@ -1894,6 +2069,27 @@ export function NativeDesktopApp() {
   const canExtendContextModeration = contextModerationEffect?.order === 2
     && !nodes.some((node) => node.data.interaction?.kind === "interaction_v2"
       && node.data.interaction.operands.length === 3);
+  const contextConstructTarget = contextMenu?.modelTarget?.kind === "construct"
+    ? contextMenu.modelTarget
+    : null;
+  const contextConstruct = contextConstructTarget
+    ? nodes.find((node) => node.id === contextConstructTarget.id)
+    : undefined;
+  const contextConstructIsHigherOrder = Boolean(
+    contextConstruct?.data.semantic === "higher_order" && contextConstruct.data.higherOrder,
+  );
+  const contextHigherOrderAuthorityCommand = contextConstructIsHigherOrder
+    ? nativeCommandsFor({ kind: "menu", menu: "model" }, {
+        ...commandContext,
+        selection: contextMenu?.selection ?? commandContext.selection,
+        selectedHigherOrder: true,
+      }).find((command) => command.id === "edit-higher-order")
+    : undefined;
+  const executeContextModelEdit = (command: ModelEditCommandV1) => {
+    void executeModelEditCommand(command).then((result) => pushToast(result.status === "applied"
+      ? { tone: "success", title: "Model updated", detail: "Applied as one undoable transaction." }
+      : { tone: "warning", title: "Model edit unavailable", detail: `${result.message} ${result.correctiveAction}` }));
+  };
   const contextMenuItems: MenuItem[] = contextModerationTarget
     ? [...(canExtendContextModeration ? [{
       id: "extend-moderating-effect",
@@ -1912,18 +2108,53 @@ export function NativeDesktopApp() {
       separator: true,
       action: () => removeModeratingEffect(contextModerationTarget.interactionTermId),
     }]
-    : nativeContextMenuCommands(
-      contextMenu?.canAddModeration === undefined ? commandContext : { ...commandContext, canAddModeration: contextMenu.canAddModeration },
-      contextMenu?.selection,
-    ).map((command, index) => ({
-      id: command.id,
-      label: command.label,
-      shortcut: formatNativeShortcut(command.shortcut),
-      disabled: !command.enabled,
-      disabledReason: command.disabledReason,
-      separator: index > 0 && Boolean(command.contextMenu?.find((placement) => placement.surface === surface)?.separatorBefore),
-      action: () => dispatchNativeAction(command.action, contextMenu?.target),
-    }));
+    : [
+      ...nativeContextMenuCommands(
+        contextMenu?.canAddModeration === undefined ? commandContext : { ...commandContext, canAddModeration: contextMenu.canAddModeration },
+        contextMenu?.selection,
+      ).filter((command) => !contextConstructIsHigherOrder
+        || (command.id !== "edit-selection" && command.id !== "delete-selection"))
+        .map((command, index) => ({
+          id: command.id,
+          label: command.label,
+          shortcut: formatNativeShortcut(command.shortcut),
+          disabled: !command.enabled,
+          disabledReason: command.disabledReason,
+          separator: index > 0 && Boolean(command.contextMenu?.find((placement) => placement.surface === surface)?.separatorBefore),
+          action: () => dispatchNativeAction(command.action, contextMenu?.target),
+        })),
+      ...(contextConstructTarget && contextConstructIsHigherOrder ? [{
+        id: "edit-higher-order-construct",
+        label: "Edit Higher-Order Construct…",
+        separator: true,
+        disabled: contextHigherOrderAuthorityCommand ? !contextHigherOrderAuthorityCommand.enabled : true,
+        disabledReason: contextHigherOrderAuthorityCommand?.disabledReason,
+        action: () => openHigherOrderDialog({ kind: "edit", constructId: contextConstruct!.id }),
+      }, {
+        id: "remove-higher-order-construct",
+        label: "Remove Higher-Order Construct",
+        disabled: contextHigherOrderAuthorityCommand ? !contextHigherOrderAuthorityCommand.enabled : true,
+        disabledReason: contextHigherOrderAuthorityCommand?.disabledReason,
+        action: () => removeHigherOrderConstruct(contextConstruct!.data.higherOrder!.id, contextConstruct!.id),
+      }] satisfies MenuItem[] : contextConstructTarget ? [{
+        id: "indicator-position",
+        label: "Indicator Position…",
+        separator: true,
+        action: () => {
+          setPropertiesOpen(true);
+          window.setTimeout(() => window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-appearance")), 0);
+        },
+      }, {
+        id: "reset-indicator-position",
+        label: "Reset Indicator Positions",
+        action: () => executeContextModelEdit({ kind: "reset_indicator_layout", constructId: contextConstructTarget.id }),
+      }, {
+        id: "invert-measurement-model",
+        label: "Invert Measurement Model",
+        separator: true,
+        action: () => executeContextModelEdit({ kind: "invert_measurement_model", constructId: contextConstructTarget.id }),
+      }] satisfies MenuItem[] : []),
+    ];
 
   const showWorkspaceContextMenu = (
     requestedX: number,
@@ -1942,14 +2173,15 @@ export function NativeDesktopApp() {
           : { ...commandContext, canAddModeration: canAddModerationOverride },
         selection,
       );
-    if (!availableCommands.length) return false;
+    const extraModelCommands = modelTarget?.kind === "construct" ? 3 : 0;
+    if (!availableCommands.length && !extraModelCommands) return false;
     const position = contextMenuCoordinates(
       requestedX,
       requestedY,
       window.innerWidth,
       window.innerHeight,
       244,
-      Math.min(320, 10 + availableCommands.length * 29),
+      Math.min(320, 10 + (availableCommands.length + extraModelCommands) * 29),
     );
     setOpenMenu(null);
     setContextMenu({ ...position, returnFocus, selection: { ...selection }, target, modelTarget, canAddModeration: canAddModerationOverride });
@@ -1992,6 +2224,7 @@ export function NativeDesktopApp() {
       selection,
       undefined,
       request.target.kind === "path" ? canAddNativeModeration(nodes, edges, request.target.id) : false,
+      request.target,
     );
   };
 
@@ -2017,6 +2250,15 @@ export function NativeDesktopApp() {
     window.addEventListener(MODERATION_CANVAS_REQUEST_EVENT, onModerationRequest);
     return () => window.removeEventListener(MODERATION_CANVAS_REQUEST_EVENT, onModerationRequest);
   });
+
+  useEffect(() => {
+    const onHigherOrderEditRequest = (event: Event) => {
+      const constructId = (event as CustomEvent<{ constructId?: string }>).detail?.constructId;
+      if (constructId) openHigherOrderDialog({ kind: "edit", constructId });
+    };
+    window.addEventListener("quickpls:edit-higher-order", onHigherOrderEditRequest);
+    return () => window.removeEventListener("quickpls:edit-higher-order", onHigherOrderEditRequest);
+  }, [openHigherOrderDialog]);
 
   const onWorkspaceContextMenu = (event: ReactMouseEvent<HTMLDivElement>) => {
     const target = event.target instanceof Element ? event.target : event.currentTarget;
@@ -2108,25 +2350,21 @@ export function NativeDesktopApp() {
         propertiesOpen={propertiesOpen}
         readiness={modelReadiness}
         generalSemRevisionRequired={strictGeneralSemRevisionRequired}
-        calculationReady={strictGeneralSemAuthority || Boolean(generalSemProjectDraftMode)}
         onContextMenuRequest={onModelCanvasContextMenuRequest}
-        onPrepareCalculationReadyRevision={() => { void prepareCalculationReadyRevision(); }}
-        onOpenAdvancedParameters={() => {
-          setPendingExactCbsemPlan(null);
-          if (strictGeneralSemRevisionRequired) void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
-          else if (strictGeneralSemAuthority || generalSemProjectDraftMode) openDialog("advanced-parameters");
-          else void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
-        }}
-        onOpenConditionalProcess={() => {
-          setCalculationKind("pls_bootstrap");
-          setAdvancedCalculationPlan(null);
-          setCalculationDraft(nativeAnalysisSettingsForWorkbenchKind(analysisSettings, "pls_bootstrap"));
-          openDialog("calculation");
-        }}
         onEditHigherOrder={(strictGeneralSemRevisionRequired
           ? generalSemRevisionDisabledReason === null
           : projectWritable && !isNativeCalculationActive(runMonitor.status))
           ? ({ nodeId }) => openHigherOrderDialog({ kind: "edit", constructId: nodeId })
+          : undefined}
+        onRemoveHigherOrder={(strictGeneralSemRevisionRequired
+          ? generalSemRevisionDisabledReason === null
+          : projectWritable && !isNativeCalculationActive(runMonitor.status))
+          ? ({ nodeId, termId }) => removeHigherOrderConstruct(termId, nodeId)
+          : undefined}
+        onRemoveModeratingEffect={(strictGeneralSemRevisionRequired
+          ? generalSemRevisionDisabledReason === null
+          : projectWritable && !isNativeCalculationActive(runMonitor.status))
+          ? ({ termId }) => removeModeratingEffect(termId)
           : undefined}
       /> : null}
       {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface
@@ -2146,6 +2384,7 @@ export function NativeDesktopApp() {
         setSelectedTableId={setSelectedTableId}
         propertiesOpen={propertiesOpen}
         openMethodDetails={() => openDialog("trust")}
+        onCalculate={() => dispatchNativeAction({ id: "calculation.open" })}
       /></Suspense> : null}
     </div>
     {contextMenu ? <ContextCommandMenu items={contextMenuItems} state={contextMenu} close={closeContextMenu} /> : null}
@@ -2163,9 +2402,13 @@ export function NativeDesktopApp() {
       ? !recodeBusy
       : dialog === "derive-variable"
         ? !deriveBusy
-        : dialog === "advanced-calculation"
-          ? !generalSemTransientWorkBlocker
-          : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
+        : dialog === "higher-order"
+          ? !higherOrderCommitPending
+          : dialog === "moderation"
+            ? !moderationCommitPending
+            : dialog === "advanced-calculation"
+              ? !generalSemTransientWorkBlocker
+              : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
       {dialog === "new-project" ? <NewProjectDialog
         value={newProjectName}
         setValue={setNewProjectName}
@@ -2245,6 +2488,7 @@ export function NativeDesktopApp() {
         edges={edges}
         request={higherOrderDialogRequest}
         commit={commitHigherOrderDialogSubmission}
+        onPendingChange={setHigherOrderCommitPending}
         close={closeDialog}
       /></Suspense> : null}
       {dialog === "moderation" ? <Suspense fallback={<UtilityDialogLoading label="Opening moderating effect setup" />}><NativeModerationDialog
@@ -2252,6 +2496,7 @@ export function NativeDesktopApp() {
         edges={edges}
         request={moderationDialogRequest}
         commit={commitModerationDialogSubmission}
+        onPendingChange={setModerationCommitPending}
         close={closeDialog}
       /></Suspense> : null}
       {dialog === "advanced-parameters" ? <NativeSemParameterTable
@@ -2497,10 +2742,75 @@ function CommandBar({ commands, surface, projectName, projectPath, modelName, pr
     <div className="nd-command-list">
       {commands.map((command) => {
         const Icon = command.icon;
+        if (command.menuItems?.length) return <CommandBarSplitButton key={command.id} command={command} />;
         return <button type="button" key={command.id} className={command.primary ? "primary" : ""} disabled={command.disabled} aria-pressed={command.pressed} aria-label={command.disabledReason ? `${command.label}. Unavailable: ${command.disabledReason}` : command.label} title={command.disabled ? command.disabledReason ?? command.label : command.label} onClick={command.action}>{Icon ? <Icon size={15} aria-hidden="true" /> : null}<span>{command.label}</span></button>;
       })}
     </div>
     {surface !== "launcher" ? <button className="nd-pane-toggle" type="button" aria-pressed={propertiesOpen} title={propertiesOpen ? "Hide Properties" : "Show Properties"} onClick={() => setPropertiesOpen(!propertiesOpen)}>{propertiesOpen ? <PanelRightClose size={15} /> : <PanelRightOpen size={15} />} Properties</button> : null}
+  </div>;
+}
+
+function CommandBarSplitButton({ command }: { command: DesktopCommand }) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
+  const Icon = command.icon;
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: PointerEvent) => {
+      if (rootRef.current?.contains(event.target as globalThis.Node)) return;
+      setOpen(false);
+    };
+    window.addEventListener("pointerdown", dismiss);
+    return () => window.removeEventListener("pointerdown", dismiss);
+  }, [open]);
+  const onMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+      toggleRef.current?.focus();
+      return;
+    }
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    event.preventDefault();
+    const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
+    if (!buttons.length) return;
+    const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    const next = nextEnabledItemIndex(buttons.map((button) => button.disabled), current, event.key);
+    buttons[next]?.focus();
+  };
+  return <div className="nd-command-split" ref={rootRef}>
+    <button
+      type="button"
+      className={command.primary ? "primary" : ""}
+      disabled={command.disabled}
+      aria-pressed={command.pressed}
+      aria-label={command.disabledReason ? `${command.label}. Unavailable: ${command.disabledReason}` : command.label}
+      title={command.disabled ? command.disabledReason ?? command.label : command.label}
+      onClick={command.action}
+    >{Icon ? <Icon size={15} aria-hidden="true" /> : null}<span>{command.label}</span></button>
+    <button
+      ref={toggleRef}
+      type="button"
+      className="nd-command-split-toggle"
+      disabled={command.disabled}
+      aria-label={`${command.label} options`}
+      aria-haspopup="menu"
+      aria-expanded={open}
+      onClick={() => setOpen((value) => !value)}
+    ><ChevronDown size={13} aria-hidden="true" /></button>
+    {open ? <div className="nd-command-split-menu" role="menu" aria-label={`${command.label} options`} onKeyDown={onMenuKeyDown}>
+      {command.menuItems?.map((item, index) => <button
+        key={item.id}
+        type="button"
+        role="menuitem"
+        tabIndex={index === 0 ? 0 : -1}
+        className={item.separator ? "separator" : ""}
+        disabled={item.disabled}
+        title={item.disabled ? item.disabledReason : undefined}
+        onClick={() => { setOpen(false); item.action(); }}
+      >{item.label}</button>)}
+    </div> : null}
   </div>;
 }
 
@@ -2553,19 +2863,16 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
   </div>;
 }
 
-function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, calculationReady, onContextMenuRequest, onPrepareCalculationReadyRevision, onOpenAdvancedParameters, onOpenConditionalProcess, onEditHigherOrder }: {
+function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, onContextMenuRequest, onEditHigherOrder, onRemoveHigherOrder, onRemoveModeratingEffect }: {
   modelName: string;
   propertiesOpen: boolean;
   readiness: NativePlsReadiness;
   generalSemRevisionRequired: boolean;
-  calculationReady: boolean;
   onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void;
-  onPrepareCalculationReadyRevision: () => void;
-  onOpenAdvancedParameters: () => void;
-  onOpenConditionalProcess: () => void;
   onEditHigherOrder?: (request: { nodeId: string; termId: string }) => void;
+  onRemoveHigherOrder?: (request: { nodeId: string; termId: string }) => void;
+  onRemoveModeratingEffect?: (request: { nodeId: string; termId: string }) => void;
 }) {
-  const activeModelId = useWorkspace((state) => state.activeModelId);
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
   const nodes = useWorkspace((state) => state.nodes);
@@ -2573,101 +2880,226 @@ function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevision
   const showGeneratedInteractionTerms = useWorkspace((state) => state.uiPreferences.showGeneratedInteractionTerms);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
-  const assignIndicator = useWorkspace((state) => state.assignIndicator);
-  const addConstruct = useWorkspace((state) => state.addConstruct);
-  const strictAuthority = useWorkspace((state) => state.activeModelId
-    ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
-    : null);
-  const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
+  const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const [authorityStatus, setAuthorityStatus] = useState<string | null>(null);
+  const indicatorIntentCounter = useRef(0);
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedAssignableConstruct = selected?.data.semantic === "interaction" || selected?.data.semantic === "higher_order" ? undefined : selected;
-  const featureInventory = useMemo(() => nativeCanvasFeatureInventory(nodes, edges), [edges, nodes]);
   const [query, setQuery] = useState("");
+  const [navigatorSection, setNavigatorSection] = useState<"indicators" | "constructs" | "relationships">("indicators");
+  const [relationshipQuery, setRelationshipQuery] = useState("");
+  const [indicatorSelection, setIndicatorSelection] = useState<NativeIndicatorSelectionV1>({ selected: [], anchor: null });
+  const [indicatorContextMenu, setIndicatorContextMenu] = useState<NativeContextMenuState | null>(null);
   const visibleColumns = dataset.columns.filter((column) => column.toLowerCase().includes(query.trim().toLowerCase()));
+  const relationshipRows = useMemo(
+    () => nativeModelNavigatorRelationshipsV1(nodes, edges).filter((row) => `${row.label} ${row.detail}`.toLowerCase().includes(relationshipQuery.trim().toLowerCase())),
+    [edges, nodes, relationshipQuery],
+  );
+  useEffect(() => {
+    const available = new Set(dataset.columns.filter((column) => column !== groupingVariable));
+    setIndicatorSelection((current) => ({
+      selected: current.selected.filter((value) => available.has(value)),
+      anchor: current.anchor && available.has(current.anchor) ? current.anchor : null,
+    }));
+  }, [dataset.columns, groupingVariable]);
+  const selectedIndicators = indicatorSelection.selected.filter((column) => column !== groupingVariable);
+  const createConstructFromIndicators = (indicators: readonly string[]) => {
+    const first = indicators[0] ?? "Construct";
+    const plan = planNativeIndicatorGroupActionV1(
+      dataset.columns,
+      indicators,
+      {
+        kind: "create_construct",
+        constructId: `model:construct:${Date.now()}:${++indicatorIntentCounter.current}`,
+        label: indicators.length === 1 ? first : `Construct ${nodes.length + 1}`,
+      },
+      groupingVariable || null,
+    );
+    if (plan.status === "blocked") {
+      setAuthorityStatus(plan.message);
+      return;
+    }
+    setAuthorityStatus("Creating construct…");
+    void executeModelEditCommand(plan.command).then((result) => setAuthorityStatus(result.status === "applied"
+      ? "Applied as one undoable model transaction."
+      : `${result.message} ${result.correctiveAction}`));
+  };
+  const assignSelectedIndicators = (indicators: readonly string[]) => {
+    if (!selectedAssignableConstruct) return;
+    const plan = planNativeIndicatorGroupActionV1(
+      dataset.columns,
+      indicators,
+      { kind: "assign_indicators", constructId: selectedAssignableConstruct.id },
+      groupingVariable || null,
+    );
+    if (plan.status === "blocked") {
+      setAuthorityStatus(plan.message);
+      return;
+    }
+    setAuthorityStatus("Applying indicator assignment…");
+    void executeModelEditCommand(plan.command).then((result) => setAuthorityStatus(result.status === "applied"
+      ? "Applied as one undoable model transaction."
+      : `${result.message} ${result.correctiveAction}`));
+  };
+  const selectIndicator = (event: ReactMouseEvent<HTMLButtonElement>, variable: string) => {
+    if (variable === groupingVariable) return;
+    setIndicatorSelection((current) => nextNativeIndicatorSelectionV1({
+      visible: visibleColumns.filter((column) => column !== groupingVariable),
+      current,
+      indicator: variable,
+      toggle: event.ctrlKey || event.metaKey,
+      range: event.shiftKey,
+    }));
+  };
   const dragVariable = (event: DragEvent<HTMLButtonElement>, variable: string) => {
     if (variable === groupingVariable) {
       event.preventDefault();
       return;
     }
+    const dragged = nativeIndicatorDragSelectionV1(selectedIndicators, variable);
+    if (!selectedIndicators.includes(variable)) setIndicatorSelection({ selected: dragged, anchor: variable });
     event.dataTransfer.setData("application/qpls-indicator", variable);
-    event.dataTransfer.setData("application/qpls-indicators", JSON.stringify([variable]));
+    event.dataTransfer.setData("application/qpls-indicators", JSON.stringify(dragged));
+    event.dataTransfer.setData("text/plain", nativeIndicatorDragLabelV1(dragged));
+    const ghost = document.createElement("div");
+    ghost.className = "nd-indicator-drag-ghost";
+    ghost.textContent = nativeIndicatorDragLabelV1(dragged);
+    document.body.appendChild(ghost);
+    event.dataTransfer.setDragImage(ghost, 12, 12);
+    window.setTimeout(() => ghost.remove(), 0);
+    window.dispatchEvent(new CustomEvent("quickpls:variables-dragging", { detail: { count: dragged.length } }));
   };
-  const activateIndicator = (variable: string) => {
-    if (variable === groupingVariable) return;
-    const owner = nodes.find((node) => node.data.indicators.includes(variable));
-    if (owner) {
-      setSelectedNode(owner.id);
-      window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id: owner.id } }));
-    } else if (selectedAssignableConstruct) {
-      if (strictAuthority) {
-        setAuthorityStatus("Committing strict indicator assignment…");
-        void commitStandardIntent({ kind: "assign_indicators", construct_id: selectedAssignableConstruct.id, indicators: [observedForStrictDesktop(strictAuthority, dataset, variable)] })
-          .then((result) => setAuthorityStatus(desktopAuthorityResultMessage(result)));
-      } else assignIndicator(selectedAssignableConstruct.id, variable);
-    } else {
-      if (strictAuthority) {
-        setAuthorityStatus("Committing strict construct creation…");
-        void commitStandardIntent({
-          kind: "add_construct",
-          variable_id: `standard:editor:construct:${Date.now()}`,
-          label: variable,
-          representation: { kind: "composite", weighting: { kind: "mode_a" } },
-          indicators: [observedForStrictDesktop(strictAuthority, dataset, variable)],
-        }).then((result) => setAuthorityStatus(desktopAuthorityResultMessage(result)));
-      } else addConstruct(undefined, [variable]);
+  const openIndicatorContextMenu = (event: ReactMouseEvent<HTMLButtonElement>, variable: string) => {
+    event.preventDefault();
+    let nextSelection = indicatorSelection;
+    if (!indicatorSelection.selected.includes(variable)) {
+      nextSelection = { selected: [variable], anchor: variable };
+      setIndicatorSelection(nextSelection);
     }
+    const position = contextMenuCoordinates(event.clientX, event.clientY, window.innerWidth, window.innerHeight, 244, 76);
+    setIndicatorContextMenu({
+      ...position,
+      returnFocus: event.currentTarget,
+      selection: { kind: "multiple", count: nextSelection.selected.length },
+    });
   };
+  const indicatorContextMenuItems: MenuItem[] = [{
+    id: "create-construct-from-indicators",
+    label: `Create Construct from ${selectedIndicators.length || 1} Indicator${selectedIndicators.length === 1 ? "" : "s"}`,
+    disabled: selectedIndicators.length === 0,
+    action: () => createConstructFromIndicators(selectedIndicators),
+  }, {
+    id: "assign-indicators-to-construct",
+    label: selectedAssignableConstruct
+      ? `Assign to ${selectedAssignableConstruct.data.label}`
+      : "Assign to Selected Construct",
+    disabled: !selectedAssignableConstruct || selectedIndicators.length === 0,
+    disabledReason: selectedAssignableConstruct ? undefined : "Select a measured construct first.",
+    action: () => assignSelectedIndicators(selectedIndicators),
+  }];
   return <div className={`nd-three-pane nd-model-workspace${propertiesOpen ? "" : " no-properties"}`}>
     <aside className="nd-navigator" aria-label="Model navigator">
-      <PaneTitle icon={<Database size={14} />} title="Indicators" />
-      <label className="nd-search"><Search size={13} /><input aria-label="Search indicators" placeholder="Search" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
-      <p id="nd-indicator-drag-help" className="nd-variable-instruction">Drag an indicator to the canvas or onto a construct.</p>
-      <div className="nd-variable-list" aria-describedby="nd-indicator-drag-help">
-        {visibleColumns.map((column) => {
-          const owner = nodes.find((node) => node.data.indicators.includes(column));
-          const isGroupingVariable = column === groupingVariable;
-          const action = isGroupingVariable
-            ? "Grouping variable; unavailable as an indicator"
-            : owner
-              ? `Select owner ${owner.data.label}`
-              : selectedAssignableConstruct
-                ? `Assign to ${selectedAssignableConstruct.data.label}`
-                : "Create construct with this indicator";
-          return <button
-            key={column}
-            type="button"
-            draggable={!isGroupingVariable}
-            disabled={isGroupingVariable}
-            onDragStart={(event) => dragVariable(event, column)}
-            onClick={() => activateIndicator(column)}
-            className={`nd-variable-item${owner ? " assigned" : ""}${isGroupingVariable ? " grouping" : ""}`}
-            title={isGroupingVariable ? action : `${action}; drag to place elsewhere`}
-            aria-label={isGroupingVariable ? `${column}. ${action}` : `${column}. ${action}; or drag to the model canvas or a construct`}
-          ><Square size={9} fill="currentColor" />{column}{isGroupingVariable ? <small>Group</small> : owner ? <Check size={12} /> : null}</button>;
-        })}
+      <PaneTitle icon={<Database size={14} />} title="Model objects" />
+      <div className="nd-model-navigator-tabs" role="tablist" aria-label="Model object type">
+        {(["indicators", "constructs", "relationships"] as const).map((section) => <button
+          key={section}
+          type="button"
+          role="tab"
+          aria-selected={navigatorSection === section}
+          tabIndex={navigatorSection === section ? 0 : -1}
+          onClick={() => setNavigatorSection(section)}
+          onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            event.preventDefault();
+            const sections = ["indicators", "constructs", "relationships"] as const;
+            const current = sections.indexOf(navigatorSection);
+            const next = event.key === "Home" ? 0 : event.key === "End" ? sections.length - 1 : (current + (event.key === "ArrowRight" ? 1 : -1) + sections.length) % sections.length;
+            setNavigatorSection(sections[next]!);
+            window.setTimeout(() => document.querySelectorAll<HTMLButtonElement>(".nd-model-navigator-tabs [role='tab']")[next]?.focus(), 0);
+          }}
+        >{section === "indicators" ? "Indicators" : section === "constructs" ? "Constructs" : "Relationships"}</button>)}
       </div>
-      {authorityStatus ? <p className="nd-authority-feedback" role="status" aria-live="polite">{authorityStatus}</p> : null}
-      <PaneTitle icon={<Circle size={13} />} title="Constructs" />
-      <div className="nd-variable-list">
-        {nodes.filter((node) => showGeneratedInteractionTerms || node.data.semantic !== "interaction").map((node) => <button key={node.id} className={selectedNodeId === node.id ? "active" : ""} onClick={() => setSelectedNode(node.id)}>{node.data.semantic === "interaction" ? <GitBranch size={11} /> : <Circle size={11} />}{node.data.label}<small>{node.data.semantic === "interaction" ? "INT" : node.data.semantic === "higher_order" ? "HOC" : node.data.indicators.length}</small></button>)}
-      </div>
+      {navigatorSection === "indicators" ? <>
+        <label className="nd-search"><Search size={13} /><input aria-label="Search indicators" placeholder="Search indicators" value={query} onChange={(event) => setQuery(event.target.value)} /></label>
+        <p id="nd-indicator-drag-help" className="nd-variable-instruction">Select normally; Ctrl/Shift extends the selection. Drag the selection to the Canvas or a construct.</p>
+        {selectedIndicators.length ? <div className="nd-indicator-selection-actions" role="group" aria-label={`${selectedIndicators.length} selected indicators`}>
+          <span>{selectedIndicators.length} selected</span>
+          <button type="button" onClick={() => createConstructFromIndicators(selectedIndicators)}>Create construct</button>
+          <button type="button" disabled={!selectedAssignableConstruct} title={selectedAssignableConstruct ? undefined : "Select a measured construct first."} onClick={() => assignSelectedIndicators(selectedIndicators)}>Assign{selectedAssignableConstruct ? ` to ${selectedAssignableConstruct.data.label}` : ""}</button>
+        </div> : null}
+        <div className="nd-variable-list nd-indicator-selection-list" role="listbox" aria-label="Dataset indicators" aria-multiselectable="true" aria-describedby="nd-indicator-drag-help">
+          {visibleColumns.map((column) => {
+            const owner = nodes.find((node) => node.data.indicators.includes(column));
+            const isGroupingVariable = column === groupingVariable;
+            const selectedIndicator = selectedIndicators.includes(column);
+            const action = isGroupingVariable ? "Grouping variable; unavailable as an indicator" : owner ? `Assigned to ${owner.data.label}` : "Available indicator";
+            return <button
+              key={column}
+              type="button"
+              role="option"
+              aria-selected={selectedIndicator}
+              aria-keyshortcuts="Control+Enter Alt+Enter"
+              draggable={!isGroupingVariable}
+              disabled={isGroupingVariable}
+              onDragStart={(event) => dragVariable(event, column)}
+              onDragEnd={() => window.dispatchEvent(new CustomEvent("quickpls:variables-dragging", { detail: { count: 0 } }))}
+              onClick={(event) => selectIndicator(event, column)}
+              onContextMenu={(event) => openIndicatorContextMenu(event, column)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" || (!event.ctrlKey && !event.altKey)) return;
+                event.preventDefault();
+                const selectedForAction = selectedIndicators.includes(column) ? selectedIndicators : [column];
+                if (event.ctrlKey) createConstructFromIndicators(selectedForAction);
+                else assignSelectedIndicators(selectedForAction);
+              }}
+              className={`nd-variable-item${selectedIndicator ? " active" : ""}${owner ? " assigned" : ""}${isGroupingVariable ? " grouping" : ""}`}
+              title={isGroupingVariable ? action : `${action}; drag the current selection to place or assign`}
+              aria-label={`${column}. ${action}`}
+            ><Square size={9} fill="currentColor" />{column}{isGroupingVariable ? <small>Group</small> : owner ? <Check size={12} /> : null}</button>;
+          })}
+        </div>
+        {indicatorContextMenu ? <ContextCommandMenu items={indicatorContextMenuItems} state={indicatorContextMenu} close={() => setIndicatorContextMenu(null)} /> : null}
+        {authorityStatus ? <p className="nd-authority-feedback" role="status" aria-live="polite">{authorityStatus}</p> : null}
+      </> : null}
+      {navigatorSection === "constructs" ? <div className="nd-variable-list nd-model-object-list">
+        {nodes.filter((node) => showGeneratedInteractionTerms || node.data.semantic !== "interaction").map((node) => <button key={node.id} className={selectedNodeId === node.id ? "active" : ""} onClick={() => { setSelectedNode(node.id); window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id: node.id } })); }}>{node.data.semantic === "interaction" ? <GitBranch size={11} /> : <Circle size={11} />}{node.data.label}<small>{node.data.semantic === "interaction" ? "INT" : node.data.semantic === "higher_order" ? "HOC" : node.data.indicators.length}</small></button>)}
+      </div> : null}
+      {navigatorSection === "relationships" ? <>
+        <label className="nd-search"><Search size={13} /><input aria-label="Search relationships" placeholder="Search relationships" value={relationshipQuery} onChange={(event) => setRelationshipQuery(event.target.value)} /></label>
+        <div className="nd-variable-list nd-relationship-list">
+          {relationshipRows.map((row) => <button key={row.id} type="button" onClick={() => {
+            if (row.kind === "relationship") {
+              setSelectedEdge(row.relationId);
+              window.dispatchEvent(new CustomEvent("quickpls:focus-edge", { detail: { id: row.relationId } }));
+            } else if (row.kind === "moderation") {
+              window.dispatchEvent(new CustomEvent("quickpls:focus-moderation", { detail: { interactionTermId: row.interactionTermId } }));
+            } else {
+              setSelectedNode(row.constructId);
+              window.dispatchEvent(new CustomEvent("quickpls:focus-construct", { detail: { id: row.constructId } }));
+            }
+          }}><GitBranch size={11} aria-hidden="true" /><span>{row.label}</span><small>{row.detail}</small></button>)}
+          {!relationshipRows.length ? <p className="nd-nav-empty">No matching relationships.</p> : null}
+        </div>
+      </> : null}
     </aside>
     <section className="nd-document nd-model-document">
       <div className="nd-model-document-tabs nd-model-document-toolbar" role="toolbar" aria-label={`${modelName} model actions`}>
         <span className="nd-model-document-title" title={modelName}><GitBranch size={14} aria-hidden="true" />{modelName}</span>
         <span className="nd-model-view-label"><GitBranch size={13} aria-hidden="true" />Canvas</span>
         <span className="nd-model-toolbar-spacer" />
-        {!calculationReady ? <button type="button" onClick={onPrepareCalculationReadyRevision} disabled={!activeModelId} title="Create a source-preserving revision for advanced PLS and CB-SEM methods."><Sparkles size={13} aria-hidden="true" />Prepare Advanced Methods</button> : null}
-        <button type="button" onClick={onOpenConditionalProcess} disabled={!activeModelId || featureInventory.interactions === 0} title={featureInventory.interactions === 0 ? "Add a moderating effect before configuring moderated mediation." : "Configure conditional indirect effects in PLS Bootstrapping."}><Calculator size={13} aria-hidden="true" />Conditional Process</button>
-        <button type="button" onClick={onOpenAdvancedParameters} disabled={!activeModelId}><TableProperties size={13} aria-hidden="true" />Advanced Parameters</button>
       </div>
       {generalSemRevisionRequired ? <p className="nd-inline-warning" role="note" data-testid="general-sem-scientific-revision-required">
         <strong>Safe revision required.</strong> Advanced scientific edits create a new calculation-ready revision; the current project remains unchanged.
       </p> : null}
       <div id="nd-model-canvas-panel" className="nd-canvas-host" role="region" aria-label={`${modelName} model canvas`} tabIndex={-1}><ModelCanvas onContextMenuRequest={onContextMenuRequest} showGeneratedInteractionTerms={showGeneratedInteractionTerms} /></div>
     </section>
-    {propertiesOpen ? <NativeModelInspector readiness={readiness} onEditHigherOrder={onEditHigherOrder} /> : null}
+    {propertiesOpen ? <NativeModelInspector
+      readiness={readiness}
+      onEditHigherOrder={onEditHigherOrder}
+      onRemoveHigherOrder={onRemoveHigherOrder}
+      onRemoveModeratingEffect={onRemoveModeratingEffect}
+    /> : null}
   </div>;
 }
 
@@ -2743,36 +3175,6 @@ export function nativeCanvasFeatureInventory(
     interactions: researcherFacingModerationCount,
     higherOrderConstructs: nodes.filter((node) => node.data.semantic === "higher_order").length,
   };
-}
-
-function observedForStrictDesktop(
-  authority: StandardSemModelV4AuthorityRecordV1,
-  dataset: Dataset,
-  column: string,
-): Extract<SemVariableV4, { kind: "observed" }> {
-  const existing = authority.model.variables.find((variable): variable is Extract<SemVariableV4, { kind: "observed" }> =>
-    variable.kind === "observed" && variable.source_column === column);
-  if (existing) return structuredClone(existing);
-  const metadata = dataset.columnMetadata?.find((item) => item.name === column);
-  return {
-    kind: "observed",
-    id: `observed:${column}`,
-    label: metadata?.label?.trim() || column,
-    source_column: column,
-    scale: metadata?.scale_type ?? "continuous",
-    role: "indicator",
-    categories: Object.keys(metadata?.value_labels ?? {}).sort(compareUtf8StringsV1),
-    value_labels: { ...(metadata?.value_labels ?? {}) },
-    missing_markers: [...new Set((metadata?.missing_markers ?? []).map((value) => value.trim()).filter(Boolean))].sort(compareUtf8StringsV1),
-    transformation_lineage: [],
-  };
-}
-
-function desktopAuthorityResultMessage(result: StandardSemModelV4AuthorityCommitResult): string {
-  if (result.status === "committed") return "Committed to the strict Standard model authority.";
-  if (result.status === "blocked") return `Blocked: ${result.diagnostic.message} ${result.diagnostic.correctiveAction}`;
-  if (result.status === "stale") return "Stale edit ignored because the active authority changed.";
-  return `Rejected: ${result.error instanceof Error ? result.error.message : String(result.error)}`;
 }
 
 function ResultsSurfaceLoading({ propertiesOpen }: { propertiesOpen: boolean }) {

@@ -217,6 +217,41 @@ describe("native Results tree accessibility", () => {
     expect(markup).not.toContain("<dt>Iterations</dt>");
   });
 
+  it("offers an optional Calculate action from the empty Results state", () => {
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[]}
+      selectedRunId=""
+      setSelectedRunId={vi.fn()}
+      navigation={{ runId: null, defaultItemId: null, groups: [], tables: [] }}
+      setSelectedTableId={vi.fn()}
+      propertiesOpen={false}
+      onCalculate={vi.fn()}
+    />);
+
+    expect(markup).toContain('data-results-empty-state="true"');
+    expect(markup).toContain('class="primary nd-results-empty-calculate"');
+    expect(markup).toContain("Calculate results</button>");
+  });
+
+  it("renders perceptible determinate export preparation with a cancellable state", () => {
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[]}
+      selectedRunId=""
+      setSelectedRunId={vi.fn()}
+      navigation={{ runId: null, defaultItemId: null, groups: [], tables: [] }}
+      setSelectedTableId={vi.fn()}
+      propertiesOpen={false}
+      exportPreparationState={{ status: "preparing", message: "Preparing three selected tables.", progress: 0.4 }}
+      onCancelExportPreparation={vi.fn()}
+    />);
+
+    expect(markup).toContain('data-results-export-preparation="preparing"');
+    expect(markup).toContain('aria-busy="true"');
+    expect(markup).toContain('<progress class="nd-results-export-preparation__progress" max="1" value="0.4"');
+    expect(markup).toContain("Preparing three selected tables.");
+    expect(markup).toContain("Cancel export</button>");
+  });
+
   it("renders an accessible observed-range NCA ceiling plot backed by the result table", () => {
     const markup = renderToStaticMarkup(<NcaCeilingPlot plot={{
       xLabel: "condition",
@@ -291,6 +326,9 @@ describe("native Results tree accessibility", () => {
     expect(markup).toContain('aria-rowcount="2"');
     expect(markup).toContain('aria-colcount="2"');
     expect(markup).toContain('aria-keyshortcuts="Control+C"');
+    expect(markup).toContain('data-result-horizontal-scroll="true"');
+    expect(markup).toContain('data-result-identity-column="true"');
+    expect(markup).toContain('data-result-column-kind="number"');
     const gridCells = markup.match(/<td[^>]*role="gridcell"[^>]*>/g) ?? [];
     expect(gridCells).toHaveLength(2);
     expect(gridCells.filter((cell) => cell.includes('aria-selected="true"'))).toHaveLength(1);

@@ -10,6 +10,12 @@ import {
 import { useId, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { publicationDiagramSvg } from "../domain/publicationDiagram";
 import type { ResultTable, ResultTableAdvisory } from "../domain/resultTables";
+import {
+  authoredCanonicalResultPresentation,
+  authoredResultTablePresentation,
+  createAuthoredResultIdentityResolver,
+  type AuthoredResultIdentityResolver,
+} from "../domain/authoredResultIdentity";
 import { ModelCanvas } from "../components/ModelCanvas";
 import {
   buildCanonicalResultNavigationV1,
@@ -43,17 +49,19 @@ import {
   nativeNcaResultProjection,
   nativePlsSampleSizePowerResultProjection,
   nativeProcessResultProjection,
+  nativeResultConfidenceLevel,
   nativeResultOverlaySelectionV1,
+  nativeResultRowOverlaySelectionV1,
   type NativeIpmaPlot,
   type NativeModerationPlot,
   type NativeNcaPlot,
 } from "./nativeResults";
 import { nativeRunSettingApplicability } from "./nativeExportTables";
 import { resolveAnalysisModel } from "./nativeRunModelSnapshot";
-import { nativeGridClipboardText, useNativeScientificGrid } from "./nativeScientificGrid";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 import { CanonicalResultDocumentV2View } from "./NativeRecipeV4CbsemWorkspace";
+import { NativeResultTable } from "./NativeResultTable";
 
 export interface NativeResultTreeEntry {
   id: string;
@@ -149,6 +157,16 @@ export interface NativeResultsSurfaceProps {
   onCanonicalNavigationItemChange?: (itemId: string) => void;
   propertiesOpen: boolean;
   openMethodDetails?: () => void;
+  onCalculate?: () => void;
+  exportPreparationState?: NativeResultExportPreparationState | null;
+  onCancelExportPreparation?: () => void;
+}
+
+export interface NativeResultExportPreparationState {
+  status: "preparing" | "cancelling";
+  message?: string;
+  /** Optional determinate fraction from zero through one. */
+  progress?: number | null;
 }
 
 export function canonicalResultPresentationTitleV2(document: CanonicalResultDocumentV2): string {
@@ -178,15 +196,27 @@ export default function NativeResultsSurface({
   onCanonicalNavigationItemChange,
   propertiesOpen,
   openMethodDetails,
+  onCalculate,
+  exportPreparationState,
+  onCancelExportPreparation,
 }: NativeResultsSurfaceProps) {
   const modelNodes = useWorkspace((state) => state.nodes);
+  const modelEdges = useWorkspace((state) => state.edges);
+  const activeModelId = useWorkspace((state) => state.activeModelId);
   const selectedModelNodeId = useWorkspace((state) => state.selectedNodeId);
   const setSelectedModelNode = useWorkspace((state) => state.setSelectedNode);
-  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
-  const canonicalPresentationDocument = useMemo(
-    () => canonicalDocument ? canonicalThreeWayModerationPresentationV1(canonicalDocument) : null,
-    [canonicalDocument],
-  );
+  const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set(["run_details", "diagnostics"]));
+  const canonicalPresentationDocument = useMemo(() => {
+    if (!canonicalDocument) return null;
+    const model = activeModelId === canonicalDocument.provenance.model_id
+      ? { nodes: modelNodes, edges: modelEdges }
+      : null;
+    const identity = createAuthoredResultIdentityResolver(model);
+    return authoredCanonicalResultPresentation(
+      canonicalThreeWayModerationPresentationV1(canonicalDocument),
+      identity,
+    );
+  }, [activeModelId, canonicalDocument, modelEdges, modelNodes]);
   const canonicalNavigation = useMemo(
     () => canonicalPresentationDocument
       ? buildCanonicalResultNavigationV1(canonicalPresentationDocument)
@@ -271,9 +301,43 @@ export default function NativeResultsSurface({
     ? canonicalResultPresentationTitleV2(canonicalDocument)
     : "";
   const activeResultId = canonicalActive ? canonicalOptionId : selectedRun?.id ?? selectedRunId;
+  const selectedRunIdentity = useMemo(
+    () => createAuthoredResultIdentityResolver(selectedRun?.modelSnapshot),
+    [selectedRun?.modelSnapshot],
+  );
+  const displayedSelectedTable = useMemo(
+    () => {
+      if (!selectedTable) return undefined;
+      const displayed = authoredResultTablePresentation(selectedTable, selectedRunIdentity);
+      if (!selectedRun) return displayed;
+      const rows = displayed.rows.map((_row, rowIndex) => {
+        const overlay = nativeResultRowOverlaySelectionV1(selectedRun, selectedTable.id, rowIndex);
+        return overlay ? {
+          key: `${selectedTable.id}:${rowIndex}`,
+          nodeIds: overlay.nodeIds,
+          relationIds: overlay.relationIds,
+          interactionTermIds: overlay.interactionTermIds,
+        } : null;
+      });
+      return rows.some(Boolean)
+        ? { ...displayed, presentation: { ...displayed.presentation, rows } }
+        : displayed;
+    },
+    [selectedRun, selectedRunIdentity, selectedTable],
+  );
+  const [activeNativeRow, setActiveNativeRow] = useState<{
+    runId: string;
+    tableId: string;
+    rowIndex: number;
+  } | null>(null);
+  const selectedNativeRowIndex = selectedRun && selectedItem?.id
+    && activeNativeRow?.runId === selectedRun.id
+    && activeNativeRow.tableId === selectedItem.id
+    ? activeNativeRow.rowIndex
+    : 0;
   const nativeResultOverlay = useMemo(
-    () => nativeResultOverlaySelectionV1(selectedRun, selectedItem?.id),
-    [selectedItem?.id, selectedRun],
+    () => nativeResultOverlaySelectionV1(selectedRun, selectedItem?.id, selectedNativeRowIndex),
+    [selectedItem?.id, selectedNativeRowIndex, selectedRun],
   );
 
   const toggleGroup = (groupId: string) => {
@@ -384,17 +448,29 @@ export default function NativeResultsSurface({
     </aside>
     <section className="nd-document nd-results-document">
       <div className="nd-document-tab"><BarChart3 size={14} /><span>{canonicalActive ? canonicalDisplayTitle : selectedRun?.name ?? "Results"}</span>{selectedRun && !canonicalActive && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
+      {exportPreparationState ? <ResultExportPreparationStatus
+        state={exportPreparationState}
+        onCancel={onCancelExportPreparation}
+      /> : null}
       {canonicalActive && canonicalDocument ? <div className="nd-general-sem-canonical-results-workspace nd-cbsem-v4-workspace">
         <CanonicalResultModelDiagram document={canonicalPresentationDocument ?? canonicalDocument} resultOverlay={canonicalResultOverlay} />
         {canonicalItem?.kind === "diagnostics"
-          ? <CanonicalResultDiagnostics document={canonicalPresentationDocument ?? canonicalDocument} />
+          ? <CanonicalResultDiagnostics document={canonicalDocument} />
           : displayedCanonicalDocument
             ? <CanonicalResultDocumentV2View document={displayedCanonicalDocument} reopened compilationReceipt={null} />
             : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected saved result does not contain this output.</span></div>}
-        <CanonicalResultExportPanelV2 document={canonicalPresentationDocument ?? canonicalDocument} />
-      </div> : !selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <div className="nd-result-selection-workspace">
+        <CanonicalResultExportPanelV2
+          document={canonicalDocument}
+          presentationDocument={canonicalPresentationDocument ?? undefined}
+          researcherFacing
+        />
+      </div> : !selectedRun ? <div className="nd-empty nd-results-empty" data-results-empty-state="true"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span>{onCalculate ? <button type="button" className="primary nd-results-empty-calculate" onClick={onCalculate}>Calculate results</button> : null}</div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : displayedSelectedTable ? <div className="nd-result-selection-workspace">
         {nativeResultOverlay ? <ResultOverlayModelDiagram overlay={nativeResultOverlay} run={selectedRun} /> : null}
-        <ResultTableView table={selectedTable} run={selectedRun} />
+        <ResultTableView
+          table={displayedSelectedTable}
+          run={selectedRun}
+          onActiveRowChange={(rowIndex) => setActiveNativeRow({ runId: selectedRun.id, tableId: selectedItem?.id ?? displayedSelectedTable.id, rowIndex })}
+        />
       </div> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
     </section>
     {propertiesOpen ? <aside className="nd-properties" aria-label="Result properties">
@@ -407,7 +483,10 @@ export default function NativeResultsSurface({
       </dl> : powerResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Prospective PLS-SEM sample size and power</dd></div>
         <div><dt>Status</dt><dd>Completed</dd></div>
-        <div><dt>Target path</dt><dd>{powerResult.recipe.design.predictor_construct} -&gt; {powerResult.recipe.design.outcome_construct}</dd></div>
+        <div><dt>Target path</dt><dd>{selectedRunIdentity.relation({
+          source: powerResult.recipe.design.predictor_construct,
+          target: powerResult.recipe.design.outcome_construct,
+        })}</dd></div>
         <div><dt>Population path</dt><dd>{powerResult.recipe.design.population_path.toFixed(4)}</dd></div>
         <div><dt>Grid points</dt><dd>{powerResult.recipe.sample_size_grid.join(", ")}</dd></div>
         <div><dt>Monte Carlo datasets</dt><dd>{powerResult.result.workload.planned_datasets.toLocaleString()}</dd></div>
@@ -417,7 +496,7 @@ export default function NativeResultsSurface({
       </dl> : processResult ? <dl className="nd-property-list">
         <div><dt>Method</dt><dd>Graph-defined Path Analysis / PROCESS</dd></div>
         <div><dt>Status</dt><dd>Completed</dd></div>
-        <div><dt>Outcome</dt><dd>{processResult.outcome}</dd></div>
+        <div><dt>Outcome</dt><dd>{selectedRunIdentity.construct(processResult.outcome)}</dd></div>
         <div><dt>Complete cases</dt><dd>{processResult.observations}</dd></div>
         <div><dt>Omitted cases</dt><dd>{processResult.omittedObservations}</dd></div>
         <div><dt>Equations</dt><dd>{processResult.graph.equations.length}</dd></div>
@@ -482,6 +561,43 @@ export default function NativeResultsSurface({
         <div><dt>Completed</dt><dd>{new Date(selectedRun.createdAt).toLocaleString()}</dd></div>
       </dl> : <div className="nd-pane-empty">No run selected.</div>}
     </aside> : null}
+  </div>;
+}
+
+function ResultExportPreparationStatus({
+  state,
+  onCancel,
+}: {
+  state: NativeResultExportPreparationState;
+  onCancel?: () => void;
+}) {
+  const fraction = typeof state.progress === "number" && Number.isFinite(state.progress)
+    ? Math.min(1, Math.max(0, state.progress))
+    : null;
+  const cancelling = state.status === "cancelling";
+  return <div
+    className="nd-results-export-preparation"
+    data-results-export-preparation={state.status}
+    role="status"
+    aria-live="polite"
+    aria-atomic="true"
+    aria-busy="true"
+  >
+    <div className="nd-results-export-preparation__message">
+      <strong>{cancelling ? "Cancelling export…" : "Preparing export…"}</strong>
+      <span>{state.message ?? (cancelling
+        ? "Stopping before publication."
+        : "Collecting the selected result tables and figures.")}</span>
+    </div>
+    {fraction == null
+      ? <span className="nd-results-export-preparation__activity" data-export-progress="indeterminate" aria-hidden="true" />
+      : <progress className="nd-results-export-preparation__progress" max={1} value={fraction} aria-label="Export preparation progress">{Math.round(fraction * 100)}%</progress>}
+    {onCancel ? <button
+      type="button"
+      className="danger nd-results-export-preparation__cancel"
+      disabled={cancelling}
+      onClick={onCancel}
+    >{cancelling ? "Cancelling…" : "Cancel export"}</button> : null}
   </div>;
 }
 
@@ -590,7 +706,19 @@ function ResultDiagramView({ run }: { run: AnalysisRun }) {
   </section>;
 }
 
-function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun }) {
+function ResultTableView({
+  table,
+  run,
+  onActiveRowChange,
+}: {
+  table: ResultTable;
+  run: AnalysisRun;
+  onActiveRowChange?: (rowIndex: number) => void;
+}) {
+  const identity = useMemo(
+    () => createAuthoredResultIdentityResolver(run.modelSnapshot),
+    [run.modelSnapshot],
+  );
   const moderationPlot = table.id === "moderation_simple_slopes" ? nativeModerationPlot(run) : null;
   const ipmaPlot = table.id === "ipma_constructs" ? nativeIpmaPlot(run) : null;
   const ncaPlot = table.id === "nca_ceiling_effects" ? nativeNcaPlot(run) : null;
@@ -599,14 +727,7 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
   const processJohnsonNeyman = table.id === "process_johnson_neyman"
     ? process?.graph.johnson_neyman.filter((row) => row.status === "available") ?? []
     : [];
-  const grid = useNativeScientificGrid({
-    gridKey: `${run.id}:${table.id}`,
-    rowCount: table.rows.length,
-    columnCount: table.columns.length,
-    getClipboardText: ({ rowIndex, columnIndex }) => nativeGridClipboardText(table.rows[rowIndex]?.[columnIndex]),
-  });
   const headingId = `nd-result-heading-${table.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-  const instructionsId = `${headingId}-grid-instructions`;
   return <section className="nd-result-table-view" data-result-table-id={table.id}>
     <header>
       <div className="nd-result-heading"><h1 id={headingId}>{table.title}</h1>{table.advisory ? <ResultTableAdvisoryView advisory={table.advisory} /> : null}</div>
@@ -616,32 +737,15 @@ function ResultTableView({ table, run }: { table: ResultTable; run: AnalysisRun 
     {moderationPlot ? <ModerationSlopePlot plot={moderationPlot} /> : null}
     {ipmaPlot ? <IpmaScatterPlot plot={ipmaPlot} /> : null}
     {ncaPlot ? <NcaCeilingPlot plot={ncaPlot} /> : null}
-    {processConditionalPlots.map((plot) => <ProcessConditionalPlotView key={plot.plot_id} plot={plot} outcome={process?.outcome ?? "Outcome"} />)}
-    {processJohnsonNeyman.map((plot) => <ProcessJohnsonNeymanPlot key={`${plot.moderation_id}:${plot.solved_moderator}:${plot.conditioning_values.map((value) => value.raw_value).join(":")}`} plot={plot} />)}
-    <div className="nd-table-scroll" role="region" aria-labelledby={headingId}>
-      <table
-        ref={grid.tableRef}
-        className="nd-result-table nd-scientific-grid"
-        role="grid"
-        aria-labelledby={headingId}
-        aria-describedby={instructionsId}
-        aria-rowcount={table.rows.length + 1}
-        aria-colcount={table.columns.length}
-        aria-multiselectable="false"
-        aria-keyshortcuts="Control+C"
-        tabIndex={table.rows.length && table.columns.length ? undefined : 0}
-        onKeyDown={grid.handleKeyDown}
-      >
-        <thead><tr role="row" aria-rowindex={1}>{table.columns.map((column, columnIndex) => <th key={column} role="columnheader" scope="col" aria-colindex={columnIndex + 1}>{column}</th>)}</tr></thead>
-        <tbody>{table.rows.map((row, rowIndex) => <tr role="row" aria-rowindex={rowIndex + 2} key={rowIndex}>{row.map((cell, columnIndex) => <td
-          {...grid.cellProps(rowIndex, columnIndex)}
-          aria-colindex={columnIndex + 1}
-          key={columnIndex}
-        >{cell}</td>)}</tr>)}</tbody>
-      </table>
-    </div>
-    <span className="nd-sr-only" id={instructionsId}>Use the arrow keys to move between cells. Press Control+C to copy the selected cell.</span>
-    <span className="nd-sr-only" role="status" aria-live="polite">{grid.announcement}</span>
+    {processConditionalPlots.map((plot) => <ProcessConditionalPlotView key={plot.plot_id} plot={plot} outcome={process?.outcome ?? "Outcome"} identity={identity} />)}
+    {processJohnsonNeyman.map((plot) => <ProcessJohnsonNeymanPlot key={`${plot.moderation_id}:${plot.solved_moderator}:${plot.conditioning_values.map((value) => value.raw_value).join(":")}`} plot={plot} identity={identity} />)}
+    <NativeResultTable
+      table={table}
+      gridKey={`${run.id}:${table.id}`}
+      headingId={headingId}
+      confidenceLevel={nativeResultConfidenceLevel(run, table.id)}
+      onActiveRowChange={onActiveRowChange}
+    />
   </section>;
 }
 
@@ -666,19 +770,26 @@ function ResultTableAdvisoryView({ advisory }: { advisory: ResultTableAdvisory }
   </details>;
 }
 
-function processProbeLabel(values: readonly { variable: string; raw_value: number }[]): string {
+function processProbeLabel(
+  values: readonly { variable: string; raw_value: number }[],
+  identity?: AuthoredResultIdentityResolver,
+): string {
   return values.length
-    ? values.map((value) => `${value.variable} = ${formatPlotNumber(value.raw_value)}`).join(", ")
+    ? values.map((value) => `${identity?.construct(value.variable) ?? value.variable} = ${formatPlotNumber(value.raw_value)}`).join(", ")
     : "Reference probe";
 }
 
 export function ProcessConditionalPlotView({
   plot,
   outcome,
+  identity = createAuthoredResultIdentityResolver(),
 }: {
   plot: ProcessConditionalPlot;
   outcome: string;
+  identity?: AuthoredResultIdentityResolver;
 }) {
+  const moderationLabel = identity.interaction(plot.moderation_id);
+  const outcomeLabel = identity.construct(outcome);
   const width = 680;
   const height = 290;
   const left = 66;
@@ -710,15 +821,15 @@ export function ProcessConditionalPlotView({
   const instanceId = useId();
   const titleId = `nd-process-conditional-title-${instanceId}`;
   const descriptionId = `nd-process-conditional-description-${instanceId}`;
-  const description = `Engine-persisted conditional outcome data for ${plot.moderation_id}. ${plot.series.map((series) => {
+  const description = `Engine-persisted conditional outcome data for ${moderationLabel}. ${plot.series.map((series) => {
     const first = series.points[0];
     const last = series.points.at(-1)!;
-    return `${processProbeLabel(series.moderator_values)}: ${series.points.length} points from predictor ${formatPlotNumber(first.predictor_raw)}, predicted ${formatPlotNumber(first.predicted_raw)}, to predictor ${formatPlotNumber(last.predictor_raw)}, predicted ${formatPlotNumber(last.predicted_raw)}.`;
+    return `${processProbeLabel(series.moderator_values, identity)}: ${series.points.length} points from predictor ${formatPlotNumber(first.predictor_raw)}, predicted ${formatPlotNumber(first.predicted_raw)}, to predictor ${formatPlotNumber(last.predictor_raw)}, predicted ${formatPlotNumber(last.predicted_raw)}.`;
   }).join(" ")} Exact predicted values and confidence intervals are available in the adjacent conditional outcome plot data table.`;
   return <figure className="nd-process-result-plot" data-process-plot-id={plot.plot_id}>
-    <figcaption><strong>Persisted conditional outcome plot</strong><span>{plot.moderation_id}</span></figcaption>
+    <figcaption><strong>Persisted conditional outcome plot</strong><span>{moderationLabel}</span></figcaption>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
-      <title id={titleId}>{`Conditional outcome plot for ${plot.moderation_id}`}</title>
+      <title id={titleId}>{`Conditional outcome plot for ${moderationLabel}`}</title>
       <desc id={descriptionId}>{description}</desc>
       <line className="axis" x1={left} y1={height - bottom} x2={width - right} y2={height - bottom} />
       <line className="axis" x1={left} y1={top} x2={left} y2={height - bottom} />
@@ -736,22 +847,22 @@ export function ProcessConditionalPlotView({
           <polyline className="process-ci" points={upper} />
           <polyline className="process-estimate" strokeDasharray={seriesStyle.dash} strokeWidth={seriesStyle.width} points={mean} />
           {series.points.map((point, pointIndex) => seriesStyle.marker === "square"
-            ? <rect key={pointIndex} x={x(point.predictor_raw) - 2} y={y(point.predicted_raw) - 2} width={4} height={4}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></rect>
+            ? <rect key={pointIndex} x={x(point.predictor_raw) - 2} y={y(point.predicted_raw) - 2} width={4} height={4}><title>{`${processProbeLabel(series.moderator_values, identity)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcomeLabel} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></rect>
             : seriesStyle.marker === "triangle"
-              ? <path key={pointIndex} d={`M ${x(point.predictor_raw)} ${y(point.predicted_raw) - 3} l 3 6 h -6 z`}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></path>
-              : <circle key={pointIndex} cx={x(point.predictor_raw)} cy={y(point.predicted_raw)} r={2.2}><title>{`${processProbeLabel(series.moderator_values)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcome} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
+              ? <path key={pointIndex} d={`M ${x(point.predictor_raw)} ${y(point.predicted_raw) - 3} l 3 6 h -6 z`}><title>{`${processProbeLabel(series.moderator_values, identity)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcomeLabel} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></path>
+              : <circle key={pointIndex} cx={x(point.predictor_raw)} cy={y(point.predicted_raw)} r={2.2}><title>{`${processProbeLabel(series.moderator_values, identity)}; predictor ${formatPlotNumber(point.predictor_raw)}; predicted ${outcomeLabel} ${formatPlotNumber(point.predicted_raw)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
         </g>;
       })}
       <text className="axis-label" x={left + plotWidth / 2} y={height - 8} textAnchor="middle">Focal predictor (raw value)</text>
-      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Predicted {outcome} (raw value)</text>
+      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Predicted {outcomeLabel} (raw value)</text>
     </svg>
-    <ul className="nd-process-plot-legend" aria-label={`Series legend for ${plot.moderation_id}`}>
+    <ul className="nd-process-plot-legend" aria-label={`Series legend for ${moderationLabel}`}>
       {plot.series.map((series, index) => {
         const seriesStyle = seriesStyles[index % seriesStyles.length];
         const signature = `${seriesStyle.dash ?? "solid"}|${seriesStyle.marker}|${seriesStyle.width}`;
         return <li key={series.series_id} data-process-legend-style={signature}>
           <svg viewBox="0 0 28 8" aria-hidden="true"><line className="process-estimate" style={{ color: palette[index % palette.length] }} strokeDasharray={seriesStyle.dash} strokeWidth={seriesStyle.width} x1={1} y1={4} x2={27} y2={4} /></svg>
-          <span>{processProbeLabel(series.moderator_values)}; {seriesStyle.marker} markers; {seriesStyle.dash ?? "solid"} line; width {seriesStyle.width}</span>
+          <span>{processProbeLabel(series.moderator_values, identity)}; {seriesStyle.marker} markers; {seriesStyle.dash ?? "solid"} line; width {seriesStyle.width}</span>
         </li>;
       })}
     </ul>
@@ -761,9 +872,13 @@ export function ProcessConditionalPlotView({
 
 export function ProcessJohnsonNeymanPlot({
   plot,
+  identity = createAuthoredResultIdentityResolver(),
 }: {
   plot: Extract<ProcessJohnsonNeymanAnalysis, { status: "available" }>;
+  identity?: AuthoredResultIdentityResolver;
 }) {
+  const moderationLabel = identity.interaction(plot.moderation_id);
+  const moderatorLabel = identity.construct(plot.solved_moderator);
   const width = 680;
   const height = 280;
   const left = 66;
@@ -783,11 +898,11 @@ export function ProcessJohnsonNeymanPlot({
   const instanceId = useId();
   const titleId = `nd-process-jn-title-${instanceId}`;
   const descriptionId = `nd-process-jn-description-${instanceId}`;
-  const description = `Engine-persisted Johnson-Neyman curve for ${plot.moderation_id}, solved moderator ${plot.solved_moderator}${plot.conditioning_values.length ? `, conditioned at ${processProbeLabel(plot.conditioning_values)}` : ""}. ${plot.curve_points.length} curve points span raw ${formatPlotNumber(plot.raw_min)} to ${formatPlotNumber(plot.raw_max)}. Roots: ${plot.roots.length ? plot.roots.map(formatPlotNumber).join(", ") : "none"}. Regions: ${plot.regions.map((region) => `${formatPlotNumber(region.lower)} to ${formatPlotNumber(region.upper)} ${region.status.replaceAll("_", " ")}`).join("; ")}. Exact effect, SE, and confidence bounds are available in the adjacent Johnson-Neyman curve data table.`;
+  const description = `Engine-persisted Johnson-Neyman curve for ${moderationLabel}, solved moderator ${moderatorLabel}${plot.conditioning_values.length ? `, conditioned at ${processProbeLabel(plot.conditioning_values, identity)}` : ""}. ${plot.curve_points.length} curve points span raw ${formatPlotNumber(plot.raw_min)} to ${formatPlotNumber(plot.raw_max)}. Roots: ${plot.roots.length ? plot.roots.map(formatPlotNumber).join(", ") : "none"}. Regions: ${plot.regions.map((region) => `${formatPlotNumber(region.lower)} to ${formatPlotNumber(region.upper)} ${region.status.replaceAll("_", " ")}`).join("; ")}. Exact effect, SE, and confidence bounds are available in the adjacent Johnson-Neyman curve data table.`;
   return <figure className="nd-process-result-plot" data-process-jn-moderation={plot.moderation_id}>
-    <figcaption><strong>Persisted Johnson-Neyman curve</strong><span>{plot.solved_moderator}{plot.conditioning_values.length ? ` at ${processProbeLabel(plot.conditioning_values)}` : ""}</span></figcaption>
+    <figcaption><strong>Persisted Johnson-Neyman curve</strong><span>{moderatorLabel}{plot.conditioning_values.length ? ` at ${processProbeLabel(plot.conditioning_values, identity)}` : ""}</span></figcaption>
     <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
-      <title id={titleId}>{`Johnson-Neyman curve for ${plot.moderation_id}`}</title>
+      <title id={titleId}>{`Johnson-Neyman curve for ${moderationLabel}`}</title>
       <desc id={descriptionId}>{description}</desc>
       <line className="axis" x1={left} y1={y(0)} x2={width - right} y2={y(0)} />
       <line className="axis" x1={left} y1={top} x2={left} y2={height - bottom} />
@@ -796,8 +911,8 @@ export function ProcessJohnsonNeymanPlot({
       <polyline className="process-ci" points={lower} />
       <polyline className="process-ci" points={upper} />
       <polyline className="process-estimate" points={estimate} />
-      {plot.curve_points.map((point, index) => <circle key={index} cx={x(point.moderator_raw)} cy={y(point.effect)} r={1.8}><title>{`${plot.solved_moderator} ${formatPlotNumber(point.moderator_raw)}; effect ${formatPlotNumber(point.effect)}; SE ${formatPlotNumber(point.standard_error)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
-      <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">{plot.solved_moderator} (original raw range)</text>
+      {plot.curve_points.map((point, index) => <circle key={index} cx={x(point.moderator_raw)} cy={y(point.effect)} r={1.8}><title>{`${moderatorLabel} ${formatPlotNumber(point.moderator_raw)}; effect ${formatPlotNumber(point.effect)}; SE ${formatPlotNumber(point.standard_error)}; 95% CI ${formatPlotNumber(point.confidence_interval_lower)} to ${formatPlotNumber(point.confidence_interval_upper)}`}</title></circle>)}
+      <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">{moderatorLabel} (original raw range)</text>
       <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Conditional effect</text>
     </svg>
     <p>All 101 curve points, intervals, roots, and regions were persisted by the engine; the UI only scales them for display.</p>

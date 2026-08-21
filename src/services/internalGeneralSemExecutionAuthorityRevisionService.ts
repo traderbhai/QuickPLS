@@ -169,6 +169,9 @@ export function selectGeneralSemRevisionExecutionV1(input: {
   const model = modelRecord.payload.model;
   const higherOrderIntent = input.intent?.kind === "add_higher_order"
     || input.intent?.kind === "replace_higher_order";
+  const removedHigherOrderIdentity = input.intent?.kind === "remove_higher_order"
+    ? { termId: input.intent.term_id, outputId: input.intent.output_id }
+    : null;
   const projectedInteractionOrders = model.derived_terms.flatMap((term) => (
     term.kind === "interaction_v2"
       && !(input.intent?.kind === "replace_moderating_effect" || input.intent?.kind === "remove_moderating_effect"
@@ -183,7 +186,12 @@ export function selectGeneralSemRevisionExecutionV1(input: {
     projectedInteractionOrders.push(input.intent.operands.length);
   }
   const hasHigherOrder = higherOrderIntent
-    || model.derived_terms.some((term) => term.kind === "higher_order");
+    || model.derived_terms.some((term) => (
+      term.kind === "higher_order"
+      && !(removedHigherOrderIdentity
+        && term.id === removedHigherOrderIdentity.termId
+        && term.output === removedHigherOrderIdentity.outputId)
+    ));
   const hasThreeWay = projectedInteractionOrders.includes(3);
   const hasTwoWay = projectedInteractionOrders.includes(2);
   const indirectPathCount = countScientificIndirectPathsV1(model);

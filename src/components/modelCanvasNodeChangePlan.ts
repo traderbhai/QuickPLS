@@ -7,10 +7,15 @@ export interface IndicatorKeyboardPositionChange {
   position: XYPosition;
 }
 
+export interface ConstructKeyboardPositionChange {
+  constructId: string;
+  position: XYPosition;
+}
+
 export interface ModelCanvasNodeChangePlan {
   modelChanges: Array<NodeChange<Node>>;
+  constructKeyboardPositions: ConstructKeyboardPositionChange[];
   indicatorKeyboardPositions: IndicatorKeyboardPositionChange[];
-  checkpointBeforePersisting: boolean;
 }
 
 /**
@@ -22,14 +27,15 @@ export function planModelCanvasNodeChanges(
   pointerDragActive: boolean,
 ): ModelCanvasNodeChangePlan {
   const modelChanges: Array<NodeChange<Node>> = [];
+  const constructKeyboardPositions: ConstructKeyboardPositionChange[] = [];
   const indicatorKeyboardPositions: IndicatorKeyboardPositionChange[] = [];
-  let checkpointBeforePersisting = false;
 
   for (const change of changes) {
     if (!("id" in change) || !isIndicatorNodeId(change.id)) {
-      if (!pointerDragActive || change.type !== "position") modelChanges.push(change);
       if (!pointerDragActive && change.type === "position" && change.position) {
-        checkpointBeforePersisting = true;
+        constructKeyboardPositions.push({ constructId: change.id, position: change.position });
+      } else if (change.type !== "position") {
+        modelChanges.push(change);
       }
       continue;
     }
@@ -38,8 +44,7 @@ export function planModelCanvasNodeChanges(
     const indicator = parseIndicatorNodeId(change.id);
     if (!indicator) continue;
     indicatorKeyboardPositions.push({ ...indicator, position: change.position });
-    checkpointBeforePersisting = true;
   }
 
-  return { modelChanges, indicatorKeyboardPositions, checkpointBeforePersisting };
+  return { modelChanges, constructKeyboardPositions, indicatorKeyboardPositions };
 }

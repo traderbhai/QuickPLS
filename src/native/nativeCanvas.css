@@ -288,6 +288,7 @@
 .nd-canvas-host .smartpls-latent-node.drop-target .smartpls-latent-ellipse { outline: 3px solid #b8790f; outline-offset: 5px; box-shadow: 0 0 0 9px rgb(215 154 25 / 16%); }
 .nd-canvas-host .smartpls-latent-node.drop-target .smartpls-latent-label { color: #704800; font-weight: 700; }
 .nd-canvas-host .smartpls-latent-label { max-width: 124px; padding: 1px 3px; overflow: hidden; border: 0; color: var(--nd-canvas-text); background: rgb(255 255 255 / 92%); text-overflow: ellipsis; white-space: normal; font-size: 10px; font-weight: 500; line-height: 1.15; cursor: grab; user-select: none; }
+.nd-canvas-host .smartpls-indicator-summary { display: block; max-width: 118px; margin-top: -3px; overflow: hidden; color: var(--nd-canvas-muted); font-size: 9px; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; }
 .nd-canvas-host .smartpls-latent-label:focus-visible { outline: 2px solid var(--nd-color-focus); outline-offset: 2px; }
 .nd-canvas-host .locked-result-canvas .smartpls-latent-label { cursor: default; }
 .nd-canvas-host .smartpls-latent-edit { width: 118px; height: 22px; border: 1px solid var(--nd-input-border); color: var(--nd-canvas-text); background: var(--nd-input-bg); text-align: center; font: 10px var(--nd-font-ui); }
@@ -330,7 +331,10 @@
 .nd-canvas-host .moderation-anchor:hover,
 .nd-canvas-host .moderation-anchor.selected { background: var(--nd-blue-50); box-shadow: 0 0 0 3px rgb(8 107 157 / 22%); }
 .nd-canvas-host .moderation-anchor:focus-visible { outline: 2px solid var(--nd-color-focus); outline-offset: 3px; }
-.nd-canvas-host .moderation-anchor .moderation-anchor-handle { width: 1px; height: 1px; min-width: 1px; min-height: 1px; border: 0; opacity: 0; pointer-events: none; }
+.nd-canvas-host .moderation-anchor .moderation-anchor-handle { width: 8px; height: 8px; min-width: 8px; min-height: 8px; border: 1px solid white; background: var(--nd-canvas-accent-dark); opacity: 0; pointer-events: auto; }
+.nd-canvas-host .moderation-anchor:hover .moderation-anchor-handle,
+.nd-canvas-host .moderation-anchor:focus-within .moderation-anchor-handle,
+.nd-canvas-host .moderation-anchor.selected .moderation-anchor-handle { opacity: .72; }
 .nd-canvas-host .moderation-connector-edge .react-flow__edge-path { stroke: #526b75; stroke-width: 1.45; stroke-dasharray: 5 4; }
 .nd-canvas-host .moderation-connector-edge.three-way .react-flow__edge-path { stroke-dasharray: 2 3 7 3; }
 .nd-canvas-host .moderation-connector-edge.selected .react-flow__edge-path,

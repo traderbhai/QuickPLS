@@ -1,4 +1,5 @@
 import type { Node } from "@xyflow/react";
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ConstructData } from "../types";
@@ -11,7 +12,7 @@ const ordinaryNodes: Array<Node<ConstructData>> = [
   { id: "y", position: { x: 360, y: 90 }, data: { label: "Outcome", shortName: "OUT", mode: "reflective", indicators: ["y1"] } },
 ];
 
-const applied = () => ({ status: "applied" as const, constructId: "derived:hoc" });
+const applied = async () => ({ status: "applied" as const, constructId: "derived:hoc" });
 
 describe("NativeHigherOrderDialog", () => {
   it("uses compact conceptual controls, derives RR, and hides approach choice under Advanced", () => {
@@ -137,5 +138,53 @@ describe("NativeHigherOrderDialog", () => {
     expect(html).toContain("compatibility-only");
     expect(html).toContain(">Close</button>");
     expect(html).not.toContain(">Save</button>");
+  });
+
+  it("keeps the dialog open and busy until the async authority result is applied", () => {
+    const source = readFileSync("src/native/NativeHigherOrderDialog.tsx", "utf8");
+
+    expect(source).toContain("Promise<NativeHigherOrderDialogCommitResult>");
+    expect(source).toContain("const result = await (request.kind");
+    expect(source).toContain('if (result.status === "applied")');
+    expect(source).toContain("aria-busy={commitPending}");
+    expect(source).toContain("disabled={commitPending}");
+    expect(source).toContain("onPendingChange?.(true)");
+    expect(source).toContain("onPendingChange?.(false)");
+    expect(source).toContain('status: "blocked" | "cancelled" | "stale" | "rejected"');
+    expect(source).toContain("data-commit-status={commitIssue.status}");
+    expect(source).toContain("higherOrderCommitMessage(commitIssue)");
+  });
+
+  it("removes generic edit and delete commands from the HOC context menu", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    const start = source.indexOf("const contextConstructIsHigherOrder");
+    const end = source.indexOf("const showWorkspaceContextMenu", start);
+    const contextMenuSource = source.slice(start, end);
+
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    expect(contextMenuSource).toContain('command.id !== "edit-selection" && command.id !== "delete-selection"');
+    expect(contextMenuSource).toContain('command.id === "edit-higher-order"');
+    expect(contextMenuSource).toContain("disabled: contextHigherOrderAuthorityCommand ? !contextHigherOrderAuthorityCommand.enabled : true");
+    expect(contextMenuSource).toContain('id: "edit-higher-order-construct"');
+    expect(contextMenuSource).toContain('id: "remove-higher-order-construct"');
+  });
+
+  it("awaits HOC gateway and Save As Revision outcomes before reporting application", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    const start = source.indexOf("const launchHigherOrderRevision = async");
+    const end = source.indexOf("const removeHigherOrderConstruct", start);
+    const commitSource = source.slice(start, end);
+
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    expect(commitSource).toContain("const result = await useInternalProjectArchiveV6Session.getState()");
+    expect(commitSource).toContain("const result = await commitGatewayDesktopCommand");
+    expect(commitSource).toContain('if (result === "saved")');
+    expect(commitSource).toContain('return { status: "cancelled"');
+    expect(commitSource).toContain('return { status: "stale"');
+    expect(commitSource).toContain('return { status: "rejected"');
+    expect(source).toContain("? !higherOrderCommitPending");
+    expect(source).toContain("onPendingChange={setHigherOrderCommitPending}");
   });
 });

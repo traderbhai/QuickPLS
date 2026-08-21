@@ -332,7 +332,7 @@ describe("PLS model fit v2 native integration", () => {
     ]);
     expect(tables.find((table) => table.id === "model_fit_details")?.rows).toContainEqual([
       "Exact-fit inference",
-      "Results available",
+      "Available",
     ]);
     expect(nativeRunProvenanceTable(run).rows).toContainEqual([
       "PLS model-fit exact method version",
@@ -346,7 +346,7 @@ describe("PLS model fit v2 native integration", () => {
     expect(nativeModelFitPresentationStateV2(partial)).toMatchObject({
       mode: "exact_partial",
       aggregateStatus: "partial",
-      detailValue: "Results partial",
+      detailValue: "Partial",
       advisory: { tone: "warning", title: "Exact fit partially available" },
     });
 
@@ -355,7 +355,7 @@ describe("PLS model fit v2 native integration", () => {
     expect(nativeModelFitPresentationStateV2(unavailable)).toMatchObject({
       mode: "exact_unavailable",
       aggregateStatus: "unavailable",
-      detailValue: "Results unavailable",
+      detailValue: "Unavailable",
       advisory: { tone: "warning", title: "Exact fit unavailable" },
     });
   });
@@ -376,7 +376,7 @@ describe("PLS model fit v2 native integration", () => {
     expect(nativeResultTables(marker)).toEqual([]);
     expect(nativeModelFitPresentationStateV2(marker)).toMatchObject({
       mode: "exact_failed",
-      detailValue: "Run failed",
+      detailValue: "Failed",
       advisory: { tone: "error", title: "Exact-fit run failed" },
     });
   });

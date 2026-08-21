@@ -13,8 +13,15 @@ import {
 } from "@xyflow/react";
 import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
-import { defaultDiagramLayout, layoutSmartplsModel } from "./domain/diagramGraph";
-import { layoutModel } from "./domain/modelLayout";
+import { defaultDiagramLayout } from "./domain/diagramGraph";
+import {
+  arrangeModelPreservingLayoutV1,
+  modelEditModeratingEffectIdentityV1,
+  modelEditTransactionClassV1,
+  reconcileModelEditDiagramLayoutV1,
+  strictModelEditIntentPlanV1,
+  tidyConstructsPreservingLayoutV1,
+} from "./domain/modelEditCommandGatewayV1";
 import {
   parseStandardSemModelV4AuthorityRecordV1,
   reduceStandardSemModelV4AuthorityV1,
@@ -46,7 +53,7 @@ import {
 } from "./native/nativeHigherOrder";
 import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
 import type { StandardSemModelV4AuthorityCasDiagnosticV1, StandardSemModelV4AuthorityCasOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, GeneralSemProjectDraftModeV1, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, GeneralSemProjectDraftModeV1, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, ModelEditAffectedIdentitiesV1, ModelEditCommandResultV1, ModelEditCommandV1, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
 
 export type GeneralSemTransientWorkBlockerV1 = "job_active" | "temporary_result_pending";
 
@@ -255,6 +262,7 @@ export interface WorkspaceState {
   setDiagramGridVisible: (showGrid: boolean) => void;
   setDiagramLayoutLocked: (layoutLocked: boolean) => void;
   checkpoint: () => void;
+  executeModelEditCommand: (command: ModelEditCommandV1) => Promise<ModelEditCommandResultV1>;
   undo: () => void;
   redo: () => void;
   onNodesChange: (changes: Array<NodeChange<Node<ConstructData>>>) => void;
@@ -947,6 +955,887 @@ const validUniqueIndicators = (
   );
 };
 
+type ModelEditTransitionV1 =
+  | { status: "applied"; state: WorkspaceState; affected: ModelEditAffectedIdentitiesV1 }
+  | { status: "blocked"; code: string; message: string; correctiveAction: string };
+
+type ScientificModelEditCommandV1 = Extract<ModelEditCommandV1, {
+  kind:
+    | "add_construct"
+    | "rename_construct"
+    | "invert_measurement_model"
+    | "assign_indicators"
+    | "unassign_indicator"
+    | "add_path"
+    | "reverse_path"
+    | "remove_path"
+    | "create_higher_order"
+    | "edit_higher_order"
+    | "remove_higher_order"
+    | "create_moderating_effect"
+    | "edit_moderating_effect"
+    | "remove_moderating_effect";
+}>;
+
+type PresentationModelEditCommandV1 = Exclude<ModelEditCommandV1, ScientificModelEditCommandV1>;
+
+const blockedModelEditTransitionV1 = (
+  code: string,
+  message: string,
+  correctiveAction: string,
+): ModelEditTransitionV1 => ({ status: "blocked", code, message, correctiveAction });
+
+const editableLegacyConstructV1 = (state: WorkspaceState, constructId: string) => {
+  const construct = state.nodes.find((node) => node.id === constructId);
+  return construct && !construct.data.semantic ? construct : null;
+};
+
+const exactLegacyModelEditIdV1 = (value: string) => value.length > 0 && value === value.trim();
+
+const applyLegacyPathModelEditV1 = (
+  state: WorkspaceState,
+  command: Extract<ScientificModelEditCommandV1, { kind: "add_path" | "reverse_path" | "remove_path" }>,
+): ModelEditTransitionV1 => {
+  if (!exactLegacyModelEditIdV1(command.relationId)) {
+    return blockedModelEditTransitionV1("model_edit.path_identity_invalid", "The path needs one exact stable relationship identifier.", "Refresh the model and draw the path again.");
+  }
+  if (command.kind === "add_path") {
+    const source = editableLegacyConstructV1(state, command.sourceId);
+    const target = editableLegacyConstructV1(state, command.targetId);
+    if (!source || !target) {
+      return blockedModelEditTransitionV1("model_edit.path_endpoint_unavailable", "Both path endpoints must be ordinary constructs in the active model.", "Select two ordinary constructs and retry.");
+    }
+    if (source.id === target.id) return blockedModelEditTransitionV1("model_edit.path_self_loop", "A structural path cannot connect a construct to itself.", "Choose two different ordinary constructs.");
+    if (state.edges.some((edge) => edge.id === command.relationId)) {
+      return blockedModelEditTransitionV1("model_edit.relationship_id_in_use", `Relationship '${command.relationId}' already exists.`, "Generate one new stable relationship ID and retry.");
+    }
+    if (state.edges.some((edge) => edge.source === source.id && edge.target === target.id && edge.data?.role !== "covariance")) {
+      return blockedModelEditTransitionV1("model_edit.path_duplicate", "That structural path already exists.", "Select the existing path or choose different endpoints.");
+    }
+    const edge: Edge = {
+      id: command.relationId,
+      source: source.id,
+      target: target.id,
+      type: "straight",
+      label: command.label?.trim() || "Path",
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+    };
+    const edges = addEdge(edge, state.edges);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        selectedNodeId: null,
+        selectedEdgeId: edge.id,
+        edges,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, edges),
+      },
+      affected: { constructIds: [source.id, target.id], indicatorIds: [], relationshipIds: [edge.id] },
+    };
+  }
+
+  const edge = state.edges.find((candidate) => candidate.id === command.relationId);
+  if (!edge || edge.id.startsWith("measurement::") || edge.data?.role === "control" || edge.data?.role === "covariance"
+    || edge.data?.technicalGenerated || requiredInteractionEdge(state.nodes, edge) || touchesGeneratedInteraction(state.nodes, edge.source, edge.target)) {
+    return blockedModelEditTransitionV1("model_edit.path_unavailable", `Relationship '${command.relationId}' is not an editable ordinary structural path.`, "Select an ordinary structural path and retry.");
+  }
+  if (command.kind === "reverse_path") {
+    if (state.edges.some((candidate) => candidate.id !== edge.id && candidate.source === edge.target && candidate.target === edge.source)) {
+      return blockedModelEditTransitionV1("model_edit.path_reverse_duplicate", "The reverse structural path already exists.", "Remove the reverse path or keep the current direction.");
+    }
+    const edges = state.edges.map((candidate) => candidate.id === edge.id ? {
+      ...candidate,
+      source: edge.target,
+      target: edge.source,
+      sourceHandle: null,
+      targetHandle: null,
+    } : candidate);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        edges,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, edges),
+      },
+      affected: { constructIds: [edge.source, edge.target], indicatorIds: [], relationshipIds: [edge.id] },
+    };
+  }
+
+  const cascadeIds = cascadingInteractionNodeIds(state.nodes, new Set(), [edge]);
+  const nodes = state.nodes.filter((node) => !cascadeIds.has(node.id));
+  const edges = state.edges.filter((candidate) => candidate.id !== edge.id
+    && !cascadeIds.has(candidate.source)
+    && !cascadeIds.has(candidate.target));
+  return {
+    status: "applied",
+    state: {
+      ...state,
+      ...historyPatch(state),
+      selectedEdgeId: state.selectedEdgeId === edge.id ? null : state.selectedEdgeId,
+      nodes,
+      edges,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
+    },
+    affected: {
+      constructIds: [edge.source, edge.target, ...cascadeIds],
+      indicatorIds: [],
+      relationshipIds: [edge.id, ...state.edges.filter((candidate) => cascadeIds.has(candidate.source) || cascadeIds.has(candidate.target)).map((candidate) => candidate.id)],
+    },
+  };
+};
+
+const applyLegacyHigherOrderModelEditV1 = (
+  state: WorkspaceState,
+  command: Extract<ScientificModelEditCommandV1, { kind: "create_higher_order" | "edit_higher_order" | "remove_higher_order" }>,
+): ModelEditTransitionV1 => {
+  if (!exactLegacyModelEditIdV1(command.termId) || !exactLegacyModelEditIdV1(command.outputId)) {
+    return blockedModelEditTransitionV1("model_edit.higher_order_identity_invalid", "The higher-order construct needs exact stable term and output identifiers.", "Refresh the model and retry the HOC operation.");
+  }
+  const current = state.nodes.find((node) => node.id === command.outputId
+    && node.data.semantic === "higher_order"
+    && node.data.higherOrder?.id === command.termId);
+  if (command.kind === "remove_higher_order") {
+    if (!current) return blockedModelEditTransitionV1("model_edit.higher_order_unavailable", "The requested higher-order identity does not match the active model.", "Refresh the model and select the higher-order construct again.");
+    const removedRelationships = state.edges.filter((edge) => edge.source === current.id || edge.target === current.id).map((edge) => edge.id);
+    const nodes = state.nodes.filter((node) => node.id !== current.id);
+    const edges = state.edges.filter((edge) => edge.source !== current.id && edge.target !== current.id);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        selectedNodeId: state.selectedNodeId === current.id ? null : state.selectedNodeId,
+        nodes,
+        edges,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
+      },
+      affected: { constructIds: [current.id, ...(current.data.higherOrder?.components ?? [])], indicatorIds: [], relationshipIds: removedRelationships },
+    };
+  }
+  const draft = command.draft;
+  const nativeDraft: NativeHigherOrderDraft = {
+    name: draft.name,
+    shortName: draft.shortName,
+    components: [...draft.components],
+    approach: draft.approach,
+    measurementType: draft.measurementType,
+    ...(command.kind === "create_higher_order" && draft.initialPath ? {
+      initialPath: { direction: draft.initialPath.direction, constructId: draft.initialPath.constructId },
+    } : {}),
+  };
+  if (command.kind === "create_higher_order") {
+    if (command.termId !== command.outputId) {
+      return blockedModelEditTransitionV1("model_edit.legacy_higher_order_identity_mismatch", "Older graph projects use one stable identity for the HOC term and node.", "Use the same new stable ID for termId and outputId, or create a calculation-ready revision.");
+    }
+    if (state.nodes.some((node) => node.id === command.outputId) || state.edges.some((edge) => edge.id === command.outputId)) {
+      return blockedModelEditTransitionV1("model_edit.higher_order_identity_in_use", "The requested HOC identity is already in use.", "Generate one new stable HOC identity and retry.");
+    }
+    const scopeBlocker = nativeHigherOrderCreationBlocker(state.nodes, state.edges, draft.approach, draft.measurementType);
+    if (scopeBlocker) return blockedModelEditTransitionV1("model_edit.higher_order_scope_unavailable", scopeBlocker, "Correct the HOC topology or choose one supported approach.");
+    const problems = nativeHigherOrderDraftProblems(nativeDraft, state.nodes, state.edges);
+    if (problems.length) return blockedModelEditTransitionV1("model_edit.higher_order_invalid", problems[0]!, "Correct the highlighted HOC setting and retry.");
+    if (draft.initialPath && (!exactLegacyModelEditIdV1(draft.initialPath.relationshipId)
+      || !editableLegacyConstructV1(state, draft.initialPath.constructId)
+      || state.edges.some((edge) => edge.id === draft.initialPath!.relationshipId))) {
+      return blockedModelEditTransitionV1("model_edit.higher_order_initial_path_invalid", "The initial HOC path has an unavailable endpoint or relationship identity.", "Choose one ordinary construct and one new stable relationship ID.");
+    }
+    const node: Node<ConstructData> = {
+      id: command.outputId,
+      type: "construct",
+      position: nextConstructPosition(state.nodes),
+      selected: true,
+      data: {
+        label: draft.name.trim(),
+        shortName: draft.shortName.trim(),
+        mode: nativeHigherOrderHocMode(draft.measurementType),
+        indicators: [],
+        semantic: "higher_order",
+        higherOrder: {
+          id: command.termId,
+          components: [...draft.components],
+          method: draft.approach === "repeated_indicators" || draft.approach === "extended_repeated_indicators" ? "repeated_indicators" : "two_stage",
+          canonicalApproach: draft.approach,
+          measurementType: draft.measurementType,
+          stage_one_recipe: null,
+        },
+      },
+    };
+    const nodes = [...state.nodes.map((candidate) => ({ ...candidate, selected: false })), node];
+    const initialEdge = draft.initialPath ? {
+      id: draft.initialPath.relationshipId,
+      source: draft.initialPath.direction === "hoc_to_construct" ? node.id : draft.initialPath.constructId,
+      target: draft.initialPath.direction === "hoc_to_construct" ? draft.initialPath.constructId : node.id,
+      type: "straight",
+      label: draft.initialPath.label?.trim() || (draft.initialPath.direction === "hoc_to_construct" ? `${node.data.label} effect` : `${node.data.label} antecedent`),
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+    } satisfies Edge : null;
+    const edges = initialEdge ? addEdge(initialEdge, state.edges) : state.edges;
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        selectedNodeId: node.id,
+        selectedEdgeId: null,
+        nodes,
+        edges,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
+      },
+      affected: { constructIds: [node.id, ...draft.components], indicatorIds: [], relationshipIds: initialEdge ? [initialEdge.id] : [] },
+    };
+  }
+
+  if (!current) return blockedModelEditTransitionV1("model_edit.higher_order_unavailable", "The requested higher-order identity does not match the active model.", "Refresh the model and select the higher-order construct again.");
+  const structuralEdges = state.edges.filter(isNativeStructuralEdge);
+  const hocIsEndogenous = structuralEdges.some((edge) => edge.target === current.id)
+    ? true
+    : structuralEdges.some((edge) => edge.source === current.id)
+      ? false
+      : null;
+  const problems = nativeHigherOrderDraftProblems(nativeDraft, state.nodes, state.edges, { editingHigherOrderId: current.id, hocIsEndogenous });
+  if (problems.length) return blockedModelEditTransitionV1("model_edit.higher_order_invalid", problems[0]!, "Correct the highlighted HOC setting and retry.");
+  const nodes = state.nodes.map((node) => node.id === current.id ? {
+    ...node,
+    selected: true,
+    data: {
+      ...node.data,
+      label: draft.name.trim(),
+      shortName: draft.shortName.trim(),
+      mode: nativeHigherOrderHocMode(draft.measurementType),
+      indicators: [],
+      semantic: "higher_order" as const,
+      higherOrder: {
+        ...current.data.higherOrder!,
+        id: command.termId,
+        components: [...draft.components],
+        method: draft.approach === "repeated_indicators" || draft.approach === "extended_repeated_indicators" ? "repeated_indicators" as const : "two_stage" as const,
+        canonicalApproach: draft.approach,
+        measurementType: draft.measurementType,
+      },
+    },
+  } : { ...node, selected: false });
+  return {
+    status: "applied",
+    state: {
+      ...state,
+      ...historyPatch(state),
+      selectedNodeId: current.id,
+      selectedEdgeId: null,
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+    },
+    affected: { constructIds: [...new Set([current.id, ...current.data.higherOrder!.components, ...draft.components])], indicatorIds: [], relationshipIds: [] },
+  };
+};
+
+const applyLegacyModeratingEffectModelEditV1 = (
+  state: WorkspaceState,
+  command: Extract<ScientificModelEditCommandV1, { kind: "create_moderating_effect" | "edit_moderating_effect" | "remove_moderating_effect" }>,
+): ModelEditTransitionV1 => {
+  if (command.kind === "edit_moderating_effect") {
+    return blockedModelEditTransitionV1(
+      "model_edit.legacy_moderating_effect_edit_requires_revision",
+      "Older graph projects cannot retarget a moderating effect without changing its historical identity contract.",
+      "Create a calculation-ready revision, then edit the moderating effect there.",
+    );
+  }
+  if (command.kind === "remove_moderating_effect") {
+    const node = state.nodes.find((candidate) => candidate.data.semantic === "interaction"
+      && candidate.id === command.outputId
+      && (candidate.data.interaction?.termId ?? candidate.id) === command.termId);
+    if (!node) return blockedModelEditTransitionV1("model_edit.moderating_effect_unavailable", "The requested moderating-effect identity does not match the active model.", "Refresh the model and select the moderating effect again.");
+    const requiredBy = interactionNodes(state.nodes).some((candidate) => candidate.id !== node.id
+      && requiredLowerOrderInteractionNodeIds(candidate, state.nodes).includes(node.id));
+    if (requiredBy) return blockedModelEditTransitionV1("model_edit.moderating_effect_still_required", "This two-way moderating effect is required by a three-way effect.", "Remove the dependent three-way effect first.");
+    const remainingNodes = state.nodes.filter((candidate) => candidate.id !== node.id);
+    const directlyRemoved = state.edges.filter((edge) => edge.source === node.id || edge.target === node.id);
+    const edgesWithoutNode = state.edges.filter((edge) => edge.source !== node.id && edge.target !== node.id);
+    const edges = edgesWithoutNode.filter((edge) => !edge.data?.technicalGenerated || interactionNodes(remainingNodes).some((candidate) => {
+      const interaction = candidate.data.interaction!;
+      return diagramInteractionOperands(interaction).includes(edge.source) && interaction.outcome === edge.target;
+    }));
+    const removedRelationshipIds = [...directlyRemoved.map((edge) => edge.id), ...edgesWithoutNode.filter((edge) => !edges.some((candidate) => candidate.id === edge.id)).map((edge) => edge.id)];
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        selectedNodeId: state.selectedNodeId === node.id ? null : state.selectedNodeId,
+        nodes: remainingNodes,
+        edges,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, remainingNodes, edges),
+      },
+      affected: { constructIds: [node.id, ...diagramInteractionOperands(node.data.interaction!), node.data.interaction!.outcome], indicatorIds: [], relationshipIds: removedRelationshipIds },
+    };
+  }
+
+  const effect = command.effect;
+  if (effect.target.kind !== "focal_relation" || effect.operands.length !== 2) {
+    return blockedModelEditTransitionV1(
+      "model_edit.legacy_three_way_requires_revision",
+      "Three-way moderation requires the strict calculation-ready authority.",
+      "Create a calculation-ready revision, then add the three-way moderating effect.",
+    );
+  }
+  const [predictor, moderator] = effect.operands;
+  const outcome = effect.outcomeId;
+  if (new Set([predictor, moderator, outcome]).size !== 3) {
+    return blockedModelEditTransitionV1("model_edit.moderating_effect_constructs_not_distinct", "Predictor, moderator, and outcome must be distinct constructs.", "Choose three distinct ordinary constructs.");
+  }
+  const predictorNode = editableLegacyConstructV1(state, predictor);
+  const moderatorNode = editableLegacyConstructV1(state, moderator);
+  const outcomeNode = editableLegacyConstructV1(state, outcome);
+  if (!predictorNode || !moderatorNode || !outcomeNode || [predictorNode, moderatorNode, outcomeNode].some((node) => node.data.indicators.length === 0)) {
+    return blockedModelEditTransitionV1("model_edit.moderating_effect_construct_unavailable", "Moderation needs three measured ordinary constructs.", "Assign indicators to the selected ordinary constructs and retry.");
+  }
+  if (state.edges.some((edge) => edge.data?.role === "control")) {
+    return blockedModelEditTransitionV1("model_edit.moderating_effect_control_paths_unsupported", "This older graph contains control paths that its moderation authority cannot reinterpret safely.", "Create a calculation-ready revision before adding moderation.");
+  }
+  const focalEdge = state.edges.find((edge) => edge.id === effect.target.relationId
+    && edge.source === predictor
+    && edge.target === outcome
+    && edge.data?.role !== "control"
+    && edge.data?.role !== "covariance");
+  if (!focalEdge) return blockedModelEditTransitionV1("model_edit.moderating_effect_focal_path_missing", "The requested focal structural path is not available.", "Draw or select the predictor-to-outcome path and retry.");
+  const identity = modelEditModeratingEffectIdentityV1(effect.target, effect.operands);
+  if (interactionNodes(state.nodes).some((node) => (node.data.interaction?.termId ?? node.id) === identity.termId)) {
+    return blockedModelEditTransitionV1("model_edit.moderating_effect_duplicate", "That moderating effect already exists.", "Select the existing moderating effect or choose a different moderator.");
+  }
+  const occupiedIds = new Set([...state.nodes.map((node) => node.id), ...state.edges.map((edge) => edge.id)]);
+  if (occupiedIds.has(identity.outputId)) return blockedModelEditTransitionV1("model_edit.moderating_effect_identity_in_use", "The generated moderation output identity is already in use.", "Refresh the model and retry against the current focal path.");
+  occupiedIds.add(identity.outputId);
+  const hasModeratorMainEffect = state.edges.some((edge) => edge.source === moderator && edge.target === outcome && edge.data?.role !== "covariance");
+  const moderatorEdgeId = uniqueStableGraphId(`path-${moderator}-${outcome}`, occupiedIds);
+  const withModeratorMainEffect = hasModeratorMainEffect ? state.edges : addEdge({
+    id: moderatorEdgeId,
+    source: moderator,
+    target: outcome,
+    type: "straight",
+    label: "Path",
+    markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+    data: { technicalGenerated: true },
+  }, state.edges);
+  for (const edge of withModeratorMainEffect) occupiedIds.add(edge.id);
+  const interactionEdgeId = uniqueStableGraphId(`path-${identity.outputId}-${outcome}`, occupiedIds);
+  const node: Node<ConstructData> = {
+    id: identity.outputId,
+    type: "construct",
+    position: {
+      x: Math.max(predictorNode.position.x, moderatorNode.position.x) + 220,
+      y: (predictorNode.position.y + moderatorNode.position.y + outcomeNode.position.y) / 3,
+    },
+    data: {
+      label: effect.label.trim() || `${predictorNode.data.shortName} × ${moderatorNode.data.shortName}`,
+      shortName: `${predictorNode.data.shortName}x${moderatorNode.data.shortName}`.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "INT",
+      mode: "formative",
+      indicators: [],
+      semantic: "interaction",
+      interaction: {
+        kind: "interaction_v2",
+        termId: identity.termId,
+        operands: [predictor, moderator],
+        outcome,
+        focalRelationId: focalEdge.id,
+        canonicalMethod: "two_stage",
+        hierarchyPolicy: "strong",
+        productIndicator: null,
+      },
+    },
+  };
+  const nodes = [...state.nodes, node];
+  const edges = addEdge({
+    id: interactionEdgeId,
+    source: node.id,
+    target: outcome,
+    type: "straight",
+    label: "Interaction",
+    markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
+    data: { technicalGenerated: true },
+  }, withModeratorMainEffect);
+  return {
+    status: "applied",
+    state: {
+      ...state,
+      ...historyPatch(state),
+      selectedNodeId: node.id,
+      selectedEdgeId: null,
+      nodes,
+      edges,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
+    },
+    affected: { constructIds: [predictor, moderator, outcome, node.id], indicatorIds: [], relationshipIds: [focalEdge.id, ...(!hasModeratorMainEffect ? [moderatorEdgeId] : []), interactionEdgeId] },
+  };
+};
+
+const applyLegacyScientificModelEditV1 = (
+  state: WorkspaceState,
+  command: ScientificModelEditCommandV1,
+): ModelEditTransitionV1 => {
+  if (command.kind === "add_construct") {
+    const label = command.label.trim();
+    if (!exactLegacyModelEditIdV1(command.constructId)) return blockedModelEditTransitionV1("model_edit.construct_id_invalid", "The new construct needs one exact stable identifier.", "Generate a new stable construct ID and retry.");
+    if (!label) return blockedModelEditTransitionV1("model_edit.label_required", "A construct name cannot be empty.", "Enter a nonempty construct name.");
+    if (command.position && (!Number.isFinite(command.position.x) || !Number.isFinite(command.position.y))) {
+      return blockedModelEditTransitionV1("model_edit.construct_position_invalid", "The requested Canvas position is not finite.", "Choose a valid point on the Canvas and retry.");
+    }
+    if (state.nodes.some((node) => node.id === command.constructId) || state.edges.some((edge) => edge.id === command.constructId)) {
+      return blockedModelEditTransitionV1("model_edit.construct_id_in_use", `Construct identity '${command.constructId}' is already in use.`, "Generate a new stable construct ID and retry.");
+    }
+    const requestedColumns = command.columns ?? [];
+    const columns = validUniqueIndicators(requestedColumns, state.dataset, state.analysisSettings.groupColumn);
+    if (requestedColumns.length !== columns.length) {
+      return blockedModelEditTransitionV1("model_edit.indicators_unavailable", "One or more requested indicators are unavailable in the active dataset.", "Select only unique, non-grouping columns from the active dataset.");
+    }
+    const usedShortNames = new Set(state.nodes.map((node) => node.data.shortName.toLocaleLowerCase()));
+    const shortBase = label.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "C";
+    let shortName = shortBase;
+    let suffix = 2;
+    while (usedShortNames.has(shortName.toLocaleLowerCase())) {
+      const text = String(suffix++);
+      shortName = `${shortBase.slice(0, Math.max(1, 8 - text.length))}${text}`;
+    }
+    const reassigned = state.nodes.map((node) => ({
+      ...node,
+      selected: false,
+      data: { ...node.data, indicators: node.data.indicators.filter((column) => !columns.includes(column)) },
+    }));
+    const node: Node<ConstructData> = {
+      id: command.constructId,
+      type: "construct",
+      position: command.position ? nearestOpenConstructPosition(command.position, reassigned) : nextConstructPosition(reassigned),
+      selected: true,
+      data: { label, shortName, mode: "reflective", indicators: columns },
+    };
+    const nodes = [...reassigned, node];
+    const previousOwners = state.nodes.filter((candidate) => candidate.data.indicators.some((column) => columns.includes(column)));
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        selectedNodeId: node.id,
+        selectedEdgeId: null,
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: { constructIds: [node.id, ...previousOwners.map((owner) => owner.id)], indicatorIds: columns, relationshipIds: [] },
+    };
+  }
+  if (command.kind === "add_path" || command.kind === "reverse_path" || command.kind === "remove_path") {
+    return applyLegacyPathModelEditV1(state, command);
+  }
+  if (command.kind === "create_higher_order" || command.kind === "edit_higher_order" || command.kind === "remove_higher_order") {
+    return applyLegacyHigherOrderModelEditV1(state, command);
+  }
+  if (command.kind === "create_moderating_effect" || command.kind === "edit_moderating_effect" || command.kind === "remove_moderating_effect") {
+    return applyLegacyModeratingEffectModelEditV1(state, command);
+  }
+  const construct = editableLegacyConstructV1(state, command.constructId);
+  if (!construct) {
+    return blockedModelEditTransitionV1(
+      "model_edit.construct_unavailable",
+      `Construct '${command.constructId}' is not an editable ordinary construct.`,
+      "Select an ordinary construct in the active model.",
+    );
+  }
+
+  if (command.kind === "rename_construct") {
+    const label = command.label.trim();
+    if (!label) return blockedModelEditTransitionV1("model_edit.label_required", "A construct name cannot be empty.", "Enter a nonempty construct name.");
+    if (construct.data.label === label) return blockedModelEditTransitionV1("model_edit.no_change", "The construct already uses that name.", "Enter a different name or cancel the edit.");
+    const nodes = state.nodes.map((node) => node.id === construct.id
+      ? { ...node, data: { ...node.data, label } }
+      : node);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: { constructIds: [construct.id], indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "invert_measurement_model") {
+    const nodes = state.nodes.map((node) => node.id === construct.id
+      ? { ...node, data: { ...node.data, mode: node.data.mode === "reflective" ? "formative" as const : "reflective" as const } }
+      : node);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: { constructIds: [construct.id], indicatorIds: [...construct.data.indicators], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "assign_indicators") {
+    const columns = validUniqueIndicators(command.columns, state.dataset, state.analysisSettings.groupColumn);
+    if (!columns.length) {
+      return blockedModelEditTransitionV1(
+        "model_edit.indicators_unavailable",
+        "None of the requested indicators is an eligible column in the active dataset.",
+        "Select one or more non-grouping columns from the active dataset.",
+      );
+    }
+    const previousOwners = state.nodes.filter((node) => columns.some((column) => node.data.indicators.includes(column)));
+    if (columns.every((column) => construct.data.indicators.includes(column)) && previousOwners.every((node) => node.id === construct.id)) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The selected indicators are already assigned to this construct.", "Choose different indicators or cancel the edit.");
+    }
+    const nodes = state.nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        indicators: node.id === construct.id
+          ? [...node.data.indicators.filter((column) => !columns.includes(column)), ...columns]
+          : node.data.indicators.filter((column) => !columns.includes(column)),
+      },
+    }));
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: {
+        constructIds: [...new Set([construct.id, ...previousOwners.map((node) => node.id)])],
+        indicatorIds: columns,
+        relationshipIds: [],
+      },
+    };
+  }
+
+  if (!construct.data.indicators.includes(command.column)) {
+    return blockedModelEditTransitionV1(
+      "model_edit.indicator_not_assigned",
+      `Column '${command.column}' is not assigned to construct '${construct.id}'.`,
+      "Choose an indicator currently assigned to the construct.",
+    );
+  }
+  const nodes = state.nodes.map((node) => node.id === construct.id
+    ? { ...node, data: { ...node.data, indicators: node.data.indicators.filter((column) => column !== command.column) } }
+    : node);
+  return {
+    status: "applied",
+    state: {
+      ...state,
+      ...historyPatch(state),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+    },
+    affected: { constructIds: [construct.id], indicatorIds: [command.column], relationshipIds: [] },
+  };
+};
+
+const applyPresentationModelEditV1 = (
+  state: WorkspaceState,
+  command: PresentationModelEditCommandV1,
+): ModelEditTransitionV1 => {
+  if (state.diagramLayout.layoutLocked) {
+    return blockedModelEditTransitionV1(
+      "model_edit.layout_locked",
+      "The diagram layout is locked.",
+      "Unlock the layout, then retry the presentation edit.",
+    );
+  }
+
+  if (command.kind === "move_construct") {
+    const construct = state.nodes.find((node) => node.id === command.constructId);
+    if (!construct || !Number.isFinite(command.position.x) || !Number.isFinite(command.position.y)) {
+      return blockedModelEditTransitionV1("model_edit.construct_position_invalid", "The construct or requested Canvas position is unavailable.", "Refresh the model and move an existing construct again.");
+    }
+    if (construct.position.x === command.position.x && construct.position.y === command.position.y) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The construct is already at that position.", "Move it to a different position or cancel the edit.");
+    }
+    const nodes = state.nodes.map((node) => node.id === construct.id ? { ...node, position: { ...command.position } } : node);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: { constructIds: [construct.id], indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "set_path_routing" || command.kind === "reset_path_route"
+    || command.kind === "nudge_path_label" || command.kind === "reset_path_label") {
+    const edge = state.edges.find((candidate) => candidate.id === command.relationId);
+    if (!edge) return blockedModelEditTransitionV1("model_edit.path_unavailable", `Relationship '${command.relationId}' is not present on the Canvas.`, "Refresh the model and select the path again.");
+    const current = state.diagramLayout.edgeLayouts[edge.id] ?? { routing: "straight" as const };
+    let next = { ...current };
+    let edges = state.edges;
+    if (command.kind === "set_path_routing") {
+      if (current.routing === command.routing) return blockedModelEditTransitionV1("model_edit.no_change", "The path already uses that routing style.", "Choose a different routing style or cancel the edit.");
+      next = { ...next, routing: command.routing, pinned: command.routing !== "straight" || Boolean(next.labelOffset) || Boolean(next.bendPoints?.length) };
+      const edgeType: PathRouting = command.routing === "orthogonal" ? "smoothstep" : command.routing === "curved" ? "default" : "straight";
+      edges = state.edges.map((candidate) => candidate.id === edge.id ? { ...candidate, type: edgeType } : candidate);
+    } else if (command.kind === "reset_path_route") {
+      if (current.routing === "straight" && !current.bendPoints?.length) return blockedModelEditTransitionV1("model_edit.no_change", "The path route already uses its default.", "Keep the current route or choose another path.");
+      next = { ...next, routing: "straight", bendPoints: undefined, pinned: Boolean(next.labelOffset) };
+      edges = state.edges.map((candidate) => candidate.id === edge.id ? { ...candidate, type: "straight" } : candidate);
+    } else if (command.kind === "nudge_path_label") {
+      if (!Number.isFinite(command.offset.x) || !Number.isFinite(command.offset.y) || command.offset.x === 0 && command.offset.y === 0) {
+        return blockedModelEditTransitionV1("model_edit.path_label_offset_invalid", "The label movement must be one finite, nonzero offset.", "Move the label by a visible horizontal or vertical amount.");
+      }
+      const currentOffset = current.labelOffset ?? { x: 0, y: 0 };
+      next = { ...next, labelOffset: { x: currentOffset.x + command.offset.x, y: currentOffset.y + command.offset.y }, pinned: true };
+    } else {
+      if (!current.labelOffset) return blockedModelEditTransitionV1("model_edit.no_change", "The path label already uses its default position.", "Keep the current label position or choose another path.");
+      next = { ...next, labelOffset: undefined, pinned: current.routing !== "straight" || Boolean(current.bendPoints?.length) };
+    }
+    const diagramLayout = {
+      ...state.diagramLayout,
+      edgeLayouts: { ...state.diagramLayout.edgeLayouts, [edge.id]: next },
+    };
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), edges, diagramLayout },
+      affected: { constructIds: [], indicatorIds: [], relationshipIds: [edge.id] },
+    };
+  }
+
+  if (command.kind === "tidy_constructs") {
+    const ids = [...new Set(command.constructIds)];
+    const existing = ids.filter((id) => state.nodes.some((node) => node.id === id));
+    if (ids.length < 2 || existing.length !== ids.length) {
+      return blockedModelEditTransitionV1("model_edit.selection_ineligible", "Local tidy needs at least two existing constructs.", "Select two or more constructs and retry.");
+    }
+    const tidied = tidyConstructsPreservingLayoutV1(state.nodes, state.edges, state.diagramLayout, ids);
+    if (!tidied.movedConstructIds.length) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The selected constructs already use this local tidy arrangement.", "Move or unpin a selected construct, or keep the current layout.");
+    }
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), nodes: tidied.nodes, diagramLayout: tidied.diagramLayout },
+      affected: { constructIds: tidied.movedConstructIds, indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "set_standard_sem_presentation") {
+    if (command.presentation.schemaVersion !== 1) {
+      return blockedModelEditTransitionV1(
+        "model_edit.presentation_schema_invalid",
+        "The diagram annotation layout uses an unsupported schema version.",
+        "Refresh the model and retry with the current presentation editor.",
+      );
+    }
+    const presentation = structuredClone(command.presentation);
+    if (JSON.stringify(state.diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] }) === JSON.stringify(presentation)) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The diagram annotations are unchanged.", "Change an annotation or cancel the edit.");
+    }
+    const diagramLayout = { ...state.diagramLayout, standardSemPresentation: presentation };
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), diagramLayout },
+      affected: { constructIds: [], indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "arrange_model") {
+    const arranged = arrangeModelPreservingLayoutV1(state.nodes, state.edges, state.diagramLayout, command.direction);
+    if (!arranged.movedConstructIds.length) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "Arrange would not move any unpinned construct.", "Unpin a construct or keep the current layout.");
+    }
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), nodes: arranged.nodes, diagramLayout: arranged.diagramLayout },
+      affected: { constructIds: arranged.movedConstructIds, indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "align_constructs" || command.kind === "distribute_constructs") {
+    const ids = [...new Set(command.constructIds)];
+    const minimum = command.kind === "align_constructs" ? 2 : 3;
+    const selected = ids.map((id) => state.nodes.find((node) => node.id === id)).filter((node): node is Node<ConstructData> => Boolean(node));
+    if (selected.length !== ids.length) {
+      return blockedModelEditTransitionV1(
+        "model_edit.selection_ineligible",
+        "The selection contains a construct that is no longer available.",
+        "Refresh the model and select existing constructs again.",
+      );
+    }
+    const constructs = selected.filter((node) => !state.diagramLayout.constructLayouts[node.id]?.pinned);
+    if (constructs.length < minimum) {
+      return blockedModelEditTransitionV1(
+        "model_edit.selection_ineligible",
+        `${command.kind === "align_constructs" ? "Alignment" : "Distribution"} needs ${minimum} selected, unpinned constructs.`,
+        `Select at least ${minimum} unpinned constructs or unpin the constructs you want to move.`,
+      );
+    }
+    const positions = new Map<string, XYPosition>();
+    if (command.kind === "align_constructs") {
+      const x = constructs.map((node) => node.position.x);
+      const y = constructs.map((node) => node.position.y);
+      const centersX = x.map((value) => value + constructSize.width / 2);
+      const centersY = y.map((value) => value + constructSize.height / 2);
+      const target = command.target === "left" ? Math.min(...x)
+        : command.target === "right" ? Math.max(...x.map((value) => value + constructSize.width))
+          : command.target === "centerX" ? centersX.reduce((sum, value) => sum + value, 0) / centersX.length
+            : command.target === "top" ? Math.min(...y)
+              : command.target === "bottom" ? Math.max(...y.map((value) => value + constructSize.height))
+                : centersY.reduce((sum, value) => sum + value, 0) / centersY.length;
+      for (const node of constructs) positions.set(node.id, command.target === "left"
+        ? { ...node.position, x: target }
+        : command.target === "right"
+          ? { ...node.position, x: target - constructSize.width }
+          : command.target === "centerX"
+            ? { ...node.position, x: target - constructSize.width / 2 }
+            : command.target === "top"
+              ? { ...node.position, y: target }
+              : command.target === "bottom"
+                ? { ...node.position, y: target - constructSize.height }
+                : { ...node.position, y: target - constructSize.height / 2 });
+    } else {
+      const sorted = [...constructs].sort((left, right) => command.axis === "horizontal"
+        ? left.position.x - right.position.x
+        : left.position.y - right.position.y);
+      const centers = sorted.map((node) => command.axis === "horizontal"
+        ? node.position.x + constructSize.width / 2
+        : node.position.y + constructSize.height / 2);
+      const spacing = (centers.at(-1)! - centers[0]!) / (sorted.length - 1);
+      sorted.forEach((node, index) => positions.set(node.id, command.axis === "horizontal"
+        ? { ...node.position, x: centers[0]! + spacing * index - constructSize.width / 2 }
+        : { ...node.position, y: centers[0]! + spacing * index - constructSize.height / 2 }));
+    }
+    const moved = constructs.map((node) => node.id).filter((id) => {
+      const before = state.nodes.find((node) => node.id === id)!.position;
+      const after = positions.get(id)!;
+      return before.x !== after.x || before.y !== after.y;
+    });
+    if (!moved.length) return blockedModelEditTransitionV1("model_edit.no_change", "The selected constructs already have the requested arrangement.", "Choose a different arrangement or selection.");
+    const nodes = state.nodes.map((node) => positions.has(node.id) ? { ...node, position: positions.get(node.id)! } : node);
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        nodes,
+        diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+      },
+      affected: { constructIds: moved, indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  const construct = state.nodes.find((node) => node.id === command.constructId);
+  if (!construct) {
+    return blockedModelEditTransitionV1(
+      "model_edit.construct_unavailable",
+      `Construct '${command.constructId}' is not present in the active diagram.`,
+      "Refresh the model and select the construct again.",
+    );
+  }
+
+  if (command.kind === "set_construct_pinned") {
+    const current = state.diagramLayout.constructLayouts[construct.id] ?? { x: construct.position.x, y: construct.position.y };
+    if (Boolean(current.pinned) === command.pinned) return blockedModelEditTransitionV1("model_edit.no_change", "The construct already has the requested pin state.", "Choose a different pin state or cancel the edit.");
+    const diagramLayout = reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, state.edges);
+    diagramLayout.constructLayouts[construct.id] = { ...diagramLayout.constructLayouts[construct.id], pinned: command.pinned };
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), diagramLayout },
+      affected: { constructIds: [construct.id], indicatorIds: [], relationshipIds: [] },
+    };
+  }
+
+  const indicators = state.diagramLayout.indicatorLayouts[construct.id] ?? {};
+  if (command.kind === "set_construct_indicator_side") {
+    if (!construct.data.indicators.length) return blockedModelEditTransitionV1("model_edit.indicators_unavailable", "The construct has no indicators to position.", "Assign indicators before changing their position.");
+    const alreadySet = construct.data.indicators.every((column) => indicators[column]?.side === command.side && indicators[column]?.pinned);
+    if (alreadySet) return blockedModelEditTransitionV1("model_edit.no_change", "All construct indicators already use that position.", "Choose a different position or cancel the edit.");
+    const nextIndicators = Object.fromEntries(construct.data.indicators.map((column, index) => [column, {
+      ...(indicators[column] ?? { order: index }),
+      side: command.side,
+      x: undefined,
+      y: undefined,
+      order: indicators[column]?.order ?? index,
+      pinned: true,
+    }]));
+    const diagramLayout = reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, state.edges);
+    diagramLayout.indicatorLayouts[construct.id] = nextIndicators;
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), diagramLayout },
+      affected: { constructIds: [construct.id], indicatorIds: [...construct.data.indicators], relationshipIds: [] },
+    };
+  }
+
+  if (command.kind === "reset_indicator_layout" && command.column === undefined) {
+    const hasManualLayout = Object.values(indicators).some((layout) =>
+      Boolean(layout.pinned) || layout.side === "free" || layout.x !== undefined || layout.y !== undefined);
+    if (!hasManualLayout) return blockedModelEditTransitionV1("model_edit.no_change", "All construct indicators already use automatic placement.", "Choose a manual position or cancel the edit.");
+    const diagramLayout = reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, state.edges);
+    diagramLayout.indicatorLayouts[construct.id] = {};
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        diagramLayout: reconcileModelEditDiagramLayoutV1(diagramLayout, state.nodes, state.edges),
+      },
+      affected: { constructIds: [construct.id], indicatorIds: [...construct.data.indicators], relationshipIds: [] },
+    };
+  }
+
+  const column = command.column;
+  if (column === undefined) {
+    return blockedModelEditTransitionV1("model_edit.indicator_required", "Select an indicator for this presentation edit.", "Select one assigned indicator and retry.");
+  }
+  if (!construct.data.indicators.includes(column)) {
+    return blockedModelEditTransitionV1(
+      "model_edit.indicator_not_assigned",
+      `Column '${column}' is not assigned to construct '${construct.id}'.`,
+      "Choose an indicator currently assigned to the construct.",
+    );
+  }
+  const current = indicators[column] ?? { side: "left" as const, order: construct.data.indicators.indexOf(column) };
+  const diagramLayout = reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, state.edges);
+  if (command.kind === "move_indicator") {
+    if (!Number.isFinite(command.position.x) || !Number.isFinite(command.position.y)) {
+      return blockedModelEditTransitionV1("model_edit.position_invalid", "Indicator coordinates must be finite numbers.", "Move the indicator to a valid Canvas position.");
+    }
+    if (current.side === "free" && current.x === command.position.x && current.y === command.position.y && current.pinned) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The indicator is already at that position.", "Move it to a different position or cancel the edit.");
+    }
+    diagramLayout.indicatorLayouts[construct.id][column] = { ...current, side: "free", x: command.position.x, y: command.position.y, pinned: true };
+  } else if (command.kind === "set_indicator_side") {
+    if (command.side === "free" && (typeof current.x !== "number" || typeof current.y !== "number")) {
+      return blockedModelEditTransitionV1("model_edit.free_position_required", "Free placement requires an existing Canvas position.", "Drag the indicator to establish its free position.");
+    }
+    if (current.side === command.side && current.pinned) return blockedModelEditTransitionV1("model_edit.no_change", "The indicator already uses that position.", "Choose a different position or cancel the edit.");
+    diagramLayout.indicatorLayouts[construct.id][column] = command.side === "free"
+      ? { ...current, side: "free", pinned: true }
+      : { ...current, side: command.side, x: undefined, y: undefined, pinned: true };
+  } else {
+    if (!current.pinned && current.side !== "free" && current.x === undefined && current.y === undefined) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The indicator already uses automatic placement.", "Choose a manual position or cancel the edit.");
+    }
+    delete diagramLayout.indicatorLayouts[construct.id][column];
+    const reconciled = reconcileModelEditDiagramLayoutV1(diagramLayout, state.nodes, state.edges);
+    return {
+      status: "applied",
+      state: { ...state, ...historyPatch(state), diagramLayout: reconciled },
+      affected: { constructIds: [construct.id], indicatorIds: [column], relationshipIds: [] },
+    };
+  }
+  return {
+    status: "applied",
+    state: { ...state, ...historyPatch(state), diagramLayout },
+    affected: { constructIds: [construct.id], indicatorIds: [column], relationshipIds: [] },
+  };
+};
+
 const upsertDatasetCatalog = (catalog: Dataset[], dataset: Dataset) => {
   const index = catalog.findIndex((candidate) => candidate.id === dataset.id);
   if (index < 0) return [...catalog, dataset];
@@ -1114,6 +2003,164 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   setDiagramGridVisible: (showGrid) => set((state) => ({ diagramLayout: { ...state.diagramLayout, showGrid } })),
   setDiagramLayoutLocked: (layoutLocked) => set((state) => ({ diagramLayout: { ...state.diagramLayout, layoutLocked } })),
   checkpoint: () => set((state) => historyPatch(state)),
+  executeModelEditCommand: async (command) => {
+    const transaction = modelEditTransactionClassV1(command);
+    const invoked = get();
+    const invokedAuthority = activeStandardSemModelV4Authority(invoked);
+    const invokedAuthorityKind = invokedAuthority ? "standard_sem_model_v4" as const : "legacy_graph" as const;
+    const invokedModelId = invoked.activeModelId;
+    const blocked = (
+      code: string,
+      message: string,
+      correctiveAction: string,
+      authority = invokedAuthorityKind,
+      modelId = invokedModelId,
+    ): ModelEditCommandResultV1 => ({
+      status: "blocked",
+      command: command.kind,
+      transaction,
+      authority,
+      modelId,
+      code,
+      message,
+      correctiveAction,
+    });
+    const applied = (
+      affected: ModelEditAffectedIdentitiesV1,
+      authority = invokedAuthorityKind,
+      modelId = invokedModelId,
+    ): ModelEditCommandResultV1 => ({
+      status: "applied",
+      command: command.kind,
+      transaction,
+      authority,
+      modelId,
+      affected,
+      undoable: true,
+      stableIdsPreserved: true,
+    });
+
+    if (invoked.generalSemPublicationPending) {
+      return blocked(
+        "model_edit.publication_pending",
+        "The calculation-ready project revision is still being published.",
+        "Wait for publication to finish, then retry the edit.",
+      );
+    }
+
+    if (transaction === "scientific" && invokedAuthority) {
+      const plan = strictModelEditIntentPlanV1(
+        command,
+        invokedAuthority,
+        invoked.dataset,
+        invoked.analysisSettings.groupColumn,
+      );
+      if (plan.status === "blocked") return blocked(plan.code, plan.message, plan.correctiveAction);
+      const outcome = await invoked.commitStandardSemModelV4Intent(plan.intent);
+      if (outcome.status === "committed") {
+        if (command.kind === "add_construct" && command.position) {
+          set((state) => {
+            if (state.activeModelId !== invokedModelId || !state.nodes.some((node) => node.id === command.constructId)) return state;
+            const nodes = state.nodes.map((node) => node.id === command.constructId
+              ? { ...node, position: { ...command.position! } }
+              : node);
+            const diagramLayout = reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges);
+            return {
+              nodes,
+              diagramLayout,
+              standardSemModelV4Layouts: invokedModelId ? {
+                ...state.standardSemModelV4Layouts,
+                [invokedModelId]: standardSemModelV4Layout(invokedModelId, diagramLayout),
+              } : state.standardSemModelV4Layouts,
+            };
+          });
+        }
+        return applied(plan.affected);
+      }
+      if (outcome.status === "blocked") {
+        return blocked(
+          outcome.diagnostic.code,
+          outcome.diagnostic.message,
+          outcome.diagnostic.correctiveAction,
+        );
+      }
+      if (outcome.status === "stale") {
+        return blocked(
+          "model_edit.authority_stale",
+          "The active model authority changed before the edit could be committed.",
+          "Review the current model and retry the edit.",
+        );
+      }
+      const rejected = outcome.error as { code?: unknown; message?: unknown; corrective_action?: unknown } | null;
+      return blocked(
+        typeof rejected?.code === "string" ? rejected.code : "model_edit.authority_rejected",
+        typeof rejected?.message === "string" ? rejected.message : "The strict model authority rejected the edit.",
+        typeof rejected?.corrective_action === "string"
+          ? rejected.corrective_action
+          : "Correct the edit against the unchanged active authority and retry.",
+      );
+    }
+
+    let transition: ModelEditTransitionV1 | null = null;
+    let appliedAuthority = invokedAuthorityKind;
+    let appliedModelId = invokedModelId;
+    set((state) => {
+      appliedAuthority = activeStandardSemModelV4Authority(state) ? "standard_sem_model_v4" : "legacy_graph";
+      appliedModelId = state.activeModelId;
+      if (state.generalSemPublicationPending) {
+        transition = blockedModelEditTransitionV1(
+          "model_edit.publication_pending",
+          "The calculation-ready project revision is still being published.",
+          "Wait for publication to finish, then retry the edit.",
+        );
+        return state;
+      }
+      if (transaction === "scientific") {
+        if (activeStandardSemModelV4Authority(state)) {
+          transition = blockedModelEditTransitionV1(
+            "model_edit.authority_changed",
+            "The active model changed to a strict Standard authority before the legacy edit was applied.",
+            "Review the active model and retry through its strict revision authority.",
+          );
+          return state;
+        }
+        transition = applyLegacyScientificModelEditV1(
+          state,
+          command as ScientificModelEditCommandV1,
+        );
+      } else {
+        transition = applyPresentationModelEditV1(
+          state,
+          command as PresentationModelEditCommandV1,
+        );
+      }
+      if (transition.status !== "applied") return state;
+      const next = transition.state;
+      const activeAuthority = activeStandardSemModelV4Authority(next);
+      return transaction === "presentation" && activeAuthority && next.activeModelId
+        ? {
+          ...next,
+          standardSemModelV4Layouts: {
+            ...next.standardSemModelV4Layouts,
+            [next.activeModelId]: standardSemModelV4Layout(next.activeModelId, next.diagramLayout),
+          },
+        }
+        : next;
+    });
+    const evaluated = transition as ModelEditTransitionV1 | null;
+    if (!evaluated) {
+      return blocked(
+        "model_edit.not_evaluated",
+        "The model edit could not be evaluated.",
+        "Refresh the active model and retry.",
+        appliedAuthority,
+        appliedModelId,
+      );
+    }
+    return evaluated.status === "applied"
+      ? applied(evaluated.affected, appliedAuthority, appliedModelId)
+      : blocked(evaluated.code, evaluated.message, evaluated.correctiveAction, appliedAuthority, appliedModelId);
+  },
   undo: () => set((state) => {
     const previous = state.past.at(-1);
     if (!previous) return state;
@@ -1879,6 +2926,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   }),
   setPathRouting: (id, routing) => set((state) => setPathRoutingState(state, id, routing)),
   alignSelectedConstructs: (target) => set((state) => {
+    if (state.diagramLayout.layoutLocked) return state;
     const selected = selectedConstructs(state);
     if (selected.length < 2) return state;
     const xValues = selected.map((node) => node.position.x);
@@ -1894,22 +2942,25 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
             : target === "bottom" ? Math.max(...bottomValues)
               : centerYValues.reduce((sum, value) => sum + value, 0) / centerYValues.length;
     const selectedIds = new Set(selected.map((node) => node.id));
+    const nodes = state.nodes.map((node) => {
+      if (!selectedIds.has(node.id)) return node;
+      const position = { ...node.position };
+      if (target === "left") position.x = targetValue;
+      else if (target === "right") position.x = targetValue - constructSize.width;
+      else if (target === "centerX") position.x = targetValue - constructSize.width / 2;
+      else if (target === "top") position.y = targetValue;
+      else if (target === "bottom") position.y = targetValue - constructSize.height;
+      else position.y = targetValue - constructSize.height / 2;
+      return { ...node, position };
+    });
     return {
       ...historyPatch(state),
-      nodes: state.nodes.map((node) => {
-        if (!selectedIds.has(node.id)) return node;
-        const position = { ...node.position };
-        if (target === "left") position.x = targetValue;
-        else if (target === "right") position.x = targetValue - constructSize.width;
-        else if (target === "centerX") position.x = targetValue - constructSize.width / 2;
-        else if (target === "top") position.y = targetValue;
-        else if (target === "bottom") position.y = targetValue - constructSize.height;
-        else position.y = targetValue - constructSize.height / 2;
-        return { ...node, position };
-      }),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
   }),
   distributeSelectedConstructs: (axis) => set((state) => {
+    if (state.diagramLayout.layoutLocked) return state;
     const selected = selectedConstructs(state);
     if (selected.length < 3) return state;
     const sorted = [...selected].sort((left, right) => axis === "horizontal" ? left.position.x - right.position.x : left.position.y - right.position.y);
@@ -1918,32 +2969,28 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     const last = centers.at(-1)!;
     const spacing = (last - first) / (sorted.length - 1);
     const targetCenters = new Map(sorted.map((node, index) => [node.id, first + spacing * index]));
+    const nodes = state.nodes.map((node) => {
+      const center = targetCenters.get(node.id);
+      if (center === undefined) return node;
+      return {
+        ...node,
+        position: axis === "horizontal"
+          ? { ...node.position, x: center - constructSize.width / 2 }
+          : { ...node.position, y: center - constructSize.height / 2 },
+      };
+    });
     return {
       ...historyPatch(state),
-      nodes: state.nodes.map((node) => {
-        const center = targetCenters.get(node.id);
-        if (center === undefined) return node;
-        return {
-          ...node,
-          position: axis === "horizontal"
-            ? { ...node.position, x: center - constructSize.width / 2 }
-            : { ...node.position, y: center - constructSize.height / 2 },
-        };
-      }),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
   }),
   autoLayout: (direction = "horizontal") => set((state) => {
-    const nodes = direction === "smartpls" ? layoutSmartplsModel(state.nodes, state.edges) : layoutModel(state.nodes, state.edges, direction);
-    const diagramLayout = syncedDiagramLayout(nodes, state.edges, state.diagramLayout);
-    for (const node of nodes) {
-      diagramLayout.constructLayouts[node.id] = {
-        ...(diagramLayout.constructLayouts[node.id] ?? {}),
-        x: node.position.x,
-        y: node.position.y,
-        pinned: false,
-      };
-    }
-    return { ...historyPatch(state), nodes, diagramLayout };
+    if (state.diagramLayout.layoutLocked) return state;
+    const arranged = arrangeModelPreservingLayoutV1(state.nodes, state.edges, state.diagramLayout, direction);
+    return arranged.movedConstructIds.length
+      ? { ...historyPatch(state), nodes: arranged.nodes, diagramLayout: arranged.diagramLayout }
+      : state;
   }),
   moveIndicator: (constructId, indicator, position) => set((state) => {
     const construct = state.nodes.find((node) => node.id === constructId);
@@ -2006,6 +3053,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     if (!construct) return state;
     const current = state.diagramLayout.constructLayouts[constructId] ?? { x: construct.position.x, y: construct.position.y };
     return {
+      ...historyPatch(state),
       diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
         ...state.diagramLayout,
         constructLayouts: {
@@ -2037,23 +3085,19 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       || target.data.indicators.includes(indicator)
       || indicator === state.analysisSettings.groupColumn?.trim()
     ) return state;
-    const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, indicators]) => {
-      const next = { ...indicators };
-      if (nodeId !== constructId) delete next[indicator];
-      return [nodeId, next];
+    const nodes = state.nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        indicators: node.id === constructId
+          ? [...node.data.indicators, indicator]
+          : node.data.indicators.filter((item) => item !== indicator),
+      },
     }));
     return {
       ...historyPatch(state),
-      nodes: state.nodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          indicators: node.id === constructId
-            ? [...node.data.indicators, indicator]
-            : node.data.indicators.filter((item) => item !== indicator),
-        },
-      })),
-      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, { ...state.diagramLayout, indicatorLayouts: indicatorLayout }),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
   }),
   assignIndicators: (constructId, indicators) => set((state) => {
@@ -2061,39 +3105,35 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     const target = state.nodes.find((node) => node.id === constructId);
     const unique = validUniqueIndicators(indicators, state.dataset, state.analysisSettings.groupColumn);
     if (!target || target.data.semantic === "interaction" || target.data.semantic === "higher_order" || unique.length === 0) return state;
-    const indicatorLayout = Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts).map(([nodeId, current]) => {
-      const next = { ...current };
-      if (nodeId !== constructId) unique.forEach((indicator) => delete next[indicator]);
-      return [nodeId, next];
+    const nodes = state.nodes.map((node) => ({
+      ...node,
+      data: {
+        ...node.data,
+        indicators: node.id === constructId
+          ? [...node.data.indicators.filter((item) => !unique.includes(item)), ...unique]
+          : node.data.indicators.filter((item) => !unique.includes(item)),
+      },
     }));
     return {
       ...historyPatch(state),
-      nodes: state.nodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          indicators: node.id === constructId
-            ? [...node.data.indicators.filter((item) => !unique.includes(item)), ...unique]
-            : node.data.indicators.filter((item) => !unique.includes(item)),
-        },
-      })),
-      diagramLayout: syncedDiagramLayout(state.nodes, state.edges, { ...state.diagramLayout, indicatorLayouts: indicatorLayout }),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
   }),
-  unassignIndicator: (constructId, indicator) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
-    ...historyPatch(state),
-    nodes: state.nodes.map((node) => node.id === constructId ? {
+  unassignIndicator: (constructId, indicator) => set((state) => {
+    if (activeStandardSemModelV4Authority(state)) return state;
+    const construct = state.nodes.find((node) => node.id === constructId);
+    if (!construct?.data.indicators.includes(indicator)) return state;
+    const nodes = state.nodes.map((node) => node.id === constructId ? {
       ...node,
       data: { ...node.data, indicators: node.data.indicators.filter((item) => item !== indicator) },
-    } : node),
-    diagramLayout: syncedDiagramLayout(state.nodes, state.edges, {
-      ...state.diagramLayout,
-      indicatorLayouts: {
-        ...state.diagramLayout.indicatorLayouts,
-        [constructId]: Object.fromEntries(Object.entries(state.diagramLayout.indicatorLayouts[constructId] ?? {}).filter(([key]) => key !== indicator)),
-      },
-    }),
-  })),
+    } : node);
+    return {
+      ...historyPatch(state),
+      nodes,
+      diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
+    };
+  }),
   setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
@@ -2560,6 +3600,11 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           || state.standardSemModelV4Authorities[modelId]?.model_document_sha256 !== source.model_document_sha256
         ) return state;
         committed = true;
+        const preservedLayout = reconcileModelEditDiagramLayoutV1(
+          state.diagramLayout,
+          projection.nodes,
+          projection.edges,
+        );
         return {
           ...historyPatch(state),
           standardSemModelV4Authorities: {
@@ -2568,7 +3613,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           },
           standardSemModelV4Layouts: {
             ...state.standardSemModelV4Layouts,
-            [modelId]: standardSemModelV4Layout(modelId, projection.diagramLayout),
+            [modelId]: standardSemModelV4Layout(modelId, preservedLayout),
           },
           standardSemModelV4Persistence: {
             ...state.standardSemModelV4Persistence,
@@ -2583,7 +3628,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           },
           nodes: projection.nodes,
           edges: projection.edges,
-          diagramLayout: projection.diagramLayout,
+          diagramLayout: preservedLayout,
           selectedNodeId: null,
           selectedEdgeId: null,
         };
@@ -2738,7 +3783,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         ? state.standardSemModelV4Persistence[state.activeModelId] ?? null
         : null;
       const sourceLayout = state.activeModelId
-        ? state.standardSemModelV4Layouts[state.activeModelId] ?? null
+        ? currentStandardSemModelV4Layout(state, state.activeModelId) ?? null
         : null;
       const revisionSourceReady = Boolean(sourceAuthority && sourcePersistence && sourceLayout);
       if (sourceAuthority && !revisionSourceReady) return state;

@@ -20,6 +20,29 @@ export interface ResultTableAdvisory {
   message: string;
 }
 
+export type ResultTableColumnKind = "identity" | "number" | "text";
+export type ResultTableColumnPriority = "primary" | "secondary" | "tertiary";
+
+export interface ResultTableColumnPresentationHint {
+  kind?: ResultTableColumnKind;
+  priority?: ResultTableColumnPriority;
+  sticky?: boolean;
+}
+
+export interface ResultTableRowPresentationHint {
+  /** Stable only within this projected table; never an archive identity. */
+  key?: string;
+  nodeIds?: readonly string[];
+  relationIds?: readonly string[];
+  interactionTermIds?: readonly string[];
+}
+
+export interface ResultTablePresentationHints {
+  columns?: readonly (ResultTableColumnPresentationHint | null)[];
+  rows?: readonly (ResultTableRowPresentationHint | null)[];
+  confidenceLevel?: number | null;
+}
+
 export interface ResultTable {
   id: string;
   title: string;
@@ -27,6 +50,8 @@ export interface ResultTable {
   warning: string | null;
   /** Compact presentation guidance. `warning` remains the export/archive authority. */
   advisory?: ResultTableAdvisory | null;
+  /** Optional UI-only semantics. Scientific values and archive identities stay in rows. */
+  presentation?: ResultTablePresentationHints;
   columns: string[];
   rows: string[][];
 }

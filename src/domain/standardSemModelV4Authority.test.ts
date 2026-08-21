@@ -226,6 +226,38 @@ describe("StandardSemModelV4 authority", () => {
     expect(JSON.stringify(replaced.model.relations)).toBe(relationBytes);
   });
 
+  it("removes only the exact HOC identity and preserves its components and unrelated paths", () => {
+    const source = authority(convertLegacyBasicModelV4(legacy, "pls_composite"));
+    const added = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "add_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:hoc",
+      label: "Corporate standing",
+      components: ["construct:x", "construct:y"],
+      approach: "embedded_two_stage",
+      measurement_type: "reflective_reflective",
+    });
+    const relationsBefore = structuredClone(added.model.relations);
+    const removed = reduceStandardSemModelV4AuthorityV1(authority(added.model, "b".repeat(64)), {
+      kind: "remove_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:hoc",
+    });
+
+    expect(removed.model.variables.some((variable) => variable.id === "derived:hoc")).toBe(false);
+    expect(removed.model.derived_terms.some((term) => term.id === "term:hoc")).toBe(false);
+    expect(removed.model.variables).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "construct:x" }),
+      expect.objectContaining({ id: "construct:y" }),
+    ]));
+    expect(removed.model.relations).toEqual(relationsBefore);
+    expect(() => reduceStandardSemModelV4AuthorityV1(authority(added.model, "b".repeat(64)), {
+      kind: "remove_higher_order",
+      term_id: "term:hoc",
+      output_id: "derived:stale",
+    })).toThrowError(expect.objectContaining({ code: "standard_sem_authority.higher_order_identity_mismatch" }));
+  });
+
   it("strictly replaces the complete canonical document without mutating the source authority", () => {
     const source = authority();
     const sourceJson = JSON.stringify(source);

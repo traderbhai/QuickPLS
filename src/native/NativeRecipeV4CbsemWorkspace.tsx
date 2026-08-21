@@ -44,6 +44,7 @@ import type {
 import type { InternalProjectSchema6ResultAppendOutcomeV1 } from "../domain/internalProjectSchema6ResultAppend";
 import type { InternalProjectSchema6CanonicalResultEntryV1 } from "../domain/internalProjectSchema6ResultRead";
 import type { ResultTable } from "../domain/resultTables";
+import { canonicalResultTablePresentation } from "../domain/resultTablePresentation";
 import type { UnifiedSemCalculationPlanV1 } from "../domain/unifiedSemCalculationV1";
 import type { ProjectUpgradeInspectionV1, ProjectUpgradeOutcomeV1 } from "../domain/internalProjectUpgradeV6";
 import { scientificSemModelV4HashInput } from "../domain/semModelV4";
@@ -807,12 +808,43 @@ export function CanonicalResultDocumentV2View({
       {section.table_ids.map((tableId) => {
         const table = tables.get(tableId);
         if (!table) return null;
+        const tablePresentation = canonicalResultTablePresentation(table);
         return <div
-          className="nd-cbsem-v4-table-wrap"
+          className="nd-cbsem-v4-table-wrap nd-result-table-scroll"
           data-canonical-table-id={table.id}
+          data-result-horizontal-scroll="true"
           id={`nd-canonical-table-${canonicalDomToken(table.id)}`}
           key={table.id}
-        ><table><caption><strong>{table.title}</strong>{table.description ? <span>{table.description}</span> : null}</caption><thead><tr>{table.columns.map((column) => <th key={column.id} scope="col" title={column.description}>{column.label}</th>)}</tr></thead><tbody>{table.rows.map((row) => <tr key={row.id}>{row.cells.map((cell, index) => <td key={`${row.id}:${table.columns[index]?.id ?? index}`}>{canonicalCellText(cell, table.columns[index]?.default_precision ?? document.presentation.precision, document.presentation.missing_value_label)}</td>)}</tr>)}</tbody></table></div>;
+        >
+          {tablePresentation.confidenceHeading ? <p className="nd-result-confidence-heading" data-result-confidence-heading="true">{tablePresentation.confidenceHeading}</p> : null}
+          {tablePresentation.hasHorizontalOverflowRisk ? <p className="nd-result-horizontal-scroll-hint" data-result-horizontal-scroll-hint="true">More columns are available horizontally.</p> : null}
+          <table
+            className="nd-result-table nd-canonical-result-table"
+            data-result-responsive-columns={tablePresentation.hasLowerPriorityColumns ? "true" : "false"}
+            data-result-overflow-risk={tablePresentation.hasHorizontalOverflowRisk ? "true" : "false"}
+          ><caption><strong>{table.title}</strong>{table.description ? <span>{table.description}</span> : null}</caption><thead><tr>{table.columns.map((column, columnIndex) => {
+            const presentation = tablePresentation.columns[columnIndex]!;
+            return <th
+              scope="col"
+              className={`nd-result-column nd-result-column--${presentation.kind} nd-result-column--${presentation.priority}`}
+              data-result-column-kind={presentation.kind}
+              data-result-column-priority={presentation.priority}
+              data-result-identity-column={presentation.sticky ? "true" : undefined}
+              key={column.id}
+              title={column.description}
+            >{column.label}</th>;
+          })}</tr></thead><tbody>{table.rows.map((row) => <tr key={row.id}>{row.cells.map((cell, index) => {
+            const column = table.columns[index];
+            const presentation = tablePresentation.columns[index]!;
+            return <td
+              className={`nd-result-column nd-result-column--${presentation.kind} nd-result-column--${presentation.priority}`}
+              data-result-column-kind={presentation.kind}
+              data-result-column-priority={presentation.priority}
+              data-result-identity-column={presentation.sticky ? "true" : undefined}
+              key={`${row.id}:${column?.id ?? index}`}
+            >{canonicalCellText(cell, column?.default_precision ?? document.presentation.precision, document.presentation.missing_value_label)}</td>;
+          })}</tr>)}</tbody></table>
+        </div>;
       })}
       {section.chart_ids.map((chartId) => {
         const chart = charts.get(chartId);

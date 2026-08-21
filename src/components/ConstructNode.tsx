@@ -15,7 +15,7 @@ function interactionNote(interaction: InteractionData): string {
 }
 
 export function ConstructNode({ id, data, selected }: NodeProps<Node<ConstructData>>) {
-  const assignIndicators = useWorkspace((state) => state.assignIndicators);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const [dropTarget, setDropTarget] = useState(false);
   const higherOrder = data.semantic === "higher_order";
   const acceptsIndicators = data.semantic !== "interaction" && data.semantic !== "higher_order";
@@ -41,7 +41,8 @@ export function ConstructNode({ id, data, selected }: NodeProps<Node<ConstructDa
           indicators = parsed.filter((value): value is string => typeof value === "string");
         } catch { return; }
       }
-      if (indicators.length > 0) assignIndicators(id, indicators);
+      if (indicators.length > 0) void executeModelEditCommand({ kind: "assign_indicators", constructId: id, columns: indicators })
+        .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })));
     }}
   >
     <Handle id="target-left" type="target" position={Position.Left} />

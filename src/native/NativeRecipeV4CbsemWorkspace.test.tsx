@@ -148,6 +148,9 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     expect(html).toContain('<th scope="col"');
     expect(html).toContain("1.23");
     expect(html).toContain('data-canonical-table-id="parameters"');
+    expect(html).toContain('data-result-horizontal-scroll="true"');
+    expect(html).toContain('data-result-column-kind="number"');
+    expect(html).toContain('data-result-responsive-columns="false"');
     const exported = canonicalResultDocumentV2ExportTables(document);
     expect(exported.map((table) => table.id)).toEqual([
       "parameters",

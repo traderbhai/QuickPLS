@@ -5,7 +5,6 @@ import {
   type StandardSemModelV4EditorIntentV1,
   type StandardSemRelationshipDefinitionV1,
 } from "../domain/standardSemModelV4Authority";
-import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import { GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1 } from "../domain/internalRecipeV4GeneralSemWorkspace";
 import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
@@ -23,9 +22,10 @@ import {
 import type { NativePlsReadiness, NativePlsReadinessStatus } from "./nativePlsReadiness";
 import type {
   ConstructData,
-  Dataset,
   HigherOrderConstructData,
+  IndicatorSide,
   InteractionData,
+  ModelEditCommandV1,
   PathEdgeData,
   SemModelV4ConstructAuthoring,
 } from "../types";
@@ -54,29 +54,6 @@ function authorityFeedbackFor(result: StandardSemModelV4AuthorityCommitResult): 
   if (result.status === "stale") return { tone: "stale", message: "Stale edit ignored because the active model authority changed. Review the current model and retry." };
   const detail = result.error instanceof Error ? result.error.message : String(result.error);
   return { tone: "rejected", message: `Rejected: ${detail}` };
-}
-
-function observedVariableForColumn(
-  authority: StandardSemModelV4AuthorityRecordV1,
-  dataset: Dataset,
-  column: string,
-): Extract<SemVariableV4, { kind: "observed" }> {
-  const existing = authority.model.variables.find((variable): variable is Extract<SemVariableV4, { kind: "observed" }> =>
-    variable.kind === "observed" && variable.source_column === column);
-  if (existing) return structuredClone(existing);
-  const metadata = dataset.columnMetadata?.find((item) => item.name === column);
-  return {
-    kind: "observed",
-    id: `observed:${column}`,
-    label: metadata?.label?.trim() || column,
-    source_column: column,
-    scale: metadata?.scale_type ?? "continuous",
-    role: "indicator",
-    categories: Object.keys(metadata?.value_labels ?? {}).sort(compareUtf8StringsV1),
-    value_labels: { ...(metadata?.value_labels ?? {}) },
-    missing_markers: [...new Set((metadata?.missing_markers ?? []).map((value) => value.trim()).filter(Boolean))].sort(compareUtf8StringsV1),
-    transformation_lineage: [],
-  };
 }
 
 function relationshipDefinition(
@@ -350,6 +327,8 @@ export interface NativeModelInspectorProps {
   strictAuthorityOverride?: StandardSemModelV4AuthorityRecordV1 | null;
   readiness?: NativePlsReadiness;
   onEditHigherOrder?: (request: { nodeId: string; termId: string }) => void;
+  onRemoveHigherOrder?: (request: { nodeId: string; termId: string }) => void;
+  onRemoveModeratingEffect?: (request: { nodeId: string; termId: string }) => void;
 }
 
 export function NativeModelInspector({
@@ -363,6 +342,8 @@ export function NativeModelInspector({
   strictAuthorityOverride,
   readiness,
   onEditHigherOrder,
+  onRemoveHigherOrder,
+  onRemoveModeratingEffect,
 }: NativeModelInspectorProps = {}) {
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
@@ -379,13 +360,10 @@ export function NativeModelInspector({
     : null);
   const strictAuthority = strictAuthorityOverride === undefined ? storeStrictAuthority : strictAuthorityOverride;
   const commitStandardIntent = useWorkspace((state) => state.commitStandardSemModelV4Intent);
+  const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const updateConstruct = useWorkspace((state) => state.updateConstruct);
   const updateEdge = useWorkspace((state) => state.updateEdge);
   const setConstructEstimandV4 = useWorkspace((state) => state.setConstructEstimandV4);
-  const assignIndicator = useWorkspace((state) => state.assignIndicator);
-  const unassignIndicator = useWorkspace((state) => state.unassignIndicator);
-  const reverseSelectedPath = useWorkspace((state) => state.reverseSelectedPath);
-  const setSelectedPathRouting = useWorkspace((state) => state.setSelectedPathRouting);
   const removeSelection = useWorkspace((state) => state.removeSelection);
 
   const selectedNodeId = selectedNodeIdOverride === undefined ? storeSelectedNodeId : selectedNodeIdOverride;
@@ -427,12 +405,25 @@ export function NativeModelInspector({
     setAuthorityFeedback(authorityFeedbackFor(result));
     return result;
   };
+  const executeModelEdit = async (command: ModelEditCommandV1) => {
+    setAuthorityFeedback({ tone: "pending", message: "Applying model edit…" });
+    const result = await executeModelEditCommand(command);
+    setAuthorityFeedback(result.status === "applied"
+      ? { tone: "committed", message: "Applied as one undoable model transaction." }
+      : { tone: "blocked", message: `${result.message} ${result.correctiveAction}` });
+    return result;
+  };
 
   useEffect(() => setActiveTab("model"), [selectedNodeId, selectedEdgeId]);
   useEffect(() => {
     const showModelEditor = () => setActiveTab("model");
+    const showAppearanceEditor = () => setActiveTab("appearance");
     window.addEventListener("quickpls:model-inspector-show-editor", showModelEditor);
-    return () => window.removeEventListener("quickpls:model-inspector-show-editor", showModelEditor);
+    window.addEventListener("quickpls:model-inspector-show-appearance", showAppearanceEditor);
+    return () => {
+      window.removeEventListener("quickpls:model-inspector-show-editor", showModelEditor);
+      window.removeEventListener("quickpls:model-inspector-show-appearance", showAppearanceEditor);
+    };
   }, []);
 
   const selectTab = (tab: NativeModelInspectorTab, moveFocus = false) => {
@@ -455,8 +446,7 @@ export function NativeModelInspector({
   };
 
   const renameConstruct = (label: string) => {
-    if (strictAuthority && selected) void commitAuthority({ kind: "rename_construct", variable_id: selected.id, label });
-    else if (selected) updateConstruct(selected.id, { label });
+    if (selected) void executeModelEdit({ kind: "rename_construct", constructId: selected.id, label });
   };
   const renamePath = (label: string) => {
     if (!selectedPath) return;
@@ -466,18 +456,8 @@ export function NativeModelInspector({
     } else updateEdge(selectedPath.id, nativePathLabelPatch(selectedPath, pathRole, label));
   };
   const setMeasurementMode = (nextMode: "reflective" | "formative") => {
-    if (!selected) return;
-    if (!strictAuthority) {
-      updateConstruct(selected.id, { mode: nextMode });
-      return;
-    }
-    const current = strictAuthority.model.variables.find((variable) => variable.id === selected.id);
-    const representation = nextMode === "formative"
-      ? { kind: "composite" as const, weighting: { kind: "mode_b" as const } }
-      : current?.kind === "common_factor"
-        ? { kind: "common_factor" as const, identification: current.identification }
-        : { kind: "composite" as const, weighting: { kind: "mode_a" as const } };
-    void commitAuthority({ kind: "set_construct_representation", variable_id: selected.id, representation });
+    if (!selected || selected.data.mode === nextMode) return;
+    void executeModelEdit({ kind: "invert_measurement_model", constructId: selected.id });
   };
   const setScientificRepresentation = (specification: SemModelV4ConstructAuthoring) => {
     if (!selected) return;
@@ -491,56 +471,41 @@ export function NativeModelInspector({
   };
   const assignDatasetIndicator = (column: string) => {
     if (!selected || !column) return;
-    if (!strictAuthority) {
-      assignIndicator(selected.id, column);
-      return;
-    }
-    void commitAuthority({
-      kind: "assign_indicators",
-      construct_id: selected.id,
-      indicators: [observedVariableForColumn(strictAuthority, dataset, column)],
-    });
+    void executeModelEdit({ kind: "assign_indicators", constructId: selected.id, columns: [column] });
   };
   const removeDatasetIndicator = (column: string) => {
     if (!selected) return;
-    if (!strictAuthority) {
-      unassignIndicator(selected.id, column);
-      return;
-    }
-    const observed = strictAuthority.model.variables.find((variable) => variable.kind === "observed" && variable.source_column === column);
-    if (!observed || observed.kind !== "observed") {
-      setAuthorityFeedback({ tone: "rejected", message: `Rejected: ${column} is not present in the strict authority.` });
-      return;
-    }
-    const construct = strictAuthority.model.variables.find((variable) => variable.id === selected.id);
-    const replacementRelation = strictAuthority.model.relations.find((relation) =>
-      relation.kind === "measurement_effect" && relation.construct === selected.id && relation.indicator !== observed.id);
-    const replacement = construct?.kind === "common_factor" && construct.identification.kind === "marker_loading" && construct.identification.indicator === observed.id
-      && replacementRelation?.kind === "measurement_effect"
-      ? replacementRelation.indicator
-      : null;
-    void commitAuthority({ kind: "remove_indicator", construct_id: selected.id, observed_id: observed.id, replacement_marker: replacement });
+    const replacementMarkerColumn = selected.data.indicators.find((indicator) => indicator !== column) ?? null;
+    void executeModelEdit({ kind: "unassign_indicator", constructId: selected.id, column, replacementMarkerColumn });
   };
   const reversePath = () => {
     if (!selectedPath) return;
-    if (!strictAuthority) {
-      reverseSelectedPath();
-      return;
-    }
-    const current = relationshipDefinition(strictAuthority, selectedPath, pathRole);
-    if (!current || current.kind === "covariance" || current.kind === "presentation_only_covariance") {
-      setAuthorityFeedback({ tone: "rejected", message: "Rejected: covariance relationships do not have a direction to reverse." });
-      return;
-    }
-    void commitAuthority({ kind: "replace_relationship", relationship_id: selectedPath.id, definition: { ...current, source: current.target, target: current.source } });
+    void executeModelEdit({ kind: "reverse_path", relationId: selectedPath.id });
   };
   const deleteSelection = () => {
+    if (selectedPath) {
+      void executeModelEdit({ kind: "remove_path", relationId: selectedPath.id });
+      return;
+    }
+    if (selected?.data.semantic === "interaction" && selectedInteraction) {
+      const termId = selectedInteraction.kind === "interaction_v2"
+        ? selectedInteraction.termId
+        : selected.id;
+      if (onRemoveModeratingEffect) onRemoveModeratingEffect({ nodeId: selected.id, termId });
+      else void executeModelEdit({ kind: "remove_moderating_effect", termId, outputId: selected.id });
+      return;
+    }
+    if (selected?.data.semantic === "higher_order" && selected.data.higherOrder) {
+      const termId = selected.data.higherOrder.id;
+      if (onRemoveHigherOrder) onRemoveHigherOrder({ nodeId: selected.id, termId });
+      else void executeModelEdit({ kind: "remove_higher_order", termId, outputId: selected.id });
+      return;
+    }
     if (!strictAuthority) {
       removeSelection();
       return;
     }
     if (selected) void commitAuthority({ kind: "delete_construct", variable_id: selected.id });
-    else if (selectedPath) void commitAuthority({ kind: "delete_relationship", relationship_id: selectedPath.id });
   };
 
   const heading = selected ? "Construct" : selectedPath ? "Path" : "Model properties";
@@ -548,6 +513,23 @@ export function NativeModelInspector({
   const tabId = `nd-model-inspector-${activeTab}-tab`;
   const preflight = readiness ? nativeModelInspectorPreflightPreview(readiness) : null;
   const assignedIndicatorCount = nodes.reduce((count, node) => count + node.data.indicators.length, 0);
+  const selectedIndicatorLayouts = selected ? diagramLayout.indicatorLayouts[selected.id] ?? {} : {};
+  const constructIndicatorPosition = selected && selected.data.indicators.length
+    ? (() => {
+        const positions = selected.data.indicators.map((indicator) => selectedIndicatorLayouts[indicator]?.side ?? "automatic");
+        return positions.every((position) => position === positions[0]) ? positions[0]! : "automatic";
+      })()
+    : "automatic";
+  const setConstructIndicatorPosition = (value: "automatic" | Exclude<IndicatorSide, "free">) => {
+    if (!selected) return;
+    if (value === "automatic") void executeModelEdit({ kind: "reset_indicator_layout", constructId: selected.id });
+    else void executeModelEdit({ kind: "set_construct_indicator_side", constructId: selected.id, side: value });
+  };
+  const setOneIndicatorPosition = (column: string, value: "automatic" | IndicatorSide) => {
+    if (!selected) return;
+    if (value === "automatic") void executeModelEdit({ kind: "reset_indicator_layout", constructId: selected.id, column });
+    else void executeModelEdit({ kind: "set_indicator_side", constructId: selected.id, column, side: value });
+  };
 
   return <aside className="nd-properties nd-model-inspector" aria-labelledby="nd-model-inspector-heading">
     <header className="nd-pane-title"><strong id="nd-model-inspector-heading">{heading}</strong></header>
@@ -630,6 +612,7 @@ export function NativeModelInspector({
           <p className="nd-property-note">{higherOrderDataBindingNote(selected.data.higherOrder)}</p>
         </> : selected ? <>
           <fieldset><legend>Measurement model</legend><label><input type="radio" checked={selected.data.mode === "reflective"} onChange={() => setMeasurementMode("reflective")} />Reflective</label><label><input type="radio" checked={selected.data.mode === "formative"} onChange={() => setMeasurementMode("formative")} />Formative</label></fieldset>
+          <button type="button" className="nd-secondary-command" onClick={() => setMeasurementMode(selected.data.mode === "reflective" ? "formative" : "reflective")}>Invert measurement model</button>
           {mode === "expert" ? <dl className="nd-property-list"><div><dt>Stable construct ID</dt><dd>{selected.id}</dd></div><div><dt>Bound indicators</dt><dd>{selected.data.indicators.length}</dd></div></dl> : null}
           {mode === "expert" && constructRepresentationAuthoringEnabled ? <NativeSemConstructAuthoringFields node={selected} onCommit={setScientificRepresentation} /> : constructRepresentationAuthoringEnabled ? <p className="nd-property-note">Switch to Expert to edit factor/composite representation and identification.</p> : null}
         </> : selectedPath ? <>
@@ -649,9 +632,21 @@ export function NativeModelInspector({
       {activeTab === "appearance" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
         {selected ? <>
           <dl className="nd-property-list"><div><dt>Canvas X</dt><dd>{Math.round(selected.position.x)}</dd></div><div><dt>Canvas Y</dt><dd>{Math.round(selected.position.y)}</dd></div></dl>
+          <button type="button" className="nd-secondary-command" aria-pressed={Boolean(diagramLayout.constructLayouts[selected.id]?.pinned)} onClick={() => void executeModelEdit({ kind: "set_construct_pinned", constructId: selected.id, pinned: !diagramLayout.constructLayouts[selected.id]?.pinned })}>{diagramLayout.constructLayouts[selected.id]?.pinned ? "Unpin construct" : "Pin construct"}</button>
+          {selected.data.semantic !== "interaction" && selected.data.semantic !== "higher_order" && selected.data.indicators.length ? <>
+            <label>Indicator position<select value={constructIndicatorPosition} onChange={(event) => setConstructIndicatorPosition(event.target.value as "automatic" | Exclude<IndicatorSide, "free">)}><option value="automatic">Automatic</option><option value="left">Left</option><option value="right">Right</option><option value="top">Above</option><option value="bottom">Below</option></select></label>
+            <div className="nd-indicator-position-list" aria-label={`Indicator positions for ${selected.data.label}`}>
+              {selected.data.indicators.map((indicator) => {
+                const current = selectedIndicatorLayouts[indicator]?.side ?? "automatic";
+                return <label key={indicator}><span>{indicator}</span><select value={current} aria-label={`Position ${indicator}`} onChange={(event) => setOneIndicatorPosition(indicator, event.target.value as "automatic" | IndicatorSide)}><option value="automatic">Automatic</option><option value="left">Left</option><option value="right">Right</option><option value="top">Above</option><option value="bottom">Below</option><option value="free">Free placement</option></select></label>;
+              })}
+            </div>
+            <button type="button" className="nd-secondary-command" onClick={() => void executeModelEdit({ kind: "reset_indicator_layout", constructId: selected.id })}>Reset all indicator positions</button>
+          </> : null}
           <p className="nd-property-note">Move the construct with the canvas, keyboard focus, or Arrange command. Its saved position is presentation-only.</p>
         </> : selectedPath ? <>
-          <label>Routing<select value={routing} onChange={(event) => setSelectedPathRouting(event.target.value === "orthogonal" ? "smoothstep" : event.target.value === "curved" ? "default" : "straight")}><option value="straight">Straight</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option></select></label>
+          <label>Routing<select value={routing} onChange={(event) => void executeModelEdit({ kind: "set_path_routing", relationId: selectedPath.id, routing: event.target.value as "straight" | "curved" | "orthogonal" })}><option value="straight">Straight</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option></select></label>
+          <div className="nd-inline-actions"><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_route", relationId: selectedPath.id })}>Reset route</button><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_label", relationId: selectedPath.id })}>Reset label position</button></div>
           <p className="nd-property-note">Routing changes presentation only; it does not change the scientific relationship.</p>
         </> : <div className="nd-pane-empty">Select an object to inspect its presentation settings.</div>}
       </form> : null}

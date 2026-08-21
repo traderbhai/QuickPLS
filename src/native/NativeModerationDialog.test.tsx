@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { Edge, Node } from "@xyflow/react";
@@ -88,7 +89,7 @@ describe("NativeModerationDialog", () => {
       nodes={[...nodes, interaction]}
       edges={edges}
       request={{ kind: "edit", interactionTermId: "term:xm" }}
-      commit={vi.fn(() => ({ status: "updated" as const, interactionTermId: "term:xm" }))}
+      commit={vi.fn(async () => ({ status: "updated" as const, interactionTermId: "term:xm" }))}
       close={vi.fn()}
     />);
     expect(markup).toContain("Save changes");
@@ -143,11 +144,43 @@ describe("NativeModerationDialog", () => {
       ]}
       edges={edges}
       request={{ kind: "create", target: { kind: "parent_interaction", interactionTermId: "term:xm" } }}
-      commit={vi.fn(() => ({ status: "created" as const, interactionId: "xmq" }))}
+      commit={vi.fn(async () => ({ status: "created" as const, interactionId: "xmq" }))}
       close={vi.fn()}
     />);
 
     expect(markup).toContain("already has its supported three-way moderating effect");
     expect(markup).toMatch(/type="submit"[^>]*disabled/);
+  });
+
+  it("waits for real async model application before closing and keeps failures inline", () => {
+    const source = readFileSync("src/native/NativeModerationDialog.tsx", "utf8");
+
+    expect(source).toContain("Promise<NativeModerationDialogCommitResult>");
+    expect(source).toContain("? await commit(submission)");
+    expect(source).toContain('if (result.status === "created" || result.status === "updated")');
+    expect(source).toContain("aria-busy={commitPending}");
+    expect(source).toContain("onPendingChange?.(true)");
+    expect(source).toContain("onPendingChange?.(false)");
+    expect(source).toContain('status: "blocked" | "cancelled" | "stale" | "rejected"');
+    expect(source).toContain("data-commit-status={commitIssue.status}");
+    expect(source).toContain("moderationCommitMessage(commitIssue)");
+  });
+
+  it("awaits both the gateway and Save As Revision outcomes before returning success", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    const start = source.indexOf("const launchModerationRevision = async");
+    const end = source.indexOf("const removeModeratingEffect", start);
+    const commitSource = source.slice(start, end);
+
+    expect(start).toBeGreaterThan(0);
+    expect(end).toBeGreaterThan(start);
+    expect(commitSource).toContain("const result = await useInternalProjectArchiveV6Session.getState()");
+    expect(commitSource).toContain("const result = await commitGatewayDesktopCommand");
+    expect(commitSource).toContain('if (result === "saved")');
+    expect(commitSource).toContain('return { status: "cancelled"');
+    expect(commitSource).toContain('return { status: "stale"');
+    expect(commitSource).toContain('return { status: "rejected"');
+    expect(source).toContain("? !moderationCommitPending");
+    expect(source).toContain("onPendingChange={setModerationCommitPending}");
   });
 });
