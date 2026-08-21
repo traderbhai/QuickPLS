@@ -2152,7 +2152,7 @@ describe("native result navigation", () => {
       "Unavailable",
       "incomplete_jackknife",
     ]]);
-    expect(navigation.groups.find((group) => group.id === "inference")?.items.map((item) => item.id))
+    expect(navigation.groups.find((group) => group.id === "run_details")?.items.map((item) => item.id))
       .toEqual(expect.arrayContaining([
         "bootstrap_accounting",
         "bootstrap_failures",

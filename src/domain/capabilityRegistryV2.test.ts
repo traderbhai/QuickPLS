@@ -22,7 +22,7 @@ describe("Capability Registry V2 frontend adapter", () => {
       option_cell_surfaces: { standard: 41, labs: 16, legacy: 2, internal: 0 },
     });
     expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
-    expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(27);
+    expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
   });
 
   it("authorizes the exact two-way moderated-mediation cell as scoped Standard", () => {
