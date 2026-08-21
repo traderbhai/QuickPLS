@@ -82,23 +82,20 @@ describe("native desktop result contracts", () => {
 describe("native desktop multi-model shell contracts", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("offers General SEM only as an explicit desktop Labs new-project mode", () => {
+  it("creates one calculation-ready desktop project without exposing an architecture mode", () => {
     const markup = renderToStaticMarkup(createElement(NewProjectDialog, {
       value: "New SEM study",
       setValue: vi.fn(),
-      projectMode: "general_sem_v1",
-      setProjectMode: vi.fn(),
       close: vi.fn(),
       create: vi.fn(),
       experimentalLabsEnabled: true,
       nativeDesktop: true,
     }));
 
-    expect(markup).toContain('value="standard"');
-    expect(markup).toMatch(/<input(?=[^>]*value="general_sem_v1")(?=[^>]*checked="")[^>]*>/);
-    expect(markup).not.toMatch(/value="general_sem_v1"[^>]*disabled/);
-    expect(markup).toContain("It starts empty");
-    expect(markup).toContain("Existing projects are never converted.");
+    expect(markup).toContain("one calculation-ready project");
+    expect(markup).toContain("Canvas");
+    expect(markup).not.toContain("general_sem_v1");
+    expect(markup).not.toContain('type="radio"');
   });
 
   it("routes only strict General SEM moderation through the versioned interaction_v2 intent", () => {
@@ -168,10 +165,10 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain("supportsGeneralSemV1(schema6Session.project)");
     expect(source).toContain("schema6Session?.standardActivation?.modelIds.includes(activeModelId)");
     expect(source).toContain("strictScientificEditLocks[activeModelId] || !projectWritable");
-    expect(source).toContain("General SEM revision required");
-    expect(source).toContain("model and RecipeV4 are immutable");
+    expect(source).toContain("Safe revision required.");
+    expect(source).toContain("the current project remains unchanged");
     expect(source).toContain("reviseGeneralSemExecutionAuthority({ intent: built.intent })");
-    expect(source).toContain("save an independently compiled schema-6 revision to a new file");
+    expect(source).toContain("preserve the current archive and revise the model and RecipeV4 together");
     expect(source).toContain('data-testid="general-sem-scientific-revision-required"');
     expect(source).toContain('kind: "general_sem_revision"');
     expect(source).toContain("available: generalSemRevisionDisabledReason === null");
@@ -194,14 +191,14 @@ describe("native desktop multi-model shell contracts", () => {
     expect(nativeGeneralSemRevisionCommandDisabledReasonV1(clean)).toBeNull();
 
     const cases = [
-      [{ revisionForkPending: true }, "Wait for the current General SEM Save As Revision transaction to finish."],
+      [{ revisionForkPending: true }, "Wait for the current calculation-ready Save As Revision transaction to finish."],
       [{ standardActivationPending: true }, "Wait for the current schema-6 authority operation to finish."],
       [{ saveCopyPending: true }, "Wait for the current schema-6 authority operation to finish."],
-      [{ publicationPending: true }, "Wait for General SEM archive publication to finish."],
-      [{ transientWorkBlocker: "job_active" }, "Finish or cancel the active General SEM calculation before creating a revision."],
-      [{ transientWorkBlocker: "temporary_result_pending" }, "Save and strictly reopen the completed General SEM result, or dismiss it, before creating a revision."],
+      [{ publicationPending: true }, "Wait for calculation-ready project publication to finish."],
+      [{ transientWorkBlocker: "job_active" }, "Finish or cancel the active advanced calculation before creating a revision."],
+      [{ transientWorkBlocker: "temporary_result_pending" }, "Save and strictly reopen the completed result, or dismiss it, before creating a revision."],
       [{ calculationStatus: "running" }, "Finish or cancel the active calculation before creating a revision."],
-      [{ sessionDirty: true }, "Restore or reopen the exact clean General SEM archive authority before creating a revision."],
+      [{ sessionDirty: true }, "Restore or reopen the exact clean calculation authority before creating a revision."],
     ] as const;
     for (const [override, expected] of cases) {
       expect(nativeGeneralSemRevisionCommandDisabledReasonV1({ ...clean, ...override })).toBe(expected);

@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { ResultTable } from "../domain/resultTables";
 import type { AnalysisRun } from "../types";
 import type { NativeResultNavigation } from "./nativeResults";
@@ -39,6 +40,96 @@ const navigation: NativeResultNavigation = {
 };
 
 describe("native Results tree accessibility", () => {
+  it("renders a searchable categorized tree for a selected schema-6 canonical output", () => {
+    const canonicalDocument: CanonicalResultDocumentV2 = {
+      schema_version: 2,
+      document_id: "result:canonical",
+      title: "Unified SEM result",
+      provenance: {
+        run_id: "run:canonical",
+        project_id: "project:canonical",
+        model_id: "model:canonical",
+        model_digest: "a".repeat(64),
+        dataset_id: "dataset:canonical",
+        dataset_fingerprint: "b".repeat(64),
+        recipe_id: "recipe:canonical",
+        recipe_digest: "c".repeat(64),
+        capability_cell: {
+          registry_schema_version: 2,
+          capability_id: "smartpls.cbsem",
+          cell_id: "qpls3.cbsem.general_sem_ml",
+          capability_version: "cbsem_general_sem_ml_v1",
+        },
+        method_version: "cbsem_general_sem_ml_v1",
+        engine_version: "native_cbsem_v1",
+        seed: null,
+        workers: 1,
+        started_at: "2026-08-21T00:00:00Z",
+        completed_at: "2026-08-21T00:00:01Z",
+      },
+      sections: [{
+        id: "cbsem_general_sem_point",
+        title: "CB-SEM ML estimates",
+        table_ids: ["cbsem_general_sem_parameters", "cbsem_general_sem_fit"],
+        chart_ids: [],
+      }],
+      tables: [
+        {
+          id: "cbsem_general_sem_parameters",
+          title: "CB-SEM parameters",
+          columns: [{ id: "estimate", label: "Estimate", data_type: "number", description: "ML estimate." }],
+          rows: [{ id: "loading", cells: [{ kind: "number", value: 0.8 }] }],
+          footnote_ids: [],
+        },
+        {
+          id: "cbsem_general_sem_fit",
+          title: "Model fit",
+          columns: [{ id: "cfi", label: "CFI", data_type: "number", description: "Comparative fit index." }],
+          rows: [{ id: "fit", cells: [{ kind: "number", value: 0.96 }] }],
+          footnote_ids: [],
+        },
+      ],
+      charts: [],
+      notices: [],
+      exclusions: [{ id: "bounded", title: "Bounded model", reason: "Raw continuous data only." }],
+      footnotes: [],
+      presentation: {
+        default_section_id: "cbsem_general_sem_point",
+        default_table_id: "cbsem_general_sem_parameters",
+        precision: 4,
+        missing_value_label: "—",
+        chart_defaults: {},
+      },
+    };
+    const selectedNavigationId = "canonical:table:cbsem_general_sem_fit";
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[]}
+      selectedRunId=""
+      setSelectedRunId={vi.fn()}
+      navigation={{ runId: null, defaultItemId: null, groups: [], tables: [] }}
+      setSelectedTableId={vi.fn()}
+      canonicalDocument={canonicalDocument}
+      canonicalSelected
+      canonicalNavigationItemId={selectedNavigationId}
+      onCanonicalNavigationItemChange={vi.fn()}
+      selectCanonicalDocument={vi.fn()}
+      propertiesOpen
+    />);
+
+    expect(markup).toContain('aria-label="Search result sections"');
+    expect(markup).toContain("CB-SEM Parameters");
+    expect(markup).toContain("CB-SEM Fit and Identification");
+    expect(markup).toContain("Diagnostics and Run Details");
+    expect(markup).toContain(`data-result-tree-item-id="${selectedNavigationId}"`);
+    expect(markup.match(new RegExp(`<button[^>]*data-result-tree-item-id="${selectedNavigationId}"[^>]*>`))?.[0])
+      .toContain('aria-selected="true"');
+    expect(markup).toContain('data-canonical-table-id="cbsem_general_sem_fit"');
+    expect(markup).toContain("Selected output</dt><dd>Model fit");
+    expect(markup).toContain(">Model diagram</h2>");
+    expect(markup).toContain("Model diagram unavailable");
+    expect(markup).toContain("Open the matching Canvas model revision");
+  });
+
   it("renders GSCA-specific fit and convergence properties without generic PLS settings", () => {
     const run = completedGscaRun();
     const gscaNavigation = buildNativeResultNavigation(run);

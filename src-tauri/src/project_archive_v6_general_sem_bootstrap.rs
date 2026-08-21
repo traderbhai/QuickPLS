@@ -120,6 +120,30 @@ impl DesktopGeneralSemFreshDraftAuthorityV1 {
         self.lock_recovering().authorization = None;
     }
 
+    /// Authorizes one source-preserving calculation-ready revision of the
+    /// exact active project. The source project is never rewritten: the
+    /// existing bootstrap command still requires a new project UUID and a new
+    /// destination path before publishing the marked schema-6 authority.
+    fn authorize_existing_project_revision(
+        &self,
+        active_project: &Arc<Mutex<Project>>,
+    ) -> Result<Uuid, String> {
+        let mut authority = self.lock_recovering();
+        let project = active_project
+            .lock()
+            .map_err(|_| "project state is unavailable".to_owned())?;
+        let project_id = project.manifest.project_id;
+        if project_id.is_nil() {
+            return Err("the active project has no stable project identity".to_owned());
+        }
+        authority.authorization = Some(GeneralSemFreshDraftAuthorizationV1 {
+            project_id,
+            issuance_id: Uuid::new_v4(),
+            claim_id: None,
+        });
+        Ok(project_id)
+    }
+
     /// Locks the active project for historical desktop persistence only after
     /// proving that it is not the exact fresh General SEM draft. The authority
     /// lock is always acquired before the project lock; it is released once the
@@ -160,6 +184,16 @@ pub(crate) fn invalidate_general_sem_fresh_draft_authority_v1(
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
 ) {
     fresh_draft_authority.clear();
+}
+
+#[tauri::command]
+pub(crate) fn authorize_general_sem_revision_draft_v1(
+    project: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+) -> Result<String, String> {
+    fresh_draft_authority
+        .authorize_existing_project_revision(&project.0)
+        .map(|project_id| project_id.to_string())
 }
 
 struct GeneralSemFreshDraftClaimV1<'a> {

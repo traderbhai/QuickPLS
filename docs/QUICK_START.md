@@ -1,6 +1,6 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.50 desktop workflow: `Launcher → Data → Model → Calculate → Results`.
+This guide follows the Version 2.51 candidate workflow: `Launcher → Data → Canvas → Calculate → Results`.
 
 ## 1. Start or open a project
 
@@ -18,20 +18,20 @@ Open `Data`, import the dataset, and check row/variable counts, missing values, 
 
 ## 3. Build the model
 
-Open `Model` and use Canvas to add constructs, assign indicators, draw structural paths or supported covariances, arrange the diagram, and validate it. For common-factor CB-SEM, set the applicable construct representation and review the Parameter Table.
+Open `Model` and use Canvas to add constructs, assign indicators, draw structural paths or supported covariances, arrange the diagram, and validate it. Canvas is the only permanent model-authoring document. For common-factor CB-SEM, set the applicable construct representation and open the **Advanced Parameter Table** from Canvas or CB-SEM setup when fixed/free parameters, bounds, or equality labels need attention.
 
-Use the Higher-Order Construct or Moderating Effect commands only when the model meets their displayed requirements. QuickPLS uses **Save As Revision** for General SEM HOC and moderated-mediation authoring so the source project remains unchanged.
+Use the Higher-Order Construct or Moderating Effect commands only when the model meets their displayed requirements. QuickPLS detects mediation from the drawn paths and offers bounded moderated-mediation selection in PLS Bootstrapping setup. Advanced changes use **Save As Revision** so the source project remains unchanged.
 
 ## 4. Calculate
 
-Choose `Calculate`. QuickPLS evaluates the resident model, data, settings, and exact Registry cells before showing an estimator as available.
+Choose `Calculate`. The searchable catalogue still contains 18 methods. QuickPLS evaluates the resident model, data, settings, and exact Registry cells, then shows only the settings relevant to the selected method.
 
-- Choose **PLS-SEM** for supported composite models, mediation/moderation, higher-order PLS, or bounded moderated mediation.
-- Choose **CB-SEM ML** for the bounded recursive common-factor scope.
-- Choose **CB-SEM recursive bootstrap** when the model and fixed bootstrap settings meet its exact predicate.
+- Choose **PLS Algorithm** for point estimation. Eligible mediation, moderation, and higher-order output is detected from the model.
+- Choose **Bootstrapping** for inference. Eligible multiple mediation, simultaneous moderation, higher-order, and bounded moderated-mediation calculations route automatically.
+- Choose **CB-SEM** for bounded common-factor ML, with case bootstrap selected inside its method settings when eligible.
 - Use Data's `Analyze…` command for compatible model-free methods.
 
-An unavailable action shows the corrective reason without modifying the diagram. Standard methods do not require the Experimental Labs preference.
+Detected feature summaries explain what will be calculated. An unavailable action shows the corrective reason and, where possible, a direct action such as opening the Advanced Parameter Table or creating a calculation-ready revision. A blocked setup never modifies the diagram. Standard methods do not require the Experimental Labs preference.
 
 ## 5. Monitor or cancel
 
@@ -39,7 +39,7 @@ Start the calculation and follow native progress. Cancellation stops publication
 
 ## 6. Review results
 
-After completion, QuickPLS opens the verified canonical result in `Results`. Available groups depend on the method and may include measurement, structural, validity, inference, higher-order stages, conditional indirect effects, CB-SEM parameters, fit, identification, and bootstrap failures.
+After completion, QuickPLS opens the verified canonical result in `Results`. Its searchable sidebar contains only groups owned by that run, which may include Overview, Measurement Model, Structural Model, Direct/Indirect/Total Effects, Moderation, Higher-Order Constructs, Moderated Mediation, CB-SEM Parameters, Model Fit, Bootstrap Inference, and Run Details.
 
 ## 7. Export and reopen
 
@@ -54,4 +54,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and [Version 2.50 Release Notes](RELEASE_NOTES_V2_50_0.md).
+For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and the [Version 2.51 Candidate Release Notes](RELEASE_NOTES_V2_51_0.md).

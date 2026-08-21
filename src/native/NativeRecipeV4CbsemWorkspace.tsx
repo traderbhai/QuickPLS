@@ -44,6 +44,7 @@ import type {
 import type { InternalProjectSchema6ResultAppendOutcomeV1 } from "../domain/internalProjectSchema6ResultAppend";
 import type { InternalProjectSchema6CanonicalResultEntryV1 } from "../domain/internalProjectSchema6ResultRead";
 import type { ResultTable } from "../domain/resultTables";
+import type { UnifiedSemCalculationPlanV1 } from "../domain/unifiedSemCalculationV1";
 import type { ProjectUpgradeInspectionV1, ProjectUpgradeOutcomeV1 } from "../domain/internalProjectUpgradeV6";
 import { scientificSemModelV4HashInput } from "../domain/semModelV4";
 import {
@@ -100,6 +101,8 @@ const defaultServices: NativeRecipeV4CbsemWorkspaceServices = {
 export interface NativeRecipeV4CbsemWorkspaceProps {
   modelName: string;
   experimentalLabsEnabled: boolean;
+  presentation?: "workspace" | "calculation";
+  calculationPlan?: UnifiedSemCalculationPlanV1 | null;
   services?: NativeRecipeV4CbsemWorkspaceServices;
 }
 
@@ -116,8 +119,11 @@ const SHA256 = /^[a-f0-9]{64}$/;
 export function NativeRecipeV4CbsemWorkspace({
   modelName,
   experimentalLabsEnabled,
+  presentation = "workspace",
+  calculationPlan = null,
   services = defaultServices,
 }: NativeRecipeV4CbsemWorkspaceProps) {
+  const calculationPresentation = presentation === "calculation";
   const projectName = useWorkspace((state) => state.projectName);
   const projectPath = useWorkspace((state) => state.projectPath);
   const activeModelId = useWorkspace((state) => state.activeModelId);
@@ -127,6 +133,9 @@ export function NativeRecipeV4CbsemWorkspace({
   const activeDataset = useWorkspace((state) => state.dataset);
   const residentDatasets = useWorkspace((state) => state.datasetCatalog);
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
+  const strictAuthority = useWorkspace((state) => state.activeModelId
+    ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+    : null);
   const datasets = residentDatasets.length ? residentDatasets : [activeDataset];
   const [datasetId, setDatasetId] = useState(activeDataset.id);
   const dataset = datasets.find((candidate) => candidate.id === datasetId) ?? null;
@@ -139,12 +148,22 @@ export function NativeRecipeV4CbsemWorkspace({
   const [engine, setEngine] = useState<InternalRecipeV4CbsemEngineOptionsV1>(() => ({
     tolerance: analysisSettings.tolerance ?? 1e-7,
     maxIterations: analysisSettings.maxIterations ?? 1_000,
-    seed: analysisSettings.seed,
+    seed: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+      ? calculationPlan.requestedConfig.inference.seed
+      : analysisSettings.seed,
     workers: analysisSettings.workers,
-    confidenceLevel: analysisSettings.confidenceLevel,
-    bootstrapSamples: analysisSettings.cbsemBootstrapSamples ?? 0,
+    confidenceLevel: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+      ? calculationPlan.requestedConfig.inference.confidence_level
+      : analysisSettings.confidenceLevel,
+    bootstrapSamples: calculationPlan
+      ? calculationPlan.requestedConfig?.inference.kind === "case_bootstrap"
+        ? calculationPlan.requestedConfig.inference.resamples
+        : 0
+      : analysisSettings.cbsemBootstrapSamples ?? 0,
     bootstrapInterval: analysisSettings.cbsemBootstrapInterval ?? "percentile_type7",
-    bootstrapTestTail: analysisSettings.cbsemBootstrapTestTail ?? "two_sided",
+    bootstrapTestTail: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+      ? "two_sided"
+      : analysisSettings.cbsemBootstrapTestTail ?? "two_sided",
   }));
   const [snapshot, setSnapshot] = useState<InternalRecipeV4CbsemJobSnapshotV1 | null>(null);
   const [completed, setCompleted] = useState<InternalRecipeV4CbsemCompletedResultV1 | null>(null);
@@ -167,6 +186,7 @@ export function NativeRecipeV4CbsemWorkspace({
   const monitorAbortRef = useRef<AbortController | null>(null);
   const capturedIdentityRef = useRef<CapturedJobIdentity | null>(null);
   const identityCancellationRequestedRef = useRef(false);
+  const automaticStartRef = useRef(false);
 
   useEffect(() => {
     if (!dataset && activeDataset.id) setDatasetId(activeDataset.id);
@@ -191,13 +211,16 @@ export function NativeRecipeV4CbsemWorkspace({
     observed_semantics: dataset ? observedSemanticsForParameterTable(dataset, indicatorColumns) : {},
   }), [activeModelId, dataset, diagramLayout, edges, effectiveMissingDataPolicy, indicatorColumns, modelName, nodes]);
   const baseAdapted = useMemo(() => adaptAuthoredNativeWorkbenchToSemModelV4(baseInput), [baseInput]);
-  const observed = baseAdapted.ok ? baseAdapted.model.variables.filter((variable) => variable.kind === "observed") : [];
+  const authoritativeBaseModel = strictAuthority?.model ?? (baseAdapted.ok ? baseAdapted.model : null);
+  const observed = authoritativeBaseModel
+    ? authoritativeBaseModel.variables.filter((variable) => variable.kind === "observed")
+    : [];
   const parsedScales = useMemo(() => Object.fromEntries(observed.map((variable) => [variable.id, Number(correlationScales[variable.id] ?? "")])), [correlationScales, observed]);
   const boundModel = useMemo(() => {
-    if (!dataset || !baseAdapted.ok) return { model: null, error: null as unknown };
+    if (!dataset || !authoritativeBaseModel) return { model: null, error: null as unknown };
     try {
       return {
-        model: bindInternalRecipeV4CbsemDatasetV1(baseAdapted.model, dataset, {
+        model: bindInternalRecipeV4CbsemDatasetV1(authoritativeBaseModel, dataset, {
           covarianceDenominator: denominator,
           missingDataPolicy: effectiveMissingDataPolicy,
           correlationStandardDeviations: parsedScales,
@@ -207,8 +230,9 @@ export function NativeRecipeV4CbsemWorkspace({
     } catch (error) {
       return { model: null, error };
     }
-  }, [baseAdapted, dataset, denominator, effectiveMissingDataPolicy, parsedScales]);
+  }, [authoritativeBaseModel, dataset, denominator, effectiveMissingDataPolicy, parsedScales]);
   const modelDiagnostics = useMemo(() => {
+    if (strictAuthority) return [];
     if (!baseAdapted.ok) return baseAdapted.diagnostics.map((diagnostic) => ({
       code: diagnostic.code,
       subject: diagnostic.subject ?? "model",
@@ -220,7 +244,7 @@ export function NativeRecipeV4CbsemWorkspace({
       return [{ code: normalized.code, subject: normalized.subject, message: normalized.message, correctiveAction: normalized.correctiveAction }];
     }
     return [];
-  }, [baseAdapted, boundModel.error]);
+  }, [baseAdapted, boundModel.error, strictAuthority]);
   const preflight = useMemo(() => preflightInternalRecipeV4CbsemWorkspaceV1({
     experimentalLabsEnabled,
     projectName,
@@ -314,6 +338,46 @@ export function NativeRecipeV4CbsemWorkspace({
         setCompleted(outcome.completed);
         setCompletedRecipe(request.recipe);
         setFailure(null);
+        if (calculationPresentation) {
+          let document = outcome.completed.canonicalDocument;
+          if (projectPath) {
+            try {
+              const inspected = await services.inspect(projectPath);
+              if (inspected.status === "ok") {
+                let identity = schema6ArchiveIdentityFromInspectionV1(inspected.value);
+                setArchivePath(projectPath);
+                setArchiveIdentity(identity);
+                const appended = await appendInternalLabsRecipeV4CbsemResultV1(
+                  outcome.completed,
+                  request.recipe,
+                  identity,
+                  services.append,
+                );
+                setAppendOutcome(appended);
+                if (appended.status === "ok") {
+                  identity = { ...identity, sourceSha256: appended.value.updated_document_sha256 };
+                  setArchiveIdentity(identity);
+                  const reopened = await reopenInternalLabsRecipeV4CbsemResultV1(
+                    outcome.completed,
+                    identity,
+                    services.read,
+                  );
+                  if (reopened.outcome.status === "ok" && reopened.entry) {
+                    setReopenedEntry(reopened.entry);
+                    setStoredEntries(storedExactCaseBootstrapEntriesV1(reopened.outcome.value.documents));
+                    document = reopened.entry.canonicalDocument;
+                  }
+                }
+              }
+            } catch {
+              // Compatibility projects that cannot accept schema-6 append still
+              // expose the verified in-memory result for this session.
+            }
+          }
+          window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+            detail: { document, navigate: true },
+          }));
+        }
         window.setTimeout(() => resultHeadingRef.current?.focus(), 0);
       } else if (outcome.status === "completed") {
         setCompleted(null);
@@ -333,6 +397,19 @@ export function NativeRecipeV4CbsemWorkspace({
       capturedIdentityRef.current = null;
     }
   };
+
+  useEffect(() => {
+    if (!calculationPresentation
+      || !calculationPlan
+      || automaticStartRef.current
+      || !preflight.ready
+      || busy
+      || running
+      || completed
+      || failure) return;
+    automaticStartRef.current = true;
+    void start();
+  }, [busy, calculationPlan, calculationPresentation, completed, failure, preflight.ready, running]);
 
   const cancel = async () => {
     const jobId = activeJobIdRef.current;
@@ -453,9 +530,9 @@ export function NativeRecipeV4CbsemWorkspace({
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const archiveReady = Boolean(archiveIdentity && SHA256.test(archiveIdentity.sourceSha256));
 
-  return <section id="nd-model-cbsem-labs-panel" className="nd-cbsem-v4-workspace" role="tabpanel" aria-labelledby="nd-model-cbsem-labs-tab">
+  return <section id={calculationPresentation ? "nd-cbsem-compatibility-calculation" : "nd-model-cbsem-labs-panel"} className="nd-cbsem-v4-workspace" role={calculationPresentation ? "region" : "tabpanel"} aria-label={calculationPresentation ? "CB-SEM compatibility calculation" : undefined} aria-labelledby={calculationPresentation ? undefined : "nd-model-cbsem-labs-tab"}>
     <header className="nd-cbsem-v4-header">
-      <div><h2>Exact CB-SEM workspace</h2></div>
+      <div><h2>{calculationPresentation ? "CB-SEM compatibility calculation" : "Exact CB-SEM workspace"}</h2></div>
       <FlaskConical size={24} aria-hidden="true" />
     </header>
 

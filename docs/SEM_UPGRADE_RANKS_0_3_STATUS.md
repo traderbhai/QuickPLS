@@ -3,6 +3,11 @@
 This document tracks implementation and qualification of the existing QuickPLS
 General SEM project mode. It does not describe a separate application.
 
+Version 2.51 keeps these scientific and archive identities but removes the
+specialized project mode from normal navigation. Canvas is the only permanent
+model-authoring document; the unchanged Calculate catalogue routes applicable
+PLS and CB-SEM selections through the same engines internally.
+
 ## Program order
 
 1. Rank 0: qualify and promote the existing General SEM mediation and
@@ -41,13 +46,13 @@ must still state exactly which automated checks and package smokes actually ran.
 ## Familiar graphical SEM workflow
 
 QuickPLS keeps one desktop workflow for all four ranks: draw and edit the model
-on Canvas, inspect the model or Parameter Table, review PLS-SEM and CB-SEM
-eligibility cards, choose calculation settings, use the normal Calculate
-command, monitor or cancel the run, and inspect verified output in the normal
-Results workspace with the shared export action. Higher-order constructs and
-moderated mediation use Save As Revision so the authored diagram remains the
-scientific authority. This is intentionally familiar to SmartPLS users without
-copying SmartPLS branding, layouts, or proprietary implementation details.
+on Canvas, open the Advanced Parameter Table only when needed, choose PLS
+Algorithm, Bootstrapping, or CB-SEM from the normal Calculate catalogue, monitor
+or cancel the run, and inspect verified output in the normal Results workspace
+with the shared export action. Higher-order constructs and moderated mediation
+use Save As Revision so the authored diagram remains the scientific authority.
+This is intentionally familiar to SmartPLS users without copying SmartPLS
+branding, layouts, or proprietary implementation details.
 
 ## Version 2.50 release checkpoint
 

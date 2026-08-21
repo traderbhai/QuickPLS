@@ -40,7 +40,7 @@ use pls_model_comparison_jobs::{
 };
 use project_archive_v6_general_sem_bootstrap::{
     DesktopGeneralSemFreshDraftAuthorityV1, GeneralSemNewProjectModeV1,
-    bootstrap_internal_general_sem_project_archive_v6,
+    authorize_general_sem_revision_draft_v1, bootstrap_internal_general_sem_project_archive_v6,
     invalidate_general_sem_fresh_draft_authority_v1,
 };
 use project_archive_v6_general_sem_preflight::preflight_internal_general_sem_estimators_v1;
@@ -7343,6 +7343,7 @@ pub fn run() {
             internal_labs_recipe_v4_pls_job_result,
             create_internal_general_sem_project_archive_v6,
             bootstrap_internal_general_sem_project_archive_v6,
+            authorize_general_sem_revision_draft_v1,
             revise_internal_general_sem_execution_authority_v1,
             revise_internal_general_sem_execution_authority_v2,
             invalidate_general_sem_fresh_draft_authority_v1,

@@ -11,8 +11,8 @@ from validation import package_release_artifacts as release
 
 
 VERSION = "3.0.0"
-REPOSITORY_RELEASE_VERSION = "2.50.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_50_0_sem_upgrade"
+REPOSITORY_RELEASE_VERSION = "2.51.0"
+REPOSITORY_ARTIFACT_LABEL = "v2_51_0_unified_workflow"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -160,7 +160,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             "python validation/package_release_artifacts.py --channel unsigned-preview "
             f"--label {REPOSITORY_ARTIFACT_LABEL}",
         )
-        self.assertEqual(prototype.count('const releaseVersion = "2.50.0";'), 1)
+        self.assertEqual(prototype.count('const releaseVersion = "2.51.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
         self.assertIn(

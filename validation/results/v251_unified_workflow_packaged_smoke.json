@@ -1,0 +1,38 @@
+{
+  "schemaVersion": 1,
+  "version": "2.51.0",
+  "generatedAt": "2026-08-21T08:47:23.440Z",
+  "runtime": "Packaged Tauri WebView2 over local CDP",
+  "passed": true,
+  "screenshots": [
+    "validation/results/screens/v251-unified-workflow/01-canvas.png",
+    "validation/results/screens/v251-unified-workflow/02-method-setup.png",
+    "validation/results/screens/v251-unified-workflow/03-corrective-error.png",
+    "validation/results/screens/v251-unified-workflow/04-results.png",
+    "validation/results/screens/v251-unified-workflow/05-progress.png"
+  ],
+  "observations": [
+    {
+      "id": "01-canvas",
+      "observation": "Canvas is the single permanent model workspace; the model toolbar exposes contextual advanced actions without architecture tabs."
+    },
+    {
+      "id": "02-method-setup",
+      "observation": "Calculate contains exactly 18 methods and shows PLS Bootstrapping setup while the Canvas retains the detected mediation feature."
+    },
+    {
+      "id": "03-corrective-error",
+      "observation": "An ineligible CB-SEM setup stays in Calculate and provides a corrective explanation without modifying the model."
+    },
+    {
+      "id": "04-results",
+      "observation": "The completed sample opens the normal categorized Results workspace with its result tree and detail pane."
+    },
+    {
+      "id": "05-progress",
+      "observation": "A packaged calculation exposes live progress and cancellation in the same Calculate window."
+    }
+  ],
+  "failures": [],
+  "consoleErrors": []
+}

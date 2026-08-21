@@ -678,12 +678,11 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toContain('role="tabpanel"');
     expect(html).toContain('aria-labelledby="nd-model-general-sem-labs-tab"');
     expect(html).toContain("General SEM in QuickPLS");
-    expect(html).toContain("One graphical model authority · Registry-authorized PLS-SEM and CB-SEM · one Calculate, progress, Results, export, and reopen workflow");
+    expect(html).toContain("One graphical model · Registry-authorized PLS-SEM and CB-SEM · calculation, progress, Results, export, and reopen in one workflow");
     expect(html).not.toContain("PLS-first Experimental Labs");
     expect(html).toContain('role="note"');
-    expect(html).toContain("This is a fresh General SEM draft inside QuickPLS.");
-    expect(html).toContain("Only this newly created canvas may be adapted; ordinary projects are never converted.");
-    expect(html).toContain("Fresh General SEM draft");
+    expect(html).toContain("This new calculation-ready project is not yet activated.");
+    expect(html).toContain("New calculation-ready draft");
     expect(html).toContain('id="nd-general-sem-bootstrap"');
     expect(html).toContain('for="nd-general-sem-bootstrap"');
     expect(html).toContain('id="nd-general-sem-seed"');
@@ -747,12 +746,11 @@ describe("General SEM native workspace accessibility", () => {
     />);
 
     expect(html).toContain("1 issue");
-    expect(html).toContain("This ordinary QuickPLS project is intentionally isolated from General SEM project mode.");
-    expect(html).toContain("QuickPLS will not copy, adapt, or relabel its canvas as general_sem_v1.");
-    expect(html).toContain("The open canvas is neither a fresh General SEM draft nor an activated general_sem_v1 authority.");
+    expect(html).toContain("This older project needs a source-preserving calculation-ready revision");
+    expect(html).toContain("The open canvas is neither a new calculation-ready draft nor an activated scientific authority.");
     expect(html).toContain("general_sem.project_mode.required");
-    expect(html).toMatch(/<button(?=[^>]*class="primary")(?=[^>]*disabled="")(?=[^>]*title="Start a new General SEM project to create its marked authority; existing projects cannot enter this path\.")[^>]*>[\s\S]*?Save and activate project…<\/button>/);
-    expect(html).toContain("General SEM project and model authority");
+    expect(html).toMatch(/<button(?=[^>]*class="primary")(?=[^>]*disabled="")(?=[^>]*title="Create a source-preserving calculation-ready revision before using this method\.")[^>]*>[\s\S]*?Save and activate project…<\/button>/);
+    expect(html).toContain("Project and model authority");
     expect(html).toContain("Safe QuickPLS project file");
     expect(html).toContain("QuickPLS engine preflight");
     expect(html).not.toContain('role="alert"');
@@ -767,8 +765,8 @@ describe("General SEM native workspace accessibility", () => {
       services={services}
     />);
 
-    expect(html).toContain("This canvas is bound to the activated, newly created general_sem_v1 authority.");
-    expect(html).toContain("Primary General SEM project activation is not connected in this build.");
+    expect(html).toContain("This canvas is bound to its activated scientific model and calculation recipe.");
+    expect(html).toContain("Primary calculation-ready project activation is not connected in this build.");
     expect(html).toContain("general_sem.project_mode.primary_activation_pending");
     expect(html).toMatch(/<button(?=[^>]*class="primary")(?=[^>]*disabled="")[^>]*>[\s\S]*?Save and activate project…<\/button>/);
     expect(Object.values(services).every((service) => !vi.isMockFunction(service) || service.mock.calls.length === 0)).toBe(true);

@@ -9,11 +9,18 @@ import {
 import { useId, useMemo, useState, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { publicationDiagramSvg } from "../domain/publicationDiagram";
 import type { ResultTable } from "../domain/resultTables";
+import { ModelCanvas } from "../components/ModelCanvas";
+import {
+  buildCanonicalResultNavigationV1,
+  canonicalResultDocumentForItemV1,
+  canonicalResultNavigationItemV1,
+  filterCanonicalResultNavigationV1,
+  type CanonicalResultNavigationGroupV1,
+} from "../domain/canonicalResultNavigationV1";
 import { useWorkspace } from "../store";
 import type { AnalysisRun, ProcessConditionalPlot, ProcessJohnsonNeymanAnalysis } from "../types";
 import type {
   NativeResultNavigation,
-  NativeResultNavigationGroup,
   NativeResultNavigationItem,
 } from "./nativeResults";
 import {
@@ -56,8 +63,15 @@ export interface NativeResultTreeKeyboardAction {
   activateItemId?: string;
 }
 
+interface ResultTreeNavigationLike {
+  groups: ReadonlyArray<{
+    id: string;
+    items: ReadonlyArray<{ id: string }>;
+  }>;
+}
+
 export function nativeVisibleResultTreeEntries(
-  navigation: NativeResultNavigation,
+  navigation: ResultTreeNavigationLike,
   collapsedGroupIds: ReadonlySet<string>,
 ): NativeResultTreeEntry[] {
   return navigation.groups.flatMap((group) => {
@@ -126,6 +140,8 @@ export interface NativeResultsSurfaceProps {
   canonicalDocument?: CanonicalResultDocumentV2;
   canonicalSelected?: boolean;
   selectCanonicalDocument?: () => void;
+  canonicalNavigationItemId?: string;
+  onCanonicalNavigationItemChange?: (itemId: string) => void;
   propertiesOpen: boolean;
   openMethodDetails?: () => void;
 }
@@ -142,21 +158,64 @@ export default function NativeResultsSurface({
   canonicalDocument,
   canonicalSelected = false,
   selectCanonicalDocument,
+  canonicalNavigationItemId,
+  onCanonicalNavigationItemChange,
   propertiesOpen,
   openMethodDetails,
 }: NativeResultsSurfaceProps) {
   const [collapsedGroupIds, setCollapsedGroupIds] = useState<Set<string>>(() => new Set());
+  const canonicalNavigation = useMemo(
+    () => canonicalDocument ? buildCanonicalResultNavigationV1(canonicalDocument) : null,
+    [canonicalDocument],
+  );
+  const [canonicalSearch, setCanonicalSearch] = useState({
+    documentId: canonicalNavigation?.documentId ?? null,
+    query: "",
+  });
+  const canonicalSearchQuery = canonicalSearch.documentId === canonicalNavigation?.documentId
+    ? canonicalSearch.query
+    : "";
+  const [internalCanonicalSelection, setInternalCanonicalSelection] = useState(() => ({
+    documentId: canonicalNavigation?.documentId ?? null,
+    itemId: canonicalNavigation?.defaultItemId ?? "canonical:overview",
+  }));
+  const filteredCanonicalNavigation = useMemo(
+    () => canonicalNavigation
+      ? filterCanonicalResultNavigationV1(canonicalNavigation, canonicalSearchQuery)
+      : null,
+    [canonicalNavigation, canonicalSearchQuery],
+  );
+  const canonicalItem = canonicalNavigation
+    ? canonicalResultNavigationItemV1(
+      canonicalNavigation,
+      canonicalNavigationItemId
+        ?? (internalCanonicalSelection.documentId === canonicalNavigation.documentId
+          ? internalCanonicalSelection.itemId
+          : canonicalNavigation.defaultItemId),
+    )
+    : null;
+  const selectedCanonicalItemId = canonicalItem?.id ?? "";
+  const displayedCanonicalDocument = canonicalDocument && canonicalItem
+    ? canonicalResultDocumentForItemV1(canonicalDocument, canonicalItem)
+    : null;
+  const canonicalActive = Boolean(canonicalDocument && canonicalSelected);
   const [focusedTreeItemId, setFocusedTreeItemId] = useState(
-    () => selectedItem?.id ?? navigation.groups[0]?.id ?? "",
+    () => canonicalSelected
+      ? canonicalNavigationItemId ?? canonicalNavigation?.defaultItemId ?? ""
+      : selectedItem?.id ?? navigation.groups[0]?.id ?? "",
   );
+  const activeNavigation = canonicalActive && filteredCanonicalNavigation
+    ? filteredCanonicalNavigation
+    : navigation;
   const visibleTreeItems = useMemo(
-    () => nativeVisibleResultTreeEntries(navigation, collapsedGroupIds),
-    [collapsedGroupIds, navigation],
+    () => nativeVisibleResultTreeEntries(activeNavigation, collapsedGroupIds),
+    [activeNavigation, collapsedGroupIds],
   );
+  const selectedTreeItemId = canonicalActive ? selectedCanonicalItemId : selectedItem?.id;
   const activeTreeItemId = visibleTreeItems.some((item) => item.id === focusedTreeItemId)
     ? focusedTreeItemId
-    : visibleTreeItems.some((item) => item.id === selectedItem?.id)
-      ? selectedItem?.id ?? ""
+    : visibleTreeItems.some((item) => item.id === selectedTreeItemId)
+      ? selectedTreeItemId ?? ""
       : visibleTreeItems[0]?.id ?? "";
   const settingApplicability = selectedRun ? nativeRunSettingApplicability(selectedRun) : null;
   const ncaResult = selectedRun ? nativeNcaResultProjection(selectedRun) : null;
@@ -173,7 +232,6 @@ export default function NativeResultsSurface({
     : null;
   const processResult = selectedRun ? nativeProcessResultProjection(selectedRun) : null;
   const canonicalOptionId = canonicalDocument ? `canonical:${canonicalDocument.document_id}` : "";
-  const canonicalActive = Boolean(canonicalDocument && canonicalSelected);
   const activeResultId = canonicalActive ? canonicalOptionId : selectedRun?.id ?? selectedRunId;
 
   const toggleGroup = (groupId: string) => {
@@ -199,8 +257,25 @@ export default function NativeResultsSurface({
     if (!action) return;
     event.preventDefault();
     if (action.toggleGroupId) toggleGroup(action.toggleGroupId);
-    if (action.activateItemId) setSelectedTableId(action.activateItemId);
+    if (action.activateItemId) {
+      if (canonicalActive) {
+        setInternalCanonicalSelection({
+          documentId: canonicalNavigation?.documentId ?? null,
+          itemId: action.activateItemId,
+        });
+        onCanonicalNavigationItemChange?.(action.activateItemId);
+      } else {
+        setSelectedTableId(action.activateItemId);
+      }
+    }
     if (action.focusId) focusTreeItem(event.currentTarget, action.focusId);
+  };
+  const activateCanonicalItem = (itemId: string) => {
+    setInternalCanonicalSelection({
+      documentId: canonicalNavigation?.documentId ?? null,
+      itemId,
+    });
+    onCanonicalNavigationItemChange?.(itemId);
   };
 
   return <div className={`nd-three-pane nd-results-workspace${propertiesOpen ? "" : " no-properties"}`}>
@@ -213,12 +288,33 @@ export default function NativeResultsSurface({
         {canonicalDocument ? <option value={canonicalOptionId}>{canonicalDocument.title}</option> : null}
         {runs.map((run) => <option value={run.id} key={run.id}>{run.name}</option>)}
       </select></label> : null}
-      {canonicalActive ? <div className="nd-result-tree" role="tree" aria-label="Available result sections">
-        <button type="button" role="treeitem" aria-current="page" className="active" onClick={selectCanonicalDocument}>
-          <FileSpreadsheet size={13} aria-hidden="true" />Verified canonical result
-        </button>
-        <span className="nd-pane-empty">{canonicalDocument?.tables.length ?? 0} tables · {canonicalDocument?.charts.length ?? 0} charts</span>
-      </div> : selectedRun ? <div className="nd-result-tree" role="tree" aria-label="Available result sections" onKeyDown={handleTreeKeyDown}>
+      {canonicalActive && filteredCanonicalNavigation ? <>
+        <label className="nd-run-select">Find result<input
+          type="search"
+          value={canonicalSearchQuery}
+          onChange={(event) => setCanonicalSearch({
+            documentId: canonicalNavigation?.documentId ?? null,
+            query: event.target.value,
+          })}
+          placeholder="Search tables and charts"
+          aria-label="Search result sections"
+        /></label>
+        <div className="nd-result-tree" role="tree" aria-label="Available result sections" onKeyDown={handleTreeKeyDown}>
+          {filteredCanonicalNavigation.groups.map((group) => <TreeGroup
+            group={group}
+            key={group.id}
+            open={!collapsedGroupIds.has(group.id)}
+            focusedItemId={activeTreeItemId}
+            selectedItemId={selectedCanonicalItemId}
+            onFocusItem={setFocusedTreeItemId}
+            onToggle={toggleGroup}
+            onActivate={activateCanonicalItem}
+          />)}
+          {filteredCanonicalNavigation.groups.length === 0
+            ? <span className="nd-pane-empty" role="status">No result sections match “{canonicalSearchQuery}”.</span>
+            : null}
+        </div>
+      </> : selectedRun ? <div className="nd-result-tree" role="tree" aria-label="Available result sections" onKeyDown={handleTreeKeyDown}>
         {navigation.groups.map((group) => <TreeGroup
           group={group}
           key={group.id}
@@ -233,8 +329,13 @@ export default function NativeResultsSurface({
     </aside>
     <section className="nd-document nd-results-document">
       <div className="nd-document-tab"><BarChart3 size={14} /><span>{canonicalActive ? canonicalDocument?.title : selectedRun?.name ?? "Results"}</span>{selectedRun && !canonicalActive && openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}</div>
-      {canonicalActive && canonicalDocument ? <div className="nd-general-sem-canonical-results-workspace">
-        <CanonicalResultDocumentV2View document={canonicalDocument} reopened compilationReceipt={null} />
+      {canonicalActive && canonicalDocument ? <div className="nd-general-sem-canonical-results-workspace nd-cbsem-v4-workspace">
+        <CanonicalResultModelDiagram document={canonicalDocument} />
+        {canonicalItem?.kind === "diagnostics"
+          ? <CanonicalResultDiagnostics document={canonicalDocument} />
+          : displayedCanonicalDocument
+            ? <CanonicalResultDocumentV2View document={displayedCanonicalDocument} reopened compilationReceipt={null} />
+            : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected saved result does not contain this output.</span></div>}
         <CanonicalResultExportPanelV2 document={canonicalDocument} />
       </div> : !selectedRun ? <div className="nd-empty"><BarChart3 size={28} /><strong>No completed calculation</strong><span>Choose a method from Calculate to create results.</span></div> : selectedItem?.kind === "diagram" ? <ResultDiagramView run={selectedRun} /> : selectedTable ? <ResultTableView table={selectedTable} run={selectedRun} /> : <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No available output</strong><span>The selected calculation did not produce this result.</span></div>}
     </section>
@@ -244,6 +345,7 @@ export default function NativeResultsSurface({
         <div><dt>Method</dt><dd>{canonicalDocument.provenance.method_version}</dd></div>
         <div><dt>Status</dt><dd>Verified and saved</dd></div>
         <div><dt>Estimator cell</dt><dd>{canonicalDocument.provenance.capability_cell.cell_id}</dd></div>
+        <div><dt>Selected output</dt><dd>{canonicalItem?.title ?? "Complete verified result"}</dd></div>
         <div><dt>Model</dt><dd>{canonicalDocument.provenance.model_id}</dd></div>
         <div><dt>Dataset</dt><dd>{canonicalDocument.provenance.dataset_id}</dd></div>
         <div><dt>Completed</dt><dd>{new Date(canonicalDocument.provenance.completed_at).toLocaleString()}</dd></div>
@@ -321,6 +423,50 @@ export default function NativeResultsSurface({
       </dl> : <div className="nd-pane-empty">No run selected.</div>}
     </aside> : null}
   </div>;
+}
+
+function CanonicalResultDiagnostics({ document }: { document: CanonicalResultDocumentV2 }) {
+  const hasDetails = document.notices.length || document.exclusions.length || document.footnotes.length;
+  return <section className="nd-cbsem-v4-results" aria-labelledby="nd-canonical-diagnostics-heading">
+    <header><div><h2 id="nd-canonical-diagnostics-heading" tabIndex={-1}>Diagnostics and run details</h2><p>Saved method notices, supported boundaries and explanatory notes.</p></div><FileSpreadsheet size={22} aria-hidden="true" /></header>
+    {!hasDetails ? <div className="nd-empty"><FileSpreadsheet size={28} /><strong>No diagnostics recorded</strong><span>This result contains no notices, exclusions or footnotes.</span></div> : null}
+    {document.notices.length ? <section aria-labelledby="nd-canonical-notices-heading"><h3 id="nd-canonical-notices-heading">Notices</h3><div className="nd-cbsem-v4-notices">{document.notices.map((notice) => <p key={notice.id} role={notice.severity === "error" ? "alert" : "note"}><strong>{notice.severity}</strong> {notice.message}</p>)}</div></section> : null}
+    {document.exclusions.length ? <section aria-labelledby="nd-canonical-boundaries-heading"><h3 id="nd-canonical-boundaries-heading">Method boundaries</h3><dl className="nd-property-list">{document.exclusions.map((exclusion) => <div key={exclusion.id}><dt>{exclusion.title}</dt><dd>{exclusion.reason}</dd></div>)}</dl></section> : null}
+    {document.footnotes.length ? <section aria-labelledby="nd-canonical-footnotes-heading"><h3 id="nd-canonical-footnotes-heading">Result notes</h3><ol>{document.footnotes.map((footnote) => <li key={footnote.id}>{footnote.text}{footnote.reference ? ` (${footnote.reference})` : ""}</li>)}</ol></section> : null}
+    <details className="nd-cbsem-v4-run-details"><summary>Run provenance</summary><dl><div><dt>Run</dt><dd>{document.provenance.run_id}</dd></div><div><dt>Project</dt><dd>{document.provenance.project_id}</dd></div><div><dt>Model</dt><dd>{document.provenance.model_id}</dd></div><div><dt>Dataset</dt><dd>{document.provenance.dataset_id}</dd></div><div><dt>Method</dt><dd>{document.provenance.method_version}</dd></div><div><dt>Estimator cell</dt><dd>{document.provenance.capability_cell.cell_id}</dd></div></dl></details>
+  </section>;
+}
+
+function CanonicalResultModelDiagram({ document }: { document: CanonicalResultDocumentV2 }) {
+  const currentModelMatches = useWorkspace((state) => (
+    state.activeModelId === document.provenance.model_id
+    && Boolean(state.standardSemModelV4Authorities[document.provenance.model_id])
+    && state.nodes.length > 0
+  ));
+  const descriptionId = "nd-canonical-model-diagram-description";
+  return <section className="nd-cbsem-v4-results" aria-labelledby="nd-canonical-model-diagram-heading">
+    <header><div><h2 id="nd-canonical-model-diagram-heading">Model diagram</h2><p id={descriptionId}>Read-only view of the active Canvas model used by this verified result.</p></div><BarChart3 size={22} aria-hidden="true" /></header>
+    {currentModelMatches ? <div
+      className="nd-canvas-host"
+      data-canonical-model-id={document.provenance.model_id}
+      role="region"
+      aria-label="Read-only model diagram"
+      aria-describedby={descriptionId}
+      tabIndex={0}
+      style={{
+        position: "relative",
+        height: "clamp(320px, 46vh, 500px)",
+        minHeight: 320,
+        overflow: "hidden",
+        border: "1px solid var(--nd-color-border)",
+        borderRadius: "var(--nd-radius-2)",
+      }}
+    ><ModelCanvas presentation="results_readonly" /></div> : <div className="nd-empty" role="status">
+      <BarChart3 size={28} aria-hidden="true" />
+      <strong>Model diagram unavailable</strong>
+      <span>Open the matching Canvas model revision to view this saved result with its diagram.</span>
+    </div>}
+  </section>;
 }
 
 function ResultDiagramView({ run }: { run: AnalysisRun }) {
@@ -688,7 +834,7 @@ function TreeGroup({
   onToggle,
   onActivate,
 }: {
-  group: NativeResultNavigationGroup;
+  group: NativeResultNavigation["groups"][number] | CanonicalResultNavigationGroupV1;
   open: boolean;
   focusedItemId: string;
   selectedItemId?: string;

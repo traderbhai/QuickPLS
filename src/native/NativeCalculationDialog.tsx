@@ -28,6 +28,15 @@ import {
 } from "../domain/capabilitySurfaceV2";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import {
+  resolveUnifiedSemCalculationV1,
+  unifiedSemModeratedMediationCandidatesV1,
+  type UnifiedSemCalculationActionV1,
+  type UnifiedSemCalculationContextV1,
+  type UnifiedSemCalculationMethodV1,
+  type UnifiedSemCalculationPlanV1,
+  type UnifiedSemInferenceChoiceV1,
+} from "../domain/unifiedSemCalculationV1";
+import {
   methodCapabilityAvailabilityV2,
   methodCapabilityRequirementsV2,
   type MethodCapabilityAvailabilityV2,
@@ -110,6 +119,10 @@ export interface NativeCalculationDialogProps {
   close: () => void;
   experimentalLabsEnabled?: boolean;
   openMethodDetails?: () => void;
+  /** Optional strict authority bridge. Omission preserves the existing legacy workflow. */
+  unifiedSem?: UnifiedSemCalculationContextV1 | null;
+  /** One event seam for strict execution and its two calculation-time editors. */
+  onUnifiedSemAction?: (action: UnifiedSemCalculationActionV1) => void;
   registryUnavailableReason?: string | null;
   capabilityRegistry?: MethodCapabilityRegistryReaderV2;
 }
@@ -218,6 +231,10 @@ export function nativeRegressionTypeSettingsPatch(
 const optionId = (kind: NativeWorkbenchAnalysisKind) => `nd-calculation-method-${kind}`;
 const panelTitleId = (kind: NativeWorkbenchAnalysisKind) => `nd-calculation-panel-${kind}-title`;
 
+function unifiedSemMethodV1(kind: NativeWorkbenchAnalysisKind): UnifiedSemCalculationMethodV1 | null {
+  return kind === "pls_algorithm" || kind === "pls_bootstrap" || kind === "cbsem" ? kind : null;
+}
+
 export interface NativeCalculationCatalogEntryV2 {
   readonly item: NativeAnalysisCatalogItem;
   readonly availability: MethodCapabilityAvailabilityV2;
@@ -313,6 +330,21 @@ export function scrollNativeMethodOptionIntoView(
   option?.scrollIntoView({ behavior: "auto", block: "nearest", inline: "nearest" });
 }
 
+export function dispatchNativeCalculationStartV1<T>(
+  plan: UnifiedSemCalculationPlanV1 | null,
+  onUnifiedSemAction: ((action: UnifiedSemCalculationActionV1) => void) | undefined,
+  legacyStart: (profile?: T) => void,
+  profile?: T,
+): "unified_sem" | "legacy" | "unavailable" {
+  if (plan && plan.route !== "legacy") {
+    if (!onUnifiedSemAction) return "unavailable";
+    onUnifiedSemAction({ kind: "start", plan });
+    return "unified_sem";
+  }
+  legacyStart(profile);
+  return "legacy";
+}
+
 /**
  * Returns only variables that are declared numeric, or that can be safely
  * inferred as numeric from every resident non-missing value when metadata is
@@ -347,6 +379,8 @@ export default function NativeCalculationDialog({
   close,
   experimentalLabsEnabled = false,
   openMethodDetails,
+  unifiedSem = null,
+  onUnifiedSemAction,
   registryUnavailableReason = null,
   capabilityRegistry = capabilityRegistryV2,
 }: NativeCalculationDialogProps) {
@@ -356,6 +390,13 @@ export default function NativeCalculationDialog({
   const [logisticProfileState, setLogisticProfileState] = useState<LogisticProfileState>({ status: "idle", key: "", profile: null, error: null });
   const [processProfileState, setProcessProfileState] = useState<ProcessProfileState>({ status: "idle", key: "", profile: null, error: null });
   const [processProfileRetryNonce, setProcessProfileRetryNonce] = useState(0);
+  const [cbsemInference, setCbsemInference] = useState<UnifiedSemInferenceChoiceV1>(() => (
+    unifiedSem?.config.inference.kind === "case_bootstrap" ? "case_bootstrap" : "point"
+  ));
+  const [moderatedMediationSelection, setModeratedMediationSelection] = useState<{
+    authorityKey: string | null;
+    pathId: string | null | undefined;
+  }>(() => ({ authorityKey: unifiedSem?.authorityKey ?? null, pathId: undefined }));
   const searchRef = useRef<HTMLInputElement>(null);
   const optionRefs = useRef<Partial<Record<NativeWorkbenchAnalysisKind, HTMLButtonElement | null>>>({});
   const catalogEntries = useMemo(
@@ -401,6 +442,31 @@ export default function NativeCalculationDialog({
     () => analysisColumnKey ? analysisColumnKey.split("\u0000") : [],
     [analysisColumnKey],
   );
+  const unifiedMethod = unifiedSemMethodV1(kind);
+  const unifiedBootstrapOptions = useMemo(() => ({
+    resamples: kind === "cbsem"
+      ? Math.min(10_000, Math.max(500, settings.cbsemBootstrapSamples || 500))
+      : Math.min(
+          NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.bootstrap.max,
+          Math.max(
+            NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS.bootstrap.min,
+            settings.bootstrapSamples || NATIVE_ANALYSIS_RECIPE_BOUNDS.bootstrapSamples.default,
+          ),
+        ),
+    seed: settings.seed,
+    confidenceLevel: kind === "cbsem" ? 0.95 : settings.confidenceLevel,
+  }), [kind, settings.bootstrapSamples, settings.cbsemBootstrapSamples, settings.confidenceLevel, settings.seed]);
+  const unifiedSemPlan = useMemo(() => unifiedMethod
+    ? resolveUnifiedSemCalculationV1({
+        method: unifiedMethod,
+        context: unifiedSem,
+        cbsemInference,
+        moderatedMediationPathId: moderatedMediationSelection.authorityKey === unifiedSem?.authorityKey
+          ? moderatedMediationSelection.pathId
+          : undefined,
+        bootstrap: unifiedBootstrapOptions,
+      })
+    : null, [cbsemInference, moderatedMediationSelection, unifiedBootstrapOptions, unifiedMethod, unifiedSem]);
   const ipmaTargetOptions = useMemo(() => nativeIpmaTargetOptions(nodes, edges), [edges, nodes]);
   const groupProfileAssessment = useMemo(
     () => nativeMgaProfileAssessment(groupProfileState.profile, settings),
@@ -496,23 +562,43 @@ export default function NativeCalculationDialog({
         : currentProcessProfileState.status !== "ready"
           ? ["Profile all dataset rows before starting graph-defined path analysis."]
           : [];
-  const archivedCbsemBootstrapSetting = kind === "cbsem" && (settings.cbsemBootstrapSamples ?? 0) > 0;
+  const archivedCbsemBootstrapSetting = !unifiedSem
+    && kind === "cbsem"
+    && (settings.cbsemBootstrapSamples ?? 0) > 0;
   const cbsemPointRouteBlockers = archivedCbsemBootstrapSetting
-    ? ["Clear the archived bootstrap setting, then run current CFA bootstrap inference from the Exact CB-SEM model tab."]
+    ? ["Clear the archived bootstrap setting before running this legacy point-estimate setup. Reopen the project through the unified CB-SEM calculation workflow for saved bootstrap inference."]
+    : [];
+  const unifiedRouteSelected = Boolean(unifiedSemPlan && unifiedSemPlan.route !== "legacy");
+  const unifiedReadinessBlockers = unifiedRouteSelected
+    ? unifiedSemPlan?.controllerPreflightRequired
+      // The exact-CB compatibility controller owns dataset/model eligibility,
+      // including covariance and correlation input. Retain only the shared
+      // desktop-runtime gate here so PLS-specific raw-data blockers cannot
+      // prevent that controller from opening.
+      ? readiness.blockers.filter((blocker) => blocker.id === "runtime")
+      : readiness.blockers.filter((blocker) => blocker.id !== "calculation")
     : [];
   const methodProfileBlockers = [...new Set([
     ...groupProfileBlockers,
     ...logisticProfileBlockers,
     ...processProfileBlockers,
     ...cbsemPointRouteBlockers,
+    ...(unifiedSemPlan?.route !== "legacy" ? unifiedSemPlan?.blockers ?? [] : []),
+    ...unifiedReadinessBlockers.map((blocker) => blocker.detail),
+    ...(unifiedRouteSelected && !onUnifiedSemAction
+      ? ["The unified calculation controller is unavailable. Close this setup and reopen the active project before calculating."]
+      : []),
   ])];
   const canStart = !registryUnavailableReason
     && selectedMethodVisible
-    && readiness.canRun
+    && (unifiedRouteSelected ? unifiedSemPlan?.canStart === true : readiness.canRun)
     && (kind !== "mga" || (groupProfileState.status === "ready" && groupProfileAssessment.canRun))
     && logisticProfileBlockers.length === 0
     && processProfileBlockers.length === 0
-    && !archivedCbsemBootstrapSetting;
+    && !archivedCbsemBootstrapSetting
+    && unifiedReadinessBlockers.length === 0
+    && (!unifiedRouteSelected || Boolean(onUnifiedSemAction))
+    && (unifiedSemPlan?.route === "legacy" || unifiedSemPlan?.canStart !== false);
   const verifiedLogisticProfile = logisticSelected
     && currentLogisticProfileState.status === "ready"
     && logisticProfileAssessment?.canRun
@@ -529,6 +615,11 @@ export default function NativeCalculationDialog({
     setProcessProfileState(retryNativeProcessProfileState(processProfileKey));
     setProcessProfileRetryNonce((value) => value + 1);
   };
+
+  useEffect(() => {
+    setCbsemInference(unifiedSem?.config.inference.kind === "case_bootstrap" ? "case_bootstrap" : "point");
+    setModeratedMediationSelection({ authorityKey: unifiedSem?.authorityKey ?? null, pathId: undefined });
+  }, [unifiedSem?.authorityKey]);
 
   useEffect(() => {
     if (kind !== "mga" || !groupColumn) {
@@ -726,7 +817,13 @@ export default function NativeCalculationDialog({
       className="nd-calculation-dialog"
       onSubmit={(event) => {
         event.preventDefault();
-        if (!running && canStart) start(verifiedLogisticProfile ?? verifiedProcessProfile);
+        if (running || !canStart) return;
+        dispatchNativeCalculationStartV1(
+          unifiedSemPlan,
+          onUnifiedSemAction,
+          start,
+          verifiedLogisticProfile ?? verifiedProcessProfile,
+        );
       }}
     >
       <aside className="nd-dialog-sidebar" aria-label="Analysis methods">
@@ -821,6 +918,33 @@ export default function NativeCalculationDialog({
                   {openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}
                 </div>
               </header>
+              {unifiedSemPlan && unifiedSemPlan.route !== "legacy" ? <UnifiedSemFeatureSummary
+                plan={unifiedSemPlan}
+                context={unifiedSem}
+                cbsemInference={cbsemInference}
+                setCbsemInference={(inference) => {
+                  setCbsemInference(inference);
+                  if (kind !== "cbsem") return;
+                  setSettings(inference === "case_bootstrap"
+                    ? {
+                        cbsemBootstrapSamples: Math.min(10_000, Math.max(500, settings.cbsemBootstrapSamples || 500)),
+                        cbsemBootstrapInterval: "percentile_type7",
+                        cbsemBootstrapTestTail: "two_sided",
+                        confidenceLevel: 0.95,
+                      }
+                    : {
+                        cbsemBootstrapSamples: 0,
+                        cbsemBootstrapInterval: "percentile_type7",
+                        cbsemBootstrapTestTail: "two_sided",
+                      });
+                }}
+                onAction={onUnifiedSemAction}
+                bootstrapOptions={unifiedBootstrapOptions}
+                onModeratedMediationPathChange={(pathId) => setModeratedMediationSelection({
+                  authorityKey: unifiedSem?.authorityKey ?? null,
+                  pathId,
+                })}
+              /> : null}
               <MethodSettings
                 kind={kind}
                 settings={settings}
@@ -829,6 +953,7 @@ export default function NativeCalculationDialog({
                 analysisColumns={stableAnalysisColumns}
                 nodes={nodes}
                 edges={edges}
+                unifiedSemPlan={unifiedSemPlan}
                 groupProfileState={groupProfileState}
                 groupProfileAssessment={groupProfileAssessment}
             logisticProfileState={currentLogisticProfileState}
@@ -839,12 +964,12 @@ export default function NativeCalculationDialog({
               />
             </section>
 
-            {!readiness.canRun || methodProfileBlockers.length ? (
+            {(!unifiedRouteSelected && !readiness.canRun) || methodProfileBlockers.length ? (
               <div className="nd-blocker" role="alert">
                 <strong>Cannot start this calculation</strong>
                 <ul>
                   {[...new Set([
-                    ...readiness.blockers.map((blocker) => blocker.detail),
+                    ...(!unifiedRouteSelected ? readiness.blockers.map((blocker) => blocker.detail) : []),
                     ...methodProfileBlockers,
                   ])].map((blocker) => <li key={blocker}>{blocker}</li>)}
                 </ul>
@@ -898,6 +1023,93 @@ export default function NativeCalculationDialog({
   );
 }
 
+function UnifiedSemFeatureSummary({
+  plan,
+  context,
+  cbsemInference,
+  setCbsemInference,
+  onAction,
+  bootstrapOptions,
+  onModeratedMediationPathChange,
+}: {
+  plan: UnifiedSemCalculationPlanV1;
+  context: UnifiedSemCalculationContextV1 | null;
+  cbsemInference: UnifiedSemInferenceChoiceV1;
+  setCbsemInference: (inference: UnifiedSemInferenceChoiceV1) => void;
+  onAction?: (action: UnifiedSemCalculationActionV1) => void;
+  bootstrapOptions: { resamples: number; seed: number; confidenceLevel: number };
+  onModeratedMediationPathChange: (pathId: string | null) => void;
+}) {
+  if (!context) return null;
+  const featureText = plan.featureSummaries.length
+    ? plan.featureSummaries.join("; ")
+    : "No advanced model feature is required for this setup.";
+  const expectedResults = plan.expectedResultCategories.join(", ");
+  let moderatedMediationCandidates: ReturnType<typeof unifiedSemModeratedMediationCandidatesV1> = [];
+  try {
+    moderatedMediationCandidates = unifiedSemModeratedMediationCandidatesV1(context, bootstrapOptions);
+  } catch {
+    moderatedMediationCandidates = [];
+  }
+  return <div className="nd-settings-grid" data-unified-sem-calculation={plan.route}>
+    <div className="nd-setting-note wide" id="nd-calculation-detected-features" role="status" aria-live="polite">
+      <span>Detected model features</span>
+      <strong>{featureText}</strong>
+    </div>
+    {expectedResults ? <div className="nd-setting-note wide" id="nd-calculation-expected-results">
+      <span>Result categories</span>
+      <strong>{expectedResults}</strong>
+    </div> : null}
+    {plan.route === "general_sem_pls" ? <div className="nd-setting-note wide" id="nd-calculation-general-pls-contract">
+      <span>Estimator setup</span>
+      <strong>Path weighting and standardized construct scores. Bootstrap routes use two-sided percentile inference.</strong>
+    </div> : null}
+    {plan.method === "cbsem" ? <>
+      <label className="wide" htmlFor="nd-calculation-cbsem-inference">Inference
+        <select
+          id="nd-calculation-cbsem-inference"
+          value={cbsemInference}
+          onChange={(event) => setCbsemInference(event.target.value as UnifiedSemInferenceChoiceV1)}
+        >
+          <option value="point">Maximum-likelihood point estimates</option>
+          <option value="case_bootstrap">Case-resampling bootstrap</option>
+        </select>
+      </label>
+      <button
+        type="button"
+        className="wide"
+        disabled={!onAction}
+        onClick={() => onAction?.({
+          kind: "open_advanced_parameter_table",
+          authorityKey: context.authorityKey,
+          plan,
+        })}
+      >Advanced Parameter Table</button>
+    </> : null}
+    {plan.method === "pls_bootstrap" && plan.moderatedMediation?.candidateCount ? <div
+      className="nd-setting-note wide"
+      id="nd-calculation-moderated-mediation"
+    >
+      <span>Moderated mediation</span>
+      <strong>{plan.moderatedMediation.selectedPath
+        ? `${plan.moderatedMediation.selectedPath.xLabel} → ${plan.moderatedMediation.selectedPath.mediatorLabel} → ${plan.moderatedMediation.selectedPath.yLabel}; ${plan.moderatedMediation.fixedTargetSummary}.`
+        : `${plan.moderatedMediation.candidateCount} eligible two-relation paths; choose one to add the fixed five-target inference.`}</strong>
+      <label htmlFor="nd-calculation-moderated-mediation-path">Indirect path
+        <select
+          id="nd-calculation-moderated-mediation-path"
+          value={plan.moderatedMediation.selectedPath?.pathId ?? ""}
+          onChange={(event) => onModeratedMediationPathChange(event.target.value || null)}
+        >
+          <option value="">Do not add moderated-mediation inference</option>
+          {moderatedMediationCandidates.map((candidate) => <option key={candidate.pathId} value={candidate.pathId}>
+            {candidate.xLabel} → {candidate.mediatorLabel} → {candidate.yLabel} ({candidate.moderatedStage === "first_stage" ? "first stage" : "second stage"})
+          </option>)}
+        </select>
+      </label>
+    </div> : null}
+  </div>;
+}
+
 function MethodSettings({
   kind,
   settings,
@@ -913,6 +1125,7 @@ function MethodSettings({
   retryProcessProfile,
   nodes,
   edges,
+  unifiedSemPlan,
 }: Pick<NativeCalculationDialogProps, "kind" | "settings" | "setSettings" | "dataset" | "analysisColumns" | "nodes" | "edges"> & {
   groupProfileState: GroupProfileState;
   groupProfileAssessment: NativeMgaProfileAssessment;
@@ -921,6 +1134,7 @@ function MethodSettings({
   processProfileState: ProcessProfileState;
   processProfileAssessment: NativeProcessReadinessAssessment | null;
   retryProcessProfile: () => void;
+  unifiedSemPlan: UnifiedSemCalculationPlanV1 | null;
 }) {
   const numericColumns = useMemo(() => nativeNumericCaseWeightColumns(dataset), [dataset]);
   const ncaNumericColumns = useMemo(() => nativeNcaNumericColumns(dataset), [dataset]);
@@ -933,7 +1147,14 @@ function MethodSettings({
   const caseWeightColumn = settings.caseWeightColumn?.trim() ?? "";
   const selectedWeightIsEligible = !caseWeightColumn || numericColumns.includes(caseWeightColumn);
   const regressionBootstrap = kind === "regression" && settings.regressionBootstrap === true;
-  const cbsemBootstrap = kind === "cbsem" && (settings.cbsemBootstrapSamples ?? 0) > 0;
+  const unifiedPls = (kind === "pls_algorithm" || kind === "pls_bootstrap")
+    && unifiedSemPlan?.route === "general_sem_pls";
+  const unifiedCbsem = kind === "cbsem"
+    && (unifiedSemPlan?.route === "general_sem_cbsem"
+      || unifiedSemPlan?.route === "exact_cbsem_compatibility");
+  const cbsemBootstrap = kind === "cbsem" && (unifiedCbsem
+    ? unifiedSemPlan.inference === "case_bootstrap"
+    : (settings.cbsemBootstrapSamples ?? 0) > 0);
   const cbsemAnalyticStudentized = cbsemBootstrap
     && (settings.cbsemBootstrapInterval ?? "percentile_type7") === "analytic_studentized_type7";
   const cbsemBcaType7 = cbsemBootstrap
@@ -1067,7 +1288,7 @@ function MethodSettings({
     <fieldset>
       <legend>Method settings</legend>
       <div className="nd-settings-grid">
-        {kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? <label htmlFor="nd-calculation-weighting">Weighting scheme
+        {!unifiedPls && kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? <label htmlFor="nd-calculation-weighting">Weighting scheme
           <select
             id="nd-calculation-weighting"
             value={settings.weightingScheme ?? "path"}
@@ -1081,7 +1302,7 @@ function MethodSettings({
           </select>
         </label> : null}
 
-        {kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "regression" && kind !== "pca" && kind !== "wpls" && kind !== "cca" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? (
+        {!unifiedPls && kind !== "pls_sample_size_power" && kind !== "nca" && kind !== "regression" && kind !== "pca" && kind !== "wpls" && kind !== "cca" && kind !== "ipma" && kind !== "mga" && kind !== "cbsem" && kind !== "gsca" ? (
           <label htmlFor="nd-calculation-preprocessing">Result data
             <select
               id="nd-calculation-preprocessing"
@@ -1148,7 +1369,7 @@ function MethodSettings({
                 onChange={(event) => setSettings({ confidenceLevel: Number(event.target.value) / 100 })}
               />
             </label>
-            {kind === "pls_bootstrap" ? (
+            {kind === "pls_bootstrap" && !unifiedPls ? (
               <label htmlFor="nd-calculation-studentized">Studentized inner samples
                 <select
                   id="nd-calculation-studentized"
@@ -1428,7 +1649,7 @@ function MethodSettings({
 
         {kind === "cbsem" ? (
           <>
-            <label className="wide" htmlFor="nd-calculation-cbsem-model-type">Model type
+            {!unifiedCbsem ? <label className="wide" htmlFor="nd-calculation-cbsem-model-type">Model type
               <select
                 id="nd-calculation-cbsem-model-type"
                 value={settings.cbsemModelType ?? "sem"}
@@ -1443,8 +1664,8 @@ function MethodSettings({
                 <option value="sem">Structural equation model (paths required)</option>
                 <option value="cfa">Confirmatory factor analysis (no paths)</option>
               </select>
-            </label>
-            {cbsemBootstrap ? <div className="nd-inline-warning wide" id="nd-calculation-cbsem-archived-bootstrap" role="alert">
+            </label> : null}
+            {!unifiedCbsem && cbsemBootstrap ? <div className="nd-inline-warning wide" id="nd-calculation-cbsem-archived-bootstrap" role="alert">
               <strong>Clear the archived bootstrap setting before running this point-estimate setup.</strong>
               <button type="button" onClick={() => setSettings({
                 cbsemBootstrapSamples: 0,
@@ -1453,6 +1674,23 @@ function MethodSettings({
                 workers: 1,
               })}>Clear setting</button>
             </div> : null}
+            {unifiedCbsem && cbsemBootstrap ? <>
+              <label htmlFor="nd-calculation-cbsem-bootstrap-samples">Bootstrap samples
+                <input
+                  id="nd-calculation-cbsem-bootstrap-samples"
+                  type="number"
+                  min={500}
+                  max={10_000}
+                  step={1}
+                  value={Math.min(10_000, Math.max(500, settings.cbsemBootstrapSamples || 500))}
+                  onChange={(event) => setSettings({ cbsemBootstrapSamples: Number(event.target.value) })}
+                />
+              </label>
+              <div className="nd-setting-note wide" id="nd-calculation-cbsem-bootstrap-contract" role="note">
+                <span>Inference contract</span>
+                <strong>Two-sided 95% percentile intervals with complete model refitting.</strong>
+              </div>
+            </> : null}
           </>
         ) : null}
 

@@ -252,6 +252,15 @@ export async function invalidateNativeGeneralSemFreshDraftAuthorityV1() {
   return invoke<void>("invalidate_general_sem_fresh_draft_authority_v1");
 }
 
+/**
+ * Authorizes one source-preserving calculation-ready revision of the exact
+ * active project. The subsequent schema-6 publication must still use a new
+ * project identity and destination path.
+ */
+export async function authorizeNativeGeneralSemRevisionDraftV1() {
+  return invoke<string>("authorize_general_sem_revision_draft_v1");
+}
+
 export async function openNativeProjectAt(path: string) {
   const project = await invoke<NativeProjectSnapshot>("open_project", { path });
   return normalizeProjectSnapshot(project);

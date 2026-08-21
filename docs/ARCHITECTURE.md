@@ -105,14 +105,22 @@ The minimum retry boundary is a Windows-native relative child create beneath
 pinned ancestor/parent directory handles; path rechecks alone cannot close an
 ancestor-junction retarget window.
 
-The model workspace's read-only Parameter Table is projected by
+The model workspace's Advanced Parameter Table is projected by
 `src/domain/semParameterTableV4.ts` through the authored workbench-to-`SemModelV4`
-adapter. It lists scientific variables, relations, parameters, constraints,
-derived terms, and groups separately from presentation-only objects and keeps
-stable links back to canvas sources. If a legacy construct estimand or covariance
-use has not been chosen, projection fails closed and shows typed corrective
-diagnostics instead of inventing parameter rows. This is an inspection surface;
-it does not activate either staged estimator path.
+adapter. It opens on demand from Canvas, CB-SEM setup, or a corrective preflight
+action instead of occupying a permanent document tab. It lists scientific
+variables, relations, parameters, constraints, derived terms, and groups
+separately from presentation-only objects and keeps stable links back to canvas
+sources. If a legacy construct estimand or covariance use has not been chosen,
+projection fails closed and shows typed corrective diagnostics instead of
+inventing parameter rows. Accepted scientific edits create a versioned revision;
+opening the table alone does not activate an estimator path.
+
+The native calculation coordinator projects resident model features into the
+unchanged 18-method catalogue. PLS Algorithm, Bootstrapping, and CB-SEM resolve
+their exact Registry cells from topology plus requested inference. Former General
+SEM and Exact CB-SEM workspaces remain compatibility adapters for historical
+payloads and are not permanent navigation surfaces.
 
 `CanonicalResultDocumentV2` in
 `src/domain/canonicalResultDocumentV2.ts` is the typed result target for the GUI,

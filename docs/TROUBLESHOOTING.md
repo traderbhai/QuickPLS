@@ -48,11 +48,15 @@ Choose `Calculate` from the active Data or Model context. QuickPLS lists only me
 
 ## A Method Says Needs Setup Or Not Applicable
 
-Open the method or estimator card from `Calculate`. QuickPLS shows the exact requirement, such as selecting a group column, choosing numeric X/Y variables for NCA, selecting a binary outcome for logistic regression, or using common-factor constructs and a supported Parameter Table for General SEM CB-SEM.
+Open the method from `Calculate`. QuickPLS shows the exact requirement, such as selecting a group column, choosing numeric X/Y variables for NCA, selecting a binary outcome for logistic regression, or using common-factor constructs and a supported Advanced Parameter Table for CB-SEM.
 
-## General SEM Is Blocked
+## An Advanced SEM Calculation Is Blocked
 
-Confirm that the project is saved and activated, the Canvas and Parameter Table have no unresolved scientific decisions, and the selected PLS-SEM or CB-SEM estimator card is `Supported`. Higher-order constructs and moderated mediation must be authored through **Save As Revision** before calculation.
+Confirm that the project is saved, Canvas has no unresolved scientific decisions, and the selected PLS Algorithm, Bootstrapping, or CB-SEM method is `Supported`. Follow the displayed correction action to open the Advanced Parameter Table, select an eligible path, or create a calculation-ready revision. The original project is not changed by a blocked preflight.
+
+## I Cannot Find The General SEM Or Exact CB-SEM Tab
+
+Version 2.51 intentionally removes those permanent tabs. Build the model on Canvas, then choose PLS Algorithm, Bootstrapping, or CB-SEM from Calculate. QuickPLS detects the advanced feature and routes it to the same bounded engine internally. Historical projects remain readable through compatibility adapters.
 
 ## R Or Python Not Found
 

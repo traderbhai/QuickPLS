@@ -44,6 +44,7 @@ import {
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
 } from "../domain/generalSemCapabilityPreflightV1";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type { UnifiedSemCalculationPlanV1 } from "../domain/unifiedSemCalculationV1";
 import type { SemCapabilityDecisionV1 } from "../domain/semCapabilityDecisionV1";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
@@ -73,6 +74,7 @@ import {
   getInternalLabsGeneralSemPlsJobV1,
   getInternalSemModelV4ScientificSha256,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
+  openNativeProjectAt,
   preflightInternalGeneralSemEstimatorsV1,
   readInternalProjectSchema6CanonicalResultsV2,
   startInternalLabsGeneralSemCbsemJobV1,
@@ -105,6 +107,8 @@ export interface NativeRecipeV4GeneralSemWorkspaceServices {
   append: typeof appendInternalProjectSchema6CanonicalResultV2;
   read: typeof readInternalProjectSchema6CanonicalResultsV2;
   invalidateDraft: typeof invalidateNativeGeneralSemFreshDraftAuthorityV1;
+  /** Keeps the native DesktopProject synchronized after a new schema-6 file is activated. */
+  adoptActiveProject?: typeof openNativeProjectAt;
   selectDestination: (suggestedName: string) => Promise<string | null>;
 }
 
@@ -126,10 +130,11 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
+  adoptActiveProject: openNativeProjectAt,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,
-      filters: [{ name: "QuickPLS General SEM project", extensions: ["qpls"] }],
+      filters: [{ name: "QuickPLS calculation-ready project", extensions: ["qpls"] }],
     });
     return typeof selected === "string" ? selected : null;
   },
@@ -138,6 +143,13 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
 export interface NativeRecipeV4GeneralSemWorkspaceProps {
   modelName: string;
   experimentalLabsEnabled: boolean;
+  presentation?: "workspace" | "calculation";
+  initialCalculationKind?: "pls_algorithm" | "pls_bootstrap" | "cbsem";
+  /** Resolved by the single Calculate dialog; the executor still recompiles and preflights it. */
+  calculationPlan?: UnifiedSemCalculationPlanV1 | null;
+  /** Publishes/activates a safe revision, then hands control to a compatibility coordinator. */
+  activationOnly?: boolean;
+  onAuthorityActivated?: () => void;
   /**
    * Fail-closed feature seam. The primary desktop opts in only when the fresh
    * draft -> bootstrap -> strict schema-6 activation bridge is installed.
@@ -338,7 +350,7 @@ export function closeGeneralSemProjectV1(bridge: GeneralSemProjectCloseBridgeV1)
       stage: "archive_authority",
       subject: "project",
       code: diagnostic?.code ?? "general_sem.project_close.inactive",
-      message: diagnostic?.message ?? "No active General SEM project could be closed.",
+      message: diagnostic?.message ?? "No active calculation-ready project could be closed.",
       correctiveAction: diagnostic?.correctiveAction ?? "Keep the current workspace unchanged and reopen the marked project before retrying.",
       issues: [],
     },
@@ -380,7 +392,7 @@ export async function activateGeneralSemProjectArchiveV1(
       || workspace.activeModelId !== modelId
       || !workspace.standardSemModelV4Authorities[modelId]
       || workspace.standardSemModelV4Persistence[modelId]?.scientificSha256 !== receipt.residentModelScientificSha256) {
-      throw new Error("The newly saved General SEM archive did not activate as the exact marked model and digest authority.");
+      throw new Error("The newly saved calculation-ready project did not activate as the exact model and digest authority.");
     }
 
     workspace.setProjectMeta(receipt.name, receipt.destinationArchivePath, receipt.projectId);
@@ -433,7 +445,7 @@ function currentGeneralSemDraftPublicationKeyV1(
     group: { kind: "single_group" },
     observed_semantics: observedSemanticsForParameterTable(state.dataset, indicators),
   });
-  if (!adapted.ok) throw new Error("The fresh General SEM canvas no longer has a valid scientific model authority.");
+  if (!adapted.ok) throw new Error("The current Canvas no longer has a valid scientific model authority.");
   const bound = bindGeneralSemPlsModelToDatasetV1(adapted.model, state.dataset);
   return JSON.stringify({
     estimatorId,
@@ -451,10 +463,17 @@ function currentGeneralSemDraftPublicationKeyV1(
 export function NativeRecipeV4GeneralSemWorkspace({
   modelName,
   experimentalLabsEnabled,
+  presentation = "workspace",
+  initialCalculationKind = "pls_algorithm",
+  calculationPlan = null,
+  activationOnly = false,
+  onAuthorityActivated,
   projectActivationConnected = false,
   services = defaultServices,
 }: NativeRecipeV4GeneralSemWorkspaceProps) {
+  const calculationPresentation = presentation === "calculation";
   const workspaceProjectId = useWorkspace((state) => state.projectId);
+  const workspaceProjectPath = useWorkspace((state) => state.projectPath);
   const projectName = useWorkspace((state) => state.projectName);
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const strictAuthority = useWorkspace((state) => state.activeModelId
@@ -480,7 +499,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const reviseGeneralSemModeratedMediationAuthority = useInternalProjectArchiveV6Session(
     (state) => state.reviseGeneralSemModeratedMediationAuthority,
   );
-  const markedGeneralSemProjectMode = Boolean(
+  const activatedGeneralSemProjectMode = Boolean(
     generalSemSession?.standardActivation
     && supportsGeneralSemV1(generalSemSession.project)
     && activeModelId
@@ -491,6 +510,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     && generalSemProjectDraftMode
     && workspaceProjectId === generalSemProjectDraftMode.sourceProjectId,
   );
+  const markedGeneralSemProjectMode = activatedGeneralSemProjectMode && !freshGeneralSemDraftMode;
   const sourceProjectId = markedGeneralSemProjectMode
     ? generalSemSession?.project.project_id ?? null
     : workspaceProjectId;
@@ -503,7 +523,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
     }
   }, [generalSemSession, markedGeneralSemProjectMode]);
   const [draftEstimatorId, setDraftEstimatorId] = useState<GeneralSemEstimatorIdV1>(
-    GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+    (calculationPlan?.method ?? initialCalculationKind) === "cbsem"
+      ? GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+      : GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
   );
   const residentEstimatorId = rehydratedExecution?.status === "ok"
     ? rehydratedExecution.value.estimatorId
@@ -521,6 +543,20 @@ export function NativeRecipeV4GeneralSemWorkspace({
       confidenceLevel: analysisSettings.confidenceLevel,
       bootstrapSamples: Math.max(analysisSettings.bootstrapSamples ?? 500, 2),
     }),
+    ...(rehydratedExecution?.status !== "ok" && (calculationPlan?.inference === "case_bootstrap" || initialCalculationKind === "pls_bootstrap")
+      ? {
+          inference: "percentile_case_bootstrap" as const,
+          bootstrapSamples: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+            ? calculationPlan.requestedConfig.inference.resamples
+            : Math.max(analysisSettings.bootstrapSamples ?? 500, 2),
+          seed: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+            ? calculationPlan.requestedConfig.inference.seed
+            : analysisSettings.seed,
+          confidenceLevel: calculationPlan?.requestedConfig?.inference.kind === "case_bootstrap"
+            ? calculationPlan.requestedConfig.inference.confidence_level
+            : analysisSettings.confidenceLevel,
+        }
+      : {}),
   }));
   const effectiveEngine = rehydratedExecution?.status === "ok"
     ? rehydratedExecution.value.engine
@@ -550,13 +586,20 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const latestAuthorityKeyRef = useRef<string | null>(null);
   const resultHeadingRef = useRef<HTMLHeadingElement>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
+  const automatedJourneyRef = useRef({
+    key: "",
+    createStarted: false,
+    calculationStarted: false,
+    appendStarted: false,
+    reopenStarted: false,
+  });
 
   useEffect(() => {
     if (!reopenedEntry || resultIntegrityInvalid) return;
     window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
-      detail: { document: reopenedEntry.canonicalDocument, navigate: false },
+      detail: { document: reopenedEntry.canonicalDocument, navigate: presentation === "calculation" },
     }));
-  }, [reopenedEntry, resultIntegrityInvalid]);
+  }, [presentation, reopenedEntry, resultIntegrityInvalid]);
 
   const indicatorColumns = useMemo(
     () => [...new Set(nodes.flatMap((node) => node.data.indicators))].sort(),
@@ -580,30 +623,37 @@ export function NativeRecipeV4GeneralSemWorkspace({
     observed_semantics: observedSemanticsForParameterTable(dataset, indicatorColumns),
   }), [activeModelId, dataset, diagramLayout, edges, indicatorColumns, modelName, nodes]);
   const adaptedDraft = useMemo(
-    () => freshGeneralSemDraftMode ? adaptAuthoredNativeWorkbenchToSemModelV4(draftAuthoringInput) : null,
-    [draftAuthoringInput, freshGeneralSemDraftMode],
+    () => freshGeneralSemDraftMode && !strictAuthority ? adaptAuthoredNativeWorkbenchToSemModelV4(draftAuthoringInput) : null,
+    [draftAuthoringInput, freshGeneralSemDraftMode, strictAuthority],
   );
   // Adaptation is allowed only inside the identity-bound fresh draft. Every
   // ordinary or previously opened project remains ineligible.
   const model = useMemo(() => {
     if (!projectActivationConnected) return null;
     if (markedGeneralSemProjectMode) return strictAuthority?.model ?? null;
-    if (!freshGeneralSemDraftMode || !adaptedDraft?.ok) return null;
-    try { return bindGeneralSemPlsModelToDatasetV1(adaptedDraft.model, dataset); } catch { return null; }
+    if (!freshGeneralSemDraftMode) return null;
+    const draftModel = strictAuthority?.model ?? (adaptedDraft?.ok ? adaptedDraft.model : null);
+    if (!draftModel) return null;
+    try { return bindGeneralSemPlsModelToDatasetV1(draftModel, dataset); } catch { return null; }
   }, [adaptedDraft, dataset, freshGeneralSemDraftMode, markedGeneralSemProjectMode, projectActivationConnected, strictAuthority]);
   const config = useMemo(() => {
     if (markedGeneralSemProjectMode) {
       return rehydratedExecution?.status === "ok" ? rehydratedExecution.value.config : null;
     }
-    try { return generalSemConfigFromEngineV1(effectiveEngine); } catch { return null; }
-  }, [effectiveEngine, markedGeneralSemProjectMode, rehydratedExecution]);
+    try {
+      return generalSemConfigFromEngineV1(
+        effectiveEngine,
+        calculationPlan?.requestedConfig?.requested_effect_estimands ?? [],
+      );
+    } catch { return null; }
+  }, [calculationPlan?.requestedConfig?.requested_effect_estimands, effectiveEngine, markedGeneralSemProjectMode, rehydratedExecution]);
   const localPreflight = useMemo(() => !projectActivationConnected ? {
     ready: false,
     decision: null,
     issues: [{
       code: "general_sem.project_mode.primary_activation_pending",
       subject: "project",
-      message: "Primary General SEM project activation is not connected in this build.",
+      message: "Primary calculation-ready project activation is not connected in this build.",
       correctiveAction: "Keep this capability disabled until the complete new-project bootstrap and strict activation bridge is installed.",
     }],
   } : !freshGeneralSemDraftMode && !markedGeneralSemProjectMode ? {
@@ -612,8 +662,8 @@ export function NativeRecipeV4GeneralSemWorkspace({
     issues: [{
       code: "general_sem.project_mode.required",
       subject: "project",
-      message: "The open canvas is neither a fresh General SEM draft nor an activated general_sem_v1 authority.",
-      correctiveAction: "Create a new General SEM project from QuickPLS New Project. Existing projects are never copied, adapted, or relabelled.",
+      message: "The open canvas is neither a new calculation-ready draft nor an activated scientific authority.",
+      correctiveAction: "Create a source-preserving calculation-ready revision before using this advanced method.",
     }],
   } : markedGeneralSemProjectMode && rehydratedExecution?.status === "blocked" ? {
     ready: false,
@@ -641,7 +691,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     issues: [{
       code: "general_sem.project_mode.strict_authority_required",
       subject: "model",
-      message: "The General SEM project has no active strict SemModelV4 authority.",
+      message: "The calculation-ready project has no active strict SemModelV4 authority.",
       correctiveAction: "Activate a ready or draft SemModelV4 authority from the marked schema-6 project before calculating.",
     }],
   } : config ? preflightGeneralSemWorkspaceV1({
@@ -658,7 +708,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     issues: [{
       code: "general_sem.config.invalid",
       subject: "config",
-      message: "The General SEM configuration is invalid.",
+      message: "The advanced-method configuration is invalid.",
       correctiveAction: "Correct the bounded inference and output settings.",
     }],
   }, [config, dataset, effectiveEngine, experimentalLabsEnabled, freshGeneralSemDraftMode, markedGeneralSemProjectMode, model, projectActivationConnected, rehydratedExecution, selectedEstimatorId, sourceProjectId, strictAuthority]);
@@ -838,7 +888,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           stage: "integrity",
           subject: "archive",
           code: "general_sem.rehydrate.result_archive_mismatch",
-          message: "The strict result readback differs from the active General SEM archive authority.",
+          message: "The strict result readback differs from the active project authority.",
           correctiveAction: "Preserve the project unchanged and do not display or export its results.",
           issues: [],
         });
@@ -866,7 +916,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       stage: "integrity",
       subject: "active_authority",
       code: "general_sem.completed_authority_stale",
-      message: "The displayed result no longer belongs to the active General SEM archive authority.",
+      message: "The displayed result no longer belongs to the active project authority.",
       correctiveAction: "The stale result was hidden. Reopen the exact marked project or calculate again from its current verified authority.",
       issues: [],
     });
@@ -879,7 +929,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       stage: "integrity",
       subject: "active_authority",
       code: "general_sem.active_authority_changed",
-      message: "The active project, dataset, model, or General SEM configuration changed while estimation was running.",
+      message: "The active project, dataset, model, or calculation configuration changed while estimation was running.",
       correctiveAction: "The job is being cancelled. Save a new calculation project from the intended canvas model and dataset.",
       issues: [],
     });
@@ -920,10 +970,10 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const current = useWorkspace.getState();
       if (!current.generalSemPublicationPending
         || current.projectId !== sourceProjectId
-        || current.projectPath !== null
+        || current.projectPath !== workspaceProjectPath
         || current.generalSemProjectDraftMode?.sourceProjectId !== sourceProjectId
          || currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId) !== draftPublicationKey) {
-        throw new Error("The fresh General SEM project authority changed while its marked archive was being published.");
+        throw new Error("The calculation-ready project authority changed while its marked archive was being published.");
       }
     };
     let publishedReceipt: GeneralSemProjectBootstrapReceiptV1 | null = null;
@@ -933,7 +983,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
     clearResults();
     try {
       if (!globalThis.crypto?.randomUUID) throw new Error("Secure project and recipe identifiers are unavailable in this runtime.");
-      const destination = await services.selectDestination(`${safeFileStem(projectName)}-General-SEM.qpls`);
+      const destination = await services.selectDestination(`${safeFileStem(projectName)}-Calculation.qpls`);
       if (!destination) return;
       assertDraftPublicationCurrent();
       const createdAt = new Date().toISOString();
@@ -964,7 +1014,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         capabilityCell,
         destinationPath: destination,
         projectId: globalThis.crypto.randomUUID(),
-        name: `${projectName} — General SEM`,
+        name: `${projectName} — Calculation`,
         createdAt,
         sourceProjectId,
         sourceDatasetId: dataset.id,
@@ -1014,11 +1064,27 @@ export function NativeRecipeV4GeneralSemWorkspace({
         readSession: () => useInternalProjectArchiveV6Session.getState().session,
         readWorkspace: () => useWorkspace.getState(),
       });
+      if (services.adoptActiveProject) {
+        try {
+          const adopted = await services.adoptActiveProject(createdReceipt.destinationArchivePath);
+          if (adopted.projectId !== createdReceipt.projectId) {
+            throw new Error("The native project identity differs from the activated calculation-ready revision.");
+          }
+        } catch (error) {
+          // The verified schema-6 session remains usable. Reopening the saved
+          // file repairs native-project synchronization before a later revision.
+          pushToast({
+            tone: "warning",
+            title: "Revision activated; reopen before another revision",
+            detail: error instanceof Error ? error.message : String(error),
+          });
+        }
+      }
       const activatedExecution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
       const activatedModelAuthority = useWorkspace.getState()
         .standardSemModelV4Authorities[createdReceipt.residentModelId];
       if (!activatedModelAuthority) {
-        throw new Error("The newly activated General SEM model authority is unavailable.");
+        throw new Error("The newly activated scientific model authority is unavailable.");
       }
       const activatedAuthorityKey = generalSemAuthorityKeyV1({
         estimatorId: activatedExecution.estimatorId,
@@ -1041,6 +1107,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         authority: authoritative.value.authority,
       });
       setSnapshot(null);
+      onAuthorityActivated?.();
     } catch (error) {
       const failure = generalSemFailureV1(error);
       if (publishedReceipt) {
@@ -1055,7 +1122,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         });
         pushToast({
           tone: "warning",
-          title: "General SEM project saved but not activated",
+          title: "Calculation-ready project saved but not activated",
           detail: `Open ${publishedReceipt.destinationArchivePath} to continue from its validated authority.`,
         });
       } else {
@@ -1100,7 +1167,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           validateGeneralSemCbsemCompletedExecutionV1(outcome.completed, nativeCbsemExecution);
         } else {
           if (!("analyticalResult" in outcome.completed) || !nativePlsExecution) {
-            throw new Error("The completed job did not return the exact General SEM PLS result contract.");
+            throw new Error("The completed job did not return the exact PLS-SEM result contract.");
           }
           validateGeneralSemPlsCompletedExecutionV1(outcome.completed, nativePlsExecution);
         }
@@ -1127,7 +1194,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         stage: "integrity",
         subject: "active_authority",
         code: "general_sem.completed_authority_stale",
-        message: "The completed result belongs to an earlier canvas, dataset, or General SEM configuration.",
+        message: "The completed result belongs to an earlier Canvas, dataset, or calculation configuration.",
         correctiveAction: "The stale result was not displayed. Save a fresh calculation project from the intended current canvas and run it again.",
         issues: [],
       });
@@ -1262,7 +1329,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           stage: "estimation",
           subject: jobId,
           code: "general_sem.job_abandon.cancel_pending",
-          message: "The General SEM job is still cancelling.",
+          message: "The advanced calculation is still cancelling.",
           correctiveAction: "Wait for cancellation to become terminal, then retry recovery or abandonment.",
           issues: [],
         });
@@ -1295,9 +1362,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
   };
 
   const verifyAndReanchorPersistedArchive = async (updatedArchiveSha256: string) => {
-    if (!completed) throw new Error("No completed General SEM result is available for archive verification.");
+    if (!completed) throw new Error("No completed advanced result is available for project verification.");
     if (useInternalProjectArchiveV6Session.getState().dirty) {
-      throw new Error("The active General SEM presentation changed after calculation. Restore its saved layout before verifying or appending results.");
+      throw new Error("The active Canvas presentation changed after calculation. Restore its saved layout before verifying or appending results.");
     }
     const inspected = await services.inspectArchive(completed.archiveIdentity.archivePath);
     if (inspected.status === "blocked") {
@@ -1310,7 +1377,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       } satisfies GeneralSemPlsJobFailureV1;
     }
     if (inspected.value.archiveSha256 !== updatedArchiveSha256) {
-      throw new Error("The appended General SEM archive digest differs from its strict reopen identity.");
+      throw new Error("The appended project digest differs from its strict reopen identity.");
     }
     const reanchored = useInternalProjectArchiveV6Session.getState()
       .reanchorGeneralSemSnapshot(inspected.value);
@@ -1321,7 +1388,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         stage: "archive_authority",
         subject: "archive",
         code: diagnostic?.code ?? "general_sem.persisted_reanchor_failed",
-        message: diagnostic?.message ?? "The saved result could not reanchor the active General SEM project.",
+        message: diagnostic?.message ?? "The saved result could not reanchor the active calculation-ready project.",
         correctiveAction: diagnostic?.correctiveAction ?? "Preserve the archive unchanged and reopen it before continuing.",
         issues: [],
       } satisfies GeneralSemPlsJobFailureV1;
@@ -1349,7 +1416,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           code: !resultAuthorityCurrent ? "general_sem.completed_authority_stale" : "general_sem.presentation_not_persisted",
           message: !resultAuthorityCurrent
             ? "The completed result no longer matches the current archive authority."
-            : "The General SEM canvas presentation differs from the saved archive.",
+            : "The Canvas presentation differs from the saved project.",
           correctiveAction: !resultAuthorityCurrent
             ? "Reopen the exact marked project or calculate again before saving this result."
             : "Undo the unsaved presentation changes, then save and verify the result.",
@@ -1407,7 +1474,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       if (reopened.outcome.status === "blocked" || !reopened.entry) {
         throw reopened.outcome.status === "blocked"
           ? { schemaVersion: 1, stage: "archive_authority", subject: "archive", ...reopened.outcome.diagnostic, issues: [] } satisfies GeneralSemPlsJobFailureV1
-          : new Error("The verified archive does not contain the appended General SEM result.");
+          : new Error("The verified project does not contain the appended result.");
       }
       setReopenedEntry(reopened.entry);
       setResultIntegrityInvalid(false);
@@ -1445,7 +1512,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           stage: "integrity",
           subject: completed.canonicalDocument.document_id,
           code: "general_sem.persisted_result_not_found",
-          message: "The verified QuickPLS project file did not contain the completed General SEM result.",
+          message: "The verified QuickPLS project file did not contain the completed result.",
           correctiveAction: "Keep the project file unchanged and report this integrity failure.",
           issues: [],
         });
@@ -1462,6 +1529,90 @@ export function NativeRecipeV4GeneralSemWorkspace({
     finally { setBusy(false); }
   };
 
+  const automaticJourneyKey = calculationPlan
+    ? JSON.stringify({
+        authorityKey: calculationPlan.authorityKey,
+        method: calculationPlan.method,
+        inference: calculationPlan.inference,
+        config: calculationPlan.requestedConfig,
+      })
+    : "";
+  if (automatedJourneyRef.current.key !== automaticJourneyKey) {
+    automatedJourneyRef.current = {
+      key: automaticJourneyKey,
+      createStarted: false,
+      calculationStarted: false,
+      appendStarted: false,
+      reopenStarted: false,
+    };
+  }
+
+  // In the unified Calculate workflow the old internal workspace becomes a
+  // coordinator: one Start action drives safe revision publication (when
+  // required), estimation, append, strict readback, and Results navigation.
+  // The visible controls remain available as recovery actions if any stage
+  // fails or the native save dialog is cancelled.
+  useEffect(() => {
+    const journey = automatedJourneyRef.current;
+    if (!calculationPresentation || (!calculationPlan && !activationOnly) || failure || operationBusy || running) return;
+    if (freshGeneralSemDraftMode && localPreflight.ready && !journey.createStarted) {
+      journey.createStarted = true;
+      void createCalculationProject();
+      return;
+    }
+    if (!activationOnly && markedGeneralSemProjectMode
+      && receipt
+      && nativePreflightReady
+      && resultAuthorityCurrent
+      && !generalSemSessionDirty
+      && !completed
+      && !snapshot
+      && !journey.calculationStarted) {
+      journey.calculationStarted = true;
+      void start();
+      return;
+    }
+    if (completed
+      && !appendOutcome
+      && resultAuthorityCurrent
+      && !generalSemSessionDirty
+      && !resultIntegrityInvalid
+      && !journey.appendStarted) {
+      journey.appendStarted = true;
+      void appendResult();
+      return;
+    }
+    if (completed
+      && appendOutcome?.status === "ok"
+      && persistedArchiveSha256
+      && !reopenedEntry
+      && !resultIntegrityInvalid
+      && !journey.reopenStarted) {
+      journey.reopenStarted = true;
+      void reopenResult();
+    }
+  }, [
+    appendOutcome,
+    activationOnly,
+    calculationPlan,
+    calculationPresentation,
+    completed,
+    failure,
+    freshGeneralSemDraftMode,
+    generalSemSessionDirty,
+    localPreflight.ready,
+    markedGeneralSemProjectMode,
+    nativePreflightReady,
+    operationBusy,
+    persistedArchiveSha256,
+    receipt,
+    reopenedEntry,
+    resultAuthorityCurrent,
+    resultIntegrityInvalid,
+    running,
+    snapshot,
+  ]);
+
   const closeGeneralSemProject = async () => {
     if (operationBusy || running) return;
     if (unpersistedCompletedResult) {
@@ -1470,7 +1621,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         stage: "archive_authority",
         subject: "result",
         code: "general_sem.project_close.temporary_result_pending",
-        message: "A completed General SEM result has not passed append and strict readback.",
+        message: "A completed result has not passed append and strict readback.",
         correctiveAction: "Save and reopen the result first, or explicitly dismiss the temporary result before closing the project.",
         issues: [],
       });
@@ -1516,19 +1667,25 @@ export function NativeRecipeV4GeneralSemWorkspace({
     || operationBusy
     || markedGeneralSemProjectMode;
 
-  return <section id="nd-model-general-sem-labs-panel" className="nd-cbsem-v4-workspace nd-general-sem-workspace" role="tabpanel" aria-labelledby="nd-model-general-sem-labs-tab">
-    <header className="nd-cbsem-v4-header"><div><h2>General SEM in QuickPLS</h2><p>One graphical model authority · Registry-authorized PLS-SEM and CB-SEM · one Calculate, progress, Results, export, and reopen workflow</p></div><FlaskConical size={24} aria-hidden="true" /></header>
+  return <section
+    id={calculationPresentation ? "nd-unified-sem-calculation-panel" : "nd-model-general-sem-labs-panel"}
+    className={`nd-cbsem-v4-workspace nd-general-sem-workspace${calculationPresentation ? " nd-unified-sem-calculation-workspace" : ""}`}
+    role={calculationPresentation ? "region" : "tabpanel"}
+    aria-label={calculationPresentation ? "Advanced model calculation setup" : undefined}
+    aria-labelledby={calculationPresentation ? undefined : "nd-model-general-sem-labs-tab"}
+  >
+    <header className="nd-cbsem-v4-header"><div><h2>{calculationPresentation ? "Advanced model calculation" : "General SEM in QuickPLS"}</h2><p>One graphical model · Registry-authorized PLS-SEM and CB-SEM · calculation, progress, Results, export, and reopen in one workflow</p></div><FlaskConical size={24} aria-hidden="true" /></header>
     <p className="nd-inline-warning" role="note"><AlertTriangle size={16} aria-hidden="true" /><span>{freshGeneralSemDraftMode
-      ? "This is a fresh General SEM draft inside QuickPLS. Only this newly created canvas may be adapted; ordinary projects are never converted. Standard Save is blocked until Save and activate creates the marked schema-6 authority."
+      ? "This new calculation-ready project is not yet activated. Review the detected model and settings, then save and activate its scientific authority before calculating."
       : markedGeneralSemProjectMode
-        ? "General SEM is a project mode inside QuickPLS, not a separate application. This canvas is bound to the activated, newly created general_sem_v1 authority."
-        : "This ordinary QuickPLS project is intentionally isolated from General SEM project mode. QuickPLS will not copy, adapt, or relabel its canvas as general_sem_v1."}</span></p>
+        ? "This canvas is bound to its activated scientific model and calculation recipe."
+        : "This older project needs a source-preserving calculation-ready revision before advanced PLS-SEM or CB-SEM methods can run."}</span></p>
 
     <div className="nd-cbsem-v4-grid">
       <section className="nd-cbsem-v4-card" aria-labelledby="nd-general-sem-input-heading">
         <h3 id="nd-general-sem-input-heading">Scientific input and inference</h3>
-        <p className="nd-cbsem-v4-summary"><strong>Project mode</strong><span>{freshGeneralSemDraftMode ? "Fresh General SEM draft" : markedGeneralSemProjectMode ? "General SEM (general_sem_v1)" : "Ordinary QuickPLS project — calculation blocked"}</span></p>
-        <p className="nd-cbsem-v4-summary"><strong>Model</strong><span>{model ? `${modelName} (${model.id})` : freshGeneralSemDraftMode ? "Resolve this new canvas model first" : "Create or activate a General SEM project first"}</span></p>
+        <p className="nd-cbsem-v4-summary"><strong>Project state</strong><span>{freshGeneralSemDraftMode ? "New calculation-ready draft" : markedGeneralSemProjectMode ? "Activated calculation authority" : "Safe revision required"}</span></p>
+        <p className="nd-cbsem-v4-summary"><strong>Model</strong><span>{model ? `${modelName} (${model.id})` : freshGeneralSemDraftMode ? "Resolve this new canvas model first" : "Create or activate a calculation-ready revision first"}</span></p>
         <p className="nd-cbsem-v4-summary"><strong>Dataset</strong><span>{dataset.name} · {dataset.rowCount ?? dataset.rows.length} cases</span></p>
         <label htmlFor="nd-general-sem-estimator-recipe">Estimator recipe
           <select
@@ -1600,15 +1757,15 @@ export function NativeRecipeV4GeneralSemWorkspace({
       <section id="nd-general-sem-preflight" className="nd-cbsem-v4-card" tabIndex={-1} aria-labelledby="nd-general-sem-preflight-heading">
         <h3 id="nd-general-sem-preflight-heading">Prepare and verify calculation</h3>
         <ol className="nd-cbsem-v4-preflight-list">
-          <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>General SEM project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
+          <li className={localPreflight.ready ? "ready" : "blocked"}><span aria-hidden="true">{localPreflight.ready ? "✓" : "!"}</span><div><strong>Project and model authority</strong><small>{localPreflight.ready ? "Ready for QuickPLS engine verification" : `${localPreflight.issues.length} issue${localPreflight.issues.length === 1 ? "" : "s"}`}</small>{localPreflight.issues.map((item) => <p key={`${item.code}:${item.subject}`}><strong>{item.message}</strong> {item.correctiveAction} <code>{item.code}</code></p>)}</div></li>
           <li className={receipt ? "ready" : "blocked"}><span aria-hidden="true">{receipt ? "✓" : "2"}</span><div><strong>Safe QuickPLS project file</strong><small>{receipt ? `Verified ${receipt.destinationArchivePath}` : "Save the current dataset, canvas model, and analysis settings in one calculation file"}</small>{receipt && !archiveCurrent ? <p>The canvas or settings changed. Keep the saved file unchanged and create a fresh calculation project from the current canvas.</p> : null}</div></li>
           <li className={nativePreflightReady && archiveCurrent ? "ready" : "blocked"}><span aria-hidden="true">{nativePreflightReady && archiveCurrent ? "✓" : "3"}</span><div><strong>QuickPLS engine preflight</strong><small>{nativePreflightReady && archiveCurrent ? nativeCbsemExecution?.kind === "recursive_sem_bootstrap" ? "Exact CB-SEM V3 recursive case-bootstrap cell verified" : nativeCbsemExecution?.kind === "recursive_sem_point" ? "Exact CB-SEM V3 ML point cell verified" : nativePlsExecution?.kind === "two_way_moderated_mediation_bootstrap" ? "Exact Registry-authorized two-way moderated-mediation bootstrap cell verified" : nativePlsExecution?.kind === "higher_order_bootstrap" ? "Exact Registry-authorized HOC bootstrap cell verified" : nativePlsExecution?.kind === "higher_order_point" ? "Exact Registry-authorized HOC point cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_bootstrap" ? "Exact simultaneous two-way moderation gamma-bootstrap cell verified" : nativePlsExecution?.kind === "multiple_two_way_moderation_point" ? "Exact simultaneous two-way moderation point cell verified" : "Exact Registry-authorized PLS capability verified" : "The resident RecipeV4 estimator is pending exact Registry-backed engine verification"}</small></div></li>
         </ol>
         <div className="nd-cbsem-v4-actions">
-          <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Start a new General SEM project to create its marked authority; existing projects cannot enter this path." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new General SEM project as the current QuickPLS canvas authority."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
+          <button ref={createButtonRef} type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !freshGeneralSemDraftMode || !localPreflight.ready} title={!freshGeneralSemDraftMode ? "Create a source-preserving calculation-ready revision before using this method." : !localPreflight.ready ? "Resolve every compatibility issue first." : "Save and activate this new scientific model and calculation recipe."} onClick={() => void createCalculationProject()}><Archive size={15} aria-hidden="true" />Save and activate project…</button>
           <button type="button" className="primary" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || !receipt || !residentEstimatorId || !resultAuthorityCurrent || !nativePreflightReady || resultIntegrityInvalid || generalSemSessionDirty} title={generalSemSessionDirty ? "Undo unsaved presentation changes before calculating from this fixed archive authority." : !resultAuthorityCurrent ? "Reopen the exact marked project authority before calculating." : !nativePreflightReady ? "The resident RecipeV4 estimator requires its exact Registry-authorized decision." : undefined} onClick={() => void start()}><Play size={15} aria-hidden="true" />{moderatedMediationPlan ? "Calculate moderated-mediation bootstrap" : generalSemCalculationActionLabelV1(interactionPlan, bootstrap, residentEstimatorId ?? selectedEstimatorId, higherOrderPlan)}</button>
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
-          {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close General SEM project</button> : null}
+          {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close project</button> : null}
         </div>
         {generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
       </section>
@@ -1665,7 +1822,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       {appendOutcome?.status === "ok" ? <p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Saved result {appendOutcome.value.canonical_document_id}.</p> : null}
       {reopenedEntry ? <><p className="nd-cbsem-v4-success" role="status"><CheckCircle2 size={15} aria-hidden="true" />Reopened and verified result {reopenedEntry.documentId}.</p><button type="button" className="primary" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", { detail: { document: reopenedEntry.canonicalDocument, navigate: true } }))}>View in Results</button></> : null}
     </section> : null}
-    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching General SEM result from strict archive readback.</p><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p><button type="button" className="primary" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", { detail: { document: reopenedEntry.canonicalDocument, navigate: true } }))}>View in Results</button></section> : null}
+    {!completed && reopenedEntry ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-reopened-result-heading"><h3 id="nd-general-sem-reopened-result-heading"><CheckCircle2 size={16} aria-hidden="true" />Verified project result</h3><p>QuickPLS restored the latest matching result from strict project readback.</p><p className="nd-cbsem-v4-success" role="status">Verified result {reopenedEntry.documentId}.</p><button type="button" className="primary" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", { detail: { document: reopenedEntry.canonicalDocument, navigate: true } }))}>View in Results</button></section> : null}
 
     {moderationInventory ? <p className="nd-cbsem-v4-success" role="status" aria-live="polite">
       Verified canonical moderation output: {moderationInventory.interactionEffectCount} interaction effect{moderationInventory.interactionEffectCount === 1 ? "" : "s"}, {moderationInventory.conditionalSlopeCount} conditional slope{moderationInventory.conditionalSlopeCount === 1 ? "" : "s"}, and {moderationInventory.interactionPlotCount} interaction plot{moderationInventory.interactionPlotCount === 1 ? "" : "s"} with {moderationInventory.interactionPlotPointCount} persisted point{moderationInventory.interactionPlotPointCount === 1 ? "" : "s"}. {moderationInventory.combinedModeratedMediation

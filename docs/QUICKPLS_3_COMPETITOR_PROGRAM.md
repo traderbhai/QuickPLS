@@ -75,7 +75,7 @@ remain chronology only and must not override that authority.
 | `2.48.0` | Promote accepted native methods and bounded assessment capabilities with method-scoped release evidence. |
 | `2.49.0` | Complete diagnostic and extended-relationship native workflows. |
 | `2.50.0` | Integrate the Rank 0–3 General SEM upgrade across PLS mediation, moderation, higher-order constructs, moderated mediation, and bounded CB-SEM workflows. |
-| `2.51.0` | Add power analysis, consistent bootstrap, consistent permutation, and consistent MGA. |
+| `2.51.0` | Unify Canvas, the 18-method Calculate catalogue, advanced parameter editing, and categorized Results while retaining existing bounded power and consistent-method cells under their recorded identities. |
 | `2.52.0` | Add model comparison/selection and advanced CB-SEM workflows. |
 | `3.0.0-beta.1` | Run a signed external competitor beta after operational policies and independent scientific review are in place. |
 | `3.0.0` | Ship only after the method and non-method competitor claim gates pass. |

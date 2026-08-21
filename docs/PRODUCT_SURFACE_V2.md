@@ -24,8 +24,12 @@ session. The acknowledgement is intentionally session-only; the Labs preference
 itself may be persisted. Each capability also requires the complete nine-part
 Method Details contract before it can be exposed.
 
-The native Calculate dialog resolves each selected method and add-on through the
-exact option-cell registry bridge. PCA, GSCA, NCA, and Regression currently
-enter Standard through release-qualified scoped cells; other executable partial
-cells remain available only after Experimental Labs is enabled. Catalogue,
-result, CLI, and documentation surfaces consume the same option-cell authority.
+The native Calculate dialog retains its 18-method catalogue and resolves each
+selected method and add-on through the exact option-cell registry bridge. For PLS
+Algorithm, Bootstrapping, and CB-SEM, resident model features and inference
+settings select the applicable bounded mediation, moderation, higher-order,
+moderated-mediation, or CB-SEM cell without exposing separate General SEM or
+Exact CB-SEM tabs. PCA, GSCA, NCA, and Regression currently enter Standard
+through release-qualified scoped cells; other executable partial cells remain
+available only after Experimental Labs is enabled. Catalogue, result, CLI, and
+documentation surfaces consume the same option-cell authority.

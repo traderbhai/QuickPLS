@@ -23,4 +23,13 @@ describe("ModelCanvas strict Standard authority routing", () => {
     expect(source).toContain('? { kind: "control", source: connection.source, target: connection.target, label }');
     expect(source).toContain(': { kind: "structural", source: connection.source, target: connection.target, label }');
   });
+
+  it("provides a non-editing Results presentation without borrowing a legacy run overlay", () => {
+    const source = readFileSync("src/components/ModelCanvas.tsx", "utf8");
+    expect(source).toContain('presentation?: "editor" | "results_readonly";');
+    expect(source).toContain('readOnlyResultsPresentation ? "smartpls_result" : diagramMode');
+    expect(source).toContain("readOnlyResultsPresentation ? undefined : selectedResultRun");
+    expect(source).toContain("if (readOnlyResultsPresentation) return;");
+    expect(source).toContain("data-model-canvas-presentation={presentation}");
+  });
 });

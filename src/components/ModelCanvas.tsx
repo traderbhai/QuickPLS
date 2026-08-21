@@ -52,9 +52,10 @@ export interface ModelCanvasContextMenuRequest {
 
 export interface ModelCanvasProps {
   onContextMenuRequest?: (request: ModelCanvasContextMenuRequest) => void;
+  presentation?: "editor" | "results_readonly";
 }
 
-export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
+export function ModelCanvas({ onContextMenuRequest, presentation = "editor" }: ModelCanvasProps) {
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
   const runs = useWorkspace((state) => state.runs);
@@ -87,6 +88,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const assignIndicators = useWorkspace((state) => state.assignIndicators);
   const undo = useWorkspace((state) => state.undo);
   const redo = useWorkspace((state) => state.redo);
+  const readOnlyResultsPresentation = presentation === "results_readonly";
   const [flow, setFlow] = useState<ReactFlowInstance | null>(null);
   const previousNodeCount = useRef(nodes.length);
   const preserveViewportForDrop = useRef(false);
@@ -100,7 +102,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   const nextStrictId = (kind: string) => `standard:editor:${kind}:${Date.now()}:${++strictIdCounter.current}`;
   const commitStrict = (intent: StandardSemModelV4EditorIntentV1) => {
     if (generalSemPublicationPending) {
-      setActionFeedback({ message: "Wait for the General SEM project file to finish publishing before editing the model." });
+      setActionFeedback({ message: "Wait for the calculation-ready project file to finish publishing before editing the model." });
       return;
     }
     setActionFeedback({ message: "Committing strict Standard model edit…" });
@@ -125,13 +127,24 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
   });
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
-  const graph = useMemo(() => buildDiagramGraph(nodes, edges, diagramMode, diagramOverlaySettings.mode, selectedResultRun, { layout: diagramLayout, layoutSource: diagramMode === "publication" ? "current_canvas" : undefined }), [diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, selectedResultRun]);
+  const canvasDiagramMode = readOnlyResultsPresentation ? "smartpls_result" : diagramMode;
+  const graph = useMemo(() => buildDiagramGraph(
+    nodes,
+    edges,
+    canvasDiagramMode,
+    diagramOverlaySettings.mode,
+    readOnlyResultsPresentation ? undefined : selectedResultRun,
+    {
+      layout: diagramLayout,
+      layoutSource: readOnlyResultsPresentation || diagramMode === "publication" ? "current_canvas" : undefined,
+    },
+  ), [canvasDiagramMode, diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, readOnlyResultsPresentation, selectedResultRun]);
   const [canvasNodes, setCanvasNodes] = useState(graph.nodes);
   const draggingNodeId = useRef<string | null>(null);
   const dragGuideFrame = useRef<number | null>(null);
   const pendingDragGuideNode = useRef<Node | null>(null);
-  const resultDiagramMode = diagramMode === "smartpls_result" || diagramMode === "publication";
-  const paperStyleCanvas = diagramMode === "sem" || diagramMode === "publication" || diagramMode === "smartpls_result";
+  const resultDiagramMode = canvasDiagramMode === "smartpls_result" || canvasDiagramMode === "publication";
+  const paperStyleCanvas = canvasDiagramMode === "sem" || canvasDiagramMode === "publication" || canvasDiagramMode === "smartpls_result";
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
   const canEditLayout = !resultDiagramMode && !layoutLocked && !generalSemPublicationPending;
   const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
@@ -387,6 +400,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
 
   const showDropCue = draggingVariableCount > 0 && canEditLayout;
   useEffect(() => {
+    if (readOnlyResultsPresentation) return;
     const handleTool = (event: Event) => {
       const tool = (event as CustomEvent<{ tool?: DiagramToolMode }>).detail?.tool;
       if (tool === "select" || tool === "pan" || tool === "path" || tool === "covariance") selectTool(tool);
@@ -411,7 +425,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
     const handleDeleteSelection = () => {
       if (!canEditLayout) {
         setActionFeedback({ message: generalSemPublicationPending
-          ? "Wait for the General SEM project file to finish publishing before deleting diagram objects."
+          ? "Wait for the calculation-ready project file to finish publishing before deleting diagram objects."
           : "Result and publication views are locked. Switch to Edit model before deleting diagram objects." });
         return;
       }
@@ -440,7 +454,7 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       window.removeEventListener("quickpls:model-undo", handleUndo);
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
-  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, redo, removeSelection, selectTool, strictAuthority, undo]);
+  }, [addConstruct, arrangeModel, canEditLayout, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, strictAuthority, undo]);
   const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
     setSelectedNode(constructId);
   };
@@ -455,11 +469,14 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       ?? document.getElementById("nd-main");
     onContextMenuRequest({ clientX: event.clientX, clientY: event.clientY, returnFocus, target });
   };
-  return <div className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}>
-    {resultDiagramMode ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
-    {generalSemPublicationPending ? <div className="canvas-tool-status warning" role="status">General SEM project publication is in progress. Canvas editing is temporarily locked.</div> : null}
+  return <div
+    className={`model-canvas theme-${diagramLayout.diagramTheme}${paperStyleCanvas ? " smartpls-result-canvas" : ""}${resultDiagramMode ? " locked-result-canvas" : ""}${layoutLocked ? " layout-locked-canvas" : ""}${showDropCue ? " can-drop-variables" : ""}`}
+    data-model-canvas-presentation={presentation}
+  >
+    {resultDiagramMode && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning">Result view is locked. Switch to Edit model to change diagram objects.</div> : null}
+    {generalSemPublicationPending && !readOnlyResultsPresentation ? <div className="canvas-tool-status warning" role="status">Calculation-ready project publication is in progress. Canvas editing is temporarily locked.</div> : null}
     {!resultDiagramMode && (diagramTool === "path" || diagramTool === "covariance") ? <span className="sr-only" role="status" aria-live="polite">{pathSource ? `Choose ${diagramTool === "path" ? "outcome construct" : "second construct"}` : `Choose ${diagramTool === "path" ? "predictor construct" : "first construct"}`}</span> : null}
-    {actionFeedback ? <div
+    {actionFeedback && !readOnlyResultsPresentation ? <div
       className={`canvas-action-feedback${actionFeedback.x !== undefined && actionFeedback.y !== undefined ? " local" : ""}`}
       style={actionFeedback.x !== undefined && actionFeedback.y !== undefined ? { left: actionFeedback.x + 12, top: actionFeedback.y + 12 } : undefined}
       role="status"
@@ -546,10 +563,15 @@ export function ModelCanvas({ onContextMenuRequest }: ModelCanvasProps) {
       }}
       onNodeClick={(event, node) => {
         const indicator = parseIndicatorNodeId(node.id);
-        if (indicator) selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
-        else {
-          chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
+        if (indicator) {
+          selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
+          return;
         }
+        if (!canEditLayout) {
+          setSelectedNode(node.id);
+          return;
+        }
+        chooseConstruct(node.id, { x: event.clientX, y: event.clientY });
       }}
       onEdgeClick={(_, edge) => setSelectedEdge(edge.id)}
       onNodeContextMenu={(event, node) => {

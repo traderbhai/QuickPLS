@@ -16,6 +16,7 @@ import {
   mutateNativeProjectExplorer,
   openNativeDemoProject,
   openNativeProjectAt,
+  readInternalProjectSchema6CanonicalResultsV2,
   saveNativeProject,
   startNativePlsJob,
 } from "../services/projectService";
@@ -28,6 +29,7 @@ import {
   generalSemWorkspaceProductAccessV1,
   rehydrateGeneralSemExecutionAuthorityV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import { selectLatestGeneralSemReopenedEntryV1 } from "./NativeRecipeV4GeneralSemWorkspace";
 import {
   hasUnsavedNativeProjectChanges,
   nativeLegacyProjectOperationBlocker,
@@ -359,14 +361,14 @@ export function NativeDesktopController() {
 
   const confirmWorkspaceReplacement = async (action: string): Promise<boolean> => {
     if (generalSemPublicationPendingRef.current) {
-      pushToast({ tone: "warning", title: "General SEM project publication in progress", detail: `Wait for the marked project file to finish publishing and validating before ${action}.` });
+      pushToast({ tone: "warning", title: "Project publication in progress", detail: `Wait for the calculation-ready project file to finish publishing and validating before ${action}.` });
       return false;
     }
     if (generalSemTransientWorkBlockerRef.current) {
       const temporaryResult = generalSemTransientWorkBlockerRef.current === "temporary_result_pending";
       pushToast({
         tone: "warning",
-        title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
+        title: temporaryResult ? "Advanced result not yet secured" : "Advanced calculation in progress",
         detail: temporaryResult
           ? `Save and strictly reopen the result, or dismiss it explicitly, before ${action}.`
           : `Finish or cancel the General SEM calculation before ${action}.`,
@@ -505,19 +507,19 @@ export function NativeDesktopController() {
     if (isNativeDesktop()) {
       const created = await createNativeProject(name, mode === "general_sem_v1" ? "general_sem_v1" : undefined);
       if (!created) return;
-      if (!loadNativeSnapshot(created, mode === "general_sem_v1" ? "General SEM project started" : "Project created")) return;
+      if (!loadNativeSnapshot(created, mode === "general_sem_v1" ? "Calculation-ready project started" : "Project created")) return;
       if (mode === "general_sem_v1") {
         if (!beginGeneralSemProjectDraftMode(created.projectId)) {
           throw new Error("The fresh native project did not satisfy the empty General SEM draft authority contract.");
         }
         pushToast({
           tone: "info",
-          title: "General SEM project draft active",
-          detail: "Import raw data and author this new canvas, then use General SEM → Save and activate. Standard Save is intentionally blocked.",
+          title: "Calculation-ready project active",
+          detail: "Import raw data, author the Canvas, then click Calculate to review, save, and activate the scientific model before its first advanced calculation.",
         });
       }
     } else {
-      if (mode === "general_sem_v1") throw new Error("General SEM project creation requires the installed QuickPLS desktop app.");
+      if (mode === "general_sem_v1") throw new Error("Calculation-ready project creation requires the installed QuickPLS desktop app.");
       closeProject();
       setProjectMeta(name, null);
       updateProjectWritable(true);
@@ -538,6 +540,10 @@ export function NativeDesktopController() {
     const inspected = await inspectInternalProjectArchiveV6At(selectedPath);
     if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project)) {
       await invalidateNativeGeneralSemFreshDraftAuthorityV1();
+      const residentProject = await openNativeProjectAt(selectedPath);
+      if (residentProject.projectId !== inspected.value.project.project_id) {
+        throw new Error("The native project identity differs from the strictly inspected calculation-ready archive.");
+      }
       // Activation revokes any backend-only fresh-draft token before resolving
       // and installing Standard authority, so a previous draft cannot survive.
       const sessionStore = useInternalProjectArchiveV6Session.getState();
@@ -559,9 +565,34 @@ export function NativeDesktopController() {
         active.clearGeneralSemProjectDraftMode();
         updateProjectWritable(false);
         markCurrentWorkspaceClean();
+        try {
+          const resultReadback = await readInternalProjectSchema6CanonicalResultsV2({
+            ...execution.readAccess,
+            capabilityCell: execution.capabilityCell,
+            archivePath: inspected.value.archivePath,
+            expectedSourceSha256: inspected.value.archiveSha256,
+          });
+          if (resultReadback.status === "ok"
+            && resultReadback.value.projectId === execution.receipt.projectId
+            && resultReadback.value.archivePath === inspected.value.archivePath
+            && resultReadback.value.sourceDocumentSha256 === inspected.value.archiveSha256) {
+            const latest = selectLatestGeneralSemReopenedEntryV1(
+              resultReadback.value.documents,
+              execution.receipt,
+            );
+            if (latest) {
+              window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+                detail: { document: latest.canonicalDocument, navigate: false },
+              }));
+            }
+          }
+        } catch {
+          // Result restoration is fail-closed: the verified model remains open,
+          // but no unverified or stale canonical document is exposed in Results.
+        }
         pushToast({
           tone: "success",
-          title: "General SEM project opened",
+          title: "Calculation-ready project opened",
           detail: `${inspected.value.project.name} was strictly validated and restored from its resident RecipeV4 authority.`,
         });
         window.dispatchEvent(new CustomEvent("quickpls:navigate-surface", { detail: { surface: "model" } }));
@@ -589,8 +620,8 @@ export function NativeDesktopController() {
     if (currentState.generalSemProjectDraftMode) {
       pushToast({
         tone: "warning",
-        title: "Use General SEM save and activation",
-        detail: "This fresh General SEM draft cannot be written as an unmarked project. Open its General SEM tab and choose Save and activate project.",
+        title: "Finish the calculation-ready revision",
+        detail: "This advanced-method draft cannot be written as an ordinary project. Return to Calculate and choose Save and activate project.",
       });
       return false;
     }
@@ -1293,7 +1324,7 @@ export function NativeDesktopController() {
       if (closeBypassRef.current) return;
       if (generalSemPublicationPendingRef.current) {
         event.preventDefault();
-        pushToast({ tone: "warning", title: "General SEM project publication in progress", detail: "Wait for the marked project file to finish publishing and validating before closing." });
+        pushToast({ tone: "warning", title: "Project publication in progress", detail: "Wait for the calculation-ready project file to finish publishing and validating before closing." });
         return;
       }
       if (generalSemTransientWorkBlockerRef.current) {
@@ -1301,10 +1332,10 @@ export function NativeDesktopController() {
         const temporaryResult = generalSemTransientWorkBlockerRef.current === "temporary_result_pending";
         pushToast({
           tone: "warning",
-          title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
+          title: temporaryResult ? "Advanced result not yet secured" : "Advanced calculation in progress",
           detail: temporaryResult
             ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing QuickPLS."
-            : "Finish or cancel the General SEM calculation before closing QuickPLS.",
+            : "Finish or cancel the advanced calculation before closing QuickPLS.",
         });
         return;
       }

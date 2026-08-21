@@ -619,7 +619,7 @@ function calculationItem(
         : null,
       settings.caseWeightColumn?.trim() ? "This CB-SEM / CFA calculation does not support case weights" : null,
       cbsemBootstrapEnabled
-        ? "Run current exact CFA bootstrap from the Exact CB-SEM model tab; this Calculate route is point-only and will not emit a historical schema-3 bootstrap recipe"
+        ? "Choose Case bootstrap in the CB-SEM Calculate settings; this point-only setup will not emit a historical schema-3 bootstrap recipe"
         : null,
       settings.bootstrapSamples > 0 || settings.studentizedInnerSamples > 0 || settings.permutationSamples > 0
         ? "CB-SEM bootstrap v2 cannot be combined with generic PLS bootstrap, studentized, or permutation inference"
@@ -831,7 +831,7 @@ function calculationItem(
     const problems = [
       moderationInteractions.length !== 1 ? "Two-stage moderation requires exactly one two-way interaction" : null,
       moderationInteractions.some((node) => node.data.interaction?.kind === "interaction_v2")
-        ? "The legacy two-stage estimator does not support interaction_v2 terms; use General SEM calculation"
+        ? "Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine."
         : null,
       (settings.weightingScheme ?? "path") !== "path" ? "Two-stage moderation requires path weighting" : null,
       (settings.preprocessing ?? "standardized") !== "standardized" ? "Two-stage moderation requires standardized preprocessing" : null,

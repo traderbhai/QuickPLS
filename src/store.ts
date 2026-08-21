@@ -141,6 +141,22 @@ export interface StandardSemModelV4DatasetDescriptorV1 {
   sampleSize: number | null;
 }
 
+export type GeneralSemRevisionDraftSourceV1 =
+  | {
+      kind: "strict";
+      modelId: string;
+      authority: StandardSemModelV4AuthorityRecordV1;
+      scientificEditLocked: boolean;
+      layout: StandardSemModelV4DiagramLayoutV1;
+      persistence: StandardSemModelV4PersistenceV1;
+    }
+  | {
+      kind: "legacy";
+      nodes: Array<Node<ConstructData>>;
+      edges: Edge[];
+      diagramLayout: DiagramLayoutState;
+    };
+
 export interface WorkspaceState {
   view: WorkspaceView;
   workflowDestinationContext: WorkflowDestinationContext | null;
@@ -194,6 +210,7 @@ export interface WorkspaceState {
   projectPath: string | null;
   projectWritable: boolean;
   generalSemProjectDraftMode: GeneralSemProjectDraftModeV1 | null;
+  generalSemRevisionDraftSource: GeneralSemRevisionDraftSourceV1 | null;
   generalSemPublicationPending: boolean;
   generalSemTransientWorkBlocker: GeneralSemTransientWorkBlockerV1 | null;
   past: HistorySnapshot[];
@@ -312,6 +329,7 @@ export interface WorkspaceState {
   setProjectMeta: (name: string, path: string | null, projectId?: string | null) => void;
   setProjectWritable: (writable: boolean) => void;
   beginGeneralSemProjectDraftMode: (sourceProjectId: string) => boolean;
+  beginGeneralSemProjectRevisionDraftMode: (sourceProjectId: string) => boolean;
   clearGeneralSemProjectDraftMode: () => void;
   setGeneralSemPublicationPending: (pending: boolean) => void;
   setGeneralSemTransientWorkBlocker: (blocker: GeneralSemTransientWorkBlockerV1 | null) => void;
@@ -993,6 +1011,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   projectPath: null,
   projectWritable: true,
   generalSemProjectDraftMode: null,
+  generalSemRevisionDraftSource: null,
   generalSemPublicationPending: false,
   generalSemTransientWorkBlocker: null,
   past: [],
@@ -2196,7 +2215,6 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         standardSemModelV4Persistence: persistence,
         standardSemModelV4DatasetDescriptors: descriptors,
         datasetDescriptorOnly: true,
-        generalSemProjectDraftMode: null,
         dataset: datasetFromStandardSemModelV4Descriptor(activeDescriptor),
         datasetCatalog: descriptorDatasets,
         datasetVersions: [],
@@ -2578,9 +2596,12 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     projectPath,
     projectId,
     generalSemProjectDraftMode: state.generalSemProjectDraftMode
-      && projectPath === null
       && projectId === state.generalSemProjectDraftMode.sourceProjectId
       ? state.generalSemProjectDraftMode
+      : null,
+    generalSemRevisionDraftSource: state.generalSemProjectDraftMode
+      && projectId === state.generalSemProjectDraftMode.sourceProjectId
+      ? state.generalSemRevisionDraftSource
       : null,
   })),
   setProjectWritable: (projectWritable) => set({ projectWritable }),
@@ -2609,11 +2630,110 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           semGeneration: "general_sem_v1",
           sourceProjectId,
         },
+        generalSemRevisionDraftSource: null,
       };
     });
     return activated;
   },
-  clearGeneralSemProjectDraftMode: () => set({ generalSemProjectDraftMode: null }),
+  beginGeneralSemProjectRevisionDraftMode: (sourceProjectId) => {
+    let activated = false;
+    set((state) => {
+      const hasResidentDataset = state.datasetCatalog.some((dataset) => (
+        dataset.columns.length > 0
+        && (dataset.rowCount ?? dataset.rows.length) > 0
+      ));
+      const eligible = sourceProjectId.length > 0
+        && state.projectId === sourceProjectId
+        && state.generalSemProjectDraftMode === null
+        && state.activeModelId !== null
+        && state.nodes.length > 0
+        && hasResidentDataset;
+      if (!eligible) return state;
+      const sourceAuthority = state.activeModelId
+        ? state.standardSemModelV4Authorities[state.activeModelId] ?? null
+        : null;
+      const sourcePersistence = state.activeModelId
+        ? state.standardSemModelV4Persistence[state.activeModelId] ?? null
+        : null;
+      const sourceLayout = state.activeModelId
+        ? state.standardSemModelV4Layouts[state.activeModelId] ?? null
+        : null;
+      const revisionSourceReady = Boolean(sourceAuthority && sourcePersistence && sourceLayout);
+      if (sourceAuthority && !revisionSourceReady) return state;
+      const nextLocks = { ...state.standardSemModelV4ScientificEditLocks };
+      if (revisionSourceReady && sourceAuthority) delete nextLocks[sourceAuthority.model.id];
+      activated = true;
+      return {
+        generalSemProjectDraftMode: {
+          schemaVersion: 1,
+          semGeneration: "general_sem_v1",
+          sourceProjectId,
+        },
+        generalSemRevisionDraftSource: sourceAuthority && sourcePersistence && sourceLayout ? {
+          kind: "strict",
+          modelId: sourceAuthority.model.id,
+          authority: structuredClone(sourceAuthority),
+          scientificEditLocked: Boolean(state.standardSemModelV4ScientificEditLocks[sourceAuthority.model.id]),
+          layout: structuredClone(sourceLayout),
+          persistence: structuredClone(sourcePersistence),
+        } : {
+          kind: "legacy",
+          nodes: structuredClone(state.nodes),
+          edges: structuredClone(state.edges),
+          diagramLayout: structuredClone(state.diagramLayout),
+        },
+        standardSemModelV4ScientificEditLocks: nextLocks,
+      };
+    });
+    return activated;
+  },
+  clearGeneralSemProjectDraftMode: () => set((state) => {
+    const source = state.generalSemRevisionDraftSource;
+    const restore = Boolean(
+      source
+      && state.generalSemProjectDraftMode
+      && state.projectId === state.generalSemProjectDraftMode.sourceProjectId,
+    );
+    if (!restore || !source) return {
+      generalSemProjectDraftMode: null,
+      generalSemRevisionDraftSource: null,
+    };
+    if (source.kind === "legacy") return {
+      generalSemProjectDraftMode: null,
+      generalSemRevisionDraftSource: null,
+      nodes: source.nodes,
+      edges: source.edges,
+      diagramLayout: source.diagramLayout,
+      selectedNodeId: null,
+      selectedEdgeId: null,
+    };
+    const projection = projectStandardSemModelV4DiagramV1(source.authority, source.layout);
+    const locks = { ...state.standardSemModelV4ScientificEditLocks };
+    if (source.scientificEditLocked) locks[source.modelId] = true;
+    else delete locks[source.modelId];
+    return {
+      generalSemProjectDraftMode: null,
+      generalSemRevisionDraftSource: null,
+      standardSemModelV4Authorities: {
+        ...state.standardSemModelV4Authorities,
+        [source.modelId]: source.authority,
+      },
+      standardSemModelV4ScientificEditLocks: locks,
+      standardSemModelV4Layouts: {
+        ...state.standardSemModelV4Layouts,
+        [source.modelId]: source.layout,
+      },
+      standardSemModelV4Persistence: {
+        ...state.standardSemModelV4Persistence,
+        [source.modelId]: source.persistence,
+      },
+      nodes: projection.nodes,
+      edges: projection.edges,
+      diagramLayout: projection.diagramLayout,
+      selectedNodeId: null,
+      selectedEdgeId: null,
+    };
+  }),
   setGeneralSemPublicationPending: (generalSemPublicationPending) => set({ generalSemPublicationPending }),
   setGeneralSemTransientWorkBlocker: (generalSemTransientWorkBlocker) => set({ generalSemTransientWorkBlocker }),
   closeProject: () => set({
@@ -2659,6 +2779,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     projectPath: null,
     projectWritable: true,
     generalSemProjectDraftMode: null,
+    generalSemRevisionDraftSource: null,
     generalSemPublicationPending: false,
     generalSemTransientWorkBlocker: null,
     past: [],
@@ -2707,6 +2828,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     projectPath: null,
     projectWritable: true,
     generalSemProjectDraftMode: null,
+    generalSemRevisionDraftSource: null,
     generalSemPublicationPending: false,
     generalSemTransientWorkBlocker: null,
     past: [],
@@ -2737,6 +2859,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       && state.generalSemProjectDraftMode.sourceProjectId === project.preserveGeneralSemProjectDraftMode.sourceProjectId
       ? state.generalSemProjectDraftMode
       : null,
+    generalSemRevisionDraftSource: null,
     savedReports: project.savedReports ?? [],
     explorerSelection: project.explorerSelection
       ?? (project.activeModelId ? { kind: "model", modelId: project.activeModelId } : { kind: "data" }),

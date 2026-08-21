@@ -192,7 +192,7 @@ function EstimatorCard({
         <strong>Cannot select:</strong> {blockingReason}
       </p> : null}
       {runnable && selectionLocked ? <p className="nd-method-availability-message" role="note">
-        The estimator is fixed by the resident RecipeV4. Publish a new General SEM archive to change methods.
+        The estimator is fixed by the saved calculation recipe. Choose another method in Calculate to create a source-preserving revision.
       </p> : null}
     </footer>
   </article>;

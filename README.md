@@ -8,7 +8,7 @@ QuickPLS runs locally. It does not require an account, activation server, cloud 
 
 > QuickPLS is independently implemented from published methods and permitted documentation. It does not import SmartPLS project files, does not reverse-engineer SmartPLS, and does not claim identical results for undocumented SmartPLS behavior.
 
-QuickPLS 2.50.0 integrates the Rank 0–3 General SEM upgrade program across mediation, moderation, higher-order PLS, moderated mediation, and bounded CB-SEM workflows. The program does not treat a method name or engine preview as unrestricted parity: each advertised capability retains its exact documented scope.
+The QuickPLS 2.51.0 source candidate places the Rank 0–3 SEM capabilities behind one `Canvas → Calculate → Results` workflow. The existing 18-method Calculate catalogue is unchanged: model features and selected inference options route to the appropriate bounded engine internally. Candidate verification and Windows artifact publication are still pending.
 
 ## Download
 
@@ -25,7 +25,7 @@ The installer is currently unsigned. Windows SmartScreen may show a warning unti
 
 The default frontend is a compact Windows scientific workbench with one operating-system title bar, a Windows-style menu and context toolbar, a project tree, a central document surface, an optional properties pane, and a minimal status bar. It starts maximized with a DPI-safe 1280 x 720 restored size. The supported minimum window is 1024 x 700; optional panes collapse before the model canvas or result tables are compressed.
 
-The primary workflow has four surfaces: Launcher/Project, Data, Model, and Results. Before a project is open, Launcher stays focused on New, Open, Sample, and Recent projects. After opening a project, the same surface becomes a compact Workspace Explorer for Data, named Models, and saved report aliases. Calculation, export, Method Details, Run Details, preferences, shortcuts, and About open only when requested instead of occupying permanent workspaces. Model and Results use one generic `Calculate` command. It opens a compact, searchable method browser instead of adding a ribbon or a separate menu item for every analysis.
+The primary workflow has four surfaces: Launcher/Project, Data, Model, and Results. Before a project is open, Launcher stays focused on New, Open, Sample, and Recent projects. After opening a project, the same surface becomes a compact Workspace Explorer for Data, named Models, and saved report aliases. Canvas is the only permanent model-authoring document. Calculation, the Advanced Parameter Table, export, Method Details, Run Details, preferences, shortcuts, and About open only when requested instead of occupying permanent workspaces. Model and Results use one generic `Calculate` command, which opens the existing compact, searchable 18-method browser.
 
 The visual acceptance harness writes its current viewport evidence to [the native desktop screenshot folder](validation/results/screens/v247-native-desktop-acceptance/). Release evidence captured from the packaged Tauri application belongs in the same folder so native-window screenshots remain distinct from browser-harness captures.
 
@@ -35,8 +35,8 @@ The visual acceptance harness writes its current viewport evidence to [the nativ
 - Inspect paged case data, edit truthful variable label/scale/range metadata, and review data quality, missing values, and import details without loading an entire native dataset into the grid at once. Page sizes are 50, 100, or 250 cases.
 - Navigate the backend-owned immutable dataset history, activate an earlier or derived version, and search variables by name or label. Metadata edits and native Recode operations create fingerprinted descendants while retaining their source versions and lineage.
 - Create a typed recoded variable in a raw dataset from the installed Windows app. Recode transforms the complete native dataset rather than the visible grid page, appends a derived column, and supports explicit handling for unmapped values; it is disabled in browser preview and read-only projects.
-- Build SEM diagrams with latent constructs, indicators, paths, covariances, layout controls, keyboard editing, and result overlays. Under their documented predicates, General SEM supports simultaneous two-way moderation, one bounded first- or second-stage moderated-mediation path, and one non-nested higher-order construct through the documented repeated, extended-repeated, embedded two-stage, or disjoint two-stage matrix. Generated technical paths remain distinguishable from authored hypotheses.
-- Use the same Canvas and `Calculate` workflow for scoped-Standard PLS-SEM and CB-SEM estimators. Version 2.50 adds General SEM mediation and simultaneous moderation, higher-order PLS point/bootstrap, two-way moderated mediation, bounded recursive common-factor CB-SEM ML, and recursive-SEM case bootstrap. Other Standard workflows include bounded PLS, reflective PLSc and consistent bootstrapping, case-weighted WPLS, CCA, descriptive CTA-PLS, IPMA, Structural Path Randomization v1, PLSpredict/CVPAT v2, coupled two-group MICOM/permutation-MGA v4, PCA, GSCA, regression, PROCESS, and NCA. Experimental Labs remains available only for separately registered incomplete cells.
+- Build SEM diagrams with latent constructs, indicators, paths, covariances, layout controls, keyboard editing, and result overlays. Canvas commands add supported moderating effects and higher-order constructs; mediation is detected from the drawn paths; bounded moderated mediation is selected while configuring PLS Bootstrapping. Generated technical paths remain distinguishable from authored hypotheses.
+- Use the same Canvas and `Calculate` workflow for scoped-Standard PLS-SEM and CB-SEM estimators. PLS Algorithm, Bootstrapping, and CB-SEM use the resident model topology to reach the qualified mediation, simultaneous moderation, higher-order PLS, moderated-mediation, or recursive common-factor CB-SEM cell when applicable. Internal compatibility adapters do not appear as separate General SEM or Exact CB-SEM tabs.
 - Open completed results automatically, navigate only the diagrams and tables available for the selected run, and return to the same live model for editing. A PLS or Bootstrap run with a genuine indirect path adds a focused Mediation result group for direct, path-specific indirect, total indirect, total, and available bootstrap effect inference.
 - Manage multiple named editable models from the Workspace Explorer, preserve each model's canvas presentation while switching, and save, rename, open, or remove report aliases without deleting their completed calculation results.
 - Save and reopen native projects through canonical typed models, immutable recipes, and integrity-checked result envelopes. Workspace JSON retains positions and pane state but cannot override scientific model or result content.
@@ -52,7 +52,7 @@ QuickPLS now separates scientific coverage from verification maturity. The optio
 - **Legacy** keeps discontinued or historical analyses readable without advertising them in normal Calculate.
 - Internal evidence states, source hashes, and promotion terminology are confined to validation reports and Run Details rather than repeated throughout the customer workflow.
 
-The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. Version 2.50 promotes the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Scoped Standard never implies unrestricted SmartPLS parity.
+The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. Version 2.50 promoted the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Version 2.51 changes their user workflow, not their scientific identities or documented predicates. Scoped Standard never implies unrestricted SmartPLS parity.
 
 The implemented product foundation includes the option-cell registry, universal `SemModelV4` authority, estimator-specific compiled plans, schema-6 project migration, recipe-schema-4 execution receipts, canonical result/comparison/export contracts, deterministic data transformations, Method Details, Run Details, and a synchronized SEM parameter table. The Rank 0–3 Version 2.50 workflows are connected to the production Canvas, calculation, cancellation, Results, export, append, and strict reopen paths.
 
@@ -62,6 +62,7 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
+- [QuickPLS 2.51.0 Candidate Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [QuickPLS 2.50.0 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Rank 0–3 SEM Upgrade Status](docs/SEM_UPGRADE_RANKS_0_3_STATUS.md)
 - [Method Compatibility](docs/METHOD_COMPATIBILITY.md)
@@ -96,7 +97,7 @@ Short version:
 2. From the Launcher, create a project, open a saved project, or open the sample project.
 3. Import a dataset and inspect its cases, variables, quality, and import details in `Data`; use Versions to reactivate an immutable dataset snapshot, search the variable list, create a native full-data Recode descendant, or configure explicit Group A/Group B values from an unassigned grouping variable.
 4. After importing the first dataset, choose `New Model…` in the Data toolbar (or press `Ctrl+Shift+N`), name the model, and choose Create. QuickPLS opens `Model` automatically. Build or edit the path model by assigning variables, creating constructs and paths, and using the properties pane.
-5. Use the generic `Calculate` command, or Data's `Analyze…` command for model-free methods. For General SEM, review the PLS-SEM and CB-SEM estimator cards generated from the resident model and Parameter Table, then choose a supported Standard cell. Enable Experimental Labs only for a separately marked preview workflow.
+5. Use the generic `Calculate` command, or Data's `Analyze…` command for model-free methods. Choose from the same 18-method catalogue; QuickPLS detects mediation, moderation, higher-order constructs, moderated mediation, and common-factor CB-SEM requirements from the resident model. Open the Advanced Parameter Table from Canvas or CB-SEM setup only when parameter-level control is needed.
 6. After a successful native job, inspect the automatically opened `Results`; use `Edit Model` to return to the same live model.
 7. Open `Export` from Results. Canonical General SEM results offer CSV, XLSX, HTML, PDF, SVG, and PNG; other result types show only their compatible table, report, or diagram formats.
 
@@ -151,10 +152,11 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The published [`v2.50.0` release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0) includes the matching checksum file plus the artifact inventory and streamlined integration evidence.
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. Version 2.51.0 artifacts must be built and verified from the integrated source candidate before publication. Until then, the latest published files remain the [`v2.50.0` release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).
 
 ## Documentation
 
+- [Version 2.51 Candidate Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [Version 2.50 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Changelog](CHANGELOG.md)
 - [Installation](docs/INSTALLATION.md)

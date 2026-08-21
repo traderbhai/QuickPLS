@@ -533,7 +533,7 @@ export function NativeModelInspector({
         onKeyDown={onTabKeyDown}
       >{TAB_LABELS[tab]}</button>)}
     </div>
-    {generalSemPublicationPending ? <p className="nd-property-note" role="status">General SEM project publication is in progress. Model and presentation editing are temporarily locked.</p> : null}
+    {generalSemPublicationPending ? <p className="nd-property-note" role="status">Calculation-ready project publication is in progress. Model and presentation editing are temporarily locked.</p> : null}
     <fieldset disabled={generalSemPublicationPending} style={{ border: 0, margin: 0, minInlineSize: 0, padding: 0 }}>
     <section id={panelId} className="nd-inspector-panel" role="tabpanel" aria-labelledby={tabId} tabIndex={0}>
       {activeTab === "model" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>

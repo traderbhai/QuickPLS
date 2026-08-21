@@ -54,10 +54,11 @@ describe("General SEM fresh-project draft authority", () => {
     expect(useWorkspace.getState().generalSemProjectDraftMode).toBeNull();
   });
 
-  it("clears the transient marker on save identity, open/load, reset, and close boundaries", () => {
+  it("preserves the staged marker for the same project identity and clears it on open/load, reset, and close boundaries", () => {
     expect(useWorkspace.getState().beginGeneralSemProjectDraftMode(PROJECT_ID)).toBe(true);
-    useWorkspace.getState().setProjectMeta("Saved incorrectly", "D:\\study.qpls", PROJECT_ID);
-    expect(useWorkspace.getState().generalSemProjectDraftMode).toBeNull();
+    const marker = useWorkspace.getState().generalSemProjectDraftMode;
+    useWorkspace.getState().setProjectMeta("Saved revision", "D:\\study.qpls", PROJECT_ID);
+    expect(useWorkspace.getState().generalSemProjectDraftMode).toEqual(marker);
 
     freshProject();
     expect(useWorkspace.getState().beginGeneralSemProjectDraftMode(PROJECT_ID)).toBe(true);

@@ -56,9 +56,11 @@ const SECTION_LABELS: Readonly<Record<SemParameterTableRowV4["section"], string>
 export interface NativeSemParameterTableProps {
   modelName: string;
   onShowCanvas: () => void;
+  presentation?: "workspace" | "dialog";
+  onContinueToCalculation?: () => void;
 }
 
-export function NativeSemParameterTable({ modelName, onShowCanvas }: NativeSemParameterTableProps) {
+export function NativeSemParameterTable({ modelName, onShowCanvas, presentation = "workspace", onContinueToCalculation }: NativeSemParameterTableProps) {
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const nodes = useWorkspace((state) => state.nodes);
   const edges = useWorkspace((state) => state.edges);
@@ -270,16 +272,19 @@ export function NativeSemParameterTable({ modelName, onShowCanvas }: NativeSemPa
     }
   };
 
+  const dialogPresentation = presentation === "dialog";
+  const headingId = dialogPresentation ? "nd-advanced-parameter-table-heading" : "nd-model-parameter-table-heading";
+
   return <section
-    id="nd-model-parameter-panel"
-    className="nd-sem-parameter-pane"
-    role="tabpanel"
-    aria-labelledby="nd-model-parameter-tab"
+    id={dialogPresentation ? "nd-advanced-parameter-table" : "nd-model-parameter-panel"}
+    className={`nd-sem-parameter-pane${dialogPresentation ? " nd-sem-parameter-dialog-content" : ""}`}
+    role={dialogPresentation ? "region" : "tabpanel"}
+    aria-labelledby={dialogPresentation ? headingId : "nd-model-parameter-tab"}
     tabIndex={0}
   >
     <header className="nd-sem-parameter-header">
       <div>
-        <h3>Parameter Table</h3>
+        <h3 id={headingId}>{dialogPresentation ? "Advanced Parameter Table" : "Parameter Table"}</h3>
         <p>Review and edit the variables, relationships, parameters, and visual-only objects in the active SEM model. After Save and activation, this table is part of the resident SemModelV4 authority used by native preflight and compatible estimators.</p>
       </div>
       <dl aria-label="Parameter table summary">
@@ -287,6 +292,7 @@ export function NativeSemParameterTable({ modelName, onShowCanvas }: NativeSemPa
         <div><dt>Presentation</dt><dd>{projection.counts.presentation}</dd></div>
         <div><dt>Needs attention</dt><dd>{projection.counts.unresolved}</dd></div>
       </dl>
+      {dialogPresentation && onContinueToCalculation ? <button type="button" className="primary" onClick={onContinueToCalculation}>Continue to Calculate</button> : null}
     </header>
     <div className={`nd-sem-parameter-status ${projection.status === "ready" ? "ready" : "attention"}`} role="status" aria-live="polite">
       {projection.status === "ready" ? <CheckCircle2 size={14} aria-hidden="true" /> : <AlertTriangle size={14} aria-hidden="true" />}

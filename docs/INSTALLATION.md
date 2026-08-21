@@ -2,6 +2,8 @@
 
 Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).
 
+The repository is currently versioned for the 2.51.0 unified-workflow candidate. Do not treat a local 2.51 build as the published release until the consolidated checks, packaged smoke test, checksums, and GitHub publication are complete.
+
 ## Choose An Install Type
 
 Use one of the assets from the [QuickPLS 2.50.0 GitHub Release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0), or use the versioned local artifacts from `target/release/artifacts/` after a production build:
@@ -41,7 +43,7 @@ The installer is unsigned. Windows may warn that the app is from an unknown publ
 1. Open QuickPLS.
 2. Choose `Open demo project`, create a project, or import your own dataset.
 3. Save the project as a `.qpls` file to enable autosave and recovery.
-4. Use `Model` to draw the diagram, then use `Calculate` to review compatible Standard PLS-SEM and CB-SEM estimators.
+4. Use Canvas to draw the diagram, then choose from the unchanged 18-method `Calculate` catalogue. Open the Advanced Parameter Table only when a CB-SEM setting or corrective action requires parameter-level editing.
 5. After completion, use `Results` to inspect, export, save, close, and strictly reopen the verified result.
 
 ## Runtime Dependencies

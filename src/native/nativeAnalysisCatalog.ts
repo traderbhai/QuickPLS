@@ -165,7 +165,7 @@ const CATALOG_DRAFTS: readonly CatalogItemDraft[] = [
     kind: "cbsem",
     categoryId: "covariance",
     categoryLabel: "Covariance-based SEM",
-    description: "Estimate single-group reflective CFA or recursive latent SEM with maximum likelihood. Current exact CFA case bootstrap is available from the Exact CB-SEM model tab.",
+    description: "Estimate single-group reflective CFA or recursive latent SEM with maximum likelihood and optional exact case bootstrap.",
     keywords: ["cbsem", "cb-sem", "cfa", "confirmatory factor analysis", "maximum likelihood", "covariance", "model fit", "case bootstrap", "percentile interval"],
     capabilityIds: ["qpls3.cbsem.ml", "qpls3.cbsem.bootstrap"],
   },

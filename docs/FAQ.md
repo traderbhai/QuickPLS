@@ -40,6 +40,14 @@ QuickPLS evaluates each method against the current dataset, model, and settings.
 
 Version 2.50 integrates bounded General SEM mediation and simultaneous moderation, higher-order PLS point/bootstrap, two-way moderated mediation, recursive common-factor CB-SEM ML, and recursive-SEM case bootstrap into the same Canvas, Calculate, Results, export, and schema-6 reopen workflow. See the [release notes](RELEASE_NOTES_V2_50_0.md).
 
+## What changes in Version 2.51?
+
+Version 2.51 makes Canvas the only permanent model-authoring document. The existing 18-method Calculate catalogue detects advanced model features and routes them internally; completed output opens in the normal categorized Results workspace. The scientific engines and archived method identities are not renamed. The source candidate is implemented, but packaged verification and publication are still pending. See the [candidate release notes](RELEASE_NOTES_V2_51_0.md).
+
+## Where did Parameter Table, General SEM, and Exact CB-SEM go?
+
+They are no longer permanent tabs. Open **Advanced Parameter Table** from Canvas, CB-SEM setup, or a corrective setup action. Mediation, moderation, higher-order constructs, moderated mediation, and bounded CB-SEM are configured through Canvas and the relevant Calculate method. Older specialized projects reopen through compatibility adapters without exposing separate tabs.
+
 ## Is QuickPLS identical to SmartPLS?
 
 No. QuickPLS offers a familiar graphical SEM workflow and independently implements documented methods. It does not import SmartPLS projects, copy proprietary implementation details, or promise identity for undocumented behavior.

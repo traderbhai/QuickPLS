@@ -72,8 +72,8 @@ export function nativeSchema6BoundWorkspaceReplacementBlocker(
 ): string | null {
   if (!sourceBound) return null;
   return dirty
-    ? "Save a validated new copy, then use Close General SEM project"
-    : "Use Close General SEM project to release the schema-6 source binding";
+    ? "Save a validated new copy, then close the calculation-ready project"
+    : "Close the calculation-ready project to release the schema-6 source binding";
 }
 
 function persistedDatasetSignature(dataset: Dataset) {

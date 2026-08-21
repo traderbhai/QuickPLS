@@ -9,8 +9,12 @@ import {
 } from "../domain/capabilitySurfaceV2";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import type { MethodCapabilityRegistryReaderV2 } from "../domain/methodCapabilityRegistryV2";
+import { defaultGeneralSemConfigV1 } from "../domain/generalSemConfigV1";
+import { convertLegacyBasicModelV4 } from "../domain/semModelV4";
+import { resolveUnifiedSemCalculationV1 } from "../domain/unifiedSemCalculationV1";
 import {
   default as NativeCalculationDialog,
+  dispatchNativeCalculationStartV1,
   NATIVE_RESAMPLING_SAMPLE_INPUT_CONSTRAINTS,
   nativeCalculationCatalogEntriesV2,
   nativeExperimentalWarningSessionKeys,
@@ -149,6 +153,42 @@ const metadata = (name: string, columnType: ColumnMetadata["column_type"]): Colu
 });
 
 describe("NativeCalculationDialog contracts", () => {
+  it("dispatches strict execution through the unified event seam and retains legacy fallback", () => {
+    const strictModel = convertLegacyBasicModelV4({
+      id: "model:calculate-event",
+      name: "Calculate event",
+      constructs: ["x", "m", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`],
+      })),
+      paths: [{ source: "x", target: "m" }, { source: "m", target: "y" }],
+    }, "pls_composite");
+    const plan = resolveUnifiedSemCalculationV1({
+      method: "pls_algorithm",
+      context: {
+        authorityKey: "authority:event",
+        model: strictModel,
+        config: defaultGeneralSemConfigV1(),
+      },
+      bootstrap: { resamples: 500, seed: 7, confidenceLevel: 0.95 },
+    });
+    const onAction = vi.fn();
+    const legacyStart = vi.fn();
+
+    expect(dispatchNativeCalculationStartV1(plan, onAction, legacyStart)).toBe("unified_sem");
+    expect(onAction).toHaveBeenCalledWith({ kind: "start", plan });
+    expect(legacyStart).not.toHaveBeenCalled();
+
+    expect(dispatchNativeCalculationStartV1(plan, undefined, legacyStart)).toBe("unavailable");
+    expect(legacyStart).not.toHaveBeenCalled();
+
+    expect(dispatchNativeCalculationStartV1(null, undefined, legacyStart)).toBe("legacy");
+    expect(legacyStart).toHaveBeenCalledOnce();
+  });
+
   it("offers Method Details beside the selected setup when the desktop host provides it", () => {
     const markup = renderReadyDialog("pls_algorithm", settings, nodes, true, vi.fn());
     expect(markup).toContain('class="nd-method-details-link"');
@@ -1137,5 +1177,116 @@ describe("NativeCalculationDialog contracts", () => {
     expect(supportedMarkup).toMatch(/id="nd-calculation-method-regression"[\s\S]*?<strong>Regression<\/strong><\/span>/);
     expect(supportedMarkup).not.toContain('data-limited-scope-warning="true"');
     expect(supportedMarkup).not.toContain('data-experimental-warning="true"');
+  });
+});
+
+describe("NativeCalculationDialog unified SEM setup", () => {
+  function renderUnified(
+    kind: "pls_algorithm" | "pls_bootstrap" | "cbsem",
+    model: ReturnType<typeof convertLegacyBasicModelV4>,
+    methodSettings: AnalysisUiSettings,
+    config = defaultGeneralSemConfigV1(),
+    legacyReady = true,
+  ): string {
+    return renderToStaticMarkup(createElement(NativeCalculationDialog, {
+      kind,
+      setKind: () => undefined,
+      settings: methodSettings,
+      setSettings: () => undefined,
+      readiness: legacyReady
+        ? { canRun: true, summary: "Ready", blockers: [], warnings: [], items: [] }
+        : {
+            canRun: false,
+            summary: "Legacy route blocked",
+            blockers: [{ id: "calculation", label: "Calculation", detail: "Use the removed Exact CB-SEM tab.", status: "blocked" as const }],
+            warnings: [],
+            items: [],
+          },
+      runMonitor,
+      dataset: { id: "study", name: "study.csv", columns: [], rows: [], missing: 0 },
+      analysisColumns: [],
+      nodes,
+      edges,
+      experimentalLabsEnabled: true,
+      capabilityRegistry: capabilityRegistryV2,
+      unifiedSem: {
+        authorityKey: "authority:dialog",
+        model,
+        config,
+      },
+      onUnifiedSemAction: () => undefined,
+      start: () => undefined,
+      cancel: () => undefined,
+      close: () => undefined,
+    }));
+  }
+
+  it("shows detected advanced PLS features without adding another method", () => {
+    const mediationModel = convertLegacyBasicModelV4({
+      id: "model:dialog-mediation",
+      name: "Mediation",
+      constructs: ["x", "m1", "m2", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`],
+      })),
+      paths: [
+        { source: "x", target: "m1" }, { source: "m1", target: "y" },
+        { source: "x", target: "m2" }, { source: "m2", target: "y" },
+      ],
+    }, "pls_composite");
+    const markup = renderUnified("pls_bootstrap", mediationModel, {
+      ...settings,
+      bootstrapSamples: 500,
+      workers: 2,
+    });
+
+    expect(markup).toContain('data-unified-sem-calculation="general_sem_pls"');
+    expect(markup).toContain("2 indirect paths");
+    expect(markup).toContain("Direct, Indirect, and Total Effects");
+    expect(markup.match(/id="nd-calculation-method-[^"]+" type="button" role="option"/g)).toHaveLength(18);
+  });
+
+  it("moves strict CB-SEM inference and the Advanced Parameter Table action into Calculate", () => {
+    const factorModel = convertLegacyBasicModelV4({
+      id: "model:dialog-cbsem",
+      name: "CB-SEM",
+      constructs: ["x", "y"].map((id) => ({
+        id,
+        name: id.toUpperCase(),
+        short_name: id.toUpperCase(),
+        mode: "reflective" as const,
+        indicators: [`${id}1`, `${id}2`, `${id}3`],
+      })),
+      paths: [{ source: "x", target: "y" }],
+    }, "cbsem_common_factor");
+    const config = defaultGeneralSemConfigV1();
+    config.inference = {
+      kind: "case_bootstrap",
+      resamples: 500,
+      seed: 7,
+      confidence_level: 0.95,
+      interval: "percentile",
+      tail: "two_sided",
+    };
+    const markup = renderUnified("cbsem", factorModel, {
+      ...settings,
+      method: "cbsem",
+      cbsemBootstrapSamples: 500,
+      workers: 2,
+    }, config, false);
+
+    expect(markup).toContain('data-unified-sem-calculation="general_sem_cbsem"');
+    expect(markup).toContain("2 common-factor constructs");
+    expect(markup).toContain('id="nd-calculation-cbsem-inference"');
+    expect(markup).toContain('<option value="case_bootstrap" selected="">Case-resampling bootstrap</option>');
+    expect(markup).toContain(">Advanced Parameter Table</button>");
+    expect(markup).toContain('id="nd-calculation-cbsem-bootstrap-samples"');
+    expect(markup).not.toContain('id="nd-calculation-cbsem-model-type"');
+    expect(markup).not.toContain("Exact CB-SEM model tab");
+    expect(markup).not.toContain("Use the removed Exact CB-SEM tab.");
+    expect(markup).toMatch(/class="primary" type="submit">/);
   });
 });

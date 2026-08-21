@@ -18,6 +18,7 @@ import {
   Replace,
   Save,
   Search,
+  Sparkles,
   Square,
   TableProperties,
   UsersRound,
@@ -45,7 +46,7 @@ import { NativeDataSurface } from "./NativeDataSurface";
 import { NativeModelInspector } from "./NativeModelInspector";
 import { NativeRecipeV4CbsemWorkspace } from "./NativeRecipeV4CbsemWorkspace";
 import { NativeRecipeV4GeneralSemWorkspace } from "./NativeRecipeV4GeneralSemWorkspace";
-import { NativeSemParameterTable } from "./NativeSemParameterTable";
+import { NativeSemParameterTable, observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import NativeWorkspaceExplorer, {
   NativeWorkspaceExplorerDialog,
   type NativeExplorerDialog,
@@ -106,6 +107,11 @@ import {
   type NativeResultNavigation,
 } from "./nativeResults";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type {
+  UnifiedSemCalculationActionV1,
+  UnifiedSemCalculationContextV1,
+  UnifiedSemCalculationPlanV1,
+} from "../domain/unifiedSemCalculationV1";
 import {
   loadNativeRecentProjects,
   rememberNativeRecentProject,
@@ -115,14 +121,28 @@ import {
 import { nativePlsReadiness, type NativePlsReadiness } from "./nativePlsReadiness";
 import {
   applyNativeDatasetTransformation,
+  authorizeNativeGeneralSemRevisionDraftV1,
   getNativeCapabilityRegistryV2,
+  invalidateNativeGeneralSemFreshDraftAuthorityV1,
   isNativeDesktop,
   previewNativeDatasetTransformation,
   recodeNativeDatasetColumn,
 } from "../services/projectService";
 import type { DatasetTransformationSpecV2 } from "../domain/datasetTransformationsV2";
+import {
+  GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+  GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
+} from "../domain/generalSemCapabilityPreflightV1";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
-import { generalSemWorkspaceProductAccessV1 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import {
+  bindGeneralSemPlsModelToDatasetV1,
+  defaultGeneralSemPlsEngineOptionsV1,
+  generalSemConfigFromEngineV1,
+  generalSemWorkspaceProductAccessV1,
+  rehydrateGeneralSemExecutionAuthorityV1,
+} from "../domain/internalRecipeV4GeneralSemWorkspace";
+import { adaptAuthoredNativeWorkbenchToSemModelV4 } from "../domain/nativeWorkbenchSemModelV4Adapter";
+import { bindInternalRecipeV4CbsemDatasetV1 } from "../domain/internalRecipeV4CbsemWorkspace";
 import { methodCapabilityAvailabilityV2 } from "../domain/methodCapabilityRegistryV2";
 import {
   GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1,
@@ -131,7 +151,7 @@ import {
   type StandardSemModelV4AuthorityRecordV1,
   type StandardSemModelV4EditorIntentV1,
 } from "../domain/standardSemModelV4Authority";
-import { compareUtf8StringsV1, type SemVariableV4 } from "../domain/semModelV4";
+import { compareUtf8StringsV1, type SemModelV4, type SemVariableV4 } from "../domain/semModelV4";
 import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { useWorkspace, type StandardSemModelV4AuthorityCommitResult } from "../store";
 import type {
@@ -150,11 +170,7 @@ import "./nativeDesktop.css";
 import "./nativeCanvas.css";
 
 export type { NativeSurface } from "./nativeCommands";
-type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
-type NativeNewProjectMode = "standard" | "general_sem_v1";
-const GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_TITLE = "General SEM revision required";
-const GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_DETAIL = "This activated general_sem_v1 model and RecipeV4 are immutable. Creating a moderating effect will save an independently compiled schema-6 revision to a new file; the current project remains unchanged.";
-
+type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "advanced-calculation" | "advanced-parameters" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
 export function completedRunNavigationTarget(
   status: RunMonitorStatus,
   lastRunId: string | null,
@@ -237,25 +253,25 @@ export function nativeGeneralSemRevisionCommandDisabledReasonV1(
   state: NativeGeneralSemRevisionCommandStateV1,
 ): string | null {
   if (state.revisionForkPending) {
-    return "Wait for the current General SEM Save As Revision transaction to finish.";
+    return "Wait for the current calculation-ready Save As Revision transaction to finish.";
   }
   if (state.standardActivationPending || state.saveCopyPending) {
     return "Wait for the current schema-6 authority operation to finish.";
   }
   if (state.publicationPending) {
-    return "Wait for General SEM archive publication to finish.";
+    return "Wait for calculation-ready project publication to finish.";
   }
   if (state.transientWorkBlocker === "job_active") {
-    return "Finish or cancel the active General SEM calculation before creating a revision.";
+    return "Finish or cancel the active advanced calculation before creating a revision.";
   }
   if (state.transientWorkBlocker === "temporary_result_pending") {
-    return "Save and strictly reopen the completed General SEM result, or dismiss it, before creating a revision.";
+    return "Save and strictly reopen the completed result, or dismiss it, before creating a revision.";
   }
   if (isNativeCalculationActive(state.calculationStatus)) {
     return "Finish or cancel the active calculation before creating a revision.";
   }
   if (state.sessionDirty) {
-    return "Restore or reopen the exact clean General SEM archive authority before creating a revision.";
+    return "Restore or reopen the exact clean calculation authority before creating a revision.";
   }
   return null;
 }
@@ -405,6 +421,7 @@ function navigationWithPrecision(navigation: NativeResultNavigation, digits: num
 
 export function NativeDesktopApp() {
   const projectName = useWorkspace((state) => state.projectName);
+  const projectId = useWorkspace((state) => state.projectId);
   const projectPath = useWorkspace((state) => state.projectPath);
   const dataset = useWorkspace((state) => state.dataset);
   const datasetDescriptorOnly = useWorkspace((state) => state.datasetDescriptorOnly);
@@ -433,6 +450,7 @@ export function NativeDesktopApp() {
   const future = useWorkspace((state) => state.future);
   const runMonitor = useWorkspace((state) => state.runMonitor);
   const analysisSettings = useWorkspace((state) => state.analysisSettings);
+  const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const setAnalysisSettings = useWorkspace((state) => state.setAnalysisSettings);
   const uiPreferences = useWorkspace((state) => state.uiPreferences);
   const toasts = useWorkspace((state) => state.toasts);
@@ -452,6 +470,8 @@ export function NativeDesktopApp() {
     && schema6Session?.standardActivation?.modelIds.includes(activeModelId)
     && supportsGeneralSemV1(schema6Session.project),
   );
+  const generalSemProjectDraftMode = useWorkspace((state) => state.generalSemProjectDraftMode);
+  const beginGeneralSemProjectRevisionDraftMode = useWorkspace((state) => state.beginGeneralSemProjectRevisionDraftMode);
   const strictGeneralSemRevisionRequired = Boolean(
     strictGeneralSemAuthority
     && activeModelId
@@ -538,6 +558,18 @@ export function NativeDesktopApp() {
   const closeDialog = useCallback(() => {
     if ((currentDialogRef.current === "recode-data" && recodeBusyRef.current)
       || (currentDialogRef.current === "derive-variable" && deriveBusyRef.current)) return;
+    if (currentDialogRef.current === "advanced-calculation"
+      && useWorkspace.getState().generalSemTransientWorkBlocker) return;
+    if ((currentDialogRef.current === "advanced-calculation" || currentDialogRef.current === "advanced-parameters")
+      && useWorkspace.getState().generalSemRevisionDraftSource) {
+      useWorkspace.getState().clearGeneralSemProjectDraftMode();
+      void invalidateNativeGeneralSemFreshDraftAuthorityV1();
+      useWorkspace.getState().pushToast({
+        tone: "info",
+        title: "Revision cancelled",
+        detail: "The original project and scientific model were restored unchanged.",
+      });
+    }
     const closingCalculation = currentDialogRef.current === "calculation";
     currentDialogRef.current = null;
     setDialog(null);
@@ -584,7 +616,9 @@ export function NativeDesktopApp() {
     () => isNativeDesktop() ? "pending" : "browser",
   );
   const [newProjectName, setNewProjectName] = useState("Untitled project");
-  const [newProjectMode, setNewProjectMode] = useState<NativeNewProjectMode>("standard");
+  const [advancedCalculationKind, setAdvancedCalculationKind] = useState<"pls_algorithm" | "pls_bootstrap" | "cbsem">("pls_algorithm");
+  const [advancedCalculationPlan, setAdvancedCalculationPlan] = useState<UnifiedSemCalculationPlanV1 | null>(null);
+  const [pendingExactCbsemPlan, setPendingExactCbsemPlan] = useState<UnifiedSemCalculationPlanV1 | null>(null);
   const [generalSemCanonicalResult, setGeneralSemCanonicalResult] = useState<CanonicalResultDocumentV2 | null>(null);
   const [generalSemResultSelected, setGeneralSemResultSelected] = useState(false);
   const lastNavigatedCompletedRunId = useRef<string | null>(null);
@@ -630,6 +664,77 @@ export function NativeDesktopApp() {
       ?? "Model",
     [activeModelId, projectModels, strictAuthorities],
   );
+  const rehydratedGeneralSemExecution = useMemo(() => {
+    if (!strictGeneralSemAuthority || !schema6Session) return null;
+    try { return rehydrateGeneralSemExecutionAuthorityV1(schema6Session.snapshot); } catch { return null; }
+  }, [schema6Session, strictGeneralSemAuthority]);
+  const draftGeneralSemModel = useMemo(() => {
+    if (!activeModelId || !projectId) return null;
+    const bindForUnifiedCalculation = (model: SemModelV4) => {
+      if (dataset.kind === "covariance" || dataset.kind === "correlation") {
+        const unitScales = Object.fromEntries(model.variables
+          .filter((variable) => variable.kind === "observed")
+          .map((variable) => [variable.id, 1]));
+        return bindInternalRecipeV4CbsemDatasetV1(model, dataset, {
+          covarianceDenominator: "sample_n_minus_one",
+          missingDataPolicy: "listwise_deletion",
+          correlationStandardDeviations: unitScales,
+        });
+      }
+      return bindGeneralSemPlsModelToDatasetV1(model, dataset);
+    };
+    if (strictAuthority) {
+      try { return bindForUnifiedCalculation(strictAuthority.model); } catch { return null; }
+    }
+    const indicatorColumns = [...new Set(nodes.flatMap((node) => node.data.indicators))].sort();
+    const adapted = adaptAuthoredNativeWorkbenchToSemModelV4({
+      model_id: activeModelId,
+      model_name: activeEditableModelName,
+      nodes,
+      edges,
+      diagram_layout: diagramLayout,
+      data_binding: {
+        kind: "raw",
+        dataset_id: dataset.id,
+        missing_data: "listwise_deletion",
+        weight: null,
+        cluster_variable: null,
+        strata_variable: null,
+      },
+      group: { kind: "single_group" },
+      observed_semantics: observedSemanticsForParameterTable(dataset, indicatorColumns),
+    });
+    if (!adapted.ok) return null;
+    try { return bindForUnifiedCalculation(adapted.model); } catch { return null; }
+  }, [activeEditableModelName, activeModelId, dataset, diagramLayout, edges, generalSemProjectDraftMode, nodes, projectId, strictAuthority]);
+  const unifiedSemCalculation = useMemo<UnifiedSemCalculationContextV1 | null>(() => {
+    const model = generalSemProjectDraftMode
+      ? draftGeneralSemModel
+      : strictGeneralSemAuthority
+        ? strictAuthority?.model ?? null
+        : draftGeneralSemModel;
+    if (!model || !activeModelId) return null;
+    let config = generalSemProjectDraftMode ? null : rehydratedGeneralSemExecution?.config ?? null;
+    if (!config) {
+      try {
+        config = generalSemConfigFromEngineV1({
+          ...defaultGeneralSemPlsEngineOptionsV1(),
+          tolerance: analysisSettings.tolerance ?? 1e-7,
+          maxIterations: analysisSettings.maxIterations ?? 1_000,
+          seed: analysisSettings.seed,
+          workers: analysisSettings.workers,
+          confidenceLevel: analysisSettings.confidenceLevel,
+          bootstrapSamples: Math.max(analysisSettings.bootstrapSamples ?? 500, 2),
+        });
+      } catch { return null; }
+    }
+    return {
+      authorityKey: `${projectId ?? "draft"}:${activeModelId}:${strictAuthority?.model_document_sha256 ?? "canvas"}`,
+      model,
+      config,
+      canonicalDocument: generalSemCanonicalResult,
+    };
+  }, [activeModelId, analysisSettings, draftGeneralSemModel, generalSemCanonicalResult, generalSemProjectDraftMode, projectId, rehydratedGeneralSemExecution?.config, strictAuthority, strictGeneralSemAuthority]);
   const explorerModels = useMemo(() => [
     ...projectModels,
     ...Object.values(strictAuthorities)
@@ -735,10 +840,10 @@ export function NativeDesktopApp() {
       const temporaryResult = generalSemTransientWorkBlocker === "temporary_result_pending";
       pushToast({
         tone: "warning",
-        title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
+        title: temporaryResult ? "Advanced result not yet secured" : "Advanced calculation in progress",
         detail: temporaryResult
-          ? "Save and strictly reopen the result, or dismiss it explicitly, before leaving the General SEM workspace."
-          : "Finish or cancel the General SEM calculation before leaving its workspace.",
+          ? "Save and strictly reopen the result, or dismiss it explicitly, before leaving this calculation."
+          : "Finish or cancel the advanced calculation before leaving its progress view.",
       });
       return;
     }
@@ -765,23 +870,23 @@ export function NativeDesktopApp() {
       if (!detail?.document) return;
       setGeneralSemCanonicalResult(detail.document);
       setGeneralSemResultSelected(true);
-      if (detail.navigate) navigate("results");
+      if (detail.navigate) {
+        setPendingExactCbsemPlan(null);
+        currentDialogRef.current = null;
+        setDialog(null);
+        navigate("results");
+      }
     };
     window.addEventListener("quickpls:general-sem-canonical-result", onCanonicalResult);
     return () => window.removeEventListener("quickpls:general-sem-canonical-result", onCanonicalResult);
   }, [navigate]);
   const openCalculation = () => {
-    if (strictGeneralSemRevisionRequired) {
-      navigate("model");
-      window.setTimeout(() => {
-        window.dispatchEvent(new CustomEvent("quickpls:open-general-sem-calculation"));
-      }, 0);
-      return;
-    }
     if (!["queued", "validating", "running", "cancelling"].includes(runMonitor.status)) {
       resetRunMonitor();
     }
     const preferredKind = surface === "data" ? "nca" : nativeWorkbenchAnalysisKindForSettings(analysisSettings);
+    setAdvancedCalculationPlan(null);
+    setPendingExactCbsemPlan(null);
     setCalculationDraft(nativeAnalysisSettingsForWorkbenchKind(analysisSettings, preferredKind));
     setCalculationKind(preferredKind);
     openDialog("calculation");
@@ -1132,14 +1237,99 @@ export function NativeDesktopApp() {
     commandEvent("run-analysis", createNativeCalculationRequest(calculationKind, calculationSettings, dataProfile));
   };
 
+  const prepareCalculationReadyRevision = async (
+    preferredKind: "pls_algorithm" | "pls_bootstrap" | "cbsem" = "pls_algorithm",
+    plan: UnifiedSemCalculationPlanV1 | null = null,
+    destination: "advanced-calculation" | "advanced-parameters" = "advanced-calculation",
+  ) => {
+    if (!isNativeDesktop() || !projectId || !activeModelId) {
+      pushToast({
+        tone: "warning",
+        title: "Revision unavailable",
+        detail: "Open a native QuickPLS project with a dataset and model before preparing advanced methods.",
+      });
+      return;
+    }
+    try {
+      const authorizedProjectId = await authorizeNativeGeneralSemRevisionDraftV1();
+      if (authorizedProjectId !== projectId || !beginGeneralSemProjectRevisionDraftMode(projectId)) {
+        await invalidateNativeGeneralSemFreshDraftAuthorityV1();
+        throw new Error("The active project changed before its calculation-ready revision could be prepared.");
+      }
+      setAdvancedCalculationKind(preferredKind);
+      setAdvancedCalculationPlan(plan);
+      pushToast({
+        tone: "info",
+        title: "Calculation-ready revision prepared",
+        detail: "Review the detected model and choose Save and activate. The current project remains unchanged.",
+      });
+      openDialog(destination);
+    } catch (error) {
+      await invalidateNativeGeneralSemFreshDraftAuthorityV1().catch(() => undefined);
+      pushToast({
+        tone: "error",
+        title: "Revision could not be prepared",
+        detail: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleUnifiedSemCalculationAction = (action: UnifiedSemCalculationActionV1) => {
+    if (action.kind === "open_advanced_parameter_table") {
+      setAdvancedCalculationKind(action.plan.method);
+      const exactCompatibility = action.plan.route === "exact_cbsem_compatibility";
+      setPendingExactCbsemPlan(exactCompatibility ? action.plan : null);
+      setAdvancedCalculationPlan(exactCompatibility ? null : action.plan);
+      if (!generalSemProjectDraftMode) {
+        void prepareCalculationReadyRevision(
+          action.plan.method,
+          exactCompatibility ? null : action.plan,
+          "advanced-parameters",
+        );
+      } else openDialog("advanced-parameters");
+      return;
+    }
+    if (action.kind === "configure_moderated_mediation") {
+      if (!generalSemProjectDraftMode) {
+        void prepareCalculationReadyRevision("pls_bootstrap");
+      } else {
+        setAdvancedCalculationKind("pls_bootstrap");
+        setAdvancedCalculationPlan(null);
+        openDialog("advanced-calculation");
+      }
+      return;
+    }
+    if (action.plan.route === "exact_cbsem_compatibility") {
+      setAdvancedCalculationKind("cbsem");
+      setAdvancedCalculationPlan(action.plan);
+      openDialog("advanced-calculation");
+      return;
+    }
+    const requestedEstimator = action.plan.method === "cbsem"
+      ? GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
+      : GENERAL_SEM_PLS_ESTIMATOR_ID_V1;
+    const residentConfigChanged = Boolean(
+      action.plan.requestedConfig
+      && rehydratedGeneralSemExecution
+      && JSON.stringify(action.plan.requestedConfig) !== JSON.stringify(rehydratedGeneralSemExecution.config),
+    );
+    if (strictGeneralSemAuthority
+      && (rehydratedGeneralSemExecution?.estimatorId !== requestedEstimator || residentConfigChanged)) {
+      void prepareCalculationReadyRevision(action.plan.method, action.plan);
+      return;
+    }
+    if (!strictGeneralSemAuthority && !generalSemProjectDraftMode) {
+      void prepareCalculationReadyRevision(action.plan.method, action.plan);
+      return;
+    }
+    setAdvancedCalculationKind(action.plan.method);
+    setAdvancedCalculationPlan(action.plan);
+    openDialog("advanced-calculation");
+  };
+
   const createProject = () => {
     const name = newProjectName.trim() || "Untitled project";
-    const projectMode = generalSemWorkspaceProductAccessV1(uiPreferences.experimentalLabsEnabled)
-      && isNativeDesktop()
-      ? newProjectMode
-      : "standard";
-    commandEvent("new-project", { name, projectMode });
-    setNewProjectMode("standard");
+    commandEvent("new-project", { name, projectMode: "standard" });
     closeDialog();
   };
 
@@ -1291,7 +1481,7 @@ export function NativeDesktopApp() {
           }
           pushToast({
             tone: "warning",
-            title: "General SEM revision unavailable",
+            title: "Calculation-ready revision unavailable",
             detail: disabledReason,
           });
           return;
@@ -1512,7 +1702,27 @@ export function NativeDesktopApp() {
         onDerive={() => { if (!rejectLockedDataMutation("Derive a variable")) openDialog("derive-variable"); }}
         onContextMenuRequest={onDataContextMenuRequest}
       /> : null}
-      {surface === "model" ? <ModelSurface modelName={activeEditableModelName} propertiesOpen={propertiesOpen} readiness={modelReadiness} generalSemRevisionRequired={strictGeneralSemRevisionRequired} onContextMenuRequest={onModelCanvasContextMenuRequest} /> : null}
+      {surface === "model" ? <ModelSurface
+        modelName={activeEditableModelName}
+        propertiesOpen={propertiesOpen}
+        readiness={modelReadiness}
+        generalSemRevisionRequired={strictGeneralSemRevisionRequired}
+        calculationReady={strictGeneralSemAuthority || Boolean(generalSemProjectDraftMode)}
+        onContextMenuRequest={onModelCanvasContextMenuRequest}
+        onPrepareCalculationReadyRevision={() => { void prepareCalculationReadyRevision(); }}
+        onOpenAdvancedParameters={() => {
+          setPendingExactCbsemPlan(null);
+          if (strictGeneralSemRevisionRequired) void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
+          else if (strictGeneralSemAuthority || generalSemProjectDraftMode) openDialog("advanced-parameters");
+          else void prepareCalculationReadyRevision("pls_algorithm", null, "advanced-parameters");
+        }}
+        onOpenConditionalProcess={() => {
+          setCalculationKind("pls_bootstrap");
+          setAdvancedCalculationPlan(null);
+          setCalculationDraft(nativeAnalysisSettingsForWorkbenchKind(analysisSettings, "pls_bootstrap"));
+          openDialog("calculation");
+        }}
+      /> : null}
       {surface === "results" ? <Suspense fallback={<ResultsSurfaceLoading propertiesOpen={propertiesOpen} />}><NativeResultsSurface
         runs={completedRuns}
         selectedRun={selectedRun}
@@ -1535,12 +1745,16 @@ export function NativeDesktopApp() {
     {contextMenu ? <ContextCommandMenu items={contextMenuItems} state={contextMenu} close={closeContextMenu} /> : null}
     <NativeToastStack toasts={toasts} dismiss={dismissToast} />
     <StatusBar surface={surface} projectName={projectName} datasetName={dataset.name} cases={dataset.rowCount ?? dataset.rows.length} constructs={nodes.length} runMonitor={runMonitor} />
-    {dialog ? <DialogHost dialog={dialog} close={closeDialog} title={dialogTitle(dialog)} dismissible={dialog === "recode-data" ? !recodeBusy : dialog === "derive-variable" ? !deriveBusy : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
+    {dialog ? <DialogHost dialog={dialog} close={closeDialog} title={dialogTitle(dialog)} dismissible={dialog === "recode-data"
+      ? !recodeBusy
+      : dialog === "derive-variable"
+        ? !deriveBusy
+        : dialog === "advanced-calculation"
+          ? !generalSemTransientWorkBlocker
+          : dialog !== "calculation" || !["queued", "validating", "running", "cancelling"].includes(runMonitor.status)}>
       {dialog === "new-project" ? <NewProjectDialog
         value={newProjectName}
         setValue={setNewProjectName}
-        projectMode={newProjectMode}
-        setProjectMode={setNewProjectMode}
         close={closeDialog}
         create={createProject}
         experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
@@ -1647,7 +1861,7 @@ export function NativeDesktopApp() {
             if (strictGeneralSemRevisionRequired) {
               pushToast({
                 tone: "info",
-                title: "Save General SEM revision",
+                title: "Save calculation-ready revision",
                 detail: "Choose a new .qpls filename. QuickPLS will preserve the current archive and revise the HOC model and RecipeV4 together.",
               });
               void useInternalProjectArchiveV6Session.getState()
@@ -1656,17 +1870,17 @@ export function NativeDesktopApp() {
                   const state = useInternalProjectArchiveV6Session.getState();
                   if (result === "saved") pushToast({
                     tone: "success",
-                    title: "General SEM HOC revision activated",
+                    title: "Higher-order revision activated",
                     detail: state.revisionForkStatusMessage,
                   });
                   else if (result === "cancelled") pushToast({
                     tone: "info",
-                    title: "General SEM HOC revision cancelled",
+                    title: "Higher-order revision cancelled",
                     detail: state.revisionForkStatusMessage,
                   });
                   else pushToast({
                     tone: "error",
-                    title: "General SEM HOC revision blocked",
+                    title: "Higher-order revision blocked",
                     detail: state.revisionForkFailure
                       ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
                       : state.revisionForkStatusMessage,
@@ -1711,7 +1925,7 @@ export function NativeDesktopApp() {
             if (strictGeneralSemRevisionRequired && built.intent.kind === "add_general_sem_interaction_v2") {
               pushToast({
                 tone: "info",
-                title: "Save General SEM revision",
+                title: "Save calculation-ready revision",
                 detail: "Choose a new .qpls filename. QuickPLS will preserve the current archive and revise the model and RecipeV4 together.",
               });
               void useInternalProjectArchiveV6Session.getState()
@@ -1720,22 +1934,22 @@ export function NativeDesktopApp() {
                   const state = useInternalProjectArchiveV6Session.getState();
                   if (result === "saved") pushToast({
                     tone: "success",
-                    title: "General SEM revision activated",
+                    title: "Moderation revision activated",
                     detail: state.revisionForkStatusMessage,
                   });
                   else if (result === "cancelled") pushToast({
                     tone: "info",
-                    title: "General SEM revision cancelled",
+                    title: "Moderation revision cancelled",
                     detail: state.revisionForkStatusMessage,
                   });
                   else if (result === "stale") pushToast({
                     tone: "warning",
-                    title: "General SEM revision saved but not activated",
+                    title: "Moderation revision saved but not activated",
                     detail: state.revisionForkStatusMessage,
                   });
                   else pushToast({
                     tone: "error",
-                    title: "General SEM revision blocked",
+                    title: "Moderation revision blocked",
                     detail: state.revisionForkFailure
                       ? `${state.revisionForkFailure.message} ${state.revisionForkFailure.correctiveAction}`
                       : state.revisionForkStatusMessage,
@@ -1756,6 +1970,40 @@ export function NativeDesktopApp() {
         }}
         close={closeDialog}
       /></Suspense> : null}
+      {dialog === "advanced-parameters" ? <NativeSemParameterTable
+        modelName={activeEditableModelName}
+        presentation="dialog"
+        onContinueToCalculation={() => {
+          openDialog("advanced-calculation");
+        }}
+        onShowCanvas={() => {
+          closeDialog();
+          navigate("model");
+          window.setTimeout(() => document.getElementById("nd-model-canvas-panel")?.focus(), 0);
+        }}
+      /> : null}
+      {dialog === "advanced-calculation" ? advancedCalculationPlan?.route === "exact_cbsem_compatibility"
+        ? <NativeRecipeV4CbsemWorkspace
+            key={`${activeModelId ?? "model"}:exact-cbsem-compatibility`}
+            modelName={activeEditableModelName}
+            experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+            presentation="calculation"
+            calculationPlan={advancedCalculationPlan}
+          />
+        : <NativeRecipeV4GeneralSemWorkspace
+            key={`${activeModelId ?? "model"}:${advancedCalculationKind}:${advancedCalculationPlan?.inference ?? "default"}`}
+            modelName={activeEditableModelName}
+            experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+            projectActivationConnected
+            presentation="calculation"
+            initialCalculationKind={advancedCalculationKind}
+            calculationPlan={advancedCalculationPlan}
+            activationOnly={Boolean(pendingExactCbsemPlan)}
+            onAuthorityActivated={pendingExactCbsemPlan ? () => {
+              setAdvancedCalculationPlan(pendingExactCbsemPlan);
+              setPendingExactCbsemPlan(null);
+            } : undefined}
+          /> : null}
       {dialog === "calculation" ? <Suspense fallback={<UtilityDialogLoading label="Opening calculation setup" />}><NativeCalculationDialog
         kind={calculationKind}
         setKind={setCalculationKind}
@@ -1768,6 +2016,8 @@ export function NativeDesktopApp() {
         nodes={nodes}
         edges={edges}
         experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+        unifiedSem={unifiedSemCalculation}
+        onUnifiedSemAction={handleUnifiedSemCalculationAction}
         openMethodDetails={() => openDialog("trust")}
         registryUnavailableReason={nativeRegistryVerification === "pending"
           ? "Checking the installed calculation catalogue."
@@ -2019,22 +2269,22 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
   </div>;
 }
 
-function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, onContextMenuRequest }: { modelName: string; propertiesOpen: boolean; readiness: NativePlsReadiness; generalSemRevisionRequired: boolean; onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void }) {
+function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, calculationReady, onContextMenuRequest, onPrepareCalculationReadyRevision, onOpenAdvancedParameters, onOpenConditionalProcess }: {
+  modelName: string;
+  propertiesOpen: boolean;
+  readiness: NativePlsReadiness;
+  generalSemRevisionRequired: boolean;
+  calculationReady: boolean;
+  onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void;
+  onPrepareCalculationReadyRevision: () => void;
+  onOpenAdvancedParameters: () => void;
+  onOpenConditionalProcess: () => void;
+}) {
   const activeModelId = useWorkspace((state) => state.activeModelId);
-  const experimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
-  const generalSemProjectDraftMode = useWorkspace((state) => state.generalSemProjectDraftMode);
-  const generalSemSchema6Session = useInternalProjectArchiveV6Session((state) => state.session);
-  const generalSemProductAccess = generalSemWorkspaceProductAccessV1(experimentalSemAuthoringEnabled);
-  const generalSemViewAvailable = Boolean(
-    generalSemProductAccess
-    || generalSemProjectDraftMode
-    || (generalSemSchema6Session && supportsGeneralSemV1(generalSemSchema6Session.project)),
-  );
-  const generalSemTransientWorkBlocker = useWorkspace((state) => state.generalSemTransientWorkBlocker);
-  const pushToast = useWorkspace((state) => state.pushToast);
   const dataset = useWorkspace((state) => state.dataset);
   const groupingVariable = useWorkspace((state) => state.analysisSettings.groupColumn?.trim() ?? "");
   const nodes = useWorkspace((state) => state.nodes);
+  const edges = useWorkspace((state) => state.edges);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const assignIndicator = useWorkspace((state) => state.assignIndicator);
@@ -2046,53 +2296,7 @@ function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevision
   const [authorityStatus, setAuthorityStatus] = useState<string | null>(null);
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedAssignableConstruct = selected?.data.semantic === "interaction" || selected?.data.semantic === "higher_order" ? undefined : selected;
-
-  type ModelDocumentView = "canvas" | "parameters" | "general_sem_labs" | "cbsem_labs";
-  const [documentView, setDocumentView] = useState<ModelDocumentView>("canvas");
-  useEffect(() => {
-    const openGeneralSemCalculation = () => {
-      if (!generalSemViewAvailable) return;
-      setDocumentView("general_sem_labs");
-      window.setTimeout(() => document.getElementById("nd-model-general-sem-labs-tab")?.focus(), 0);
-    };
-    window.addEventListener("quickpls:open-general-sem-calculation", openGeneralSemCalculation);
-    return () => window.removeEventListener("quickpls:open-general-sem-calculation", openGeneralSemCalculation);
-  }, [generalSemViewAvailable]);
-  useEffect(() => {
-    if (!useWorkspace.getState().generalSemTransientWorkBlocker) setDocumentView("canvas");
-  }, [activeModelId, experimentalSemAuthoringEnabled]);
-  const selectDocumentView = (view: ModelDocumentView, moveFocus = false) => {
-    if ((view === "parameters" || view === "general_sem_labs") && !generalSemViewAvailable) return;
-    if (documentView === "general_sem_labs" && generalSemTransientWorkBlocker && view !== "general_sem_labs") {
-      const temporaryResult = generalSemTransientWorkBlocker === "temporary_result_pending";
-      pushToast({
-        tone: "warning",
-        title: temporaryResult ? "General SEM result not yet secured" : "General SEM calculation in progress",
-        detail: temporaryResult
-          ? "Save and strictly reopen the result, or dismiss it explicitly, before changing model views."
-          : "Finish or cancel the General SEM calculation before changing model views.",
-      });
-      return;
-    }
-    setDocumentView(view);
-    if (moveFocus) window.setTimeout(() => document.getElementById({ canvas: "nd-model-canvas-tab", parameters: "nd-model-parameter-tab", general_sem_labs: "nd-model-general-sem-labs-tab", cbsem_labs: "nd-model-cbsem-labs-tab" }[view])?.focus(), 0);
-  };
-  const onDocumentTabKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-    event.preventDefault();
-    const views: ModelDocumentView[] = generalSemViewAvailable
-      ? ["canvas", "parameters", "general_sem_labs", "cbsem_labs"]
-      : ["canvas", "cbsem_labs"];
-    const currentIndex = Math.max(0, views.indexOf(documentView));
-    const nextIndex = event.key === "Home"
-      ? 0
-      : event.key === "End"
-        ? views.length - 1
-        : event.key === "ArrowLeft"
-          ? (currentIndex - 1 + views.length) % views.length
-          : (currentIndex + 1) % views.length;
-    selectDocumentView(views[nextIndex], true);
-  };
+  const featureInventory = useMemo(() => nativeCanvasFeatureInventory(nodes, edges), [edges, nodes]);
   const [query, setQuery] = useState("");
   const visibleColumns = dataset.columns.filter((column) => column.toLowerCase().includes(query.trim().toLowerCase()));
   const dragVariable = (event: DragEvent<HTMLButtonElement>, variable: string) => {
@@ -2164,62 +2368,53 @@ function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevision
       </div>
     </aside>
     <section className="nd-document nd-model-document">
-      <div className="nd-model-document-tabs" role="tablist" aria-label={`${modelName} views`}>
+      <div className="nd-model-document-tabs nd-model-document-toolbar" role="toolbar" aria-label={`${modelName} model actions`}>
         <span className="nd-model-document-title" title={modelName}><GitBranch size={14} aria-hidden="true" />{modelName}</span>
-        <button
-          id="nd-model-canvas-tab"
-          type="button"
-          role="tab"
-          aria-selected={documentView === "canvas"}
-          aria-controls="nd-model-canvas-panel"
-          tabIndex={documentView === "canvas" ? 0 : -1}
-          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
-          onClick={() => selectDocumentView("canvas")}
-          onKeyDown={onDocumentTabKeyDown}
-        ><GitBranch size={13} aria-hidden="true" />Canvas</button>
-        {generalSemViewAvailable ? <button
-          id="nd-model-parameter-tab"
-          type="button"
-          role="tab"
-          aria-selected={documentView === "parameters"}
-          aria-controls="nd-model-parameter-panel"
-          tabIndex={documentView === "parameters" ? 0 : -1}
-          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
-          onClick={() => selectDocumentView("parameters")}
-         onKeyDown={onDocumentTabKeyDown}
-        ><TableProperties size={13} aria-hidden="true" />Parameter Table {generalSemProductAccess?.surface === "internal_labs" ? <span className="nd-experimental-chip">Experimental</span> : null}</button> : null}
-        {generalSemViewAvailable ? <button
-          id="nd-model-general-sem-labs-tab"
-          type="button"
-          role="tab"
-          aria-selected={documentView === "general_sem_labs"}
-          aria-controls="nd-model-general-sem-labs-panel"
-          tabIndex={documentView === "general_sem_labs" ? 0 : -1}
-          onClick={() => selectDocumentView("general_sem_labs")}
-          onKeyDown={onDocumentTabKeyDown}
-        ><Calculator size={13} aria-hidden="true" />General SEM {generalSemProductAccess?.surface === "internal_labs" ? <span className="nd-experimental-chip">Labs</span> : null}</button> : null}
-        <button
-          id="nd-model-cbsem-labs-tab"
-          type="button"
-          role="tab"
-          aria-selected={documentView === "cbsem_labs"}
-          aria-controls="nd-model-cbsem-labs-panel"
-          tabIndex={documentView === "cbsem_labs" ? 0 : -1}
-          disabled={documentView === "general_sem_labs" && Boolean(generalSemTransientWorkBlocker)}
-          onClick={() => selectDocumentView("cbsem_labs")}
-          onKeyDown={onDocumentTabKeyDown}
-        ><Calculator size={13} aria-hidden="true" />Exact CB-SEM</button>
+        <span className="nd-model-view-label"><GitBranch size={13} aria-hidden="true" />Canvas</span>
+        <div className="nd-model-feature-inventory" aria-label="Detected model features">
+          {featureInventory.indirectPaths > 0 ? <span>{featureInventory.indirectPaths} indirect path{featureInventory.indirectPaths === 1 ? "" : "s"}</span> : null}
+          {featureInventory.interactions > 0 ? <span>{featureInventory.interactions} interaction{featureInventory.interactions === 1 ? "" : "s"}</span> : null}
+          {featureInventory.higherOrderConstructs > 0 ? <span>{featureInventory.higherOrderConstructs} higher-order construct{featureInventory.higherOrderConstructs === 1 ? "" : "s"}</span> : null}
+        </div>
+        <span className="nd-model-toolbar-spacer" />
+        {!calculationReady ? <button type="button" onClick={onPrepareCalculationReadyRevision} disabled={!activeModelId} title="Create a source-preserving revision for advanced PLS and CB-SEM methods."><Sparkles size={13} aria-hidden="true" />Prepare Advanced Methods</button> : null}
+        <button type="button" onClick={onOpenConditionalProcess} disabled={!activeModelId || featureInventory.interactions === 0} title={featureInventory.interactions === 0 ? "Add a moderating effect before configuring moderated mediation." : "Configure conditional indirect effects in PLS Bootstrapping."}><Calculator size={13} aria-hidden="true" />Conditional Process</button>
+        <button type="button" onClick={onOpenAdvancedParameters} disabled={!activeModelId}><TableProperties size={13} aria-hidden="true" />Advanced Parameters</button>
       </div>
       {generalSemRevisionRequired ? <p className="nd-inline-warning" role="note" data-testid="general-sem-scientific-revision-required">
-        <strong>{GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_TITLE}.</strong> {GENERAL_SEM_SCIENTIFIC_REVISION_REQUIRED_DETAIL}
+        <strong>Safe revision required.</strong> Advanced scientific edits create a new calculation-ready revision; the current project remains unchanged.
       </p> : null}
-      {documentView === "canvas" ? <div id="nd-model-canvas-panel" className="nd-canvas-host" role="tabpanel" aria-labelledby="nd-model-canvas-tab"><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div> : null}
-      {generalSemViewAvailable && documentView === "parameters" ? <NativeSemParameterTable modelName={modelName} onShowCanvas={() => selectDocumentView("canvas")} /> : null}
-      {generalSemViewAvailable && documentView === "general_sem_labs" ? <NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled={experimentalSemAuthoringEnabled} projectActivationConnected /> : null}
-      {documentView === "cbsem_labs" ? <NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} /> : null}
+      <div id="nd-model-canvas-panel" className="nd-canvas-host" role="region" aria-label={`${modelName} model canvas`} tabIndex={-1}><ModelCanvas onContextMenuRequest={onContextMenuRequest} /></div>
     </section>
     {propertiesOpen ? <NativeModelInspector readiness={readiness} /> : null}
   </div>;
+}
+
+export function nativeCanvasFeatureInventory(
+  nodes: readonly { id: string; data: { semantic?: string } }[],
+  edges: readonly { source: string; target: string }[],
+): { indirectPaths: number; interactions: number; higherOrderConstructs: number } {
+  const scientificNodeIds = new Set(nodes
+    .filter((node) => node.data.semantic !== "interaction" && node.data.semantic !== "higher_order")
+    .map((node) => node.id));
+  const outgoing = new Map<string, string[]>();
+  for (const edge of edges) {
+    if (!scientificNodeIds.has(edge.source) || !scientificNodeIds.has(edge.target) || edge.source === edge.target) continue;
+    outgoing.set(edge.source, [...(outgoing.get(edge.source) ?? []), edge.target]);
+  }
+  const paths = new Set<string>();
+  for (const [source, mediators] of outgoing) {
+    for (const mediator of mediators) {
+      for (const target of outgoing.get(mediator) ?? []) {
+        if (source !== target) paths.add(`${source}\u0000${mediator}\u0000${target}`);
+      }
+    }
+  }
+  return {
+    indirectPaths: paths.size,
+    interactions: nodes.filter((node) => node.data.semantic === "interaction").length,
+    higherOrderConstructs: nodes.filter((node) => node.data.semantic === "higher_order").length,
+  };
 }
 
 function observedForStrictDesktop(
@@ -2309,11 +2504,9 @@ function DialogHost({ dialog, close, title, children, dismissible = true }: { di
   </div>;
 }
 
-export function NewProjectDialog({ value, setValue, projectMode, setProjectMode, close, create, experimentalLabsEnabled, nativeDesktop }: {
+export function NewProjectDialog({ value, setValue, close, create, experimentalLabsEnabled, nativeDesktop }: {
   value: string;
   setValue: (value: string) => void;
-  projectMode: NativeNewProjectMode;
-  setProjectMode: (mode: NativeNewProjectMode) => void;
   close: () => void;
   create: () => void;
   experimentalLabsEnabled: boolean;
@@ -2323,12 +2516,9 @@ export function NewProjectDialog({ value, setValue, projectMode, setProjectMode,
   const generalSemAvailable = Boolean(generalSemAccess) && nativeDesktop;
   return <form className="nd-dialog-form" onSubmit={(event) => { event.preventDefault(); create(); }}>
     <label>Project name<input autoFocus value={value} onChange={(event) => setValue(event.target.value)} /></label>
-    {generalSemAccess ? <fieldset className="nd-project-mode-options" aria-describedby="nd-general-sem-project-mode-help">
-      <legend>Project type</legend>
-      <label><input type="radio" name="project-type" value="standard" checked={projectMode === "standard"} onChange={() => setProjectMode("standard")} />Standard QuickPLS project</label>
-      <label aria-disabled={!generalSemAvailable}><input type="radio" name="project-type" value="general_sem_v1" checked={projectMode === "general_sem_v1"} disabled={!generalSemAvailable} onChange={() => setProjectMode("general_sem_v1")} />General SEM project {generalSemAccess.surface === "internal_labs" ? <span className="nd-experimental-chip">Labs</span> : null}</label>
-      <p id="nd-general-sem-project-mode-help">General SEM is a project mode in this QuickPLS app, not a separate app. It starts empty, accepts newly imported raw data and a newly authored canvas, then saves and activates a marked schema-6 project. Existing projects are never converted.{nativeDesktop ? "" : " Install and use the QuickPLS desktop app for this mode."}</p>
-    </fieldset> : null}
+    <p className="nd-dialog-note" role="note">{generalSemAvailable
+      ? "QuickPLS will prepare one calculation-ready project for the Canvas, all compatible PLS-SEM and CB-SEM methods, and verified Results."
+      : "This preview creates a standard project. The installed Windows app adds the calculation-ready scientific project authority."}</p>
     <footer><button type="button" onClick={close}>Cancel</button><button className="primary" type="submit">Create</button></footer>
   </form>;
 }
@@ -2458,7 +2648,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.50.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>General SEM</dt><dd>Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Mediation, moderation, higher-order stages, moderated-mediation targets, and CB-SEM output appear only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.51.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Mediation, moderation, higher-order stages, moderated-mediation targets, and CB-SEM output appear only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({ surface, projectName, datasetName, cases, constructs, runMonitor }: { surface: NativeSurface; projectName: string; datasetName: string; cases: number; constructs: number; runMonitor: ReturnType<typeof useWorkspace.getState>["runMonitor"] }) {
@@ -2485,6 +2675,8 @@ function dialogTitle(dialog: Exclude<NativeDialog, null>) {
   if (dialog === "moderation") return "Create Moderating Effect";
   if (dialog === "higher-order") return "Create Higher-Order Construct";
   if (dialog === "calculation") return "Calculate";
+  if (dialog === "advanced-calculation") return "Calculate Advanced Model";
+  if (dialog === "advanced-parameters") return "Advanced Parameter Table";
   if (dialog === "export") return "Export Results";
   if (dialog === "trust") return "Method Details";
   if (dialog === "settings") return "Preferences";

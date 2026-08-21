@@ -594,9 +594,7 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
     id: "open-calculation",
     label: (context) => context.surface === "data"
       ? "Analyze…"
-      : context.generalSemCalculationAvailable
-        ? "Calculate General SEM…"
-        : "Calculate…",
+      : "Calculate…",
     action: { id: "calculation.open" },
     shortcut: { key: "r", ctrl: true },
     menu: { menu: "calculate", order: 10 },

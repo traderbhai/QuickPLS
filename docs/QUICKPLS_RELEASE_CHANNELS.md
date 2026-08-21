@@ -37,10 +37,10 @@ The command preserves the desktop executable, CLI, NSIS installer, and checksum
 manifest under unique names such as:
 
 ```text
-QuickPLS_2.50.0_unsigned-preview_<label>_<UTC>_x64_setup.exe
-QuickPLS_2.50.0_unsigned-preview_<label>_<UTC>_x64_portable.exe
-QuickPLS_2.50.0_unsigned-preview_<label>_<UTC>_x64_cli.exe
-QuickPLS_2.50.0_unsigned-preview_<label>_<UTC>_x64_checksums.txt
+QuickPLS_<version>_unsigned-preview_<label>_<UTC>_x64_setup.exe
+QuickPLS_<version>_unsigned-preview_<label>_<UTC>_x64_portable.exe
+QuickPLS_<version>_unsigned-preview_<label>_<UTC>_x64_cli.exe
+QuickPLS_<version>_unsigned-preview_<label>_<UTC>_x64_checksums.txt
 ```
 
 The factory refuses `beta` and `stable`; those channels require a future signed

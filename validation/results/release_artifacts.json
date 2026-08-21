@@ -2,38 +2,38 @@
   "schema_version": 2,
   "target": "QuickPLS unsigned preview artifact preservation",
   "passed": true,
-  "version": "2.50.0",
+  "version": "2.51.0",
   "version_contract": {
-    "package_json": "2.50.0",
+    "package_json": "2.51.0",
     "package_lock": {
-      "document": "2.50.0",
-      "root_package": "2.50.0"
+      "document": "2.51.0",
+      "root_package": "2.51.0"
     },
-    "cargo_workspace": "2.50.0",
+    "cargo_workspace": "2.51.0",
     "cargo_members": {
-      "qpls-assessment": "2.50.0",
-      "qpls-cli": "2.50.0",
-      "qpls-core": "2.50.0",
-      "qpls-data": "2.50.0",
-      "qpls-estimation": "2.50.0",
-      "qpls-project": "2.50.0",
-      "qpls-resampling": "2.50.0",
-      "qpls-runner": "2.50.0",
-      "quickpls-desktop": "2.50.0"
+      "qpls-assessment": "2.51.0",
+      "qpls-cli": "2.51.0",
+      "qpls-core": "2.51.0",
+      "qpls-data": "2.51.0",
+      "qpls-estimation": "2.51.0",
+      "qpls-project": "2.51.0",
+      "qpls-resampling": "2.51.0",
+      "qpls-runner": "2.51.0",
+      "quickpls-desktop": "2.51.0"
     },
     "cargo_lock_quickpls_packages": {
-      "qpls-assessment": "2.50.0",
-      "qpls-cli": "2.50.0",
-      "qpls-core": "2.50.0",
-      "qpls-data": "2.50.0",
-      "qpls-estimation": "2.50.0",
-      "qpls-project": "2.50.0",
-      "qpls-resampling": "2.50.0",
-      "qpls-runner": "2.50.0",
-      "quickpls-desktop": "2.50.0"
+      "qpls-assessment": "2.51.0",
+      "qpls-cli": "2.51.0",
+      "qpls-core": "2.51.0",
+      "qpls-data": "2.51.0",
+      "qpls-estimation": "2.51.0",
+      "qpls-project": "2.51.0",
+      "qpls-resampling": "2.51.0",
+      "qpls-runner": "2.51.0",
+      "quickpls-desktop": "2.51.0"
     },
-    "tauri": "2.50.0",
-    "release_channels": "2.50.0"
+    "tauri": "2.51.0",
+    "release_channels": "2.51.0"
   },
   "release_channel": "unsigned-preview",
   "channel_policy": {
@@ -52,38 +52,38 @@
     "stable_eligible": false,
     "competitor_claims_authorized": false
   },
-  "label": "v2_50_0_sem_upgrade",
-  "timestamp_utc": "20260821-054636",
+  "label": "v2_51_0_unified_workflow",
+  "timestamp_utc": "20260821-083501",
   "artifact_directory": "target/release/artifacts",
   "artifacts": [
     {
       "role": "portable",
       "source": "target/release/quickpls-desktop.exe",
-      "source_bytes": 61481472,
-      "source_sha256": "5E8BA782DD2BDF09112CAAE3CCB04FE292ECCD598DE9B651FCCD026765B99618",
-      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_portable.exe",
-      "bytes": 61481472,
-      "sha256": "5E8BA782DD2BDF09112CAAE3CCB04FE292ECCD598DE9B651FCCD026765B99618",
+      "source_bytes": 61504000,
+      "source_sha256": "31A519B625B242D0175A88746CB27CA4C43FF648DAD0639960FB5364869C04DC",
+      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_portable.exe",
+      "bytes": 61504000,
+      "sha256": "31A519B625B242D0175A88746CB27CA4C43FF648DAD0639960FB5364869C04DC",
       "copy_verified": true
     },
     {
       "role": "cli",
       "source": "target/release/qpls.exe",
       "source_bytes": 32458752,
-      "source_sha256": "6670D27F103FB638475964756A6A68B395F329E449339A4E33FDC4215B9D3228",
-      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_cli.exe",
+      "source_sha256": "E441C6185245228D81D595F267657731BC33F24FC651989FD394C91A0CED75E2",
+      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_cli.exe",
       "bytes": 32458752,
-      "sha256": "6670D27F103FB638475964756A6A68B395F329E449339A4E33FDC4215B9D3228",
+      "sha256": "E441C6185245228D81D595F267657731BC33F24FC651989FD394C91A0CED75E2",
       "copy_verified": true
     },
     {
       "role": "setup",
-      "source": "target/release/bundle/nsis/QuickPLS_2.50.0_x64-setup.exe",
-      "source_bytes": 228071356,
-      "source_sha256": "6D3E7D91B253718673954D9FD2ADDE839D5BB69317D10E6239C6B5EC053D8B51",
-      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_setup.exe",
-      "bytes": 228071356,
-      "sha256": "6D3E7D91B253718673954D9FD2ADDE839D5BB69317D10E6239C6B5EC053D8B51",
+      "source": "target/release/bundle/nsis/QuickPLS_2.51.0_x64-setup.exe",
+      "source_bytes": 228091455,
+      "source_sha256": "D8684050E2BC1532DD08DAA1183F2917E386B5E054F914C1F2EC582EBBD3EEC8",
+      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_setup.exe",
+      "bytes": 228091455,
+      "sha256": "D8684050E2BC1532DD08DAA1183F2917E386B5E054F914C1F2EC582EBBD3EEC8",
       "copy_verified": true
     },
     {
@@ -91,11 +91,11 @@
       "source": null,
       "source_bytes": null,
       "source_sha256": null,
-      "path": "target/release/artifacts/QuickPLS_2.50.0_unsigned-preview_v2_50_0_sem_upgrade_20260821-054636_x64_checksums.txt",
-      "bytes": 448,
-      "sha256": "3A2ECDD55F02D6A3427B98DEBA7FC559357AEA87398B591DC8454ACE877DD2E2",
+      "path": "target/release/artifacts/QuickPLS_2.51.0_unsigned-preview_v2_51_0_unified_workflow_20260821-083501_x64_checksums.txt",
+      "bytes": 463,
+      "sha256": "DD428AB424739D1E11C9C1F1FF98D7C269398D0FD1264996100D9300FCFD3A3E",
       "copy_verified": true
     }
   ],
-  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This channel permits public GitHub prerelease evaluation and never authorizes beta, stable, or competitor-ready claims."
+  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This unsigned-preview factory never authorizes beta, stable, or competitor-ready distribution."
 }
