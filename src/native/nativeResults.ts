@@ -298,11 +298,11 @@ const MEDIATION_IDS = [
 const HIGHER_ORDER_IDS = [
   "hoc_component_relationships",
   "hoc_structural_paths",
+  "hoc_scope",
   "general_sem_higher_order_targets",
 ] as const;
 
 const RUN_DETAILS_IDS = [
-  "hoc_scope",
   "general_sem_higher_order_stages",
   "general_sem_higher_order_bootstrap_receipt",
   "model_fit_exact_failures",

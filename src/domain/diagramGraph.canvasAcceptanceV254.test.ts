@@ -39,7 +39,7 @@ const interaction = (
 });
 
 describe("QuickPLS 2.54 diagram-native moderation projection", () => {
-  it("honors explicit Above indicator placement in compact mode", () => {
+  it("honors explicit Above indicator placement in SEM mode", () => {
     const nodes: Array<Node<ConstructData>> = [{
       id: "quality",
       position: { x: 240, y: 260 },
@@ -49,7 +49,7 @@ describe("QuickPLS 2.54 diagram-native moderation projection", () => {
     layout.indicatorLayouts.quality.q1 = { side: "top", order: 0, pinned: true };
     layout.indicatorLayouts.quality.q2 = { side: "top", order: 1, pinned: true };
 
-    const graph = buildDiagramGraph(nodes, [], "compact", "model", undefined, { layout });
+    const graph = buildDiagramGraph(nodes, [], "sem", "model", undefined, { layout });
     const indicators = ["q1", "q2"].map((column) => graph.nodes.find((node) => node.id === indicatorNodeId("quality", column))!);
 
     expect(indicators.every((node) => node.position.y < nodes[0]!.position.y)).toBe(true);

@@ -123,6 +123,7 @@ import {
   isContextMenuKeyboardGesture,
   nextEnabledItemIndex,
   nextMenuIndex,
+  type MenuItemNavigationKey,
 } from "./nativeMenuNavigation";
 import {
   buildNativeResultNavigation,
@@ -2776,7 +2777,7 @@ function CommandBarSplitButton({ command }: { command: DesktopCommand }) {
     const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('[role="menuitem"]'));
     if (!buttons.length) return;
     const current = buttons.indexOf(document.activeElement as HTMLButtonElement);
-    const next = nextEnabledItemIndex(buttons.map((button) => button.disabled), current, event.key);
+    const next = nextEnabledItemIndex(buttons.map((button) => button.disabled), current, event.key as MenuItemNavigationKey);
     buttons[next]?.focus();
   };
   return <div className="nd-command-split" ref={rootRef}>

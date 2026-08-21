@@ -24,22 +24,23 @@ describe("native desktop command surface contracts", () => {
     expect(app).toContain('draggable={!isGroupingVariable}');
     expect(app).toContain('disabled={isGroupingVariable}');
     expect(app).toContain('"Grouping variable; unavailable as an indicator"');
-    expect(app).toContain('onClick={() => activateIndicator(column)}');
-    expect(app).toContain('setSelectedNode(owner.id)');
-    expect(app).toContain('assignIndicator(selectedAssignableConstruct.id, variable)');
-    expect(app).toContain('addConstruct(undefined, [variable])');
-    expect(app).toContain('aria-label={isGroupingVariable ? `${column}. ${action}` : `${column}. ${action}; or drag to the model canvas or a construct`}');
-    expect(app).toContain("Drag an indicator to the canvas or onto a construct.");
+    expect(app).toContain('onClick={(event) => selectIndicator(event, column)}');
+    expect(app).toContain("nextNativeIndicatorSelectionV1({");
+    expect(app).toContain("if (event.ctrlKey) createConstructFromIndicators(selectedForAction)");
+    expect(app).toContain("else assignSelectedIndicators(selectedForAction)");
+    expect(app).toContain('aria-multiselectable="true"');
+    expect(app).toContain("Select normally; Ctrl/Shift extends the selection. Drag the selection to the Canvas or a construct.");
     expect(data).toContain('tabIndex={0} aria-selected={selectedColumn === column}');
     expect(data).toContain('event.key === "Enter" || event.key === " "');
   });
 
-  it("does not duplicate calculation commands in properties or empty results", () => {
+  it("keeps calculation out of Properties and offers one compact empty-Results action", () => {
     const app = read("src/native/NativeDesktopApp.tsx");
     const results = read("src/native/NativeResultsSurface.tsx");
 
     expect(app).not.toContain('className="nd-properties-footer"');
-    expect(results).not.toContain("onCalculate");
+    expect(results).toContain("onCalculate?: () => void");
+    expect(results).toContain("onClick={onCalculate}>Calculate results</button>");
     expect(results).not.toContain("<Calculator");
     expect(results).toContain("No completed calculation");
   });
@@ -164,7 +165,8 @@ describe("native desktop command surface contracts", () => {
     expect(data).not.toContain('title="Variables" action=');
     expect(data).toContain("disabled={Boolean(activatingDatasetId) || mutationsLocked}");
     expect(data).toContain("if (datasetId === dataset.id || activatingDatasetId || mutationsLocked) return");
-    expect(app).toContain('dialog === "recode-data" ? !recodeBusy');
+    expect(app).toContain('dismissible={dialog === "recode-data"');
+    expect(app).toContain("? !recodeBusy");
     expect(app).toContain("scope !== dialogScopeRef.current");
     expect(dialog).toContain('disabled={status === "saving"} onClick={close}');
     expect(dialog).toContain("runNativeScopedSubmission");

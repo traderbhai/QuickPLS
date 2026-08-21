@@ -124,7 +124,7 @@ describe("nativePlsReadiness", () => {
       });
       expect(archivedBootstrap.canRun).toBe(false);
       expect(archivedBootstrap.blockers.find((item) => item.id === "calculation")?.detail)
-        .toContain("Run current exact CFA bootstrap from the Exact CB-SEM model tab");
+        .toContain("Choose Case bootstrap in the CB-SEM Calculate settings");
     }
 
     const invalidScope = readiness({
@@ -577,7 +577,8 @@ describe("nativePlsReadiness", () => {
       settings: { ...settings, weightingScheme: "path", preprocessing: "standardized" },
     });
     expect(v2Blocked.canRun).toBe(false);
-    expect(v2Blocked.blockers.find((item) => item.id === "calculation")?.detail).toContain("does not support interaction_v2");
+    expect(v2Blocked.blockers.find((item) => item.id === "calculation")?.detail)
+      .toContain("Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine.");
 
     for (const invalidSettings of [
       { ...settings, weightingScheme: "factor" as const, preprocessing: "standardized" as const },

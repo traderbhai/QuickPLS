@@ -162,6 +162,7 @@ function splitPathIdentity(value: string): string[] {
   if (value.includes("→")) return value.split("→").map((part) => part.trim()).filter(Boolean);
   if (value.includes("->")) return value.split("->").map((part) => part.trim()).filter(Boolean);
   if (value.includes("_via_")) return value.split("_via_").map((part) => part.trim()).filter(Boolean);
+  if (value.includes("_to_")) return value.split("_to_").map((part) => part.trim()).filter(Boolean);
   return [];
 }
 
@@ -491,7 +492,11 @@ export function authoredCanonicalResultPresentation(
         label: resolver.text(series.label),
         group: series.group ? resolver.text(series.group) : series.group,
         points: series.points.map((point) => {
-          const label = point.label ? resolver.text(point.label) : point.label;
+          const label = point.label
+            ? higherOrder
+              ? resolver.canonicalTarget(point.label)
+              : resolver.text(point.label)
+            : point.label;
           return {
             ...point,
             x: higherOrder && label ? label : typeof point.x === "string" ? resolver.text(point.x) : point.x,

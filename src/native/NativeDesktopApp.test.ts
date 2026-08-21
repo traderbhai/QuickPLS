@@ -90,7 +90,7 @@ describe("native desktop result contracts", () => {
       columns: ["Path", "Original", "Exceedances", "Permutations", "Raw two-sided p"],
     });
     expect(table?.rows).toHaveLength(5);
-    expect(table?.rows[0]).toEqual(["competence -> satisfaction", "0.403000", "9", "999", "0.01"]);
+    expect(table?.rows[0]).toEqual(["Competence -> Satisfaction", "0.403000", "9", "999", "0.01"]);
     expect(navigation.groups.find((group) => group.id === "inference")?.items.map((item) => item.id)).toContain("permutation");
   });
 });
@@ -377,12 +377,15 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain('surface === "launcher" && projectOpen ? "Project"');
   });
 
-  it("routes strict group, higher-order, moderation, and navigator indicator actions through authority intents", () => {
+  it("routes strict groups and model-authoring actions through their shared authority gateways", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
-    expect(source).toContain("commitStandardSemModelV4Intent");
-    for (const kind of ["set_group", "add_higher_order", "add_interaction", "assign_indicators", "add_construct"]) {
+    expect(source).toContain("commitStrictDesktopIntent");
+    expect(source).toContain("commitGatewayDesktopCommand");
+    expect(source).toContain("executeModelEditCommand");
+    for (const kind of ["set_group", "create_higher_order", "edit_higher_order", "create_moderating_effect", "edit_moderating_effect", "assign_indicators"]) {
       expect(source).toContain(`kind: \"${kind}\"`);
     }
+    expect(source).toContain("planNativeIndicatorGroupActionV1(");
     expect(source).toContain('title: `${label} blocked`');
     expect(source).toContain('title: `${label} stale`');
     expect(source).toContain('title: `${label} rejected`');

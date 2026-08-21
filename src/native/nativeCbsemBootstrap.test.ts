@@ -163,7 +163,7 @@ const runMonitor: RunMonitorState = {
 };
 
 describe("historical native CB-SEM bootstrap v2 compatibility", () => {
-  it("keeps the historical schema-3 recipe explicit but routes new inference to Exact CB-SEM", () => {
+  it("keeps the historical schema-3 recipe explicit but routes new inference through CB-SEM Calculate", () => {
     const recipe = buildNativeAnalysisRecipe({
       kind: "cbsem",
       recipeId: "11111111-1111-4111-8111-111111111111",
@@ -207,7 +207,7 @@ describe("historical native CB-SEM bootstrap v2 compatibility", () => {
     const readiness = nativePlsReadiness({ dataset, nodes, edges, settings, nativeDesktop: true });
     expect(readiness.canRun).toBe(false);
     expect(readiness.blockers.find((item) => item.id === "calculation")?.detail)
-      .toContain("Run current exact CFA bootstrap from the Exact CB-SEM model tab");
+      .toContain("Choose Case bootstrap in the CB-SEM Calculate settings");
     const wrongConfidence = nativePlsReadiness({
       dataset,
       nodes,
@@ -236,7 +236,7 @@ describe("historical native CB-SEM bootstrap v2 compatibility", () => {
     }));
     expect(markup).toContain('id="nd-calculation-method-cbsem"');
     expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
-    expect(markup).toContain("Run current exact CFA bootstrap from the Exact CB-SEM model tab");
+    expect(markup).toContain("Choose Case bootstrap in the CB-SEM Calculate settings");
     expect(markup).toContain("Clear the archived bootstrap setting before running this point-estimate setup.");
     expect(markup).toContain("Clear setting");
     expect(markup).not.toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
@@ -248,7 +248,7 @@ describe("historical native CB-SEM bootstrap v2 compatibility", () => {
     expect(markup).toContain('id="nd-calculation-workers"');
     expect(markup).not.toContain('data-limited-scope-warning="true"');
     expect(nativeAnalysisCatalogItem("cbsem").description)
-      .toContain("Current exact CFA case bootstrap is available from the Exact CB-SEM model tab");
+      .toContain("optional exact case bootstrap");
   });
 
   it("projects the same completed run into results and export tables and rejects analytical tampering", () => {

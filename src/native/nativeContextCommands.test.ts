@@ -31,7 +31,7 @@ function context(surface: NativeSurface): NativeCommandContext {
 describe("registry-derived native context commands", () => {
   it.each<[NativeSurface, string[]]>([
     ["data", ["recode-variable", "configure-groups", "go-model"]],
-    ["model", ["edit-selection", "delete-selection", "arrange-model", "fit-model", "open-calculation"]],
+    ["model", ["edit-selection", "delete-selection", "arrange-model", "toggle-pin", "fit-model", "focus-selection", "open-calculation"]],
     ["results", ["go-model", "save-report", "export-results", "run-details"]],
   ])("provides functional %s workspace commands", (surface, expected) => {
     const commands = nativeCommandsFor({ kind: "context-menu", surface }, context(surface));

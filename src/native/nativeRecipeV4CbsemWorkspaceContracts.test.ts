@@ -5,14 +5,15 @@ const appSource = readFileSync(new URL("./NativeDesktopApp.tsx", import.meta.url
 const workspaceSource = readFileSync(new URL("./NativeRecipeV4CbsemWorkspace.tsx", import.meta.url), "utf8");
 
 describe("CB-SEM Recipe-v4 workspace interaction contracts", () => {
-  it("is reachable from the Standard exact model tab and remains separate from schema-3 Calculate", () => {
-    expect(appSource).toContain('documentView === "cbsem_labs" ? <NativeRecipeV4CbsemWorkspace');
-    expect(appSource).toContain('id="nd-model-cbsem-labs-tab"');
-    expect(appSource).toContain("Exact CB-SEM");
-    expect(appSource).toContain('role="tab"');
-    expect(appSource).toContain('["canvas", "parameters", "general_sem_labs", "cbsem_labs"]');
-    expect(appSource).toContain('["canvas", "cbsem_labs"]');
-    expect(appSource).toContain('"ArrowLeft", "ArrowRight", "Home", "End"');
+  it("is reached from unified Calculate with Advanced Parameters remaining a separate modal", () => {
+    expect(appSource).toContain('dialog === "calculation" ? <Suspense');
+    expect(appSource).toContain("<NativeCalculationDialog");
+    expect(appSource).toContain("unifiedSem={unifiedSemCalculation}");
+    expect(appSource).toContain('dialog === "advanced-parameters" ? <NativeSemParameterTable');
+    expect(appSource).toContain('presentation="dialog"');
+    expect(appSource).toContain('advancedCalculationPlan?.route === "exact_cbsem_compatibility"');
+    expect(appSource).toContain("<NativeRecipeV4CbsemWorkspace");
+    expect(appSource).not.toContain('documentView === "cbsem_labs"');
     expect(workspaceSource).not.toContain("NativeCalculationDialog");
   });
 

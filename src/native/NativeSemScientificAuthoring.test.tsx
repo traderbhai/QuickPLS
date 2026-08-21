@@ -97,24 +97,23 @@ describe("SemModelV4 scientific authoring UI", () => {
     expect(html).toContain("disabled=\"\"");
   });
 
-  it("routes General SEM and its Parameter Table from exact Registry availability while keeping expert inspector fields Labs-scoped", () => {
+  it("routes Standard scientific authoring through the unified Calculate and Advanced Parameters workflow", () => {
     const app = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
     const modelInspector = readFileSync("src/native/NativeModelInspector.tsx", "utf8");
     const legacyInspector = readFileSync("src/components/Inspector.tsx", "utf8");
-    const standardInspector = renderToStaticMarkup(<NativeModelInspector initialTab="parameter" />);
-    expect(app).toContain("state.uiPreferences.experimentalLabsEnabled");
-    expect(app).toContain("generalSemWorkspaceProductAccessV1(experimentalSemAuthoringEnabled)");
-    expect(app).toContain("<NativeModelInspector readiness={readiness} />");
-    expect(app).toContain("generalSemViewAvailable ? <button");
-    expect(app).toContain('if ((view === "parameters" || view === "general_sem_labs") && !generalSemViewAvailable) return;');
-    expect(app).toContain('["canvas", "parameters", "general_sem_labs", "cbsem_labs"]');
-    expect(app).toContain('id="nd-model-general-sem-labs-tab"');
-    expect(app).toContain('<NativeRecipeV4GeneralSemWorkspace modelName={modelName} experimentalLabsEnabled={experimentalSemAuthoringEnabled} projectActivationConnected />');
-    expect(app).toContain('id="nd-model-cbsem-labs-tab"');
-    expect(app).toContain('<NativeRecipeV4CbsemWorkspace modelName={modelName} experimentalLabsEnabled={false} />');
+    const standardInspector = renderToStaticMarkup(<NativeModelInspector initialMode="expert" initialTab="parameter" />);
+    expect(app).toContain('dialog === "calculation" ? <Suspense');
+    expect(app).toContain("unifiedSem={unifiedSemCalculation}");
+    expect(app).toContain('dialog === "advanced-parameters" ? <NativeSemParameterTable');
+    expect(app).toContain('presentation="dialog"');
+    expect(app).toContain('advancedCalculationPlan?.route === "exact_cbsem_compatibility"');
+    expect(app).toContain("<NativeRecipeV4GeneralSemWorkspace");
+    expect(app).toContain("<NativeRecipeV4CbsemWorkspace");
+    expect(modelInspector).toContain("experimentalSemAuthoringEnabled");
+    expect(modelInspector).toContain("|| standardCbsemConstructAuthoringAvailable");
     expect(modelInspector).toContain('mode === "expert" && constructRepresentationAuthoringEnabled ? <NativeSemConstructAuthoringFields');
     expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled && pathRole === "covariance" ? <NativeSemCovarianceAuthoringFields');
-    expect(standardInspector).not.toContain("Scientific representation");
+    expect(standardInspector).toContain("Scientific representation");
     expect(standardInspector).not.toContain("Model covariance");
     expect(legacyInspector).toContain("state.uiPreferences.experimentalLabsEnabled");
     expect(legacyInspector).toContain("experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields");

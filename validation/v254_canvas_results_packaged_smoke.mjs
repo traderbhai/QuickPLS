@@ -488,12 +488,15 @@ async function runHeadlessCrawl(rawArgs) {
     const results = page.locator(".nd-results-workspace");
     await results.waitFor({ state: "visible", timeout: 15_000 });
     const empty = results.locator('[data-results-empty-state="true"]');
+    await empty.waitFor({ state: "visible", timeout: 15_000 });
     record("results_empty_state", await empty.isVisible(), { text: compact(await empty.textContent()) });
     const calculate = empty.getByRole("button", { name: "Calculate results", exact: true });
     await calculate.click();
     const calculation = page.getByRole("dialog", { name: "Calculate", exact: true });
     await calculation.waitFor({ state: "visible", timeout: 15_000 });
-    const methodCount = await calculation.locator('#nd-calculation-method-list [role="option"]').count();
+    const methodList = calculation.locator("#nd-calculation-method-list");
+    await methodList.waitFor({ state: "visible", timeout: 15_000 });
+    const methodCount = await methodList.locator('[role="option"]').count();
     record("results_to_calculate", methodCount === 18, { methodCount });
     await page.keyboard.press("Escape");
     await calculation.waitFor({ state: "hidden", timeout: 10_000 });

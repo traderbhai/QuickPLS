@@ -15,7 +15,7 @@ import {
 } from "@xyflow/react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
-import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId } from "../domain/diagramGraph";
+import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId, type DiagramGraph } from "../domain/diagramGraph";
 import {
   dispatchModerationCanvasRequest,
   isModerationAnchorData,
@@ -141,7 +141,7 @@ export function ModelCanvas({
   const undo = useWorkspace((state) => state.undo);
   const redo = useWorkspace((state) => state.redo);
   const readOnlyResultsPresentation = presentation === "results_readonly";
-  const [flow, setFlow] = useState<ReactFlowInstance | null>(null);
+  const [flow, setFlow] = useState<ReactFlowInstance<DiagramGraph["nodes"][number], Edge> | null>(null);
   const previousNodeCount = useRef(nodes.length);
   const preserveViewportForDrop = useRef(false);
   const [pathSource, setPathSource] = useState<string | null>(null);
@@ -356,7 +356,7 @@ export function ModelCanvas({
     setIsolatedNodeIds(expanded);
     setActionFeedback({ message: "Focused on the selected model region. Use Focus selection again to show all." });
     window.setTimeout(() => {
-      void flow.fitView({
+      void flow?.fitView({
         nodes: graph.nodes.filter((node) => expanded.has(node.id)),
         padding: 0.28,
         minZoom: 0.65,

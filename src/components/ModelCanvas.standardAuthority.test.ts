@@ -4,26 +4,25 @@ import { describe, expect, it } from "vitest";
 import { persistentModelEdgeChanges, persistentModelNodeChanges } from "./ModelCanvas";
 
 describe("ModelCanvas strict Standard authority routing", () => {
-  it("routes scientific canvas actions to typed authority intents while retaining layout actions", () => {
+  it("routes canvas mutations through the shared command gateway while retaining layout actions", () => {
     const source = readFileSync("src/components/ModelCanvas.tsx", "utf8");
-    expect(source).toContain("commitStandardSemModelV4Intent");
-    for (const kind of ["add_construct", "add_relationship", "replace_relationship", "delete_construct", "delete_relationship", "assign_indicators"]) {
+    expect(source).toContain("executeModelEditCommand");
+    expect(source).toContain("runModelEditCommand");
+    for (const kind of ["add_construct", "assign_indicators", "add_path", "move_construct", "move_indicator", "set_standard_sem_presentation", "arrange_model", "remove_path"]) {
       expect(source).toContain(`kind: \"${kind}\"`);
     }
     expect(source).toContain('persistentChanges.filter((change) => change.type !== "remove")');
     expect(source).toContain("if (strictAuthority) return;");
-    expect(source).toContain("moveIndicator(indicator.constructId, indicator.indicator, node.position)");
     expect(source).toContain("StandardSemPresentationLayer");
-    expect(source).toContain("standardSemPresentation: presentation");
     expect(source).toContain("if (!strictAuthority || !canEditLayout) return;");
     expect(source).not.toContain('commitStrict({ kind: "caption"');
   });
 
-  it("preserves the canonical latent-control role when a strict path is reconnected", () => {
+  it("reconnects legacy paths but blocks strict retargeting behind a versioned revision", () => {
     const source = readFileSync("src/components/ModelCanvas.tsx", "utf8");
-    expect(source).toContain('relation?.kind === "structural" && relation.role === "control"');
-    expect(source).toContain('? { kind: "control", source: connection.source, target: connection.target, label }');
-    expect(source).toContain(': { kind: "structural", source: connection.source, target: connection.target, label }');
+    expect(source).toContain("if (!strictAuthority) {");
+    expect(source).toContain("reconnectPath(edge, connection);");
+    expect(source).toContain("Retargeting a calculation-ready relationship needs a versioned revision.");
   });
 
   it("provides a non-editing Results presentation without borrowing a legacy run overlay", () => {

@@ -143,7 +143,7 @@ describe("PLS posthoc minimum sample size", () => {
       .toBe("validated");
     expect(nativeResultTables(run).find((table) => table.id === "posthoc_minimum_sample_size")?.rows)
       .toEqual(expect.arrayContaining([
-        ["Driving path", "likeability → loyalty"],
+        ["Driving path", "Likeability → Loyalty"],
         ["Bootstrap p value (two-sided)", "0.010000"],
         ["Driver selection", "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"],
       ]));

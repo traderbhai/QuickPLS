@@ -71,49 +71,55 @@ describe("model edit command gateway v1 domain", () => {
 
   it("derives exact strict intents without changing construct or observed identities", () => {
     const current = authority();
-    expect(strictModelEditIntentPlanV1({ kind: "rename_construct", constructId: "x", label: "  New predictor  " }, current, dataset)).toEqual({
+    const predictorId = current.model.variables.find((variable) => variable.label === "Predictor")?.id;
+    if (!predictorId) throw new Error("Expected the resident Predictor identity.");
+    expect(strictModelEditIntentPlanV1({ kind: "rename_construct", constructId: predictorId, label: "  New predictor  " }, current, dataset)).toEqual({
       status: "ready",
-      intent: { kind: "rename_construct", variable_id: "x", label: "New predictor" },
-      affected: { constructIds: ["x"], indicatorIds: [], relationshipIds: [] },
+      intent: { kind: "rename_construct", variable_id: predictorId, label: "New predictor" },
+      affected: { constructIds: [predictorId], indicatorIds: [], relationshipIds: [] },
     });
 
-    const assignment = strictModelEditIntentPlanV1({ kind: "assign_indicators", constructId: "x", columns: ["x3"] }, current, dataset);
+    const assignment = strictModelEditIntentPlanV1({ kind: "assign_indicators", constructId: predictorId, columns: ["x3"] }, current, dataset);
     expect(assignment).toMatchObject({
       status: "ready",
       intent: {
         kind: "assign_indicators",
-        construct_id: "x",
+        construct_id: predictorId,
         indicators: [{ id: "observed:x3", source_column: "x3", label: "Third predictor item" }],
       },
-      affected: { constructIds: ["x"], indicatorIds: ["observed:x3"] },
+      affected: { constructIds: [predictorId], indicatorIds: ["observed:x3"] },
     });
     expect(observedVariableForModelEditColumnV1(current, dataset, "x1").id).toBe("observed:x1");
-    expect(strictModelEditIntentPlanV1({ kind: "rename_construct", constructId: "x", label: "Predictor" }, current, dataset)).toMatchObject({ status: "blocked", code: "model_edit.no_change" });
+    expect(strictModelEditIntentPlanV1({ kind: "rename_construct", constructId: predictorId, label: "Predictor" }, current, dataset)).toMatchObject({ status: "blocked", code: "model_edit.no_change" });
   });
 
   it("plans construct, measurement, path, HOC, and moderation edits through resident strict intents", () => {
     const current = authority();
-    const focal = current.model.relations.find((relation) => relation.kind === "structural" && relation.source === "x" && relation.target === "y");
+    const predictorId = current.model.variables.find((variable) => variable.label === "Predictor")?.id;
+    const outcomeId = current.model.variables.find((variable) => variable.label === "Outcome")?.id;
+    const moderatorId = current.model.variables.find((variable) => variable.label === "Moderator")?.id;
+    if (!predictorId || !outcomeId || !moderatorId) throw new Error("Expected resident construct identities.");
+    const focal = current.model.relations.find((relation) => relation.kind === "structural" && relation.source === predictorId && relation.target === outcomeId);
     if (focal?.kind !== "structural") throw new Error("Expected the focal path.");
 
     expect(strictModelEditIntentPlanV1({
       kind: "add_construct",
-      constructId: "w",
+      constructId: "construct:w",
       label: "Second moderator",
       columns: ["x3"],
       position: { x: 320, y: 120 },
     }, current, dataset)).toMatchObject({
       status: "ready",
-      intent: { kind: "add_construct", variable_id: "w", representation: { kind: "composite", weighting: { kind: "mode_a" } } },
-      affected: { constructIds: ["w"], indicatorIds: ["observed:x3"] },
+      intent: { kind: "add_construct", variable_id: "construct:w", representation: { kind: "composite", weighting: { kind: "mode_a" } } },
+      affected: { constructIds: ["construct:w"], indicatorIds: ["observed:x3"] },
     });
-    expect(strictModelEditIntentPlanV1({ kind: "invert_measurement_model", constructId: "x" }, current, dataset)).toMatchObject({
+    expect(strictModelEditIntentPlanV1({ kind: "invert_measurement_model", constructId: predictorId }, current, dataset)).toMatchObject({
       status: "ready",
-      intent: { kind: "set_construct_representation", variable_id: "x", representation: { kind: "composite", weighting: { kind: "mode_b" } } },
+      intent: { kind: "set_construct_representation", variable_id: predictorId, representation: { kind: "composite", weighting: { kind: "mode_b" } } },
     });
     expect(strictModelEditIntentPlanV1({ kind: "reverse_path", relationId: focal.id }, current, dataset)).toMatchObject({
       status: "ready",
-      intent: { kind: "replace_relationship", relationship_id: focal.id, definition: { kind: "structural", source: "y", target: "x" } },
+      intent: { kind: "replace_relationship", relationship_id: focal.id, definition: { kind: "structural", source: outcomeId, target: predictorId } },
     });
     expect(strictModelEditIntentPlanV1({ kind: "remove_path", relationId: focal.id }, current, dataset)).toMatchObject({
       status: "ready",
@@ -127,10 +133,10 @@ describe("model edit command gateway v1 domain", () => {
       draft: {
         name: "Higher order",
         shortName: "HOC",
-        components: ["x", "z"],
+        components: [predictorId, moderatorId],
         approach: "embedded_two_stage",
         measurementType: "reflective_reflective",
-        initialPath: { direction: "hoc_to_construct", constructId: "y", relationshipId: "relation:hoc-y" },
+        initialPath: { direction: "hoc_to_construct", constructId: outcomeId, relationshipId: "relation:hoc-y" },
       },
     }, current, dataset)).toMatchObject({
       status: "ready",
@@ -138,14 +144,14 @@ describe("model edit command gateway v1 domain", () => {
     });
 
     const target = { kind: "focal_relation" as const, relationId: focal.id };
-    const identity = modelEditModeratingEffectIdentityV1(target, ["x", "z"]);
+    const identity = modelEditModeratingEffectIdentityV1(target, [predictorId, moderatorId]);
     expect(strictModelEditIntentPlanV1({
       kind: "create_moderating_effect",
-      effect: { label: "X × Z", operands: ["x", "z"], target, outcomeId: "y" },
+      effect: { label: "X × Z", operands: [predictorId, moderatorId], target, outcomeId },
     }, current, dataset)).toMatchObject({
       status: "ready",
-      intent: { kind: "add_moderating_effect_v3", operands: ["x", "z"], target },
-      affected: { constructIds: expect.arrayContaining([identity.outputId, "x", "z", "y"]), relationshipIds: [focal.id] },
+      intent: { kind: "add_moderating_effect_v3", operands: [predictorId, moderatorId], target },
+      affected: { constructIds: expect.arrayContaining([identity.outputId, predictorId, moderatorId, outcomeId]), relationshipIds: [focal.id] },
     });
   });
 

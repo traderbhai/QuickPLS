@@ -13,7 +13,7 @@ import {
 } from "./internalGeneralSemModeratedMediationRevisionV2Service";
 
 describe("internal moderated-mediation revision service boundary", () => {
-  it("opens only the Registry-authorized Labs route and cancels before persistence", async () => {
+  it("opens the Registry-authorized Standard route and cancels before persistence", async () => {
     expect(GENERAL_SEM_MODERATED_MEDIATION_PRODUCT_ROUTE_CONNECTED_V1).toBe(true);
     const transaction = transactionV2();
     const invokeNative = vi.fn();

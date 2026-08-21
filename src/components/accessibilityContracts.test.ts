@@ -111,7 +111,7 @@ describe("desktop accessibility contracts", () => {
     expect(canvas).toContain("deleteKeyCode={null}");
     expect(canvas).not.toContain('window.addEventListener("keydown"');
     expect(commands).toContain('shortcut: { key: "enter" }');
-    expect(canvas).not.toContain('event.key === "Enter"');
+    expect(canvas).toContain('selectedInteractionTermId && (event.key === "Enter" || event.key === "F2")');
     expect(canvas).not.toContain("window.prompt(");
   });
 

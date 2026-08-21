@@ -359,10 +359,15 @@ describe("native model inspector customer workflow", () => {
     expect(nextNativeModelInspectorTab("parameter", "PageDown")).toBe("parameter");
   });
 
-  it("routes strict scientific inspector controls through one authority commit seam", () => {
+  it("routes common inspector edits through the shared gateway and preserves strict-only commits", () => {
     const source = readFileSync("src/native/NativeModelInspector.tsx", "utf8");
+    expect(source).toContain("executeModelEditCommand");
+    expect(source).toContain("const executeModelEdit = async");
+    for (const kind of ["rename_construct", "invert_measurement_model", "assign_indicators", "unassign_indicator", "reverse_path", "remove_path"]) {
+      expect(source).toContain(`kind: \"${kind}\"`);
+    }
     expect(source).toContain("commitStandardSemModelV4Intent");
-    for (const kind of ["rename_construct", "set_construct_representation", "replace_relationship", "assign_indicators", "remove_indicator", "delete_construct", "delete_relationship"]) {
+    for (const kind of ["set_construct_representation", "replace_relationship", "delete_construct"]) {
       expect(source).toContain(`kind: \"${kind}\"`);
     }
     expect(source).toContain('role={authorityFeedback.tone === "blocked" || authorityFeedback.tone === "rejected" ? "alert" : "status"}');

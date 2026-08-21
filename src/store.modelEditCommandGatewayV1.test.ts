@@ -119,14 +119,16 @@ describe("workspace model edit command gateway v1", () => {
 
   it("keeps path route and label edits presentation-only", async () => {
     const edge = useWorkspace.getState().edges.find((candidate) => !candidate.id.startsWith("measurement::"))!;
-    await expect(useWorkspace.getState().executeModelEditCommand({ kind: "set_path_routing", relationId: edge.id, routing: "orthogonal" })).resolves.toMatchObject({
+    const currentRouting = useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]?.routing ?? "straight";
+    const changedRouting = currentRouting === "orthogonal" ? "curved" : "orthogonal";
+    await expect(useWorkspace.getState().executeModelEditCommand({ kind: "set_path_routing", relationId: edge.id, routing: changedRouting })).resolves.toMatchObject({
       status: "applied",
       transaction: "presentation",
       affected: { relationshipIds: [edge.id] },
     });
     await expect(useWorkspace.getState().executeModelEditCommand({ kind: "nudge_path_label", relationId: edge.id, offset: { x: 9, y: -4 } })).resolves.toMatchObject({ status: "applied" });
     expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]).toMatchObject({
-      routing: "orthogonal",
+      routing: changedRouting,
       labelOffset: { x: 9, y: -4 },
       pinned: true,
     });
@@ -207,26 +209,28 @@ describe("workspace model edit command gateway v1", () => {
   it("routes strict scientific edits through CAS and maps revision locks to an explicit correction", async () => {
     const modelId = useWorkspace.getState().activeModelId!;
     const authority = strictAuthority(modelId);
+    const predictorId = authority.model.variables.find((variable) => variable.label === "Predictor")?.id;
+    if (!predictorId) throw new Error("Expected the resident Predictor identity.");
     expect(useWorkspace.getState().installStandardSemModelV4Authority(authority)).toBe(true);
-    await useWorkspace.getState().executeModelEditCommand({ kind: "set_construct_pinned", constructId: "x", pinned: true });
+    await useWorkspace.getState().executeModelEditCommand({ kind: "set_construct_pinned", constructId: predictorId, pinned: true });
     const layoutBefore = structuredClone(useWorkspace.getState().diagramLayout);
     compareAndSwap.mockImplementation(async (_source: SemModelV4, expected: string, candidate: SemModelV4) => successfulOutcome(expected, candidate));
 
     await expect(useWorkspace.getState().executeModelEditCommand({
       kind: "rename_construct",
-      constructId: "x",
+      constructId: predictorId,
       label: "Strict predictor renamed",
     })).resolves.toMatchObject({
       status: "applied",
       transaction: "scientific",
       authority: "standard_sem_model_v4",
-      affected: { constructIds: ["x"] },
+      affected: { constructIds: [predictorId] },
     });
     expect(compareAndSwap).toHaveBeenCalledTimes(1);
-    expect(useWorkspace.getState().standardSemModelV4Authorities[modelId].model.variables.find((variable) => variable.id === "x")?.label).toBe("Strict predictor renamed");
-    expect(useWorkspace.getState().diagramLayout.constructLayouts.x).toEqual(layoutBefore.constructLayouts.x);
+    expect(useWorkspace.getState().standardSemModelV4Authorities[modelId].model.variables.find((variable) => variable.id === predictorId)?.label).toBe("Strict predictor renamed");
+    expect(useWorkspace.getState().diagramLayout.constructLayouts[predictorId]).toEqual(layoutBefore.constructLayouts[predictorId]);
     useWorkspace.getState().undo();
-    expect(useWorkspace.getState().standardSemModelV4Authorities[modelId].model.variables.find((variable) => variable.id === "x")?.label).toBe("Predictor");
+    expect(useWorkspace.getState().standardSemModelV4Authorities[modelId].model.variables.find((variable) => variable.id === predictorId)?.label).toBe("Predictor");
 
     useWorkspace.setState((state) => ({
       standardSemModelV4ScientificEditLocks: { ...state.standardSemModelV4ScientificEditLocks, [modelId]: true },
@@ -234,7 +238,7 @@ describe("workspace model edit command gateway v1", () => {
     compareAndSwap.mockClear();
     await expect(useWorkspace.getState().executeModelEditCommand({
       kind: "rename_construct",
-      constructId: "x",
+      constructId: predictorId,
       label: "Blocked rename",
     })).resolves.toMatchObject({
       status: "blocked",

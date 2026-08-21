@@ -1115,14 +1115,15 @@ const applyLegacyHigherOrderModelEditV1 = (
     };
   }
   const draft = command.draft;
+  const initialPath = command.kind === "create_higher_order" ? command.draft.initialPath : undefined;
   const nativeDraft: NativeHigherOrderDraft = {
     name: draft.name,
     shortName: draft.shortName,
     components: [...draft.components],
     approach: draft.approach,
     measurementType: draft.measurementType,
-    ...(command.kind === "create_higher_order" && draft.initialPath ? {
-      initialPath: { direction: draft.initialPath.direction, constructId: draft.initialPath.constructId },
+    ...(initialPath ? {
+      initialPath: { direction: initialPath.direction, constructId: initialPath.constructId },
     } : {}),
   };
   if (command.kind === "create_higher_order") {
@@ -1136,9 +1137,9 @@ const applyLegacyHigherOrderModelEditV1 = (
     if (scopeBlocker) return blockedModelEditTransitionV1("model_edit.higher_order_scope_unavailable", scopeBlocker, "Correct the HOC topology or choose one supported approach.");
     const problems = nativeHigherOrderDraftProblems(nativeDraft, state.nodes, state.edges);
     if (problems.length) return blockedModelEditTransitionV1("model_edit.higher_order_invalid", problems[0]!, "Correct the highlighted HOC setting and retry.");
-    if (draft.initialPath && (!exactLegacyModelEditIdV1(draft.initialPath.relationshipId)
-      || !editableLegacyConstructV1(state, draft.initialPath.constructId)
-      || state.edges.some((edge) => edge.id === draft.initialPath!.relationshipId))) {
+    if (initialPath && (!exactLegacyModelEditIdV1(initialPath.relationshipId)
+      || !editableLegacyConstructV1(state, initialPath.constructId)
+      || state.edges.some((edge) => edge.id === initialPath.relationshipId))) {
       return blockedModelEditTransitionV1("model_edit.higher_order_initial_path_invalid", "The initial HOC path has an unavailable endpoint or relationship identity.", "Choose one ordinary construct and one new stable relationship ID.");
     }
     const node: Node<ConstructData> = {
@@ -1163,14 +1164,14 @@ const applyLegacyHigherOrderModelEditV1 = (
       },
     };
     const nodes = [...state.nodes.map((candidate) => ({ ...candidate, selected: false })), node];
-    const initialEdge = draft.initialPath ? {
-      id: draft.initialPath.relationshipId,
-      source: draft.initialPath.direction === "hoc_to_construct" ? node.id : draft.initialPath.constructId,
-      target: draft.initialPath.direction === "hoc_to_construct" ? draft.initialPath.constructId : node.id,
+    const initialEdge: Edge | null = initialPath ? {
+      id: initialPath.relationshipId,
+      source: initialPath.direction === "hoc_to_construct" ? node.id : initialPath.constructId,
+      target: initialPath.direction === "hoc_to_construct" ? initialPath.constructId : node.id,
       type: "straight",
-      label: draft.initialPath.label?.trim() || (draft.initialPath.direction === "hoc_to_construct" ? `${node.data.label} effect` : `${node.data.label} antecedent`),
+      label: initialPath.label?.trim() || (initialPath.direction === "hoc_to_construct" ? `${node.data.label} effect` : `${node.data.label} antecedent`),
       markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-    } satisfies Edge : null;
+    } : null;
     const edges = initialEdge ? addEdge(initialEdge, state.edges) : state.edges;
     return {
       status: "applied",
@@ -1279,6 +1280,7 @@ const applyLegacyModeratingEffectModelEditV1 = (
       "Create a calculation-ready revision, then add the three-way moderating effect.",
     );
   }
+  const focalRelationId = effect.target.relationId;
   const [predictor, moderator] = effect.operands;
   const outcome = effect.outcomeId;
   if (new Set([predictor, moderator, outcome]).size !== 3) {
@@ -1293,7 +1295,7 @@ const applyLegacyModeratingEffectModelEditV1 = (
   if (state.edges.some((edge) => edge.data?.role === "control")) {
     return blockedModelEditTransitionV1("model_edit.moderating_effect_control_paths_unsupported", "This older graph contains control paths that its moderation authority cannot reinterpret safely.", "Create a calculation-ready revision before adding moderation.");
   }
-  const focalEdge = state.edges.find((edge) => edge.id === effect.target.relationId
+  const focalEdge = state.edges.find((edge) => edge.id === focalRelationId
     && edge.source === predictor
     && edge.target === outcome
     && edge.data?.role !== "control"

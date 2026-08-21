@@ -6,21 +6,20 @@ const table = readFileSync("src/native/NativeSemParameterTable.tsx", "utf8");
 const editor = readFileSync("src/native/NativeSemParameterEditor.tsx", "utf8");
 
 describe("native SEM parameter-table UI contracts", () => {
-  it("provides an operable tablist and labelled panels", () => {
-    expect(app).toContain('role="tablist"');
-    expect(app).toContain('id="nd-model-canvas-tab"');
-    expect(app).toContain('id="nd-model-parameter-tab"');
-    expect(app).toContain('aria-selected={documentView === "parameters"}');
-    expect(app).toContain('["ArrowLeft", "ArrowRight", "Home", "End"]');
-    expect(table).toContain('role="tabpanel"');
-    expect(table).toContain('aria-labelledby="nd-model-parameter-tab"');
+  it("provides the Advanced Parameter Table as a labelled modal region", () => {
+    expect(app).toContain('dialog === "advanced-parameters" ? <NativeSemParameterTable');
+    expect(app).toContain('presentation="dialog"');
+    expect(app).toContain('if (dialog === "advanced-parameters") return "Advanced Parameter Table"');
+    expect(table).toContain('role={dialogPresentation ? "region" : "tabpanel"}');
+    expect(table).toContain('aria-labelledby={dialogPresentation ? headingId : "nd-model-parameter-tab"}');
+    expect(table).toContain('id={dialogPresentation ? "nd-advanced-parameter-table" : "nd-model-parameter-panel"}');
   });
 
   it("derives editable rows from the estimator-authoritative SemModelV4 adapter", () => {
     expect(table).toContain("projectNativeWorkbenchSemParameterTableV4");
     expect(table).toContain("part of the resident SemModelV4 authority used by native preflight and compatible estimators");
     expect(table).not.toContain("nd-experimental-chip");
-    expect(app).toContain("generalSemViewAvailable && documentView === \"parameters\"");
+    expect(app).toContain('dialog === "advanced-parameters" ? <NativeSemParameterTable');
     expect(table).toContain("NativeSemParameterEditor");
     expect(table).toContain("NativeSemVariableEditor");
     expect(table).not.toContain("contentEditable");

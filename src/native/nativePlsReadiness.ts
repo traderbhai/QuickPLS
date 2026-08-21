@@ -831,7 +831,7 @@ function calculationItem(
     const problems = [
       moderationInteractions.length !== 1 ? "Two-stage moderation requires exactly one two-way interaction" : null,
       moderationInteractions.some((node) => node.data.interaction?.kind === "interaction_v2")
-        ? "Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine."
+        ? "Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine"
         : null,
       (settings.weightingScheme ?? "path") !== "path" ? "Two-stage moderation requires path weighting" : null,
       (settings.preprocessing ?? "standardized") !== "standardized" ? "Two-stage moderation requires standardized preprocessing" : null,

@@ -10,6 +10,7 @@ import {
   nativeStructuralPathRandomizationProjection,
   nativeStructuralPathRandomizationTable,
 } from "../native/nativeStructuralPathRandomization";
+import { createAuthoredResultIdentityResolver } from "./authoredResultIdentity";
 import { spreadsheetSafeCsvCell } from "./spreadsheetSafety";
 
 export type ResultTableAdvisoryTone = "neutral" | "info" | "warning" | "error";
@@ -713,6 +714,7 @@ export function methodResultTables(result: PlsResult): ResultTable[] {
 export function runExportTables(run: AnalysisRun): ResultTable[] {
   if (run.status !== "completed" || !run.result) return [];
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
+  const authoredIdentity = createAuthoredResultIdentityResolver(run.modelSnapshot);
   const runStatus = structuralPathRandomization ? "validated" : resultScopeStatus(run.result);
   const processProjection = nativeProcessResultProjection(run);
   const legacyProcessProjection = nativeLegacyProcessResultProjection(run);
@@ -723,7 +725,7 @@ export function runExportTables(run: AnalysisRun): ResultTable[] {
       : [
           ...methodResultTables(run.result),
           ...(structuralPathRandomization
-            ? [nativeStructuralPathRandomizationTable(structuralPathRandomization)]
+            ? [nativeStructuralPathRandomizationTable(structuralPathRandomization, authoredIdentity.construct)]
             : []),
         ];
   const provenanceRows = [

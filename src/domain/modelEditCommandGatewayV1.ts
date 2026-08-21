@@ -3,6 +3,8 @@ import { defaultDiagramLayout, layoutSmartplsModel } from "./diagramGraph";
 import { layoutModel } from "./modelLayout";
 import {
   compareUtf8StringsV1,
+  type SemDerivedTermV4,
+  type SemRelationV4,
   type SemVariableV4,
 } from "./semModelV4";
 import {
@@ -22,6 +24,10 @@ import type {
   ModelEditCommandV1,
   ModelEditTransactionClassV1,
 } from "../types";
+
+type SemMeasurementRelationV4 = Extract<SemRelationV4, { kind: "measurement_effect" | "measurement_causal" }>;
+type SemStructuralRelationV4 = Extract<SemRelationV4, { kind: "structural" }>;
+type SemInteractionV2TermV4 = Extract<SemDerivedTermV4, { kind: "interaction_v2" }>;
 
 export type StrictModelEditIntentPlanV1 =
   | {
@@ -264,7 +270,7 @@ export function strictModelEditIntentPlanV1(
       : construct.weighting.kind === "mode_b"
         ? { kind: "composite" as const, weighting: { kind: "mode_a" as const } }
         : { kind: "composite" as const, weighting: { kind: "mode_b" as const } };
-    const relations = authority.model.relations.filter((relation) =>
+    const relations = authority.model.relations.filter((relation): relation is SemMeasurementRelationV4 =>
       relation.kind === "measurement_effect"
         ? relation.construct === constructId
         : relation.kind === "measurement_causal" && relation.composite === constructId);
@@ -308,7 +314,7 @@ export function strictModelEditIntentPlanV1(
     };
   }
 
-  const matchingRelation = authority.model.relations.find((candidate) => {
+  const matchingRelation = authority.model.relations.find((candidate): candidate is SemMeasurementRelationV4 => {
     if (candidate.kind !== "measurement_effect" && candidate.kind !== "measurement_causal") return false;
     const owner = candidate.kind === "measurement_effect" ? candidate.construct : candidate.composite;
     if (owner !== constructId) return false;
@@ -412,7 +418,7 @@ function strictHigherOrderIntentPlanV1(
   if (resident || authority.model.variables.some((variable) => variable.id === outputId)) {
     return blocked("model_edit.higher_order_identity_in_use", "The requested HOC term or output identity is already in use.", "Generate new stable HOC identities and retry.");
   }
-  const initialPath = draft.initialPath;
+  const initialPath = command.kind === "create_higher_order" ? command.draft.initialPath : undefined;
   const initialRelationshipId = initialPath ? exactModelEditId(initialPath.relationshipId) : null;
   if (initialPath && !initialRelationshipId) {
     return blocked("model_edit.higher_order_path_identity_invalid", "The initial HOC path needs one exact stable relationship identifier.", "Generate a stable relationship ID and retry.");
@@ -466,10 +472,16 @@ function strictModeratingEffectIntentPlanV1(
   const requestedTermId = command.kind === "create_moderating_effect" ? null : exactModelEditId(command.termId);
   const requestedOutputId = command.kind === "create_moderating_effect" ? null : exactModelEditId(command.outputId);
   const resident = requestedTermId
-    ? authority.model.derived_terms.find((term) => term.kind === "interaction_v2" && term.id === requestedTermId)
+    ? authority.model.derived_terms.find((term): term is SemInteractionV2TermV4 => term.kind === "interaction_v2" && term.id === requestedTermId)
     : undefined;
+  const interactionFocalRelation = (term: SemInteractionV2TermV4 | undefined) => term
+    ? authority.model.relations.find((relation): relation is SemStructuralRelationV4 => (
+        relation.kind === "structural" && relation.id === term.focal_relation
+      ))
+    : undefined;
+  const residentFocalRelation = interactionFocalRelation(resident);
   if (command.kind === "remove_moderating_effect") {
-    if (!requestedTermId || !requestedOutputId || resident?.kind !== "interaction_v2" || resident.output !== requestedOutputId) {
+    if (!requestedTermId || !requestedOutputId || !resident || !residentFocalRelation || resident.output !== requestedOutputId) {
       return blocked("model_edit.moderating_effect_unavailable", "The requested moderating-effect identity does not match the active authority.", "Refresh the model and select the moderating effect again.");
     }
     return {
@@ -481,7 +493,7 @@ function strictModeratingEffectIntentPlanV1(
         term_id: requestedTermId,
         output_id: requestedOutputId,
       },
-      affected: { constructIds: [requestedOutputId, ...resident.operands, resident.outcome], indicatorIds: [], relationshipIds: [resident.focal_relation] },
+      affected: { constructIds: [requestedOutputId, ...resident.operands, residentFocalRelation.target], indicatorIds: [], relationshipIds: [resident.focal_relation] },
     };
   }
 
@@ -501,15 +513,18 @@ function strictModeratingEffectIntentPlanV1(
   if (structuralVariables.some((variable) => !variable || variable.kind === "observed" || variable.kind === "derived")) {
     return blocked("model_edit.moderating_effect_construct_unavailable", "Every moderation operand and outcome must be an ordinary factor or composite.", "Refresh the model and select eligible ordinary constructs.");
   }
+  const parent = target.kind === "parent_interaction"
+    ? authority.model.derived_terms.find((term): term is SemInteractionV2TermV4 => term.kind === "interaction_v2" && term.id === target.interactionTermId)
+    : undefined;
+  const parentFocalRelation = interactionFocalRelation(parent);
   if (target.kind === "focal_relation") {
     const focal = authority.model.relations.find((relation) => relation.id === target.relationId);
     if (focal?.kind !== "structural" || focal.role || focal.source !== operands[0] || focal.target !== effect.outcomeId) {
       return blocked("model_edit.moderating_effect_focal_path_missing", "The selected focal path does not match the predictor and outcome.", "Select the exact predictor-to-outcome structural path and retry.");
     }
   } else {
-    const parent = authority.model.derived_terms.find((term) => term.kind === "interaction_v2" && term.id === target.interactionTermId);
-    if (parent?.kind !== "interaction_v2" || parent.operands.length !== 2
-      || parent.operands[0] !== operands[0] || parent.operands[1] !== operands[1] || parent.outcome !== effect.outcomeId) {
+    if (!parent || !parentFocalRelation || parent.operands.length !== 2
+      || parent.operands[0] !== operands[0] || parent.operands[1] !== operands[1] || parentFocalRelation.target !== effect.outcomeId) {
       return blocked("model_edit.moderating_effect_parent_missing", "The selected parent two-way interaction does not match the requested three-way effect.", "Refresh the model and select one resident two-way moderating effect.");
     }
   }
@@ -524,7 +539,7 @@ function strictModeratingEffectIntentPlanV1(
   }
   const targetFocalRelation = target.kind === "focal_relation"
     ? target.relationId
-    : authority.model.derived_terms.find((term) => term.kind === "interaction_v2" && term.id === target.interactionTermId)?.focal_relation;
+    : parent?.focal_relation;
   const common = {
     intent_version: GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
     sem_generation: "general_sem_v1" as const,
@@ -545,10 +560,10 @@ function strictModeratingEffectIntentPlanV1(
         identity.outputId,
         ...operands,
         effect.outcomeId,
-        ...(resident?.kind === "interaction_v2" ? [...resident.operands, resident.outcome] : []),
+        ...(resident ? [...resident.operands, ...(residentFocalRelation ? [residentFocalRelation.target] : [])] : []),
       ])],
       indicatorIds: [],
-      relationshipIds: [...new Set([targetFocalRelation, resident?.kind === "interaction_v2" ? resident.focal_relation : undefined].filter((id): id is string => Boolean(id)))],
+      relationshipIds: [...new Set([targetFocalRelation, resident?.focal_relation].filter((id): id is string => Boolean(id)))],
     },
   };
 }

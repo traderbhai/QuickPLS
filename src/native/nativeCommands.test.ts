@@ -231,7 +231,9 @@ describe("native command registry", () => {
       "edit-selection",
       "delete-selection",
       "arrange-model",
+      "toggle-pin",
       "fit-model",
+      "focus-selection",
       "open-calculation",
     ]);
 
@@ -302,10 +304,10 @@ describe("native command registry", () => {
       "path-tool",
       "edit-selection",
       "delete-selection",
-      "arrange-model",
     ] as const) {
       expect(resolveNativeCommand(directMutation, revision).enabled).toBe(false);
     }
+    expect(resolveNativeCommand("arrange-model", revision).enabled).toBe(true);
   });
 
   it("offers selected HOC editing from Model, context, Properties authority, and Enter semantics", () => {

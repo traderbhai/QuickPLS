@@ -113,8 +113,8 @@ describe("native canonical IPMA frontend slice", () => {
       ["Retention Intent", "Relationship Quality", "0.610000", "72.5000"],
     ]);
     expect(table("ipma_indicators")?.rows).toEqual([
-      ["Retention Intent", "Market Capability", "x1", "0.256200", "0.910000", "58.5000", "-0.040000"],
-      ["Retention Intent", "Relationship Quality", "m1", "0.610000", "0.880000", "70.2500", "0.110000"],
+      ["Retention Intent", "Market Capability", "X1", "0.256200", "0.910000", "58.5000", "-0.040000"],
+      ["Retention Intent", "Relationship Quality", "M1", "0.610000", "0.880000", "70.2500", "0.110000"],
     ]);
     expect(table("ipma_scope")?.title).toBe("Run details");
     expect(table("ipma_scope")?.rows).toEqual(expect.arrayContaining([

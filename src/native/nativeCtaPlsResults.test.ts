@@ -23,7 +23,7 @@ describe("native CTA-PLS result contract", () => {
       "cta_pls_scope",
     ]);
     expect(tables.find((table) => table.id === "cta_pls_summary")?.rows).toEqual([
-      ["Composite X", "x1, x2, x3, x4", "1", "3", "0.010000"],
+      ["Composite X", "X1, X2, X3, X4", "1", "3", "0.010000"],
     ]);
     expect(tables.find((table) => table.id === "cta_pls_tetrads")?.rows).toHaveLength(3);
     expect(tables.find((table) => table.id === "cta_pls_scope")).toMatchObject({

@@ -55,7 +55,7 @@ describe("NativeResultsSurface PROCESS v2 plots", () => {
     expect(markup).toContain("data-process-plot-id=\"plot:moderation:X-&gt;Y@W\"");
     expect(markup).toContain("Engine-persisted conditional outcome data");
     expect(markup).toContain("original-sample raw moderator probes");
-    expect(markup).toContain('aria-label="Series legend for moderation:X-&gt;Y@W"');
+    expect(markup).toContain('aria-label="Series legend for X × W → Y"');
     expect(markup).toContain("circle markers");
     expect(markup).toContain("square markers");
     expect(markup).toContain("triangle markers");

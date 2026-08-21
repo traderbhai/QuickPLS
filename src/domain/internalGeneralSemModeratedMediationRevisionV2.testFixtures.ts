@@ -86,8 +86,8 @@ export function selectionV1(): GeneralSemModeratedMediationSelectionReadyV1 {
 
 export function requestV2(): InternalGeneralSemModeratedMediationRevisionRequestV2 {
   return {
-    surface: "internal_labs",
-    experimentalLabsEnabled: true,
+    surface: "standard",
+    experimentalLabsEnabled: false,
     sourceArchivePath: "D:\\source.qpls",
     expectedSourceArchiveSha256: sha("a"),
     destinationArchivePath: "D:\\revision-v2.qpls",
@@ -116,7 +116,7 @@ export function requestV2(): InternalGeneralSemModeratedMediationRevisionRequest
         ordered_relation_ids: [...relationIds],
       },
       expectedCapabilityCell: { ...GENERAL_SEM_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_CELL_V1 },
-      recipeExecutionSurface: "native_general_sem_pls_labs_v1",
+      recipeExecutionSurface: "native_general_sem_pls_standard_v1",
     },
   };
 }

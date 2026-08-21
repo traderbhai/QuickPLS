@@ -130,7 +130,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     />);
 
     expect(html).toContain("PLS-SEM General v3: Supported");
-    expect(html).toContain("General recursive PLS percentile case-bootstrap inference passes the bounded exact-cell compiler preflight.");
+    expect(html).toContain("General multiple-mediation percentile case-bootstrap inference passes the bounded exact-cell compiler preflight.");
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");
     expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");

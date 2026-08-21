@@ -2148,7 +2148,7 @@ describe("native result navigation", () => {
       "4", "constant_indicator", "constant indicator: competence_1",
     ]]);
     expect(table("bootstrap_bca_unavailable")?.rows).toEqual([[
-      "Path: competence → satisfaction",
+      "Path: Competence → Satisfaction",
       "Unavailable",
       "incomplete_jackknife",
     ]]);
@@ -2276,12 +2276,12 @@ describe("native result navigation", () => {
 
     expect(table("direct_effects")?.title).toBe("Direct effects");
     expect(table("specific_indirect_effects")?.rows).toEqual([
-      ["competence → satisfaction → loyalty", "0.219232"],
-      ["likeability → satisfaction → loyalty", "0.177888"],
+      ["Competence → Satisfaction → Loyalty", "0.219232"],
+      ["Likeability → Satisfaction → Loyalty", "0.177888"],
     ]);
     expect(table("total_indirect_effects")?.rows).toEqual([
-      ["competence → loyalty", "0.219000"],
-      ["likeability → loyalty", "0.178000"],
+      ["Competence → Loyalty", "0.219000"],
+      ["Likeability → Loyalty", "0.178000"],
     ]);
     expect(table("total_effects")?.columns).toEqual(["Effect", "Total effect"]);
     expect(table("mediation_bootstrap")?.columns).toEqual([
@@ -2298,16 +2298,16 @@ describe("native result navigation", () => {
     expect(table("mediation_bootstrap")?.title).toBe("Aggregate mediation effects bootstrap inference");
     expect(nativeResultConfidenceLevel(run, "mediation_bootstrap")).toBe(0.95);
     expect(table("mediation_bootstrap")?.rows).toEqual([
-      ["Direct effect", "competence → loyalty", "0.116000", "0.120000", "0.030000", "3.867", "0.0020", "0.060000", "0.180000"],
-      ["Total indirect effect (aggregate)", "competence → loyalty", "0.219000", "0.218000", "0.057000", "3.842", "0.0040", "0.101000", "0.328000"],
-      ["Total effect", "competence → loyalty", "0.335000", "0.338000", "0.060000", "5.583", "0.0002", "0.210000", "0.440000"],
+      ["Direct effect", "Competence → Loyalty", "0.116000", "0.120000", "0.030000", "3.867", "0.0020", "0.060000", "0.180000"],
+      ["Total indirect effect (aggregate)", "Competence → Loyalty", "0.219000", "0.218000", "0.057000", "3.842", "0.0040", "0.101000", "0.328000"],
+      ["Total effect", "Competence → Loyalty", "0.335000", "0.338000", "0.060000", "5.583", "0.0002", "0.210000", "0.440000"],
     ]);
     expect(table("bootstrap_percentile")?.rows.map((row) => row[0])).toEqual([
-      "Path: competence → satisfaction",
-      "Path: satisfaction → loyalty",
+      "Path: Competence → Satisfaction",
+      "Path: Satisfaction → Loyalty",
     ]);
-    expect(table("bootstrap_bca")?.rows[0]?.[0]).toBe("Indirect effect: competence → loyalty");
-    expect(table("bootstrap_studentized")?.rows[0]?.[0]).toBe("Indirect effect: competence → loyalty");
+    expect(table("bootstrap_bca")?.rows[0]?.[0]).toBe("Indirect effect: Competence → Loyalty");
+    expect(table("bootstrap_studentized")?.rows[0]?.[0]).toBe("Indirect effect: Competence → Loyalty");
     expect(navigation.tables.some((candidate) => candidate.id === "path_coefficients")).toBe(false);
 
     expect(nativeResultRowOverlaySelectionV1(run, "specific_indirect_effects", 0)).toEqual({
@@ -2508,11 +2508,11 @@ describe("native result navigation", () => {
     };
 
     expect(nativeResultTables(run).find((table) => table.id === "specific_indirect_effects")?.rows).toEqual([
-      ["x → m1 → m2", "0.080000"],
-      ["x → m1 → m2 → y", "0.048000"],
-      ["x → m1 → y", "0.100000"],
-      ["x → m2 → y", "0.180000"],
-      ["m1 → m2 → y", "0.240000"],
+      ["X → M1 → M2", "0.080000"],
+      ["X → M1 → M2 → Y", "0.048000"],
+      ["X → M1 → Y", "0.100000"],
+      ["X → M2 → Y", "0.180000"],
+      ["M1 → M2 → Y", "0.240000"],
     ]);
   });
 
@@ -2577,13 +2577,13 @@ describe("native result navigation", () => {
     const table = (id: string) => tables.find((candidate) => candidate.id === id);
 
     expect(table("specific_indirect_effects")?.rows).toEqual([
-      ["x → m1 → y", "0.250000"],
-      ["x → m2 → y", "-0.250000"],
+      ["X → M1 → Y", "0.250000"],
+      ["X → M2 → Y", "-0.250000"],
     ]);
-    expect(table("total_indirect_effects")?.rows).toEqual([["x → y", "0.000000"]]);
+    expect(table("total_indirect_effects")?.rows).toEqual([["X → Y", "0.000000"]]);
     expect(table("mediation_bootstrap")?.rows).toEqual([[
       "Total indirect effect (aggregate)",
-      "x → y",
+      "X → Y",
       "0.000000",
       "0.010000",
       "0.040000",
@@ -2635,7 +2635,7 @@ describe("native result navigation", () => {
     expect(new Set(first?.rows.map(([path]) => path))).toHaveProperty("size", 5_000);
     expect(second?.rows).toEqual(first?.rows);
     expect(nativeResultTables(run).find((table) => table.id === "total_indirect_effects")?.rows).toEqual([
-      ["c0 → c13", "1.000000"],
+      ["C0 → C13", "1.000000"],
     ]);
   });
 
@@ -2828,13 +2828,13 @@ describe("native result navigation", () => {
     const navigation = buildNativeResultNavigation(run);
     const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
     expect(navigation.defaultItemId).toBe("model_estimates");
-    expect(table("outer_loadings")?.rows[0]).toEqual(["competence", "COMP1", "0.950000"]);
-    expect(table("outer_weights")?.rows[0]).toEqual(["competence", "COMP1", "0.450000"]);
-    expect(table("path_coefficients")?.rows).toEqual([["competence → satisfaction", "0.654321"]]);
-    expect(table("r_squared")?.rows).toEqual([["satisfaction", "0.765432"]]);
-    expect(table("total_effects")?.rows).toEqual([["competence → satisfaction", "0.654321", "0.000000", "0.654321"]]);
-    expect(table("plsc_reliability")?.rows).toEqual([["competence", "0.876543"]]);
-    expect(table("plsc_correlations")?.rows).toEqual([["competence", "satisfaction", "0.456789", "0.567891"]]);
+    expect(table("outer_loadings")?.rows[0]).toEqual(["Competence", "COMP1", "0.950000"]);
+    expect(table("outer_weights")?.rows[0]).toEqual(["Competence", "COMP1", "0.450000"]);
+    expect(table("path_coefficients")?.rows).toEqual([["Competence → Satisfaction", "0.654321"]]);
+    expect(table("r_squared")?.rows).toEqual([["Satisfaction", "0.765432"]]);
+    expect(table("total_effects")?.rows).toEqual([["Competence → Satisfaction", "0.654321", "0.000000", "0.654321"]]);
+    expect(table("plsc_reliability")?.rows).toEqual([["Competence", "0.876543"]]);
+    expect(table("plsc_correlations")?.rows).toEqual([["Competence", "Satisfaction", "0.456789", "0.567891"]]);
     expect(navigation.tables.some((candidate) => candidate.id === "plsc_paths")).toBe(false);
     expect(navigation.groups.find((group) => group.id === "quality_criteria")?.items.map((item) => item.id)).toEqual([
       "plsc_reliability",
@@ -2877,10 +2877,10 @@ describe("native result navigation", () => {
     const navigation = buildNativeResultNavigation(run);
     const table = (id: string) => navigation.tables.find((candidate) => candidate.id === id);
     expect(navigation.defaultItemId).toBe("model_estimates");
-    expect(table("outer_loadings")?.rows).toEqual([["competence", "COMP1", "0.812345"]]);
-    expect(table("outer_weights")?.rows).toEqual([["competence", "COMP1", "0.412345"]]);
-    expect(table("path_coefficients")?.rows).toEqual([["competence → satisfaction", "0.712345"]]);
-    expect(table("r_squared")?.rows).toEqual([["satisfaction", "0.612345"]]);
+    expect(table("outer_loadings")?.rows).toEqual([["Competence", "COMP1", "0.812345"]]);
+    expect(table("outer_weights")?.rows).toEqual([["Competence", "COMP1", "0.412345"]]);
+    expect(table("path_coefficients")?.rows).toEqual([["Competence → Satisfaction", "0.712345"]]);
+    expect(table("r_squared")?.rows).toEqual([["Satisfaction", "0.612345"]]);
     expect(table("wpls_weights")?.rows).toEqual([
       ["Case-weight column", "case_wt"],
       ["Weight sum", "211.550000"],
@@ -3365,9 +3365,8 @@ describe("native result navigation", () => {
     expect(navigation.groups.find((group) => group.id === "higher_order")?.items.map((item) => item.id)).toEqual([
       "hoc_component_relationships",
       "hoc_structural_paths",
+      "hoc_scope",
     ]);
-    expect(navigation.groups.find((group) => group.id === "run_details")?.items.map((item) => item.id))
-      .toContain("hoc_scope");
     expect(table("hoc_component_relationships")?.rows).toEqual([
       ["Organizational strength", "Capability", "Disjoint two-stage", "0.930000", "0.580000"],
       ["Organizational strength", "Resources", "Disjoint two-stage", "0.900000", "0.550000"],
@@ -3398,9 +3397,9 @@ describe("native result navigation", () => {
     expect(table("hoc_scope")?.rows.flat().join(" ")).not.toContain("HOC bootstrapping and permutation inference remain unavailable");
     expect(table("model_fit")).toBeUndefined();
     expect(table("outer_loadings")?.rows).toEqual([
-      ["Capability", "x1", "0.910000"],
-      ["Resources", "z1", "0.890000"],
-      ["Performance", "y1", "0.940000"],
+      ["Capability", "X1", "0.910000"],
+      ["Resources", "Z1", "0.890000"],
+      ["Performance", "Y1", "0.940000"],
     ]);
     expect(table("construct_reliability")?.rows.flat()).not.toContain("Organizational strength");
     const rendered = navigation.tables.flatMap((candidate) => [candidate.title, ...candidate.columns, ...candidate.rows.flat()]).join(" ");
@@ -3783,8 +3782,8 @@ describe("native result navigation", () => {
     expect(nativeCbsemResultProjection(run)).not.toBeNull();
     const table = nativeResultTables(run).find((candidate) => candidate.id === "modification_index_score_tests");
     expect(table?.rows).toEqual([
-      ["x1 ↔ x2", "Residual covariance fixed to zero", "Available", "0.000000", "0.000000", "1.000000", "1.000000", "0.000000", "0.000000", "1", "1.0000", ""],
-      ["y1 ↔ y2", "Residual covariance fixed to zero", "Unavailable", "", "", "", "", "", "", "", "", "Nuisance information unavailable"],
+      ["X1 ↔ X2", "Residual covariance fixed to zero", "Available", "0.000000", "0.000000", "1.000000", "1.000000", "0.000000", "0.000000", "1", "1.0000", ""],
+      ["Y1 ↔ Y2", "Residual covariance fixed to zero", "Unavailable", "", "", "", "", "", "", "", "", "Nuisance information unavailable"],
     ]);
     expect(nativeResultTables(run).find((candidate) => candidate.id === "cbsem_modification_diagnostics"))
       .toBeUndefined();
