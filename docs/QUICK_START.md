@@ -1,82 +1,57 @@
 # QuickPLS Quick Start
 
-This guide follows the main desktop workflow: `Home -> Data -> Model -> Setup -> Run -> Results -> Report`.
+This guide follows the Version 2.50 desktop workflow: `Launcher → Data → Model → Calculate → Results`.
 
-## 1. Start Or Open A Project
+## 1. Start or open a project
 
 Open QuickPLS and choose one:
 
-- `Open demo project` to try the bundled corporate reputation workflow.
-- `Import dataset` to start from your own CSV, TSV, XLSX, or SAV file.
+- `Open demo project` to try a bundled workflow.
+- `Import dataset` to start with CSV, TSV, XLSX, or SAV data.
 - `Open project` to load an existing `.qpls` project.
 
-Save the project early so autosave and recovery can track your work.
+Save early so autosave and recovery can preserve the project.
 
-## 2. Import And Inspect Data
+## 2. Import and inspect data
 
-Open `Data`.
+Open `Data`, import the dataset, and check row/variable counts, missing values, nonnumeric or constant columns, headers, and selected-variable metadata. Matrix input is available only for methods whose documented scope permits it.
 
-Use `Import Data` for your dataset. After import, check:
+## 3. Build the model
 
-- row and variable counts;
-- missing cells;
-- nonnumeric variables;
-- constant columns;
-- header issues;
-- selected-column metadata.
+Open `Model` and use Canvas to add constructs, assign indicators, draw structural paths or supported covariances, arrange the diagram, and validate it. For common-factor CB-SEM, set the applicable construct representation and review the Parameter Table.
 
-Use `Create Constructs From Prefixes` when variable names follow patterns like `COMP1`, `COMP2`, `COMP3`.
+Use the Higher-Order Construct or Moderating Effect commands only when the model meets their displayed requirements. QuickPLS uses **Save As Revision** for General SEM HOC and moderated-mediation authoring so the source project remains unchanged.
 
-## 3. Build The SEM Diagram
+## 4. Calculate
 
-Open `Model`.
+Choose `Calculate`. QuickPLS evaluates the resident model, data, settings, and exact Registry cells before showing an estimator as available.
 
-Use the canvas to:
+- Choose **PLS-SEM** for supported composite models, mediation/moderation, higher-order PLS, or bounded moderated mediation.
+- Choose **CB-SEM ML** for the bounded recursive common-factor scope.
+- Choose **CB-SEM recursive bootstrap** when the model and fixed bootstrap settings meet its exact predicate.
+- Use Data's `Analyze…` command for compatible model-free methods.
 
-- add constructs;
-- assign indicators;
-- draw structural paths;
-- create covariances where supported;
-- arrange the diagram;
-- validate the model.
+An unavailable action shows the corrective reason without modifying the diagram. Standard methods do not require the Experimental Labs preference.
 
-Estimates are hidden until a compatible completed run is selected.
+## 5. Monitor or cancel
 
-## 4. Choose A Method
+Start the calculation and follow native progress. Cancellation stops publication: no partial analytical result or partial archive attachment is created.
 
-Open `Setup`.
+## 6. Review results
 
-QuickPLS evaluates the current data and model and groups methods as:
+After completion, QuickPLS opens the verified canonical result in `Results`. Available groups depend on the method and may include measurement, structural, validity, inference, higher-order stages, conditional indirect effects, CB-SEM parameters, fit, identification, and bootstrap failures.
 
-- recommended;
-- available;
-- needs setup;
-- not applicable;
-- unsupported;
-- experimental.
+## 7. Export and reopen
 
-Select the method card and complete any required setup fields. Bootstrap, permutation, group analysis, NCA, regression, and prediction settings appear only where relevant.
+Use `Export` from Results. Canonical General SEM results support:
 
-## 5. Run
+- CSV;
+- XLSX;
+- self-contained HTML;
+- PDF;
+- SVG; and
+- PNG.
 
-Open `Run` and click `Run selected method`.
+Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-After completion, QuickPLS saves an immutable run with data fingerprint, recipe, seed, method version, warnings, estimates, and provenance.
-
-## 6. Review Results
-
-Open `Results`.
-
-Use tabs for overview, measurement, structural, validity, inference, prediction, groups, diagnostics, interpretation, and comparison. Interpretation panels use actual result values and remain conservative.
-
-## 7. Export
-
-Open `Report`.
-
-Choose a preset, verify the selected run, preview the diagram, and export:
-
-- SVG publication diagram;
-- CSV tables;
-- HTML report;
-- XLSX workbook;
-- browser print-to-PDF workflow where documented.
+For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and [Version 2.50 Release Notes](RELEASE_NOTES_V2_50_0.md).

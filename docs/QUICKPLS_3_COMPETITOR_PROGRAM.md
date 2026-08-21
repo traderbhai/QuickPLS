@@ -44,32 +44,23 @@ Final readiness also requires the evidence-derived external-beta gate in [`valid
 
 ## Gap inventory
 
-### Retained engine/archive foundations
+### Version 2.50 checkpoint
 
-- Moderation, mediation, and higher-order models have freshly rerun engine and archive evidence only. Native and release evidence is absent.
-- Nonlinear relationships derives engine-only evidence. Persistence, native authoring/results/export, and packaged evidence remain absent.
+Capability Registry V2 currently projects 38 scoped-Standard exact cells across
+27 catalogue rows, 16 Labs cells across 16 rows, and two Legacy cells/rows. The
+Rank 0–3 General SEM cells are Standard for their documented bounded predicates:
+mediation, simultaneous moderation, higher-order PLS, two-way moderated
+mediation, General SEM CB-SEM ML, and recursive-SEM case bootstrap.
 
-Each capability remains bounded by its own missing release evidence or failed release gate and cannot become `release-qualified` from another method's package evidence.
+This is not unrestricted catalogue parity. Sixteen Labs cells still represent
+separately governed incomplete areas such as broader assessment/inference,
+model comparison and selection, segmentation/heterogeneity, and advanced
+CB-SEM families. A Standard sibling never promotes another option on the same
+catalogue row.
 
-### Not yet factory-qualified
-
-- PLS-SEM sample-size and power analysis
-- Consistent bootstrapping for PLSc
-- Consistent permutation for PLSc
-- HTMT and HTMT+
-- Bounded model-fit metrics
-- PLS model comparison
-- Prediction-oriented model selection
-- Consistent MGA
-- PLS-POS
-- FIMIX-PLS
-- CB-SEM bootstrapping
-- CB-SEM multigroup analysis
-- CB-SEM measurement invariance
-- CB-SEM model comparison
-- CB-SEM moderator analysis
-
-All other active rows currently derive `absent`, including the PLS core and bootstrap families, PLSc/WPLS/PCA, prediction and assessment workflows, Gaussian-copula endogeneity, GSCA, regression/PROCESS, CB-SEM/CFA, and the advanced group/segmentation/model-comparison families. Some have bounded implementation or scaffolding in the repository, but that is not qualification evidence. A row can advance only after its exact current evidence is regenerated and the Registry V2 cross-check passes.
+The exact current inventory and evidence state come from Capability Registry V2
+and its live method manifests. Historical counts below or in milestone ledgers
+remain chronology only and must not override that authority.
 
 ### Intentionally deferred
 

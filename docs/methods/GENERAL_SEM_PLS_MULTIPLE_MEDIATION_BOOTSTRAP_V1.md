@@ -106,15 +106,16 @@ are unstandardized, whereas PLS path scores are standardized, and it does not
 test sample standard errors, plus-one probabilities, null calibration,
 interval-width efficiency, or latent-score recovery. With 96 trials, its
 truth-inclusion rates are a smoke screen rather than nominal-coverage
-qualification. It does not replace the pending independent full-PLS
-simulations, null-rejection calibration, or SmartPLS observable comparison.
+qualification. Additional full-PLS simulations, null-rejection calibration,
+and observable cross-product comparisons remain useful future strengthening,
+but are not admission requirements under the approved streamlined Plan 4B
+profile.
 
-QuickPLS now connects the same-app native Labs project-mode workflow from a
+QuickPLS connects the same-app Standard project-mode workflow from a
 newly created schema-6 `general_sem_v1` project through dataset/model
 activation, preflight, job execution, progress, cancellation, canonical result
-readback, persistence, close, and reopen. This implementation evidence does
-not supply independent native or packaged qualification, a cross-runtime
-golden, semantic export qualification, or release acceptance.
+readback, persistence, close, and reopen. Historical Labs-authored archives
+retain their stored identity and read compatibility.
 
 The release-qualified receipt uses the newer streamlined Plan 4B decision: it
 retains the independent scientific and current-engine comparisons, schema-6

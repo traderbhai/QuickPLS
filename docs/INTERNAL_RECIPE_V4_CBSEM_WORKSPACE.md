@@ -1,5 +1,10 @@
 # Internal CB-SEM Recipe-v4 workspace
 
+> Historical V2/matrix-input Labs workspace. The current bounded Rank 3
+> schema-6 General SEM ML and recursive-bootstrap workflow is scoped Standard
+> and is documented in [CB-SEM General SEM V3](methods/CBSEM_GENERAL_SEM_V3.md).
+> The matrix-input and broader Labs behavior below is not silently promoted.
+
 Status date: 15 August 2026
 
 QuickPLS exposes the cancellable Recipe-v4 CB-SEM job only in the model

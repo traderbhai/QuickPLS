@@ -13,6 +13,10 @@ accessibility barriers, and documentation defects. Method extensions, research
 consulting, statistical interpretation for a specific study, journal acceptance,
 and unsupported project formats are outside the support commitment.
 
+The public `v2.50.0` unsigned pre-release receives best-effort issue triage and
+security intake, not the response-time commitment of a future signed Stable
+channel. Public availability must not be interpreted as commercial support.
+
 ## Support Channels
 
 - Public product support and reproducible bug reports use the

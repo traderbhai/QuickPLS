@@ -32,8 +32,7 @@ They must never be relabeled, migrated, or cited as v2 evidence.
 
 ## Rank 3 General SEM Version 2.50 Standard path
 
-Two additive schema-6 identities now have a bounded product path registered in
-Experimental Labs:
+Two additive schema-6 identities now have bounded scoped-Standard product paths:
 
 - `qpls3.cbsem.general_sem_ml / cbsem_general_sem_ml_v1`
 - `qpls3.cbsem.bootstrap.recursive_sem / cbsem_exact_recursive_sem_case_bootstrap_v1`
@@ -49,14 +48,17 @@ append/readback, the General SEM estimator service and workspace, canonical
 tables, and the shared provenance-bound cross-format exporter are wired in
 source.
 
-This is not yet a Standard release claim. Both cells are present in the
-Capability Registry, and the five bounded CB-SEM job commands plus shared
-export handler are registered with exact-cell authorization. Independent
-the previously planned independent per-cell qualification matrix was replaced
-by the user-approved streamlined Version 2.50 integrated regression, production
-build, and short Standard-access smoke profile;
-no Standard promotion is authorized. Existing `qpls3.cbsem.ml` and
-`qpls3.cbsem.bootstrap` identities and results are unchanged.
+Both cells are present in the Capability Registry as scoped Standard. The five
+bounded CB-SEM job commands plus shared export handler use exact-cell
+authorization. The previously planned independent per-cell qualification matrix
+was replaced by the user-approved streamlined Version 2.50 integrated
+regression, production build, and short Standard-access smoke profile. Existing
+`qpls3.cbsem.ml` and `qpls3.cbsem.bootstrap` identities and results remain
+unchanged.
+
+This promotion applies only to the two exact predicates above. It does not
+promote the wider Phase 5 tracks listed below or turn the full CB-SEM catalogue
+into a Standard claim.
 
 ## Fail-closed dependency plan
 

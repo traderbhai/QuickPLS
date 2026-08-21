@@ -81,7 +81,8 @@ contract or work artifact is not qualification evidence.
 The raw-data CB-SEM ML option and the duplicate CFA catalogue row are scoped
 Standard under their exact point-estimator identity. The parent CB-SEM row stays
 conservatively in Labs because its separately registered covariance/scaled-
-correlation option and General SEM V3 option have different maturity. Exact CFA
+correlation matrix-input option remains absent; General SEM V3 is independently
+Standard. Exact CFA
 case bootstrap remains a scoped Standard cell under
 `cbsem_exact_case_bootstrap_v1`; its mixed parent row now projects to Standard
 because the separately governed recursive-SEM bootstrap cell is also Standard
@@ -103,8 +104,9 @@ These labels are governance data, not customer copy.
 The authoritative inventory contains 56 option cells: 54 active and two
 legacy. Their baseline coverage counts are 0 full, 43 partial, 11 absent, and
 2 intentionally excluded. The different cell count is expected because the
-sample-size/power, moderation, mediation, and permutation catalogue rows contain
-separately governed option cells. The frozen 45-row counts above remain the conservative
+sample-size/power, permutation, moderation, mediation, higher-order-model,
+CB-SEM, and CB-SEM-bootstrap catalogue rows contain separately governed option
+cells. The frozen 45-row counts above remain the conservative
 compatibility projection used by historical reports.
 
 Option-cell evidence is 16 absent, one engine-only, one archive-qualified,
@@ -190,6 +192,9 @@ bootstrapping, graph-defined PROCESS v2, and its dedicated PROCESS bootstrap
 plus the coupled exactly-two-group MICOM/permutation-MGA v4 workflow, the
 single-model fixed-score Structural Path Randomization v1 workflow, the
 historical one-HOC reflective-reflective disjoint two-stage point-estimate workflow, and
+the General SEM Rank 0–3 mediation, simultaneous moderation, higher-order PLS,
+two-way moderated-mediation, CB-SEM ML, and recursive-SEM bootstrap workflows,
+plus
 the inference-aware post-hoc technical minimum sample-size v2 cell and the
 independently qualified bounded prospective sample-size/power v2 workflow to Standard
 through release-qualified scoped option cells. Other active rows
@@ -197,7 +202,7 @@ stay in Labs and the two exclusions remain Legacy. GSCA Standard status does
 not claim bootstrapping or inference; bounded PLS Standard status does not
 claim cyclic or covariance-only models, prediction,
 group comparison, PLSc, WPLS, CB-SEM inference outside the separately registered
-exact-CFA case-bootstrap family, or SmartPLS numerical identity;
+exact-CFA and General SEM V3 families, or SmartPLS numerical identity;
 PLS Bootstrap Standard status is restricted to the registered indexed-resampling
 v4 PLS-PM scope; regression bootstrap, PLSc bootstrap, broader null-distribution
 permutation designs, and unsupported PLS shapes remain separate or excluded;
@@ -234,9 +239,11 @@ alpha, or unrestricted catalogue breadth.
 Exact-CFA case-bootstrap Standard status is restricted to raw continuous,
 single-group reflective CFA with listwise deletion and the documented indexed
 no-retry percentile Type-7, analytic-studentized Type-7, or complete-delete-one
-BCa Type-7 contracts. Recursive structural SEM, multigroup, ordinal/WLSMV,
-robust/FIML, weighted, clustered, multilevel, parametric, and Bollen-Stine
-bootstrap remain excluded.
+BCa Type-7 contracts. Recursive structural SEM is excluded from that exact CFA
+identity but is available through the separate bounded Rank 3 General SEM
+percentile case-bootstrap cell. Multigroup, ordinal/WLSMV, robust/FIML,
+weighted, clustered, multilevel, parametric, and Bollen-Stine bootstrap remain
+excluded from the Rank 3 cell.
 
 ## Qualification-link contract
 

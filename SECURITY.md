@@ -4,14 +4,14 @@
 
 | Version | Supported |
 | --- | --- |
-| 2.50.x | Yes |
-| 2.46.x | Transition support while 2.50.x is the current stable line |
-| Earlier releases and preview builds | No public security support |
+| 2.50.x | Public unsigned preview; security reports accepted and fixes are best effort |
+| 2.46.x | Historical transition support only |
+| Earlier releases | No public security support |
 
 The lifecycle and transition rules are defined in
-[`docs/VERSION_SUPPORT_POLICY.md`](docs/VERSION_SUPPORT_POLICY.md). A QuickPLS 3
-preview does not become a supported stable release until its signed commercial
-gate passes.
+[`docs/VERSION_SUPPORT_POLICY.md`](docs/VERSION_SUPPORT_POLICY.md). Public
+availability of an unsigned preview does not make it a supported stable release;
+that requires the signed commercial gate.
 
 ## Reporting A Vulnerability
 
@@ -35,8 +35,8 @@ QuickPLS is designed as an offline Windows desktop application:
 
 - No account.
 - No activation server.
-- No telemetry.
+- No QuickPLS product telemetry.
 - No cloud sync.
 - No remote computation.
 
-The 2.50.0 installer is currently unsigned. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as the competitor-grade stable release.
+The 2.50.0 installer is currently unsigned and is published only as a GitHub pre-release. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as Beta, Stable, or the competitor-grade release.

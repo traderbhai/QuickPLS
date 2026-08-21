@@ -81,10 +81,10 @@ authorize a commercial claim.
 
 ## Protected Signed-Candidate Workflow
 
-The manual `release.yml` workflow is intentionally unavailable until repository
-maintainers configure a protected `quickpls-signing` environment and update the
-signing identity record after purchasing and independently approving the exact
-leaf certificate.
+The manual `.github/workflows/release.yml` workflow is installed but must remain
+operationally blocked until repository maintainers configure a protected
+`quickpls-signing` environment and update the signing identity record after
+purchasing and independently approving the exact leaf certificate.
 
 Before enabling it:
 

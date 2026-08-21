@@ -10,6 +10,7 @@ export type NativePrototypeDialog =
   | "settings"
   | "close_project"
   | "documentation"
+  | "about"
   | "data_transform"
   | "data_add_column"
   | "data_recode"

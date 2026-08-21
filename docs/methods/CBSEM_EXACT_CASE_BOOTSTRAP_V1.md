@@ -1,9 +1,8 @@
 # Exact CFA case bootstrap v1
 
-Status: current bounded product contract staged for Standard qualification.
-Final release receipts are minted only from the rebuilt desktop/CLI binaries;
-the source bridge and compact scientific gates do not substitute for that
-packaged refresh.
+Status: release-qualified scoped Standard for the exact CFA identity below.
+The separate Version 2.50 recursive structural bootstrap belongs to its own
+General SEM Rank 3 cell and does not reinterpret this contract.
 
 ## Identity and supported scope
 
@@ -94,7 +93,9 @@ selected document identity.
 
 ## Exclusions
 
-Recursive structural SEM bootstrap, multigroup bootstrap, ordinal/WLSMV,
+Recursive structural SEM bootstrap is outside this exact CFA identity and is
+available only through the separately registered bounded Rank 3 General SEM
+cell. Multigroup bootstrap, ordinal/WLSMV,
 robust or FIML estimation, weights, clustered/multilevel sampling, parametric
 and Bollen-Stine bootstrap, custom confidence levels, arbitrary one-sided
 studentized/BCa tests, automatic model modification, and cryptographic
@@ -108,9 +109,9 @@ coverage simulation or a substitute for ML-reference validation. Existing
 exact-ML reference reports and exact-bootstrap engine tests cover the estimator,
 indexed no-retry execution, typed failures, cancellation, and sidecar payloads.
 `validation/cbsem_exact_case_bootstrap_v1_source_gate.py` binds those current
-source paths to the capability, desktop, and archive bridge. Final native,
-export, packaged, and audit identities must be regenerated from the shared
-release build after source staging settles.
+source paths to the capability, desktop, and archive bridge. The existing
+release-qualified identity remains frozen independently of the additive Rank 3
+cell.
 
 The packaged offline gate is functional and method-scoped: the exact-CFA
 workflow must complete, export, save, and reopen without an internet-dependent

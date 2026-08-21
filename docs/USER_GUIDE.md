@@ -1,75 +1,77 @@
 # QuickPLS User Guide
 
-## Project Model
+This guide describes the Version 2.50 Windows workflow. QuickPLS runs analyses locally without an account, cloud service, R, or Python at runtime.
 
-A QuickPLS project stores datasets, SEM diagrams, method setup, saved runs, report settings, layout metadata, and provenance. Analysis runs are immutable so results can be traced back to the dataset fingerprint, model, settings, random seed, engine version, and warnings.
+## Projects and scientific authority
 
-## Home
+A `.qpls` project stores immutable dataset versions, SEM models, recipes, completed results, report settings, layout metadata, and provenance. A completed result remains bound to its dataset, model, settings, seed, method version, capability cell, and engine identity.
 
-Use Home to start new work, open a project, import a dataset, open the demo project, or continue from recovery/recent state when available.
+General SEM projects use `SemModelV4` as the model authority, `AnalysisRecipeV4` as the requested analysis, compiled plans as execution authority, `CanonicalResultDocumentV2` as result authority, and schema-6 as persistence authority. Canvas layout cannot override scientific content.
 
-## Data
+## Launcher and Data
 
-The Data workspace is for import, inspection, and metadata.
+Use Launcher to create or open a project, open a sample, or continue from recovery. Use Data to import and inspect raw or supported matrix data, review missing values and quality, search variables, edit metadata, and create immutable derived dataset versions.
 
-Supported documented import paths include raw data and matrix inputs where method scope permits. Use the quality cards and selected-column metadata panel before modeling.
+## Model and Parameter Table
 
-The `What can I do with this data?` guidance and prefix detection help decide the next step without showing every possible method at once.
+Use Model to create constructs, assign indicators, draw paths and supported covariances, arrange the diagram, and validate the model. Layout changes do not alter analytical fingerprints.
 
-## Model
+For CB-SEM General, construct representation and the active Parameter Table define the model sent to native preflight and estimation. Supported fixed/free rows, equality labels, and row bounds are preserved; unsupported constraint objects remain visible and block calculation instead of being discarded.
 
-The Model workspace is the SEM designer.
+## General SEM authoring
 
-Use it to create constructs, assign indicators, draw paths, arrange the layout, validate the diagram, and select compatible result overlays. Layout metadata is UI-only and does not change numerical fingerprints.
+Version 2.50 adds bounded authoring to the same Canvas:
 
-## Setup
+- **Mediation and simultaneous moderation:** select compatible General SEM PLS calculations from the normal estimator cards.
+- **Higher-order constructs:** author one non-nested second-order HOC using an eligible repeated, extended-repeated, embedded two-stage, or disjoint two-stage combination.
+- **Moderated mediation:** choose one eligible two-relation path and one first- or second-stage interaction. Probes are fixed at standardized `−1`, `0`, and `+1`.
+- **CB-SEM:** use common-factor constructs and the resident Parameter Table for bounded recursive ML or recursive case bootstrap.
 
-Setup is where method applicability is evaluated.
+Higher-order and moderated-mediation changes use **Save As Revision**. The source file is never silently replaced.
 
-Each method is shown with status, reasons, expected outputs, and next actions. Methods are grouped by research workflow rather than shown as one flat catalog.
+## Calculate and preflight
 
-Common statuses:
+Use the generic `Calculate` command. Preflight evaluates the exact model, dataset, recipe, and Registry cell and displays applicable PLS-SEM and CB-SEM estimator cards. A card can be:
 
-- `Recommended`: ready and sensible for the current project.
-- `Available`: runnable but not the primary recommendation.
-- `Needs setup`: possible after required fields or settings are completed.
-- `Not applicable`: incompatible with the current data/model.
-- `Unsupported`: outside documented QuickPLS scope.
-- `Experimental`: available only with explicit warning or watermark.
+- `Supported` — a matching scoped-Standard cell can run;
+- `Experimental` — a matching Labs cell can run only after Labs opt-in; or
+- `Blocked` — the setup is incompatible, with a corrective explanation.
 
-## Run
-
-Run executes the selected method through the offline desktop engine. If the run is disabled, QuickPLS shows the exact blocker near the action.
+Starting a run opens native progress. Cancellation publishes no partial analytical result.
 
 ## Results
 
-Results are organized around researcher tasks:
+Verified results open in the normal Results workspace and remain available after strict save/close/reopen. Depending on the selected estimator, result groups can include:
 
-- overview;
-- measurement;
-- structural;
-- validity;
-- inference;
-- prediction;
-- groups;
-- diagnostics;
-- interpretation;
-- comparison.
+- measurement loadings, weights, and collinearity;
+- structural paths and effects;
+- mediation and moderation output;
+- higher-order stages and generated-variable mappings;
+- conditional indirect effects and moderated-mediation indices;
+- CB-SEM parameters, standardized estimates, fit, and identification; and
+- bootstrap inference and ordered failure accounting.
 
-Tables stay numerically clean. Interpretation findings are value-specific, expandable, and tied to the selected run.
+Researcher-authored paths remain distinguishable from generated technical paths. Reflective HOC relationships report loadings; formative relationships report weights.
 
-## Report
+## Export
 
-Report prepares publication and review outputs. SVG is the audited figure export. CSV, HTML, and XLSX table exports are available where a completed compatible run exists.
+Canonical General SEM exports are generated from the same result document shown in Results:
 
-Reviewer/reproducibility reports include scope, warnings, method version, fingerprints, and provenance.
+- CSV for a selected table;
+- XLSX with multiple sheets;
+- self-contained HTML;
+- PDF;
+- SVG; and
+- PNG.
 
-## Method Scope
+Stable result IDs and provenance accompany the publication contract. Other method families expose their compatible table, report, or diagram formats.
 
-Always check method scope before reporting results:
+## Scope and interpretation
 
+Always review Method Details and the exact supported predicate before reporting results. Scoped Standard does not mean unrestricted SmartPLS parity, identical undocumented behavior, or a causal claim.
+
+- [Quick Start](QUICK_START.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
-- [Known Differences](V1_KNOWN_DIFFERENCES.md)
-- [Validation Artifact Index](VALIDATION_ARTIFACT_INDEX_V1_0.md)
-
-QuickPLS does not claim SmartPLS equivalence and does not import SmartPLS project files.
+- [Known Differences](KNOWN_DIFFERENCES.md)
+- [Version 2.50 Release Notes](RELEASE_NOTES_V2_50_0.md)
+- [FAQ](FAQ.md)

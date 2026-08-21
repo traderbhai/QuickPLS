@@ -1,6 +1,11 @@
 # General SEM upgrade execution
 
-This document tracks the work that began on `codx/sem-platform-upgrade`, the
+> Historical checkpoint record. It describes the early Checkpoint A–E branches
+> and their then-current Labs blockers. The current integrated product state is
+> documented in [Rank 0–3 SEM Upgrade Status](SEM_UPGRADE_RANKS_0_3_STATUS.md)
+> and the [Version 2.50 release notes](RELEASE_NOTES_V2_50_0.md).
+
+This document historically tracked the work that began on `codx/sem-platform-upgrade`, the
 stable `codx/sem-native-mediation-workflow-v1` integration branch, and the
 current `codx/sem-native-moderation-workflow-v1` child checkpoint. It is a
 checkpoint record, not a claim that the General SEM roadmap or a Standard-tier

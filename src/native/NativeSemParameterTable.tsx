@@ -279,8 +279,8 @@ export function NativeSemParameterTable({ modelName, onShowCanvas }: NativeSemPa
   >
     <header className="nd-sem-parameter-header">
       <div>
-        <h3>Parameter Table <span className="nd-experimental-chip">Experimental</span></h3>
-        <p>Review and edit the variables, relationships, parameters, and visual-only objects in the experimental SEM model. These edits are not sent to the current calculation engine.</p>
+        <h3>Parameter Table</h3>
+        <p>Review and edit the variables, relationships, parameters, and visual-only objects in the active SEM model. After Save and activation, this table is part of the resident SemModelV4 authority used by native preflight and compatible estimators.</p>
       </div>
       <dl aria-label="Parameter table summary">
         <div><dt>Scientific</dt><dd>{projection.counts.scientific}</dd></div>

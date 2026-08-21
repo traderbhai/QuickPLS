@@ -111,7 +111,7 @@ const base: NativeProjectSignatureInput = {
 describe("native project lifecycle", () => {
   it("blocks even clean workspace replacement while a schema-6 Standard source remains bound", () => {
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(false, false)).toBeNull();
-    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close Standard project");
+    expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close General SEM project");
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, true)).toContain("Save a validated new copy");
   });
 

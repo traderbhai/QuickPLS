@@ -40,10 +40,10 @@ EXPECTED_CHANNEL_POLICY: dict[str, dict[str, object]] = {
         "artifact_factory": "unsigned_preview",
     },
     "unsigned-preview": {
-        "audience": "named_technical_preview_testers",
+        "audience": "public_technical_preview_users",
         "artifact_token": "unsigned-preview",
         "authenticode_required": False,
-        "distribution": "private_named_testers_only",
+        "distribution": "public_github_prerelease",
         "commercial_channel": None,
         "competitor_claims_policy": "prohibited",
         "artifact_factory": "unsigned_preview",

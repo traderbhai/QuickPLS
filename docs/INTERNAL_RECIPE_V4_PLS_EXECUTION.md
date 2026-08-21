@@ -1,5 +1,11 @@
 # Internal Recipe-v4 PLS execution boundary
 
+> Historical generic-command boundary. Version 2.50 General SEM Standard uses
+> the newer exact-cell native job route documented in
+> [Rank 0–3 SEM Upgrade Status](SEM_UPGRADE_RANKS_0_3_STATUS.md). The internal
+> command names and restrictions below remain relevant only to their preserved
+> compatibility surface.
+
 QuickPLS now has an internal typed Tauri command for the first Recipe-v4 PLS
 point-estimation slice:
 

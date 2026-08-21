@@ -78,5 +78,5 @@ separate and mandatory.
 - `python validation/quickpls_signed_candidate.py ...` is the protected beta/stable
   path. It produces an actual CycloneDX 1.6 SBOM with package URLs and a complete
   dependency graph, an in-toto/SLSA provenance statement, a signed protected-build
-  attestation, and a signed channel manifest. It fails while the approved signer or
-  protected workflow is absent.
+  attestation, and a signed channel manifest. It fails while the approved signer,
+  protected environment, or exact evidence artifact is unavailable.

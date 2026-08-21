@@ -1,14 +1,16 @@
 # QuickPLS Installation
 
-Current development release: `v2.50.0`.
+Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).
 
 ## Choose An Install Type
 
-Use one of the release assets from the latest GitHub Release, or use the versioned local artifacts from `target/release/artifacts/` after a production build:
+Use one of the assets from the [QuickPLS 2.50.0 GitHub Release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0), or use the versioned local artifacts from `target/release/artifacts/` after a production build:
 
-- `QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe` for a normal Windows installation.
-- `QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe` for a portable launch without installing.
-- `QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe` for offline command-line and batch recipe execution.
+- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` for a normal Windows installation.
+- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` for a portable launch without installing.
+- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe` for offline command-line and batch recipe execution.
+
+For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The public `v2.50.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
 
 The desktop, CLI, and analytical workflows require no internet connection,
 account, or cloud service after download. The QuickPLS application and page make
@@ -23,26 +25,28 @@ network boundary is applied. See `docs/WEBVIEW2_OFFLINE_BOUNDARY.md`.
 From PowerShell:
 
 ```powershell
-Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe -Algorithm SHA256
-Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe -Algorithm SHA256
-Get-FileHash .\QuickPLS_<version>_<milestone>_<timestamp>_x64_cli.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe -Algorithm SHA256
 ```
 
-Compare the hashes with the matching `QuickPLS_<version>_<milestone>_<timestamp>_x64_checksums.txt` file.
+Compare the hashes with the matching `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_checksums.txt` file. Checksums detect changed or corrupted bytes; they do not establish publisher identity.
 
 ## Windows SmartScreen
 
-The installer is unsigned. Windows may warn that the app is from an unknown publisher. That warning is expected until a signing certificate is added and audited.
+The installer is unsigned. Windows may warn that the app is from an unknown publisher or show Microsoft SmartScreen. Confirm that the filename came from the official GitHub Release and that its SHA-256 value matches the attached checksum file before running it. A future signed build will replace this preview distribution path.
 
 ## First Launch
 
 1. Open QuickPLS.
-2. Choose `Open demo project` to inspect the full workflow, or choose `Data` to import your own dataset.
-3. Save your project as a `.qpls` file to enable autosave and recovery.
+2. Choose `Open demo project`, create a project, or import your own dataset.
+3. Save the project as a `.qpls` file to enable autosave and recovery.
+4. Use `Model` to draw the diagram, then use `Calculate` to review compatible Standard PLS-SEM and CB-SEM estimators.
+5. After completion, use `Results` to inspect, export, save, close, and strictly reopen the verified result.
 
 ## Runtime Dependencies
 
-QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activation at runtime. QuickPLS product telemetry is disabled and its application/page makes no external requests. The separate Microsoft-managed WebView2 process boundary described above still applies. R and Python are used only by development validation scripts.
+QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activation at runtime. QuickPLS product telemetry is disabled and its application/page makes no external requests. The installer embeds the WebView2 offline installer; portable execution requires a compatible WebView2 runtime already installed. The separate Microsoft-managed WebView2 process boundary described above still applies. R and Python are used only by development validation scripts.
 
 ## Uninstall
 

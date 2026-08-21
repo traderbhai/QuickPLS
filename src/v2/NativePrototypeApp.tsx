@@ -393,7 +393,7 @@ function DesktopMenu({
     Help: [
       { label: "Shortcuts", action: () => openDialog("help_shortcuts") },
       { label: "Documentation", dialog: "documentation" },
-      { label: "About QuickPLS", action: () => openDialog("method_scope") },
+      { label: "About QuickPLS", action: () => openDialog("about") },
     ],
   };
   return <nav className="np-menu" aria-label="Application menu">
@@ -1826,10 +1826,9 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
       <section className="np-trust-detail-section">
         <h3><X size={15} />Unsupported Setups</h3>
         <ul>
-          <li>Two-stage approach</li>
-          <li>Higher-order constructs (component-based)</li>
-          <li>Categorical indicators (experimental)</li>
-          <li>Non-metric data</li>
+          <li>Any model or data shape rejected by the selected exact capability cell</li>
+          <li>Unresolved scientific or Parameter Table decisions</li>
+          <li>Method combinations outside the documented bounded scope</li>
         </ul>
       </section>
       <section className="np-trust-detail-section">
@@ -1838,18 +1837,20 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
         <ul>
           <li>Scaling (standardization vs. original metric)</li>
           <li>Convergence tolerance settings</li>
-          <li>Handling of missing data (pairwise deletion)</li>
+          <li>The method-specific missing-data policy</li>
         </ul>
       </section>
       <section className="np-trust-detail-section">
         <h3><MonitorCog size={15} />Runtime Dependencies</h3>
-        <p>.NET Runtime: 8.0.5 or higher</p>
-        <p>BLAS/LAPACK: OpenBLAS 0.3.24</p>
-        <p>CPU Features: SSE2 or higher</p>
+        <p>Windows x64 and a compatible Microsoft WebView2 runtime</p>
+        <p>No R, Python, .NET, or cloud service is required for calculation</p>
+        <p>All analytical execution remains local to the QuickPLS application</p>
       </section>
       <section className="np-trust-detail-section">
         <h3><FileText size={15} />Technical References</h3>
-        {["alg_plssem_v2.0.pdf", "alg_plssem_tests_v2.0.zip", "alg_plssem_replication.xlsx"].map((artifact, index) => <p key={artifact}><a>{artifact}</a><span>(SHA-256)</span><code>{["3F2A...9C71", "C6D1...7B2E", "7A91...1E8F"][index]}</code><CheckCircle2 size={13} /></p>)}
+        <p>Use Method Details for the exact capability reference and supported predicate.</p>
+        <p>Use Release Integrity for the current artifact checksum and version.</p>
+        <p>Version 2.50 release notes are bundled with the repository documentation.</p>
       </section>
       <section className="np-trust-detail-section references">
         <h3><BookOpen size={15} />References</h3>
@@ -2311,6 +2312,7 @@ function Dialog({
     settings: "Preferences",
     close_project: "Close Project",
     documentation: "QuickPLS Documentation",
+    about: "About QuickPLS",
     data_transform: "Transform Column",
     data_add_column: "Add Column",
     data_recode: "Recode Values",
@@ -2325,22 +2327,24 @@ function Dialog({
     import_data: <ImportDataWizard data={data} />,
     calculation_setup: <CalculationSetupDialog />,
     method_scope: <><p>This method is available for the listed model and data requirements. Unsupported setups remain unavailable or are marked Experimental.</p><DataTable headers={["Detail", "Value"]} rows={[["Method reference", "Available"], ["Comparison tolerance", "1e-6 where conventions match"], ["Runtime dependency", "Offline, no R required at runtime"]]} /></>,
-    export_options: <><PropertyRow label="Preset" value="Reviewer Pack" /><PropertyRow label="Tables" value="CSV, HTML, XLSX" /><PropertyRow label="Figure" value="SVG" /><PropertyRow label="Include interpretation notes" value="Yes" /></>,
-    help_shortcuts: <DataTable headers={["Shortcut", "Action"]} rows={[["Ctrl+N", "New project"], ["Ctrl+O", "Open project"], ["Ctrl+S", "Save project"], ["F5", "Run calculation"], ["Delete", "Delete selected object"]]} />,
+    export_options: <><PropertyRow label="Preset" value="Reviewer Pack" /><PropertyRow label="Canonical General SEM" value="CSV, XLSX, HTML, PDF, SVG, PNG" /><PropertyRow label="Other results" value="Only compatible table, report, or diagram formats" /><PropertyRow label="Include interpretation notes" value="Yes" /></>,
+    help_shortcuts: <DataTable headers={["Shortcut", "Action"]} rows={[["Ctrl+N", "New project"], ["Ctrl+O", "Open project"], ["Ctrl+S", "Save project"], ["Ctrl+R", "Calculate"], ["Delete", "Delete selected object"]]} />,
     settings: <SettingsScreen />,
     close_project: <p>Close the current project and clear project data, model selections, saved-run selection, report state, and transient warnings from the active workspace.</p>,
     documentation: <div className="np-doc-browser">
       {[
-        ["Quick Start", "Open or import a dataset, create constructs in Model, choose a method in Setup, run the calculation, then review Results and Report."],
+        ["Quick Start", "Open or import a dataset, build the model, choose Calculate, review an applicable estimator card, then inspect and export the verified Results."],
         ["Data Import", "Use raw CSV/XLSX/SAV files where available. Matrix imports require sample size and a compatible analysis setup."],
         ["SEM Designer", "Create constructs, assign indicators, draw paths/covariances, arrange the diagram, and check publication layout before export."],
-        ["Method Setup", "QuickPLS recommends only methods that match the current dataset, model shape, and stated requirements."],
+        ["General SEM 2.50", "Use one Canvas and Parameter Table for Registry-authorized PLS-SEM or CB-SEM preflight. HOCs and moderated mediation use Save As Revision."],
+        ["Method Setup", "QuickPLS offers only exact Standard or enabled Labs cells that match the current dataset, model shape, and stated requirements."],
         ["Running Analyses", "Runs record the data fingerprint, recipe fingerprint, seed, worker count, warnings, and requirements status."],
         ["Results Interpretation", "Use result-specific findings as guidance. Thresholds are aids, not universal pass/fail rules."],
-        ["Report Export", "SVG is the audited diagram export. CSV, HTML, and XLSX table exports use existing report pipelines."],
+        ["Result Export", "Canonical General SEM supports CSV, XLSX, HTML, PDF, SVG, and PNG. Other results show only compatible formats."],
         ["Trust Center", "Review method references, known limitations, release integrity, and requirements before reporting."],
       ].map(([title, text]) => <section key={title}><h3>{title}</h3><p>{text}</p></section>)}
     </div>,
+    about: <div className="np-doc-browser"><section><h3>QuickPLS 2.50.0</h3><p>Independent offline structural equation modeling for Windows.</p></section><section><h3>Release channel</h3><p>Public unsigned GitHub pre-release. Verify the attached SHA-256 checksums before running downloaded artifacts.</p></section><section><h3>General SEM</h3><p>Scoped-Standard mediation, moderation, higher-order PLS, moderated mediation, and bounded CB-SEM workflows share one Canvas, Calculate, Results, export, and reopen experience.</p></section></div>,
     data_transform: <DataTransformDialog close={close} />,
     data_add_column: <DataAddColumnDialog close={close} />,
     data_recode: <DataRecodeDialog close={close} />,

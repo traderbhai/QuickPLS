@@ -14,10 +14,10 @@
       "artifact_factory": "unsigned_preview"
     },
     "unsigned-preview": {
-      "audience": "named_technical_preview_testers",
+      "audience": "public_technical_preview_users",
       "artifact_token": "unsigned-preview",
       "authenticode_required": false,
-      "distribution": "private_named_testers_only",
+      "distribution": "public_github_prerelease",
       "commercial_channel": null,
       "competitor_claims_policy": "prohibited",
       "artifact_factory": "unsigned_preview"

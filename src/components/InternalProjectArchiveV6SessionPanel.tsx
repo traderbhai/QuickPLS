@@ -268,7 +268,7 @@ export function InternalProjectArchiveV6SessionView({
                 : "Close Standard and release its schema-6 source binding."}
             onClick={onCloseStandardProject}
           >
-            <LogOut size={15} aria-hidden="true" /> Close Standard project
+            <LogOut size={15} aria-hidden="true" /> Close General SEM project
           </ToolbarButton>
           <span>Closes the strict Standard workspace and its source session together. Reopen the saved copy to continue.</span>
         </div> : null}

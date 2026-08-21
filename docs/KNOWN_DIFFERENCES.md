@@ -1,6 +1,6 @@
 # QuickPLS Known Differences Register
 
-Status: initial publication-audit register.
+Status: current bounded-method register for Version 2.50.
 
 This file records documented convention differences between QuickPLS and reference engines. A difference listed here is not automatically acceptable for publication-ready output; each method promotion audit must decide whether the difference is justified, blocked, or unsupported.
 
@@ -20,4 +20,7 @@ This file records documented convention differences between QuickPLS and referen
 
 ## CB-SEM And Extended Methods
 
-- v0.7 and v0.8 outputs remain experimental until their later publication promotion audits close.
+- General SEM CB-SEM V3 is limited to raw continuous, listwise, single-group recursive common-factor models with ordinary ML, no mean structure, and the exact supported parameter-row semantics. Recursive bootstrap is percentile Type-7 with the documented fixed settings and does not infer derived indirect effects.
+- General SEM higher-order PLS accepts one non-nested HOC through its documented approach/HCM matrix. Hybrid, multiple/nested HOCs, HOC interactions, groups, weights, feedback, PLSc, and matrix input remain outside that cell.
+- General SEM moderated mediation accepts one selected two-relation path and one first- or second-stage interaction with fixed standardized probes at `−1/0/+1`. It does not implement the unrestricted PROCESS catalogue or make causal claims.
+- Historical experimental payloads retain their stored identities and are not silently relabeled as Version 2.50 Standard results.

@@ -15,6 +15,15 @@ PLS Algorithm, Consistent PLS, Weighted PLS, bounded GSCA ALS, CCA composite res
 
 The HTML shell does not draw a title bar. Tauri supplies the single Windows title bar, starts maximized with a DPI-safe 1280 x 720 restored size, and enforces a 1024 x 700 minimum window.
 
+## Version 2.50 General SEM lane
+
+The same production shell now routes bounded Rank 0–3 General SEM workflows
+through one familiar graphical journey: Canvas and Parameter Table, `Calculate`,
+PLS-SEM/CB-SEM estimator preflight, native progress or cancellation, structured
+Results, shared export, and strict schema-6 reopen. Higher-order constructs and
+moderated mediation use Save As Revision. This lane adds no second application
+or permanent Setup/Run/Report workspace.
+
 ## Primary Workflow
 
 1. Start at the quiet Launcher and create a project, open a saved project, reopen a recent project, or load the sample project. Once a project is open, use the Workspace Explorer to open Data, create, rename, switch, or delete named editable models, and open saved report aliases. Model switching restores that model's own positions and routing without treating navigation alone as a scientific edit.
@@ -149,7 +158,7 @@ The current packaged evidence additionally requires a visibly authored 240-case 
 
 The redesigned primary path currently exposes sixteen calculation-catalog workflows: PLS Algorithm, Consistent PLS, Weighted PLS, bounded GSCA ALS, CCA composite residual diagnostics, Confirmatory Tetrad Analysis, Importance-Performance Map Analysis, bounded CB-SEM / CFA, Bootstrapping, Structural Path Randomization, prospective PLS-SEM Sample Size and Power, MICOM and Two-Group Permutation MGA, bounded PLSpredict / CVPAT, bounded Necessary Condition Analysis, bounded Principal Component Analysis, and Regression. The Regression workflow has separately versioned OLS, Binary Logistic, Regression Bootstrapping, and Graph-defined PROCESS v2 variants. The accepted workflows retain their narrower documented scopes and evidence boundaries. PROCESS v2 proves its bounded graph-defined workflow, 10,000-resample execution, cancellation/retry, accessible scientific tables and plot data, native XLSX, strict persistence, repeated completion identity, explicit save/reopen, terminal process-role stability, and clean shutdown, and its point and dedicated bootstrap capabilities are routed to Standard. These are result capabilities, not claims of unrestricted method parity. Dataset history, activation, variable search, metadata versioning, native full-data Recode, explicit Data-view group setup, named editable models with separate canvas presentations, and non-destructive saved report aliases are also part of the current workbench slice.
 
-This is not final SmartPLS-class workflow breadth. The accepted GSCA, CCA, bounded descriptive CTA-PLS, IPMA, CB-SEM/CFA, MICOM/MGA, prediction, NCA, PCA, OLS, binary-logistic, regression-bootstrap, and PROCESS workflows are intentionally bounded. Native setup, interaction, capability-derived results, export review, and packaged acceptance remain to be completed for endogeneity, nonlinear effects, moderated mediation, and FIMIX. Existing bounded engine support for any of those families is not evidence that its redesigned desktop workflow is finished.
+This is not final SmartPLS-class workflow breadth. The accepted GSCA, CCA, bounded descriptive CTA-PLS, IPMA, CB-SEM/CFA and General SEM V3, MICOM/MGA, prediction, NCA, PCA, OLS, binary-logistic, regression-bootstrap, PROCESS, higher-order PLS, and moderated-mediation workflows are intentionally bounded. Native workflow completion still remains for separately registered Labs families such as broader endogeneity, nonlinear, segmentation, and model-comparison cells. Existing engine support for any Labs family is not evidence that its redesigned desktop workflow is finished.
 
 ## Product Boundary
 

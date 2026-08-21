@@ -1,14 +1,12 @@
 # CB-SEM exact parameter table V3
 
-Status date: 15 August 2026
+Status updated: 21 August 2026
 
-`cbsem_ml_exact_parameter_table_v3` is an Internal/Labs scientific engine
-slice. It replaces the automatic-covariance/diagonal-residual projection only
-for the immutable Recipe-v4 + `CompiledCbsemPlanV2` moment-input path. The
+The bounded row-semantics foundation now feeds the scoped-Standard
+`qpls3.cbsem.general_sem_ml / cbsem_general_sem_ml_v1` path through the resident
+schema-6 `SemModelV4` Parameter Table. The broader exact moment-input and Special
+Assumptions work described here remains an internal scientific foundation. The
 legacy schema-5 CB-SEM implementation is unchanged.
-
-This is implemented work, not a registry, qualification, parity, Standard,
-GUI, CLI, archive/export, or release claim.
 
 ## Scientific execution contract
 
@@ -119,7 +117,7 @@ provenance, and make the setting visible in the recipe. Only then can a
 no-arrow Special Assumption be scientifically different from an undeclared
 covariance fixed to zero.
 
-## Verification and remaining blockers
+## Verification and Version 2.50 boundary
 
 Focused Rust coverage includes exact absence/presence of a declared exogenous
 covariance, fixed residual-covariance effects, fixed-row result retention,
@@ -135,20 +133,13 @@ Lambda, B, Psi, Theta, Phi, and Sigma for latent, disturbance, and residual
 covariance microcases. It imports no QuickPLS product code. It is work evidence
 only and emits no admitted receipt.
 
-Activation remains blocked on:
+Version 2.50 activates the exact bounded General SEM ML cell with native
+Parameter Table authoring, preflight, canonical schema-6 save/reopen, shared
+export, and the streamlined integrated release profile. That activation accepts
+the supported fixed/free rows, compatible equality labels, and finite row bounds
+defined by the General SEM compiler.
 
-1. a dedicated registry option cell and frozen QualificationSpec V2 contract;
-2. current-product-versus-oracle receipts plus a second maintained external SEM
-   implementation or approved exception;
-3. generative parameter recovery, interval coverage, difficult conditioning,
-   group/worker/order metamorphic, and adversarial campaigns;
-4. live Recipe-v4 authoring/preflight for each endpoint/status/constraint;
-5. canonical schema-6 save/reopen and every supported export readback for the
-   new v3 rows;
-6. packaged Windows, cancellation, accessibility, performance, memory, and
-   soak evidence; and
-7. explicit materialized Special Assumptions and parity settings/defaults.
-
-No Capability Registry V2 coverage/evidence state, customer surface, or
-qualification receipt is changed by this slice.
-
+It does not activate a separate unrestricted exact-parameter-table cell.
+Explicit `SemConstraintV4` objects, materialized Special Assumptions, mean
+structures, feedback, robust/ordinal/FIML estimation, groups, and broader
+moment-input paths remain blocked and require separately governed future work.

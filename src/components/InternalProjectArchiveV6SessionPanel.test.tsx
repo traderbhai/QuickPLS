@@ -229,7 +229,7 @@ describe("Internal/Labs schema-6 read-only session panel", () => {
         saveCopyStatusMessage: "Save required.",
       },
     });
-    expect(blocked).toContain("Close Standard project");
+    expect(blocked).toContain("Close General SEM project");
     expect(blocked).toContain("Save a validated new copy before closing");
     expect(blocked).toContain("Edit active model as new revision");
     expect(blocked).toContain("old RecipeV4 and canonical results remain bound");

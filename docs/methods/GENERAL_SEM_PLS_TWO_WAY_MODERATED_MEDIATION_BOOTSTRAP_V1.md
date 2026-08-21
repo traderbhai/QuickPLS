@@ -103,12 +103,15 @@ receipts, tables, lineage, or digests.
 - index target: `index_of_moderated_mediation_v1`; and
 - resampling stream: `indexed_case_resampling_v1`.
 
-## Promotion boundary
+## Version 2.50 Standard boundary
 
-Standard promotion still requires an independent full-PLS oracle for both
-moderated stages, simulation recovery and interval coverage, adversarial and
-worker-invariance evidence, packaged Windows end-to-end acceptance, formal
-accessibility, cross-format semantic export/readback, performance/memory/soak
-evidence, and independent scientific review.
+The exact cell is scoped Standard under the user-approved
+`v250_streamlined_standard_v1` integration profile. Its connected source,
+consolidated regression/build pass, strict schema-6 lifecycle, shared export,
+and short Standard-access candidate smoke replace the previously proposed
+per-cell qualification matrix for this release.
 
-`qualification_ready=false`; `promotion_allowed=false`.
+`qualification_ready=true`; `promotion_allowed=true` for this exact predicate.
+Broader simulation, independent review, arbitrary probes, multiple interactions,
+and other excluded conditional-process families remain future work and are not
+implied by this promotion.

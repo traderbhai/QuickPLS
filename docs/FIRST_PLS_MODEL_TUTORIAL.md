@@ -21,12 +21,11 @@ It is a compact deterministic dataset for smoke testing the PLS workflow.
 5. Create construct `x` with indicators `x1` and `x2`.
 6. Create construct `y` with indicators `y1` and `y2`.
 7. Draw a structural path from `x` to `y`.
-8. Open `Setup`.
-9. Choose `PLS path modeling core` from the recommended methods.
-10. Open `Run` and click `Run selected method`.
-11. Open `Results` and select the completed saved run.
-12. Confirm that diagram estimates appear only after the compatible run is selected.
-13. Open `Report` and export CSV, HTML, XLSX, or SVG.
+8. Choose `Calculate`.
+9. Select `PLS path modeling core` from the compatible Standard methods and start the calculation.
+10. QuickPLS opens `Results` after completion; select the completed saved run if more than one is present.
+11. Confirm that diagram estimates appear only after the compatible run is selected.
+12. Choose `Export` and save one of the formats available for that result.
 
 ## CLI Equivalent
 

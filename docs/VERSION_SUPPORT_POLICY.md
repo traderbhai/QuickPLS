@@ -11,7 +11,7 @@ that line.
 | Stable | The current stable line receives correctness, security, installer, and critical documentation fixes. |
 | Previous stable | Receives transition support for 90 days after the next stable line is published, limited to P0/P1 defects and migration assistance. |
 | Beta | Supported only for the active named beta cohort and only until the next beta or stable replacement is published. |
-| Unsigned preview | Engineering evaluation only; no public support or publication-ready claim. |
+| Unsigned preview | Public technical evaluation with best-effort issue triage; no signed-release SLA or publication-ready claim. |
 | Internal | Maintainer-only; no user support commitment. |
 
 Only artifacts published through an official QuickPLS release channel are covered.
@@ -51,7 +51,8 @@ recovery or export procedure before ending support.
 
 ## Current Transition
 
-QuickPLS 2.50.x is the current integrated SEM-upgrade line while QuickPLS 3 remains under development.
-Unsigned QuickPLS 3 builds are preview artifacts and do not replace the stable line.
+QuickPLS 2.50.x is the current integrated SEM-upgrade public pre-release line while QuickPLS 3 remains under development.
+The `v2.50.0` artifacts are unsigned technical previews, not Beta or Stable, even though they are publicly downloadable from GitHub.
+Unsigned QuickPLS 3 builds likewise remain preview artifacts and do not replace a signed stable line.
 The first competitor-grade QuickPLS 3 stable line begins only after the signed
 commercial-readiness gate passes.

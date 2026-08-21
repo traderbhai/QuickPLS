@@ -32,11 +32,11 @@ npm run build
 cargo test -p qpls-core -p qpls-project -p qpls-runner -p quickpls-desktop
 ```
 
-## Run Current v2 Release Handoff Gate
+## Run Current Release Foundation Checks
 
 ```powershell
-npm run qpls:v290:acceptance-backlog
-cargo run -p qpls-cli -- gate v2_9_0_acceptance_backlog_and_next_pass
+npm run qpls:release:foundation
+python validation/capability_registry_v2.py --check-legacy
 ```
 
 ## Development Desktop App
@@ -62,9 +62,10 @@ target/release/artifacts/
 Current artifact naming pattern:
 
 ```text
-QuickPLS_<version>_<milestone>_<timestamp>_x64_setup.exe
-QuickPLS_<version>_<milestone>_<timestamp>_x64_portable.exe
-QuickPLS_<version>_<milestone>_<timestamp>_x64_checksums.txt
+QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe
+QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe
+QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe
+QuickPLS_<version>_<channel>_<label>_<UTC>_x64_checksums.txt
 ```
 
 Do not overwrite older release artifacts.

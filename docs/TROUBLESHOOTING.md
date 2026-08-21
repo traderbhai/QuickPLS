@@ -2,7 +2,7 @@
 
 ## Windows SmartScreen Warns About The Installer
 
-The current installer is unsigned. This warning is expected until a code-signing certificate is added and audited.
+The public `v2.50.0` pre-release installer is unsigned. Download it only from the official GitHub Release and verify its SHA-256 value against the attached checksum file. The warning remains expected until a signed release is published.
 
 ## Browser Preview Cannot Run Analyses
 
@@ -42,13 +42,17 @@ target/release/quickpls-desktop.exe
 
 or the installed release application. Development debug builds may require a running dev server.
 
-## A Method Is Missing From The Top Bar
+## A Method Is Missing From Calculate
 
-The top bar intentionally lists only recommended or currently available methods. Open `Setup` and use `Show all methods` to see methods that need setup, are not applicable, unsupported, or experimental.
+Choose `Calculate` from the active Data or Model context. QuickPLS lists only methods whose exact data/model predicate can be evaluated; blocked estimator cards show the corrective reason. Experimental cells also require the Labs preference.
 
 ## A Method Says Needs Setup Or Not Applicable
 
-Open the method card in `Setup`. QuickPLS shows the exact requirement, such as selecting a group column, choosing numeric X/Y variables for NCA, selecting a binary outcome for logistic regression, or using reflective constructs for CB-SEM/CFA scope.
+Open the method or estimator card from `Calculate`. QuickPLS shows the exact requirement, such as selecting a group column, choosing numeric X/Y variables for NCA, selecting a binary outcome for logistic regression, or using common-factor constructs and a supported Parameter Table for General SEM CB-SEM.
+
+## General SEM Is Blocked
+
+Confirm that the project is saved and activated, the Canvas and Parameter Table have no unresolved scientific decisions, and the selected PLS-SEM or CB-SEM estimator card is `Supported`. Higher-order constructs and moderated mediation must be authored through **Save As Revision** before calculation.
 
 ## R Or Python Not Found
 

@@ -89,12 +89,11 @@ Later-stage evidence cannot compensate for a failed or missing earlier stage.
 The validator derives the highest state on disk and rejects a higher declared
 state.
 
-The repository currently carries 47 method contracts. Nine derive
-`release_qualified`: PLS Algorithm, WPLS, PLSc, PLS Bootstrapping, PCA, CTA-PLS,
-Structural Path Randomization, Binary Logistic Regression, and Regression
-Bootstrapping. Graph-defined PROCESS v2 derives `native_qualified`; the other 30
-contracts remain `absent`. These states come from the strict evidence validator,
-not from this inventory paragraph.
+The repository currently carries 47 live method contracts. Their current
+derived states are 30 `release_qualified`, two `engine_only`, one
+`archive_qualified`, and 14 `absent`. These values come from the strict evidence
+validator and Capability Registry V2; this explanatory paragraph must never be
+used as an independent promotion authority.
 
 `history/pls_sample_size_power_v1.manifest.json` preserves the preregistered
 failed-calibration v1 contract as a historical, non-promotional record. The

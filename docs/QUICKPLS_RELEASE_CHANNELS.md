@@ -2,9 +2,10 @@
 
 ## Purpose
 
-QuickPLS development can continue before an Authenticode identity is available,
-but unsigned engineering artifacts are not beta, stable, or competitor-ready
-releases. The machine-readable policy is
+QuickPLS development can continue before an Authenticode identity is available.
+Unsigned engineering artifacts may be published for transparent technical
+evaluation as GitHub pre-releases, but they are not beta, stable, or
+competitor-ready releases. The machine-readable policy is
 [`validation/quickpls_release_channels.json`](../validation/quickpls_release_channels.json).
 The policy is enforced in code so changing a JSON flag cannot authorize an
 unsigned commercial release.
@@ -14,12 +15,13 @@ unsigned commercial release.
 | Channel | Audience | Authenticode | Distribution rule | Factory |
 | --- | --- | --- | --- | --- |
 | `internal` | Maintainers | Not required | Maintainers only | Unsigned preview |
-| `unsigned-preview` | Named technical-preview testers | Not required | Private named testers only | Unsigned preview |
+| `unsigned-preview` | Public technical-preview users | Not required | GitHub pre-release only | Unsigned preview |
 | `beta` | Named external beta testers | Required | Signed prerelease only | Signed candidate |
 | `stable` | Public users | Required | All commercial gates must pass | Signed candidate |
 
 `unsigned-preview` is an engineering channel, not an additional commercial
-channel. It cannot authorize competitor claims. Checksums prove that copied
+channel. Public download does not convert it into Beta or Stable and cannot
+authorize competitor claims. Checksums prove that copied
 bytes did not change; they do not establish publisher identity or replace an
 Authenticode signature.
 
@@ -72,8 +74,9 @@ record, the protected main-branch release workflow, SignTool, the approved
 certificate private key, and already signed/timestamped desktop, CLI, and
 installer bytes:
 
-`validation/quickpls_signing_identity.json` remains pending and the reviewed
-`.github/workflows/release.yml` protected workflow has not yet been installed,
+`validation/quickpls_signing_identity.json` remains pending. The reviewed
+`.github/workflows/release.yml` workflow is installed, but the protected
+environment, approved signer, and signed-candidate evidence are not configured,
 so the beta/stable path is deliberately blocked today.
 
 ```powershell

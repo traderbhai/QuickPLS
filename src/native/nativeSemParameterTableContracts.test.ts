@@ -16,10 +16,10 @@ describe("native SEM parameter-table UI contracts", () => {
     expect(table).toContain('aria-labelledby="nd-model-parameter-tab"');
   });
 
-  it("derives rows from the authored SemModelV4 adapter and exposes editing only in Experimental Labs", () => {
+  it("derives editable rows from the estimator-authoritative SemModelV4 adapter", () => {
     expect(table).toContain("projectNativeWorkbenchSemParameterTableV4");
-    expect(table).toContain("These edits are not sent to the current calculation engine");
-    expect(table).toContain("Experimental");
+    expect(table).toContain("part of the resident SemModelV4 authority used by native preflight and compatible estimators");
+    expect(table).not.toContain("nd-experimental-chip");
     expect(app).toContain("generalSemViewAvailable && documentView === \"parameters\"");
     expect(table).toContain("NativeSemParameterEditor");
     expect(table).toContain("NativeSemVariableEditor");

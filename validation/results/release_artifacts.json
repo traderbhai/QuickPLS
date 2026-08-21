@@ -37,10 +37,10 @@
   },
   "release_channel": "unsigned-preview",
   "channel_policy": {
-    "audience": "named_technical_preview_testers",
+    "audience": "public_technical_preview_users",
     "artifact_token": "unsigned-preview",
     "authenticode_required": false,
-    "distribution": "private_named_testers_only",
+    "distribution": "public_github_prerelease",
     "commercial_channel": null,
     "competitor_claims_policy": "prohibited",
     "artifact_factory": "unsigned_preview"
@@ -97,5 +97,5 @@
       "copy_verified": true
     }
   ],
-  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This unsigned-preview factory never authorizes beta, stable, or competitor-ready distribution."
+  "note": "Files are copied to unique names so repeated desktop builds do not overwrite prior test artifacts. Every copied binary is size- and SHA-256-identical to its source, but checksums do not establish publisher authenticity. This channel permits public GitHub prerelease evaluation and never authorizes beta, stable, or competitor-ready claims."
 }

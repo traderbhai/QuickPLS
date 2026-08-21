@@ -1,6 +1,8 @@
 ﻿# QuickPLS 2.x Active Milestone
 
-This file is the single active working tracker for the QuickPLS 2.x frontend program. Keep detailed one-off plans out of chat and avoid creating a new planning document unless a milestone is completed and needs a permanent evidence note.
+> Historical milestone tracker. The current Version 2.50 product and release status is maintained in [`RELEASE_NOTES_V2_50_0.md`](RELEASE_NOTES_V2_50_0.md) and [`SEM_UPGRADE_RANKS_0_3_STATUS.md`](SEM_UPGRADE_RANKS_0_3_STATUS.md).
+
+This file records the earlier QuickPLS 2.x frontend program. Keep it as historical implementation context rather than treating it as the active release authority.
 
 ## Operating Rules
 

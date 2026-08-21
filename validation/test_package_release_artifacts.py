@@ -163,7 +163,10 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertEqual(prototype.count('const releaseVersion = "2.50.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
-        self.assertIn("Current development release: `v2.50.0`.", readme)
+        self.assertIn(
+            "Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).",
+            readme,
+        )
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
         self.assertIn(
             "Standard shows only an exact option cell that has passed the full release evidence ladder and "
@@ -171,14 +174,18 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             " ".join(readme.replace("**", "").split()),
         )
         self.assertIn(
-            "The Registry currently contains 35 scoped-Standard exact cells across 29 catalogue rows",
+            "The Registry contains 38 scoped-Standard exact cells; its conservative compatibility projection "
+            "is 27 Standard rows, 16 Labs rows, and two Legacy rows.",
             " ".join(readme.split()),
         )
         self.assertNotIn("The coordinated public 2.46.0 Wave 1 release packages this qualified capability", readme)
         self.assertIn("Previous Milestone Notes v2.45.0", readme)
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
-        self.assertIn("Current development release: `v2.50.0`.", installation)
+        self.assertIn(
+            "Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).",
+            installation,
+        )
         self.assertIn("_x64_cli.exe` for offline command-line and batch recipe execution.", installation)
         normalized_installation = " ".join(installation.split())
         self.assertIn(

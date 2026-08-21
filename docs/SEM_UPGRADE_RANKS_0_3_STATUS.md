@@ -49,20 +49,22 @@ moderated mediation use Save As Revision so the authored diagram remains the
 scientific authority. This is intentionally familiar to SmartPLS users without
 copying SmartPLS branding, layouts, or proprietary implementation details.
 
-## Active checkpoint
+## Version 2.50 release checkpoint
 
 Rank 0, Rank 1, Rank 2 moderated mediation, and both Rank 3 General SEM CB-SEM
-cells are integrated as bounded Standard capabilities on the Version 2.50
-branch. Their compilers, numerical runners,
-job lifecycle, schema-6 persistence, canonical Results workspace, and shared
-export route are connected without introducing a second application.
+cells are integrated on `main` as bounded Standard capabilities. Their
+compilers, numerical runners, native job lifecycle, schema-6 persistence,
+canonical Results workspace, shared export route, and Standard-access workflow
+are connected without introducing a second application.
 
-The consolidated automated diagnostic and one-pass correction cycle are
-complete. The remaining release sequence is deliberately short: build one
-Version 2.50 Windows candidate, run the short Standard-access smoke, record its
-compact streamlined evidence, and retain the installer and portable artifact.
-The later screenshot/observation sweep is a separate whole-product improvement
-pass and does not block source integration.
+The consolidated automated diagnostic, one-pass correction, production build,
+short Standard-access smoke, and compact streamlined evidence are complete. The
+Version 2.50 setup, portable, CLI, checksum, artifact inventory, and evidence
+files are published as the unsigned [`v2.50.0` GitHub pre-release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).
+
+The later automated whole-product screenshot and observation sweep remains a
+separate UI/UX improvement pass. Code signing and signed beta/stable release
+hardening also remain separate from analytical-cell Standard status.
 
 ## Storage policy
 
