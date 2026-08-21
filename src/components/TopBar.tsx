@@ -246,6 +246,22 @@ export function TopBar() {
         nca_permutation_samples: String(analysisSettings.ncaPermutationSamples ?? 999),
       } : {}),
     };
+    const legacyInteractions = nodes
+      .filter((node) => node.data.semantic === "interaction" && node.data.interaction)
+      .map((node) => {
+        const interaction = node.data.interaction!;
+        if (interaction.kind === "interaction_v2") {
+          throw new Error(`The legacy calculation workflow cannot serialize interaction_v2 term '${interaction.termId}'. Use General SEM calculation.`);
+        }
+        return {
+          id: node.id,
+          predictor: interaction.predictor,
+          moderator: interaction.moderator,
+          product_construct: node.id,
+          outcome: interaction.outcome,
+          method: interaction.method,
+        };
+      });
     const recipe = {
       schema_version: 2, id: crypto.randomUUID(), created_at: createdAt, dataset_fingerprint: dataset.fingerprint,
       model: {
@@ -260,14 +276,7 @@ export function TopBar() {
           method: node.data.higherOrder!.method,
           stage_one_recipe: node.data.higherOrder!.stage_one_recipe ?? null,
         })),
-        interactions: nodes.filter((node) => node.data.semantic === "interaction" && node.data.interaction).map((node) => ({
-          id: node.id,
-          predictor: node.data.interaction!.predictor,
-          moderator: node.data.interaction!.moderator,
-          product_construct: node.id,
-          outcome: node.data.interaction!.outcome,
-          method: node.data.interaction!.method,
-        })),
+        interactions: legacyInteractions,
       },
       settings: { method: analysisSettings.method, weighting_scheme: "path", tolerance: 1e-7, max_iterations: 3000, bootstrap_samples: analysisSettings.bootstrapSamples, studentized_inner_samples: analysisSettings.studentizedInnerSamples, permutation_samples: analysisSettings.permutationSamples, seed: analysisSettings.seed, workers: analysisSettings.workers, confidence_level: analysisSettings.confidenceLevel, preprocessing: "standardized", missing_data: "listwise_deletion", ...(analysisSettings.caseWeightColumn ? { case_weight_column: analysisSettings.caseWeightColumn } : {}) }, metadata,
     };

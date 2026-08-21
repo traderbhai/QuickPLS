@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
+import {
+  type CanonicalResultDocumentV2,
+  validateCanonicalResultDocumentV2,
+} from "./canonicalResultDocumentV2";
 import {
   buildCanonicalResultSemanticExportV2,
   canonicalResultSemanticExportJsonV2,
@@ -131,6 +134,29 @@ function resultDocument(): CanonicalResultDocumentV2 {
   };
 }
 
+function generalSemResultDocument(chiSquare = 12.5): CanonicalResultDocumentV2 {
+  const document = resultDocument();
+  document.general_sem_results = {
+    schema_version: 1,
+    cbsem_fit: [{
+      fit_id: "fit_model",
+      trace: {
+        model_id: document.provenance.model_id,
+        capability_cell: { ...document.provenance.capability_cell },
+      },
+      chi_square: chiSquare,
+      degrees_of_freedom: 8,
+      chi_square_p_value: 0.13,
+      rmsea: 0.04,
+      rmsea_interval: { confidence_level: 0.95, lower: 0.02, upper: 0.07 },
+      cfi: 0.97,
+      tli: 0.96,
+      srmr: 0.03,
+    }],
+  };
+  return document;
+}
+
 describe("CanonicalResultDocumentV2 semantic export", () => {
   it("projects ordered typed tables, notices, provenance, and chart data without method payload access", () => {
     const source = resultDocument();
@@ -187,6 +213,59 @@ describe("CanonicalResultDocumentV2 semantic export", () => {
       analytical_match: true,
       errors: [],
     });
+  });
+
+  it("losslessly exports and reads back valid General SEM results", () => {
+    const source = generalSemResultDocument();
+    expect(validateCanonicalResultDocumentV2(source)).toEqual({ passed: true, errors: [] });
+
+    const built = buildCanonicalResultSemanticExportV2(source);
+
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    expect(built.projection.general_sem_results).toEqual(source.general_sem_results);
+    const json = canonicalResultSemanticExportJsonV2(built.projection);
+    const parsed = parseCanonicalResultSemanticExportJsonV2(json);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(parsed.document.general_sem_results).toEqual(source.general_sem_results);
+    expect(verifyCanonicalResultSemanticExportReadbackV2(source, json)).toMatchObject({
+      passed: true,
+      exact_document_match: true,
+      analytical_match: true,
+      errors: [],
+    });
+  });
+
+  it("rejects unknown fields nested inside General SEM results through canonical validation", () => {
+    const source = generalSemResultDocument();
+    const built = buildCanonicalResultSemanticExportV2(source);
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    const tampered = structuredClone(built.projection) as unknown as {
+      general_sem_results: { cbsem_fit: Array<Record<string, unknown>> };
+    };
+    tampered.general_sem_results.cbsem_fit[0].unexpected = true;
+
+    expect(parseCanonicalResultSemanticExportJsonV2(JSON.stringify(tampered))).toMatchObject({
+      ok: false,
+      code: "invalid_export",
+      errors: [expect.stringContaining("general_sem_results.cbsem_fit[0].unexpected")],
+    });
+  });
+
+  it("keeps documents without the General SEM extension on their legacy export shape", () => {
+    const built = buildCanonicalResultSemanticExportV2(resultDocument());
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+
+    expect(Object.prototype.hasOwnProperty.call(built.projection, "general_sem_results")).toBe(false);
+    const json = canonicalResultSemanticExportJsonV2(built.projection);
+    expect(json).not.toContain('"general_sem_results"');
+    const parsed = parseCanonicalResultSemanticExportJsonV2(json);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+    expect(Object.prototype.hasOwnProperty.call(parsed.document, "general_sem_results")).toBe(false);
   });
 
   it("rejects reordered indexes, changed cell types, and unexpected fields", () => {

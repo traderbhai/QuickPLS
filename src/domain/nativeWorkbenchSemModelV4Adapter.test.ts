@@ -5,6 +5,7 @@ import { parseSemModelV4, scientificSemModelV4HashInput } from "./semModelV4";
 import {
   adaptAuthoredNativeWorkbenchToSemModelV4,
   adaptNativeWorkbenchToSemModelV4,
+  nativeWorkbenchDerivedVariableIdV4,
   nativeWorkbenchObservedVariableIdV4,
   requireNativeWorkbenchSemModelV4,
   type NativeWorkbenchToSemModelV4Input,
@@ -70,6 +71,74 @@ function successful(input: NativeWorkbenchToSemModelV4Input) {
   expect(result.ok, result.ok ? undefined : JSON.stringify(result.diagnostics)).toBe(true);
   if (!result.ok) throw new Error(result.diagnostics[0]?.message);
   return result;
+}
+
+function moderationInput(): NativeWorkbenchToSemModelV4Input {
+  const input = baseInput();
+  input.nodes = [
+    construct("x", ["x1"], { x: 0, y: 0 }),
+    construct("w", ["w1"], { x: 0, y: 120 }),
+    construct("z", ["z1"], { x: 0, y: 240 }),
+    construct("y", ["y1"], { x: 420, y: 120 }),
+    {
+      id: "x-w-y",
+      type: "construct",
+      position: { x: 210, y: 40 },
+      data: {
+        label: "X x W",
+        shortName: "XW",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "interaction-term:x-w-y",
+          operands: ["x", "w"],
+          outcome: "y",
+          focalRelationId: "path-x-y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    },
+    {
+      id: "x-z-y",
+      type: "construct",
+      position: { x: 210, y: 220 },
+      data: {
+        label: "X x Z",
+        shortName: "XZ",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "interaction-term:x-z-y",
+          operands: ["x", "z"],
+          outcome: "y",
+          focalRelationId: "path-x-y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    },
+  ];
+  input.edges = [
+    { id: "path-x-y", source: "x", target: "y" },
+    { id: "path-w-y", source: "w", target: "y" },
+    { id: "path-z-y", source: "z", target: "y" },
+    { id: "path-x-w-y", source: "x-w-y", target: "y" },
+    { id: "path-x-z-y", source: "x-z-y", target: "y" },
+  ];
+  input.construct_estimands = {
+    x: { kind: "composite" },
+    w: { kind: "composite" },
+    z: { kind: "composite" },
+    y: { kind: "composite" },
+  };
+  return input;
 }
 
 describe("native workbench to SemModelV4 adapter", () => {
@@ -375,5 +444,137 @@ describe("native workbench to SemModelV4 adapter", () => {
       left: { kind: "residual_of", id: "observed:x1" },
       right: { kind: "residual_of", id: "observed:y1" },
     }));
+  });
+
+  it("preserves simultaneous interaction_v2 terms with exact focal and effect relations", () => {
+    const first = successful(moderationInput());
+    expect(first.model.derived_terms).toEqual([
+      {
+        kind: "interaction_v2",
+        id: "interaction-term:x-w-y",
+        output: nativeWorkbenchDerivedVariableIdV4("x-w-y"),
+        operands: ["construct:x", "construct:w"],
+        focal_relation: first.trace.edge_objects["path-x-y"].sem_id,
+        method: "two_stage",
+        hierarchy_policy: "strong",
+      },
+      {
+        kind: "interaction_v2",
+        id: "interaction-term:x-z-y",
+        output: nativeWorkbenchDerivedVariableIdV4("x-z-y"),
+        operands: ["construct:x", "construct:z"],
+        focal_relation: first.trace.edge_objects["path-x-y"].sem_id,
+        method: "two_stage",
+        hierarchy_policy: "strong",
+      },
+    ]);
+    expect(first.model.variables).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "derived", id: nativeWorkbenchDerivedVariableIdV4("x-w-y") }),
+      expect.objectContaining({ kind: "derived", id: nativeWorkbenchDerivedVariableIdV4("x-z-y") }),
+    ]));
+    expect(first.model.relations).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "structural", source: nativeWorkbenchDerivedVariableIdV4("x-w-y"), target: "construct:y" }),
+      expect.objectContaining({ kind: "structural", source: nativeWorkbenchDerivedVariableIdV4("x-z-y"), target: "construct:y" }),
+    ]));
+
+    const reordered = moderationInput();
+    reordered.nodes = [...reordered.nodes].reverse();
+    reordered.edges = [...reordered.edges].reverse();
+    const second = successful(reordered);
+    expect(second.model).toEqual(first.model);
+    expect(second.trace).toEqual(first.trace);
+    expect(parseSemModelV4(JSON.parse(JSON.stringify(first.model)))).toEqual(first.model);
+
+    const authored = moderationInput();
+    authored.nodes = authored.nodes.map((node) => node.data.semantic === "interaction"
+      ? node
+      : withNativeConstructEstimandV4(node, { kind: "composite" }));
+    const {
+      construct_estimands: _constructEstimands,
+      covariance_semantics: _covarianceSemantics,
+      ...authoredInput
+    } = authored;
+    const authoredResult = adaptAuthoredNativeWorkbenchToSemModelV4(authoredInput);
+    expect(authoredResult.ok, authoredResult.ok ? undefined : JSON.stringify(authoredResult.diagnostics)).toBe(true);
+    if (!authoredResult.ok) throw new Error(authoredResult.diagnostics[0]?.message);
+    expect(authoredResult.model).toEqual(first.model);
+  });
+
+  it("rejects legacy or malformed interaction metadata instead of silently downgrading it", () => {
+    const legacy = moderationInput();
+    const legacyNode = legacy.nodes.find((node) => node.id === "x-w-y")!;
+    legacy.nodes = legacy.nodes.map((node) => node.id === legacyNode.id
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            interaction: { predictor: "x", moderator: "w", outcome: "y", method: "two_stage_product_score" },
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(legacy)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.derived_construct_requires_explicit_v4_definition", subject: "x-w-y" }),
+      ]),
+    });
+
+    const staleFocal = moderationInput();
+    staleFocal.nodes = staleFocal.nodes.map((node) => node.id === "x-w-y"
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            interaction: { ...node.data.interaction!, focalRelationId: "path-w-y" },
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(staleFocal)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.interaction_v2_focal_relation_invalid", subject: "x-w-y" }),
+      ]),
+    });
+
+    const falseyProductSettings = moderationInput();
+    falseyProductSettings.nodes = falseyProductSettings.nodes.map((node) => node.id === "x-w-y"
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            interaction: {
+              ...node.data.interaction!,
+              productIndicator: false,
+            } as unknown as NonNullable<ConstructData["interaction"]>,
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(falseyProductSettings)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.interaction_v2_product_indicator_forbidden", subject: "x-w-y" }),
+      ]),
+    });
+
+    const malformedProductSettings = moderationInput();
+    malformedProductSettings.nodes = malformedProductSettings.nodes.map((node) => node.id === "x-w-y"
+      ? {
+          ...node,
+          data: {
+            ...node.data,
+            interaction: {
+              ...node.data.interaction!,
+              canonicalMethod: "product_indicator",
+              productIndicator: { centering: "unknown", standardization: "none", pairing: "all_pairs" },
+            } as unknown as NonNullable<ConstructData["interaction"]>,
+          },
+        }
+      : node);
+    expect(adaptNativeWorkbenchToSemModelV4(malformedProductSettings)).toMatchObject({
+      ok: false,
+      diagnostics: expect.arrayContaining([
+        expect.objectContaining({ code: "native_workbench.interaction_v2_product_indicator_invalid", subject: "x-w-y" }),
+      ]),
+    });
   });
 });

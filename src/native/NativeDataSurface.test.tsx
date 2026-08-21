@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useWorkspace } from "../store";
 import { NativeDataSurface } from "./NativeDataSurface";
@@ -7,7 +8,7 @@ const baselineAnalysisSettings = { ...useWorkspace.getState().analysisSettings }
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  useWorkspace.setState({ analysisSettings: { ...baselineAnalysisSettings } });
+  useWorkspace.setState({ analysisSettings: { ...baselineAnalysisSettings }, datasetDescriptorOnly: false });
 });
 
 describe("native Data scientific grid", () => {
@@ -128,5 +129,35 @@ describe("native Data scientific grid", () => {
 
     expect(markup).toContain("Derive variable…");
     expect(markup).toContain("Create a non-destructive derived variable");
+  });
+
+  it("renders archive-bound metadata as read-only before any save handler can run", () => {
+    vi.stubGlobal("window", {});
+    const dataset = useWorkspace.getState().dataset;
+    const markup = renderToStaticMarkup(<NativeDataSurface
+      selectedColumn={dataset.columns[0]}
+      setSelectedColumn={vi.fn()}
+      groupColumn={null}
+      propertiesOpen
+      hasEditableModel
+      projectWritable={false}
+      mutationsLocked
+      onNewModel={vi.fn()}
+      onAnalyze={vi.fn()}
+      onDerive={vi.fn()}
+      onContextMenuRequest={() => false}
+    />);
+
+    expect(markup).toContain("This General SEM archive is read-only");
+    expect(markup).toMatch(/<input[^>]*disabled=""/);
+    expect(markup).toMatch(/<select[^>]*disabled=""/);
+    expect(markup).toMatch(/<button[^>]*class="primary"[^>]*disabled=""/);
+  });
+
+  it("never invents missing-value counts for a descriptor-only General SEM dataset", () => {
+    const source = readFileSync("src/native/NativeDataSurface.tsx", "utf8");
+    expect(source).toContain("const dataQualityAvailable = !datasetDescriptorOnly && Number.isFinite(dataset.missing)");
+    expect(source).toContain('missingCount={dataQualityAvailable ? missingCounts.get(selectedColumn) ?? 0 : null}');
+    expect(source).toContain('missingCount == null ? "Not stored" : missingCount.toLocaleString()');
   });
 });

@@ -7,7 +7,7 @@ import {
 } from "./nativeResults";
 
 describe("native CTA-PLS result contract", () => {
-  it("projects the exact bounded payload into accessible summary, tetrad, and scope tables", () => {
+  it("projects the exact bounded payload into accessible summary, tetrad, and run-detail tables", () => {
     const run = completedCtaPlsRun();
     expect(nativeCtaPlsResultProjection(run)).toMatchObject({
       methodVersion: "cta_pls_tetrad_v1",
@@ -26,10 +26,16 @@ describe("native CTA-PLS result contract", () => {
       ["Composite X", "x1, x2, x3, x4", "1", "3", "0.010000"],
     ]);
     expect(tables.find((table) => table.id === "cta_pls_tetrads")?.rows).toHaveLength(3);
-    expect(tables.find((table) => table.id === "cta_pls_scope")?.rows).toEqual(expect.arrayContaining([
+    expect(tables.find((table) => table.id === "cta_pls_scope")).toMatchObject({
+      title: "CTA-PLS run details",
+      status: "validated",
+    });
+    expect(tables.find((table) => table.id === "cta_pls_scope")?.rows).toEqual([
       ["Method version", "cta_pls_tetrad_v1"],
-      ["Excluded inference", "Bootstrap, permutation, asymptotic, and vanishing-tetrad decisions"],
-    ]));
+      ["Covariance convention", "sample_covariance_of_preprocessed_indicators_v1"],
+      ["Complete cases", "80"],
+      ["Omitted cases", "2"],
+    ]);
     expect(JSON.stringify(tables)).not.toMatch(/experimental|limited scope/i);
 
     const navigation = buildNativeResultNavigation(run);

@@ -38,7 +38,9 @@ import { currentNativeModelPresentation, nativeModelSnapshotFromCanonical } from
 import { nativeHigherOrderCreationBlocker, nativeHigherOrderDraftProblems, type NativeHigherOrderDraft } from "./native/nativeHigherOrder";
 import { compareAndSwapStandardSemModelV4Authority } from "./services/standardSemModelV4AuthorityService";
 import type { StandardSemModelV4AuthorityCasDiagnosticV1, StandardSemModelV4AuthorityCasOutcomeV1 } from "./domain/standardSemModelV4AuthorityCas";
-import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+import type { AnalysisMethodId, AnalysisRun, AnalysisUiSettings, ColumnMetadata, ConstructData, Dataset, DatasetVersionMutation, DatasetVersionRecord, DesktopCommandStatus, DesktopDialogId, DesktopMenuId, DiagramLayoutState, DiagramMode, DiagramOverlaySettings, DiagramToolMode, ExplorerTab, GeneralSemProjectDraftModeV1, IndicatorSide, LargeModelViewState, MethodPresetId, MethodSetupState, NativeCanonicalModelSpec, NativeExplorerSelection, NativeModelPresentation, NativeProcessGraphRelationshipConfig, NativeSavedReport, OnboardingState, PublicationDiagramSettings, ResultWorkspaceState, RunMonitorLogEntry, RunMonitorState, SemModelV4AuthoringEndpoint, SemModelV4ConstructAuthoring, ToastNotification, UiPreferences, WorkflowCommandContext, WorkflowDestinationContext, WorkspaceView } from "./types";
+
+export type GeneralSemTransientWorkBlockerV1 = "job_active" | "temporary_result_pending";
 
 type AlignTarget = "left" | "centerX" | "right" | "top" | "centerY" | "bottom";
 type DistributeAxis = "horizontal" | "vertical";
@@ -46,7 +48,7 @@ type PathRouting = "smoothstep" | "default" | "straight";
 
 export type AddTwoStageInteractionBlockReason =
   | "constructs_not_distinct"
-  | "interaction_exists"
+  | "duplicate_interaction"
   | "construct_missing"
   | "unsupported_construct"
   | "focal_path_missing"
@@ -181,8 +183,12 @@ export interface WorkspaceState {
   runs: AnalysisRun[];
   analysisSettings: AnalysisUiSettings;
   projectName: string;
+  projectId: string | null;
   projectPath: string | null;
   projectWritable: boolean;
+  generalSemProjectDraftMode: GeneralSemProjectDraftModeV1 | null;
+  generalSemPublicationPending: boolean;
+  generalSemTransientWorkBlocker: GeneralSemTransientWorkBlockerV1 | null;
   past: HistorySnapshot[];
   future: HistorySnapshot[];
   setView: (view: WorkspaceView, context?: Omit<WorkflowDestinationContext, "timestamp">) => void;
@@ -296,11 +302,15 @@ export interface WorkspaceState {
   switchProjectModel: (modelId: string) => boolean;
   addRun: (run: AnalysisRun) => void;
   setAnalysisSettings: (patch: Partial<AnalysisUiSettings>) => void;
-  setProjectMeta: (name: string, path: string | null) => void;
+  setProjectMeta: (name: string, path: string | null, projectId?: string | null) => void;
   setProjectWritable: (writable: boolean) => void;
+  beginGeneralSemProjectDraftMode: (sourceProjectId: string) => boolean;
+  clearGeneralSemProjectDraftMode: () => void;
+  setGeneralSemPublicationPending: (pending: boolean) => void;
+  setGeneralSemTransientWorkBlocker: (blocker: GeneralSemTransientWorkBlockerV1 | null) => void;
   closeProject: () => void;
   resetProject: () => void;
-  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState> }) => void;
+  loadProject: (project: { nodes: Array<Node<ConstructData>>; edges: Edge[]; dataset: Dataset; datasets?: Dataset[]; datasetVersions?: DatasetVersionRecord[]; projectModels?: NativeCanonicalModelSpec[]; activeModelId?: string | null; modelPresentations?: Record<string, NativeModelPresentation>; savedReports?: NativeSavedReport[]; explorerSelection?: NativeExplorerSelection; runs?: AnalysisRun[]; analysisSettings?: AnalysisUiSettings; diagramMode?: DiagramMode; diagramOverlaySettings?: Partial<DiagramOverlaySettings>; publicationDiagramSettings?: Partial<PublicationDiagramSettings>; diagramLayout?: Partial<DiagramLayoutState>; preserveGeneralSemProjectDraftMode?: GeneralSemProjectDraftModeV1 }) => void;
 }
 
 const supportedAnalysisMethods = new Set<AnalysisMethodId>(["pls_pm", "bootstrap", "permutation", "pls_sample_size_power", "plsc", "wpls", "cca", "cta_pls", "endogeneity", "nonlinear_effects", "moderated_mediation", "predict", "mga", "ipma", "cbsem", "pca", "gsca", "regression", "nca"]);
@@ -678,38 +688,106 @@ const interactionNodes = (nodes: Array<Node<ConstructData>>) => nodes.filter((no
   node.data.semantic === "interaction" && node.data.interaction,
 );
 
+const diagramInteractionOperands = (interaction: NonNullable<ConstructData["interaction"]>): readonly string[] =>
+  interaction.kind === "interaction_v2"
+    ? interaction.operands
+    : [interaction.predictor, interaction.moderator];
+
+type RequiredDiagramInteractionPath = { source: string; target: string; relationId?: string };
+
+const requiredDiagramInteractionPaths = (node: Node<ConstructData>): RequiredDiagramInteractionPath[] => {
+  const interaction = node.data.interaction!;
+  const operands = diagramInteractionOperands(interaction);
+  const required: RequiredDiagramInteractionPath[] = [
+    {
+      source: operands[0]!,
+      target: interaction.outcome,
+      ...(interaction.focalRelationId ? { relationId: interaction.focalRelationId } : {}),
+    },
+    { source: node.id, target: interaction.outcome },
+  ];
+  if (interaction.kind !== "interaction_v2" || interaction.hierarchyPolicy !== "none") {
+    required.push(...operands.slice(1).map((operand) => ({ source: operand, target: interaction.outcome })));
+  }
+  return required;
+};
+
+const matchesRequiredDiagramInteractionPath = (
+  edge: Pick<Edge, "id" | "source" | "target">,
+  required: RequiredDiagramInteractionPath,
+) => edge.source === required.source
+  && edge.target === required.target
+  && (!required.relationId || edge.id === required.relationId);
+
+const requiredLowerOrderInteractionNodeIds = (
+  node: Node<ConstructData>,
+  nodes: Array<Node<ConstructData>>,
+): string[] => {
+  const interaction = node.data.interaction!;
+  if (interaction.kind !== "interaction_v2" || interaction.hierarchyPolicy !== "strong" || interaction.operands.length <= 2) return [];
+  return interaction.operands.flatMap((_, omitted) => {
+    const required = new Set(interaction.operands.filter((__, index) => index !== omitted));
+    const lowerOrder = interactionNodes(nodes).find((candidate) => {
+      if (candidate.id === node.id || candidate.data.interaction!.outcome !== interaction.outcome) return false;
+      const candidateInteraction = candidate.data.interaction!;
+      const candidateOperands = diagramInteractionOperands(candidateInteraction);
+      if (candidateOperands.length !== required.size
+        || candidateOperands.some((operand) => !required.has(operand))) return false;
+      return candidateOperands.length <= 2
+        || candidateInteraction.kind === "interaction_v2" && candidateInteraction.hierarchyPolicy === "strong";
+    });
+    return lowerOrder ? [lowerOrder.id] : [];
+  });
+};
+
+const uniqueStableGraphId = (base: string, occupiedIds: ReadonlySet<string>) => {
+  const normalized = base.replace(/[^a-zA-Z0-9_-]/g, "-") || "interaction";
+  if (!occupiedIds.has(normalized)) return normalized;
+  let suffix = 2;
+  while (occupiedIds.has(`${normalized}-${suffix}`)) suffix += 1;
+  return `${normalized}-${suffix}`;
+};
+
 const touchesGeneratedInteraction = (nodes: Array<Node<ConstructData>>, source: string, target: string) => {
   const generatedIds = new Set(interactionNodes(nodes).map((node) => node.id));
   return generatedIds.has(source) || generatedIds.has(target);
 };
 
-const requiredInteractionEdge = (nodes: Array<Node<ConstructData>>, edge: Pick<Edge, "source" | "target">) => interactionNodes(nodes).some((node) => {
-  const interaction = node.data.interaction!;
-  return [
-    [interaction.predictor, interaction.outcome],
-    [interaction.moderator, interaction.outcome],
-    [node.id, interaction.outcome],
-  ].some(([source, target]) => edge.source === source && edge.target === target);
+const requiredInteractionEdge = (nodes: Array<Node<ConstructData>>, edge: Pick<Edge, "id" | "source" | "target">) => interactionNodes(nodes).some((node) => {
+  return requiredDiagramInteractionPaths(node)
+    .some((required) => matchesRequiredDiagramInteractionPath(edge, required));
 });
 
 const cascadingInteractionNodeIds = (
   nodes: Array<Node<ConstructData>>,
   removedNodeIds: ReadonlySet<string>,
-  removedEdges: readonly Pick<Edge, "source" | "target">[],
-) => new Set(interactionNodes(nodes)
-  .filter((node) => {
+  removedEdges: readonly Pick<Edge, "id" | "source" | "target">[],
+) => {
+  const interactions = interactionNodes(nodes);
+  const cascadingIds = new Set(interactions
+    .filter((node) => {
     const interaction = node.data.interaction!;
+    const operands = diagramInteractionOperands(interaction);
     return removedNodeIds.has(node.id)
-      || removedNodeIds.has(interaction.predictor)
-      || removedNodeIds.has(interaction.moderator)
+      || operands.some((operand) => removedNodeIds.has(operand))
       || removedNodeIds.has(interaction.outcome)
-      || removedEdges.some((edge) => [
-        [interaction.predictor, interaction.outcome],
-        [interaction.moderator, interaction.outcome],
-        [node.id, interaction.outcome],
-      ].some(([source, target]) => edge.source === source && edge.target === target));
-  })
-  .map((node) => node.id));
+      || removedEdges.some((edge) => requiredDiagramInteractionPaths(node)
+        .some((required) => matchesRequiredDiagramInteractionPath(edge, required)));
+    })
+    .map((node) => node.id));
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const node of interactions) {
+      if (cascadingIds.has(node.id)) continue;
+      if (requiredLowerOrderInteractionNodeIds(node, nodes).some((id) => cascadingIds.has(id))) {
+        cascadingIds.add(node.id);
+        changed = true;
+      }
+    }
+  }
+  return cascadingIds;
+};
 
 const cascadingHigherOrderNodeIds = (
   nodes: Array<Node<ConstructData>>,
@@ -904,8 +982,12 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   runs: [],
   analysisSettings: defaultAnalysisSettings,
   projectName: "Corporate Reputation Study",
+  projectId: null,
   projectPath: null,
   projectWritable: true,
+  generalSemProjectDraftMode: null,
+  generalSemPublicationPending: false,
+  generalSemTransientWorkBlocker: null,
   past: [],
   future: [],
   setView: (view, context) => set((state) => {
@@ -928,6 +1010,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   setInspectorCollapsed: (inspectorCollapsed) => set({ inspectorCollapsed }),
   setExplorerWidth: (explorerWidth) => set({ explorerWidth: Math.min(430, Math.max(250, Math.trunc(explorerWidth))) }),
   setUiPreferences: (patch) => set((state) => {
+    if (state.generalSemTransientWorkBlocker && patch.experimentalLabsEnabled === false) return {};
     const uiPreferences = normalizedUiPreferences({ ...state.uiPreferences, ...patch });
     persistUiPreferences(uiPreferences);
     return { uiPreferences };
@@ -1238,10 +1321,6 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       result = { status: "blocked", reason: "constructs_not_distinct" };
       return state;
     }
-    if (state.nodes.some((node) => node.data.semantic === "interaction")) {
-      result = { status: "blocked", reason: "interaction_exists" };
-      return state;
-    }
     const predictorNode = state.nodes.find((node) => node.id === predictor);
     const moderatorNode = state.nodes.find((node) => node.id === moderator);
     const outcomeNode = state.nodes.find((node) => node.id === outcome);
@@ -1257,20 +1336,34 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       result = { status: "blocked", reason: "control_paths_unsupported" };
       return state;
     }
-    const hasPredictorRelationship = state.edges.some((edge) =>
+    const focalEdge = state.edges.find((edge) =>
       !edge.id.startsWith("measurement::")
       && edge.source === predictor
       && edge.target === outcome
       && edge.data?.role !== "control"
       && edge.data?.role !== "covariance",
     );
-    if (!hasPredictorRelationship) {
+    if (!focalEdge) {
       result = { status: "blocked", reason: "focal_path_missing" };
       return state;
     }
-    const baseId = `interaction-${predictor}-${moderator}-${outcome}`.replace(/[^a-zA-Z0-9_-]/g, "-");
-    const id = state.nodes.some((node) => node.id === baseId) ? `${baseId}-${Date.now()}` : baseId;
-    const edgeId = `path-${id}-${outcome}`;
+    if (interactionNodes(state.nodes).some((node) => {
+      const interaction = node.data.interaction!;
+      const operands = diagramInteractionOperands(interaction);
+      return operands.length === 2
+        && operands[0] === predictor
+        && operands[1] === moderator
+        && interaction.outcome === outcome;
+    })) {
+      result = { status: "blocked", reason: "duplicate_interaction" };
+      return state;
+    }
+    const occupiedIds = new Set([
+      ...state.nodes.map((node) => node.id),
+      ...state.edges.map((edge) => edge.id),
+    ]);
+    const id = uniqueStableGraphId(`interaction-${predictor}-${moderator}-${outcome}`, occupiedIds);
+    occupiedIds.add(id);
     const shortName = `${predictorNode.data.shortName}x${moderatorNode.data.shortName}`.replace(/[^a-zA-Z0-9]/g, "").slice(0, 8) || "INT";
     const hasModeratorMainEffect = state.edges.some((edge) =>
       !edge.id.startsWith("measurement::")
@@ -1278,17 +1371,31 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       && edge.target === outcome
       && edge.data?.role !== "covariance",
     );
-    const moderatorEdgeId = `path-${moderator}-${outcome}`;
+    const moderatorEdgeId = uniqueStableGraphId(`path-${moderator}-${outcome}`, occupiedIds);
     const withModeratorMainEffect = hasModeratorMainEffect
       ? state.edges
       : addEdge({
-        id: state.edges.some((edge) => edge.id === moderatorEdgeId) ? `${moderatorEdgeId}-${Date.now()}` : moderatorEdgeId,
+        id: moderatorEdgeId,
         source: moderator,
         target: outcome,
         type: "straight",
         label: "Path",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       }, state.edges);
+    for (const edge of withModeratorMainEffect) occupiedIds.add(edge.id);
+    const interactionEdgeId = uniqueStableGraphId(`path-${id}-${outcome}`, occupiedIds);
+    const interaction: NonNullable<ConstructData["interaction"]> = state.generalSemProjectDraftMode?.semGeneration === "general_sem_v1"
+      ? {
+          kind: "interaction_v2",
+          termId: `interaction-term:${id}`,
+          operands: [predictor, moderator],
+          outcome,
+          focalRelationId: focalEdge.id,
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        }
+      : { predictor, moderator, outcome, method: "two_stage_product_score" };
     result = { status: "created", interactionId: id };
     return {
       ...historyPatch(state),
@@ -1307,13 +1414,13 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           mode: "formative",
           indicators: [],
           semantic: "interaction",
-          interaction: { predictor, moderator, outcome, method: "two_stage_product_score" },
+          interaction,
         },
       }],
       edges: withModeratorMainEffect.some((edge) => edge.source === id && edge.target === outcome)
         ? withModeratorMainEffect
         : addEdge({
-          id: edgeId,
+          id: interactionEdgeId,
           source: id,
           target: outcome,
           type: "straight",
@@ -1868,7 +1975,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       },
     }),
   })),
-  setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
+  setDataset: (dataset) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
     datasetDescriptorOnly: false,
@@ -1876,10 +1983,10 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
   })),
-  setDatasetCatalog: (datasetCatalog, datasetVersions) => set((state) => activeStandardSemModelV4Authority(state)
+  setDatasetCatalog: (datasetCatalog, datasetVersions) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending
     ? state
     : { datasetCatalog, datasetVersions, datasetDescriptorOnly: false }),
-  commitDatasetVersion: ({ dataset, version }) => set((state) => activeStandardSemModelV4Authority(state) ? state : ({
+  commitDatasetVersion: ({ dataset, version }) => set((state) => activeStandardSemModelV4Authority(state) || state.generalSemPublicationPending ? state : ({
     dataset,
     datasetCatalog: upsertDatasetCatalog(state.datasetCatalog, dataset),
     datasetDescriptorOnly: false,
@@ -2071,6 +2178,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         standardSemModelV4Persistence: persistence,
         standardSemModelV4DatasetDescriptors: descriptors,
         datasetDescriptorOnly: true,
+        generalSemProjectDraftMode: null,
         dataset: datasetFromStandardSemModelV4Descriptor(activeDescriptor),
         datasetCatalog: descriptorDatasets,
         datasetVersions: [],
@@ -2447,8 +2555,49 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     view: "runs",
   })),
   setAnalysisSettings: (patch) => set((state) => ({ analysisSettings: normalizeAnalysisSettings({ ...state.analysisSettings, ...patch }) })),
-  setProjectMeta: (projectName, projectPath) => set({ projectName, projectPath }),
+  setProjectMeta: (projectName, projectPath, projectId = null) => set((state) => ({
+    projectName,
+    projectPath,
+    projectId,
+    generalSemProjectDraftMode: state.generalSemProjectDraftMode
+      && projectPath === null
+      && projectId === state.generalSemProjectDraftMode.sourceProjectId
+      ? state.generalSemProjectDraftMode
+      : null,
+  })),
   setProjectWritable: (projectWritable) => set({ projectWritable }),
+  beginGeneralSemProjectDraftMode: (sourceProjectId) => {
+    let activated = false;
+    set((state) => {
+      const noResidentData = state.datasetCatalog.length === 0
+        || (state.datasetCatalog.length === 1
+          && state.datasetCatalog[0].columns.length === 0
+          && (state.datasetCatalog[0].rowCount ?? state.datasetCatalog[0].rows.length) === 0);
+      const fresh = sourceProjectId.length > 0
+        && state.projectId === sourceProjectId
+        && state.projectPath === null
+        && noResidentData
+        && state.projectModels.length === 0
+        && state.activeModelId === null
+        && state.nodes.length === 0
+        && state.edges.length === 0
+        && state.runs.length === 0
+        && Object.keys(state.standardSemModelV4Authorities).length === 0;
+      if (!fresh) return state;
+      activated = true;
+      return {
+        generalSemProjectDraftMode: {
+          schemaVersion: 1,
+          semGeneration: "general_sem_v1",
+          sourceProjectId,
+        },
+      };
+    });
+    return activated;
+  },
+  clearGeneralSemProjectDraftMode: () => set({ generalSemProjectDraftMode: null }),
+  setGeneralSemPublicationPending: (generalSemPublicationPending) => set({ generalSemPublicationPending }),
+  setGeneralSemTransientWorkBlocker: (generalSemTransientWorkBlocker) => set({ generalSemTransientWorkBlocker }),
   closeProject: () => set({
     nodes: [],
     edges: [],
@@ -2488,8 +2637,12 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
     projectName: "No project open",
+    projectId: null,
     projectPath: null,
     projectWritable: true,
+    generalSemProjectDraftMode: null,
+    generalSemPublicationPending: false,
+    generalSemTransientWorkBlocker: null,
     past: [],
     future: [],
   }),
@@ -2532,12 +2685,16 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowDestinationContext: null,
     workflowCommandContext: null,
     projectName: "Untitled project",
+    projectId: null,
     projectPath: null,
     projectWritable: true,
+    generalSemProjectDraftMode: null,
+    generalSemPublicationPending: false,
+    generalSemTransientWorkBlocker: null,
     past: [],
     future: [],
   }),
-  loadProject: (project) => set({
+  loadProject: (project) => set((state) => ({
     nodes: project.nodes,
     edges: project.edges,
     dataset: project.dataset,
@@ -2553,6 +2710,15 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     standardSemModelV4Persistence: {},
     standardSemModelV4DatasetDescriptors: {},
     datasetDescriptorOnly: false,
+    projectId: null,
+    generalSemTransientWorkBlocker: null,
+    generalSemProjectDraftMode: project.preserveGeneralSemProjectDraftMode
+      && state.generalSemProjectDraftMode
+      && state.projectPath === null
+      && state.projectId === project.preserveGeneralSemProjectDraftMode.sourceProjectId
+      && state.generalSemProjectDraftMode.sourceProjectId === project.preserveGeneralSemProjectDraftMode.sourceProjectId
+      ? state.generalSemProjectDraftMode
+      : null,
     savedReports: project.savedReports ?? [],
     explorerSelection: project.explorerSelection
       ?? (project.activeModelId ? { kind: "model", modelId: project.activeModelId } : { kind: "data" }),
@@ -2577,5 +2743,5 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     workflowCommandContext: null,
     past: [],
     future: [],
-  }),
+  })),
 }));

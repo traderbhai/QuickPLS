@@ -594,7 +594,7 @@ fn translate_initialization_to_projected_columns(
     })
 }
 
-fn project_pls_plan_to_current_recipe(
+pub(crate) fn project_pls_plan_to_current_recipe(
     recipe: &AnalysisRecipeV4,
     model: &SemModelV4,
     plan: &CompiledPlsPlanV2,

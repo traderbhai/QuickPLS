@@ -111,4 +111,44 @@ describe("Internal/Labs strict schema-6 ZIP read contract", () => {
       },
     });
   });
+
+  it("allows an exact blank marked project but requires native authority once populated", () => {
+    const blank = okOutcome();
+    const blankProject = blank.value.project as typeof blank.value.project & {
+      sem_generation?: string;
+      datasets?: unknown[];
+    };
+    const blankValue = blank.value as typeof blank.value & {
+      generalSemExecutionAuthority?: unknown;
+      residentDatasets: unknown[];
+    };
+    blankProject.sem_generation = "general_sem_v1";
+    blankValue.generalSemExecutionAuthority = null;
+    expect(parseInternalProjectArchiveV6ReadOutcomeV1(blank)).toMatchObject({
+      status: "ok",
+      value: { project: { sem_generation: "general_sem_v1" }, generalSemExecutionAuthority: null },
+    });
+
+    const populated = clone(blank);
+    const populatedProject = populated.value.project as typeof populated.value.project & { datasets: unknown[] };
+    const populatedValue = populated.value as unknown as { residentDatasets: unknown[] };
+    populatedProject.datasets = [{
+      id: "00000000-0000-4000-8000-000000000610",
+      name: "Resident data",
+      schema: { version: 1, kind: "raw", columns: [], case_count: 0, sample_size: null },
+      fingerprint: "dataset-fingerprint",
+    }];
+    populatedValue.residentDatasets = [{
+      datasetId: "00000000-0000-4000-8000-000000000610",
+      name: "Resident data",
+      fingerprint: "dataset-fingerprint",
+      rowCount: 0,
+      columnCount: 0,
+      sampleSize: null,
+      arrowResident: true,
+    }];
+    populated.value.counts.datasets = 1;
+    expect(() => parseInternalProjectArchiveV6ReadOutcomeV1(populated))
+      .toThrowError(expect.objectContaining({ code: "schema6_archive_read.general_sem_authority_missing" }));
+  });
 });

@@ -16,13 +16,34 @@ describe("Capability Registry V2 frontend adapter", () => {
       row_count: 45,
       active_row_count: 43,
       coverage: { full: 0, partial: 32, absent: 11, intentionally_excluded: 2 },
-      surfaces: { standard: 26, labs: 17, legacy: 2, internal: 0 },
-      option_cell_count: 48,
-      option_cell_coverage: { full: 0, partial: 35, absent: 11, intentionally_excluded: 2 },
-      option_cell_surfaces: { standard: 29, labs: 17, legacy: 2, internal: 0 },
+      surfaces: { standard: 27, labs: 16, legacy: 2, internal: 0 },
+      option_cell_count: 51,
+      option_cell_coverage: { full: 0, partial: 38, absent: 11, intentionally_excluded: 2 },
+      option_cell_surfaces: { standard: 33, labs: 16, legacy: 2, internal: 0 },
     });
-    expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(26);
+    expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
     expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
+  });
+
+  it("exposes the exact General SEM multiple-mediation bootstrap cell as scoped Standard", () => {
+    const capabilityId = "smartpls.mediation";
+    const cellId = "qpls3.pls.general_sem_multiple_mediation_bootstrap";
+    expect(capabilityRegistryV2.quickPlsCell(cellId)).toHaveLength(1);
+    expect(capabilityRegistryV2.quickPlsCell(cellId)[0]).toMatchObject({
+      row: { capability_id: capabilityId },
+      cell: {
+        capability_version: "general_sem_pls_full_model_case_bootstrap_v1",
+        coverage_state: "partial",
+        evidence_state: "release_qualified",
+        surface: "standard",
+      },
+    });
+    expect(capabilityRegistryV2.availability(capabilityId, cellId, false)).toMatchObject({
+      visibility: "supported",
+      selectable: true,
+      customer_label: "Supported",
+      reason: "standard_ready",
+    });
   });
 
   it("keeps Blindfolding and GoF as the only explicit Legacy exclusions", () => {
@@ -230,8 +251,8 @@ describe("Capability Registry V2 frontend adapter", () => {
     revised.capabilities[0].option_cells[0].surface = "standard";
     revised.state_contract.baseline_counts.full = 1;
     revised.state_contract.baseline_counts.partial = 31;
-    revised.surface_contract.baseline_counts.standard = 26;
-    revised.surface_contract.baseline_counts.labs = 17;
+    revised.surface_contract.baseline_counts.standard = 27;
+    revised.surface_contract.baseline_counts.labs = 16;
     const adapter = new CapabilityRegistryV2Adapter(revised, { requireFrozenStateDistribution: false });
     expect(adapter.availability("smartpls.pls_algorithm", "qpls3.pls.algorithm", false)).toMatchObject({
       visibility: "supported",

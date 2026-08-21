@@ -2,6 +2,7 @@ import type {
   CapabilityCellReferenceV2,
   CanonicalResultDocumentV2,
 } from "./canonicalResultDocumentV2";
+import type { GeneralSemConfigV1 } from "./generalSemConfigV1";
 import { validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import { validateArchivedPlsScoreExecutionV2 } from "./internalProjectSchema6ResultRead";
 import { compareUtf8StringsV1, type SemModelV4 } from "./semModelV4";
@@ -127,6 +128,7 @@ export interface AnalysisRecipeV4<
   estimand_confirmation: LegacyEstimandConfirmationV4;
   settings: AnalysisRecipeV4Settings<TMissingData>;
   method_config?: NativeAnalysisMethodConfig | null;
+  general_sem_config?: GeneralSemConfigV1 | null;
   metadata: Record<string, string>;
   legacy_source?: {
     source_schema_version: 1 | 2 | 3;

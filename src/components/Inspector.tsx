@@ -105,6 +105,17 @@ export function Inspector() {
   </aside>;
 
   const update = (patch: Parameters<typeof updateConstruct>[1]) => updateConstruct(node.id, patch);
+  const selectedInteraction = node.data.semantic === "interaction" ? node.data.interaction : undefined;
+  const selectedInteractionOperands = selectedInteraction?.kind === "interaction_v2"
+    ? selectedInteraction.operands
+    : selectedInteraction
+      ? [selectedInteraction.predictor, selectedInteraction.moderator]
+      : [];
+  const selectedInteractionOperandLabels = selectedInteractionOperands
+    .map((operand) => nodes.find((item) => item.id === operand)?.data.shortName ?? operand);
+  const selectedInteractionOutcomeLabel = selectedInteraction
+    ? nodes.find((item) => item.id === selectedInteraction.outcome)?.data.shortName ?? selectedInteraction.outcome
+    : "";
   const availableIndicators = dataset.columns.filter((column) => !node.data.indicators.includes(column));
   const componentCandidates = nodes.filter((item) => item.id !== node.id && item.data.semantic !== "interaction");
   const higherOrder = node.data.higherOrder;
@@ -153,7 +164,13 @@ export function Inspector() {
     /> : null}
     <div className="inspector-actions"><button className="secondary-button danger" onClick={removeSelection}><Trash2 size={14} />Delete construct</button></div>
     </details>
-    {node.data.semantic === "interaction" && node.data.interaction ? <div className="method-note"><strong>Two-stage interaction</strong><p>{nodes.find((item) => item.id === node.data.interaction?.predictor)?.data.shortName} x {nodes.find((item) => item.id === node.data.interaction?.moderator)?.data.shortName} moderates {nodes.find((item) => item.id === node.data.interaction?.outcome)?.data.shortName}. Estimation is blocked until the v0.5 two-stage engine gate is complete.</p></div> : null}
+    {selectedInteraction ? <div className="method-note">
+      <strong>{selectedInteraction.kind === "interaction_v2" ? `${selectedInteractionOperands.length}-way interaction` : "Two-stage interaction"}</strong>
+      <p>{selectedInteractionOperandLabels.join(" × ")} targets {selectedInteractionOutcomeLabel}.
+        {selectedInteraction.kind === "interaction_v2" ? ` ${selectedInteraction.canonicalMethod.replaceAll("_", " ")}; ${selectedInteraction.hierarchyPolicy} hierarchy.` : ""}
+        {" Estimator availability is checked before calculation."}
+      </p>
+    </div> : null}
     <details className="inspector-section"><summary>Indicators</summary>
     <div className="inspector-section-title"><strong>Indicators ({node.data.indicators.length})</strong></div>
     <label className="indicator-picker"><span><Plus size={13} />Assign dataset variable</span><select value="" onChange={(event) => { if (event.target.value) assignIndicator(node.id, event.target.value); }}>

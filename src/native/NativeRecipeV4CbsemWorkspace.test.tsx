@@ -159,6 +159,75 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     expect(exported[1]?.rows).toContainEqual(["Recipe digest", "b".repeat(64)]);
   });
 
+  it("renders persisted line charts with a textual legend and exact table fallback", () => {
+    const primary = { registry_schema_version: 2 as const, capability_id: "smartpls.moderation", cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point", capability_version: "general_sem_pls_multiple_two_way_moderation_point_v1" };
+    const document: CanonicalResultDocumentV2 = {
+      schema_version: 2,
+      document_id: "moderation-chart-document",
+      title: "Multiple moderation result",
+      provenance: {
+        run_id: "run-moderation",
+        project_id: "project-moderation",
+        model_id: "model-moderation",
+        model_digest: "a".repeat(64),
+        dataset_id: "dataset-moderation",
+        dataset_fingerprint: "b".repeat(64),
+        recipe_id: "recipe-moderation",
+        recipe_digest: "c".repeat(64),
+        capability_cell: primary,
+        method_version: "qpls.general-sem-pls.multiple-two-way.point.v1",
+        engine_version: "compiled_general_sem_pls_recipe_v1_multiple_two_way_moderation_point_execution_v1",
+        seed: 42,
+        workers: 1,
+        started_at: "2026-08-19T00:00:00Z",
+        completed_at: "2026-08-19T00:00:01Z",
+      },
+      capability_cells: [primary],
+      sections: [{ id: "conditional_effects", title: "Conditional effects", table_ids: ["general_sem_interaction_plots"], chart_ids: ["plot:x-by-w"], capability_cells: [primary] }],
+      tables: [{
+        id: "general_sem_interaction_plots",
+        title: "Persisted interaction plot points",
+        columns: [
+          { id: "moderator", label: "Moderator", data_type: "number", description: "Standardized moderator" },
+          { id: "outcome", label: "Predicted outcome", data_type: "number", description: "Predicted outcome" },
+        ],
+        rows: [
+          { id: "low", cells: [{ kind: "number", value: -1 }, { kind: "number", value: -0.75 }] },
+          { id: "mean", cells: [{ kind: "number", value: 0 }, { kind: "number", value: 0.25 }] },
+          { id: "high", cells: [{ kind: "number", value: 1 }, { kind: "number", value: 1.5 }] },
+        ],
+        footnote_ids: [],
+        capability_cells: [primary],
+      }],
+      charts: [{
+        id: "plot:x-by-w",
+        title: "Conditional X to Y relationship",
+        description: "Predicted Y across fixed W probes.",
+        kind: "line",
+        series: [
+          { id: "w-low", label: "W = -1", points: [{ x: -1, y: -0.75, label: "low X" }, { x: 1, y: 0.75, label: "high X" }] },
+          { id: "w-high", label: "W = +1", points: [{ x: -1, y: -0.25, lower: -0.5, upper: 0 }, { x: 1, y: 1.5, lower: 1.2, upper: 1.8 }] },
+        ],
+        source_table_id: "general_sem_interaction_plots",
+        display: { show_legend: true, show_values: true, x_axis_label: "Standardized X", y_axis_label: "Predicted Y" },
+      }],
+      notices: [], exclusions: [], footnotes: [],
+      presentation: { default_section_id: "conditional_effects", default_table_id: "general_sem_interaction_plots", precision: 3, missing_value_label: "—", chart_defaults: {} },
+    };
+
+    const html = renderToStaticMarkup(<CanonicalResultDocumentV2View document={document} reopened />);
+    expect(html).toContain('data-canonical-chart-id="plot:x-by-w"');
+    expect(html).toContain('<svg class="nd-canonical-chart__plot"');
+    expect(html).toContain('role="img"');
+    expect(html).toContain("Line chart with 2 series and 4 persisted points");
+    expect(html).toContain("W = -1 (solid)");
+    expect(html).toContain("W = +1 (long dashed)");
+    expect(html).toContain("W = +1: x -1, y -0.25, interval -0.5 to 0");
+    expect(html).toMatch(/href="#nd-canonical-table-[0-9a-f]+"/u);
+    expect(html).toContain("Exact plot data: Persisted interaction plot points");
+    expect(html).toContain('data-canonical-table-id="general_sem_interaction_plots"');
+  });
+
   it("renders the generic nonlinear section and all three v7 tables accessibly", () => {
     const primary = { registry_schema_version: 2 as const, capability_id: "smartpls.nonlinear_relationships", cell_id: "qpls3.pls.nonlinear_quadratic", capability_version: "pls_quadratic_nonlinear_effects_v1" };
     const textColumn = (id: string) => ({ id, label: id, data_type: "text" as const, description: id });

@@ -24,6 +24,15 @@ export async function inspectInternalProjectArchiveV6At(archivePath: string) {
   return parseInternalProjectArchiveV6ReadOutcomeV1(response);
 }
 
+/** Selects one project path so the controller can choose its versioned loader. */
+export async function selectQuickPlsProjectArchivePath() {
+  const archivePath = await open({
+    multiple: false,
+    filters: [{ name: "QuickPLS project", extensions: ["qpls"] }],
+  });
+  return typeof archivePath === "string" ? archivePath : null;
+}
+
 /** Selects a local `.qpls` file and returns an ephemeral read-only snapshot. */
 export async function openInternalProjectArchiveV6() {
   const archivePath = await open({

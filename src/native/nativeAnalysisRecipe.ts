@@ -1031,6 +1031,25 @@ export function buildNativeRecipeModel(
     `${edge.source}\u0000${edge.target}`,
     { source: edge.source, target: edge.target },
   ])).values()];
+  const interactions = nodes
+    .filter((node) => node.data.semantic === "interaction" && node.data.interaction)
+    .map((node): NativeRecipeInteraction => {
+      const interaction = node.data.interaction!;
+      if (interaction.kind === "interaction_v2") {
+        fail(
+          "model",
+          `The legacy native recipe cannot serialize interaction_v2 term '${interaction.termId}'. Use the General SEM calculation workflow.`,
+        );
+      }
+      return {
+        id: node.id,
+        predictor: interaction.predictor,
+        moderator: interaction.moderator,
+        product_construct: node.id,
+        outcome: interaction.outcome,
+        method: interaction.method,
+      };
+    });
 
   return {
     id: modelId,
@@ -1056,16 +1075,7 @@ export function buildNativeRecipeModel(
         method: node.data.higherOrder!.method,
         stage_one_recipe: optionalText(node.data.higherOrder!.stage_one_recipe),
       })),
-    interactions: nodes
-      .filter((node) => node.data.semantic === "interaction" && node.data.interaction)
-      .map((node) => ({
-        id: node.id,
-        predictor: node.data.interaction!.predictor,
-        moderator: node.data.interaction!.moderator,
-        product_construct: node.id,
-        outcome: node.data.interaction!.outcome,
-        method: node.data.interaction!.method,
-      })),
+    interactions,
   };
 }
 

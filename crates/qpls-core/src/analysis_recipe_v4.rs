@@ -1,8 +1,8 @@
 use crate::{
-    AnalysisRecipe, AnalysisSettings, LegacyBasicModelConversionErrorV4,
-    LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4, MethodConfig, ModelSpec,
-    SemAnnotationV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError, SemParameterTargetV4,
-    SemParameterV4, SemRelationV4, convert_legacy_basic_model_v4,
+    AnalysisRecipe, AnalysisSettings, GeneralSemConfigV1, GeneralSemConfigV1ValidationError,
+    LegacyBasicModelConversionErrorV4, LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4,
+    MethodConfig, ModelSpec, SemAnnotationV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
+    SemParameterTargetV4, SemParameterV4, SemRelationV4, convert_legacy_basic_model_v4,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -72,6 +72,11 @@ pub struct AnalysisRecipeV4 {
     pub settings: AnalysisSettings,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub method_config: Option<MethodConfig>,
+    /// Optional General SEM effect/probing/inference request layered over the
+    /// estimator-specific method configuration. Existing Recipe-v4 documents
+    /// omit this field and retain their exact behavior.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub general_sem_config: Option<GeneralSemConfigV1>,
     #[serde(default)]
     pub metadata: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -115,6 +120,8 @@ pub enum AnalysisRecipeV4Error {
     LegacyConversion(#[from] LegacyBasicModelConversionErrorV4),
     #[error(transparent)]
     InvalidSemModel(#[from] SemModelV4ValidationError),
+    #[error(transparent)]
+    InvalidGeneralSemConfig(#[from] GeneralSemConfigV1ValidationError),
 }
 
 impl AnalysisRecipeV4 {
@@ -170,6 +177,9 @@ impl AnalysisRecipeV4 {
                 ));
             }
             validate_sha256("source_recipe_sha256", &source.source_recipe_sha256)?;
+        }
+        if let Some(config) = &self.general_sem_config {
+            config.ensure_valid()?;
         }
         Ok(())
     }
@@ -238,6 +248,7 @@ pub fn migrate_analysis_recipe_to_v4_pending(
         estimand_confirmation: LegacyEstimandConfirmationV4::LegacyEstimandUnspecified,
         settings: source.settings.clone(),
         method_config: source.method_config.clone(),
+        general_sem_config: None,
         metadata: source.metadata.clone(),
         legacy_source: Some(LegacyRecipeSourceV4 {
             source_schema_version: source.schema_version,
@@ -406,8 +417,8 @@ fn validate_sha256(field: &'static str, value: &str) -> Result<(), AnalysisRecip
 mod tests {
     use super::*;
     use crate::{
-        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, Construct, MeasurementMode, MethodConfig,
-        StructuralPath,
+        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, Construct,
+        GENERAL_SEM_CONFIG_V1_SCHEMA_VERSION, MeasurementMode, MethodConfig, StructuralPath,
     };
 
     fn legacy_model() -> ModelSpec {
@@ -560,5 +571,43 @@ mod tests {
             .unwrap_err(),
             AnalysisRecipeV4Error::LegacyModelMismatch
         );
+    }
+
+    #[test]
+    fn general_sem_config_is_additive_versioned_and_validated() {
+        let source = legacy_recipe();
+        let pending = migrate_analysis_recipe_to_v4_pending(&source).unwrap();
+        assert!(
+            serde_json::to_value(&pending)
+                .unwrap()
+                .get("general_sem_config")
+                .is_none()
+        );
+
+        let (mut configured, _) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source.model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        configured.general_sem_config = Some(GeneralSemConfigV1::default());
+        configured.ensure_valid().unwrap();
+        assert_eq!(
+            serde_json::to_value(&configured).unwrap()["general_sem_config"]["schema_version"],
+            GENERAL_SEM_CONFIG_V1_SCHEMA_VERSION
+        );
+
+        configured
+            .general_sem_config
+            .as_mut()
+            .unwrap()
+            .schema_version = 2;
+        assert!(matches!(
+            configured.ensure_valid(),
+            Err(AnalysisRecipeV4Error::InvalidGeneralSemConfig(
+                GeneralSemConfigV1ValidationError::SchemaVersion { found: 2 }
+            ))
+        ));
     }
 }

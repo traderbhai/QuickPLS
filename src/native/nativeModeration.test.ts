@@ -34,7 +34,7 @@ describe("native moderation authoring contract", () => {
     expect(nativeModerationCreationError("control_paths_unsupported")).toContain("Remove or convert control paths");
   });
 
-  it("enforces the validated single-interaction scope", () => {
+  it("keeps distinct moderators eligible while filtering an exact duplicate", () => {
     const interaction: Node<ConstructData> = {
       id: "xm",
       position: { x: 100, y: 100 },
@@ -47,6 +47,15 @@ describe("native moderation authoring contract", () => {
         interaction: { predictor: "x", moderator: "m", outcome: "y", method: "two_stage_product_score" },
       },
     };
+    const secondModerator: Node<ConstructData> = {
+      id: "m2",
+      position: { x: 0, y: 200 },
+      data: { label: "Moderator 2", shortName: "M2", mode: "reflective", indicators: ["m2"] },
+    };
+    const relationship = nativeModerationRelationships(nodes, [{ id: "x-y", source: "x", target: "y" }])[0];
     expect(canAddNativeModeration([...nodes, interaction], [{ id: "x-y", source: "x", target: "y" }])).toBe(false);
+    expect(nativeModeratorCandidates([...nodes, interaction, secondModerator], relationship)).toEqual([{ id: "m2", label: "Moderator 2" }]);
+    expect(canAddNativeModeration([...nodes, interaction, secondModerator], [{ id: "x-y", source: "x", target: "y" }])).toBe(true);
+    expect(nativeModerationCreationError("duplicate_interaction")).toContain("already define a moderating effect");
   });
 });

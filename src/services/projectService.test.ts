@@ -27,6 +27,7 @@ import {
   getInternalLabsRecipeV4PlsJobResult,
   getNativePlsJob,
   getNativePlsJobResult,
+  invalidateNativeGeneralSemFreshDraftAuthorityV1,
   mutateNativeProjectExplorer,
   inspectInternalProjectUpgradeV6,
   openNativeDemoProject,
@@ -824,6 +825,37 @@ describe("native canonical project services", () => {
       savedReports: [],
       datasetVersions: [],
     });
+    expect(mocks.invoke).toHaveBeenCalledWith("new_project", { name: "Legacy" });
+  });
+
+  it("requests a backend-owned fresh General SEM draft using the strict projectMode wire", async () => {
+    mocks.invoke.mockResolvedValue({
+      projectId: "60000002-0000-4000-8000-000000000123",
+      name: "General SEM",
+      path: null,
+      readOnly: false,
+      recovered: false,
+      datasets: [],
+      datasetVersions: [],
+      workspace: null,
+    });
+
+    await createNativeProject("General SEM", "general_sem_v1");
+
+    expect(mocks.invoke).toHaveBeenCalledWith("new_project", {
+      name: "General SEM",
+      projectMode: "general_sem_v1",
+    });
+  });
+
+  it("exposes a one-way invalidation seam for strict schema-6 project activation", async () => {
+    mocks.invoke.mockResolvedValue(undefined);
+
+    await invalidateNativeGeneralSemFreshDraftAuthorityV1();
+
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "invalidate_general_sem_fresh_draft_authority_v1",
+    );
   });
 
   it("rejects malformed lineage returned across the untrusted project snapshot boundary", async () => {

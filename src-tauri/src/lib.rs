@@ -1,8 +1,14 @@
 mod capability_registry_command;
+mod canonical_result_export_publication_v2;
+mod general_sem_registry_access_v1;
 #[cfg(test)]
 mod pls_algorithm_current_product_qualification;
 mod pls_model_comparison_jobs;
+mod project_archive_v6_general_sem_bootstrap;
+mod project_archive_v6_general_sem_preflight;
+mod project_archive_v6_general_sem_revision;
 mod project_archive_v6_model_mutation;
+mod project_archive_v6_new_general_sem;
 mod project_archive_v6_read;
 mod project_archive_v6_save_copy;
 mod project_schema6_result_append;
@@ -11,6 +17,8 @@ mod project_upgrade_assistant;
 mod recipe_v4_canonical_result;
 mod recipe_v4_cbsem_canonical_result;
 mod recipe_v4_cbsem_execution;
+mod recipe_v4_general_sem_canonical_result;
+mod recipe_v4_general_sem_pls_jobs;
 mod recipe_v4_jobs;
 mod sample_projects;
 mod sem_model_v4_scientific_digest;
@@ -20,14 +28,25 @@ mod wave1_diagram_cbsem_roundtrip;
 
 use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
 use capability_registry_command::capability_registry_v2;
+use canonical_result_export_publication_v2::publish_canonical_result_export_v2;
 use chrono::{SecondsFormat, Utc};
 use pls_model_comparison_jobs::{
     DesktopPlsModelComparisonJobsV1, cancel_internal_labs_pls_model_comparison_job,
     dismiss_internal_labs_pls_model_comparison_job, internal_labs_pls_model_comparison_job_result,
     internal_labs_pls_model_comparison_job_status, start_internal_labs_pls_model_comparison_job,
 };
+use project_archive_v6_general_sem_bootstrap::{
+    DesktopGeneralSemFreshDraftAuthorityV1, GeneralSemNewProjectModeV1,
+    bootstrap_internal_general_sem_project_archive_v6,
+    invalidate_general_sem_fresh_draft_authority_v1,
+};
+use project_archive_v6_general_sem_preflight::preflight_internal_general_sem_estimators_v1;
+use project_archive_v6_general_sem_revision::revise_internal_general_sem_execution_authority_v1;
 use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
-use project_archive_v6_read::inspect_internal_project_archive_v6_zip;
+use project_archive_v6_new_general_sem::create_internal_general_sem_project_archive_v6;
+use project_archive_v6_read::{
+    inspect_internal_project_archive_v6_zip, read_internal_project_archive_v6_dataset_rows,
+};
 use project_archive_v6_save_copy::save_internal_project_archive_v6_copy;
 use project_schema6_result_append::append_internal_project_schema6_canonical_result_v2;
 use project_schema6_result_read::read_internal_project_schema6_canonical_results_v2;
@@ -64,6 +83,11 @@ use qpls_runner::{
     run_compiled_pls_recipe_v4, run_pls_analysis,
 };
 use recipe_v4_cbsem_execution::run_internal_labs_recipe_v4_cbsem_execution;
+use recipe_v4_general_sem_pls_jobs::{
+    DesktopGeneralSemPlsJobsV1, cancel_internal_labs_general_sem_pls_job_v1,
+    dismiss_internal_labs_general_sem_pls_job_v1, result_internal_labs_general_sem_pls_job_v1,
+    start_internal_labs_general_sem_pls_job_v1, status_internal_labs_general_sem_pls_job_v1,
+};
 use recipe_v4_jobs::{
     DesktopRecipeV4Jobs, cancel_internal_labs_recipe_v4_cbsem_job,
     cancel_internal_labs_recipe_v4_pls_job, dismiss_internal_labs_recipe_v4_cbsem_job,
@@ -389,6 +413,7 @@ struct DatasetVersionMutation {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 struct ProjectSnapshot {
+    project_id: Uuid,
     name: String,
     path: Option<String>,
     read_only: bool,
@@ -2664,13 +2689,16 @@ fn safe_sheet_name(title: &str, index: usize) -> String {
 }
 
 #[tauri::command]
-fn new_project(name: String, state: State<'_, DesktopProject>) -> Result<ProjectSnapshot, String> {
-    let mut active = state
-        .0
-        .lock()
-        .map_err(|_| "project state is unavailable".to_owned())?;
-    *active = Project::new(name);
-    snapshot(&active, None, None)
+fn new_project(
+    name: String,
+    project_mode: Option<GeneralSemNewProjectModeV1>,
+    state: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+) -> Result<ProjectSnapshot, String> {
+    let project = Project::new(name);
+    let response = snapshot(&project, None, None)?;
+    fresh_draft_authority.replace_from_new_project(&state.0, project, project_mode)?;
+    Ok(response)
 }
 
 #[tauri::command]
@@ -3027,13 +3055,11 @@ fn append_dataset(project: &mut Project, dataset: Dataset) -> Result<DatasetSnap
 fn open_demo_project(
     sample_id: Option<String>,
     state: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
 ) -> Result<ProjectSnapshot, String> {
     let project = build_sample_project(sample_id.as_deref().unwrap_or("corporate_reputation"))?;
     let response = snapshot(&project, None, None)?;
-    *state
-        .0
-        .lock()
-        .map_err(|_| "project state is unavailable".to_owned())? = project;
+    fresh_draft_authority.replace_and_clear(&state.0, project)?;
     Ok(response)
 }
 
@@ -3345,14 +3371,15 @@ fn require_writable_project(project: &Project, operation: &str) -> Result<(), St
 }
 
 #[tauri::command]
-fn open_project(path: String, state: State<'_, DesktopProject>) -> Result<ProjectSnapshot, String> {
+fn open_project(
+    path: String,
+    state: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+) -> Result<ProjectSnapshot, String> {
     let (project, recovery_source) =
         load_project_with_autosave(Path::new(&path)).map_err(|error| error.to_string())?;
     let response = snapshot(&project, Some(path), recovery_source)?;
-    *state
-        .0
-        .lock()
-        .map_err(|_| "project state is unavailable".to_owned())? = project;
+    fresh_draft_authority.replace_and_clear(&state.0, project)?;
     Ok(response)
 }
 
@@ -3363,11 +3390,27 @@ fn save_active_project(
     model: Option<ModelSpec>,
     model_presentation: Option<Value>,
     state: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
 ) -> Result<ProjectSnapshot, String> {
-    let mut project = state
-        .0
-        .lock()
-        .map_err(|_| "project state is unavailable".to_owned())?;
+    save_active_project_with_fresh_draft_authority(
+        path,
+        workspace,
+        model,
+        model_presentation,
+        &state.0,
+        fresh_draft_authority.inner(),
+    )
+}
+
+pub(crate) fn save_active_project_with_fresh_draft_authority(
+    path: String,
+    workspace: Value,
+    model: Option<ModelSpec>,
+    model_presentation: Option<Value>,
+    active_project: &Arc<Mutex<Project>>,
+    fresh_draft_authority: &DesktopGeneralSemFreshDraftAuthorityV1,
+) -> Result<ProjectSnapshot, String> {
+    let mut project = fresh_draft_authority.lock_project_for_unmarked_save(active_project)?;
     let mut candidate =
         project_with_workspace_model(&project, workspace, model, model_presentation)?;
     let manifest = save_project(Path::new(&path), &candidate).map_err(|error| error.to_string())?;
@@ -3390,11 +3433,27 @@ fn autosave_active_project(
     model: Option<ModelSpec>,
     model_presentation: Option<Value>,
     state: State<'_, DesktopProject>,
+    fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
 ) -> Result<(), String> {
-    let mut project = state
-        .0
-        .lock()
-        .map_err(|_| "project state is unavailable".to_owned())?;
+    autosave_active_project_with_fresh_draft_authority(
+        path,
+        workspace,
+        model,
+        model_presentation,
+        &state.0,
+        fresh_draft_authority.inner(),
+    )
+}
+
+pub(crate) fn autosave_active_project_with_fresh_draft_authority(
+    path: String,
+    workspace: Value,
+    model: Option<ModelSpec>,
+    model_presentation: Option<Value>,
+    active_project: &Arc<Mutex<Project>>,
+    fresh_draft_authority: &DesktopGeneralSemFreshDraftAuthorityV1,
+) -> Result<(), String> {
+    let mut project = fresh_draft_authority.lock_project_for_unmarked_save(active_project)?;
     let candidate = project_with_workspace_model(&project, workspace, model, model_presentation)?;
     save_autosave(Path::new(&path), &candidate).map_err(|error| error.to_string())?;
     *project = candidate;
@@ -4386,6 +4445,7 @@ fn snapshot(
         .map(|lineage| lineage.records)
         .unwrap_or_default();
     Ok(ProjectSnapshot {
+        project_id: project.manifest.project_id,
         name: project.manifest.name.clone(),
         path,
         read_only: project.read_only,
@@ -5269,6 +5329,7 @@ mod desktop_job_tests {
         );
 
         let wire = serde_json::to_value(response).unwrap();
+        assert_eq!(wire["projectId"], project.manifest.project_id.to_string());
         assert_eq!(wire["activeModelId"], canonical_model_id);
         assert_eq!(wire["sourceArchiveVersion"], 4);
         assert_eq!(wire["migrationPending"], true);
@@ -7239,10 +7300,12 @@ pub fn run() {
         .manage(DesktopProject(Arc::new(Mutex::new(Project::new(
             "Untitled project",
         )))))
+        .manage(DesktopGeneralSemFreshDraftAuthorityV1::default())
         .manage(DesktopJobs(Arc::new(Mutex::new(HashMap::new()))))
         .manage(DesktopDiagnostics::new())
         .manage(DesktopProjectUpgradePlans::default())
         .manage(DesktopRecipeV4Jobs::default())
+        .manage(DesktopGeneralSemPlsJobsV1::default())
         .manage(DesktopPlsModelComparisonJobsV1::default())
         .invoke_handler(tauri::generate_handler![
             capability_registry_v2,
@@ -7266,8 +7329,19 @@ pub fn run() {
             cancel_internal_labs_recipe_v4_pls_job,
             dismiss_internal_labs_recipe_v4_pls_job,
             internal_labs_recipe_v4_pls_job_result,
+            create_internal_general_sem_project_archive_v6,
+            bootstrap_internal_general_sem_project_archive_v6,
+            revise_internal_general_sem_execution_authority_v1,
+            invalidate_general_sem_fresh_draft_authority_v1,
+            preflight_internal_general_sem_estimators_v1,
+            start_internal_labs_general_sem_pls_job_v1,
+            status_internal_labs_general_sem_pls_job_v1,
+            cancel_internal_labs_general_sem_pls_job_v1,
+            dismiss_internal_labs_general_sem_pls_job_v1,
+            result_internal_labs_general_sem_pls_job_v1,
             mutate_internal_project_archive_v6_model,
             inspect_internal_project_archive_v6_zip,
+            read_internal_project_archive_v6_dataset_rows,
             save_internal_project_archive_v6_copy,
             append_internal_project_schema6_canonical_result_v2,
             read_internal_project_schema6_canonical_results_v2,
@@ -7288,6 +7362,7 @@ pub fn run() {
             preview_dataset_transformation,
             apply_dataset_transformation,
             activate_dataset,
+            publish_canonical_result_export_v2,
             export_xlsx_tables,
             export_text_file,
             open_default_export_folder,

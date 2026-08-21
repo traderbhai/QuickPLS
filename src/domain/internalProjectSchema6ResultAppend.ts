@@ -1,12 +1,21 @@
-import type { CanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
+import type { CanonicalResultDocumentV2, CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import type { AnalysisRecipeV4, AnalysisRecipeV4MissingDataPolicy } from "./internalRecipeV4PlsExecution";
 
 export const INTERNAL_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE = "internal_labs" as const;
+export const STANDARD_GENERAL_SEM_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE = "standard" as const;
 export const STANDARD_EXACT_CBSEM_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE = "standard_exact_cbsem" as const;
 
 export interface InternalProjectSchema6ResultAppendRequestV1 {
-  surface: typeof INTERNAL_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE | typeof STANDARD_EXACT_CBSEM_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE;
+  surface:
+    | typeof INTERNAL_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE
+    | typeof STANDARD_GENERAL_SEM_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE
+    | typeof STANDARD_EXACT_CBSEM_PROJECT_SCHEMA6_RESULT_APPEND_SURFACE;
   experimentalLabsEnabled: boolean;
+  /**
+   * Exact General SEM execution selection. Every General SEM mutation requires
+   * this field; omission remains only for non-General legacy and exact CB paths.
+   */
+  capabilityCell?: CapabilityCellReferenceV2;
   archivePath: string;
   expectedSourceSha256: string;
   recipe?: AnalysisRecipeV4<AnalysisRecipeV4MissingDataPolicy>;

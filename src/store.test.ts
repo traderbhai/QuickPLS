@@ -236,7 +236,7 @@ describe("model editor state", () => {
     expect(useWorkspace.getState().edges).toHaveLength(before + 1);
   });
 
-  it("creates one two-stage moderating effect and atomically adds the moderator main effect", () => {
+  it("creates a two-stage moderating effect atomically and rejects only an exact duplicate", () => {
     useWorkspace.setState((state) => ({ edges: state.edges.filter((edge) => edge.id !== "like-cusa") }));
     const beforeNodes = useWorkspace.getState().nodes.length;
     expect(useWorkspace.getState().edges.some((edge) => edge.source === "likeability" && edge.target === "satisfaction")).toBe(false);
@@ -250,11 +250,73 @@ describe("model editor state", () => {
     expect(state.edges).toContainEqual(expect.objectContaining({ source: "likeability", target: "satisfaction", label: "Path" }));
     expect(state.edges).toContainEqual(expect.objectContaining({ source: interaction.id, target: "satisfaction", label: "Interaction" }));
     const duplicate = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "satisfaction");
-    expect(duplicate).toEqual({ status: "blocked", reason: "interaction_exists" });
+    expect(duplicate).toEqual({ status: "blocked", reason: "duplicate_interaction" });
     expect(useWorkspace.getState().nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(1);
     useWorkspace.getState().undo();
     expect(useWorkspace.getState().nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(0);
     expect(useWorkspace.getState().edges.some((edge) => edge.source === "likeability" && edge.target === "satisfaction")).toBe(false);
+  });
+
+  it("authors distinct interactions on the same and different focal paths", () => {
+    const sameFocalFirst = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "loyalty");
+    const sameFocalSecond = useWorkspace.getState().addTwoStageInteraction("competence", "satisfaction", "loyalty");
+    const differentFocal = useWorkspace.getState().addTwoStageInteraction("likeability", "competence", "satisfaction");
+
+    expect([sameFocalFirst, sameFocalSecond, differentFocal]).toEqual([
+      expect.objectContaining({ status: "created" }),
+      expect.objectContaining({ status: "created" }),
+      expect.objectContaining({ status: "created" }),
+    ]);
+    const interactions = useWorkspace.getState().nodes.filter((node) => node.data.semantic === "interaction");
+    expect(interactions).toHaveLength(3);
+    expect(new Set(interactions.map((node) => node.id))).toHaveLength(3);
+    expect(interactions.map((node) => node.data.interaction)).toEqual(expect.arrayContaining([
+      expect.objectContaining({ predictor: "competence", moderator: "likeability", outcome: "loyalty" }),
+      expect.objectContaining({ predictor: "competence", moderator: "satisfaction", outcome: "loyalty" }),
+      expect.objectContaining({ predictor: "likeability", moderator: "competence", outcome: "satisfaction" }),
+    ]));
+  });
+
+  it("uses deterministic unique ids when distinct interaction identities sanitize to the same base", () => {
+    useWorkspace.setState({
+      nodes: [
+        { id: "a/b", type: "construct", position: { x: 0, y: 0 }, data: { label: "Predictor slash", shortName: "AB1", mode: "reflective", indicators: ["COMP1"] } },
+        { id: "a-b", type: "construct", position: { x: 0, y: 120 }, data: { label: "Predictor dash", shortName: "AB2", mode: "reflective", indicators: ["COMP2"] } },
+        { id: "m", type: "construct", position: { x: 0, y: 240 }, data: { label: "Moderator", shortName: "M", mode: "reflective", indicators: ["LIKE1"] } },
+        { id: "y", type: "construct", position: { x: 260, y: 120 }, data: { label: "Outcome", shortName: "Y", mode: "reflective", indicators: ["CUSA1"] } },
+      ],
+      edges: [
+        { id: "a-slash-y", source: "a/b", target: "y" },
+        { id: "a-dash-y", source: "a-b", target: "y" },
+      ],
+    });
+
+    const first = useWorkspace.getState().addTwoStageInteraction("a/b", "m", "y");
+    const second = useWorkspace.getState().addTwoStageInteraction("a-b", "m", "y");
+    expect(first).toEqual({ status: "created", interactionId: "interaction-a-b-m-y" });
+    expect(second).toEqual({ status: "created", interactionId: "interaction-a-b-m-y-2" });
+    expect(new Set(useWorkspace.getState().nodes.map((node) => node.id)).size).toBe(useWorkspace.getState().nodes.length);
+    expect(new Set(useWorkspace.getState().edges.map((edge) => edge.id)).size).toBe(useWorkspace.getState().edges.length);
+  });
+
+  it("keeps multi-interaction create, deletion, undo, and redo atomic with stable ids", () => {
+    const first = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "loyalty");
+    const second = useWorkspace.getState().addTwoStageInteraction("competence", "satisfaction", "loyalty");
+    if (first.status !== "created" || second.status !== "created") throw new Error("Expected both distinct interactions to be created");
+
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === first.interactionId)).toBe(true);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === second.interactionId)).toBe(false);
+    useWorkspace.getState().redo();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === second.interactionId)).toBe(true);
+
+    useWorkspace.getState().setSelectedNode(first.interactionId);
+    useWorkspace.getState().removeSelection();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === first.interactionId)).toBe(false);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === second.interactionId)).toBe(true);
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === first.interactionId)).toBe(true);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === second.interactionId)).toBe(true);
   });
 
   it("requires a focal structural path and does not assign manifest indicators to generated interactions", () => {
@@ -310,6 +372,52 @@ describe("model editor state", () => {
     useWorkspace.getState().removeSelection();
     expect(useWorkspace.getState().nodes.some((node) => node.id === "likeability")).toBe(false);
     expect(useWorkspace.getState().nodes.some((node) => node.data.semantic === "interaction")).toBe(false);
+  });
+
+  it("cascades a strong three-way interaction when a required lower-order term is removed and restores both atomically", () => {
+    const first = useWorkspace.getState().addTwoStageInteraction("competence", "likeability", "loyalty");
+    const second = useWorkspace.getState().addTwoStageInteraction("competence", "satisfaction", "loyalty");
+    const third = useWorkspace.getState().addTwoStageInteraction("likeability", "satisfaction", "loyalty");
+    if (first.status !== "created" || second.status !== "created" || third.status !== "created") {
+      throw new Error("Expected the complete lower-order interaction set.");
+    }
+    const source = useWorkspace.getState().nodes.find((node) => node.id === first.interactionId)!;
+    const highOrderId = "interaction:competence-likeability-satisfaction";
+    useWorkspace.setState((state) => ({
+      nodes: [...state.nodes, {
+        ...source,
+        id: highOrderId,
+        data: {
+          ...source.data,
+          label: "Competence × Likeability × Satisfaction",
+          shortName: "COMPxLxS",
+          interaction: {
+            kind: "interaction_v2",
+            termId: "term:competence-likeability-satisfaction",
+            operands: ["competence", "likeability", "satisfaction"],
+            outcome: "loyalty",
+            focalRelationId: "comp-cusl",
+            canonicalMethod: "two_stage",
+            hierarchyPolicy: "strong",
+            productIndicator: null,
+          },
+        },
+      }],
+      edges: [...state.edges, { id: "three-way-cusl", source: highOrderId, target: "loyalty", label: "Interaction" }],
+      past: [],
+      future: [],
+    }));
+
+    useWorkspace.getState().setSelectedNode(first.interactionId);
+    useWorkspace.getState().removeSelection();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === first.interactionId)).toBe(false);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === highOrderId)).toBe(false);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === second.interactionId)).toBe(true);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === third.interactionId)).toBe(true);
+
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().nodes.some((node) => node.id === first.interactionId)).toBe(true);
+    expect(useWorkspace.getState().nodes.some((node) => node.id === highOrderId)).toBe(true);
   });
 
   it("keeps generated interaction semantics and required endpoints immutable in the store", () => {

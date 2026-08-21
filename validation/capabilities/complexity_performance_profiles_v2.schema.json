@@ -35,7 +35,7 @@
         "registry_sha256": { "$ref": "#/$defs/sha256" },
         "selection": { "const": "active_option_cells" },
         "expected_active_row_count": { "const": 43 },
-        "expected_active_option_cell_count": { "const": 46 },
+        "expected_active_option_cell_count": { "const": 49 },
         "derived_reference_set_sha256": { "$ref": "#/$defs/sha256" }
       }
     },

@@ -230,6 +230,48 @@ describe("native model inspector customer workflow", () => {
     }
   });
 
+  it("reads back ordered interaction_v2 operands, hierarchy, and canonical method", () => {
+    const focal = projectedNode({ label: "Focal predictor", shortName: "X" });
+    focal.id = "construct:x";
+    const firstModerator = projectedNode({ label: "First moderator", shortName: "Z" });
+    firstModerator.id = "construct:z";
+    const secondModerator = projectedNode({ label: "Second moderator", shortName: "W" });
+    secondModerator.id = "construct:w";
+    const outcome = projectedNode({ label: "Outcome", shortName: "Y" });
+    outcome.id = "construct:y";
+    const interaction = projectedNode({
+      semantic: "interaction",
+      interaction: {
+        kind: "interaction_v2",
+        termId: "interaction:x-z-w",
+        operands: ["construct:x", "construct:z", "construct:w"],
+        outcome: "construct:y",
+        focalRelationId: "path:x-y",
+        canonicalMethod: "orthogonalizing",
+        hierarchyPolicy: "strong",
+        productIndicator: null,
+      },
+    });
+    const nodes = [focal, firstModerator, secondModerator, outcome, interaction];
+    const modelHtml = renderToStaticMarkup(<NativeModelInspector
+      nodesOverride={nodes}
+      selectedNodeIdOverride={interaction.id}
+      selectedEdgeIdOverride={null}
+    />);
+    const parameterHtml = renderToStaticMarkup(<NativeModelInspector
+      initialTab="parameter"
+      nodesOverride={nodes}
+      selectedNodeIdOverride={interaction.id}
+      selectedEdgeIdOverride={null}
+    />);
+
+    expect(modelHtml).toContain("<dt>Focal predictor</dt><dd>Focal predictor</dd>");
+    expect(modelHtml).toContain("<dt>Moderators (authored order)</dt><dd>First moderator × Second moderator</dd>");
+    expect(modelHtml).toContain("<dt>Hierarchy policy</dt><dd>strong</dd>");
+    expect(parameterHtml).toContain("<dt>Parameter</dt><dd>Orthogonalizing</dd>");
+    expect(parameterHtml).toContain("ordered operand scores");
+  });
+
   it("renders every projected higher-order approach and measurement type exactly", () => {
     for (const [measurementType, label] of [
       ["reflective_reflective", "Reflective–reflective higher-order construct"],

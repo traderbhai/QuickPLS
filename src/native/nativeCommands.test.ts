@@ -256,6 +256,127 @@ describe("native command registry", () => {
     expect(ids(pointerCommands)).toContain("edit-selection");
     expect(ids(pointerCommands)).toContain("delete-selection");
   });
+
+  it("keeps an immutable activated General SEM model revision-reachable from toolbar, path context, and shortcut", () => {
+    const revision = context({
+      surface: "model",
+      projectOpen: true,
+      projectWritable: false,
+      hasDataset: true,
+      canUndo: true,
+      canAddModeration: true,
+      moderationMutationAuthority: {
+        kind: "general_sem_revision",
+        available: true,
+      },
+      selection: { kind: "path", count: 1 },
+    });
+
+    const toolbar = nativeCommandsFor({ kind: "toolbar", surface: "model" }, revision);
+    const toolbarModeration = toolbar.find((command) => command.id === "add-moderating-effect");
+    expect(toolbarModeration).toMatchObject({
+      label: "Moderating Effect (Save As Revision)…",
+      enabled: true,
+      action: { id: "model.add-moderating-effect" },
+    });
+
+    const contextModeration = nativeContextMenuCommands(revision)
+      .find((command) => command.id === "add-moderating-effect");
+    expect(contextModeration).toMatchObject({
+      label: "Moderating Effect (Save As Revision)…",
+      enabled: true,
+    });
+    expect(nativeCommandForShortcut({ key: "m" }, revision)?.id).toBe("add-moderating-effect");
+    const dispatch = vi.fn();
+    expect(executeNativeCommand("add-moderating-effect", revision, dispatch)).toBe(true);
+    expect(dispatch).toHaveBeenCalledWith({ id: "model.add-moderating-effect" });
+
+    for (const directMutation of [
+      "save-project",
+      "undo",
+      "add-construct",
+      "path-tool",
+      "add-higher-order",
+      "edit-selection",
+      "delete-selection",
+      "arrange-model",
+    ] as const) {
+      expect(resolveNativeCommand(directMutation, revision).enabled).toBe(false);
+    }
+  });
+
+  it("fails closed across every moderation entry point when revision authority is busy", () => {
+    const reason = "Wait for General SEM archive publication to finish.";
+    const blockedRevision = context({
+      surface: "model",
+      projectOpen: true,
+      projectWritable: false,
+      hasDataset: true,
+      canAddModeration: true,
+      moderationMutationAuthority: {
+        kind: "general_sem_revision",
+        available: false,
+        disabledReason: reason,
+      },
+      selection: { kind: "path", count: 1 },
+    });
+
+    expect(resolveNativeCommand("add-moderating-effect", blockedRevision)).toMatchObject({
+      label: "Moderating Effect (Save As Revision)…",
+      enabled: false,
+      disabledReason: reason,
+    });
+    expect(nativeCommandsFor({ kind: "toolbar", surface: "model" }, blockedRevision)
+      .find((command) => command.id === "add-moderating-effect")?.disabledReason).toBe(reason);
+    expect(nativeContextMenuCommands(blockedRevision)
+      .find((command) => command.id === "add-moderating-effect")?.disabledReason).toBe(reason);
+    expect(nativeCommandForShortcut({ key: "m" }, blockedRevision)).toBeNull();
+    const dispatch = vi.fn();
+    expect(executeNativeCommand("add-moderating-effect", blockedRevision, dispatch)).toBe(false);
+    expect(dispatch).not.toHaveBeenCalled();
+  });
+
+  it("does not let revision authority bypass graph, calculation, or legacy read-only locks", () => {
+    const revision = context({
+      surface: "model",
+      projectOpen: true,
+      projectWritable: false,
+      hasDataset: true,
+      canAddModeration: true,
+      moderationMutationAuthority: { kind: "general_sem_revision", available: true },
+      selection: { kind: "path", count: 1 },
+    });
+    expect(resolveNativeCommand("add-moderating-effect", { ...revision, canAddModeration: false })).toMatchObject({
+      enabled: false,
+      disabledReason: "Select an eligible directed structural path with an available measured moderator.",
+    });
+    expect(resolveNativeCommand("add-moderating-effect", { ...revision, calculationStatus: "running" })).toMatchObject({
+      enabled: false,
+      disabledReason: "Finish or cancel the active calculation before changing the model.",
+    });
+
+    const legacyReadOnly = {
+      ...revision,
+      moderationMutationAuthority: {
+        kind: "blocked" as const,
+        disabledReason: "This project does not permit direct model mutations.",
+      },
+    };
+    expect(resolveNativeCommand("add-moderating-effect", legacyReadOnly)).toMatchObject({
+      label: "Moderating Effect…",
+      enabled: false,
+      disabledReason: "This project does not permit direct model mutations.",
+    });
+    expect(nativeCommandForShortcut({ key: "m" }, legacyReadOnly)).toBeNull();
+
+    const standardWritable = { ...revision, projectWritable: true, moderationMutationAuthority: { kind: "direct" as const } };
+    expect(resolveNativeCommand("add-moderating-effect", standardWritable)).toMatchObject({
+      label: "Moderating Effect…",
+      enabled: true,
+    });
+    expect(nativeCommandForShortcut({ key: "m" }, standardWritable)?.id).toBe("add-moderating-effect");
+  });
+
   it("opens calculation setup for a blocked model so the dialog can explain the blocker", () => {
     const blocked = context({ surface: "model", projectOpen: true, hasDataset: true, canCalculate: false });
     expect(resolveNativeCommand("open-calculation", blocked).enabled).toBe(true);

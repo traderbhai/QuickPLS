@@ -2037,6 +2037,7 @@ pub(crate) fn build_recipe_v4_pls_canonical_result(
             completed_at: completed_at.into(),
         },
         capability_cells: Some(all_capability_cells),
+        general_sem_results: None,
         sections,
         tables,
         charts: Vec::new(),

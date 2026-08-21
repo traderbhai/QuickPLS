@@ -28,6 +28,8 @@ import {
   type ReactNode,
 } from "react";
 import { activateNativeDataset, getNativeDatasetRows, isNativeDesktop, updateNativeColumnMetadata } from "../services/projectService";
+import { readInternalProjectArchiveV6DatasetRows } from "../services/internalProjectArchiveV6DatasetRowsService";
+import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { useWorkspace } from "../store";
 import type { ColumnMetadata, Dataset } from "../types";
 import {
@@ -42,6 +44,7 @@ import { nativeDatasetOperationLabel, nativeDatasetVersionItems } from "./native
 import type { NativeDataContextMenuRequest, NativeDataContextTarget } from "./nativeDataContext";
 import { isContextMenuKeyboardGesture } from "./nativeMenuNavigation";
 import { nativeGridClipboardText, useNativeScientificGrid } from "./nativeScientificGrid";
+import { readNativeDatasetPageV1 } from "./nativeDatasetRowPaging";
 import {
   defaultNativeColumnMetadata,
   nativeVariableMetadataDraft,
@@ -97,11 +100,13 @@ export function NativeDataSurface({
   onContextMenuRequest,
 }: NativeDataSurfaceProps) {
   const dataset = useWorkspace((state) => state.dataset);
+  const datasetDescriptorOnly = useWorkspace((state) => state.datasetDescriptorOnly);
   const datasetCatalog = useWorkspace((state) => state.datasetCatalog);
   const datasetVersions = useWorkspace((state) => state.datasetVersions);
   const groupColumn = configuredGroupColumn?.trim() ?? "";
   const setDataset = useWorkspace((state) => state.setDataset);
   const pushToast = useWorkspace((state) => state.pushToast);
+  const schema6Session = useInternalProjectArchiveV6Session((state) => state.session);
   const [mode, setMode] = useState<NativeDataMode>("data");
   const [variableSearch, setVariableSearch] = useState("");
   const [activatingDatasetId, setActivatingDatasetId] = useState<string | null>(null);
@@ -117,7 +122,10 @@ export function NativeDataSurface({
     () => nativeDataPage(rowCount, pageSize, requestedPage),
     [rowCount, pageSize, requestedPage],
   );
-  const pageKey = `${dataset.id}:${page.start}:${pageSize}`;
+  const pageAuthorityKey = datasetDescriptorOnly
+    ? schema6Session?.snapshot.archiveSha256 ?? "unbound"
+    : "legacy";
+  const pageKey = `${dataset.id}:${dataset.fingerprint ?? "unfingerprinted"}:${pageAuthorityKey}:${page.start}:${pageSize}`;
   const currentNativePage = nativePageState?.key === pageKey ? nativePageState : null;
   const visibleRows = useMemo(
     () => nativeRuntime
@@ -137,8 +145,11 @@ export function NativeDataSurface({
   );
   const pagerLabelId = `nd-data-range-${dataset.id.replace(/[^a-zA-Z0-9_-]/g, "-")}`;
   const gridInstructionsId = `${pagerLabelId}-grid-instructions`;
+  const dataQualityAvailable = !datasetDescriptorOnly && Number.isFinite(dataset.missing);
   const totalCells = rowCount * dataset.columns.length;
-  const completePercent = totalCells > 0 ? Math.max(0, Math.min(100, ((totalCells - dataset.missing) / totalCells) * 100)) : 0;
+  const completePercent = dataQualityAvailable && totalCells > 0
+    ? Math.max(0, Math.min(100, ((totalCells - dataset.missing) / totalCells) * 100))
+    : null;
   const dataKindLabel = dataset.kind === "covariance" ? "Covariance matrix" : dataset.kind === "correlation" ? "Correlation matrix" : "Raw data";
   const deriveDisabledReason = !nativeRuntime
     ? "Derived variables are available in the installed Windows app."
@@ -211,7 +222,13 @@ export function NativeDataSurface({
 
     let active = true;
     setNativePageState({ key: pageKey, status: "loading", rows: [] });
-    void getNativeDatasetRows(dataset.id, page.start, pageSize)
+    void readNativeDatasetPageV1({
+      dataset,
+      datasetDescriptorOnly,
+      session: schema6Session,
+      offset: page.start,
+      limit: pageSize,
+    }, readInternalProjectArchiveV6DatasetRows, getNativeDatasetRows)
       .then((response) => {
         if (!active) return;
         if (response.datasetId !== dataset.id || response.offset !== page.start) {
@@ -226,7 +243,7 @@ export function NativeDataSurface({
       });
 
     return () => { active = false; };
-  }, [dataset.columns.length, dataset.id, mode, nativeRuntime, page.start, pageKey, pageSize, reloadToken, rowCount]);
+  }, [dataset, datasetDescriptorOnly, mode, nativeRuntime, page.start, pageKey, pageSize, reloadToken, rowCount, schema6Session]);
 
 
   useEffect(() => {
@@ -405,17 +422,20 @@ export function NativeDataSurface({
           <tbody>{dataset.columns.map((column) => {
             const item = metadataByColumn.get(column);
             return <tr key={column} data-native-variable={column} tabIndex={0} aria-selected={selectedColumn === column} onClick={() => setSelectedColumn(column)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); setSelectedColumn(column); } }}>
-              <td>{column}</td><td>{item?.column_type ?? "Not declared"}</td><td>{item?.scale_type ?? "Not declared"}</td><td>{column === groupColumn ? <span className="nd-group-role"><UsersRound size={12} aria-hidden="true" />Grouping</span> : "Analysis"}</td><td>{missingCounts.get(column) ?? 0}</td>
-            </tr>;
-          })}</tbody>
-        </table>
-      </div> : dataset.columns.length && mode === "quality" ? <div className="nd-data-detail" role="region" aria-label="Data Quality">
+               <td>{column}</td><td>{item?.column_type ?? "Not declared"}</td><td>{item?.scale_type ?? "Not declared"}</td><td>{column === groupColumn ? <span className="nd-group-role"><UsersRound size={12} aria-hidden="true" />Grouping</span> : "Analysis"}</td><td>{dataQualityAvailable ? missingCounts.get(column) ?? 0 : "Not stored"}</td>
+             </tr>;
+           })}</tbody>
+         </table>
+       </div> : dataset.columns.length && mode === "quality" && !dataQualityAvailable ? <div className="nd-data-detail" role="region" aria-label="Data Quality unavailable">
+         <header className="nd-data-detail-heading"><h2>Data Quality</h2><span>Summary not stored</span></header>
+         <p role="status">This verified General SEM archive exposes its exact data rows on demand, but it does not store per-variable missing-value summaries. QuickPLS will not infer quality statistics from the descriptor-only placeholder.</p>
+       </div> : dataset.columns.length && mode === "quality" ? <div className="nd-data-detail" role="region" aria-label="Data Quality">
         <header className="nd-data-detail-heading"><h2>Data Quality</h2><span>Current dataset</span></header>
         <dl className="nd-data-summary">
           <div><dt>Cases</dt><dd>{rowCount.toLocaleString()}</dd></div>
           <div><dt>Variables</dt><dd>{dataset.columns.length.toLocaleString()}</dd></div>
           <div><dt>Missing values</dt><dd>{dataset.missing.toLocaleString()}</dd></div>
-          <div><dt>Complete cells</dt><dd>{completePercent.toFixed(1)}%</dd></div>
+           <div><dt>Complete cells</dt><dd>{completePercent == null ? "Not stored" : `${completePercent.toFixed(1)}%`}</dd></div>
         </dl>
         <div className="nd-table-scroll" tabIndex={0} role="region" aria-label="Missing values by variable">
           <table className="nd-result-table">
@@ -440,7 +460,7 @@ export function NativeDataSurface({
           <div><dt>Data kind</dt><dd>{dataKindLabel}</dd></div>
           <div><dt>Cases</dt><dd>{rowCount.toLocaleString()}</dd></div>
           <div><dt>Variables</dt><dd>{dataset.columns.length.toLocaleString()}</dd></div>
-          <div><dt>Missing values</dt><dd>{dataset.missing.toLocaleString()}</dd></div>
+           <div><dt>Missing values</dt><dd>{dataQualityAvailable ? dataset.missing.toLocaleString() : "Not stored"}</dd></div>
           {dataset.sampleSize != null ? <div><dt>Declared sample size</dt><dd>{dataset.sampleSize.toLocaleString()}</dd></div> : null}
           <div><dt>Fingerprint</dt><dd><code title={dataset.fingerprint}>{dataset.fingerprint?.trim() || "Not available"}</code></dd></div>
         </dl>
@@ -452,9 +472,14 @@ export function NativeDataSurface({
       {selectedColumn ? <NativeVariableProperties
         dataset={dataset}
         selectedColumn={selectedColumn}
-        missingCount={missingCounts.get(selectedColumn) ?? 0}
+         missingCount={dataQualityAvailable ? missingCounts.get(selectedColumn) ?? 0 : null}
         rowCount={rowCount}
         isGroupingVariable={selectedColumn === groupColumn}
+        mutationDisabledReason={!projectWritable
+          ? "This General SEM archive is read-only. Dataset metadata revisions require a future versioned authority workflow."
+          : mutationsLocked
+            ? "Dataset changes are locked while General SEM publication or another protected operation is active."
+            : null}
       /> : <div className="nd-pane-empty">Select a variable.</div>}
     </aside> : null}
   </div>;
@@ -466,12 +491,14 @@ function NativeVariableProperties({
   missingCount,
   rowCount,
   isGroupingVariable,
+  mutationDisabledReason,
 }: {
   dataset: Dataset;
   selectedColumn: string;
-  missingCount: number;
+  missingCount: number | null;
   rowCount: number;
   isGroupingVariable: boolean;
+  mutationDisabledReason: string | null;
 }) {
   const setDataset = useWorkspace((state) => state.setDataset);
   const pushToast = useWorkspace((state) => state.pushToast);
@@ -500,6 +527,11 @@ function NativeVariableProperties({
   };
 
   const saveMetadata = async () => {
+    if (mutationDisabledReason) {
+      setStatus("error");
+      setError(mutationDisabledReason);
+      return;
+    }
     const validation = validateNativeVariableMetadata(currentMetadata, draft);
     if (!validation.metadata) {
       setStatus("error");
@@ -529,16 +561,17 @@ function NativeVariableProperties({
       <div><dt>Name</dt><dd>{selectedColumn}</dd></div>
       <div><dt>Physical type</dt><dd>{currentMetadata.column_type}</dd></div>
       <div><dt>Role</dt><dd>{isGroupingVariable ? <span className="nd-group-role"><UsersRound size={12} aria-hidden="true" />Grouping variable</span> : "Analysis variable"}</dd></div>
-      <div><dt>Missing values</dt><dd>{missingCount.toLocaleString()}</dd></div>
+       <div><dt>Missing values</dt><dd>{missingCount == null ? "Not stored" : missingCount.toLocaleString()}</dd></div>
       <div><dt>Cases</dt><dd>{rowCount.toLocaleString()}</dd></div>
       <div><dt>Import markers</dt><dd title={markerLabel}>{markerLabel}</dd></div>
     </dl>
     <p className="nd-property-note">Missing markers are applied when the file is imported.</p>
+    {mutationDisabledReason ? <p className="nd-property-note" role="status">{mutationDisabledReason}</p> : null}
     <label htmlFor={`${fieldPrefix}-label`}>Label
-      <input id={`${fieldPrefix}-label`} type="text" value={draft.label} onChange={(event) => update("label", event.target.value)} />
+      <input id={`${fieldPrefix}-label`} type="text" value={draft.label} disabled={Boolean(mutationDisabledReason)} onChange={(event) => update("label", event.target.value)} />
     </label>
     <label htmlFor={`${fieldPrefix}-scale`}>Scale
-      <select id={`${fieldPrefix}-scale`} value={draft.scaleType} onChange={(event) => update("scaleType", event.target.value as ColumnMetadata["scale_type"])}>
+      <select id={`${fieldPrefix}-scale`} value={draft.scaleType} disabled={Boolean(mutationDisabledReason)} onChange={(event) => update("scaleType", event.target.value as ColumnMetadata["scale_type"])}>
         <option value="continuous">Continuous</option>
         <option value="ordinal">Ordinal</option>
         <option value="nominal">Nominal</option>
@@ -548,16 +581,16 @@ function NativeVariableProperties({
     </label>
     <div className="nd-property-bounds" role="group" aria-label="Theoretical range">
       <label htmlFor={`${fieldPrefix}-minimum`}>Minimum
-        <input id={`${fieldPrefix}-minimum`} type="number" step="any" value={draft.theoreticalMin} onChange={(event) => update("theoreticalMin", event.target.value)} />
+        <input id={`${fieldPrefix}-minimum`} type="number" step="any" value={draft.theoreticalMin} disabled={Boolean(mutationDisabledReason)} onChange={(event) => update("theoreticalMin", event.target.value)} />
       </label>
       <label htmlFor={`${fieldPrefix}-maximum`}>Maximum
-        <input id={`${fieldPrefix}-maximum`} type="number" step="any" value={draft.theoreticalMax} onChange={(event) => update("theoreticalMax", event.target.value)} />
+        <input id={`${fieldPrefix}-maximum`} type="number" step="any" value={draft.theoreticalMax} disabled={Boolean(mutationDisabledReason)} onChange={(event) => update("theoreticalMax", event.target.value)} />
       </label>
     </div>
     {error ? <p className="nd-form-error" role="alert">{error}</p> : null}
     <div className="nd-property-actions">
       <span className="nd-form-status" role="status">{status === "saving" ? "Saving..." : status === "saved" ? "Saved" : ""}</span>
-      <button className="primary" type="submit" disabled={status === "saving"}>{status === "saving" ? "Applying..." : "Apply"}</button>
+      <button className="primary" type="submit" disabled={status === "saving" || Boolean(mutationDisabledReason)}>{status === "saving" ? "Applying..." : "Apply"}</button>
     </div>
   </form>;
 }

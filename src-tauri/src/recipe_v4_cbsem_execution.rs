@@ -367,9 +367,8 @@ pub(crate) mod tests {
     use chrono::{TimeZone, Utc};
     use qpls_core::{
         ANALYSIS_RECIPE_V4_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipeModelBindingV4,
-        AnalysisSettings, CbsemBootstrapAlgorithm, CbsemBootstrapConfigV2,
-        CbsemBootstrapInterval, CbsemBootstrapTestTail, CbsemEstimator, CbsemInput,
-        CbsemModelType, Construct,
+        AnalysisSettings, CbsemBootstrapAlgorithm, CbsemBootstrapConfigV2, CbsemBootstrapInterval,
+        CbsemBootstrapTestTail, CbsemEstimator, CbsemInput, CbsemModelType, Construct,
         FactorMeanPolicyV4, LegacyBasicModelInterpretationV4, LegacyEstimandConfirmationV4,
         MeasurementMode, MethodConfig, MissingDataPolicyV4, ModelSpec, Preprocessing,
         SemCovarianceDenominatorV4, SemDataBindingV4, SemMatrixSampleMetadataV4,
@@ -457,6 +456,7 @@ pub(crate) mod tests {
                 group_column: None,
                 invariance_steps: Vec::new(),
             }),
+            general_sem_config: None,
             metadata: BTreeMap::new(),
             legacy_source: None,
         };
@@ -610,6 +610,7 @@ pub(crate) mod tests {
                 group_column: None,
                 invariance_steps: Vec::new(),
             }),
+            general_sem_config: None,
             metadata: BTreeMap::new(),
             legacy_source: None,
         };

@@ -34,7 +34,7 @@ describe("native Capability Registry V2 bridge", () => {
       registry_version: rawCapabilityRegistryV2.registry_version,
       capability_row_count: 45,
       active_row_count: 43,
-      option_cell_count: 48,
+      option_cell_count: 51,
     });
     expect(parsed.registry.capabilities).toHaveLength(45);
     expect(Object.isFrozen(parsed)).toBe(true);

@@ -56,6 +56,62 @@ describe("validateModel", () => {
     ])).toEqual([]);
   });
 
+  it("validates strong three-way interaction_v2 lower-order closure", () => {
+    const moderators: Array<Node<ConstructData>> = [
+      { id: "z", position: { x: 0, y: 1 }, data: { label: "Moderator Z", shortName: "Z", mode: "reflective", indicators: ["z1"] } },
+      { id: "w", position: { x: 0, y: 2 }, data: { label: "Moderator W", shortName: "W", mode: "reflective", indicators: ["w1"] } },
+    ];
+    const lowerOrder = (id: string, predictor: string, moderator: string): Node<ConstructData> => ({
+      id,
+      position: { x: 1, y: 0 },
+      data: {
+        label: id,
+        shortName: id.toUpperCase(),
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: { predictor, moderator, outcome: "y", method: "two_stage_product_score" },
+      },
+    });
+    const highOrder: Node<ConstructData> = {
+      id: "xzw",
+      position: { x: 2, y: 0 },
+      data: {
+        label: "X × Z × W",
+        shortName: "XZW",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "interaction:x-z-w",
+          operands: ["x", "z", "w"],
+          outcome: "y",
+          focalRelationId: "x-y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    };
+    const lowerOrders = [
+      lowerOrder("xz", "x", "z"),
+      lowerOrder("xw", "x", "w"),
+      lowerOrder("zw", "z", "w"),
+    ];
+    const completeEdges: Edge[] = [
+      ...edges,
+      { id: "z-y", source: "z", target: "y" },
+      { id: "w-y", source: "w", target: "y" },
+      ...lowerOrders.map((interaction) => ({ id: `${interaction.id}-y`, source: interaction.id, target: "y" })),
+      { id: "xzw-y", source: "xzw", target: "y" },
+    ];
+
+    expect(validateModel([...nodes, ...moderators, ...lowerOrders, highOrder], completeEdges)).toEqual([]);
+    expect(validateModel([...nodes, ...moderators, ...lowerOrders.slice(1), highOrder], completeEdges))
+      .toContainEqual({ code: "interaction.invalid", subject: "xzw" });
+  });
+
   it("accepts a valid indicator-free higher-order construct placeholder", () => {
     const higherOrder: Node<ConstructData> = {
       id: "hoc",
@@ -104,8 +160,12 @@ describe("validateModel", () => {
     ]));
   });
 
-  it("blocks incomplete and multiple moderation relationships", () => {
-    const interaction = (id: string): Node<ConstructData> => ({
+  it("accepts multiple distinct interactions on the same focal path", () => {
+    const moderators: Array<Node<ConstructData>> = [
+      { id: "m1", position: { x: 0, y: 1 }, data: { label: "Moderator 1", shortName: "M1", mode: "reflective", indicators: ["m1"] } },
+      { id: "m2", position: { x: 0, y: 2 }, data: { label: "Moderator 2", shortName: "M2", mode: "reflective", indicators: ["m2"] } },
+    ];
+    const interaction = (id: string, moderator: string): Node<ConstructData> => ({
       id,
       position: { x: 1, y: 0 },
       data: {
@@ -114,11 +174,66 @@ describe("validateModel", () => {
         mode: "formative",
         indicators: [],
         semantic: "interaction",
-        interaction: { predictor: "x", moderator: "missing", outcome: "y", method: "two_stage_product_score" },
+        interaction: { predictor: "x", moderator, outcome: "y", method: "two_stage_product_score" },
       },
     });
-    const issues = validateModel([...nodes, interaction("xm"), interaction("xm2")], edges);
-    expect(issues).toContainEqual({ code: "interaction.multiple", subject: "model" });
-    expect(issues).toContainEqual({ code: "interaction.invalid", subject: "xm" });
+    expect(validateModel([...nodes, ...moderators, interaction("xm1", "m1"), interaction("xm2", "m2")], [
+      ...edges,
+      { id: "m1-y", source: "m1", target: "y" },
+      { id: "m2-y", source: "m2", target: "y" },
+      { id: "xm1-y", source: "xm1", target: "y" },
+      { id: "xm2-y", source: "xm2", target: "y" },
+    ])).toEqual([]);
+  });
+
+  it("accepts multiple distinct interactions on different focal paths", () => {
+    const moderator: Node<ConstructData> = { id: "m", position: { x: 0, y: 1 }, data: { label: "Moderator", shortName: "M", mode: "reflective", indicators: ["m1"] } };
+    const secondOutcome: Node<ConstructData> = { id: "z", position: { x: 2, y: 1 }, data: { label: "Second outcome", shortName: "Z", mode: "reflective", indicators: ["z1"] } };
+    const interaction = (id: string, outcome: string): Node<ConstructData> => ({
+      id,
+      position: { x: 1, y: 0 },
+      data: {
+        label: id,
+        shortName: id.toUpperCase(),
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: { predictor: "x", moderator: "m", outcome, method: "two_stage_product_score" },
+      },
+    });
+    expect(validateModel([...nodes, moderator, secondOutcome, interaction("xm-y", "y"), interaction("xm-z", "z")], [
+      ...edges,
+      { id: "x-z", source: "x", target: "z" },
+      { id: "m-y", source: "m", target: "y" },
+      { id: "m-z", source: "m", target: "z" },
+      { id: "xm-y-effect", source: "xm-y", target: "y" },
+      { id: "xm-z-effect", source: "xm-z", target: "z" },
+    ])).toEqual([]);
+  });
+
+  it("rejects duplicate and incomplete interaction declarations without rejecting distinct multiplicity", () => {
+    const interaction = (id: string, moderator = "m"): Node<ConstructData> => ({
+      id,
+      position: { x: 1, y: 0 },
+      data: {
+        label: id,
+        shortName: id.toUpperCase(),
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: { predictor: "x", moderator, outcome: "y", method: "two_stage_product_score" },
+      },
+    });
+    const moderator: Node<ConstructData> = { id: "m", position: { x: 0, y: 1 }, data: { label: "Moderator", shortName: "M", mode: "reflective", indicators: ["m1"] } };
+    const duplicateIssues = validateModel([...nodes, moderator, interaction("xm"), interaction("xm-copy")], [
+      ...edges,
+      { id: "m-y", source: "m", target: "y" },
+      { id: "xm-y", source: "xm", target: "y" },
+      { id: "xm-copy-y", source: "xm-copy", target: "y" },
+    ]);
+    expect(duplicateIssues).toContainEqual({ code: "interaction.duplicate", subject: "xm-copy" });
+
+    const incompleteIssues = validateModel([...nodes, interaction("invalid", "missing")], edges);
+    expect(incompleteIssues).toContainEqual({ code: "interaction.invalid", subject: "invalid" });
   });
 });

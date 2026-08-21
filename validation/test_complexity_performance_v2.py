@@ -45,10 +45,10 @@ class ComplexityPerformanceContractV2Tests(unittest.TestCase):
         report = self.context()
         self.assertTrue(report["contract_valid"], report["errors"])
         self.assertEqual(report["active_row_count"], 43)
-        self.assertEqual(report["active_option_cell_count"], 46)
-        self.assertEqual(report["resolved_capability_count"], 46)
-        self.assertEqual(report["resolved_budget_count"], 460)
-        self.assertEqual(report["expected_capability_current_measurements"], 736)
+        self.assertEqual(report["active_option_cell_count"], 49)
+        self.assertEqual(report["resolved_capability_count"], 49)
+        self.assertEqual(report["resolved_budget_count"], 490)
+        self.assertEqual(report["expected_capability_current_measurements"], 784)
         self.assertEqual(report["expected_ui_current_measurements"], 8)
 
     def test_machine_readable_schemas_are_valid_and_manifest_conforms(self) -> None:
@@ -112,7 +112,7 @@ class ComplexityPerformanceContractV2Tests(unittest.TestCase):
             self.manifest, self.registry, context, []
         )
         self.assertFalse(report["measurement_qualification_passed"])
-        self.assertEqual(report["missing_capability_measurement_count"], 736)
+        self.assertEqual(report["missing_capability_measurement_count"], 784)
         self.assertEqual(report["missing_ui_measurement_count"], 8)
 
     def test_run_gate_checks_absolute_budget_progress_cancel_and_memory(self) -> None:

@@ -169,6 +169,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             group_column: None,
             invariance_steps: Vec::new(),
         }),
+        general_sem_config: None,
         metadata: BTreeMap::new(),
         legacy_source: None,
     };
@@ -917,6 +918,7 @@ fn verify_document_command(raw_args: &[String]) -> Result<(), Box<dyn std::error
                     group_column: None,
                     invariance_steps: Vec::new(),
                 }),
+                general_sem_config: None,
                 metadata: BTreeMap::new(),
                 legacy_source: None,
             };

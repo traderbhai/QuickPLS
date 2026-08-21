@@ -94,6 +94,7 @@ fn now_utc() -> String {
 struct InternalRecipeV4Job {
     snapshot: InternalRecipeV4JobSnapshotV1,
     kind: InternalRecipeV4JobKindV1,
+    worker_demand: usize,
     cancellation: Arc<AtomicBool>,
     result: Option<InternalRecipeV4StoredResultV1>,
 }
@@ -141,14 +142,19 @@ impl DesktopRecipeV4Jobs {
             .values()
             .filter(|job| job.snapshot.state.is_active())
             .count();
-        Ok((active_count, active_count))
+        let worker_demand = jobs
+            .values()
+            .filter(|job| job.snapshot.state.is_active())
+            .map(|job| job.worker_demand)
+            .sum();
+        Ok((active_count, worker_demand))
     }
 }
 
 /// RAII reservation in the existing Standard/Recipe-v4 admission pool. The
 /// comparison job service moves this guard into its worker; every return,
 /// cancellation, caught panic, and spawn failure therefore releases the
-/// charged active-job and single-worker demand.
+/// charged active-job and configured worker demand.
 pub(crate) struct PlsModelComparisonAdmissionReservationV1 {
     job_id: Uuid,
     jobs: Arc<Mutex<HashMap<Uuid, InternalRecipeV4Job>>>,
@@ -191,17 +197,73 @@ pub(crate) fn reserve_pls_model_comparison_admission(
     )
 }
 
+/// Reserves capacity in the shared Standard/Recipe-v4 admission pool for an
+/// isolated General SEM job. The returned RAII guard must live for the worker
+/// lifetime so cancellation, panic, and every terminal return release the
+/// charged worker demand.
+pub(crate) fn reserve_general_sem_pls_admission(
+    job_id: Uuid,
+    worker_demand: usize,
+    standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
+    job_state: DesktopRecipeV4Jobs,
+) -> Result<PlsModelComparisonAdmissionReservationV1, InternalRecipeV4ExecutionFailureV1> {
+    let cpu_budget = std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1);
+    reserve_internal_recipe_v4_admission_with_cpu_budget(
+        job_id,
+        standard_jobs,
+        job_state,
+        cpu_budget,
+        worker_demand,
+        "general_sem_pls",
+        "General SEM PLS analysis",
+        "Wait for another analysis to finish or reduce the General SEM recipe worker count.",
+    )
+}
+
 fn reserve_pls_model_comparison_admission_with_cpu_budget(
     job_id: Uuid,
     standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
     job_state: DesktopRecipeV4Jobs,
     cpu_budget: usize,
 ) -> Result<PlsModelComparisonAdmissionReservationV1, InternalRecipeV4ExecutionFailureV1> {
+    reserve_internal_recipe_v4_admission_with_cpu_budget(
+        job_id,
+        standard_jobs,
+        job_state,
+        cpu_budget,
+        1,
+        "pls_model_comparison",
+        "PLS model comparison",
+        "Wait for another analysis to finish before starting this comparison.",
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn reserve_internal_recipe_v4_admission_with_cpu_budget(
+    job_id: Uuid,
+    standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
+    job_state: DesktopRecipeV4Jobs,
+    cpu_budget: usize,
+    worker_demand: usize,
+    code_prefix: &str,
+    analysis_label: &str,
+    worker_corrective_action: &str,
+) -> Result<PlsModelComparisonAdmissionReservationV1, InternalRecipeV4ExecutionFailureV1> {
+    if worker_demand == 0 {
+        return Err(job_failure(
+            "workers",
+            format!("{code_prefix}.worker_demand_invalid"),
+            format!("{analysis_label} requires at least one worker."),
+            worker_corrective_action,
+        ));
+    }
     let jobs = job_state.0;
     let standard_guard = standard_jobs.lock().map_err(|_| {
         job_failure(
             "jobs",
-            "pls_model_comparison.shared_job_state_unavailable",
+            format!("{code_prefix}.shared_job_state_unavailable"),
             "The shared analysis job state is temporarily unavailable.",
             "Retry after current analyses finish.",
         )
@@ -209,7 +271,7 @@ fn reserve_pls_model_comparison_admission_with_cpu_budget(
     let mut guard = jobs.lock().map_err(|_| {
         job_failure(
             "jobs",
-            "pls_model_comparison.internal_job_state_unavailable",
+            format!("{code_prefix}.internal_job_state_unavailable"),
             "The internal analysis job state is temporarily unavailable.",
             "Retry after current internal analyses finish.",
         )
@@ -218,7 +280,7 @@ fn reserve_pls_model_comparison_admission_with_cpu_budget(
     if guard.contains_key(&job_id) {
         return Err(job_failure(
             "jobId",
-            "pls_model_comparison.duplicate_job_id",
+            format!("{code_prefix}.duplicate_job_id"),
             format!("Internal analysis job ID {job_id} is already reserved."),
             "Create a new comparison job request and retry.",
         ));
@@ -242,11 +304,16 @@ fn reserve_pls_model_comparison_admission_with_cpu_budget(
     if standard_active_count + internal_active_count >= MAXIMUM_ACTIVE_INTERNAL_RECIPE_V4_JOBS {
         return Err(job_failure(
             "jobs",
-            "pls_model_comparison.active_job_limit_reached",
+            format!("{code_prefix}.active_job_limit_reached"),
             "Four analyses are already active across Standard and internal execution.",
             "Wait for one analysis to finish, or cancel it, before starting another.",
         ));
     }
+    let internal_worker_demand = guard
+        .values()
+        .filter(|job| job.snapshot.state.is_active())
+        .map(|job| job.worker_demand)
+        .sum::<usize>();
     let allocated_workers = standard_guard
         .values()
         .filter(|job| {
@@ -260,16 +327,16 @@ fn reserve_pls_model_comparison_admission_with_cpu_budget(
         })
         .map(|job| job.worker_demand)
         .sum::<usize>()
-        + internal_active_count;
-    if allocated_workers + 1 > cpu_budget {
+        + internal_worker_demand;
+    if allocated_workers.saturating_add(worker_demand) > cpu_budget {
         return Err(job_failure(
             "jobs",
-            "pls_model_comparison.worker_budget_unavailable",
+            format!("{code_prefix}.worker_budget_unavailable"),
             format!(
-                "PLS model comparison requires one worker, but only {} of {cpu_budget} are available.",
+                "{analysis_label} requires {worker_demand} worker(s), but only {} of {cpu_budget} are available.",
                 cpu_budget.saturating_sub(allocated_workers)
             ),
-            "Wait for another analysis to finish before starting this comparison.",
+            worker_corrective_action,
         ));
     }
     let mut snapshot = InternalRecipeV4JobSnapshotV1::queued();
@@ -279,6 +346,7 @@ fn reserve_pls_model_comparison_admission_with_cpu_budget(
         InternalRecipeV4Job {
             snapshot,
             kind: InternalRecipeV4JobKindV1::PlsModelComparisonReservation,
+            worker_demand,
             cancellation: Arc::new(AtomicBool::new(false)),
             result: None,
         },
@@ -886,6 +954,11 @@ fn start_job(
             "Wait for one analysis to finish, or cancel it, before starting another.",
         ));
     }
+    let internal_worker_demand = guard
+        .values()
+        .filter(|job| job.snapshot.state.is_active())
+        .map(|job| job.worker_demand)
+        .sum::<usize>();
     let allocated_workers = standard_guard
         .values()
         .filter(|job| {
@@ -899,16 +972,21 @@ fn start_job(
         })
         .map(|job| job.worker_demand)
         .sum::<usize>()
-        + internal_active_count;
+        + internal_worker_demand;
+    // Preserve the existing Standard/internal Recipe V4 admission behavior:
+    // these legacy job types occupy one shared worker slot. General SEM jobs
+    // use the explicit reservation helper below to charge their configured
+    // worker demand without changing this established path.
+    let worker_demand = 1;
     let cpu_budget = std::thread::available_parallelism()
         .map(usize::from)
         .unwrap_or(1);
-    if allocated_workers + 1 > cpu_budget {
+    if allocated_workers.saturating_add(worker_demand) > cpu_budget {
         return Err(job_failure(
             "jobs",
             "recipe_v4.worker_budget_unavailable",
             format!(
-                "The internal analysis requires one worker, but only {} of {cpu_budget} are available.",
+                "The internal analysis requires {worker_demand} worker(s), but only {} of {cpu_budget} are available.",
                 cpu_budget.saturating_sub(allocated_workers)
             ),
             "Wait for another analysis to finish or reduce its configured worker count.",
@@ -919,6 +997,7 @@ fn start_job(
         InternalRecipeV4Job {
             snapshot: snapshot.clone(),
             kind: InternalRecipeV4JobKindV1::Pls,
+            worker_demand,
             cancellation,
             result: None,
         },
@@ -996,6 +1075,11 @@ fn start_cbsem_job(
             "Wait for one analysis to finish, or cancel it, before starting another.",
         ));
     }
+    let internal_worker_demand = guard
+        .values()
+        .filter(|job| job.snapshot.state.is_active())
+        .map(|job| job.worker_demand)
+        .sum::<usize>();
     let allocated_workers = standard_guard
         .values()
         .filter(|job| {
@@ -1009,16 +1093,19 @@ fn start_cbsem_job(
         })
         .map(|job| job.worker_demand)
         .sum::<usize>()
-        + internal_active_count;
+        + internal_worker_demand;
+    // Preserve the existing Standard/internal Recipe V4 admission behavior;
+    // General SEM uses its dedicated reservation to charge configured demand.
+    let worker_demand = 1;
     let cpu_budget = std::thread::available_parallelism()
         .map(usize::from)
         .unwrap_or(1);
-    if allocated_workers + 1 > cpu_budget {
+    if allocated_workers.saturating_add(worker_demand) > cpu_budget {
         return Err(job_failure(
             "jobs",
             "recipe_v4.worker_budget_unavailable",
             format!(
-                "The internal CB-SEM analysis requires one worker, but only {} of {cpu_budget} are available.",
+                "The internal CB-SEM analysis requires {worker_demand} worker(s), but only {} of {cpu_budget} are available.",
                 cpu_budget.saturating_sub(allocated_workers)
             ),
             "Wait for another analysis to finish or reduce its configured worker count.",
@@ -1029,6 +1116,7 @@ fn start_cbsem_job(
         InternalRecipeV4Job {
             snapshot: snapshot.clone(),
             kind: InternalRecipeV4JobKindV1::Cbsem,
+            worker_demand,
             cancellation,
             result: None,
         },
@@ -1383,6 +1471,7 @@ mod tests {
             InternalRecipeV4Job {
                 snapshot,
                 kind,
+                worker_demand: 1,
                 cancellation: Arc::new(AtomicBool::new(false)),
                 result: None,
             },

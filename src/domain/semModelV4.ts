@@ -149,6 +149,7 @@ export type SemConstraintV4 =
   | { kind: "linear"; id: string; terms: SemLinearConstraintTermV4[]; value: number };
 
 export type InteractionMethodV4 = "product_indicator" | "two_stage" | "orthogonalizing";
+export type InteractionHierarchyPolicyV2 = "strong" | "weak" | "none";
 export type ProductIndicatorCenteringV4 = "none" | "mean_center" | "double_mean_center";
 export type ProductIndicatorStandardizationV4 = "none" | "sample_standard_deviation";
 export type ProductIndicatorPairingV4 = "all_pairs";
@@ -178,6 +179,17 @@ export type SemDerivedTermV4 =
     moderator: string;
     focal_relation: string;
     method: InteractionMethodV4;
+    product_indicator?: ProductIndicatorSpecificationV4 | null;
+  }
+  | {
+    kind: "interaction_v2";
+    id: string;
+    output: string;
+    /** The focal predictor is operands[0]; moderators retain authored order. */
+    operands: string[];
+    focal_relation: string;
+    method: InteractionMethodV4;
+    hierarchy_policy: InteractionHierarchyPolicyV2;
     product_indicator?: ProductIndicatorSpecificationV4 | null;
   }
   | {
@@ -789,6 +801,22 @@ function parseDerivedTerm(value: unknown, path: string): SemDerivedTermV4 {
     }
     return parsed;
   }
+  if (candidate.kind === "interaction_v2") {
+    const term = exactRecord(candidate, ["kind", "id", "output", "operands", "focal_relation", "method", "hierarchy_policy"], ["product_indicator"], path);
+    const parsed: Extract<SemDerivedTermV4, { kind: "interaction_v2" }> = {
+      kind: "interaction_v2",
+      id: textValue(term.id, `${path}.id`),
+      output: textValue(term.output, `${path}.output`),
+      operands: textArrayValue(term.operands, `${path}.operands`),
+      focal_relation: textValue(term.focal_relation, `${path}.focal_relation`),
+      method: enumValue(term.method, ["product_indicator", "two_stage", "orthogonalizing"] as const, `${path}.method`),
+      hierarchy_policy: enumValue(term.hierarchy_policy, ["strong", "weak", "none"] as const, `${path}.hierarchy_policy`),
+    };
+    if (hasOwn(term, "product_indicator") && term.product_indicator != null) {
+      parsed.product_indicator = parseProductIndicator(term.product_indicator, `${path}.product_indicator`);
+    }
+    return parsed;
+  }
   if (candidate.kind === "higher_order") {
     const term = exactRecord(candidate, ["kind", "id", "output", "components", "approach", "measurement_type"], [], path);
     return {
@@ -1264,8 +1292,21 @@ function validateConstraints(constraints: SemConstraintV4[], parameters: Map<str
   }
 }
 
+function isStructuralEffectRelation(
+  relation: SemRelationV4,
+): relation is Extract<SemRelationV4, { kind: "structural" }> {
+  return relation.kind === "structural" && relation.role !== "control";
+}
+
+function interactionOperands(term: SemDerivedTermV4): readonly string[] | null {
+  if (term.kind === "interaction") return [term.predictor, term.moderator];
+  if (term.kind === "interaction_v2") return term.operands;
+  return null;
+}
+
 function validateDerivedTerms(model: SemModelV4, variables: Map<string, SemVariableV4>, issues: SemModelV4Issue[]) {
   const outputs = new Set<string>();
+  const relationsById = new Map(model.relations.map((relation) => [relation.id, relation]));
   for (const term of model.derived_terms) {
     if (outputs.has(term.output)) issues.push(issue("derived.output.duplicate", term.output, "Derived output has multiple definitions"));
     outputs.add(term.output);
@@ -1282,6 +1323,87 @@ function validateDerivedTerms(model: SemModelV4, variables: Map<string, SemVaria
       if (!focal) issues.push(issue("derived.interaction.focal_relation_unknown", term.id, `Unknown focal relation ${term.focal_relation}`));
       else if (focal.kind !== "structural" || focal.source !== term.predictor) issues.push(issue("derived.interaction.focal_relation_invalid", term.id, "Focal relation must be a structural path sourced by the predictor"));
       else if (!model.relations.some((relation) => relation.kind === "structural" && relation.source === term.output && relation.target === focal.target)) issues.push(issue("derived.interaction.effect_path_missing", term.id, "Interaction output must target the focal outcome"));
+    } else if (term.kind === "interaction_v2") {
+      const uniqueOperands = new Set(term.operands);
+      if (term.operands.length < 2 || uniqueOperands.size !== term.operands.length || uniqueOperands.has(term.output)) {
+        issues.push(issue(
+          "derived.interaction_v2.operands_invalid",
+          term.id,
+          "interaction_v2 requires at least two unique, non-output operands in stable authored order",
+        ));
+      }
+      for (const input of term.operands) {
+        if (!variables.has(input)) issues.push(issue("derived.input.unknown", term.id, `Unknown interaction input ${input}`));
+      }
+      if (term.method === "product_indicator" && !term.product_indicator) {
+        issues.push(issue("derived.interaction.product_indicator_spec_required", term.id, "Product-indicator interactions require explicit construction settings"));
+      } else if (term.method !== "product_indicator" && term.product_indicator) {
+        issues.push(issue("derived.interaction.product_indicator_spec_forbidden", term.id, "Product-indicator construction settings are valid only for the product-indicator method"));
+      }
+
+      const focal = relationsById.get(term.focal_relation);
+      let focalTarget: string | null = null;
+      if (!focal) {
+        issues.push(issue("derived.interaction.focal_relation_unknown", term.id, `Unknown focal relation ${term.focal_relation}`));
+      } else if (!isStructuralEffectRelation(focal) || focal.source !== term.operands[0]) {
+        issues.push(issue("derived.interaction.focal_relation_invalid", term.id, "The focal relation must be a structural-effect path sourced by operands[0]"));
+      } else {
+        focalTarget = focal.target;
+      }
+
+      if (focalTarget !== null) {
+        const hasEffectPath = model.relations.some((relation) =>
+          isStructuralEffectRelation(relation)
+          && relation.source === term.output
+          && relation.target === focalTarget);
+        if (!hasEffectPath) {
+          issues.push(issue("derived.interaction.effect_path_missing", term.id, "The interaction output must have a structural-effect path to the focal relation outcome"));
+        }
+
+        if (term.hierarchy_policy === "strong" || term.hierarchy_policy === "weak") {
+          for (const operand of term.operands) {
+            const hasMainEffect = model.relations.some((relation) =>
+              isStructuralEffectRelation(relation)
+              && relation.source === operand
+              && relation.target === focalTarget);
+            if (!hasMainEffect) {
+              issues.push(issue(
+                "derived.interaction_v2.main_effect_missing",
+                term.id,
+                `Hierarchy policy requires a main-effect path from ${operand} to ${focalTarget}`,
+              ));
+            }
+          }
+        }
+
+        if (term.hierarchy_policy === "strong" && term.operands.length > 2 && uniqueOperands.size === term.operands.length) {
+          for (let omitted = 0; omitted < term.operands.length; omitted += 1) {
+            const required = new Set(term.operands.filter((_, index) => index !== omitted));
+            const lowerOrderPresent = model.derived_terms.some((candidate) => {
+              if (candidate.id === term.id) return false;
+              const candidateOperands = interactionOperands(candidate);
+              if (!candidateOperands || candidateOperands.length !== required.size) return false;
+              const candidateOperandSet = new Set(candidateOperands);
+              if (candidateOperandSet.size !== required.size
+                || [...required].some((operand) => !candidateOperandSet.has(operand))) return false;
+              if (candidateOperands.length > 2
+                && (candidate.kind !== "interaction_v2" || candidate.hierarchy_policy !== "strong")) return false;
+              return model.relations.some((relation) =>
+                isStructuralEffectRelation(relation)
+                && relation.source === candidate.output
+                && relation.target === focalTarget);
+            });
+            if (!lowerOrderPresent) {
+              const requiredOperands = [...required].sort();
+              issues.push(issue(
+                "derived.interaction_v2.lower_order_missing",
+                term.id,
+                `Strong hierarchy requires an interaction for operands [${requiredOperands.join(", ")}] targeting ${focalTarget}`,
+              ));
+            }
+          }
+        }
+      }
     } else if (term.kind === "higher_order") {
       const unique = new Set(term.components);
       if (unique.size < 2 || unique.size !== term.components.length || unique.has(term.output)) issues.push(issue("derived.higher_order.components_invalid", term.id, "Higher-order components must be unique and non-self"));

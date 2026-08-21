@@ -357,9 +357,11 @@ function derivedTermRow(
   const source = sources.variables.get(term.output) ?? { kind: "model", id: term.id };
   const specification = term.kind === "interaction"
     ? `${labelOf(labels, term.predictor)} × ${labelOf(labels, term.moderator)}; ${humanToken(term.method)}`
-    : term.kind === "higher_order"
-      ? `${term.components.map((id) => labelOf(labels, id)).join(", ")}; ${humanToken(term.approach)}; ${humanToken(term.measurement_type)}`
-      : `${labelOf(labels, term.source)} to degree ${term.degree}`;
+    : term.kind === "interaction_v2"
+      ? `${term.operands.map((id) => labelOf(labels, id)).join(" × ")}; ${humanToken(term.method)}; ${humanToken(term.hierarchy_policy)} hierarchy`
+      : term.kind === "higher_order"
+        ? `${term.components.map((id) => labelOf(labels, id)).join(", ")}; ${humanToken(term.approach)}; ${humanToken(term.measurement_type)}`
+        : `${labelOf(labels, term.source)} to degree ${term.degree}`;
   return {
     id: `derived:${term.id}`,
     section: "derived_term",

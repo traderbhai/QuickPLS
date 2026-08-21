@@ -235,9 +235,12 @@ describe("historical native CB-SEM bootstrap v2 compatibility", () => {
       close: () => undefined,
     }));
     expect(markup).toContain('id="nd-calculation-method-cbsem"');
-    expect(markup).toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
-    expect(markup).toContain("Run percentile Type-7, analytic studentized Type-7, or BCa Type-7 case bootstrap from the Exact CB-SEM model tab");
-    expect(markup).toContain("Clear archived bootstrap setting");
+    expect(markup).toContain('id="nd-calculation-cbsem-archived-bootstrap"');
+    expect(markup).toContain("Run current exact CFA bootstrap from the Exact CB-SEM model tab");
+    expect(markup).toContain("Clear the archived bootstrap setting before running this point-estimate setup.");
+    expect(markup).toContain("Clear setting");
+    expect(markup).not.toContain('id="nd-calculation-cbsem-exact-bootstrap-route"');
+    expect(markup).not.toContain("Run percentile Type-7, analytic studentized Type-7, or BCa Type-7 case bootstrap");
     expect(markup).not.toContain('id="nd-calculation-cbsem-bootstrap-samples"');
     expect(markup).not.toContain('id="nd-calculation-cbsem-confidence"');
     expect(markup).not.toContain("Calculation method unavailable");

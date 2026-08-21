@@ -1,7 +1,14 @@
+use crate::general_sem_registry_access_v1::{
+    GeneralSemRegistryAccessErrorV1, authorize_general_sem_registry_access_v1,
+    is_rank0_general_sem_execution_cell_v1,
+};
+use crate::recipe_v4_canonical_result::validate_archived_recipe_v4_pls_method_identity;
 use crate::recipe_v4_cbsem_canonical_result::validate_archived_recipe_v4_cbsem_method_identity;
-use qpls_core::AnalysisRecipeV4;
+use crate::recipe_v4_general_sem_canonical_result::validate_archived_general_sem_pls_method_identity_v1;
+use qpls_core::{AnalysisRecipeV4, CapabilityCellReferenceV2};
 use qpls_project::{
-    CanonicalResultDocumentV2, ProjectArchiveCanonicalAppendReceiptV6, ProjectArchiveV6Error,
+    CanonicalResultDocumentV2, CapabilityCellReferenceV2 as ArchivedCapabilityCellReferenceV2,
+    ProjectArchiveCanonicalAppendReceiptV6, ProjectArchiveV6Error,
     append_canonical_result_document_v2_file_v6,
     append_recipe_v4_and_canonical_result_document_v2_file_v6,
 };
@@ -14,21 +21,23 @@ const STANDARD_EXACT_CBSEM_SURFACE: &str = "standard_exact_cbsem";
 #[derive(Debug, Clone, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ProjectSchema6ResultAppendRequestV1 {
-    surface: String,
-    experimental_labs_enabled: bool,
-    archive_path: String,
-    expected_source_sha256: String,
+    pub(crate) surface: String,
+    pub(crate) experimental_labs_enabled: bool,
     #[serde(default)]
-    recipe: Option<AnalysisRecipeV4>,
-    canonical_document: CanonicalResultDocumentV2,
+    pub(crate) capability_cell: Option<CapabilityCellReferenceV2>,
+    pub(crate) archive_path: String,
+    pub(crate) expected_source_sha256: String,
+    #[serde(default)]
+    pub(crate) recipe: Option<AnalysisRecipeV4>,
+    pub(crate) canonical_document: CanonicalResultDocumentV2,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct ProjectSchema6ResultAppendDiagnosticV1 {
-    code: String,
-    message: String,
-    corrective_action: String,
+    pub(crate) code: String,
+    pub(crate) message: String,
+    pub(crate) corrective_action: String,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -60,13 +69,94 @@ fn blocked(
     }
 }
 
-fn validate_request_access(
+fn same_capability_cell(
+    left: &CapabilityCellReferenceV2,
+    right: &CapabilityCellReferenceV2,
+) -> bool {
+    left.registry_schema_version == right.registry_schema_version
+        && left.capability_id == right.capability_id
+        && left.cell_id == right.cell_id
+        && left.capability_version == right.capability_version
+}
+
+fn live_capability_cell(archived: &ArchivedCapabilityCellReferenceV2) -> CapabilityCellReferenceV2 {
+    CapabilityCellReferenceV2 {
+        registry_schema_version: archived.registry_schema_version,
+        capability_id: archived.capability_id.clone(),
+        cell_id: archived.cell_id.clone(),
+        capability_version: archived.capability_version.clone(),
+    }
+}
+
+fn is_general_sem_document(document: &CanonicalResultDocumentV2) -> bool {
+    document.general_sem_results.is_some()
+        || is_rank0_general_sem_execution_cell_v1(&live_capability_cell(
+            &document.provenance.capability_cell,
+        ))
+        || document.capability_cells.as_ref().is_some_and(|cells| {
+            cells
+                .iter()
+                .any(|cell| is_rank0_general_sem_execution_cell_v1(&live_capability_cell(cell)))
+        })
+}
+
+fn selected_general_sem_execution_cell(
+    document: &CanonicalResultDocumentV2,
+) -> Option<CapabilityCellReferenceV2> {
+    if !is_general_sem_document(document) {
+        return None;
+    }
+    Some(
+        document
+            .general_sem_results
+            .as_ref()
+            .and_then(|results| results.inference_receipt.as_ref())
+            .map(|receipt| receipt.capability_cell.clone())
+            .unwrap_or_else(|| live_capability_cell(&document.provenance.capability_cell)),
+    )
+}
+
+fn registry_access_block(
+    error: GeneralSemRegistryAccessErrorV1,
+) -> ProjectSchema6ResultAppendOutcomeV1 {
+    match error {
+        GeneralSemRegistryAccessErrorV1::RegistryInvalid(detail) => blocked(
+            "schema6_result_append.capability_registry_invalid",
+            format!("Capability Registry V2 is invalid: {detail}"),
+            "Keep the archive unchanged and repair the embedded registry before attaching results.",
+        ),
+        GeneralSemRegistryAccessErrorV1::CapabilityUnavailable => blocked(
+            "schema6_result_append.capability_unavailable",
+            "The exact General SEM execution cell is not available in Capability Registry V2.",
+            "Refresh exact estimator preflight and retry without changing the archive.",
+        ),
+        GeneralSemRegistryAccessErrorV1::StandardSurfaceRequired => blocked(
+            "schema6_result_append.standard_surface_required",
+            "The exact General SEM execution cell requires the Standard surface.",
+            "Refresh capability access and retry through Standard without relabelling the result.",
+        ),
+        GeneralSemRegistryAccessErrorV1::InternalLabsRequired => blocked(
+            "schema6_result_append.internal_labs_required",
+            "The exact General SEM execution cell requires Experimental Labs opt-in.",
+            "Enable Experimental Labs or use a Standard-qualified cell.",
+        ),
+    }
+}
+
+fn validate_request_access_using<F>(
     request: &ProjectSchema6ResultAppendRequestV1,
-) -> Result<PathBuf, ProjectSchema6ResultAppendOutcomeV1> {
-    let historical_internal =
-        request.surface == INTERNAL_LABS_SURFACE && request.experimental_labs_enabled;
+    authorize: F,
+) -> Result<PathBuf, ProjectSchema6ResultAppendOutcomeV1>
+where
+    F: Fn(&str, bool, &CapabilityCellReferenceV2) -> Result<(), GeneralSemRegistryAccessErrorV1>,
+{
+    let historical_internal = request.capability_cell.is_none()
+        && request.surface == INTERNAL_LABS_SURFACE
+        && request.experimental_labs_enabled
+        && !is_general_sem_document(&request.canonical_document);
     let current_exact_cbsem = request.surface == STANDARD_EXACT_CBSEM_SURFACE
         && !request.experimental_labs_enabled
+        && request.capability_cell.is_none()
         && matches!(
             (
                 request
@@ -85,11 +175,42 @@ fn validate_request_access(
             ("smartpls.cbsem", "qpls3.cbsem.ml")
                 | ("smartpls.cbsem_bootstrapping", "qpls3.cbsem.bootstrap")
         );
-    if !historical_internal && !current_exact_cbsem {
+    let exact_general_sem = if let Some(cell) = request.capability_cell.as_ref() {
+        if !is_rank0_general_sem_execution_cell_v1(cell) {
+            return Err(blocked(
+                "schema6_result_append.capability_unavailable",
+                "The selected cell is not one of the exact General SEM result-publication cells.",
+                "Refresh exact General SEM estimator preflight before attaching the result.",
+            ));
+        }
+        if let Err(error) = authorize(&request.surface, request.experimental_labs_enabled, cell) {
+            return Err(registry_access_block(error));
+        }
+        let selected = selected_general_sem_execution_cell(&request.canonical_document);
+        if !selected.is_some_and(|selected| same_capability_cell(&selected, cell)) {
+            return Err(blocked(
+                "schema6_result_append.capability_document_mismatch",
+                "The requested General SEM execution cell differs from the canonical result's exact point-or-bootstrap owner.",
+                "Discard the mismatched result and rerun the exact selected point or supplemental bootstrap cell.",
+            ));
+        }
+        true
+    } else {
+        false
+    };
+    if !historical_internal && !current_exact_cbsem && !exact_general_sem {
+        if request.capability_cell.is_none() && is_general_sem_document(&request.canonical_document)
+        {
+            return Err(blocked(
+                "schema6_result_append.capability_cell_required",
+                "General SEM result attachment requires the exact selected execution cell.",
+                "Rerun exact estimator preflight and attach through its Registry-authorized point or bootstrap cell.",
+            ));
+        }
         return Err(blocked(
             "schema6_result_append.surface_mismatch",
-            "Schema-6 result attachment requires the historical internal-Labs boundary or the current exact-CB-SEM Standard boundary with its matching capability cell.",
-            "Use standard_exact_cbsem with Experimental Labs disabled only for a current CB-SEM point or exact-bootstrap canonical document.",
+            "Schema-6 result attachment requires historical Labs access, exact Registry-authorized General SEM access, or the exact-CB-SEM Standard boundary.",
+            "Select the exact execution cell and surface before attaching the canonical result.",
         ));
     }
     let archive_path = Path::new(request.archive_path.trim());
@@ -101,6 +222,12 @@ fn validate_request_access(
         ));
     }
     Ok(archive_path.to_path_buf())
+}
+
+fn validate_request_access(
+    request: &ProjectSchema6ResultAppendRequestV1,
+) -> Result<PathBuf, ProjectSchema6ResultAppendOutcomeV1> {
+    validate_request_access_using(request, authorize_general_sem_registry_access_v1)
 }
 
 fn map_append_error(error: ProjectArchiveV6Error) -> ProjectSchema6ResultAppendOutcomeV1 {
@@ -150,6 +277,23 @@ pub(crate) fn append_internal_project_schema6_canonical_result_v2(
             "Rebuild the CB-SEM canonical result from the exact matching Recipe-v4 execution before attaching it.",
         );
     }
+    if let Err(error) =
+        validate_archived_general_sem_pls_method_identity_v1(&request.canonical_document)
+    {
+        return blocked(
+            "schema6_result_append.general_sem_method_identity_mismatch",
+            error,
+            "Rebuild the General SEM canonical result from the exact resident compiled plan and native execution before attaching it.",
+        );
+    }
+    if let Err(error) = validate_archived_recipe_v4_pls_method_identity(&request.canonical_document)
+    {
+        return blocked(
+            "schema6_result_append.pls_method_identity_mismatch",
+            error,
+            "Rebuild the PLS canonical result from the exact matching Recipe-v4 execution before attaching it.",
+        );
+    }
     let appended = match request.recipe {
         Some(recipe) => append_recipe_v4_and_canonical_result_document_v2_file_v6(
             &archive_path,
@@ -173,10 +317,22 @@ pub(crate) fn append_internal_project_schema6_canonical_result_v2(
 mod tests {
     use super::*;
 
+    fn archived_capability_cell(
+        live: CapabilityCellReferenceV2,
+    ) -> ArchivedCapabilityCellReferenceV2 {
+        ArchivedCapabilityCellReferenceV2 {
+            registry_schema_version: live.registry_schema_version,
+            capability_id: live.capability_id,
+            cell_id: live.cell_id,
+            capability_version: live.capability_version,
+        }
+    }
+
     fn request(path: &str) -> ProjectSchema6ResultAppendRequestV1 {
         ProjectSchema6ResultAppendRequestV1 {
             surface: INTERNAL_LABS_SURFACE.into(),
             experimental_labs_enabled: true,
+            capability_cell: None,
             archive_path: path.into(),
             expected_source_sha256: "a".repeat(64),
             recipe: None,
@@ -251,6 +407,46 @@ mod tests {
         let relative = request("study-v6.json");
         assert!(matches!(
             validate_request_access(&relative),
+            Err(ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code == "schema6_result_append.absolute_path_required"
+        ));
+    }
+
+    #[test]
+    fn general_sem_append_requires_the_exact_selected_cell_before_path_access() {
+        let mut point = request("relative-general-sem.qpls");
+        point.canonical_document.provenance.capability_cell =
+            archived_capability_cell(qpls_core::pls_general_recursive_effects_capability_cell_v1());
+
+        assert!(matches!(
+            validate_request_access(&point),
+            Err(ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code == "schema6_result_append.capability_cell_required"
+        ));
+
+        point.surface = "standard".into();
+        point.experimental_labs_enabled = false;
+        point.capability_cell =
+            Some(qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1());
+        point.canonical_document.capability_cells = Some(vec![
+            archived_capability_cell(qpls_core::pls_general_recursive_effects_capability_cell_v1()),
+            archived_capability_cell(
+                qpls_core::pls_general_multiple_moderation_bootstrap_capability_cell_v1(),
+            ),
+        ]);
+        assert!(matches!(
+            validate_request_access_using(&point, |surface, enabled, _cell| {
+                assert_eq!(surface, "standard");
+                assert!(!enabled);
+                Ok(())
+            }),
+            Err(ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code == "schema6_result_append.capability_document_mismatch"
+        ));
+
+        point.capability_cell = Some(qpls_core::pls_general_recursive_effects_capability_cell_v1());
+        assert!(matches!(
+            validate_request_access_using(&point, |_surface, _enabled, _cell| Ok(())),
             Err(ProjectSchema6ResultAppendOutcomeV1::Blocked { diagnostic })
                 if diagnostic.code == "schema6_result_append.absolute_path_required"
         ));

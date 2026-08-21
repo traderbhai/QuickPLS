@@ -283,7 +283,7 @@ function modelItem(nodes: Array<Node<ConstructData>>, issues: ModelIssue[]): Nat
     return { id: "model", label: "Structural model", detail: "Structural validity cannot be checked without constructs.", status: "blocked" };
   }
   const structural = issues.filter((issue) =>
-    ["path.self", "path.duplicate", "path.cycle", "path.unknown_construct", "interaction.invalid", "interaction.multiple"].includes(issue.code)
+    ["path.self", "path.duplicate", "path.cycle", "path.unknown_construct", "interaction.invalid", "interaction.duplicate"].includes(issue.code)
     || issue.code.startsWith("higher_order."),
   );
   if (structural.length > 0) {
@@ -291,7 +291,7 @@ function modelItem(nodes: Array<Node<ConstructData>>, issues: ModelIssue[]): Nat
       if (issue.code === "path.cycle") return "a directed cycle";
       if (issue.code === "path.self") return "a self-referencing path";
       if (issue.code === "path.duplicate") return "a duplicate path";
-      if (issue.code === "interaction.multiple") return "more than one interaction for this method";
+      if (issue.code === "interaction.duplicate") return "a duplicate moderating effect";
       if (issue.code === "interaction.invalid") return "an incomplete moderating effect";
       if (issue.code === "higher_order.invalid") return "an incomplete higher-order construct declaration";
       if (issue.code === "higher_order.components") return "a higher-order construct with fewer than two components";
@@ -830,6 +830,9 @@ function calculationItem(
     const controlPaths = edges.filter((edge) => (edge.data as { role?: string } | undefined)?.role === "control");
     const problems = [
       moderationInteractions.length !== 1 ? "Two-stage moderation requires exactly one two-way interaction" : null,
+      moderationInteractions.some((node) => node.data.interaction?.kind === "interaction_v2")
+        ? "The legacy two-stage estimator does not support interaction_v2 terms; use General SEM calculation"
+        : null,
       (settings.weightingScheme ?? "path") !== "path" ? "Two-stage moderation requires path weighting" : null,
       (settings.preprocessing ?? "standardized") !== "standardized" ? "Two-stage moderation requires standardized preprocessing" : null,
       settings.caseWeightColumn?.trim() ? "Two-stage moderation does not support case weights" : null,

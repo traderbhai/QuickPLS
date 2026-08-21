@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   inspectInternalProjectArchiveV6At,
   openInternalProjectArchiveV6,
+  selectQuickPlsProjectArchivePath,
 } from "./internalProjectArchiveV6ReadService";
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), open: vi.fn() }));
@@ -60,6 +61,17 @@ describe("Internal/Labs schema-6 ZIP read service", () => {
       filters: [{ name: "QuickPLS schema-6 ZIP project", extensions: ["qpls"] }],
     });
     expect(mocks.invoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("selects one project path without choosing a loader prematurely", async () => {
+    mocks.open.mockResolvedValue("D:\\projects\\study.qpls");
+
+    await expect(selectQuickPlsProjectArchivePath()).resolves.toBe("D:\\projects\\study.qpls");
+    expect(mocks.open).toHaveBeenCalledWith({
+      multiple: false,
+      filters: [{ name: "QuickPLS project", extensions: ["qpls"] }],
+    });
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 
   it("rejects malformed native responses at the service boundary", async () => {

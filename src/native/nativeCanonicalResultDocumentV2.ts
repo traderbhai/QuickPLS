@@ -13,6 +13,11 @@ import {
   type CapabilityCellReferenceV2,
   validateCanonicalResultDocumentV2,
 } from "../domain/canonicalResultDocumentV2";
+import {
+  CanonicalGeneralSemResultsV1ParseError,
+  parseCanonicalGeneralSemResultsV1,
+  type CanonicalGeneralSemResultsV1,
+} from "../domain/canonicalGeneralSemResultsV1";
 import { capabilityRegistryV2 } from "../domain/capabilityRegistryV2";
 import {
   methodCapabilityRequirementsV2,
@@ -34,6 +39,58 @@ import {
   nativePlsPosthocMinimumSampleSizeProjection,
 } from "./nativeResults";
 
+export {
+  CANONICAL_GENERAL_SEM_RESULTS_V1_SCHEMA_VERSION,
+  CanonicalGeneralSemResultsV1ParseError,
+  GENERAL_SEM_INDEXED_CASE_RESAMPLING_STREAM_VERSION_V1,
+  GENERAL_SEM_MINIMUM_USABLE_FRACTION_POLICY_VERSION_V1,
+  GENERAL_SEM_NEUMAIER_SUMMATION_METHOD_VERSION_V1,
+  GENERAL_SEM_NULL_CENTERED_PLUS_ONE_P_VALUE_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_CASE_BOOTSTRAP_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_CASE_BOOTSTRAP_OPERATION_VERSION_V1,
+  GENERAL_SEM_PLS_MULTIPLE_TWO_WAY_POINT_METHOD_VERSION_V1,
+  GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1,
+  GENERAL_SEM_PLS_SIMPLE_SLOPE_POLICY_VERSION_V1,
+  GENERAL_SEM_PLS_STRONG_HIERARCHY_POLICY_VERSION_V1,
+  GENERAL_SEM_SAMPLE_STANDARD_ERROR_METHOD_VERSION_V1,
+  GENERAL_SEM_TYPE7_QUANTILE_METHOD_VERSION_V1,
+  parseCanonicalGeneralSemResultsV1,
+} from "../domain/canonicalGeneralSemResultsV1";
+export type {
+  CanonicalAggregateEffectKindV1,
+  CanonicalAggregateEffectResultV1,
+  CanonicalCbsemFitResultV1,
+  CanonicalConditionalEffectProbeResultV1,
+  CanonicalConditionalEffectResultV1,
+  CanonicalConditionalProbeValuesResultV1,
+  CanonicalGeneralSemBootstrapIntervalV1,
+  CanonicalGeneralSemEffectIdentityV1,
+  CanonicalGeneralSemEstimateV1,
+  CanonicalGeneralSemFailedReplicateReasonV1,
+  CanonicalGeneralSemFailedReplicateV1,
+  CanonicalGeneralSemInferenceKindV1,
+  CanonicalGeneralSemInferenceReceiptV1,
+  CanonicalGeneralSemInferenceTailV1,
+  CanonicalGeneralSemIntervalV1,
+  CanonicalGeneralSemResultTraceV1,
+  CanonicalGeneralSemResultsV1,
+  CanonicalGeneralSemResultsV1Context,
+  CanonicalGeneralSemResultsV1ParseErrorCode,
+  CanonicalHocRelationEstimateV1,
+  CanonicalHocStageKindV1,
+  CanonicalHocStageResultV1,
+  CanonicalIdentificationDiagnosticV1,
+  CanonicalIdentificationScopeV1,
+  CanonicalIdentificationStatusV1,
+  CanonicalInteractionConstructionMethodV1,
+  CanonicalInteractionEffectResultV1,
+  CanonicalInteractionHierarchyPolicyV1,
+  CanonicalInteractionPlotPointV1,
+  CanonicalInteractionPlotResultV1,
+  CanonicalInteractionPlotSeriesV1,
+  CanonicalSpecificIndirectEffectResultV1,
+} from "../domain/canonicalGeneralSemResultsV1";
+
 export type NativeCanonicalResultModeV2 = "current_typed_bridge" | "historical_text_fallback";
 
 export interface NativeCanonicalResultPresentationV2 {
@@ -50,11 +107,36 @@ export interface NativeCanonicalResultContextV2 {
   presentation?: NativeCanonicalResultPresentationV2;
 }
 
+/** Additive cross-runtime wire shape; legacy documents omit general_sem_results entirely. */
+export interface NativeCanonicalResultDocumentV2 extends CanonicalResultDocumentV2 {
+  general_sem_results?: CanonicalGeneralSemResultsV1;
+}
+
+export type NativeCanonicalResultDocumentV2ParseErrorCode =
+  | "schema.invalid_shape"
+  | "schema.unknown_field"
+  | "schema.invalid_discriminator"
+  | "schema.version_unsupported"
+  | "schema.non_finite"
+  | "schema.integer_invalid"
+  | "document.invalid";
+
+export class NativeCanonicalResultDocumentV2ParseError extends Error {
+  constructor(
+    public readonly code: NativeCanonicalResultDocumentV2ParseErrorCode,
+    public readonly path: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = "NativeCanonicalResultDocumentV2ParseError";
+  }
+}
+
 export type NativeCanonicalResultBuildV2 =
   | {
       ok: true;
       mode: NativeCanonicalResultModeV2;
-      document: CanonicalResultDocumentV2;
+      document: NativeCanonicalResultDocumentV2;
     }
   | {
       ok: false;
@@ -404,6 +486,84 @@ function hasNonFiniteNumber(value: unknown, seen = new Set<object>()): boolean {
   const invalid = Object.values(value).some((child) => hasNonFiniteNumber(child, seen));
   seen.delete(value);
   return invalid;
+}
+
+type StrictWireRecord = Record<string, unknown>;
+
+function wireFail(
+  code: NativeCanonicalResultDocumentV2ParseErrorCode,
+  path: string,
+  message: string,
+): never {
+  throw new NativeCanonicalResultDocumentV2ParseError(code, path, message);
+}
+
+function strictWireRecord(value: unknown, path: string): StrictWireRecord {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return wireFail("schema.invalid_shape", path, `${path} must be an object.`);
+  }
+  return value as StrictWireRecord;
+}
+
+function exactWireRecord(
+  value: unknown,
+  required: readonly string[],
+  optional: readonly string[],
+  path: string,
+): StrictWireRecord {
+  const record = strictWireRecord(value, path);
+  const allowed = new Set([...required, ...optional]);
+  const unknown = Object.keys(record).find((key) => !allowed.has(key));
+  if (unknown) return wireFail("schema.unknown_field", `${path}.${unknown}`, `${path}.${unknown} is not supported.`);
+  const missing = required.find((key) => !Object.prototype.hasOwnProperty.call(record, key));
+  if (missing) return wireFail("schema.invalid_shape", `${path}.${missing}`, `${path}.${missing} is required.`);
+  return record;
+}
+
+/**
+ * Strictly validates a complete cross-runtime document while preserving the
+ * original object/key ordering for byte-stable JSON readback.
+ */
+export function parseNativeCanonicalResultDocumentV2(value: unknown): NativeCanonicalResultDocumentV2 {
+  const document = exactWireRecord(value, [
+    "schema_version", "document_id", "title", "provenance", "sections", "tables", "charts",
+    "notices", "exclusions", "footnotes", "presentation",
+  ], ["capability_cells", "general_sem_results"], "document");
+  if (document.schema_version !== CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION) {
+    return wireFail("schema.version_unsupported", "document.schema_version", `document.schema_version must equal ${CANONICAL_RESULT_DOCUMENT_V2_SCHEMA_VERSION}.`);
+  }
+  if (hasNonFiniteNumber(value)) {
+    return wireFail("schema.non_finite", "document", "The canonical result document contains a non-finite number or cyclic value.");
+  }
+  if (Object.prototype.hasOwnProperty.call(document, "general_sem_results")) {
+    const base = value as CanonicalResultDocumentV2;
+    try {
+      parseCanonicalGeneralSemResultsV1(document.general_sem_results, {
+        modelId: base.provenance.model_id,
+        modelDigest: base.provenance.model_digest,
+        datasetFingerprint: base.provenance.dataset_fingerprint,
+        recipeDigest: base.provenance.recipe_digest,
+        seed: base.provenance.seed,
+        workers: base.provenance.workers,
+        capabilityCells: base.capability_cells ?? [],
+      });
+    } catch (error) {
+      if (error instanceof CanonicalGeneralSemResultsV1ParseError) {
+        return wireFail(error.code, error.path, error.message);
+      }
+      throw error;
+    }
+  }
+  let validation;
+  try {
+    validation = validateCanonicalResultDocumentV2(value as CanonicalResultDocumentV2);
+  } catch {
+    return wireFail("schema.invalid_shape", "document", "The base CanonicalResultDocumentV2 shape is invalid.");
+  }
+  if (!validation.passed) {
+    return wireFail("document.invalid", "document", validation.errors.join(" "));
+  }
+  return value as NativeCanonicalResultDocumentV2;
 }
 
 function stableId(label: string, fallback: string): string {

@@ -34,6 +34,16 @@ export interface NativeCommandContext {
   canConfigureGroups: boolean;
   selectedVariableIsGrouping: boolean;
   canAddModeration: boolean;
+  /**
+   * Moderation normally uses the same direct-mutation authority as the other
+   * canvas commands. An exact, activated General SEM authority is the sole
+   * exception: it may open the versioned Save As Revision workflow without
+   * making the resident model writable.
+   *
+   * Omission deliberately falls back to direct authority so older/secondary
+   * command consumers cannot accidentally acquire revision capability.
+   */
+  moderationMutationAuthority?: NativeModerationMutationAuthorityV1;
   canAddHigherOrder: boolean;
   propertiesOpen: boolean;
   selection: {
@@ -42,6 +52,18 @@ export interface NativeCommandContext {
   };
   calculationStatus: RunMonitorStatus;
 }
+
+export type NativeModerationMutationAuthorityV1 =
+  | { readonly kind: "direct" }
+  | {
+    readonly kind: "general_sem_revision";
+    readonly available: boolean;
+    readonly disabledReason?: string;
+  }
+  | {
+    readonly kind: "blocked";
+    readonly disabledReason: string;
+  };
 
 export interface NativeKeyboardShortcut {
   key: string;
@@ -106,11 +128,11 @@ export interface NativeContextPlacement {
 }
 
 type ContextRule = (context: Readonly<NativeCommandContext>) => boolean;
-type CommandLabel = string | ((context: Readonly<NativeCommandContext>) => string);
+type CommandText = string | ((context: Readonly<NativeCommandContext>) => string);
 
 export interface NativeCommandDefinition {
   id: NativeCommandId;
-  label: CommandLabel;
+  label: CommandText;
   action: NativeCommandAction;
   shortcut?: NativeKeyboardShortcut;
   menu?: NativeMenuPlacement;
@@ -118,6 +140,7 @@ export interface NativeCommandDefinition {
   contextMenu?: readonly NativeContextPlacement[];
   visibleWhen?: ContextRule;
   enabledWhen?: ContextRule;
+  disabledReason?: CommandText;
 }
 
 export type NativeCommandId =
@@ -183,6 +206,44 @@ const canOpenCalculation: ContextRule = (context) =>
   && !isNativeCalculationActive(context.calculationStatus);
 const hasModelSelection: ContextRule = (context) =>
   context.selection.count > 0 && ["construct", "path", "multiple"].includes(context.selection.kind);
+
+function moderationMutationAuthority(
+  context: Readonly<NativeCommandContext>,
+): NativeModerationMutationAuthorityV1 {
+  return context.moderationMutationAuthority ?? { kind: "direct" };
+}
+
+const canInvokeModeration: ContextRule = (context) => {
+  if (context.surface !== "model"
+    || !context.projectOpen
+    || !context.hasDataset
+    || !context.canAddModeration
+    || isNativeCalculationActive(context.calculationStatus)) return false;
+  const authority = moderationMutationAuthority(context);
+  if (authority.kind === "general_sem_revision") return authority.available;
+  if (authority.kind === "blocked") return false;
+  return modelIsMutable(context);
+};
+
+function moderationDisabledReason(context: Readonly<NativeCommandContext>): string {
+  if (context.surface !== "model") return "Open the model workspace to create a moderating effect.";
+  if (!context.projectOpen) return "Open a project before creating a moderating effect.";
+  if (!context.hasDataset) return "Import data before creating a moderating effect.";
+  if (isNativeCalculationActive(context.calculationStatus)) {
+    return "Finish or cancel the active calculation before changing the model.";
+  }
+  const authority = moderationMutationAuthority(context);
+  if (authority.kind === "general_sem_revision" && !authority.available) {
+    return authority.disabledReason
+      ?? "The exact General SEM Save As Revision authority is not currently available.";
+  }
+  if (authority.kind === "blocked") return authority.disabledReason;
+  if (!context.canAddModeration) {
+    return "Select an eligible directed structural path with an available measured moderator.";
+  }
+  if (!context.projectWritable) return "This project does not permit direct model mutations.";
+  return "Moderation authoring is not available in the current model state.";
+}
 
 /**
  * The single source of truth for native command presentation and semantics.
@@ -460,12 +521,15 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
   {
     id: "add-moderating-effect",
-    label: "Moderating Effect…",
+    label: (context) => moderationMutationAuthority(context).kind === "general_sem_revision"
+      ? "Moderating Effect (Save As Revision)…"
+      : "Moderating Effect…",
     action: { id: "model.add-moderating-effect" },
     shortcut: { key: "m" },
     toolbar: [{ surface: "model", order: 55 }],
     contextMenu: [{ surface: "model", selections: ["path"], order: 7 }],
-    enabledWhen: (context) => modelIsMutable(context) && context.canAddModeration,
+    enabledWhen: canInvokeModeration,
+    disabledReason: moderationDisabledReason,
   },
   {
     id: "edit-selection",
@@ -574,10 +638,11 @@ export const NATIVE_COMMANDS: readonly NativeCommandDefinition[] = [
   },
 ] as const;
 
-export interface ResolvedNativeCommand extends Omit<NativeCommandDefinition, "label"> {
+export interface ResolvedNativeCommand extends Omit<NativeCommandDefinition, "label" | "disabledReason"> {
   label: string;
   visible: boolean;
   enabled: boolean;
+  disabledReason?: string;
 }
 
 const commandById = new Map<NativeCommandId, NativeCommandDefinition>(
@@ -591,11 +656,18 @@ export function resolveNativeCommand(
   const command = commandById.get(id);
   if (!command) throw new Error(`Unknown native command: ${id}`);
   const visible = command.visibleWhen?.(context) ?? true;
+  const enabled = visible && (command.enabledWhen?.(context) ?? true);
+  const disabledReason = visible && !enabled && command.disabledReason
+    ? typeof command.disabledReason === "function"
+      ? command.disabledReason(context)
+      : command.disabledReason
+    : undefined;
   return {
     ...command,
     label: typeof command.label === "function" ? command.label(context) : command.label,
     visible,
-    enabled: visible && (command.enabledWhen?.(context) ?? true),
+    enabled,
+    disabledReason,
   };
 }
 

@@ -478,7 +478,7 @@ pub fn compile_analysis_recipe_v4(
         ensure_pls_score_execution_compatibility(recipe, plan)?;
     }
     let recipe_document_sha256 = hash_serializable(recipe)?;
-    let recipe_analytical_sha256 = recipe_analytical_sha256(recipe, model)?;
+    let recipe_analytical_sha256 = recipe_v4_analytical_sha256(recipe, model)?;
     let model_document_sha256 = hash_serializable(model)?;
     let model_scientific_sha256 = model.scientific_sha256()?;
     let plan_sha256 = hash_serializable(&plan)?;
@@ -1130,7 +1130,7 @@ fn ensure_receipt_capability_cell(
     Ok(())
 }
 
-fn recipe_analytical_sha256(
+pub fn recipe_v4_analytical_sha256(
     recipe: &AnalysisRecipeV4,
     model: &SemModelV4,
 ) -> Result<String, RecipeV4CompilationError> {
@@ -1143,6 +1143,7 @@ fn recipe_analytical_sha256(
         estimand_confirmation: recipe.estimand_confirmation,
         settings: &recipe.settings,
         method_config: recipe.method_config.as_ref(),
+        general_sem_config: recipe.general_sem_config.as_ref(),
         metadata: &recipe.metadata,
     })
 }
@@ -1157,6 +1158,8 @@ struct RecipeAnalyticalIdentityV4<'a> {
     estimand_confirmation: LegacyEstimandConfirmationV4,
     settings: &'a crate::AnalysisSettings,
     method_config: Option<&'a MethodConfig>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    general_sem_config: Option<&'a crate::GeneralSemConfigV1>,
     metadata: &'a std::collections::BTreeMap<String, String>,
 }
 

@@ -7,6 +7,10 @@ import {
   parseSemModelV4AuthoringDraft,
   type SemModelV4,
 } from "./semModelV4";
+import {
+  parseGeneralSemConfigV1,
+  type GeneralSemConfigV1,
+} from "./generalSemConfigV1";
 import type { NativeCanonicalModelSpec } from "../types";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
@@ -183,6 +187,8 @@ export interface ProjectUpgradeLineageV6Wire {
 export type ProjectOriginV6Wire =
   | { kind: "new_project" }
   | { kind: "upgraded_copy"; lineage: ProjectUpgradeLineageV6Wire };
+
+export type ProjectSemGenerationV6Wire = "general_sem_v1";
 
 function normalizePathForComparison(value: string): string {
   return value.trim().replace(/[\\/]+$/, "").replaceAll("/", "\\").toLowerCase();
@@ -563,6 +569,7 @@ export interface ProjectAnalysisRecipeV4Wire {
   estimand_confirmation: LegacyEstimandConfirmationV4Wire;
   settings: ProjectAnalysisSettingsV4Wire;
   method_config?: Readonly<WireRecord>;
+  general_sem_config?: GeneralSemConfigV1;
   metadata: Record<string, string>;
   legacy_source?: { source_schema_version: 1 | 2 | 3; source_recipe_sha256: string };
 }
@@ -919,7 +926,10 @@ function parseMethodConfig(value: unknown, path: string): WireRecord {
   return fail("project_archive_v6.method_config_kind", `${path}.kind`, `${path}.kind is unsupported.`);
 }
 
-function parseRecipe(value: unknown, path: string): ProjectAnalysisRecipeV4Wire {
+export function parseProjectAnalysisRecipeV4Wire(
+  value: unknown,
+  path = "recipe",
+): ProjectAnalysisRecipeV4Wire {
   const recipe = exactRecordAt(value, [
     "schema_version",
     "id",
@@ -928,7 +938,7 @@ function parseRecipe(value: unknown, path: string): ProjectAnalysisRecipeV4Wire 
     "model_binding",
     "estimand_confirmation",
     "settings",
-  ], ["method_config", "metadata", "legacy_source"], path);
+  ], ["method_config", "general_sem_config", "metadata", "legacy_source"], path);
   if (u32At(recipe.schema_version, `${path}.schema_version`) !== 4) {
     fail("project_archive_v6.recipe_schema", `${path}.schema_version`, "Current project recipes must use schema version 4.");
   }
@@ -968,6 +978,14 @@ function parseRecipe(value: unknown, path: string): ProjectAnalysisRecipeV4Wire 
     settings: parseRecipeSettings(recipe.settings, `${path}.settings`),
     metadata: recipe.metadata === undefined ? {} : stringMapAt(recipe.metadata, `${path}.metadata`),
     ...(recipe.method_config == null ? {} : { method_config: parseMethodConfig(recipe.method_config, `${path}.method_config`) }),
+    ...(recipe.general_sem_config == null
+      ? {}
+      : {
+          general_sem_config: parseGeneralSemConfigV1(
+            recipe.general_sem_config,
+            `${path}.general_sem_config`,
+          ),
+        }),
     ...(legacySource == null ? {} : {
       legacy_source: {
         source_schema_version: u32At(legacySource.source_schema_version, `${path}.legacy_source.source_schema_version`) as 1 | 2 | 3,
@@ -1057,6 +1075,11 @@ export interface InternalProjectArchiveV6Wire {
   historical_results: ImmutableHistoricalResultV6Wire[];
   canonical_result_documents: CanonicalResultDocumentAttachmentV2Wire[];
   origin: ProjectOriginV6Wire;
+  sem_generation?: ProjectSemGenerationV6Wire;
+}
+
+export function supportsGeneralSemV1(project: Pick<InternalProjectArchiveV6Wire, "origin" | "sem_generation">): boolean {
+  return project.origin.kind === "new_project" && project.sem_generation === "general_sem_v1";
 }
 
 /**
@@ -1092,6 +1115,7 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     "canonical_result_documents",
     "origin",
     "upgrade_lineage",
+    "sem_generation",
   ], "project");
   // These are Option<T> fields in the compatibility-only Rust reader, so an
   // explicit JSON null has the same presence semantics as an omitted field.
@@ -1106,6 +1130,16 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     : { kind: "upgraded_copy", lineage: parseUpgradeLineage(root.upgrade_lineage, "project.upgrade_lineage") } as const;
   if (origin.kind === "upgraded_copy" && origin.lineage.source_project_id !== projectId) {
     fail("project_archive_v6.upgrade_project_identity", "project.origin", "Upgraded-copy source_project_id must match project_id.");
+  }
+  const semGeneration = hasOwn(root, "sem_generation") && root.sem_generation != null
+    ? enumAt(root.sem_generation, ["general_sem_v1"] as const, "project.sem_generation")
+    : undefined;
+  if (origin.kind === "upgraded_copy" && semGeneration !== undefined) {
+    fail(
+      "project_archive_v6.general_sem_generation_requires_new_project",
+      "project.sem_generation",
+      "general_sem_v1 generation authority is valid only for a newly created schema-v6 project.",
+    );
   }
 
   const datasets = arrayAt(hasOwn(root, "datasets") ? root.datasets : [], "project.datasets")
@@ -1137,7 +1171,7 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
   });
 
   const recipes = arrayAt(hasOwn(root, "recipes") ? root.recipes : [], "project.recipes")
-    .map((recipe, index) => parseRecipe(recipe, `project.recipes[${index}]`));
+    .map((recipe, index) => parseProjectAnalysisRecipeV4Wire(recipe, `project.recipes[${index}]`));
   recipes.forEach((recipe, index) => {
     if (recipeIds.has(recipe.id)) {
       fail("project_archive_v6.recipe_id_duplicate", `project.recipes[${index}].id`, "Current and historical recipe ids must be unique together.");
@@ -1188,5 +1222,6 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     historical_results: historicalResults,
     canonical_result_documents: canonicalAttachments,
     origin,
+    ...(semGeneration === undefined ? {} : { sem_generation: semGeneration }),
   };
 }

@@ -5,6 +5,7 @@ import {
   type CanonicalResultCell,
   type CanonicalResultTable,
 } from "./canonicalResultDocumentV2";
+import type { CapabilityCellReferenceV2 } from "./canonicalResultDocumentV2";
 import {
   cbsemCfaScoreLmChiSquare1PValueV1,
   cbsemCfaScoreLmNumbersCloseV1,
@@ -35,8 +36,10 @@ const SHA256_HEX = /^[a-f0-9]{64}$/;
 const DATA_FINGERPRINT_V2 = /^v2:([a-f0-9]{64})$/;
 
 export interface InternalProjectSchema6ResultReadRequestV1 {
-  surface: "internal_labs" | "standard_exact_cbsem";
+  surface: "internal_labs" | "standard" | "standard_exact_cbsem";
   experimentalLabsEnabled: boolean;
+  /** Exact selected General SEM cell; absent only on legacy Labs/CB requests. */
+  capabilityCell?: CapabilityCellReferenceV2;
   archivePath: string;
   expectedSourceSha256: string;
 }
@@ -234,7 +237,7 @@ function validateCanonicalDocumentWireShape(value: unknown, path: string): void 
       "schema_version", "document_id", "title", "provenance", "sections", "tables",
       "charts", "notices", "exclusions", "footnotes", "presentation",
     ],
-    ["capability_cells"],
+    ["capability_cells", "general_sem_results"],
     path,
   );
   if (document.schema_version !== 2) fail(`${path}.schema_version`, "must equal 2");
@@ -258,9 +261,13 @@ function validateCanonicalDocumentWireShape(value: unknown, path: string): void 
     "run_id", "project_id", "model_id", "dataset_id", "recipe_id", "method_version",
     "engine_version", "started_at", "completed_at",
   ]) nonemptyStringAt(provenance[key], `${path}.provenance.${key}`);
-  for (const key of ["model_digest", "dataset_fingerprint", "recipe_digest"]) {
+  for (const key of ["model_digest", "recipe_digest"]) {
     sha256At(provenance[key], `${path}.provenance.${key}`);
   }
+  dataFingerprintAt(
+    provenance.dataset_fingerprint,
+    `${path}.provenance.dataset_fingerprint`,
+  );
   validateCapabilityReferenceShape(
     provenance.capability_cell,
     `${path}.provenance.capability_cell`,
@@ -2605,9 +2612,13 @@ export function validateArchivedCbsemMissingDataExecutionV1(
     fail(`${path}.estimation_summary.canonical_observed_means_sha256`, "must be undisplayed not_estimated");
   }
 
+  const provenanceFingerprint = dataFingerprintAt(
+    document.provenance.dataset_fingerprint,
+    `${path}.provenance.dataset_fingerprint`,
+  );
   if (
     document.provenance.dataset_id !== sourceDatasetId
-    || document.provenance.dataset_fingerprint !== sourceFingerprint.recordedSha256
+    || provenanceFingerprint.recordedSha256 !== sourceFingerprint.recordedSha256
   ) fail(`${path}.provenance`, "differs from the missing-data execution source identity");
   const covarianceTables = matching("canonical_ml_covariance");
   if (

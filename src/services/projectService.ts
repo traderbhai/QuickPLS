@@ -21,6 +21,18 @@ import {
   type InternalLabsRecipeV4CbsemExecutionRequestV1,
   type InternalRecipeV4CbsemJobSnapshotV1,
 } from "../domain/internalRecipeV4CbsemExecution";
+import {
+  generalSemPlsRequestedCapabilityCellV1,
+  parseGeneralSemEstimatorPreflightOutcomeV1,
+  parseGeneralSemPlsCompletedResultV1,
+  parseGeneralSemPlsJobSnapshotV1,
+  parseGeneralSemProjectBootstrapOutcomeV1,
+  selectGeneralSemExecutionAccessV1,
+  type GeneralSemPlsJobRequestV1,
+  type GeneralSemProjectBootstrapRequestV1,
+} from "../domain/internalRecipeV4GeneralSemWorkspace";
+import type { GeneralSemConfigV1 } from "../domain/generalSemConfigV1";
+import type { InternalProjectArchiveV6Wire } from "../domain/internalProjectArchiveV6Wire";
 import type {
   InternalProjectSchema6ResultAppendOutcomeV1,
   InternalProjectSchema6ResultAppendRequestV1,
@@ -65,6 +77,40 @@ export interface ChecksumVerification {
   verified: number;
   failures: string[];
   message: string;
+}
+
+export class NativeLegacyDatasetOperationBlockedError extends Error {
+  readonly code = "schema6_general_sem.legacy_dataset_operation_blocked";
+
+  constructor(operation: string, reason: "bound_archive" | "publication_pending") {
+    super(reason === "bound_archive"
+      ? `${operation} is unavailable because the active dataset is bound to an immutable schema-6 archive.`
+      : `${operation} is unavailable while General SEM publication is validating and committing its archive.`);
+    this.name = "NativeLegacyDatasetOperationBlockedError";
+  }
+}
+
+async function boundSchema6SessionActive() {
+  const { useInternalProjectArchiveV6Session } = await import("../internalProjectArchiveV6SessionStore");
+  const session = useInternalProjectArchiveV6Session.getState().session;
+  return Boolean(session?.standardActivation);
+}
+
+/** Central application boundary for every legacy dataset mutation service. */
+export async function assertNativeLegacyDatasetMutationAllowed(operation: string) {
+  const { useWorkspace } = await import("../store");
+  if (useWorkspace.getState().generalSemPublicationPending) {
+    throw new NativeLegacyDatasetOperationBlockedError(operation, "publication_pending");
+  }
+  if (await boundSchema6SessionActive()) {
+    throw new NativeLegacyDatasetOperationBlockedError(operation, "bound_archive");
+  }
+}
+
+async function assertNativeLegacyDatasetReadAllowed(operation: string) {
+  if (await boundSchema6SessionActive()) {
+    throw new NativeLegacyDatasetOperationBlockedError(operation, "bound_archive");
+  }
 }
 
 export interface NativeTextExportRequest {
@@ -154,6 +200,8 @@ export interface DiagnosticBundleSaveResult {
 
 export const isNativeDesktop = () => typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
+export type NativeNewProjectModeV1 = "standard" | "general_sem_v1";
+
 export async function getNativeCapabilityRegistryV2(): Promise<NativeCapabilityRegistryV2Snapshot> {
   return parseNativeCapabilityRegistryV2(await invoke<unknown>("capability_registry_v2"));
 }
@@ -188,8 +236,19 @@ const normalizeProjectSnapshot = async (project: NativeProjectSnapshot): Promise
   };
 };
 
-export async function createNativeProject(name = "Untitled project") {
-  return normalizeProjectSnapshot(await invoke<NativeProjectSnapshot>("new_project", { name }));
+export async function createNativeProject(
+  name = "Untitled project",
+  projectMode?: NativeNewProjectModeV1,
+) {
+  const commandArguments = projectMode === undefined ? { name } : { name, projectMode };
+  return normalizeProjectSnapshot(
+    await invoke<NativeProjectSnapshot>("new_project", commandArguments),
+  );
+}
+
+/** Clears, but can never issue, the backend General SEM fresh-draft authority. */
+export async function invalidateNativeGeneralSemFreshDraftAuthorityV1() {
+  return invoke<void>("invalidate_general_sem_fresh_draft_authority_v1");
 }
 
 export async function openNativeProjectAt(path: string) {
@@ -238,16 +297,20 @@ export async function mutateNativeProjectExplorer(request: NativeProjectExplorer
 }
 
 export async function importNativeDataset(dataKind: "raw" | "covariance" | "correlation" = "raw", sampleSize?: number, missingMarkers?: string[]) {
+  await assertNativeLegacyDatasetMutationAllowed("Import data");
   const path = await open({ multiple: false, filters: [{ name: "Research data", extensions: ["csv", "tsv", "txt", "xls", "xlsx", "xlsb", "ods", "sav", "zsav"] }] });
   if (!path) return null;
+  await assertNativeLegacyDatasetMutationAllowed("Import data");
   return normalizeDataset(await invoke<Dataset>("import_dataset", { path, dataKind, sampleSize, missingMarkers }));
 }
 
 export async function importNativeValidationFixture() {
+  await assertNativeLegacyDatasetMutationAllowed("Import validation data");
   return normalizeDataset(await invoke<Dataset>("import_validation_fixture"));
 }
 
 export async function getNativeDatasetRows(datasetId: string, offset: number, limit: number) {
+  await assertNativeLegacyDatasetReadAllowed("Legacy dataset row access");
   return invoke<DatasetRowsPage>("dataset_rows", { datasetId, offset, limit });
 }
 
@@ -256,6 +319,7 @@ export async function profileNativeDatasetGroups(
   columnName: string,
   analysisColumns: readonly string[],
 ) {
+  await assertNativeLegacyDatasetReadAllowed("Legacy dataset group profiling");
   return invoke<DatasetGroupProfile>("profile_dataset_groups", {
     datasetId,
     columnName,
@@ -264,14 +328,17 @@ export async function profileNativeDatasetGroups(
 }
 
 export async function updateNativeColumnMetadata(datasetId: string, columnName: string, metadata: ColumnMetadata) {
+  await assertNativeLegacyDatasetMutationAllowed("Update variable metadata");
   return normalizeDataset(await invoke<Dataset>("set_column_metadata", { datasetId, columnName, metadata }));
 }
 
 export async function activateNativeDataset(datasetId: string) {
+  await assertNativeLegacyDatasetMutationAllowed("Activate a dataset version");
   return normalizeDataset(await invoke<Dataset>("activate_dataset", { datasetId }));
 }
 
 export async function recodeNativeDatasetColumn(datasetId: string, spec: RecodeColumnSpec) {
+  await assertNativeLegacyDatasetMutationAllowed("Recode data");
   const mutation = await invoke<DatasetVersionMutation>("recode_dataset_column", { datasetId, spec });
   return {
     ...mutation,
@@ -284,6 +351,7 @@ export async function previewNativeDatasetTransformation(
   datasetId: string,
   spec: DatasetTransformationSpecV2,
 ) {
+  await assertNativeLegacyDatasetMutationAllowed("Preview a dataset transformation");
   return invoke<DatasetTransformationPreviewV2>("preview_dataset_transformation", {
     datasetId,
     spec,
@@ -295,6 +363,7 @@ export async function applyNativeDatasetTransformation(
   spec: DatasetTransformationSpecV2,
   outputDatasetName: string,
 ) {
+  await assertNativeLegacyDatasetMutationAllowed("Create a transformed dataset version");
   const mutation = await invoke<DatasetVersionMutation>("apply_dataset_transformation", {
     datasetId,
     spec,
@@ -355,6 +424,79 @@ export async function getInternalLabsRecipeV4PlsJobResult(jobId: string) {
     { jobId },
   );
   return parseInternalRecipeV4CompletedResultV1(response);
+}
+
+/**
+ * Atomically creates a new schema-6 general_sem_v1 archive from exactly one
+ * resident active-project dataset, one promoted SemModelV4, and one RecipeV4.
+ */
+export async function bootstrapInternalGeneralSemProjectArchiveV6(
+  request: GeneralSemProjectBootstrapRequestV1,
+) {
+  const response = await invoke<unknown>(
+    "bootstrap_internal_general_sem_project_archive_v6",
+    { request },
+  );
+  return parseGeneralSemProjectBootstrapOutcomeV1(response);
+}
+
+/** Native Rust capability authority for an already populated marked project. */
+export async function preflightInternalGeneralSemEstimatorsV1(input: {
+  project: InternalProjectArchiveV6Wire;
+  model: SemModelV4;
+  config: GeneralSemConfigV1;
+  experimentalLabsEnabled?: boolean;
+}) {
+  const capabilityCell = generalSemPlsRequestedCapabilityCellV1(input.model, input.config);
+  const access = selectGeneralSemExecutionAccessV1({
+    capabilityCell,
+    experimentalLabsEnabled: input.experimentalLabsEnabled ?? true,
+  });
+  const response = await invoke<unknown>(
+    "preflight_internal_general_sem_estimators_v1",
+    {
+      request: {
+        ...access,
+        capabilityCell,
+        project: input.project,
+        model: input.model,
+        config: input.config,
+      },
+    },
+  );
+  return parseGeneralSemEstimatorPreflightOutcomeV1(response);
+}
+
+export async function startInternalLabsGeneralSemPlsJobV1(request: GeneralSemPlsJobRequestV1) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "start_internal_labs_general_sem_pls_job_v1",
+    { request },
+  ));
+}
+
+export async function getInternalLabsGeneralSemPlsJobV1(jobId: string) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "status_internal_labs_general_sem_pls_job_v1",
+    { jobId },
+  ));
+}
+
+export async function cancelInternalLabsGeneralSemPlsJobV1(jobId: string) {
+  return parseGeneralSemPlsJobSnapshotV1(await invoke<unknown>(
+    "cancel_internal_labs_general_sem_pls_job_v1",
+    { jobId },
+  ));
+}
+
+export async function dismissInternalLabsGeneralSemPlsJobV1(jobId: string) {
+  return invoke<null>("dismiss_internal_labs_general_sem_pls_job_v1", { jobId });
+}
+
+export async function getInternalLabsGeneralSemPlsJobResultV1(jobId: string) {
+  return parseGeneralSemPlsCompletedResultV1(await invoke<unknown>(
+    "result_internal_labs_general_sem_pls_job_v1",
+    { jobId },
+  ));
 }
 
 /** Internal-only bounded CB-SEM Recipe-v4 bridge; Standard Calculate never calls this. */

@@ -1,0 +1,42 @@
+{
+    "schema_version":  1,
+    "evidence_kind":  "general_sem_rank0_installed_portable_workflow",
+    "variant_id":  "mediation_point",
+    "packages":  [
+                     {
+                         "package_kind":  "installed",
+                         "resolved_path":  "D:\\QuickPLS-sem-upgrade\\validation\\results\\rank0-installed-candidate-final\\QuickPLS\\quickpls-desktop.exe",
+                         "size":  55821824,
+                         "sha256":  "3b386b90a7f195ee758827a89bd2e86c6b1c96f28fb3622c6e1167357c88126e",
+                         "product_version":  "2.46.0",
+                         "file_version":  "2.46.0",
+                         "provenance":  {
+                                            "evidence_kind":  "windows_pe_package_identity_v1",
+                                            "file_identity_source":  "resolved_path_size_sha256",
+                                            "version_identity_source":  "System.Diagnostics.FileVersionInfo"
+                                        }
+                     },
+                     {
+                         "package_kind":  "portable",
+                         "resolved_path":  "D:\\QuickPLS-sem-upgrade\\target\\release\\quickpls-desktop.exe",
+                         "size":  55821824,
+                         "sha256":  "09ec300dd659550e6d091836255fc59f1e1083db94cc2b4325dbceabfff4682d",
+                         "product_version":  "2.46.0",
+                         "file_version":  "2.46.0",
+                         "provenance":  {
+                                            "evidence_kind":  "windows_pe_package_identity_v1",
+                                            "file_identity_source":  "resolved_path_size_sha256",
+                                            "version_identity_source":  "System.Diagnostics.FileVersionInfo"
+                                        }
+                     }
+                 ],
+    "workflow":  [
+                     "execute",
+                     "cancel_retry",
+                     "append",
+                     "close",
+                     "fresh_reopen"
+                 ],
+    "exports":  "verified_separately",
+    "passed":  true
+}

@@ -1,7 +1,18 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { useState } from "react";
 import { useWorkspace } from "../store";
-import type { ConstructData } from "../types";
+import type { ConstructData, InteractionData } from "../types";
+
+function interactionNote(interaction: InteractionData): string {
+  const method = interaction.canonicalMethod === "product_indicator"
+    ? "Product indicator"
+    : interaction.canonicalMethod === "orthogonalizing"
+      ? "Orthogonalizing"
+      : "Two-stage product score";
+  return interaction.kind === "interaction_v2"
+    ? `${interaction.operands.length}-way · ${method} · ${interaction.hierarchyPolicy} hierarchy`
+    : method;
+}
 
 export function ConstructNode({ id, data, selected }: NodeProps<Node<ConstructData>>) {
   const assignIndicators = useWorkspace((state) => state.assignIndicators);
@@ -39,7 +50,7 @@ export function ConstructNode({ id, data, selected }: NodeProps<Node<ConstructDa
     <div className="construct-kind">{data.semantic === "interaction" ? "INT" : data.semantic === "higher_order" ? "HOC" : data.mode === "reflective" ? "A" : "B"}</div>
     <div className={`construct-score${hasResults ? " has-results" : ""}`}>{data.resultR2 !== undefined ? `R2 ${data.resultR2.toFixed(3)}` : "Model"}</div>
     <strong title={data.label}>{data.label}</strong><span>[{data.shortName}]</span>
-    {data.semantic === "interaction" && data.interaction ? <small className="interaction-note">Two-stage product score</small> : null}
+    {data.semantic === "interaction" && data.interaction ? <small className="interaction-note">{interactionNote(data.interaction)}</small> : null}
     {data.semantic === "higher_order" && data.higherOrder ? <small className="interaction-note">{data.higherOrder.method.replaceAll("_", " ")}</small> : null}
     {acceptsIndicators ? <div className="indicator-strip">
       {shownIndicators.map((item) => <small key={item}>{item}{data.resultLoadings?.[item] !== undefined ? <b>{data.resultLoadings[item].toFixed(3)}</b> : null}</small>)}

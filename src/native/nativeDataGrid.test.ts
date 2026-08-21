@@ -51,7 +51,10 @@ describe("native data surface integration", () => {
     const source = readFileSync("src/native/NativeDataSurface.tsx", "utf8");
 
     expect(source).toContain("const rowCount = dataset.rowCount ?? dataset.rows.length");
-    expect(source).toContain("getNativeDatasetRows(dataset.id, page.start, pageSize)");
+    expect(source).toContain("readNativeDatasetPageV1({");
+    expect(source).toContain("datasetDescriptorOnly,");
+    expect(source).toContain("session: schema6Session,");
+    expect(source).toContain("}, readInternalProjectArchiveV6DatasetRows, getNativeDatasetRows)");
     expect(source).toContain("nativeDataPageRows(dataset.rows, page)");
     expect(source).toContain("aria-rowcount={rowCount + 1}");
     expect(source).toContain("visibleRows.map((row, localIndex)");
@@ -72,6 +75,8 @@ describe("native data surface integration", () => {
     expect(source).toContain("nativeMissingCounts(dataset.columns, dataset.rows)");
     expect(source).not.toContain("dataset.rows.filter(");
     expect(source).toContain("Data Quality");
+    expect(source).toContain('mode === "quality" && !dataQualityAvailable');
+    expect(source).toContain("QuickPLS will not infer quality statistics from the descriptor-only placeholder.");
     expect(source).toContain("Import Details");
     expect(source).toContain("dataset.fingerprint?.trim()");
     expect(source).not.toContain("Import history");

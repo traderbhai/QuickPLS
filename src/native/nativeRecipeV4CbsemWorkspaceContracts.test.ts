@@ -10,7 +10,7 @@ describe("CB-SEM Recipe-v4 workspace interaction contracts", () => {
     expect(appSource).toContain('id="nd-model-cbsem-labs-tab"');
     expect(appSource).toContain("Exact CB-SEM");
     expect(appSource).toContain('role="tab"');
-    expect(appSource).toContain('["canvas", "parameters", "cbsem_labs"]');
+    expect(appSource).toContain('["canvas", "parameters", "general_sem_labs", "cbsem_labs"]');
     expect(appSource).toContain('["canvas", "cbsem_labs"]');
     expect(appSource).toContain('"ArrowLeft", "ArrowRight", "Home", "End"');
     expect(workspaceSource).not.toContain("NativeCalculationDialog");

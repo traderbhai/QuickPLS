@@ -182,7 +182,8 @@ fn writer_error(error: ProjectArchiveV6SaveCopyError) -> ProjectArchiveV6SaveCop
             "schema6_save_copy.commit_validation_failed",
             "Keep the current session open and retry with a new local destination.",
         ),
-        ProjectArchiveV6SaveCopyError::ArchiveLimit(_)
+        ProjectArchiveV6SaveCopyError::NewDocumentRequiresEmptyDatasets
+        | ProjectArchiveV6SaveCopyError::ArchiveLimit(_)
         | ProjectArchiveV6SaveCopyError::Contract(_)
         | ProjectArchiveV6SaveCopyError::Project(_)
         | ProjectArchiveV6SaveCopyError::Io(_)

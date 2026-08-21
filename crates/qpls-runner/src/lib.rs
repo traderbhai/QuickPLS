@@ -1,11 +1,13 @@
 mod pls_model_comparison_execution;
 mod recipe_v4_cbsem_execution;
 mod recipe_v4_cbsem_product_indicator_execution;
+mod recipe_v4_general_sem_pls_execution;
 mod recipe_v4_pls_execution;
 
 pub use pls_model_comparison_execution::*;
 pub use recipe_v4_cbsem_execution::*;
 pub use recipe_v4_cbsem_product_indicator_execution::*;
+pub use recipe_v4_general_sem_pls_execution::*;
 pub use recipe_v4_pls_execution::*;
 
 use chrono::Utc;

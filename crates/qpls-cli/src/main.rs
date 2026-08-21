@@ -8930,11 +8930,9 @@ mod tests {
         cca.settings.method = AnalysisMethod::Cca;
         cca.method_config = Some(MethodConfig::Cca);
 
-        let ordinary = require_cli_capability_availability(&cca, false, false)
-            .unwrap_err()
-            .to_string();
-        assert!(ordinary.contains("qpls3.assessment.cca_residuals is Experimental"));
-        require_cli_capability_availability(&cca, true, false).unwrap();
+        for allow_experimental in [false, true] {
+            require_cli_capability_availability(&cca, allow_experimental, false).unwrap();
+        }
 
         let registry = CapabilityRegistryV2::embedded().unwrap();
         let mut absent_evidence_cell = registry
@@ -8943,6 +8941,7 @@ mod tests {
             .unwrap()
             .clone();
         absent_evidence_cell.evidence_state = qpls_core::EvidenceStateV2::Absent;
+        absent_evidence_cell.surface = ProductSurfaceV2::Labs;
         if cfg!(debug_assertions) {
             assert!(internal_qualification_allows_cell(
                 &cca,
@@ -9764,7 +9763,7 @@ mod tests {
                 .filter_map(|row| row["option_cells"].as_array())
                 .map(Vec::len)
                 .sum::<usize>(),
-            48,
+            51,
         );
     }
 
