@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v254_canvas_results_headless_crawl_v1",
+  "version": "2.54.0",
+  "passed": true,
+  "started_at": "2026-08-21T18:45:52.489Z",
+  "completed_at": "2026-08-21T18:45:58.067Z",
+  "checks": [
+    {
+      "id": "canvas_fixture",
+      "passed": true,
+      "nodeCount": 20,
+      "fixture": {
+        "constructs": 20,
+        "indicators": 80
+      }
+    },
+    {
+      "id": "model_navigator_tabs",
+      "passed": true,
+      "labels": [
+        "Indicators",
+        "Constructs",
+        "Relationships"
+      ]
+    },
+    {
+      "id": "canvas_to_inspector",
+      "passed": true,
+      "heading": "Construct"
+    },
+    {
+      "id": "appearance_controls",
+      "passed": true,
+      "text": "ConstructBasicExpertModelParameterAppearanceData BindingCanvas X80Canvas Y70Pin constructIndicator positionAutomaticLeftRightAboveBelowC01_1AutomaticLeftRightAboveBelowFree placementC01_2AutomaticLeftRightAboveBelowFree placementC01_3AutomaticLeftRightAboveBelowFree placementC01_4AutomaticLeftRightAboveBelowFree placementReset all indicator positionsMove the construct with the canvas, keyboard focus, or Arrange command. Its saved position is presentation-only.Delete construct"
+    },
+    {
+      "id": "arrange_menu",
+      "passed": true,
+      "labels": [
+        "Tidy selection",
+        "Align left",
+        "Align center",
+        "Align right",
+        "Align top",
+        "Align middle",
+        "Align bottom",
+        "Distribute horizontally",
+        "Distribute vertically",
+        "Arrange model left-to-right",
+        "Arrange model top-to-bottom"
+      ]
+    },
+    {
+      "id": "results_empty_state",
+      "passed": true,
+      "text": "No completed calculationChoose a method from Calculate to create results.Calculate results"
+    },
+    {
+      "id": "results_to_calculate",
+      "passed": true,
+      "methodCount": 18
+    },
+    {
+      "id": "console",
+      "passed": true,
+      "errors": []
+    }
+  ],
+  "console_errors": [],
+  "failures": []
+}

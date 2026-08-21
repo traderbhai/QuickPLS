@@ -1,0 +1,1030 @@
+{
+    "schema_version":  1,
+    "suite_id":  "quickpls_v254_canvas_results_consolidated_diagnostics_v1",
+    "version":  "2.54.0",
+    "passed":  false,
+    "repository_root":  "D:\\QuickPLS",
+    "evidence_directory":  "D:\\QuickPLS\\validation\\results\\v254_consolidated_diagnostics_20260821T181553Z",
+    "started_at":  "2026-08-21T18:15:53.3838554Z",
+    "ended_at":  "2026-08-21T18:20:49.6542205Z",
+    "duration_ms":  296270,
+    "policy":  {
+                   "ordinary_command_failures":  "record and continue",
+                   "disk_safety_failures":  "skip disk-intensive commands",
+                   "minimum_free_gib_exclusive":  20,
+                   "cargo_incremental":  0,
+                   "cargo_target_dir":  "D:\\QuickPLS\\target",
+                   "repeated_historical_scientific_matrices":  false,
+                   "packaged_execution":  false,
+                   "headless_browser_execution":  true,
+                   "code_signing":  false
+               },
+    "summary":  {
+                    "total":  9,
+                    "passed":  5,
+                    "failed":  4,
+                    "skipped":  0,
+                    "failed_step_ids":  [
+                                            "frontend_full_vitest",
+                                            "rust_authority",
+                                            "frontend_typecheck",
+                                            "headless_canvas_results"
+                                        ],
+                    "skipped_step_ids":  [
+
+                                         ]
+                },
+    "evidence":  {
+                     "headless_canvas_results_crawl":  "D:\\QuickPLS\\validation\\results\\v254_consolidated_diagnostics_20260821T181553Z\\v254_canvas_results_headless_crawl.json",
+                     "packaged_smoke":  "run separately against the one frozen unsigned Windows candidate"
+                 },
+    "disk_snapshots":  [
+                           {
+                               "label":  "before_consolidated_pass",
+                               "captured_at":  "2026-08-21T18:15:53.6495377Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.717,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.438,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_full_vitest",
+                               "captured_at":  "2026-08-21T18:15:53.9831438Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.717,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.438,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_full_vitest",
+                               "captured_at":  "2026-08-21T18:16:43.0196326Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.686,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.434,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_authority",
+                               "captured_at":  "2026-08-21T18:16:43.0548813Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.686,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.434,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_authority",
+                               "captured_at":  "2026-08-21T18:17:37.4185664Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.686,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.137,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_archive",
+                               "captured_at":  "2026-08-21T18:17:37.4596263Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.686,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  24.137,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_archive",
+                               "captured_at":  "2026-08-21T18:19:06.0716986Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.685,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  23.019,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_routing",
+                               "captured_at":  "2026-08-21T18:19:06.1220958Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.685,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  23.019,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_routing",
+                               "captured_at":  "2026-08-21T18:19:08.1548626Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.685,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  23.019,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_check",
+                               "captured_at":  "2026-08-21T18:19:08.1910553Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.685,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  23.019,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_check",
+                               "captured_at":  "2026-08-21T18:20:00.2661505Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.684,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_typecheck",
+                               "captured_at":  "2026-08-21T18:20:00.3057041Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.684,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_typecheck",
+                               "captured_at":  "2026-08-21T18:20:30.7550984Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_build",
+                               "captured_at":  "2026-08-21T18:20:30.7870995Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_build",
+                               "captured_at":  "2026-08-21T18:20:41.1848759Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "before_headless_canvas_results",
+                               "captured_at":  "2026-08-21T18:20:41.2363963Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_headless_canvas_results",
+                               "captured_at":  "2026-08-21T18:20:49.6150842Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           },
+                           {
+                               "label":  "after_consolidated_pass",
+                               "captured_at":  "2026-08-21T18:20:49.6542205Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  30.683,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  22.975,
+                                                  "threshold_gib_exclusive":  20,
+                                                  "passed":  true
+                                              }
+                                          ],
+                               "errors":  [
+
+                                          ]
+                           }
+                       ],
+    "steps":  [
+                  {
+                      "id":  "diff_check",
+                      "description":  "Git whitespace-error check",
+                      "status":  "passed",
+                      "reason":  null,
+                      "command":  "git diff --check",
+                      "executable":  "git",
+                      "arguments":  [
+                                        "diff",
+                                        "--check"
+                                    ],
+                      "disk_intensive":  false,
+                      "started_at":  "2026-08-21T18:15:53.6675354Z",
+                      "ended_at":  "2026-08-21T18:15:53.8514187Z",
+                      "duration_ms":  182,
+                      "exit_code":  0,
+                      "stdout":  "logs/diff_check.stdout.log",
+                      "stderr":  "logs/diff_check.stderr.log",
+                      "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "disk_gate":  null
+                  },
+                  {
+                      "id":  "frontend_full_vitest",
+                      "description":  "One full Vitest traversal across the frontend and domain suite",
+                      "status":  "failed",
+                      "reason":  null,
+                      "command":  "npm.cmd run test",
+                      "executable":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "test"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:15:53.9841420Z",
+                      "ended_at":  "2026-08-21T18:16:42.9423255Z",
+                      "duration_ms":  48958,
+                      "exit_code":  1,
+                      "stdout":  "logs/frontend_full_vitest.stdout.log",
+                      "stderr":  "logs/frontend_full_vitest.stderr.log",
+                      "stdout_sha256":  "c1e1dd2b69c16dc78b10dec3f0262c8d04cc7935ba92119e32c6092d86271d90",
+                      "stderr_sha256":  "73d9563aff02421dafd28a49e4c740421e871364e084a704fac5585d3908b35f",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_full_vitest",
+                                                       "captured_at":  "2026-08-21T18:15:53.9831438Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.717,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  24.438,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_full_vitest",
+                                                      "captured_at":  "2026-08-21T18:16:43.0196326Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.686,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  24.434,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_authority",
+                      "description":  "Focused embedded Registry authority test",
+                      "status":  "failed",
+                      "reason":  null,
+                      "command":  "cargo test --locked -p qpls-core embedded_registry_is_the_exact_option_cell_authority -- --nocapture",
+                      "executable":  "cargo",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-core",
+                                        "embedded_registry_is_the_exact_option_cell_authority",
+                                        "--",
+                                        "--nocapture"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:16:43.0558834Z",
+                      "ended_at":  "2026-08-21T18:17:37.3632925Z",
+                      "duration_ms":  54307,
+                      "exit_code":  101,
+                      "stdout":  "logs/rust_authority.stdout.log",
+                      "stderr":  "logs/rust_authority.stderr.log",
+                      "stdout_sha256":  "a0e57d45493359ec9858751f71e4b05bac34efb0343bd1fd6093a6a92fdda8b7",
+                      "stderr_sha256":  "21ce987d3e53c443d3df73ae82149723f7223e1d90b2d77b0cf56f9c9fa16623",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_authority",
+                                                       "captured_at":  "2026-08-21T18:16:43.0548813Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.686,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  24.434,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_authority",
+                                                      "captured_at":  "2026-08-21T18:17:37.4185664Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.686,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  24.137,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_archive",
+                      "description":  "Focused schema-6 model-authority archive author/save/reopen test",
+                      "status":  "passed",
+                      "reason":  null,
+                      "command":  "cargo test --locked -p qpls-project --test schema6_sem_model_v4_authoring_shapes section_3_1_shapes_author_serialize_and_reopen_through_standalone_schema6 -- --exact --nocapture",
+                      "executable":  "cargo",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-project",
+                                        "--test",
+                                        "schema6_sem_model_v4_authoring_shapes",
+                                        "section_3_1_shapes_author_serialize_and_reopen_through_standalone_schema6",
+                                        "--",
+                                        "--exact",
+                                        "--nocapture"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:17:37.4596263Z",
+                      "ended_at":  "2026-08-21T18:19:05.8742497Z",
+                      "duration_ms":  88414,
+                      "exit_code":  0,
+                      "stdout":  "logs/rust_archive.stdout.log",
+                      "stderr":  "logs/rust_archive.stderr.log",
+                      "stdout_sha256":  "e27f4b41a3ead82b5782d96f6a3b47c6b8bbc40b79236a23b33287c26995c4ef",
+                      "stderr_sha256":  "86761c41cd1d220d699b5e6508a56d0dbe6cc27f72d85e2241ebfc6fb5323181",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_archive",
+                                                       "captured_at":  "2026-08-21T18:17:37.4596263Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.686,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  24.137,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_archive",
+                                                      "captured_at":  "2026-08-21T18:19:06.0716986Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.685,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  23.019,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_routing",
+                      "description":  "Focused exact Registry three-way point/bootstrap routing test",
+                      "status":  "passed",
+                      "reason":  null,
+                      "command":  "cargo test --locked -p qpls-core bounded_three_way_point_and_bootstrap_route_to_their_distinct_cells -- --nocapture",
+                      "executable":  "cargo",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-core",
+                                        "bounded_three_way_point_and_bootstrap_route_to_their_distinct_cells",
+                                        "--",
+                                        "--nocapture"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:19:06.1220958Z",
+                      "ended_at":  "2026-08-21T18:19:08.0963139Z",
+                      "duration_ms":  1974,
+                      "exit_code":  0,
+                      "stdout":  "logs/rust_routing.stdout.log",
+                      "stderr":  "logs/rust_routing.stderr.log",
+                      "stdout_sha256":  "2fd19c41c6e9700b3dc06618298cac3ce0d54d72eac49f8331bd7552911e7bc5",
+                      "stderr_sha256":  "b4bc2b959154664624a5d8e0f714c844a4ce68d0199688faed986bd4e3b0918a",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_routing",
+                                                       "captured_at":  "2026-08-21T18:19:06.1220958Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.685,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  23.019,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_routing",
+                                                      "captured_at":  "2026-08-21T18:19:08.1548626Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.685,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  23.019,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_check",
+                      "description":  "One consolidated Rust compile check; no repeated scientific qualification matrices",
+                      "status":  "passed",
+                      "reason":  null,
+                      "command":  "cargo check --locked -p qpls-core -p qpls-project -p qpls-runner -p quickpls-desktop",
+                      "executable":  "cargo",
+                      "arguments":  [
+                                        "check",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-core",
+                                        "-p",
+                                        "qpls-project",
+                                        "-p",
+                                        "qpls-runner",
+                                        "-p",
+                                        "quickpls-desktop"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:19:08.1910553Z",
+                      "ended_at":  "2026-08-21T18:20:00.2065675Z",
+                      "duration_ms":  52015,
+                      "exit_code":  0,
+                      "stdout":  "logs/rust_check.stdout.log",
+                      "stderr":  "logs/rust_check.stderr.log",
+                      "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "stderr_sha256":  "b2dba33bfbcecaa8b5385538f03149719ec0be282552ef284e1459b858ec8d92",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_check",
+                                                       "captured_at":  "2026-08-21T18:19:08.1910553Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.685,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  23.019,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_check",
+                                                      "captured_at":  "2026-08-21T18:20:00.2661505Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.684,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  22.975,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "frontend_typecheck",
+                      "description":  "One full frontend typecheck",
+                      "status":  "failed",
+                      "reason":  null,
+                      "command":  "npm.cmd run typecheck:full",
+                      "executable":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "typecheck:full"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:20:00.3057041Z",
+                      "ended_at":  "2026-08-21T18:20:30.6911457Z",
+                      "duration_ms":  30395,
+                      "exit_code":  1,
+                      "stdout":  "logs/frontend_typecheck.stdout.log",
+                      "stderr":  "logs/frontend_typecheck.stderr.log",
+                      "stdout_sha256":  "79e4c0f2ca32600c5414f61f8edb353994eb6f721d80af4fe8336f8e6e073beb",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_typecheck",
+                                                       "captured_at":  "2026-08-21T18:20:00.3057041Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.684,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  22.975,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_typecheck",
+                                                      "captured_at":  "2026-08-21T18:20:30.7550984Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.683,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  22.975,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "frontend_build",
+                      "description":  "One production frontend bundle",
+                      "status":  "passed",
+                      "reason":  null,
+                      "command":  "npm.cmd run build:bundle",
+                      "executable":  "npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "build:bundle"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:20:30.7870995Z",
+                      "ended_at":  "2026-08-21T18:20:41.1285887Z",
+                      "duration_ms":  10340,
+                      "exit_code":  0,
+                      "stdout":  "logs/frontend_build.stdout.log",
+                      "stderr":  "logs/frontend_build.stderr.log",
+                      "stdout_sha256":  "cfeb712c69a4784992998c2dfa80135b5ac0e39c5229986a6579716b24329c63",
+                      "stderr_sha256":  "2c1a9ecb11645b68ae696c76ebc35cf1910e117a2f2254379e746b3269926f90",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_build",
+                                                       "captured_at":  "2026-08-21T18:20:30.7870995Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.683,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  22.975,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_build",
+                                                      "captured_at":  "2026-08-21T18:20:41.1848759Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.683,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  22.975,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "headless_canvas_results",
+                      "description":  "Headless Canvas and Results interaction crawl against the production bundle",
+                      "status":  "failed",
+                      "reason":  null,
+                      "command":  "node validation/v254_canvas_results_packaged_smoke.mjs --phase headless --evidence-dir D:\\QuickPLS\\validation\\results\\v254_consolidated_diagnostics_20260821T181553Z --port 57654",
+                      "executable":  "node",
+                      "arguments":  [
+                                        "validation/v254_canvas_results_packaged_smoke.mjs",
+                                        "--phase",
+                                        "headless",
+                                        "--evidence-dir",
+                                        "D:\\QuickPLS\\validation\\results\\v254_consolidated_diagnostics_20260821T181553Z",
+                                        "--port",
+                                        "57654"
+                                    ],
+                      "disk_intensive":  true,
+                      "started_at":  "2026-08-21T18:20:41.2373950Z",
+                      "ended_at":  "2026-08-21T18:20:49.5597100Z",
+                      "duration_ms":  8325,
+                      "exit_code":  1,
+                      "stdout":  "logs/headless_canvas_results.stdout.log",
+                      "stderr":  "logs/headless_canvas_results.stderr.log",
+                      "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "stderr_sha256":  "2c298223443206a427595b6b491cf63a06b55d578977ecd31fd5b5151d9b1b1c",
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_headless_canvas_results",
+                                                       "captured_at":  "2026-08-21T18:20:41.2363963Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  30.683,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  22.975,
+                                                                          "threshold_gib_exclusive":  20,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ],
+                                                       "errors":  [
+
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_headless_canvas_results",
+                                                      "captured_at":  "2026-08-21T18:20:49.6150842Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  30.683,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  22.975,
+                                                                         "threshold_gib_exclusive":  20,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ],
+                                                      "errors":  [
+
+                                                                 ]
+                                                  }
+                                    }
+                  }
+              ]
+}

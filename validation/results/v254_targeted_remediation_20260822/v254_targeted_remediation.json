@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v254_targeted_frontend_remediation_v1",
+  "version": "2.54.0",
+  "passed": true,
+  "source_commit": "d44fae379277a2acb1af7c83cb7ac60f4a9e6339",
+  "baseline_report": "validation/results/v254_consolidated_diagnostics_20260821T184114Z/v254_consolidated_diagnostics.json",
+  "baseline_status": {
+    "passed_steps": 8,
+    "failed_steps": 1,
+    "failed_step_ids": [
+      "frontend_full_vitest"
+    ]
+  },
+  "closed_failures": [
+    {
+      "test_file": "src/domain/capabilityRegistryV2.test.ts",
+      "cause": "The current Labs-enabled product projection contains 29 visible rows, including two Legacy rows; the assertion still expected the 27 Standard rows only."
+    },
+    {
+      "test_file": "src/native/nativeResults.test.ts",
+      "cause": "Bootstrap accounting, failure, and unavailable-BCa tables are intentionally collapsed under Run Details; the assertion still expected them in the researcher-facing Inference group."
+    }
+  ],
+  "command": "npm.cmd test -- src/domain/capabilityRegistryV2.test.ts src/native/nativeResults.test.ts",
+  "observed_start_local": "2026-08-22T00:16:27+05:30",
+  "duration_ms": 2720,
+  "result": {
+    "test_files_passed": 2,
+    "test_files_total": 2,
+    "tests_passed": 69,
+    "tests_total": 69
+  },
+  "scope": "Targeted closure of the only failed step in the identical consolidated rerun; no product source changed after the eight other consolidated steps passed.",
+  "raw_log": null
+}

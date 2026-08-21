@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "receipt_kind": "quickpls_v254_targeted_frontend_remediation_sha256_v1",
+  "report": {
+    "path": "validation/results/v254_targeted_remediation_20260822/v254_targeted_remediation.json",
+    "size_bytes": 1480,
+    "sha256": "d4f8399a67d74ac9d95780f6c112096157a4c5cd91949c6563d0aefea745f461"
+  }
+}
