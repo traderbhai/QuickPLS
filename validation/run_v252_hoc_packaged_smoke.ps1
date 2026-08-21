@@ -58,7 +58,7 @@ function Wait-Cdp([bool]$Open, [int]$Seconds = 45) {
 }
 
 function Start-Candidate {
-    $process = Start-Process -FilePath $desktop -WorkingDirectory $repositoryRoot -WindowStyle Normal -PassThru
+    $process = Start-Process -FilePath $desktop -WorkingDirectory $repositoryRoot -WindowStyle Hidden -PassThru
     try {
         Wait-Cdp $true
         return $process

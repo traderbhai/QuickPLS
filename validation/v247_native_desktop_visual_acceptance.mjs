@@ -26,9 +26,18 @@ import {
 
 const port = 57_647;
 const baseUrl = `http://127.0.0.1:${port}/`;
-const screenshotDir = path.join(RESULTS, "screens", "v247-native-desktop-visual");
-const screenshotPathPrefix = "validation/results/screens/v247-native-desktop-visual/";
-const resultPath = path.join(RESULTS, "v247_native_desktop_visual_acceptance.json");
+const auditOutputId = process.env.QPLS_VISUAL_ACCEPTANCE_OUTPUT_ID?.trim()
+  || "v247-native-desktop-visual";
+if (!/^[a-z0-9][a-z0-9_-]*$/i.test(auditOutputId)) {
+  throw new Error(`QPLS_VISUAL_ACCEPTANCE_OUTPUT_ID is invalid: ${auditOutputId}`);
+}
+const screenshotDir = path.join(RESULTS, "screens", auditOutputId);
+const screenshotPathPrefix = `validation/results/screens/${auditOutputId}/`;
+const resultPath = path.join(
+  RESULTS,
+  process.env.QPLS_VISUAL_ACCEPTANCE_REPORT_NAME?.trim()
+    || "v247_native_desktop_visual_acceptance.json",
+);
 
 const viewports = [
   { id: "1024x700", width: 1024, height: 700 },
