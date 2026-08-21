@@ -29,7 +29,7 @@ import type {
 import {
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
-  standardSemGeneralSemThreeWayInteractionTermIdV1,
+  standardSemGeneralSemModerationV3IdentityV1,
 } from "./standardSemModelV4Authority";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
@@ -551,17 +551,7 @@ function revisionReceiptIdentityV1(
       return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
     }
     case "add_moderating_effect_v3": {
-      const termId = intent.target.kind === "parent_interaction"
-        ? standardSemGeneralSemThreeWayInteractionTermIdV1(
-          intent.target.interactionTermId,
-          intent.operands[2]!,
-        )
-        : standardSemGeneralSemInteractionV2TermIdV1(
-          intent.target.relationId,
-          intent.operands[0],
-          intent.operands[1],
-        );
-      return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
+      return standardSemGeneralSemModerationV3IdentityV1(intent.target, intent.operands);
     }
   }
 }

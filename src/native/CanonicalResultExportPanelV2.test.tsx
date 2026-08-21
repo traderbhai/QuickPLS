@@ -163,6 +163,36 @@ describe("CanonicalResultExportPanelV2 accessibility", () => {
     expect(html).toMatch(/<button(?=[^>]*(?!disabled=""))[^>]*>[\s\S]*?Export PNG<\/button>/u);
   });
 
+  it("aligns repeated line-series coordinates on the persisted x domain instead of ordinal point indexes", () => {
+    const document = documentWithChart();
+    document.charts[0]!.display.x_axis_label = "W";
+    document.charts[0]!.series = [-1, 0, 1].map((z, seriesIndex) => ({
+      id: `z-${seriesIndex}`,
+      label: `Z = ${z}`,
+      points: [-1, 0, 1].map((w) => ({ x: w, y: 0.2 + (seriesIndex + 1) * (w + 2) * 0.1 })),
+    }));
+
+    const html = renderToStaticMarkup(<CanonicalResultExportPanelV2 document={document} nativeDesktop />);
+    const ticks = [...html.matchAll(/<text class="nd-canonical-chart__tick"[^>]*>([^<]+)<\/text>/gu)]
+      .map((match) => match[1]);
+    const pointCoordinates = [...html.matchAll(/<circle class="nd-canonical-chart__point" cx="([^"]+)"/gu)]
+      .map((match) => match[1]);
+
+    expect(ticks).toEqual(["-1", "0", "1"]);
+    expect(pointCoordinates).toHaveLength(9);
+    expect(pointCoordinates.slice(0, 3)).toEqual(pointCoordinates.slice(3, 6));
+    expect(pointCoordinates.slice(0, 3)).toEqual(pointCoordinates.slice(6, 9));
+    expect(html).toContain("<td>-1</td>");
+    expect(html).toContain("<td>0</td>");
+    expect(html).toContain("<td>1</td>");
+
+    document.charts[0]!.kind = "bar";
+    const barHtml = renderToStaticMarkup(<CanonicalResultExportPanelV2 document={document} nativeDesktop />);
+    const barTicks = [...barHtml.matchAll(/<text class="nd-canonical-chart__tick"[^>]*>([^<]+)<\/text>/gu)]
+      .map((match) => match[1]);
+    expect(barTicks).toEqual(["1", "2", "3", "4", "5", "6", "7", "8", "9"]);
+  });
+
   it("is the only General SEM export UI seam and replaces the method-specific XLSX handler", () => {
     const source = readFileSync("src/native/NativeRecipeV4GeneralSemWorkspace.tsx", "utf8");
     const panel = readFileSync("src/native/CanonicalResultExportPanelV2.tsx", "utf8");

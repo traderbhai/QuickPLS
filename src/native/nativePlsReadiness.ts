@@ -825,13 +825,36 @@ function calculationItem(
         };
   }
   const moderationInteractions = nodes.filter((node) => node.data.semantic === "interaction");
+  const strictModerationInteractions = moderationInteractions.filter((node) => (
+    node.data.interaction?.kind === "interaction_v2"
+  ));
+  const legacyModerationInteractions = moderationInteractions.filter((node) => (
+    node.data.interaction?.kind !== "interaction_v2"
+  ));
+  const strictThreeWayInteractions = strictModerationInteractions.filter((node) => (
+    node.data.interaction?.kind === "interaction_v2"
+    && node.data.interaction.operands.length === 3
+  ));
+  const strictModerationRoute = strictModerationInteractions.length > 0
+    && legacyModerationInteractions.length === 0;
   if (moderationInteractions.length > 0) {
     const higherOrderConstructs = nodes.filter((node) => node.data.semantic === "higher_order");
     const controlPaths = edges.filter((edge) => (edge.data as { role?: string } | undefined)?.role === "control");
     const problems = [
-      moderationInteractions.length !== 1 ? "Two-stage moderation requires exactly one two-way interaction" : null,
-      moderationInteractions.some((node) => node.data.interaction?.kind === "interaction_v2")
-        ? "Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine"
+      !strictModerationRoute && moderationInteractions.length !== 1
+        ? "Two-stage moderation requires exactly one two-way interaction"
+        : null,
+      strictModerationInteractions.length > 0 && legacyModerationInteractions.length > 0
+        ? "Legacy and Standard moderating effects cannot be mixed in one calculation"
+        : null,
+      strictModerationInteractions.some((node) => (
+        node.data.interaction?.kind === "interaction_v2"
+        && node.data.interaction.operands.length > 3
+      ))
+        ? "Qualified moderation supports two-way interactions and one bounded three-way interaction"
+        : null,
+      strictThreeWayInteractions.length > 1
+        ? "Qualified three-way moderation supports exactly one three-way interaction per model"
         : null,
       (settings.weightingScheme ?? "path") !== "path" ? "Two-stage moderation requires path weighting" : null,
       (settings.preprocessing ?? "standardized") !== "standardized" ? "Two-stage moderation requires standardized preprocessing" : null,
@@ -888,7 +911,13 @@ function calculationItem(
       status: "blocked",
     };
   }
-  const moderationSuffix = moderationInteractions.length ? " with two-stage moderation" : "";
+  const moderationSuffix = strictThreeWayInteractions.length
+    ? " with qualified bounded three-way moderation"
+    : strictModerationRoute
+      ? " with qualified simultaneous two-way moderation"
+      : moderationInteractions.length
+        ? " with two-stage moderation"
+        : "";
   return {
     id: "calculation",
     label: "Calculation",

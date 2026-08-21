@@ -85,6 +85,14 @@ const text = (value: unknown, subject: string, nonempty = false) => {
 
 const nullableText = (value: unknown, subject: string) => value === null ? null : text(value, subject);
 
+const INTERNAL_MODERATION_ANNOTATION_PREFIXES = [
+  "general-sem:v1:interaction-generated:",
+  "general-sem:v1:interaction-dependency:",
+] as const;
+
+const isInternalModerationAnnotationId = (id: string) =>
+  INTERNAL_MODERATION_ANNOTATION_PREFIXES.some((prefix) => id.startsWith(prefix));
+
 function textMap(value: unknown, subject: string) {
   return Object.fromEntries(Object.entries(object(value, subject)).map(([key, item]) => [key, text(item, `${subject}.${key}`)]));
 }
@@ -195,8 +203,8 @@ export function projectStandardSemModelV4DiagramV1(
     ));
   }
 
-  const seed = supplied?.diagram_layout ?? presentationLayoutSeed(model);
-  const decorations = supplied?.diagram_layout.standardSemPresentation ?? standardSemPresentationSeed(model);
+  const seed = withoutInternalModerationNotes(supplied?.diagram_layout ?? presentationLayoutSeed(model));
+  const decorations = seed?.standardSemPresentation ?? standardSemPresentationSeed(model);
   const diagramLayout = parseDiagramLayout({
     ...defaultDiagramLayout(nodes, edges, seed),
     ...(decorations ? { standardSemPresentation: decorations } : {}),
@@ -396,7 +404,7 @@ function standardSemPresentationSeed(model: SemModelV4): StandardSemPresentation
   for (const annotation of model.annotations) {
     if (annotation.kind === "caption") {
       objects.push({ kind: "caption", id: annotation.id, text: annotation.text, x: 40, y: 40 + annotationIndex++ * 72 });
-    } else if (annotation.kind === "note") {
+    } else if (annotation.kind === "note" && !isInternalModerationAnnotationId(annotation.id)) {
       objects.push({ kind: "note", id: annotation.id, subject: annotation.subject, text: annotation.text, x: 40, y: 40 + annotationIndex++ * 72 });
     }
   }
@@ -439,6 +447,23 @@ function standardSemPresentationSeed(model: SemModelV4): StandardSemPresentation
     );
   }
   return objects.length ? { schemaVersion: 1, objects } : undefined;
+}
+
+function withoutInternalModerationNotes<T extends Partial<DiagramLayoutState> | undefined>(layout: T): T {
+  const presentation = layout?.standardSemPresentation;
+  if (!presentation) return layout;
+  const objects = presentation.objects.filter((object) => (
+    object.kind !== "note" || !isInternalModerationAnnotationId(object.id)
+  ));
+  if (objects.length === presentation.objects.length) return layout;
+  if (objects.length) {
+    return {
+      ...layout,
+      standardSemPresentation: { ...presentation, objects },
+    } as T;
+  }
+  const { standardSemPresentation: _removed, ...remaining } = layout;
+  return remaining as T;
 }
 
 function parseDiagramLayout(value: unknown): DiagramLayoutState {

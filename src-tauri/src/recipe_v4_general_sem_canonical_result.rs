@@ -4599,4 +4599,427 @@ mod tests {
                 .is_some_and(|cells| cells.contains(&bootstrap_cell))
         );
     }
+
+    #[cfg(windows)]
+    fn strict_v3_three_way_source_fixture(
+    ) -> (qpls_data::Dataset, AnalysisRecipeV4, SemModelV4, [String; 4]) {
+        use chrono::{TimeZone, Utc};
+        use qpls_core::{
+            ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
+            AnalysisRecipeModelBindingV4, AnalysisSettings, Construct,
+            LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
+            SemDataBindingV4, SemVariableV4, StructuralPath,
+            confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
+        };
+        use qpls_data::{ImportOptions, import_delimited_bytes};
+        use std::collections::BTreeMap;
+
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0001),
+            name: "Strict V3 authored-ID moderation source".into(),
+            constructs: [
+                ("authored:x", "X", ["x1", "x2"]),
+                ("authored:w", "W", ["w1", "w2"]),
+                ("authored:z", "Z", ["z1", "z2"]),
+                ("authored:y", "Y", ["y1", "y2"]),
+            ]
+            .into_iter()
+            .map(|(id, label, indicators)| Construct {
+                id: id.into(),
+                name: label.into(),
+                short_name: label.into(),
+                mode: MeasurementMode::Reflective,
+                indicators: indicators.into_iter().map(str::to_owned).collect(),
+            })
+            .collect(),
+            // Only the focal effect is authored. Strict hierarchy must create
+            // both moderator main-effect relations through the V3 revision
+            // allocator, which is where colon-bearing authored IDs previously
+            // produced overlong generated schema-6 identities.
+            paths: [("authored:x", "authored:y")]
+            .into_iter()
+            .map(|(source, target)| StructuralPath {
+                source: source.into(),
+                target: target.into(),
+            })
+            .collect(),
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let mut csv = String::from("x1,x2,w1,w2,z1,z2,y1,y2\n");
+        for row in 0..81 {
+            let row = f64::from(row);
+            let x = (row - 40.0) / 13.0;
+            let w = (row * 0.71).sin() + 0.2 * (row * 0.13).cos();
+            let z = (row * 0.37).cos() - 0.3 * (row * 0.19).sin();
+            let y = 0.25 * x + 0.20 * w - 0.15 * z + 0.65 * x * w
+                - 0.30 * x * z
+                + 0.20 * w * z
+                + 0.45 * x * w * z;
+            csv.push_str(&format!(
+                "{},{},{},{},{},{},{},{}\n",
+                x + 0.03 * (row * 0.11).sin(),
+                1.02 * x + 0.02 * (row * 0.17).cos(),
+                w + 0.03 * (row * 0.23).cos(),
+                0.98 * w + 0.02 * (row * 0.29).sin(),
+                z + 0.03 * (row * 0.31).sin(),
+                1.01 * z + 0.02 * (row * 0.41).cos(),
+                y + 0.03 * (row * 0.43).sin(),
+                1.01 * y + 0.02 * (row * 0.47).cos(),
+            ));
+        }
+        let dataset = import_delimited_bytes(
+            csv.as_bytes(),
+            "strict-v3-three-way-authored-ids.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_recipe = AnalysisRecipe {
+            schema_version: ANALYSIS_RECIPE_SCHEMA_VERSION,
+            id: Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0002),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model: source_model.clone(),
+            settings: AnalysisSettings {
+                method: AnalysisMethod::PlsPm,
+                workers: 1,
+                ..AnalysisSettings::default()
+            },
+            method_config: Some(MethodConfig::PlsAlgorithm),
+            metadata: BTreeMap::new(),
+        };
+        let pending = migrate_analysis_recipe_to_v4_pending(&source_recipe).unwrap();
+        let (mut recipe, mut model) = confirm_legacy_recipe_estimand_v4(
+            &pending,
+            &source_model,
+            &[],
+            LegacyBasicModelInterpretationV4::PlsComposite,
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!("the fixture is raw-data PLS")
+        };
+        *dataset_id = dataset.id.to_string();
+        let authored_id = |label: &str| {
+            model
+                .variables
+                .iter()
+                .find_map(|variable| match variable {
+                    SemVariableV4::Composite {
+                        id,
+                        label: actual,
+                        ..
+                    } if actual == label => Some(id.clone()),
+                    _ => None,
+                })
+                .unwrap()
+        };
+        let ids = [
+            authored_id("X"),
+            authored_id("W"),
+            authored_id("Z"),
+            authored_id("Y"),
+        ];
+        assert!(ids.iter().all(|id| id.matches(':').count() >= 2));
+        recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: model.id.clone(),
+            scientific_sha256: model.scientific_sha256().unwrap(),
+        };
+        recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.metadata.insert(
+            "execution_surface".into(),
+            qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+        );
+        recipe
+            .metadata
+            .insert("general_sem_generation".into(), "general_sem_v1".into());
+        recipe.ensure_valid().unwrap();
+        model.ensure_valid().unwrap();
+        (dataset, recipe, model, ids)
+    }
+
+    #[cfg(windows)]
+    fn strict_structural_relation_id(
+        model: &SemModelV4,
+        source: &str,
+        target: &str,
+    ) -> String {
+        model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                qpls_core::SemRelationV4::Structural {
+                    id,
+                    source: actual_source,
+                    target: actual_target,
+                    role: qpls_core::StructuralRelationRoleV4::Structural,
+                    ..
+                } if actual_source == source && actual_target == target => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap()
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn strict_v3_colon_ids_execute_build_append_and_reopen_three_way_canonical_result() {
+        use chrono::{TimeZone, Utc};
+        use qpls_core::{
+            SemDerivedTermV4, sha256_serialized,
+        };
+        use qpls_project::{
+            GeneralSemExecutionAuthorityRevisionIdentityV1,
+            GeneralSemExecutionAuthorityRevisionIntentV1,
+            GeneralSemExecutionAuthorityRevisionRequestV1,
+            GeneralSemExecutionAuthoritySourcePinV1, GeneralSemModeratingEffectTargetV1,
+            GeneralSemRevisionGenerationV1, GeneralSemRevisionHierarchyPolicyV1,
+            GeneralSemRevisionInteractionMethodV1, ProjectModelPayloadV6,
+            append_canonical_result_document_v2_file_v6,
+            create_general_sem_execution_authority_revision_v1,
+            create_populated_general_sem_project_archive_v6, load_project_archive_v6,
+        };
+
+        let assert_canonical_generated_id = |id: &str, prefix: &str| {
+            assert!(id.starts_with(prefix));
+            assert!(!id.contains('%'));
+            assert!(id.bytes().all(|byte| {
+                byte.is_ascii_lowercase()
+                    || byte.is_ascii_digit()
+                    || matches!(byte, b'_' | b'.' | b':' | b'-')
+            }));
+        };
+
+        let directory = tempfile::tempdir().unwrap();
+        let source_path = directory.path().join("strict-v3-source.qpls");
+        let two_way_path = directory.path().join("strict-v3-two-way.qpls");
+        let three_way_path = directory.path().join("strict-v3-three-way.qpls");
+        let (dataset, recipe, model, [x_id, w_id, z_id, y_id]) =
+            strict_v3_three_way_source_fixture();
+        let source_project_id = Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0010);
+        let source_model_document_sha256 = model.model_document_sha256().unwrap();
+        let source_model_scientific_sha256 = model.scientific_sha256().unwrap();
+        let source_recipe_document_sha256 = sha256_serialized(&recipe);
+        let focal_relation = strict_structural_relation_id(&model, &x_id, &y_id);
+        let source_receipt = create_populated_general_sem_project_archive_v6(
+            &source_path,
+            source_project_id,
+            "Strict V3 source",
+            Utc.with_ymd_and_hms(2026, 8, 22, 8, 0, 0).unwrap(),
+            &dataset,
+            model.clone(),
+            recipe.clone(),
+        )
+        .unwrap();
+        let two_way_project_id =
+            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0020);
+        let two_way_receipt = create_general_sem_execution_authority_revision_v1(
+            &source_path,
+            &source_receipt.destination_archive_sha256,
+            &two_way_path,
+            GeneralSemExecutionAuthorityRevisionRequestV1 {
+                source: GeneralSemExecutionAuthoritySourcePinV1 {
+                    project_id: source_project_id,
+                    model_id: model.id.clone(),
+                    model_document_sha256: source_model_document_sha256,
+                    model_scientific_sha256: source_model_scientific_sha256,
+                    recipe_id: recipe.id,
+                    recipe_document_sha256: source_recipe_document_sha256,
+                },
+                revision: GeneralSemExecutionAuthorityRevisionIdentityV1 {
+                    project_id: two_way_project_id,
+                    project_name: "Strict V3 two-way revision".into(),
+                    created_at: Utc.with_ymd_and_hms(2026, 8, 22, 8, 1, 0).unwrap(),
+                    model_id: "model:strict-v3:two-way".into(),
+                    model_name: "Strict V3 two-way revision".into(),
+                    recipe_id: Uuid::from_u128(
+                        0x3254_0000_0000_0000_0000_0000_0000_0021,
+                    ),
+                },
+                intent: GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+                    intent_version: 3,
+                    sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                    label: "X × W".into(),
+                    operands: vec![x_id.clone(), w_id.clone()],
+                    target: GeneralSemModeratingEffectTargetV1::FocalRelation {
+                        relation_id: focal_relation,
+                    },
+                    outcome: y_id.clone(),
+                    method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+                    hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+                },
+                expected_capability_cell:
+                    qpls_core::pls_general_multiple_moderation_point_capability_cell_v1(),
+                recipe_execution_surface:
+                    qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+            },
+        )
+        .unwrap();
+        assert_canonical_generated_id(
+            &two_way_receipt.interaction_term_id,
+            "general_sem_v1_moderation_term_",
+        );
+
+        let three_way_project_id =
+            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0030);
+        let three_way_receipt = create_general_sem_execution_authority_revision_v1(
+            &two_way_path,
+            &two_way_receipt.destination_archive_sha256,
+            &three_way_path,
+            GeneralSemExecutionAuthorityRevisionRequestV1 {
+                source: GeneralSemExecutionAuthoritySourcePinV1 {
+                    project_id: two_way_project_id,
+                    model_id: two_way_receipt.resident_model_id.clone(),
+                    model_document_sha256: two_way_receipt
+                        .resident_model_document_sha256
+                        .clone(),
+                    model_scientific_sha256: two_way_receipt
+                        .resident_model_scientific_sha256
+                        .clone(),
+                    recipe_id: two_way_receipt.resident_recipe_id,
+                    recipe_document_sha256: two_way_receipt
+                        .resident_recipe_document_sha256
+                        .clone(),
+                },
+                revision: GeneralSemExecutionAuthorityRevisionIdentityV1 {
+                    project_id: three_way_project_id,
+                    project_name: "Strict V3 three-way revision".into(),
+                    created_at: Utc.with_ymd_and_hms(2026, 8, 22, 8, 2, 0).unwrap(),
+                    model_id: "model:strict-v3:three-way".into(),
+                    model_name: "Strict V3 three-way revision".into(),
+                    recipe_id: Uuid::from_u128(
+                        0x3254_0000_0000_0000_0000_0000_0000_0031,
+                    ),
+                },
+                intent: GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+                    intent_version: 3,
+                    sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                    label: "X × W × Z".into(),
+                    operands: vec![x_id.clone(), w_id.clone(), z_id.clone()],
+                    target: GeneralSemModeratingEffectTargetV1::ParentInteraction {
+                        interaction_term_id: two_way_receipt.interaction_term_id.clone(),
+                    },
+                    outcome: y_id.clone(),
+                    method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+                    hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+                },
+                expected_capability_cell:
+                    pls_general_three_way_moderation_point_capability_cell_v1(),
+                recipe_execution_surface:
+                    qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+            },
+        )
+        .unwrap();
+        assert_canonical_generated_id(
+            &three_way_receipt.interaction_term_id,
+            "general_sem_v1_moderation_term_",
+        );
+        assert_eq!(three_way_receipt.revision_number, 2);
+
+        let loaded = load_project_archive_v6(&three_way_path).unwrap();
+        let resident_model = match &loaded.document.models[0].payload {
+            ProjectModelPayloadV6::SemModelV4 { model, .. } => model,
+            _ => panic!("the strict revision must retain one SemModelV4 authority"),
+        };
+        let resident_recipe = &loaded.document.recipes[0];
+        for moderator in [&w_id, &z_id] {
+            let (relation_id, parameter_id) = resident_model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    qpls_core::SemRelationV4::Structural {
+                        id,
+                        source,
+                        target,
+                        parameter,
+                        role: qpls_core::StructuralRelationRoleV4::Structural,
+                        ..
+                    } if source == moderator && target == &y_id => {
+                        Some((id.as_str(), parameter.as_str()))
+                    }
+                    _ => None,
+                })
+                .unwrap();
+            assert_canonical_generated_id(
+                relation_id,
+                "general_sem_v1_moderation_main_relation_",
+            );
+            assert_canonical_generated_id(
+                parameter_id,
+                "general_sem_v1_moderation_parameter_",
+            );
+        }
+        assert_eq!(resident_model.derived_terms.len(), 4);
+        assert!(resident_model.derived_terms.iter().all(|term| matches!(
+            term,
+            SemDerivedTermV4::InteractionV2 {
+                hierarchy_policy: qpls_core::InteractionHierarchyPolicyV2::Strong,
+                ..
+            }
+        )));
+        let artifact = compile_general_sem_pls_recipe_v1(resident_recipe, Some(resident_model))
+            .unwrap();
+        assert_eq!(
+            artifact.capability_cell(),
+            &pls_general_three_way_moderation_point_capability_cell_v1()
+        );
+        let analytical = run_compiled_general_sem_pls_recipe_v1(
+            &loaded.datasets[0],
+            resident_recipe,
+            resident_model,
+            &artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        assert!(analytical.three_way_point_estimation().is_some());
+        assert!(analytical.three_way_bootstrap_inference().is_none());
+
+        let canonical = build_recipe_v4_general_sem_pls_canonical_result_v1(
+            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0040),
+            three_way_project_id,
+            loaded.datasets[0].id,
+            "2026-08-22T08:03:00.000Z",
+            "2026-08-22T08:03:01.000Z",
+            resident_recipe,
+            resident_model,
+            &analytical,
+        )
+        .unwrap();
+        assert_eq!(
+            canonical.provenance.capability_cell,
+            pls_general_three_way_moderation_point_capability_cell_v1()
+        );
+        let results = canonical.general_sem_results.as_ref().unwrap();
+        assert_eq!(results.three_way_interaction_effects.len(), 1);
+        assert_eq!(
+            results.three_way_interaction_effects[0].interaction_id,
+            three_way_receipt.interaction_term_id
+        );
+        assert_canonical_generated_id(
+            &results.three_way_interaction_effects[0].interaction_id,
+            "general_sem_v1_moderation_term_",
+        );
+        assert!(!results.three_way_conditional_interaction_effects.is_empty());
+        assert!(!results.three_way_simple_slopes.is_empty());
+        assert!(results.three_way_moderation_bootstrap_receipt.is_none());
+
+        let archive_canonical: qpls_project::CanonicalResultDocumentV2 =
+            serde_json::from_value(serde_json::to_value(&canonical).unwrap()).unwrap();
+        archive_canonical.ensure_valid().unwrap();
+        let append = append_canonical_result_document_v2_file_v6(
+            &three_way_path,
+            &three_way_receipt.destination_archive_sha256,
+            archive_canonical,
+        )
+        .unwrap();
+        assert_eq!(append.canonical_result_document_count, 1);
+        let reopened = load_project_archive_v6(&three_way_path).unwrap();
+        assert_eq!(reopened.document.canonical_result_documents.len(), 1);
+        let reopened_canonical = reopened.document.canonical_result_documents[0]
+            .canonical_document();
+        reopened_canonical.ensure_valid().unwrap();
+        validate_archived_general_sem_pls_method_identity_v1(reopened_canonical).unwrap();
+    }
 }

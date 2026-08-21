@@ -1765,7 +1765,12 @@ fn apply_interaction_v2_revision(
     Ok((term_id, output_id))
 }
 
-fn moderation_dependency_annotation_id(owner: &str, subject: &str) -> String {
+const LEGACY_MODERATION_DEPENDENCY_ANNOTATION_PREFIX: &str =
+    "general-sem:v1:interaction-dependency:";
+const MODERATION_V3_DEPENDENCY_ANNOTATION_PREFIX: &str =
+    "general-sem:v1:interaction-dependency:_";
+
+fn legacy_moderation_dependency_annotation_id(owner: &str, subject: &str) -> String {
     format!(
         "general-sem:v1:interaction-dependency:{}:{}",
         encode_uri_component(owner),
@@ -1773,11 +1778,59 @@ fn moderation_dependency_annotation_id(owner: &str, subject: &str) -> String {
     )
 }
 
-fn moderation_generated_annotation_id(subject: &str) -> String {
+fn legacy_moderation_generated_annotation_id(subject: &str) -> String {
     format!(
         "general-sem:v1:interaction-generated:{}",
         encode_uri_component(subject)
     )
+}
+
+fn moderation_dependency_annotation_id(owner: &str, subject: &str) -> String {
+    moderation_v3_generated_id(
+        "general-sem:v1:interaction-dependency:",
+        &[owner, subject],
+    )
+}
+
+fn moderation_generated_annotation_id(subject: &str) -> String {
+    moderation_v3_generated_id("general-sem:v1:interaction-generated:", &[subject])
+}
+
+fn is_moderation_dependency_annotation_id(id: &str) -> bool {
+    id.starts_with(LEGACY_MODERATION_DEPENDENCY_ANNOTATION_PREFIX)
+        || id.starts_with(MODERATION_V3_DEPENDENCY_ANNOTATION_PREFIX)
+}
+
+fn moderation_dependency_annotation_matches_owner(
+    id: &str,
+    owner: &str,
+    subject: &str,
+) -> bool {
+    id == moderation_dependency_annotation_id(owner, subject)
+        || id == legacy_moderation_dependency_annotation_id(owner, subject)
+}
+
+fn has_moderation_generated_annotation(model: &SemModelV4, subject: &str) -> bool {
+    let canonical = moderation_generated_annotation_id(subject);
+    let legacy = legacy_moderation_generated_annotation_id(subject);
+    model
+        .annotations
+        .iter()
+        .any(|annotation| matches!(annotation,
+            SemAnnotationV4::Note { id, subject: candidate, .. }
+                if candidate.as_str() == subject && (id == &canonical || id == &legacy)
+        ))
+}
+
+fn remove_moderation_generated_annotations(model: &mut SemModelV4, subject: &str) {
+    let canonical = moderation_generated_annotation_id(subject);
+    let legacy = legacy_moderation_generated_annotation_id(subject);
+    model.annotations.retain(|annotation| {
+        !matches!(annotation,
+            SemAnnotationV4::Note { id, subject: candidate, .. }
+                if candidate.as_str() == subject && (id == &canonical || id == &legacy)
+        )
+    });
 }
 
 fn add_moderation_note(model: &mut SemModelV4, id: String, subject: String, text: String) {
@@ -1900,12 +1953,11 @@ fn ensure_moderation_main_effect(
         reference_hierarchy(model, owner, &id);
         return Ok(id);
     }
-    let id = format!(
-        "general-sem:v1:interaction-main:{}:{}",
-        encode_uri_component(owner),
-        encode_uri_component(operand)
+    let id = moderation_v3_generated_id(
+        "general_sem_v1_moderation_main_relation",
+        &[owner, operand],
     );
-    add_structural_relation(
+    add_moderation_structural_relation(
         model,
         id.clone(),
         operand.to_owned(),
@@ -1963,11 +2015,12 @@ fn ensure_pair_interaction(
         reference_hierarchy(model, owner, &id);
         return Ok(id);
     }
-    let term_id = general_sem_interaction_v2_term_id(focal_relation, first, second);
-    let output_id = format!(
-        "general-sem:v1:interaction-output:{}",
-        encode_uri_component(&term_id)
+    let term_id = moderation_v3_generated_id(
+        "general_sem_v1_moderation_term",
+        &[focal_relation, first, second],
     );
+    let output_id =
+        moderation_v3_generated_id("general_sem_v1_moderation_output", &[&term_id]);
     if model.derived_terms.iter().any(|term| term.id() == term_id)
         || model
             .variables
@@ -2003,12 +2056,9 @@ fn ensure_pair_interaction(
         hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
         product_indicator: None,
     });
-    add_structural_relation(
+    add_moderation_structural_relation(
         model,
-        format!(
-            "general-sem:v1:interaction-effect:{}",
-            encode_uri_component(&term_id)
-        ),
+        moderation_v3_generated_id("general_sem_v1_moderation_effect_relation", &[&term_id]),
         output_id,
         outcome.to_owned(),
         "Lower-order interaction effect",
@@ -2142,18 +2192,17 @@ fn apply_moderating_effect_revision_v3(
 
     let (term_id, output_id) = preserved_identity.unwrap_or_else(|| {
         let term = if let Some(parent) = &parent_term_id {
-            format!(
-                "general-sem:v1:interaction-three-way:{}:{}",
-                encode_uri_component(parent),
-                encode_uri_component(&operands[2])
+            moderation_v3_generated_id(
+                "general_sem_v1_moderation_term",
+                &[parent, &operands[2]],
             )
         } else {
-            general_sem_interaction_v2_term_id(&focal_relation, &operands[0], &operands[1])
+            moderation_v3_generated_id(
+                "general_sem_v1_moderation_term",
+                &[&focal_relation, &operands[0], &operands[1]],
+            )
         };
-        let output = format!(
-            "general-sem:v1:interaction-output:{}",
-            encode_uri_component(&term)
-        );
+        let output = moderation_v3_generated_id("general_sem_v1_moderation_output", &[&term]);
         (term, output)
     });
     if model.derived_terms.iter().any(|term| term.id() == term_id)
@@ -2219,12 +2268,9 @@ fn apply_moderating_effect_revision_v3(
         hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
         product_indicator: None,
     });
-    add_structural_relation(
+    add_moderation_structural_relation(
         model,
-        format!(
-            "general-sem:v1:interaction-effect:{}",
-            encode_uri_component(&term_id)
-        ),
+        moderation_v3_generated_id("general_sem_v1_moderation_effect_relation", &[&term_id]),
         output_id.clone(),
         outcome.to_owned(),
         if operands.len() == 3 {
@@ -2327,7 +2373,7 @@ fn remove_moderating_effect_revision_v3(
     }
     let incoming_reference = model.annotations.iter().any(|annotation| match annotation {
         SemAnnotationV4::Note { id, subject, .. } => {
-            subject == term_id && id.starts_with("general-sem:v1:interaction-dependency:")
+            subject == term_id && is_moderation_dependency_annotation_id(id)
         }
         _ => false,
     });
@@ -2336,23 +2382,24 @@ fn remove_moderating_effect_revision_v3(
             "this two-way moderating effect is required by a three-way effect; remove the dependent effect first",
         ));
     }
-    let prefix = format!(
-        "general-sem:v1:interaction-dependency:{}:",
-        encode_uri_component(term_id)
-    );
     let subjects = model
         .annotations
         .iter()
         .filter_map(|annotation| match annotation {
-            SemAnnotationV4::Note { id, subject, .. } if id.starts_with(&prefix) => {
+            SemAnnotationV4::Note { id, subject, .. }
+                if moderation_dependency_annotation_matches_owner(id, term_id, subject) =>
+            {
                 Some(subject.clone())
             }
             _ => None,
         })
         .collect::<Vec<_>>();
-    model
-        .annotations
-        .retain(|annotation| !annotation.id().starts_with(&prefix));
+    model.annotations.retain(|annotation| match annotation {
+        SemAnnotationV4::Note { id, subject, .. } => {
+            !moderation_dependency_annotation_matches_owner(id, term_id, subject)
+        }
+        _ => true,
+    });
     remove_interaction_output(model, term_id, output_id);
 
     for subject in subjects {
@@ -2361,16 +2408,10 @@ fn remove_moderating_effect_revision_v3(
                 id,
                 subject: candidate,
                 ..
-            } => candidate == &subject && id.starts_with("general-sem:v1:interaction-dependency:"),
+            } => candidate == &subject && is_moderation_dependency_annotation_id(id),
             _ => false,
         });
-        let origin = moderation_generated_annotation_id(&subject);
-        if still_referenced
-            || !model
-                .annotations
-                .iter()
-                .any(|annotation| annotation.id() == origin)
-        {
+        if still_referenced || !has_moderation_generated_annotation(model, &subject) {
             continue;
         }
         if let Some(output) = model
@@ -2387,9 +2428,7 @@ fn remove_moderating_effect_revision_v3(
         {
             remove_generated_relation(model, &subject);
         }
-        model
-            .annotations
-            .retain(|annotation| annotation.id() != origin);
+        remove_moderation_generated_annotations(model, &subject);
     }
     Ok(())
 }
@@ -2668,9 +2707,52 @@ fn apply_higher_order_replacement(
     Ok((term_id.to_owned(), output_id.to_owned()))
 }
 
+fn add_moderation_structural_relation(
+    model: &mut SemModelV4,
+    relation_id: String,
+    source: String,
+    target: String,
+    label: &str,
+) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    let parameter_id = moderation_v3_generated_id(
+        "general_sem_v1_moderation_parameter",
+        &[&relation_id],
+    );
+    add_structural_relation_with_parameter_id(
+        model,
+        relation_id,
+        parameter_id,
+        source,
+        target,
+        label,
+    )
+}
+
 fn add_structural_relation(
     model: &mut SemModelV4,
     relation_id: String,
+    source: String,
+    target: String,
+    label: &str,
+) -> Result<(), GeneralSemExecutionAuthorityRevisionErrorV1> {
+    let parameter_id = format!(
+        "standard:v1:relationship-parameter:{}",
+        encode_uri_component(&relation_id)
+    );
+    add_structural_relation_with_parameter_id(
+        model,
+        relation_id,
+        parameter_id,
+        source,
+        target,
+        label,
+    )
+}
+
+fn add_structural_relation_with_parameter_id(
+    model: &mut SemModelV4,
+    relation_id: String,
+    parameter_id: String,
     source: String,
     target: String,
     label: &str,
@@ -2684,10 +2766,6 @@ fn add_structural_relation(
             "deterministic relationship identity already exists",
         ));
     }
-    let parameter_id = format!(
-        "standard:v1:relationship-parameter:{}",
-        encode_uri_component(&relation_id)
-    );
     if model
         .parameters
         .iter()
@@ -2756,6 +2834,25 @@ fn general_sem_interaction_v2_term_id(focal: &str, predictor: &str, moderator: &
         encode_uri_component(predictor),
         encode_uri_component(moderator)
     )
+}
+
+/// Allocates a lossless canonical ID for newly generated V3 moderation content.
+/// Each UTF-8 component is independently rendered as lowercase hexadecimal;
+/// underscores delimit components and cannot alias any encoded byte.
+fn moderation_v3_generated_id(prefix: &str, components: &[&str]) -> String {
+    const LOWER_HEX: &[u8; 16] = b"0123456789abcdef";
+
+    let mut encoded = String::new();
+    for (index, component) in components.iter().enumerate() {
+        if index != 0 {
+            encoded.push('_');
+        }
+        for &byte in component.as_bytes() {
+            encoded.push(char::from(LOWER_HEX[usize::from(byte >> 4)]));
+            encoded.push(char::from(LOWER_HEX[usize::from(byte & 0x0f)]));
+        }
+    }
+    format!("{prefix}_{encoded}")
 }
 
 /// Byte-for-byte equivalent to JavaScript `encodeURIComponent` for valid UTF-8
@@ -3140,6 +3237,194 @@ mod tests {
         assert!(!model.relations.iter().any(|relation| matches!(relation,
             SemRelationV4::Structural { source, target, .. } if source == "w" && target == "y2"
         )));
+    }
+
+    #[test]
+    fn moderating_effect_v3_two_way_to_three_way_allocates_canonical_safe_generated_ids() {
+        fn is_canonical_safe_id(value: &str) -> bool {
+            let mut characters = value.chars();
+            let Some(first) = characters.next() else {
+                return false;
+            };
+            (first.is_ascii_lowercase() || first.is_ascii_digit())
+                && characters.all(|character| {
+                    character.is_ascii_lowercase()
+                        || character.is_ascii_digit()
+                        || matches!(character, '_' | '.' | ':' | '-')
+                })
+        }
+
+        let composite = |id: &str| SemVariableV4::Composite {
+            id: id.into(),
+            label: id.into(),
+            weighting: qpls_core::CompositeWeightingV4::ModeA,
+        };
+        let predictor = "model:construct:predictor";
+        let first_moderator = "model:construct:first-moderator";
+        let second_moderator = "model:construct:second-moderator";
+        let outcome = "model:construct:outcome";
+        let focal_relation = "model:relationship:predictor-outcome";
+        let mut model = SemModelV4 {
+            schema_version: 4,
+            id: "model:r3-shaped-three-way".into(),
+            name: "R3-shaped three-way moderation".into(),
+            variables: [predictor, first_moderator, second_moderator, outcome]
+                .into_iter()
+                .map(composite)
+                .collect(),
+            relations: Vec::new(),
+            parameters: Vec::new(),
+            constraints: Vec::new(),
+            derived_terms: Vec::new(),
+            group: qpls_core::SemGroupV4::SingleGroup,
+            data_binding: qpls_core::SemDataBindingV4::Raw {
+                dataset_id: Uuid::from_u128(1).to_string(),
+                missing_data: qpls_core::MissingDataPolicyV4::ListwiseDeletion,
+                weight: None,
+                cluster_variable: None,
+                strata_variable: None,
+            },
+            annotations: Vec::new(),
+            presentation: qpls_core::SemPresentationV4::None,
+        };
+        add_structural_relation(
+            &mut model,
+            focal_relation.into(),
+            predictor.into(),
+            outcome.into(),
+            "Predictor to outcome",
+        )
+        .unwrap();
+        let authored_relation_ids = model
+            .relations
+            .iter()
+            .map(|relation| relation.id().to_owned())
+            .collect::<std::collections::BTreeSet<_>>();
+        let authored_parameter_ids = model
+            .parameters
+            .iter()
+            .map(|parameter| parameter.id().to_owned())
+            .collect::<std::collections::BTreeSet<_>>();
+
+        let add_two_way = GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            label: "Predictor by first moderator".into(),
+            operands: vec![predictor.into(), first_moderator.into()],
+            target: GeneralSemModeratingEffectTargetV1::FocalRelation {
+                relation_id: focal_relation.into(),
+            },
+            outcome: outcome.into(),
+            method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+            hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+        };
+        let (parent_term_id, parent_output_id) =
+            apply_general_sem_revision_intent(&mut model, &add_two_way).unwrap();
+        let add_three_way = GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
+            intent_version: 3,
+            sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+            label: "Predictor by both moderators".into(),
+            operands: vec![
+                predictor.into(),
+                first_moderator.into(),
+                second_moderator.into(),
+            ],
+            target: GeneralSemModeratingEffectTargetV1::ParentInteraction {
+                interaction_term_id: parent_term_id.clone(),
+            },
+            outcome: outcome.into(),
+            method: GeneralSemRevisionInteractionMethodV1::TwoStage,
+            hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
+        };
+        let (three_way_term_id, three_way_output_id) =
+            apply_general_sem_revision_intent(&mut model, &add_three_way).unwrap();
+
+        assert!(model
+            .relations
+            .iter()
+            .any(|relation| relation.id() == focal_relation));
+        for term in &model.derived_terms {
+            assert!(is_canonical_safe_id(term.id()), "term ID: {}", term.id());
+            assert!(
+                is_canonical_safe_id(term.output()),
+                "term output ID: {}",
+                term.output()
+            );
+        }
+        for variable in &model.variables {
+            if let SemVariableV4::Derived { id, .. } = variable {
+                assert!(is_canonical_safe_id(id), "derived-variable ID: {id}");
+            }
+        }
+        for relation in &model.relations {
+            if !authored_relation_ids.contains(relation.id()) {
+                assert!(
+                    is_canonical_safe_id(relation.id()),
+                    "generated relation ID: {}",
+                    relation.id()
+                );
+            }
+        }
+        for parameter in &model.parameters {
+            if !authored_parameter_ids.contains(parameter.id()) {
+                assert!(
+                    is_canonical_safe_id(parameter.id()),
+                    "generated parameter ID: {}",
+                    parameter.id()
+                );
+            }
+        }
+        for annotation in &model.annotations {
+            assert!(
+                is_canonical_safe_id(annotation.id()),
+                "generated annotation ID: {}",
+                annotation.id()
+            );
+        }
+
+        apply_general_sem_revision_intent(
+            &mut model,
+            &GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect {
+                intent_version: 3,
+                sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                term_id: three_way_term_id,
+                output_id: three_way_output_id,
+            },
+        )
+        .unwrap();
+
+        // Simulate reopening an archive written before canonical-safe annotation
+        // allocation. Removal must still recognize both historical ID families.
+        for annotation in &mut model.annotations {
+            let SemAnnotationV4::Note { id, subject, .. } = annotation else {
+                continue;
+            };
+            let canonical_generated_id = moderation_generated_annotation_id(subject);
+            if id.starts_with(MODERATION_V3_DEPENDENCY_ANNOTATION_PREFIX) {
+                *id = legacy_moderation_dependency_annotation_id(&parent_term_id, subject);
+            } else if id.as_str() == canonical_generated_id.as_str() {
+                *id = legacy_moderation_generated_annotation_id(subject);
+            }
+        }
+        apply_general_sem_revision_intent(
+            &mut model,
+            &GeneralSemExecutionAuthorityRevisionIntentV1::RemoveModeratingEffect {
+                intent_version: 3,
+                sem_generation: GeneralSemRevisionGenerationV1::GeneralSemV1,
+                term_id: parent_term_id,
+                output_id: parent_output_id,
+            },
+        )
+        .unwrap();
+        assert!(model.derived_terms.is_empty());
+        assert_eq!(
+            model
+                .relations
+                .iter()
+                .map(|relation| relation.id())
+                .collect::<Vec<_>>(),
+            vec![focal_relation]
+        );
     }
 
     #[test]

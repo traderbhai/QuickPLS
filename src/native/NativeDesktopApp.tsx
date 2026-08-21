@@ -184,9 +184,7 @@ import {
 } from "../domain/moderationDiagramProjectionV1";
 import {
   GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
-  standardSemGeneralSemInteractionV2OutputIdV1,
-  standardSemGeneralSemInteractionV2TermIdV1,
-  standardSemGeneralSemThreeWayInteractionTermIdV1,
+  standardSemGeneralSemModerationV3IdentityV1,
   type StandardSemModelV4EditorIntentV1,
 } from "../domain/standardSemModelV4Authority";
 import type { SemModelV4 } from "../domain/semModelV4";
@@ -241,12 +239,10 @@ export function buildStrictDesktopModerationIntentV1(
   input: StrictDesktopModerationIntentInputV1,
 ): { intent: StandardSemModelV4EditorIntentV1; interactionId: string } {
   if (input.projectMode === "general_sem_v1") {
-    const termId = standardSemGeneralSemInteractionV2TermIdV1(
-      input.focalRelation,
-      input.predictor,
-      input.moderator,
+    const identity = standardSemGeneralSemModerationV3IdentityV1(
+      { kind: "focal_relation", relationId: input.focalRelation },
+      [input.predictor, input.moderator],
     );
-    const interactionId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
     return {
       intent: {
         kind: "add_moderating_effect_v3",
@@ -259,7 +255,7 @@ export function buildStrictDesktopModerationIntentV1(
         method: "two_stage",
         hierarchy_policy: "strong",
       },
-      interactionId,
+      interactionId: identity.outputId,
     };
   }
   return {
@@ -1683,12 +1679,7 @@ export function NativeDesktopApp() {
   const moderationIntentIdentity = (
     target: ModeratingEffectTargetV1,
     operands: readonly [string, string] | readonly [string, string, string],
-  ) => {
-    const termId = target.kind === "parent_interaction"
-      ? standardSemGeneralSemThreeWayInteractionTermIdV1(target.interactionTermId, operands[2]!)
-      : standardSemGeneralSemInteractionV2TermIdV1(target.relationId, operands[0], operands[1]);
-    return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
-  };
+  ) => standardSemGeneralSemModerationV3IdentityV1(target, operands);
 
   const launchModerationRevision = async (
     intent: ModerationAuthorityIntentV3,

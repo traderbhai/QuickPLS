@@ -7,12 +7,16 @@
 use qpls_core::{
     CapabilityCellReferenceV2, CapabilityRegistryV2, GeneralSemConfigV1, GeneralSemInferenceV1,
     SemCapabilityDecisionV1, SemDerivedTermV4, SemModelV4, cbsem_general_sem_ml_capability_cell_v1,
-    cbsem_recursive_sem_bootstrap_capability_cell_v1, pls_general_bootstrap_capability_cell_v1,
+    cbsem_recursive_sem_bootstrap_capability_cell_v1, compile_pls_plan_v3,
+    pls_general_bootstrap_capability_cell_v1,
     pls_general_higher_order_bootstrap_capability_cell_v1,
     pls_general_higher_order_point_capability_cell_v1,
     pls_general_multiple_moderation_bootstrap_capability_cell_v1,
     pls_general_multiple_moderation_point_capability_cell_v1,
     pls_general_recursive_effects_capability_cell_v1,
+    pls_general_single_mediation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_bootstrap_capability_cell_v1,
+    pls_general_three_way_moderation_point_capability_cell_v1,
     pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1,
 };
 
@@ -144,10 +148,13 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> CapabilityCellReferenceV2 {
-    let has_two_way_interactions = model
+    let has_interactions = model
         .derived_terms
         .iter()
         .any(|term| matches!(term, SemDerivedTermV4::InteractionV2 { .. }));
+    let has_three_way = model.derived_terms.iter().any(|term| {
+        matches!(term, SemDerivedTermV4::InteractionV2 { operands, .. } if operands.len() == 3)
+    });
     let has_higher_order = model
         .derived_terms
         .iter()
@@ -160,7 +167,17 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
             }
         };
     }
-    if has_two_way_interactions
+    if has_three_way {
+        return match config.inference {
+            GeneralSemInferenceV1::None => {
+                pls_general_three_way_moderation_point_capability_cell_v1()
+            }
+            GeneralSemInferenceV1::CaseBootstrap { .. } => {
+                pls_general_three_way_moderation_bootstrap_capability_cell_v1()
+            }
+        };
+    }
+    if has_interactions
         && matches!(
             &config.inference,
             GeneralSemInferenceV1::CaseBootstrap { .. }
@@ -169,7 +186,17 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
     {
         return pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1();
     }
-    selected_general_sem_execution_cell_for_topology_v1(has_two_way_interactions, &config.inference)
+    if has_interactions {
+        return selected_general_sem_execution_cell_for_topology_v1(true, &config.inference);
+    }
+    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. })
+        && compile_pls_plan_v3(model, config)
+            .map(|plan| plan.topology().specific_directed_paths().len() == 1)
+            .unwrap_or(false)
+    {
+        return pls_general_single_mediation_bootstrap_capability_cell_v1();
+    }
+    selected_general_sem_execution_cell_for_topology_v1(false, &config.inference)
 }
 
 fn selected_general_sem_execution_cell_for_topology_v1(
@@ -318,8 +345,13 @@ fn authorize_general_sem_registry_access_with_v1(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_core::CAPABILITY_REGISTRY_V2_JSON;
+    use qpls_core::{
+        CAPABILITY_REGISTRY_V2_JSON, Construct, InteractionHierarchyPolicyV2,
+        InteractionMethodV4, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
+        StructuralPath, convert_legacy_basic_model_v4,
+    };
     use serde_json::{Value, json};
+    use uuid::Uuid;
 
     const CAPABILITY_ID: &str = "smartpls.mediation";
     const CELL_ID: &str = "qpls3.pls.mediation";
@@ -342,6 +374,52 @@ mod tests {
             interval: qpls_core::GeneralSemBootstrapIntervalV1::Percentile,
             tail: qpls_core::GeneralSemInferenceTailV1::TwoSided,
         }
+    }
+
+    fn single_mediation_model() -> SemModelV4 {
+        convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x5031_5311),
+                name: "Single mediation execution owner".into(),
+                constructs: ["x", "m", "y"]
+                    .into_iter()
+                    .map(|id| Construct {
+                        id: id.into(),
+                        name: id.to_uppercase(),
+                        short_name: id.to_uppercase(),
+                        mode: MeasurementMode::Reflective,
+                        indicators: vec![format!("{id}1"), format!("{id}2")],
+                    })
+                    .collect(),
+                paths: [("x", "m"), ("m", "y"), ("x", "y")]
+                    .into_iter()
+                    .map(|(source, target)| StructuralPath {
+                        source: source.into(),
+                        target: target.into(),
+                    })
+                    .collect(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap()
+    }
+
+    fn three_way_execution_owner_model() -> SemModelV4 {
+        let mut model = single_mediation_model();
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: "interaction:x_by_w_by_z".into(),
+            output: "derived:interaction:x_by_w_by_z".into(),
+            operands: vec!["construct:x".into(), "construct:w".into(), "construct:z".into()],
+            focal_relation: "relation:x_y".into(),
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+        model
     }
 
     #[test]
@@ -368,6 +446,31 @@ mod tests {
         assert_eq!(
             selected_general_sem_execution_cell_for_topology_v1(true, &bootstrap_inference()),
             pls_general_multiple_moderation_bootstrap_capability_cell_v1()
+        );
+    }
+
+    #[test]
+    fn resident_recipe_owner_selection_preserves_three_way_point_and_bootstrap_cells() {
+        let model = three_way_execution_owner_model();
+        assert_eq!(
+            selected_general_sem_execution_cell_v1(&model, &GeneralSemConfigV1::default()),
+            pls_general_three_way_moderation_point_capability_cell_v1()
+        );
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = bootstrap_inference();
+        assert_eq!(
+            selected_general_sem_execution_cell_v1(&model, &config),
+            pls_general_three_way_moderation_bootstrap_capability_cell_v1()
+        );
+    }
+
+    #[test]
+    fn resident_recipe_owner_selection_preserves_single_mediation_bootstrap_cell() {
+        let mut config = GeneralSemConfigV1::default();
+        config.inference = bootstrap_inference();
+        assert_eq!(
+            selected_general_sem_execution_cell_v1(&single_mediation_model(), &config),
+            pls_general_single_mediation_bootstrap_capability_cell_v1()
         );
     }
 

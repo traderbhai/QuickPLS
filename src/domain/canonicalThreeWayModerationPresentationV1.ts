@@ -40,6 +40,25 @@ function probeKindLabel(kind: CanonicalThreeWayModeratorProbeKindV1): string {
   return kind === "binary_zero_one" ? "Binary 0/1" : "Continuous standardized";
 }
 
+function probeValueLabel(kind: CanonicalThreeWayModeratorProbeKindV1, value: number): string {
+  if (kind === "binary_zero_one") return Object.is(value, -0) ? "0" : String(value);
+  if (value === -1) return "−1 SD";
+  if (Object.is(value, -0) || value === 0) return "Mean";
+  if (value === 1) return "+1 SD";
+  return String(value);
+}
+
+function probeAssignmentLabel(
+  moderatorId: string,
+  kind: CanonicalThreeWayModeratorProbeKindV1,
+  value: number,
+): string {
+  const label = probeValueLabel(kind, value);
+  return kind === "binary_zero_one"
+    ? `${moderatorId} (binary) = ${label}`
+    : `${moderatorId} = ${label}`;
+}
+
 function column(
   id: string,
   label: string,
@@ -255,16 +274,20 @@ function simpleSlopeChart(document: CanonicalResultDocumentV2): CanonicalResultC
       .sort(([left], [right]) => left - right)
       .map(([probeIndex, group]) => ({
         id: `second_moderator_probe_${probeIndex}`,
-        label: `${secondModerator} = ${group[0].second_moderator_value}`,
+        label: probeAssignmentLabel(
+          secondModerator,
+          group[0].second_moderator_probe_kind,
+          group[0].second_moderator_value,
+        ),
         group: secondModerator,
         points: [...group]
           .sort((left, right) => left.first_probe_index - right.first_probe_index)
           .map((row) => ({
-            x: row.first_moderator_value,
+            x: probeValueLabel(row.first_moderator_probe_kind, row.first_moderator_value),
             y: row.value.estimate,
             lower: row.value.lower,
             upper: row.value.upper,
-            label: `${firstModerator} = ${row.first_moderator_value}; ${secondModerator} = ${row.second_moderator_value}`,
+            label: `${probeAssignmentLabel(firstModerator, row.first_moderator_probe_kind, row.first_moderator_value)}; ${probeAssignmentLabel(secondModerator, row.second_moderator_probe_kind, row.second_moderator_value)}`,
           })),
       })),
     source_table_id: CANONICAL_THREE_WAY_SIMPLE_SLOPE_TABLE_ID_V1,
@@ -297,20 +320,27 @@ export function canonicalThreeWayModerationPresentationV1(
   const existingTableIds = new Set(document.tables.map((table) => table.id));
   const addedTables = tableCandidates.filter((table) => !existingTableIds.has(table.id));
   const chartCandidate = simpleSlopeChart(document);
-  const addedCharts = chartCandidate && !document.charts.some((chart) => chart.id === chartCandidate.id)
-    ? [chartCandidate]
-    : [];
+  const existingChart = chartCandidate
+    ? document.charts.find((chart) => chart.id === chartCandidate.id)
+    : null;
+  const chartPresentationChanged = Boolean(chartCandidate
+    && (!existingChart || JSON.stringify(existingChart) !== JSON.stringify(chartCandidate)));
+  const projectedCharts = !chartCandidate || !chartPresentationChanged
+    ? document.charts
+    : existingChart
+      ? document.charts.map((chart) => chart.id === chartCandidate.id ? chartCandidate : chart)
+      : [...document.charts, chartCandidate];
   const existingSection = document.sections.find((section) => section.id === CANONICAL_THREE_WAY_SECTION_ID_V1);
   const sectionAlreadyComplete = Boolean(existingSection
     && tableCandidates.every((table) => existingSection.table_ids.includes(table.id))
     && (!chartCandidate || existingSection.chart_ids.includes(chartCandidate.id)));
-  if (!addedTables.length && !addedCharts.length && sectionAlreadyComplete) return document;
+  if (!addedTables.length && !chartPresentationChanged && sectionAlreadyComplete) return document;
 
   const relevantTableIds = tableCandidates
     .map((table) => table.id)
     .filter((id) => existingTableIds.has(id) || addedTables.some((table) => table.id === id));
   const relevantChartIds = [CANONICAL_THREE_WAY_SIMPLE_SLOPE_CHART_ID_V1]
-    .filter((id) => document.charts.some((chart) => chart.id === id) || addedCharts.some((chart) => chart.id === id));
+    .filter((id) => projectedCharts.some((chart) => chart.id === id));
   const sectionCapabilities = tableCapabilities(
     document,
     [
@@ -342,6 +372,6 @@ export function canonicalThreeWayModerationPresentationV1(
       ? document.sections.map((section) => section.id === projectedSection.id ? projectedSection : section)
       : [...document.sections, projectedSection],
     tables: [...document.tables, ...addedTables],
-    charts: [...document.charts, ...addedCharts],
+    charts: projectedCharts,
   };
 }

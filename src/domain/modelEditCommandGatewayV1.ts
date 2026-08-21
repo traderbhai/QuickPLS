@@ -9,9 +9,7 @@ import {
 } from "./semModelV4";
 import {
   GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
-  standardSemGeneralSemInteractionV2OutputIdV1,
-  standardSemGeneralSemInteractionV2TermIdV1,
-  standardSemGeneralSemThreeWayInteractionTermIdV1,
+  standardSemGeneralSemModerationV3IdentityV1,
   type ModeratingEffectTargetV1,
   type StandardSemModelV4AuthorityRecordV1,
   type StandardSemModelV4EditorIntentV1,
@@ -459,10 +457,7 @@ export function modelEditModeratingEffectIdentityV1(
   target: ModeratingEffectTargetV1,
   operands: readonly [string, string] | readonly [string, string, string],
 ) {
-  const termId = target.kind === "parent_interaction"
-    ? standardSemGeneralSemThreeWayInteractionTermIdV1(target.interactionTermId, operands[2] ?? "")
-    : standardSemGeneralSemInteractionV2TermIdV1(target.relationId, operands[0], operands[1]);
-  return { termId, outputId: standardSemGeneralSemInteractionV2OutputIdV1(termId) };
+  return standardSemGeneralSemModerationV3IdentityV1(target, operands);
 }
 
 function strictModeratingEffectIntentPlanV1(

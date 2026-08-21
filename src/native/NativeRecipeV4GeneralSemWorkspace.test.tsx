@@ -27,6 +27,7 @@ import {
   closeGeneralSemProjectV1,
   generalSemCalculationActionLabelV1,
   generalSemCanonicalModerationInventoryV1,
+  GeneralSemFailureNotice,
   NativeRecipeV4GeneralSemWorkspace,
   selectCurrentGeneralSemNativePlsDecisionV1,
   selectGeneralSemDisplayedDocumentV1,
@@ -692,6 +693,33 @@ describe("General SEM native workspace accessibility", () => {
     const close = vi.fn(() => "closed" as const);
     expect(closeGeneralSemProjectV1({ close, readFailure: () => null })).toEqual({ status: "closed" });
     expect(close).toHaveBeenCalledOnce();
+  });
+
+  it("keeps typed failure issues in collapsed technical details without cluttering failures that have none", () => {
+    const failure = {
+      schemaVersion: 1 as const,
+      stage: "capability" as const,
+      subject: "preflight",
+      code: "general_sem.preflight.blocked",
+      message: "The calculation could not start.",
+      correctiveAction: "Correct the reported model issue and retry.",
+      issues: [{
+        code: "sem.capability.interaction_hierarchy_missing",
+        subject: "interaction:x:w:z",
+        message: "The three-way interaction is missing a required lower-order term.",
+      }],
+    };
+
+    const withIssues = renderToStaticMarkup(<GeneralSemFailureNotice failure={failure} />);
+    expect(withIssues).toContain("Technical details (1)");
+    expect(withIssues).toContain("sem.capability.interaction_hierarchy_missing");
+    expect(withIssues).toContain("interaction:x:w:z");
+    expect(withIssues).toContain("The three-way interaction is missing a required lower-order term.");
+    expect(withIssues).toMatch(/<details class="nd-cbsem-v4-run-details">/);
+    expect(withIssues).not.toMatch(/<details[^>]*\sopen(?:=|\s|>)/);
+
+    const withoutIssues = renderToStaticMarkup(<GeneralSemFailureNotice failure={{ ...failure, issues: [] }} />);
+    expect(withoutIssues).not.toContain("Technical details");
   });
 
   it("renders a ready fresh-project General SEM flow without opening legacy adaptation", () => {

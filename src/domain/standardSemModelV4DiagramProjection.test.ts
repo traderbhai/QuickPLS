@@ -446,6 +446,49 @@ describe("StandardSemModelV4 diagram projection", () => {
     expect(scientificSemModelV4HashInput(decorated.model)).toBe(scientificBefore);
   });
 
+  it("keeps moderation hierarchy annotations internal while preserving authored presentation notes", () => {
+    const source = authority();
+    const decorated = {
+      ...source,
+      model: {
+        ...source.model,
+        annotations: [
+          ...source.model.annotations,
+          { kind: "caption" as const, id: "caption:authored", text: "Authored caption" },
+          { kind: "note" as const, id: "note:authored", subject: "Method", text: "Authored note" },
+          { kind: "note" as const, id: "general-sem:v1:interaction-generated:relation%3Alegacy", subject: "relation:legacy", text: "Internal legacy origin" },
+          { kind: "note" as const, id: "general-sem:v1:interaction-dependency:term%3Alegacy:relation%3Alegacy", subject: "relation:legacy", text: "Internal legacy dependency" },
+          { kind: "note" as const, id: "general-sem:v1:interaction-generated:_72656c6174696f6e", subject: "relation:canonical", text: "Internal canonical origin" },
+          { kind: "note" as const, id: "general-sem:v1:interaction-dependency:_7465726d_72656c6174696f6e", subject: "relation:canonical", text: "Internal canonical dependency" },
+        ],
+      },
+    };
+
+    const projected = projectStandardSemModelV4DiagramV1(decorated);
+    expect(projected.diagramLayout.standardSemPresentation?.objects).toEqual([
+      { kind: "caption", id: "caption:authored", text: "Authored caption", x: 40, y: 40 },
+      { kind: "note", id: "note:authored", subject: "Method", text: "Authored note", x: 40, y: 112 },
+    ]);
+
+    const reopenedLayout = parseStandardSemModelV4DiagramLayoutV1({
+      schema_version: 1,
+      model_id: decorated.model.id,
+      diagram_layout: {
+        ...projected.diagramLayout,
+        standardSemPresentation: {
+          schemaVersion: 1,
+          objects: [
+            ...projected.diagramLayout.standardSemPresentation!.objects,
+            { kind: "note", id: "general-sem:v1:interaction-generated:relation%3Aleaked", subject: "relation:leaked", text: "Previously leaked note", x: 40, y: 184 },
+            { kind: "note", id: "general-sem:v1:interaction-dependency:_7465726d_72656c6174696f6e", subject: "relation:leaked", text: "Previously leaked dependency", x: 40, y: 256 },
+          ],
+        },
+      },
+    });
+    expect(projectStandardSemModelV4DiagramV1(decorated, reopenedLayout).diagramLayout.standardSemPresentation?.objects)
+      .toEqual(projected.diagramLayout.standardSemPresentation?.objects);
+  });
+
   it("rejects a layout belonging to another model", () => {
     const projected = projectStandardSemModelV4DiagramV1(authority());
     const wrong = parseStandardSemModelV4DiagramLayoutV1({ schema_version: 1, model_id: "other-model", diagram_layout: projected.diagramLayout });

@@ -4,8 +4,7 @@ import {
   parseInternalGeneralSemExecutionAuthorityRevisionRequestV1,
 } from "./internalGeneralSemExecutionAuthorityRevisionV1";
 import {
-  standardSemGeneralSemInteractionV2OutputIdV1,
-  standardSemGeneralSemThreeWayInteractionTermIdV1,
+  standardSemGeneralSemModerationV3IdentityV1,
 } from "./standardSemModelV4Authority";
 
 const sourceProjectId = "10000000-0000-4000-8000-000000000001";
@@ -259,7 +258,10 @@ describe("General SEM execution-authority revision v1 wire", () => {
       value: { receipt: { capabilityCell: moderationPointCell } },
     });
     const parentTermId = "general-sem:v1:interaction:path%3Ax-y:x:w";
-    const threeWayTermId = standardSemGeneralSemThreeWayInteractionTermIdV1(parentTermId, "z");
+    const threeWayIdentity = standardSemGeneralSemModerationV3IdentityV1(
+      { kind: "parent_interaction", interactionTermId: parentTermId },
+      ["x", "w", "z"],
+    );
     const threeWayRequest = parseInternalGeneralSemExecutionAuthorityRevisionRequestV1({
       ...parsedRequest,
       revision: {
@@ -286,13 +288,13 @@ describe("General SEM execution-authority revision v1 wire", () => {
         receipt: {
           ...receipt,
           capabilityCell: threeWayPointCell,
-          interactionTermId: threeWayTermId,
-          interactionOutputId: standardSemGeneralSemInteractionV2OutputIdV1(threeWayTermId),
+          interactionTermId: threeWayIdentity.termId,
+          interactionOutputId: threeWayIdentity.outputId,
         },
       },
     }, threeWayRequest)).toMatchObject({
       status: "ok",
-      value: { receipt: { capabilityCell: threeWayPointCell, interactionTermId: threeWayTermId } },
+      value: { receipt: { capabilityCell: threeWayPointCell, interactionTermId: threeWayIdentity.termId } },
     });
     expect(() => parseInternalGeneralSemExecutionAuthorityRevisionNativeOutcomeV1({
       status: "ok",

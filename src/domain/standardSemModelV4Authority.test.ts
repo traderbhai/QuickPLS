@@ -10,7 +10,7 @@ import {
   standardSemGeneralSemInteractionV2ModeratorMainRelationIdV1,
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
-  standardSemGeneralSemThreeWayInteractionTermIdV1,
+  standardSemGeneralSemModerationV3ThreeWayTermIdV1,
   standardSemMeasurementRelationIdV1,
   type AddGeneralSemInteractionV2EditorIntentV1,
   type StandardSemModelV4AuthorityRecordV1,
@@ -682,7 +682,7 @@ describe("StandardSemModelV4 authority", () => {
       method: "two_stage",
       hierarchy_policy: "strong",
     });
-    const topId = standardSemGeneralSemThreeWayInteractionTermIdV1(parent.id, "construct:w");
+    const topId = standardSemGeneralSemModerationV3ThreeWayTermIdV1(parent.id, "construct:w");
     const top = threeWay.model.derived_terms.find((term) => term.id === topId);
     expect(top).toEqual(expect.objectContaining({
       kind: "interaction_v2",
@@ -691,6 +691,8 @@ describe("StandardSemModelV4 authority", () => {
       hierarchy_policy: "strong",
     }));
     expect(threeWay.model.derived_terms.filter((term) => term.kind === "interaction_v2")).toHaveLength(4);
+    expect(topId).toMatch(/^general_sem_v1_moderation_term_[0-9a-f_]+$/);
+    expect(threeWay.model.annotations.every((annotation) => !annotation.id.includes("%"))).toBe(true);
     expect(threeWay.model.relations.every((relation) => !Object.hasOwn(relation, "target_relation"))).toBe(true);
 
     expect(() => reduceStandardSemModelV4AuthorityV1(authority(threeWay.model, "9".repeat(64)), {

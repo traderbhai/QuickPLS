@@ -122,8 +122,10 @@ if (@(Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object
 
 New-Item -ItemType Directory -Path $evidence | Out-Null
 $priorBrowserArgs = [Environment]::GetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", "Process")
+$priorUserDataFolder = [Environment]::GetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", "Process")
 $priorEndpoint = [Environment]::GetEnvironmentVariable("QUICKPLS_CDP_ENDPOINT", "Process")
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$Port --force-device-scale-factor=1 --disable-background-networking --disable-component-update"
+$env:WEBVIEW2_USER_DATA_FOLDER = Join-Path $evidence "webview2-profile"
 $env:QUICKPLS_CDP_ENDPOINT = $endpoint
 $application = $null
 $runError = $null
@@ -145,6 +147,7 @@ try {
         catch { if (-not $runError) { $runError = $_ } }
     }
     [Environment]::SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", $priorBrowserArgs, "Process")
+    [Environment]::SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", $priorUserDataFolder, "Process")
     [Environment]::SetEnvironmentVariable("QUICKPLS_CDP_ENDPOINT", $priorEndpoint, "Process")
 }
 

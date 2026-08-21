@@ -84,14 +84,15 @@ export type ModeratingEffectTargetV1 =
   | { readonly kind: "focal_relation"; readonly relationId: string }
   | { readonly kind: "parent_interaction"; readonly interactionTermId: string };
 
-type ModeratingEffectOperandsV3 =
+export type ModeratingEffectOperandsV3 =
   | readonly [predictor: string, moderator: string]
   | readonly [predictor: string, firstModerator: string, secondModerator: string];
 
 /**
  * Diagram-native General SEM moderation intent. The target is a relationship
  * or an existing two-way interaction; it is never an edge-to-edge SEM
- * relationship. Two-way terms retain their historical deterministic IDs.
+ * relationship. Newly created V3 terms use canonical-safe deterministic IDs;
+ * historical identities remain valid for replace/remove compatibility.
  */
 export interface AddModeratingEffectIntentV3 {
   readonly kind: "add_moderating_effect_v3";
@@ -365,6 +366,74 @@ export const standardSemGeneralSemInteractionDependencyAnnotationIdV1 = (
 export const standardSemGeneralSemGeneratedHierarchyAnnotationIdV1 = (subjectId: string) =>
   `general-sem:v1:interaction-generated:${encodeURIComponent(subjectId)}`;
 
+function standardSemModerationV3GeneratedIdV1(prefix: string, parts: readonly string[]): string {
+  const encoder = new TextEncoder();
+  const encoded = parts.map((part) => Array.from(
+    encoder.encode(part),
+    (byte) => byte.toString(16).padStart(2, "0"),
+  ).join("")).join("_");
+  return `${prefix}_${encoded}`;
+}
+
+export const standardSemGeneralSemModerationV3TwoWayTermIdV1 = (
+  focalRelationId: string,
+  predictorId: string,
+  moderatorId: string,
+) => standardSemModerationV3GeneratedIdV1(
+  "general_sem_v1_moderation_term",
+  [focalRelationId, predictorId, moderatorId],
+);
+
+export const standardSemGeneralSemModerationV3ThreeWayTermIdV1 = (
+  parentInteractionTermId: string,
+  secondModeratorId: string,
+) => standardSemModerationV3GeneratedIdV1(
+  "general_sem_v1_moderation_term",
+  [parentInteractionTermId, secondModeratorId],
+);
+
+export const standardSemGeneralSemModerationV3OutputIdV1 = (termId: string) =>
+  standardSemModerationV3GeneratedIdV1("general_sem_v1_moderation_output", [termId]);
+
+export const standardSemGeneralSemModerationV3MainRelationIdV1 = (
+  ownerTermId: string,
+  operandId: string,
+) => standardSemModerationV3GeneratedIdV1(
+  "general_sem_v1_moderation_main_relation",
+  [ownerTermId, operandId],
+);
+
+export const standardSemGeneralSemModerationV3EffectRelationIdV1 = (termId: string) =>
+  standardSemModerationV3GeneratedIdV1("general_sem_v1_moderation_effect_relation", [termId]);
+
+export const standardSemGeneralSemModerationV3ParameterIdV1 = (relationId: string) =>
+  standardSemModerationV3GeneratedIdV1("general_sem_v1_moderation_parameter", [relationId]);
+
+export const standardSemGeneralSemModerationV3DependencyAnnotationIdV1 = (
+  ownerTermId: string,
+  subjectId: string,
+) => standardSemModerationV3GeneratedIdV1(
+  "general-sem:v1:interaction-dependency:",
+  [ownerTermId, subjectId],
+);
+
+export const standardSemGeneralSemModerationV3GeneratedAnnotationIdV1 = (subjectId: string) =>
+  standardSemModerationV3GeneratedIdV1("general-sem:v1:interaction-generated:", [subjectId]);
+
+export function standardSemGeneralSemModerationV3IdentityV1(
+  target: ModeratingEffectTargetV1,
+  operands: ModeratingEffectOperandsV3,
+): { termId: string; outputId: string } {
+  const termId = target.kind === "parent_interaction"
+    ? standardSemGeneralSemModerationV3ThreeWayTermIdV1(target.interactionTermId, operands[2] ?? "")
+    : standardSemGeneralSemModerationV3TwoWayTermIdV1(
+      target.relationId,
+      operands[0],
+      operands[1],
+    );
+  return { termId, outputId: standardSemGeneralSemModerationV3OutputIdV1(termId) };
+}
+
 function applyIntent(model: MutableModel, intent: StandardSemModelV4EditorIntentV1) {
   switch (intent.kind) {
     case "replace_complete_model":
@@ -634,10 +703,15 @@ function replaceObserved(model: MutableModel, variableId: string, replacement: E
   model.variables[model.variables.indexOf(current)] = parsed;
 }
 
-function addRelationship(model: MutableModel, relationshipId: string, definition: StandardSemRelationshipDefinitionV1) {
+function addRelationship(
+  model: MutableModel,
+  relationshipId: string,
+  definition: StandardSemRelationshipDefinitionV1,
+  parameterIdentity?: string,
+) {
   const id = stableId(relationshipId, "intent.relationship_id");
   if (model.relations.some((relation) => relation.id === id) || model.annotations.some((annotation) => annotation.id === id)) duplicate("relationship", id);
-  writeRelationship(model, id, definition, null);
+  writeRelationship(model, id, definition, null, parameterIdentity);
 }
 
 function replaceRelationship(model: MutableModel, relationshipId: string, definition: StandardSemRelationshipDefinitionV1) {
@@ -661,7 +735,13 @@ function deleteRelationship(model: MutableModel, relationshipId: string) {
   if (relation) removeRelationCascade(model, relationshipId);
 }
 
-function writeRelationship(model: MutableModel, id: string, definition: StandardSemRelationshipDefinitionV1, preserved: SemParameterV4 | null) {
+function writeRelationship(
+  model: MutableModel,
+  id: string,
+  definition: StandardSemRelationshipDefinitionV1,
+  preserved: SemParameterV4 | null,
+  parameterIdentity?: string,
+) {
   if (definition.kind === "presentation_only_covariance") {
     const left = anyVariable(model, definition.left).id;
     const right = anyVariable(model, definition.right).id;
@@ -669,7 +749,8 @@ function writeRelationship(model: MutableModel, id: string, definition: Standard
     model.annotations.push({ kind: "display_only_covariance", id, left, right, label: requiredText(definition.label, "definition.label") });
     return;
   }
-  const parameterId = standardSemRelationshipParameterIdV1(id);
+  const parameterId = preserved?.id
+    ?? (parameterIdentity ? stableId(parameterIdentity, "intent.parameter_id") : standardSemRelationshipParameterIdV1(id));
   let relation: SemRelationV4;
   let target: SemParameterTargetV4;
   if (definition.kind === "structural" || definition.kind === "control") {
@@ -1058,7 +1139,7 @@ function resolveModeratingEffectV3(
 }
 
 function hierarchyOrigin(model: MutableModel, subjectId: string) {
-  const id = standardSemGeneralSemGeneratedHierarchyAnnotationIdV1(subjectId);
+  const id = standardSemGeneralSemModerationV3GeneratedAnnotationIdV1(subjectId);
   if (!model.annotations.some((annotation) => annotation.id === id)) {
     model.annotations.push({
       kind: "note",
@@ -1070,7 +1151,7 @@ function hierarchyOrigin(model: MutableModel, subjectId: string) {
 }
 
 function hierarchyReference(model: MutableModel, ownerTermId: string, subjectId: string) {
-  const id = standardSemGeneralSemInteractionDependencyAnnotationIdV1(ownerTermId, subjectId);
+  const id = standardSemGeneralSemModerationV3DependencyAnnotationIdV1(ownerTermId, subjectId);
   if (!model.annotations.some((annotation) => annotation.id === id)) {
     model.annotations.push({
       kind: "note",
@@ -1079,6 +1160,19 @@ function hierarchyReference(model: MutableModel, ownerTermId: string, subjectId:
       text: `Required by moderating effect ${ownerTermId}.`,
     });
   }
+}
+
+function addModerationRelationship(
+  model: MutableModel,
+  relationshipId: string,
+  definition: StandardSemRelationshipDefinitionV1,
+) {
+  addRelationship(
+    model,
+    relationshipId,
+    definition,
+    standardSemGeneralSemModerationV3ParameterIdV1(relationshipId),
+  );
 }
 
 function ensureModerationMainEffect(
@@ -1101,8 +1195,8 @@ function ensureModerationMainEffect(
     hierarchyReference(model, ownerTermId, conflicting.id);
     return conflicting.id;
   }
-  const id = `general-sem:v1:interaction-main:${encodeURIComponent(ownerTermId)}:${encodeURIComponent(operand)}`;
-  addRelationship(model, id, {
+  const id = standardSemGeneralSemModerationV3MainRelationIdV1(ownerTermId, operand);
+  addModerationRelationship(model, id, {
     kind: "structural",
     source: operand,
     target: outcome,
@@ -1148,8 +1242,8 @@ function ensurePairInteraction(
     hierarchyReference(model, ownerTermId, existing.id);
     return existing;
   }
-  const termId = standardSemGeneralSemInteractionV2TermIdV1(focalRelationId, first, second);
-  const outputId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  const termId = standardSemGeneralSemModerationV3TwoWayTermIdV1(focalRelationId, first, second);
+  const outputId = standardSemGeneralSemModerationV3OutputIdV1(termId);
   if (model.derived_terms.some((term) => term.id === termId)
     || model.variables.some((variable) => variable.id === outputId)) {
     fail(
@@ -1173,7 +1267,7 @@ function ensurePairInteraction(
     method: "two_stage",
     hierarchy_policy: "strong",
   });
-  addRelationship(model, standardSemGeneralSemInteractionV2EffectRelationIdV1(termId), {
+  addModerationRelationship(model, standardSemGeneralSemModerationV3EffectRelationIdV1(termId), {
     kind: "structural",
     source: outputId,
     target: outcome,
@@ -1202,18 +1296,14 @@ function addModeratingEffectV3(
     );
   }
   const [predictor, firstModerator, secondModerator] = resolved.operands;
-  const termId = preservedIdentity?.termId ?? (resolved.parentInteractionTermId
-    ? standardSemGeneralSemThreeWayInteractionTermIdV1(
-      resolved.parentInteractionTermId,
-      secondModerator!,
-    )
-    : standardSemGeneralSemInteractionV2TermIdV1(
-      resolved.focalRelationId,
-      predictor,
-      firstModerator,
-    ));
-  const outputId = preservedIdentity?.outputId
-    ?? standardSemGeneralSemInteractionV2OutputIdV1(termId);
+  const identity = standardSemGeneralSemModerationV3IdentityV1(
+    resolved.parentInteractionTermId
+      ? { kind: "parent_interaction", interactionTermId: resolved.parentInteractionTermId }
+      : { kind: "focal_relation", relationId: resolved.focalRelationId },
+    resolved.operands,
+  );
+  const termId = preservedIdentity?.termId ?? identity.termId;
+  const outputId = preservedIdentity?.outputId ?? identity.outputId;
   if (model.derived_terms.some((term) => term.id === termId)
     || model.variables.some((variable) => variable.id === outputId)) duplicate("moderating effect", termId);
   const semanticDuplicate = model.derived_terms.find((term) => term.kind === "interaction_v2"
@@ -1279,7 +1369,7 @@ function addModeratingEffectV3(
     method: "two_stage",
     hierarchy_policy: "strong",
   });
-  addRelationship(model, standardSemGeneralSemInteractionV2EffectRelationIdV1(termId), {
+  addModerationRelationship(model, standardSemGeneralSemModerationV3EffectRelationIdV1(termId), {
     kind: "structural",
     source: outputId,
     target: resolved.outcome,
@@ -1288,9 +1378,11 @@ function addModeratingEffectV3(
 }
 
 function generatedHierarchyReferences(model: MutableModel, ownerTermId: string) {
-  const prefix = `${standardSemGeneralSemInteractionDependencyAnnotationIdV1(ownerTermId, "")}`;
   return model.annotations.filter((annotation): annotation is Extract<SemModelV4["annotations"][number], { kind: "note" }> =>
-    annotation.kind === "note" && annotation.id.startsWith(prefix));
+    annotation.kind === "note" && (
+      annotation.id === standardSemGeneralSemModerationV3DependencyAnnotationIdV1(ownerTermId, annotation.subject)
+      || annotation.id === standardSemGeneralSemInteractionDependencyAnnotationIdV1(ownerTermId, annotation.subject)
+    ));
 }
 
 function removeModeratingEffectCore(
@@ -1320,8 +1412,10 @@ function removeModeratingEffectCore(
     );
   }
   const dependencySubjects = generatedHierarchyReferences(model, termId).map((annotation) => annotation.subject);
-  model.annotations = model.annotations.filter((annotation) =>
-    !annotation.id.startsWith(standardSemGeneralSemInteractionDependencyAnnotationIdV1(termId, "")));
+  model.annotations = model.annotations.filter((annotation) => annotation.kind !== "note" || (
+    annotation.id !== standardSemGeneralSemModerationV3DependencyAnnotationIdV1(termId, annotation.subject)
+    && annotation.id !== standardSemGeneralSemInteractionDependencyAnnotationIdV1(termId, annotation.subject)
+  ));
   removeVariablesCascade(model, new Set([outputId]));
 
   const stillReferenced = (subjectId: string) => model.annotations.some((annotation) =>
@@ -1329,12 +1423,15 @@ function removeModeratingEffectCore(
     && annotation.subject === subjectId
     && annotation.id.startsWith("general-sem:v1:interaction-dependency:"));
   for (const subjectId of dependencySubjects) {
-    const originId = standardSemGeneralSemGeneratedHierarchyAnnotationIdV1(subjectId);
-    if (!model.annotations.some((annotation) => annotation.id === originId) || stillReferenced(subjectId)) continue;
+    const originIds = [
+      standardSemGeneralSemModerationV3GeneratedAnnotationIdV1(subjectId),
+      standardSemGeneralSemGeneratedHierarchyAnnotationIdV1(subjectId),
+    ];
+    if (!model.annotations.some((annotation) => originIds.includes(annotation.id)) || stillReferenced(subjectId)) continue;
     const dependencyTerm = model.derived_terms.find((candidate) => candidate.id === subjectId);
     if (dependencyTerm) removeVariablesCascade(model, new Set([dependencyTerm.output]));
     else if (model.relations.some((relation) => relation.id === subjectId)) removeRelationCascade(model, subjectId);
-    model.annotations = model.annotations.filter((annotation) => annotation.id !== originId);
+    model.annotations = model.annotations.filter((annotation) => !originIds.includes(annotation.id));
   }
 }
 

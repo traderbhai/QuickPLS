@@ -4,8 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import {
-  standardSemGeneralSemInteractionV2OutputIdV1,
-  standardSemGeneralSemInteractionV2TermIdV1,
+  standardSemGeneralSemModerationV3IdentityV1,
 } from "../domain/standardSemModelV4Authority";
 import { useWorkspace } from "../store";
 import type { AnalysisRun } from "../types";
@@ -143,12 +142,10 @@ describe("native desktop multi-model shell contracts", () => {
       interactionId: "legacy:output",
     });
 
-    const termId = standardSemGeneralSemInteractionV2TermIdV1(
-      common.focalRelation,
-      common.predictor,
-      common.moderator,
+    const identity = standardSemGeneralSemModerationV3IdentityV1(
+      { kind: "focal_relation", relationId: common.focalRelation },
+      [common.predictor, common.moderator],
     );
-    const interactionId = standardSemGeneralSemInteractionV2OutputIdV1(termId);
     const generalSem = buildStrictDesktopModerationIntentV1({
       projectMode: "general_sem_v1",
       ...common,
@@ -165,7 +162,7 @@ describe("native desktop multi-model shell contracts", () => {
         method: "two_stage",
         hierarchy_policy: "strong",
       },
-      interactionId,
+      interactionId: identity.outputId,
     });
     expect(buildStrictDesktopModerationIntentV1({ projectMode: "general_sem_v1", ...common })).toEqual(generalSem);
     expect(generalSem.intent).not.toHaveProperty("term_id");

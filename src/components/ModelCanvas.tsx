@@ -31,7 +31,7 @@ import {
   projectNativeCanvasSemanticZoomV1,
 } from "../native/nativeCanvasBehaviorV1";
 import { useWorkspace } from "../store";
-import type { ConstructData, DiagramToolMode, ModelEditCommandV1, StandardSemPresentationLayoutV1 } from "../types";
+import type { ConstructData, DiagramToolMode, DiagramViewport, ModelEditCommandV1, StandardSemPresentationLayoutV1 } from "../types";
 import { ConstructNode } from "./ConstructNode";
 import { IndicatorNode } from "./IndicatorNode";
 import { LatentNode } from "./LatentNode";
@@ -106,6 +106,39 @@ export function persistentModelNodeChanges(
     if (!("id" in change)) return true;
     return !visualOnlyIds.has(change.id);
   });
+}
+
+/**
+ * Navigator focus is a plain selection gesture. Mirror it into React Flow so
+ * the next Ctrl-click extends from the focused construct instead of toggling a
+ * stale Canvas selection.
+ */
+export function focusedConstructSelectionChanges(
+  nodes: readonly Node<ConstructData>[],
+  focusedId: string,
+): Array<NodeChange<Node<ConstructData>>> {
+  if (!nodes.some((node) => node.id === focusedId)) return [];
+  const changes: Array<NodeChange<Node<ConstructData>>> = [];
+  for (const node of nodes) {
+    const selected = node.id === focusedId;
+    if (Boolean(node.selected) !== selected) changes.push({ type: "select", id: node.id, selected });
+  }
+  return changes;
+}
+
+export function modelCanvasInitialViewportPlan(persistedViewport: DiagramViewport | undefined): {
+  defaultViewport: DiagramViewport | undefined;
+  fitOnInit: boolean;
+} {
+  return { defaultViewport: persistedViewport, fitOnInit: persistedViewport === undefined };
+}
+
+export function shouldAutoFitModelCanvasAfterNodeGrowth(input: {
+  strictAuthority: boolean;
+  persistedViewport: DiagramViewport | undefined;
+  preserveViewportForDrop: boolean;
+}): boolean {
+  return !input.preserveViewportForDrop && !(input.strictAuthority && input.persistedViewport);
 }
 
 export function ModelCanvas({
@@ -205,6 +238,7 @@ export function ModelCanvas({
   const paperStyleCanvas = canvasDiagramMode === "sem" || canvasDiagramMode === "publication" || canvasDiagramMode === "smartpls_result";
   const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
   const canEditLayout = !resultDiagramMode && !layoutLocked && !generalSemPublicationPending;
+  const initialViewportPlan = modelCanvasInitialViewportPlan(diagramLayout.diagramViewport);
   const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
   const updateStandardPresentation = (presentation: StandardSemPresentationLayoutV1) => {
     if (!strictAuthority || !canEditLayout) return;
@@ -367,16 +401,29 @@ export function ModelCanvas({
   };
   useEffect(() => {
     if (nodes.length > previousNodeCount.current) {
-      if (preserveViewportForDrop.current) preserveViewportForDrop.current = false;
-      else window.setTimeout(() => { fitCanvas("structure"); }, 0);
+      const preserveViewportForDropValue = preserveViewportForDrop.current;
+      if (preserveViewportForDropValue) preserveViewportForDrop.current = false;
+      else if (shouldAutoFitModelCanvasAfterNodeGrowth({
+        strictAuthority: Boolean(strictAuthority),
+        persistedViewport: diagramLayout.diagramViewport,
+        preserveViewportForDrop: preserveViewportForDropValue,
+      })) window.setTimeout(() => { fitCanvas("structure"); }, 0);
     }
     previousNodeCount.current = nodes.length;
-  }, [flow, nodes.length]);
+  }, [diagramLayout.diagramViewport, flow, nodes.length, strictAuthority]);
 
   useEffect(() => {
     const centerNode = (id: string) => {
       const node = graph.nodes.find((candidate) => candidate.id === id);
       if (!node || !flow) return;
+      const selectionChanges = focusedConstructSelectionChanges(nodes, id);
+      if (selectionChanges.length) {
+        setCanvasNodes((current) => applyNodeChanges(
+          selectionChanges as Array<NodeChange<(typeof current)[number]>>,
+          current,
+        ));
+        onNodesChange(selectionChanges);
+      }
       const size = node.type === "latent" ? smartplsNodeSize : compactNodeSize;
       void flow.setCenter(node.position.x + size.width / 2, node.position.y + size.height / 2, { zoom: Math.max(0.75, flow.getZoom()), duration: animationDuration(240) });
     };
@@ -405,7 +452,7 @@ export function ModelCanvas({
       window.removeEventListener("quickpls:focus-edge", handleEdge);
       window.removeEventListener("quickpls:focus-moderation", handleModeration);
     };
-  }, [flow, graph.edges, graph.nodes]);
+  }, [flow, graph.edges, graph.nodes, nodes, onNodesChange]);
 
   useEffect(() => {
     const handleVariablesDragging = (event: Event) => {
@@ -842,8 +889,10 @@ export function ModelCanvas({
       edges={visibleGraph.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
+      defaultViewport={initialViewportPlan.defaultViewport}
       onInit={(instance) => {
         setFlow(instance);
+        if (!initialViewportPlan.fitOnInit) return;
         window.setTimeout(() => {
           void instance.fitView({
             nodes: graph.nodes.filter((node) => !isIndicatorNodeId(node.id)),

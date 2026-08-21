@@ -10,6 +10,7 @@ import {
   inspectNativeCovarianceAuthoringV4,
 } from "./semModelV4Authoring";
 import { applyNativeSemModelParameterAuthoringV4 } from "./semModelV4ParameterAuthoring";
+import { standardSemGeneralSemModerationV3GeneratedAnnotationIdV1 } from "./standardSemModelV4Authority";
 import {
   canonicalizeSemModelV4,
   SEM_MODEL_V4_SCHEMA_VERSION,
@@ -836,7 +837,7 @@ function buildNativeWorkbenchSemModelV4(
       if ((edge.data as { technicalGenerated?: boolean } | undefined)?.technicalGenerated === true) {
         annotations.push({
           kind: "note",
-          id: `general-sem:v1:interaction-generated:${encodeURIComponent(relationId)}`,
+          id: standardSemGeneralSemModerationV3GeneratedAnnotationIdV1(relationId),
           subject: relationId,
           text: "QuickPLS-generated strong-hierarchy dependency.",
         });

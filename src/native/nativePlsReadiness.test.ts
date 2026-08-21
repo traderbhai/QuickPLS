@@ -570,15 +570,15 @@ describe("nativePlsReadiness", () => {
         },
       },
     };
-    const v2Blocked = readiness({
+    const v2Ready = readiness({
       dataset: moderationDataset,
       nodes: [...nodes, moderator, interactionV2],
       edges: moderationEdges,
       settings: { ...settings, weightingScheme: "path", preprocessing: "standardized" },
     });
-    expect(v2Blocked.canRun).toBe(false);
-    expect(v2Blocked.blockers.find((item) => item.id === "calculation")?.detail)
-      .toContain("Choose PLS Algorithm or Bootstrapping in Calculate so QuickPLS can route the interaction model to its qualified engine.");
+    expect(v2Ready.canRun).toBe(true);
+    expect(v2Ready.items.find((item) => item.id === "calculation")?.detail)
+      .toContain("qualified simultaneous two-way moderation");
 
     for (const invalidSettings of [
       { ...settings, weightingScheme: "factor" as const, preprocessing: "standardized" as const },
@@ -626,6 +626,86 @@ describe("nativePlsReadiness", () => {
     expect(multipleInteractions.canRun).toBe(false);
     expect(multipleInteractions.items.find((item) => item.id === "model")?.status).toBe("ready");
     expect(multipleInteractions.blockers.find((item) => item.id === "calculation")?.detail).toContain("exactly one two-way interaction");
+  });
+
+  it("recognizes a strict strong-hierarchy three-way projection as qualified readiness", () => {
+    const moderatorW: Node<ConstructData> = {
+      id: "w",
+      position: { x: 0, y: 160 },
+      data: { label: "Moderator W", shortName: "W", mode: "reflective", indicators: ["w1", "w2"] },
+    };
+    const moderatorZ: Node<ConstructData> = {
+      id: "z",
+      position: { x: 0, y: 260 },
+      data: { label: "Moderator Z", shortName: "Z", mode: "reflective", indicators: ["z1", "z2"] },
+    };
+    const interactionNode = (
+      id: string,
+      operands: [string, string] | [string, string, string],
+      focalRelationId: string,
+    ): Node<ConstructData> => ({
+      id,
+      position: { x: 160, y: 160 },
+      data: {
+        label: operands.join(" x "),
+        shortName: id.toUpperCase(),
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: `interaction:${id}`,
+          operands,
+          outcome: "y",
+          focalRelationId,
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+          productIndicator: null,
+        },
+      },
+    });
+    const hierarchy = [
+      interactionNode("xw", ["x", "w"], "x-y"),
+      interactionNode("xz", ["x", "z"], "x-y"),
+      interactionNode("wz", ["w", "z"], "w-y"),
+      interactionNode("xwz", ["x", "w", "z"], "x-y"),
+    ];
+    const threeWayEdges: Edge[] = [
+      ...edges,
+      { id: "w-y", source: "w", target: "y" },
+      { id: "z-y", source: "z", target: "y" },
+      ...hierarchy.map((node) => ({ id: `${node.id}-y`, source: node.id, target: "y" })),
+    ];
+    const threeWayDataset: Dataset = {
+      ...dataset,
+      columns: [...dataset.columns, "w1", "w2", "z1", "z2"],
+      rows: dataset.rows.map((row, index) => ({
+        ...row,
+        w1: index + 4,
+        w2: index + 5,
+        z1: index + 6,
+        z2: index + 7,
+      })),
+      columnMetadata: [
+        ...(dataset.columnMetadata ?? []),
+        numericMetadata("w1"),
+        numericMetadata("w2"),
+        numericMetadata("z1"),
+        numericMetadata("z2"),
+      ],
+    };
+
+    const result = readiness({
+      dataset: threeWayDataset,
+      nodes: [...nodes, moderatorW, moderatorZ, ...hierarchy],
+      edges: threeWayEdges,
+      settings: { ...settings, weightingScheme: "path", preprocessing: "standardized" },
+    });
+
+    expect(result.canRun).toBe(true);
+    expect(result.blockers).toEqual([]);
+    expect(result.items.find((item) => item.id === "calculation")?.detail)
+      .toContain("qualified bounded three-way moderation");
   });
 
   it("checks Weighted PLS setup without claiming to validate unseen native rows", () => {

@@ -190,6 +190,18 @@ function modelInspector(page) {
   return page.locator("aside.nd-model-inspector");
 }
 
+async function navigatorConstructRow(page, label) {
+  const navigator = page.getByRole("complementary", { name: "Model navigator", exact: true });
+  const constructsTab = navigator.getByRole("tab", { name: "Constructs", exact: true });
+  await constructsTab.waitFor({ state: "visible", timeout: 10_000 });
+  if (await constructsTab.getAttribute("aria-selected") !== "true") await constructsTab.click();
+  const row = navigator.locator(".nd-model-object-list button").filter({
+    hasText: new RegExp(`^${escaped(label)}\\s*\\d+\\s*$`),
+  });
+  await row.waitFor({ state: "visible", timeout: 10_000 });
+  return row;
+}
+
 async function inspectorTab(page, label) {
   const tab = modelInspector(page).getByRole("tab", { name: label, exact: true });
   await tab.waitFor({ state: "visible", timeout: 10_000 });
@@ -248,9 +260,9 @@ async function createConstructFromIndicators(page, indicators, label, beforeCrea
 }
 
 async function selectConstructs(page, labels) {
-  await constructNode(page, labels[0]).click();
+  await (await navigatorConstructRow(page, labels[0])).click();
   for (const label of labels.slice(1)) {
-    await constructNode(page, label).click({ modifiers: ["Control"] });
+    await constructNode(page, label).click({ modifiers: ["Control"], position: { x: 12, y: 40 } });
   }
   const selected = page.locator(".react-flow__node-latent.selected");
   await page.waitForFunction(
@@ -281,8 +293,23 @@ async function alignConstructsTop(page, labels) {
   return { selectedCount: labels.length, topSpreadPx: Number(spread.toFixed(2)) };
 }
 
+async function confirmCompositeRepresentations(page, labels) {
+  const inspector = modelInspector(page);
+  const expert = inspector.getByRole("button", { name: "Expert", exact: true });
+  if (await expert.getAttribute("aria-pressed") !== "true") await expert.click();
+  for (const label of labels) {
+    await (await navigatorConstructRow(page, label)).click();
+    await inspector.getByRole("tab", { name: "Parameter", exact: true }).click();
+    const authoring = inspector.locator(".nd-sem-authoring");
+    await authoring.waitFor({ state: "visible", timeout: 10_000 });
+    const representation = authoring.locator('select[id$="-representation"]');
+    await representation.selectOption("composite");
+    assert(await representation.inputValue() === "composite", `${label} was not confirmed as a PLS composite.`);
+  }
+}
+
 async function createPath(page, sourceLabel, targetLabel) {
-  await page.getByRole("button", { name: "Path", exact: true }).click();
+  await page.getByRole("button", { name: "Connect", exact: true }).click();
   await constructNode(page, sourceLabel).dispatchEvent("click");
   await constructNode(page, targetLabel).dispatchEvent("click");
   await scientificPaths(page).first().waitFor({ state: "attached", timeout: 10_000 });
@@ -330,6 +357,51 @@ async function createThreeWayModeration(page) {
   return { dialog, summary, add };
 }
 
+async function saveNativeProjectAction(page, python, target, trigger) {
+  const helper = createDialogHelper({ python, target });
+  let completed = false;
+  try {
+    const ready = await helper.ready;
+    assert(ready?.passed && ready.event === "ready", `Native Save helper was not ready: ${JSON.stringify(ready)}`);
+    await trigger();
+    const save = await helper.completed;
+    completed = true;
+    assert(save?.passed, `Native project Save failed: ${JSON.stringify(save)}`);
+    return save;
+  } finally {
+    if (!completed) helper.stop();
+  }
+}
+
+async function prepareCalculationReadyRevision(page, args) {
+  const sourceRevisionPath = path.join(args.evidenceDir, "quickpls-v254-canvas-results-two-way-source.qpls");
+  assert(!await pathExists(sourceRevisionPath), `Source revision path must be new: ${sourceRevisionPath}`);
+  await page.getByRole("menubar", { name: "Application menu", exact: true })
+    .getByRole("menuitem", { name: "Model", exact: true })
+    .click();
+  const command = page.getByRole("menuitem", { name: "Create Calculation-Ready Revision…", exact: true });
+  if (await command.isVisible().catch(() => false)) {
+    await command.click();
+  } else {
+    const parameters = page.getByRole("menuitem", { name: "Advanced Parameter Table…", exact: true });
+    await parameters.waitFor({ state: "visible", timeout: 10_000 });
+    await parameters.click();
+    const parameterDialog = page.getByRole("dialog", { name: "Advanced Parameter Table", exact: true });
+    await parameterDialog.waitFor({ state: "visible", timeout: 30_000 });
+    await parameterDialog.getByRole("button", { name: "Continue to Calculate", exact: true }).click();
+  }
+  const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
+  await advanced.waitFor({ state: "visible", timeout: 30_000 });
+  const activate = advanced.locator("button.primary:not([disabled])").filter({ hasText: /^Save and activate project…$/ });
+  await activate.waitFor({ state: "visible", timeout: 30_000 });
+  const save = await saveNativeProjectAction(page, args.python, sourceRevisionPath, () => activate.click());
+  const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
+  await close.waitFor({ state: "visible", timeout: 30_000 });
+  await close.click();
+  await advanced.waitFor({ state: "hidden", timeout: 10_000 });
+  return { sourceRevisionPath, save };
+}
+
 async function waitForCalculationTerminal(page, timeout = 180_000) {
   const state = page.locator(".nd-cbsem-v4-state");
   const deadline = Date.now() + timeout;
@@ -347,6 +419,24 @@ async function waitForCalculationTerminal(page, timeout = 180_000) {
   throw new Error(`Three-way calculation did not finish: ${compact(await page.locator(".nd-cbsem-v4-monitor").textContent())}`);
 }
 
+async function waitForUnifiedCalculationEntry(page, timeout = 15_000) {
+  const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
+  const monitor = page.locator(".nd-cbsem-v4-monitor");
+  const results = page.locator(".nd-results-workspace");
+  const deadline = Date.now() + timeout;
+  let advancedText = "";
+  while (Date.now() < deadline) {
+    if (await results.isVisible().catch(() => false)) return "results";
+    if (await monitor.isVisible().catch(() => false)) return "monitor";
+    if (await advanced.isVisible().catch(() => false)) {
+      advancedText = compact(await advanced.textContent());
+    }
+    await page.waitForTimeout(100);
+  }
+  const dialogs = await page.locator('[role="dialog"]').allTextContents();
+  throw new Error(`Unified calculation did not open its monitor or Results: ${JSON.stringify({ advancedText, dialogs, body: compact(await page.locator("body").textContent()).slice(-1500) })}`);
+}
+
 async function assertThreeWayResults(page) {
   const workspace = page.locator(".nd-results-workspace");
   await workspace.waitFor({ state: "visible", timeout: 300_000 });
@@ -355,13 +445,18 @@ async function assertThreeWayResults(page) {
   const group = tree.getByRole("treeitem", { name: /Three-Way Moderation/i }).first();
   await group.waitFor({ state: "visible", timeout: 30_000 });
   if (await group.getAttribute("aria-expanded") !== "true") await group.click();
-  const item = tree.getByRole("treeitem", { name: /Three-way interaction effect/i }).first();
+  const item = tree.getByRole("treeitem", { name: /^Three-way interaction$/i }).first();
   await item.waitFor({ state: "visible", timeout: 15_000 });
   await item.click();
   const table = page.locator('[data-canonical-table-id="general_sem_three_way_effect"]');
   await table.waitFor({ state: "visible", timeout: 30_000 });
   const identity = await canonicalIdentity(page);
   assert(identity.documentId && identity.runId, `Canonical three-way identity is incomplete: ${JSON.stringify(identity)}`);
+  const researcherText = compact(await workspace.textContent());
+  assert(!/general_sem_v1_moderation_(?:term|output|main_relation|effect_relation|parameter)_/i.test(researcherText),
+    "Normal Results exposed an internal generated moderation identity.");
+  assert(!/general-sem:v1:interaction-(?:generated|dependency):/i.test(researcherText),
+    "Normal Results exposed an internal moderation provenance annotation.");
   return {
     identity,
     tableId: await table.getAttribute("data-canonical-table-id"),
@@ -538,9 +633,9 @@ async function executeJourney(page, args, report, screenshotRoot) {
   await createConstructFromIndicators(page, ["z_1", "z_2"], "Z");
   assert(await constructNodes(page).count() === 4, "The native indicator workflow did not create X, Y, W and Z.");
 
-  await constructNode(page, "X").click();
+  await (await navigatorConstructRow(page, "X")).click();
   await inspectorTab(page, "Appearance");
-  const indicatorPosition = modelInspector(page).getByLabel("Indicator position", { exact: true });
+  const indicatorPosition = modelInspector(page).locator("label", { hasText: "Indicator position" }).locator("select");
   await indicatorPosition.selectOption("left");
   assert(await indicatorPosition.inputValue() === "left", "The construct indicator side did not persist in the Inspector.");
   await capture(page, report, screenshotRoot, {
@@ -560,6 +655,8 @@ async function executeJourney(page, args, report, screenshotRoot) {
     observed: `Four constructs remain selected with a ${alignment.topSpreadPx}px top-edge spread.`,
   });
 
+  await confirmCompositeRepresentations(page, ["X", "Y", "W", "Z"]);
+
   await createPath(page, "X", "Y");
   const twoWay = await createTwoWayModeration(page);
   await capture(page, report, screenshotRoot, {
@@ -572,6 +669,8 @@ async function executeJourney(page, args, report, screenshotRoot) {
   await twoWay.add.click();
   await twoWay.dialog.waitFor({ state: "hidden", timeout: 10_000 });
 
+  const calculationReadyRevision = await prepareCalculationReadyRevision(page, args);
+
   const threeWay = await createThreeWayModeration(page);
   await capture(page, report, screenshotRoot, {
     id: "05-three-way-dialog",
@@ -580,7 +679,7 @@ async function executeJourney(page, args, report, screenshotRoot) {
     expected: "M on the two-way anchor extends it with a distinct third moderator.",
     observed: threeWay.summary,
   });
-  await threeWay.add.click();
+  const threeWaySave = await saveNativeProjectAction(page, args.python, args.projectPath, () => threeWay.add.click());
   await threeWay.dialog.waitFor({ state: "hidden", timeout: 10_000 });
   await page.waitForFunction(() => {
     const anchor = document.querySelector('.moderation-anchor[role="button"]');
@@ -593,13 +692,24 @@ async function executeJourney(page, args, report, screenshotRoot) {
   assert(/W/i.test(anchorLabel ?? "") && /Z/i.test(anchorLabel ?? ""), `Three-way anchor omits a moderator: ${anchorLabel}`);
   assert(connectorCount === 2, `Expected two visual-only moderator connectors; found ${connectorCount}.`);
   assert(await constructNodes(page).count() === 4, "Generated hierarchy constructs leaked onto the ordinary Canvas.");
-  assert(await scientificPaths(page).count() === 1, "A presentation anchor or connector contaminated persisted structural paths.");
+  const scientificPathIds = await scientificPaths(page).evaluateAll((elements) => elements
+    .map((element) => element.getAttribute("data-id") ?? ""));
+  assert(scientificPathIds.length >= 1, "The authored focal relationship disappeared after three-way authoring.");
+  assert(scientificPathIds.every((id) => !id.startsWith("moderation-connector::") && !id.startsWith("moderation-anchor::")),
+    "A presentation anchor or connector contaminated persisted structural paths.");
+  const visibleCanvasText = compact((await page.locator(".react-flow__node:visible").allTextContents()).join(" "));
+  assert(!/general_sem_v1_moderation_(?:term|output|main_relation|effect_relation|parameter)_/i.test(visibleCanvasText),
+    "Normal Canvas exposed an internal generated moderation identity.");
+  assert(!/general-sem:v1:interaction-(?:generated|dependency):/i.test(visibleCanvasText),
+    "Normal Canvas exposed an internal moderation provenance annotation.");
+  assert(!/Two-stage moderation requires exactly one two-way interaction/i.test(await page.locator("body").textContent()),
+    "A valid three-way model is still showing the obsolete two-way-only preflight blocker.");
   await capture(page, report, screenshotRoot, {
     id: "06-canvas",
     phase: "execute",
     area: "Model Canvas",
     expected: "One compact anchor and two dashed connectors represent the three-way effect without generated-node clutter.",
-    observed: `${anchorLabel}; ${connectorCount} visual connectors; four visible constructs; one scientific path.`,
+    observed: `${anchorLabel}; ${connectorCount} visual connectors; four visible constructs; ${scientificPathIds.length} authored/hierarchy scientific paths.`,
   });
 
   await page.keyboard.press("Control+R");
@@ -623,52 +733,47 @@ async function executeJourney(page, args, report, screenshotRoot) {
     observed: `18 methods; ${routeText}`,
   });
 
-  const saveHelper = createDialogHelper({ python: args.python, target: args.projectPath });
-  let saveCompleted = false;
-  try {
-    const ready = await saveHelper.ready;
-    assert(ready?.passed && ready.event === "ready", `Native Save helper was not ready: ${JSON.stringify(ready)}`);
-    const progressCapture = (async () => {
-      const monitor = page.locator(".nd-cbsem-v4-monitor");
-      await monitor.waitFor({ state: "visible", timeout: 180_000 });
-      const progress = compact(await monitor.textContent());
-      await capture(page, report, screenshotRoot, {
-        id: "08-progress",
-        phase: "execute",
-        area: "Calculation progress",
-        expected: "Calculation uses the shared progress and cancellation surface.",
-        observed: progress || "The shared calculation monitor is visible.",
-      });
-      return progress;
-    })();
-    await start.click();
-    const save = await saveHelper.completed;
-    saveCompleted = true;
-    assert(save?.passed, `Native project Save failed: ${JSON.stringify(save)}`);
-    const progress = await progressCapture;
-    const terminalState = await waitForCalculationTerminal(page);
-    const results = await assertThreeWayResults(page);
+  await start.click();
+  const calculationEntry = await waitForUnifiedCalculationEntry(page);
+  const progressCapture = (async () => {
+    const monitor = page.locator(".nd-cbsem-v4-monitor");
+    await monitor.waitFor({ state: "visible", timeout: 180_000 });
+    const progress = compact(await monitor.textContent());
     await capture(page, report, screenshotRoot, {
-      id: "09-results",
+      id: "08-progress",
       phase: "execute",
-      area: "Results",
-      expected: "Successful calculation opens categorized, researcher-facing three-way Results.",
-      observed: `${results.groupLabel}; canonical table ${results.tableId}.`,
+      area: "Calculation progress",
+      expected: "Calculation uses the shared progress and cancellation surface.",
+      observed: progress || "The shared calculation monitor is visible.",
     });
-    return {
-      fixture,
-      alignment,
-      anchorLabel,
-      connectorCount,
-      route: routeText,
-      progress,
-      terminalState,
-      save: { phase: save.phase, target: args.projectPath },
-      results,
-    };
-  } finally {
-    if (!saveCompleted) saveHelper.stop();
-  }
+    return progress;
+  })();
+  const progress = await progressCapture;
+  const terminalState = await waitForCalculationTerminal(page);
+  const results = await assertThreeWayResults(page);
+  await capture(page, report, screenshotRoot, {
+    id: "09-results",
+    phase: "execute",
+    area: "Results",
+    expected: "Successful calculation opens categorized, researcher-facing three-way Results.",
+    observed: `${results.groupLabel}; canonical table ${results.tableId}.`,
+  });
+  return {
+    fixture,
+    alignment,
+    anchorLabel,
+    connectorCount,
+    route: routeText,
+    calculationEntry,
+    progress,
+    terminalState,
+    calculationReadyRevision: {
+      source: calculationReadyRevision.sourceRevisionPath,
+      phase: calculationReadyRevision.save.phase,
+    },
+    save: { phase: threeWaySave.phase, target: args.projectPath },
+    results,
+  };
 }
 
 async function reopenJourney(page, args, report, screenshotRoot) {

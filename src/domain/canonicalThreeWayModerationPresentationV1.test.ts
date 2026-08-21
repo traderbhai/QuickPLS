@@ -59,7 +59,7 @@ function fixture(): CanonicalResultDocumentV2 {
       standardized_product_coefficient: estimate(0.2),
       scientific_rescaled_delta: estimate(0.2),
     }],
-    three_way_conditional_interaction_effects: [-1, 1].map((probe, index) => ({
+    three_way_conditional_interaction_effects: [-1, 0, 1].map((probe, index) => ({
       effect_id: `conditional_interaction:${index}`,
       trace: { model_id: "model:test", capability_cell: pointCell },
       interaction_id: "term:x_w_z",
@@ -71,8 +71,8 @@ function fixture(): CanonicalResultDocumentV2 {
       second_moderator_value: probe,
       value: estimate(0.2 + probe * 0.1),
     })),
-    three_way_simple_slopes: [-1, 1].flatMap((secondProbe, secondIndex) => (
-      [-1, 1].map((firstProbe, firstIndex) => ({
+    three_way_simple_slopes: [-1, 0, 1].flatMap((secondProbe, secondIndex) => (
+      [-1, 0, 1].map((firstProbe, firstIndex) => ({
         effect_id: `simple_slope:${secondIndex}:${firstIndex}`,
         trace: { model_id: "model:test", capability_cell: pointCell },
         interaction_id: "term:x_w_z",
@@ -173,10 +173,82 @@ describe("canonical three-way moderation presentation V1", () => {
         y_axis_label: "Simple slope of focal predictor",
       },
     });
-    expect(projected.charts[0].series).toHaveLength(2);
-    expect(projected.charts[0].series.every((series) => series.points.length === 2)).toBe(true);
-    expect(projected.tables.find((table) => table.id === CANONICAL_THREE_WAY_SIMPLE_SLOPE_TABLE_ID_V1)?.rows)
-      .toHaveLength(4);
+    expect(projected.charts[0].series.map((series) => series.label)).toEqual([
+      "construct:z = −1 SD",
+      "construct:z = Mean",
+      "construct:z = +1 SD",
+    ]);
+    expect(projected.charts[0].series.map((series) => series.points.map((point) => point.x))).toEqual([
+      ["−1 SD", "Mean", "+1 SD"],
+      ["−1 SD", "Mean", "+1 SD"],
+      ["−1 SD", "Mean", "+1 SD"],
+    ]);
+    expect(projected.charts[0].series).toHaveLength(3);
+    expect(projected.charts[0].series.every((series) => series.points.length === 3)).toBe(true);
+    const slopeTable = projected.tables.find((table) => table.id === CANONICAL_THREE_WAY_SIMPLE_SLOPE_TABLE_ID_V1)!;
+    expect(slopeTable.rows).toHaveLength(9);
+    expect(slopeTable.rows[0]!.cells[3]).toEqual({ kind: "number", value: -1 });
+    expect(slopeTable.rows[0]!.cells[6]).toEqual({ kind: "number", value: -1 });
+  });
+
+  it("overlays an existing same-ID chart with typed continuous labels without changing its exact table or source document", () => {
+    const document = fixture();
+    document.charts = [{
+      id: CANONICAL_THREE_WAY_SIMPLE_SLOPE_CHART_ID_V1,
+      title: "Simple slopes across moderator probes",
+      description: "Persisted chart.",
+      kind: "line",
+      series: [{ id: "persisted", label: "construct:z = -1.0000", points: [{ x: -1, y: 0.1 }] }],
+      source_table_id: CANONICAL_THREE_WAY_SIMPLE_SLOPE_TABLE_ID_V1,
+      display: { x_axis_label: "construct:w", y_axis_label: "Simple slope of focal predictor" },
+    }];
+    const before = structuredClone(document);
+
+    const projected = canonicalThreeWayModerationPresentationV1(document);
+
+    expect(document).toEqual(before);
+    expect(projected.charts).toHaveLength(1);
+    expect(projected.charts[0].series[0]).toMatchObject({
+      label: "construct:z = −1 SD",
+      points: [
+        expect.objectContaining({ x: "−1 SD" }),
+        expect.objectContaining({ x: "Mean" }),
+        expect.objectContaining({ x: "+1 SD" }),
+      ],
+    });
+  });
+
+  it("keeps binary moderator probes as actual 0/1 presentation categories", () => {
+    const document = fixture();
+    const results = document.general_sem_results!;
+    results.three_way_conditional_interaction_effects = results.three_way_conditional_interaction_effects!.slice(0, 2).map((row, index) => ({
+      ...row,
+      second_moderator_probe_kind: "binary_zero_one",
+      second_moderator_value: index,
+    }));
+    results.three_way_simple_slopes = results.three_way_simple_slopes!
+      .filter((row) => row.first_probe_index < 2 && row.second_probe_index < 2)
+      .map((row) => ({
+        ...row,
+        first_moderator_probe_kind: "binary_zero_one",
+        second_moderator_probe_kind: "binary_zero_one",
+        first_moderator_value: row.first_probe_index,
+        second_moderator_value: row.second_probe_index,
+      }));
+
+    const projected = canonicalThreeWayModerationPresentationV1(document);
+
+    expect(projected.charts[0].series.map((series) => series.label)).toEqual([
+      "construct:z (binary) = 0",
+      "construct:z (binary) = 1",
+    ]);
+    expect(projected.charts[0].series.map((series) => series.points.map((point) => point.x))).toEqual([
+      ["0", "1"],
+      ["0", "1"],
+    ]);
+    const slopeTable = projected.tables.find((table) => table.id === CANONICAL_THREE_WAY_SIMPLE_SLOPE_TABLE_ID_V1)!;
+    expect(slopeTable.rows[0]!.cells[3]).toEqual({ kind: "number", value: 0 });
+    expect(slopeTable.rows[0]!.cells[6]).toEqual({ kind: "number", value: 0 });
   });
 
   it("is idempotent when a canonical producer already supplied every resource", () => {

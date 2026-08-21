@@ -353,6 +353,29 @@ export function generalSemStartedJobRetentionV1(input: {
     : "release";
 }
 
+export function GeneralSemFailureNotice({ failure }: { failure: GeneralSemPlsJobFailureV1 }) {
+  return <div className="nd-cbsem-v4-failure" role="alert">
+    <AlertTriangle size={16} aria-hidden="true" />
+    <div>
+      <strong>{failure.message}</strong>
+      <p>{failure.correctiveAction}</p>
+      <small>{failure.code}</small>
+      {failure.issues.length ? <details className="nd-cbsem-v4-run-details">
+        <summary>Technical details ({failure.issues.length})</summary>
+        <ol>
+          {failure.issues.map((issue, index) => <li key={`${issue.code}:${issue.subject}:${index}`}>
+            <dl>
+              <div><dt>Code</dt><dd><code>{issue.code}</code></dd></div>
+              <div><dt>Subject</dt><dd>{issue.subject}</dd></div>
+              <div><dt>Message</dt><dd>{issue.message}</dd></div>
+            </dl>
+          </li>)}
+        </ol>
+      </details> : null}
+    </div>
+  </div>;
+}
+
 export interface GeneralSemProjectCloseBridgeV1 {
   close: () => "closed" | "blocked" | "inactive";
   readFailure: () => ReturnType<typeof useInternalProjectArchiveV6Session.getState>["standardActivationFailure"];
@@ -1836,7 +1859,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
       : null}
 
     {snapshot ? <section className="nd-cbsem-v4-card nd-cbsem-v4-monitor" aria-labelledby="nd-general-sem-monitor-heading"><div><h3 id="nd-general-sem-monitor-heading">Calculation progress</h3><span className={`nd-cbsem-v4-state ${snapshot.state}`}>{snapshot.state}</span></div><progress max={progressMaximum} value={progressValue}>{progressValue} of {progressMaximum}</progress><p aria-live="polite" aria-atomic="true">{snapshot.phase}: {snapshot.completedUnits} of {snapshot.totalUnits}</p>{snapshot.state === "failed" || snapshot.state === "cancelled" ? <button type="button" onClick={() => void clearTerminal()}><RotateCcw size={15} aria-hidden="true" />Clear terminal job</button> : null}{jobRecoveryRequired ? <div className="nd-cbsem-v4-actions"><button type="button" className="primary" disabled={busy} onClick={() => void recoverJob()}><RotateCcw size={15} aria-hidden="true" />Retry job recovery</button><button type="button" className="danger" disabled={busy} onClick={() => void abandonJobRecovery()}><CircleStop size={15} aria-hidden="true" />Abandon unrecovered job</button></div> : null}</section> : null}
-    {failure ? <div className="nd-cbsem-v4-failure" role="alert"><AlertTriangle size={16} aria-hidden="true" /><div><strong>{failure.message}</strong><p>{failure.correctiveAction}</p><small>{failure.code}</small></div></div> : null}
+    {failure ? <GeneralSemFailureNotice failure={failure} /> : null}
 
     {completed ? <section className="nd-cbsem-v4-card nd-cbsem-v4-archive" aria-labelledby="nd-general-sem-persistence-heading">
       <h3 id="nd-general-sem-persistence-heading"><Archive size={16} aria-hidden="true" />Save and verify result</h3>

@@ -119,6 +119,28 @@ describe("General SEM revision persistence service", () => {
       recipeExecutionSurface: "native_general_sem_pls_standard_v1",
     });
 
+    const threeWayIntent = {
+      kind: "add_moderating_effect_v3" as const,
+      intent_version: 3 as const,
+      sem_generation: "general_sem_v1" as const,
+      label: "X × W × Z",
+      operands: ["construct:x", "construct:w", "construct:z"] as [string, string, string],
+      target: {
+        kind: "parent_interaction" as const,
+        interactionTermId: "general-sem:v1:interaction:path%3Ax-y:x:w",
+      },
+      outcome: "construct:y",
+      method: "two_stage" as const,
+      hierarchy_policy: "strong" as const,
+    };
+    expect(selectGeneralSemRevisionExecutionV1({
+      snapshot: point,
+      intent: threeWayIntent,
+      experimentalLabsEnabled: false,
+      capabilityRegistry: standardRegistry,
+    }).expectedCapabilityCell.cell_id)
+      .toBe("qpls3.pls.general_sem_three_way_moderation_point");
+
     expect(selectGeneralSemRevisionExecutionV1({
       snapshot: point,
       intent: {
@@ -178,6 +200,13 @@ describe("General SEM revision persistence service", () => {
       capabilityRegistry: standardRegistry,
     }).expectedCapabilityCell.cell_id)
       .toBe("qpls3.pls.general_sem_multiple_two_way_moderation_bootstrap");
+    expect(selectGeneralSemRevisionExecutionV1({
+      snapshot: bootstrap,
+      intent: threeWayIntent,
+      experimentalLabsEnabled: false,
+      capabilityRegistry: standardRegistry,
+    }).expectedCapabilityCell.cell_id)
+      .toBe("qpls3.pls.general_sem_three_way_moderation_bootstrap");
 
     const labsRegistry = {
       requireOptionCell(capabilityId: string, cellId: string) {

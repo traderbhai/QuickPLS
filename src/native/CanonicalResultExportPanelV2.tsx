@@ -90,6 +90,52 @@ function displayChartValue(value: number | null | undefined): string {
     : value.toFixed(4).replace(/\.?0+$/u, "");
 }
 
+interface CanonicalPreviewXProjectionV2 {
+  coordinate(value: number | string): number;
+  ticks: Array<{ value: number | string; label: string; coordinate: number }>;
+}
+
+function canonicalPreviewXProjectionV2(
+  chart: CanonicalResultExportChartV2["chart"],
+  left: number,
+  right: number,
+): CanonicalPreviewXProjectionV2 | null {
+  if (chart.kind !== "line" && chart.kind !== "scatter" && chart.kind !== "interval") return null;
+  const points = chart.series.flatMap((series) => series.points);
+  if (!points.length) return null;
+  const numeric = points.every((point) => typeof point.x === "number" && Number.isFinite(point.x));
+  if (numeric) {
+    const values = [...new Set(points.map((point) => point.x as number))].sort((a, b) => a - b);
+    const minimum = values[0]!;
+    const maximum = values[values.length - 1]!;
+    const coordinate = (value: number | string) => minimum === maximum
+      ? (left + right) / 2
+      : left + ((Number(value) - minimum) / (maximum - minimum)) * (right - left);
+    const tickValues = values.length <= 7
+      ? values
+      : Array.from({ length: 5 }, (_, index) => minimum + ((maximum - minimum) * index) / 4);
+    return {
+      coordinate,
+      ticks: tickValues.map((value) => ({ value, label: displayChartValue(value), coordinate: coordinate(value) })),
+    };
+  }
+  const values: string[] = [];
+  for (const point of points) {
+    const value = String(point.x);
+    if (!values.includes(value)) values.push(value);
+  }
+  const coordinate = (value: number | string) => {
+    const index = Math.max(0, values.indexOf(String(value)));
+    return values.length === 1
+      ? (left + right) / 2
+      : left + (index / (values.length - 1)) * (right - left);
+  };
+  return {
+    coordinate,
+    ticks: values.map((value) => ({ value, label: value, coordinate: coordinate(value) })),
+  };
+}
+
 function CanonicalExportChartPreviewV2({
   entry,
   researcherFacing,
@@ -124,6 +170,7 @@ function CanonicalExportChartPreviewV2({
   const y = (value: number) => margin.top + ((yMaximum - value) / (yMaximum - yMinimum)) * plotHeight;
   const zeroY = y(0);
   const step = rows.length ? plotWidth / rows.length : plotWidth;
+  const xProjection = canonicalPreviewXProjectionV2(chart, margin.left, width - margin.right);
   const barWidth = Math.max(4, Math.min(36, step * 0.62));
   const summary = `${origin === "derived_from_canonical_table" ? "Export-derived" : researcherFacing ? "Saved" : "Persisted"} ${chart.kind} chart with ${chart.series.length} series and ${rows.length} exact ${rows.length === 1 ? "point" : "points"}.`;
 
@@ -158,7 +205,11 @@ function CanonicalExportChartPreviewV2({
           }) : chart.series.map((series, seriesIndex) => {
             const projected = series.points.map((point, pointIndex) => {
               const globalIndex = rows.findIndex((row) => row.seriesId === series.id && row.pointIndex === pointIndex);
-              return { point, x: margin.left + step * (globalIndex + 0.5), y: y(point.y) };
+              return {
+                point,
+                x: xProjection?.coordinate(point.x) ?? margin.left + step * (globalIndex + 0.5),
+                y: y(point.y),
+              };
             });
             const path = projected.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
             return <g className={`nd-canonical-chart__series--${seriesIndex % 5}`} key={`${chart.id}:series:${series.id}`}>
@@ -166,10 +217,12 @@ function CanonicalExportChartPreviewV2({
               {projected.map((point, index) => <circle className="nd-canonical-chart__point" cx={point.x} cy={point.y} r={4} key={`${series.id}:${index}`} />)}
             </g>;
           })}
-          {rows.map((_row, index) => {
-            const x = margin.left + step * (index + 0.5);
-            return <text className="nd-canonical-chart__tick" x={x} y={height - margin.bottom + 17} textAnchor="middle" key={`${chart.id}:tick:${index}`}>{index + 1}</text>;
-          })}
+          {xProjection
+            ? xProjection.ticks.map((tick) => <text className="nd-canonical-chart__tick" x={tick.coordinate} y={height - margin.bottom + 17} textAnchor="middle" key={`${chart.id}:tick:${String(tick.value)}`}>{tick.label}</text>)
+            : rows.map((_row, index) => {
+              const x = margin.left + step * (index + 0.5);
+              return <text className="nd-canonical-chart__tick" x={x} y={height - margin.bottom + 17} textAnchor="middle" key={`${chart.id}:tick:${index}`}>{index + 1}</text>;
+            })}
           <text className="nd-canonical-chart__axis-label" x={(margin.left + width - margin.right) / 2} y={height - 7} textAnchor="middle">{chart.display.x_axis_label ?? "Point index"}</text>
           <text className="nd-canonical-chart__axis-label" x={12} y={height / 2} textAnchor="middle" transform={`rotate(-90 12 ${height / 2})`}>{chart.display.y_axis_label ?? "Estimate"}</text>
         </svg>
