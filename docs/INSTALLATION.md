@@ -1,18 +1,18 @@
 # QuickPLS Installation
 
-Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).
+Current public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
 
 The published 2.51.0 files passed the consolidated checks, packaged smoke journey, and checksum-preservation step. They remain unsigned preview artifacts.
 
 ## Choose An Install Type
 
-Use one of the assets from the [QuickPLS 2.51.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0), or use the versioned local artifacts from `target/release/artifacts/` after a production build:
+Use one of the assets from the [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0), or use the versioned local artifacts from `target/release/artifacts/` after a production build:
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` for a normal Windows installation.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` for a portable launch without installing.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe` for offline command-line and batch recipe execution.
 
-For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The public `v2.51.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
+For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The public `v2.53.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
 
 The desktop, CLI, and analytical workflows require no internet connection,
 account, or cloud service after download. The QuickPLS application and page make

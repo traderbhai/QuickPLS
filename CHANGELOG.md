@@ -2,14 +2,14 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
-## [Unreleased — 2.53.0]
+## [2.53.0] - 2026-08-21
 
 - Moved mediation and moderation into the normal diagram-native Canvas → Calculate → Results workflow while preserving exactly 18 public methods.
 - Added a presentation-only moderation anchor with drag, context-menu, and keyboard entry points; generated interaction terms remain hidden in normal Canvas use.
 - Added separately versioned cells for exactly-one-path mediation bootstrap and bounded true three-way moderation point/bootstrap.
 - Promoted all three cells independently to scoped Standard after their compact reference, consolidated integration, and post-promotion archive checks passed.
 
-See the [2.53.0 release notes](docs/RELEASE_NOTES_V2_53_0.md). The unsigned Windows candidate and packaged save/fresh-reopen smoke passed; public release publication remains pending.
+See the [2.53.0 release notes](docs/RELEASE_NOTES_V2_53_0.md) and [GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). The unsigned Windows candidate and packaged save/fresh-reopen smoke passed; code signing remains intentionally excluded.
 
 ## [2.52.0] - 2026-08-21
 

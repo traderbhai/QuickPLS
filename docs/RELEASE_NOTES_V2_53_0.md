@@ -3,7 +3,8 @@
 Status: **workflow implementation, the three bounded exact-cell qualifications,
 post-promotion archive verification, the 2.53.0 version-authority update, the
 unsigned Windows candidate, and the packaged save/fresh-reopen smoke are
-complete; public release publication remains pending**.
+complete and the verified unsigned artifacts are published in the
+[GitHub v2.53.0 prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0); code signing was intentionally not performed**.
 
 ## Diagram-native authoring
 
@@ -89,8 +90,8 @@ activation, two Registry-dependent post-promotion archive checks, unsigned
 Windows build, and packaged moderation create → calculate → Results →
 save/fresh-reopen journey are complete. The packaged run retained the exact
 canonical identity after relaunch, captured six screenshots, reported no console
-errors, and left both C: and D: above the 20 GB floor. Public release publication
-is the only remaining distribution step.
+errors, and left both C: and D: above the 20 GB floor. The setup, portable app,
+CLI, and checksum file are published together in the GitHub prerelease.
 
 No earlier large mediation or two-way moderation qualification matrix needs to
 be repeated because those engines and estimands are unchanged.

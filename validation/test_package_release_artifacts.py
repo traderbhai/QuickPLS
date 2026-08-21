@@ -164,7 +164,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
         self.assertIn(
-            "Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).",
+            "Current public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).",
             readme,
         )
         self.assertIn("_x64_cli.exe` - command-line executable for batch recipes.", readme)
@@ -183,7 +183,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
         self.assertIn(
-            "Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).",
+            "Current public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).",
             installation,
         )
         self.assertIn("_x64_cli.exe` for offline command-line and batch recipe execution.", installation)

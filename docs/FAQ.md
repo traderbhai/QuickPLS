@@ -26,7 +26,7 @@ No. R/Rscript and R packages are validation-only development tools.
 
 ## Why does Windows warn about the installer?
 
-The public `v2.51.0` GitHub prerelease is unsigned. Download it only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0), compare its SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing remains a separate release-hardening step.
+The public `v2.53.0` GitHub prerelease is unsigned. Download it only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0), compare its SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing remains a separate release-hardening step.
 
 ## What export formats are supported?
 

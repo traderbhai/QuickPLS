@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0). The attached Windows binaries are unsigned preview artifacts; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). The attached Windows binaries are unsigned preview artifacts; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -26,7 +26,7 @@ pending.
 
 ## Download
 
-Use the [QuickPLS 2.51.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0) and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
+Use the [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0) and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` - installer, recommended for normal use.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` - portable executable.
@@ -168,7 +168,7 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The verified Version 2.51.0 setup, portable app, CLI, and checksum files are published in the [`v2.51.0` GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The verified Version 2.53.0 setup, portable app, CLI, and checksum files are published in the [`v2.53.0` GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
 
 ## Documentation
 
