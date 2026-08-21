@@ -2,6 +2,15 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [2.54.0] - 2026-08-22
+
+- Unified visible Canvas edits behind an authority-aware applied/blocked command path while preserving strict revisions, stable IDs, undo behavior, and presentation metadata.
+- Added Relationships navigation, indicator-side controls, local tidy/alignment/distribution, and structure/all/selection fitting without changing scientific model identities.
+- Reworked normal Results to use authored labels, sticky identity columns, numeric alignment, confidence metadata, and a compact Calculate action from the empty state.
+- Preserved the exact 18-method catalogue and all existing numerical engines, estimands, Registry cells, and stored result identities.
+
+The consolidated source diagnostic recorded 8/9 passing steps; the focused remediation pass then passed 69/69 targeted tests. The unsigned Windows candidate, release-artifact package, packaged smoke, and GitHub publication remain pending. See the [2.54.0 release notes](docs/RELEASE_NOTES_V2_54_0.md).
+
 ## [2.53.0] - 2026-08-21
 
 - Moved mediation and moderation into the normal diagram-native Canvas → Calculate → Results workflow while preserving exactly 18 public methods.

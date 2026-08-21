@@ -1766,7 +1766,7 @@ function TrustScreen({ data }: { data: NativePrototypeData }) {
   const statusIcon = (state: string) => state === "ok" ? <CheckCircle2 size={13} /> : state === "warn" ? <AlertTriangle size={13} /> : <X size={13} />;
   const statusTone = (status: string) => status.toLowerCase().includes("supported") || status.toLowerCase().includes("recommended") ? "good" : status.toLowerCase().includes("experimental") || status.toLowerCase().includes("setup") || status.toLowerCase().includes("available") ? "warn" : "bad";
   const selectedEvidence = evidenceRows[0] ?? ["No method", "No requirements", "No references loaded", "N/A", "N/A", "N/A", "Unsupported"];
-  const releaseVersion = "2.53.0";
+  const releaseVersion = "2.54.0";
   const checksumPrompt = "Use Verify Checksums Now to inspect current release artifacts";
   return <main className="np-trust-center-exact" data-v237-screen="trust" data-v241-trust-exact="true">
     <span className="np-parity-required-text">Method Compatibility Matrix Method References Known Limitations Run Details Overall Assessment Requirements checked</span>
@@ -2344,7 +2344,7 @@ function Dialog({
         ["Trust Center", "Review method references, known limitations, release integrity, and requirements before reporting."],
       ].map(([title, text]) => <section key={title}><h3>{title}</h3><p>{text}</p></section>)}
     </div>,
-    about: <div className="np-doc-browser"><section><h3>QuickPLS 2.53.0</h3><p>Independent offline structural equation modeling for Windows.</p></section><section><h3>Release channel</h3><p>Unsigned preview candidate. Verify the attached SHA-256 checksums before running downloaded artifacts.</p></section><section><h3>Unified workflow</h3><p>Diagram-native mediation, two-way and three-way moderation, higher-order PLS, moderated mediation, and bounded CB-SEM use one Canvas, Calculate, Results, export, and reopen experience.</p></section></div>,
+    about: <div className="np-doc-browser"><section><h3>QuickPLS 2.54.0</h3><p>Independent offline structural equation modeling for Windows.</p></section><section><h3>Release channel</h3><p>Source candidate. The unsigned Windows candidate, checksum package, and packaged smoke are pending for this version.</p></section><section><h3>Unified workflow</h3><p>Authority-aware Canvas editing, model navigation and arrangement, diagram-native advanced relationships, and researcher-facing Results use one Canvas, Calculate, Results, export, and reopen experience.</p></section></div>,
     data_transform: <DataTransformDialog close={close} />,
     data_add_column: <DataAddColumnDialog close={close} />,
     data_recode: <DataRecodeDialog close={close} />,

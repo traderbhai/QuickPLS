@@ -1,12 +1,12 @@
 # QuickPLS Installation
 
-Current public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
+Current source version: **2.54.0**. Its Windows candidate and packaged smoke are pending.
 
-The published 2.51.0 files passed the consolidated checks, packaged smoke journey, and checksum-preservation step. They remain unsigned preview artifacts.
+Latest published public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). Its setup, portable, CLI, and checksum files passed the documented 2.53 packaged workflow and remain unsigned preview artifacts. No 2.54 installer or portable package is claimed yet.
 
 ## Choose An Install Type
 
-Use one of the assets from the [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0), or use the versioned local artifacts from `target/release/artifacts/` after a production build:
+Until the 2.54 candidate is built and its packaged smoke passes, use one of the assets from the [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). Maintainers can create versioned local artifacts under `target/release/artifacts/` after a production build:
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` for a normal Windows installation.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` for a portable launch without installing.

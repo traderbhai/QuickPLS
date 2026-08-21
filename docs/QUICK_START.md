@@ -1,8 +1,10 @@
 # QuickPLS Quick Start
 
-This guide follows the verified Version 2.53 workflow:
-`Launcher → Data → Canvas → Calculate → Results`. Its consolidated checks and
-unsigned packaged save/fresh-reopen journey have passed.
+This guide follows the Version 2.54 source workflow:
+`Launcher → Data → Canvas → Calculate → Results`. The consolidated source
+diagnostic recorded 8/9 passing steps and the focused remediation pass then
+passed 69/69 targeted tests. The unsigned 2.54 Windows candidate and packaged
+save/fresh-reopen journey are still pending.
 
 ## 1. Start or open a project
 
@@ -21,6 +23,12 @@ Open `Data`, import the dataset, and check row/variable counts, missing values, 
 ## 3. Build the model
 
 Open `Model` and use Canvas to add constructs, assign indicators, draw structural paths or supported covariances, arrange the diagram, and validate it. Canvas is the only permanent model-authoring document. For common-factor CB-SEM, set the applicable construct representation and open the **Advanced Parameter Table** from Canvas or CB-SEM setup when fixed/free parameters, bounds, or equality labels need attention.
+
+Use the model navigator's **Indicators**, **Constructs**, and **Relationships**
+sections to find and focus model elements. Arrange supports tidy selection,
+alignment, distribution, and whole-model direction; Fit supports structure,
+all, and selection. Indicator side, free placement, pins, routes, and label
+offsets remain presentation metadata and do not change calculation authority.
 
 For a higher-order construct (HOC), select at least two eligible constructs and choose **Model → Higher-Order Construct…** or the same command from the selection context menu. Choose the conceptual direction; QuickPLS derives the RR/RF/FR/FF type and recommends a valid construction approach. Select the HOC and press Enter, use its context menu, or use Properties to edit it. The permanent Canvas shows only the HOC marker; detailed settings stay in the dialog.
 
@@ -56,6 +64,12 @@ Start the calculation and follow native progress. Cancellation stops publication
 
 After completion, QuickPLS opens the verified canonical result in `Results`. Its searchable sidebar contains only groups owned by that run, which may include Overview, Measurement Model, Structural Model, Direct/Indirect/Total Effects, Moderation, Higher-Order Constructs, Moderated Mediation, CB-SEM Parameters, Model Fit, Bootstrap Inference, and Run Details.
 
+Normal Results use the construct, indicator, and relationship names saved with
+the calculated model. Primary identity columns remain visible while wide tables
+scroll, scientific values align numerically, and interval tables expose their
+confidence level. Generated IDs and hashes remain in Run Details rather than
+the researcher-facing table.
+
 PLS fit is shown as **Model fit — descriptive**. Open its information button or Model Fit Details for interpretation. A compact exact-fit state says whether exact-fit inference was not run, is available, is partial or unavailable, or failed; Version 2.52 does not add adapted Bollen–Stine to Calculate.
 
 ## 7. Export and reopen
@@ -71,4 +85,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md), and the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md).
+For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md), and the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md).

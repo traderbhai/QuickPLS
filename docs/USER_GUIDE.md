@@ -1,9 +1,10 @@
 # QuickPLS User Guide
 
-This guide describes the verified Version 2.53 Windows workflow.
+This guide describes the Version 2.54 source workflow.
 QuickPLS runs analyses locally without an account, cloud service, R, or Python
-at runtime. The consolidated checks and unsigned packaged save/fresh-reopen
-journey have passed.
+at runtime. The consolidated source diagnostic recorded 8/9 passing steps and
+the focused remediation pass then passed 69/69 targeted tests. The unsigned
+2.54 Windows candidate and packaged save/fresh-reopen journey remain pending.
 
 ## Projects and scientific authority
 
@@ -18,6 +19,13 @@ Use Launcher to create or open a project, open a sample, or continue from recove
 ## Canvas and Advanced Parameter Table
 
 Use Model to create constructs, assign indicators, draw paths and supported covariances, arrange the diagram, and validate the model. Layout changes do not alter analytical fingerprints.
+
+The model navigator separates Indicators, Constructs, and Relationships. Use a
+navigator row to focus its model element. Canvas arrangement includes tidy
+selection, alignment, distribution, and whole-model direction, while Fit can
+target the structure, all diagram content, or the current selection. Indicator
+side/free placement, pins, path routes, and label offsets remain presentation
+metadata and survive unrelated scientific edits.
 
 The Parameter Table is no longer a permanent workspace tab. Open the resizable **Advanced Parameter Table** from Canvas, CB-SEM setup, or a corrective preflight action. Construct representation and the active table define the model sent to native preflight and estimation. Supported fixed/free rows, equality labels, and row bounds are preserved; unsupported constraint objects remain visible and block calculation instead of being discarded.
 
@@ -61,6 +69,11 @@ Verified results open in the normal Results workspace and remain available after
 
 Researcher-authored paths remain distinguishable from generated technical paths. Reflective HOC relationships report loadings; formative relationships report weights. HOC results are grouped as component relationships, HOC structural paths, extended effects when applicable, and bootstrap inference. Selecting an HOC result highlights the HOC and its dimensions without adding stored scientific edges.
 
+Normal result labels come from the immutable model snapshot attached to the
+run. Primary identity columns remain sticky in wide tables, numeric cells align
+as numbers, and interval tables expose their confidence level. Generated term
+IDs, hashes, and raw receipts remain under Run Details or Diagnostics.
+
 ### PLS model fit
 
 PLS point-fit output is titled **Model fit — descriptive**. SRMR and NFI are approximate fit measures; `d_ULS` and `d_G` remain descriptive unless the completed result contains separately linked exact-fit inference. Use the title's information button or Model Fit Details for the full interpretation.
@@ -87,6 +100,7 @@ Always review Method Details and the exact supported predicate before reporting 
 - [Quick Start](QUICK_START.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
 - [Known Differences](KNOWN_DIFFERENCES.md)
+- [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md)
 - [FAQ](FAQ.md)

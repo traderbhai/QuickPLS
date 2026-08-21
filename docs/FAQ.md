@@ -8,6 +8,12 @@ Yes. Official QuickPLS releases are free to use.
 
 No. QuickPLS is proprietary source-available software. The source can be inspected and contributions can be proposed, but redistribution and derived commercial use are restricted by `LICENSE.md` and `EULA.md`.
 
+## What is the current version?
+
+The coordinated source version is 2.54.0. Its unsigned Windows candidate,
+release-artifact package, and packaged lifecycle smoke are pending. The latest
+published public prerelease remains [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
+
 ## Does QuickPLS import SmartPLS projects?
 
 No.
@@ -81,6 +87,17 @@ entry points share the same authoring dialog; generated interaction terms are
 hidden from the ordinary Canvas. The public Calculate catalogue remains exactly
 18 methods. See the [2.53 release notes](RELEASE_NOTES_V2_53_0.md) for the
 implementation and verification status.
+
+## What changes in Version 2.54?
+
+Version 2.54 makes Canvas edits authority-aware across direct gestures, menus,
+and Properties; adds Relationships navigation and compact arrangement/Fit
+strategies; and makes normal Results use authored labels with stronger wide-table
+presentation. It does not add a public method or change a numerical engine,
+estimand, Registry cell, or stored result identity. The source diagnostic
+recorded 8/9 passing steps, followed by a 69/69 targeted remediation pass; the
+Windows candidate and packaged smoke are still pending. See the [2.54 release
+notes](RELEASE_NOTES_V2_54_0.md).
 
 ## How do I create or edit a higher-order construct?
 
