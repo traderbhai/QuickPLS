@@ -1,18 +1,20 @@
 # QuickPLS Installation
 
-Current source version: **2.54.0**. Its Windows candidate and packaged smoke are pending.
+Current source version: **2.54.0**. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. Code signing is excluded.
 
-Latest published public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). Its setup, portable, CLI, and checksum files passed the documented 2.53 packaged workflow and remain unsigned preview artifacts. No 2.54 installer or portable package is claimed yet.
+Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned.
 
 ## Choose An Install Type
 
-Until the 2.54 candidate is built and its packaged smoke passes, use one of the assets from the [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). Maintainers can create versioned local artifacts under `target/release/artifacts/` after a production build:
+Use one of the assets from the [QuickPLS 2.54.0 release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Maintainers can create versioned local artifacts under `target/release/artifacts/` after a production build:
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` for a normal Windows installation.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` for a portable launch without installing.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe` for offline command-line and batch recipe execution.
 
-For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The public `v2.53.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
+For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The `v2.54.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
 
 The desktop, CLI, and analytical workflows require no internet connection,
 account, or cloud service after download. The QuickPLS application and page make

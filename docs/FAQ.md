@@ -10,9 +10,9 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 
 ## What is the current version?
 
-The coordinated source version is 2.54.0. Its unsigned Windows candidate,
-release-artifact package, and packaged lifecycle smoke are pending. The latest
-published public prerelease remains [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
+The coordinated source version is 2.54.0. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -32,7 +32,7 @@ No. R/Rscript and R packages are validation-only development tools.
 
 ## Why does Windows warn about the installer?
 
-The public `v2.53.0` GitHub prerelease is unsigned. Download it only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0), compare its SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing remains a separate release-hardening step.
+The `v2.54.0` Windows artifacts are unsigned. Download them only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0), compare each SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing is excluded from this release.
 
 ## What export formats are supported?
 
@@ -96,8 +96,10 @@ strategies; and makes normal Results use authored labels with stronger wide-tabl
 presentation. It does not add a public method or change a numerical engine,
 estimand, Registry cell, or stored result identity. The source diagnostic
 recorded 8/9 passing steps, followed by a 69/69 targeted remediation pass; the
-Windows candidate and packaged smoke are still pending. See the [2.54 release
-notes](RELEASE_NOTES_V2_54_0.md).
+final unsigned candidate then passed the isolated 10/10 create → calculate →
+Results → save → fresh-reopen packaged journey with zero application-page
+external requests and zero console errors. Release packaging and checksums also
+passed; code signing is excluded. See the [2.54 release notes](RELEASE_NOTES_V2_54_0.md).
 
 ## How do I create or edit a higher-order construct?
 

@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current source version: **2.54.0**. Its unsigned Windows candidate and packaged lifecycle smoke are pending. Latest published public pre-release: [`v2.53.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). The published Windows binaries are unsigned preview artifacts; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current source version: **2.54.0**. Its final unsigned Windows candidate, release-artifact package and checksums, and isolated packaged lifecycle smoke passed. Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -21,20 +21,22 @@ point/bootstrap cells are independently scoped Standard; the existing qualified
 two-way, multiple-mediation, and moderated-mediation cells keep their exact
 identities and states. The public Calculate catalogue remains exactly 18 methods.
 The unsigned Windows candidate and its packaged moderation create → calculate →
-Results → save/fresh-reopen journey passed; public release publication remains
-pending.
+Results → save/fresh-reopen journey passed, and the unsigned assets remain
+available from the [`v2.53.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
 
 QuickPLS 2.54.0 refines Canvas editing, model navigation, arrangement, and
 researcher-facing Results without changing the 18-method catalogue or any
 numerical engine, estimand, Registry cell, or stored result identity. The latest
 consolidated source diagnostic recorded 8/9 passing steps, followed by a 69/69
-focused remediation pass. One unsigned Windows candidate and its packaged
-Canvas/Results save/fresh-reopen journey remain to be completed before 2.54 is
-published.
+focused remediation pass. The final unsigned Windows candidate then passed the
+isolated 10/10 create → calculate → Results → save → fresh-reopen packaged
+journey with zero application-page external requests and zero console errors.
+The release-artifact package and SHA-256 checksum verification also passed;
+code signing is excluded.
 
 ## Download
 
-Until the 2.54 candidate and packaged smoke pass, use the latest published [QuickPLS 2.53.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0). For local development builds, versioned files are created under `target/release/artifacts/`.
+Use the assets from the [QuickPLS 2.54.0 release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). For local development builds, versioned files are created under `target/release/artifacts/`.
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` - installer, recommended for normal use.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` - portable executable.
@@ -84,7 +86,7 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
-- [QuickPLS 2.54.0 Release Notes — source candidate](docs/RELEASE_NOTES_V2_54_0.md)
+- [QuickPLS 2.54.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [QuickPLS 2.53.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [QuickPLS 2.52.0 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
 - [QuickPLS 2.51.0 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
@@ -110,7 +112,7 @@ Important limits:
 - No reproduction of undocumented SmartPLS behavior.
 - No runtime dependency on R, Rscript, Python, lavaan, cSEM, seminr, plspm, NumPy, or validation tooling.
 - PDF/PNG publication is available for canonical General SEM results; older result families may expose SVG or Windows Print/PDF instead.
-- Installer signing is still pending.
+- Code signing is excluded; the installer and portable executable are unsigned.
 
 ## Quick Start
 
@@ -177,11 +179,11 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. Version 2.54.0 artifacts have not yet been built or packaged. The verified Version 2.53.0 setup, portable app, CLI, and checksum files remain published in the [`v2.53.0` GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.53.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The Version 2.54.0 setup, portable app, CLI, release-artifact manifest, and SHA-256 checksum verification passed for the final unsigned candidate. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Documentation
 
-- [Version 2.54 Release Notes — source candidate](docs/RELEASE_NOTES_V2_54_0.md)
+- [Version 2.54 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
 - [Version 2.51 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)

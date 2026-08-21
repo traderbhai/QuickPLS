@@ -1,8 +1,8 @@
 # QuickPLS 2.54.0 — Canvas and Results Refinement
 
-Status: **source implementation and version-authority coordination are complete.
-The unsigned Windows candidate, release-artifact package, packaged lifecycle
-smoke, and any GitHub publication are still pending.**
+Status: **source implementation, version-authority coordination, the final
+unsigned Windows candidate, release-artifact packaging and checksums, and the
+isolated packaged lifecycle smoke are complete. Code signing is excluded.**
 
 ## What changed
 
@@ -56,17 +56,17 @@ failure set was reviewed and corrected, the focused remediation run passed
 **69 of 69 targeted tests**. A later complete nine-step rerun has not been
 claimed.
 
-## Remaining release work
+## Packaged release evidence
 
-Before 2.54 can be described as a packaged Windows release:
+- One final unsigned Windows candidate was built.
+- Setup, portable, CLI, manifest, and SHA-256 checksum packaging passed with the
+  `v2_54_0_canvas_results` label.
+- The isolated packaged create → calculate → Results → save → fresh-reopen
+  journey passed all **10 of 10** recorded observations against that candidate.
+- The journey recorded **zero application-page external requests** and **zero
+  console errors**.
+- Code signing was intentionally excluded, so Windows can identify the
+  publisher as unknown even when the attached checksum matches.
 
-1. Build one frozen unsigned Windows candidate.
-2. Package setup, portable, CLI, and checksum artifacts with the
-   `v2_54_0_canvas_results` label.
-3. Run the automated packaged Canvas → Calculate → Results → save → fresh-reopen
-   journey against that same candidate.
-4. Record the resulting screenshots and observations.
-5. Publish a GitHub prerelease only after those steps succeed.
-
-The latest published public prerelease therefore remains 2.53.0 until this
-pending release work is completed.
+See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0)
+for the release entry and unsigned assets.

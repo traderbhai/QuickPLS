@@ -1,10 +1,13 @@
 # QuickPLS User Guide
 
-This guide describes the Version 2.54 source workflow.
+This guide describes the Version 2.54 workflow.
 QuickPLS runs analyses locally without an account, cloud service, R, or Python
 at runtime. The consolidated source diagnostic recorded 8/9 passing steps and
-the focused remediation pass then passed 69/69 targeted tests. The unsigned
-2.54 Windows candidate and packaged save/fresh-reopen journey remain pending.
+the focused remediation pass then passed 69/69 targeted tests. The final
+unsigned 2.54 Windows candidate passed the isolated 10/10 create → calculate →
+Results → save → fresh-reopen packaged journey with zero application-page
+external requests and zero console errors. Release-artifact packaging and
+SHA-256 checksum verification passed; code signing is excluded.
 
 ## Projects and scientific authority
 

@@ -9,7 +9,7 @@ This changelog summarizes public product releases. Detailed historical milestone
 - Reworked normal Results to use authored labels, sticky identity columns, numeric alignment, confidence metadata, and a compact Calculate action from the empty state.
 - Preserved the exact 18-method catalogue and all existing numerical engines, estimands, Registry cells, and stored result identities.
 
-The consolidated source diagnostic recorded 8/9 passing steps; the focused remediation pass then passed 69/69 targeted tests. The unsigned Windows candidate, release-artifact package, packaged smoke, and GitHub publication remain pending. See the [2.54.0 release notes](docs/RELEASE_NOTES_V2_54_0.md).
+The consolidated source diagnostic recorded 8/9 passing steps; the focused remediation pass then passed 69/69 targeted tests. The final unsigned Windows candidate passed the isolated 10/10 create → calculate → Results → save → fresh-reopen packaged journey with zero application-page external requests and zero console errors. Release-artifact packaging and SHA-256 checksum verification passed; code signing is excluded. See the [2.54.0 release notes](docs/RELEASE_NOTES_V2_54_0.md) and [release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## [2.53.0] - 2026-08-21
 
