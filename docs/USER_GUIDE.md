@@ -1,6 +1,6 @@
 # QuickPLS User Guide
 
-This guide describes the Version 2.51 candidate Windows workflow. QuickPLS runs analyses locally without an account, cloud service, R, or Python at runtime.
+This guide describes the Version 2.51 Windows workflow. QuickPLS runs analyses locally without an account, cloud service, R, or Python at runtime.
 
 ## Projects and scientific authority
 
@@ -74,5 +74,5 @@ Always review Method Details and the exact supported predicate before reporting 
 - [Quick Start](QUICK_START.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
 - [Known Differences](KNOWN_DIFFERENCES.md)
-- [Version 2.51 Candidate Release Notes](RELEASE_NOTES_V2_51_0.md)
+- [Version 2.51 Release Notes](RELEASE_NOTES_V2_51_0.md)
 - [FAQ](FAQ.md)

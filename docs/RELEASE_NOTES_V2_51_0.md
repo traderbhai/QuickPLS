@@ -1,6 +1,6 @@
 # QuickPLS 2.51.0 — Unified Calculation Workflow
 
-Status: **verified unsigned preview candidate**. The unified workflow, consolidated automated checks, Windows build, packaged smoke journey, screenshots, and checksums are complete on this branch. Code signing and GitHub publication remain pending.
+Status: **published unsigned preview**. The unified workflow, consolidated automated checks, Windows build, packaged smoke journey, screenshots, and checksums are complete. The installer, portable app, CLI, and checksums are available from the [GitHub v2.51.0 prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0). Code signing was intentionally not performed.
 
 ## One model workflow
 
@@ -79,7 +79,7 @@ The preserved unsigned-preview files are listed in [release_artifacts.json](../v
 - Portable desktop: `31A519B625B242D0175A88746CB27CA4C43FF648DAD0639960FB5364869C04DC`
 - CLI: `E441C6185245228D81D595F267657731BC33F24FC651989FD394C91A0CED75E2`
 
-This candidate is not yet signed or published. Checksums verify file identity; they do not establish publisher authenticity.
+This release is published but unsigned. Checksums verify file identity; they do not establish publisher authenticity.
 
 See also:
 

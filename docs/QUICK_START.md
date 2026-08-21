@@ -1,6 +1,6 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.51 candidate workflow: `Launcher → Data → Canvas → Calculate → Results`.
+This guide follows the Version 2.51 workflow: `Launcher → Data → Canvas → Calculate → Results`.
 
 ## 1. Start or open a project
 
@@ -54,4 +54,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and the [Version 2.51 Candidate Release Notes](RELEASE_NOTES_V2_51_0.md).
+For the exact supported boundaries, see [Method Compatibility](METHOD_COMPATIBILITY.md) and the [Version 2.51 Release Notes](RELEASE_NOTES_V2_51_0.md).

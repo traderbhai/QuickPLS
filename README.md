@@ -2,17 +2,17 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current public pre-release: [`v2.50.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0). The attached Windows binaries are unsigned preview artifacts; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current public pre-release: [`v2.51.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0). The attached Windows binaries are unsigned preview artifacts; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
 > QuickPLS is independently implemented from published methods and permitted documentation. It does not import SmartPLS project files, does not reverse-engineer SmartPLS, and does not claim identical results for undocumented SmartPLS behavior.
 
-The QuickPLS 2.51.0 source candidate places the Rank 0–3 SEM capabilities behind one `Canvas → Calculate → Results` workflow. The existing 18-method Calculate catalogue is unchanged: model features and selected inference options route to the appropriate bounded engine internally. Candidate verification and Windows artifact publication are still pending.
+QuickPLS 2.51.0 places the Rank 0–3 SEM capabilities behind one `Canvas → Calculate → Results` workflow. The existing 18-method Calculate catalogue is unchanged: model features and selected inference options route to the appropriate bounded engine internally. The verified unsigned Windows preview and checksums are published on GitHub.
 
 ## Download
 
-Use the [QuickPLS 2.50.0 GitHub Release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0) and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
+Use the [QuickPLS 2.51.0 GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0) and download one of these Windows assets. For local development builds, the same files are created under `target/release/artifacts/`.
 
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` - installer, recommended for normal use.
 - `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` - portable executable.
@@ -62,7 +62,7 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
-- [QuickPLS 2.51.0 Candidate Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
+- [QuickPLS 2.51.0 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [QuickPLS 2.50.0 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Rank 0–3 SEM Upgrade Status](docs/SEM_UPGRADE_RANKS_0_3_STATUS.md)
 - [Method Compatibility](docs/METHOD_COMPATIBILITY.md)
@@ -152,11 +152,11 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. Version 2.51.0 artifacts must be built and verified from the integrated source candidate before publication. Until then, the latest published files remain the [`v2.50.0` release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The verified Version 2.51.0 setup, portable app, CLI, and checksum files are published in the [`v2.51.0` GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).
 
 ## Documentation
 
-- [Version 2.51 Candidate Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
+- [Version 2.51 Release Notes](docs/RELEASE_NOTES_V2_51_0.md)
 - [Version 2.50 Release Notes](docs/RELEASE_NOTES_V2_50_0.md)
 - [Changelog](CHANGELOG.md)
 - [Installation](docs/INSTALLATION.md)

@@ -26,7 +26,7 @@ No. R/Rscript and R packages are validation-only development tools.
 
 ## Why does Windows warn about the installer?
 
-The public `v2.50.0` GitHub pre-release is unsigned. Download it only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.50.0), compare its SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing is planned as a separate release-hardening step.
+The public `v2.51.0` GitHub prerelease is unsigned. Download it only from the [official release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0), compare its SHA-256 value with the attached checksum file, and expect Windows SmartScreen to identify the publisher as unknown. Code signing remains a separate release-hardening step.
 
 ## What export formats are supported?
 
@@ -42,7 +42,7 @@ Version 2.50 integrates bounded General SEM mediation and simultaneous moderatio
 
 ## What changes in Version 2.51?
 
-Version 2.51 makes Canvas the only permanent model-authoring document. The existing 18-method Calculate catalogue detects advanced model features and routes them internally; completed output opens in the normal categorized Results workspace. The scientific engines and archived method identities are not renamed. The source candidate is implemented, but packaged verification and publication are still pending. See the [candidate release notes](RELEASE_NOTES_V2_51_0.md).
+Version 2.51 makes Canvas the only permanent model-authoring document. The existing 18-method Calculate catalogue detects advanced model features and routes them internally; completed output opens in the normal categorized Results workspace. The scientific engines and archived method identities are not renamed. The verified unsigned preview is available from GitHub. See the [release notes](RELEASE_NOTES_V2_51_0.md).
 
 ## Where did Parameter Table, General SEM, and Exact CB-SEM go?
 

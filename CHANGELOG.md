@@ -2,14 +2,14 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
-## [2.51.0] - Unreleased
+## [2.51.0] - 2026-08-21
 
 - Made Canvas the only permanent model-authoring document.
 - Routed the unchanged 18-method Calculate catalogue to applicable mediation, moderation, higher-order, moderated-mediation, and bounded CB-SEM capabilities from the resident model.
 - Moved parameter-level editing into an on-demand Advanced Parameter Table and retained safe calculation-ready revisions for older projects.
 - Integrated advanced canonical output into the normal categorized Results workflow while keeping historical General SEM and Exact CB-SEM archives readable through compatibility adapters.
 
-Implementation is present in the source candidate. Consolidated verification, Windows artifact creation, and GitHub publication remain pending. See the [2.51.0 candidate release notes](docs/RELEASE_NOTES_V2_51_0.md).
+The consolidated verification, Windows artifact build, packaged smoke journey, and checksum publication passed. See the [2.51.0 release notes](docs/RELEASE_NOTES_V2_51_0.md) and [GitHub prerelease](https://github.com/traderbhai/QuickPLS/releases/tag/v2.51.0).
 
 ## [2.50.0] - 2026-08-21
 
