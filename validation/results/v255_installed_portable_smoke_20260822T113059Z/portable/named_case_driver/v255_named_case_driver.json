@@ -1,0 +1,1069 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v255_named_case_driver_v1",
+  "target_release": "2.55.0",
+  "status": "failed",
+  "passed": false,
+  "candidate": "portable",
+  "candidate_process": {
+    "pid": 45508,
+    "executable": "D:\\QuickPLS\\target\\release\\artifacts\\QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-112613_x64_portable.exe",
+    "executable_sha256": "a8273bb96104eff5aba28479c3ba4d2b9257e0900bb6bf27fd4efb41b755ff8c"
+  },
+  "sources": {
+    "manifest": "validation/v255_named_case_manifest.json",
+    "manifest_sha256": "23c81c7d33eeacc400a7637455d25a40e5dd820948fa8cca73445030a24fc943",
+    "index": "validation/v255_named_evidence_index.json",
+    "index_sha256": "4d49df3413afe324de217bc89b7a949f436e787a05fa2977dbc9aab0e60965a9"
+  },
+  "serial": true,
+  "maximum_concurrent_cases": 1,
+  "console_errors": [],
+  "named_evidence_observations": [],
+  "result_archive_supplements": [],
+  "cases": [
+    {
+      "id": "cross_method:packaged:portable candidate",
+      "status": "passed",
+      "candidate": "portable",
+      "operation": "verify_packaged_candidate",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "set_viewport",
+          "observed": {
+            "width": 1223,
+            "height": 763,
+            "device_pixel_ratio": 1
+          }
+        },
+        {
+          "action": "wait_for",
+          "selector": ".nd-app[data-native-desktop-shell=\"true\"]",
+          "state": "visible"
+        }
+      ],
+      "assertion": {
+        "id": "verify_packaged_candidate:cross_method:packaged:portable candidate",
+        "expected": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1223,
+            "height": 763
+          }
+        },
+        "observed": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1223,
+            "height": 763
+          }
+        },
+        "passed": true
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\01-cross-method-packaged-portable-candidate.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      },
+      "observation": {
+        "schema_version": 1,
+        "case_id": "cross_method:packaged:portable candidate",
+        "operation": "verify_packaged_candidate",
+        "assertion": {
+          "id": "verify_packaged_candidate:cross_method:packaged:portable candidate",
+          "passed": true,
+          "expected": {
+            "origin": "http://tauri.localhost",
+            "native_shell_visible": true,
+            "viewport": {
+              "width": 1223,
+              "height": 763
+            }
+          },
+          "observed": {
+            "origin": "http://tauri.localhost",
+            "native_shell_visible": true,
+            "viewport": {
+              "width": 1223,
+              "height": 763
+            }
+          }
+        },
+        "screenshot": {
+          "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\01-cross-method-packaged-portable-candidate.png",
+          "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+        }
+      }
+    },
+    {
+      "id": "cross_method:accessibility:keyboard-only Calculate",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "exercise_accessibility",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "load_fixture",
+          "fixture": "large"
+        },
+        {
+          "action": "set_view",
+          "requested_view": "model"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('body').first() to be visible\u001b[22m\n\u001b[2m    121 × locator resolved to hidden <body>…</body>\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\02-cross-method-accessibility-keyboard-only-calculate-failure.png",
+        "sha256": "fc2d888efd96d8770d0be1c23e57b30bd3dad83714ce77e69a2bcc7f8e69b04e"
+      }
+    },
+    {
+      "id": "cross_method:accessibility:focus restoration",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "exercise_accessibility",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "load_fixture",
+          "fixture": "large"
+        },
+        {
+          "action": "set_view",
+          "requested_view": "model"
+        },
+        {
+          "action": "press",
+          "selector": "[aria-label=\"Calculate…\"]"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('.nd-dialog-calculation').first() to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\03-cross-method-accessibility-focus-restoration-failure.png",
+        "sha256": "773da31cc99bc6c43ccae2e1261e7f930763da90069b3dbf7b2188b96a6ba57c"
+      }
+    },
+    {
+      "id": "specialized_result:single mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/single-mediation-legacy-result.qpls",
+          "sha256": "57c29c740d6c97238b86a14cb81a4d9a429c243598251d379df4b18911b5a642"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "3285488c-af44-4062-8093-0e60d19a6085",
+            "status": "completed",
+            "method": "pls_pm",
+            "method_version": "pls_pm_v1+pls_mediation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1",
+            "payload_kind": "pls_pm_v2",
+            "model_id": "1aed3b49-c702-4584-9cc6-fa72504ac60d",
+            "construct_count": 3,
+            "structural_path_count": 2,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 1,
+            "moderation_probe_counts": [],
+            "regression_type": null,
+            "process_model": null,
+            "cbsem_model_type": null,
+            "table_id": "specific_indirect_effects",
+            "table_backing_key": "estimates",
+            "table_backing_count": 3
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "3285488c-af44-4062-8093-0e60d19a6085",
+          "selected_text": "PLS-SEM Bootstrapping run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "specific_indirect_effects"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:single mediation final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"3285488c-af44-4062-8093-0e60d19a6085\",\"selected_result_id_present\":true,\"table_id\":\"specific_indirect_effects\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"3285488c-af44-4062-8093-0e60d19a6085\",\"status\":\"completed\",\"method\":\"pls_pm\",\"method_version\":\"pls_pm_v1+pls_mediation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1\",\"payload_kind\":\"pls_pm_v2\",\"model_id\":\"1aed3b49-c702-4584-9cc6-fa72504ac60d\",\"construct_count\":3,\"structural_path_count\":2,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":1,\"moderation_probe_counts\":[],\"regression_type\":null,\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"specific_indirect_effects\",\"table_backing_key\":\"estimates\",\"table_backing_count\":3},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"3285488c-af44-4062-8093-0e60d19a6085\",\"selected_result_id_present\":true,\"table_id\":\"specific_indirect_effects\",\"table_shape_passed\":true,\"header_expectations_passed\":false,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"3285488c-af44-4062-8093-0e60d19a6085\",\"status\":\"completed\",\"method\":\"pls_pm\",\"method_version\":\"pls_pm_v1+pls_mediation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1\",\"payload_kind\":\"pls_pm_v2\",\"model_id\":\"1aed3b49-c702-4584-9cc6-fa72504ac60d\",\"construct_count\":3,\"structural_path_count\":2,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":1,\"moderation_probe_counts\":[],\"regression_type\":null,\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"specific_indirect_effects\",\"table_backing_key\":\"estimates\",\"table_backing_count\":3},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\04-specialized-result-single-mediation-failure.png",
+        "sha256": "e982fc666ab5de2001fafd8213d2c8d06e25d5978ac19987ca0db98d88d3efe6"
+      }
+    },
+    {
+      "id": "specialized_result:continuous moderator probes",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls",
+          "sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+            "status": "completed",
+            "method": "pls_pm",
+            "method_version": "pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1",
+            "payload_kind": "pls_pm_v2",
+            "model_id": "68df9553-f48b-46c4-b60a-e7fb67ee6a48",
+            "construct_count": 4,
+            "structural_path_count": 3,
+            "interaction_count": 1,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [
+              3
+            ],
+            "regression_type": null,
+            "process_model": null,
+            "cbsem_model_type": null,
+            "table_id": "moderation_simple_slopes",
+            "table_backing_key": "estimates",
+            "table_backing_count": 1
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+          "selected_text": "PLS-SEM Bootstrapping run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "moderation_simple_slopes"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:continuous moderator probes final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"fa5ac33f-4b8a-458b-a889-7b005d95b403\",\"selected_result_id_present\":true,\"table_id\":\"moderation_simple_slopes\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"fa5ac33f-4b8a-458b-a889-7b005d95b403\",\"status\":\"completed\",\"method\":\"pls_pm\",\"method_version\":\"pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1\",\"payload_kind\":\"pls_pm_v2\",\"model_id\":\"68df9553-f48b-46c4-b60a-e7fb67ee6a48\",\"construct_count\":4,\"structural_path_count\":3,\"interaction_count\":1,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[3],\"regression_type\":null,\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"moderation_simple_slopes\",\"table_backing_key\":\"estimates\",\"table_backing_count\":1},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"fa5ac33f-4b8a-458b-a889-7b005d95b403\",\"selected_result_id_present\":true,\"table_id\":\"moderation_simple_slopes\",\"table_shape_passed\":true,\"header_expectations_passed\":false,\"row_expectations_passed\":false,\"navigation_expectations_passed\":false,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"fa5ac33f-4b8a-458b-a889-7b005d95b403\",\"status\":\"completed\",\"method\":\"pls_pm\",\"method_version\":\"pls_pm_v1+pls_mediation_v1+pls_two_stage_moderation_v1+pls_assessment_v8+indexed_resampling_v4+htmt_bias_corrected_bootstrap_inference_v1\",\"payload_kind\":\"pls_pm_v2\",\"model_id\":\"68df9553-f48b-46c4-b60a-e7fb67ee6a48\",\"construct_count\":4,\"structural_path_count\":3,\"interaction_count\":1,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[3],\"regression_type\":null,\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"moderation_simple_slopes\",\"table_backing_key\":\"estimates\",\"table_backing_count\":1},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\05-specialized-result-continuous-moderator-probes-failure.png",
+        "sha256": "17c7a2dbbe1678a96c8c53bf7e7b9ae055bca34a296c96f0729ac356ec82f7cd"
+      }
+    },
+    {
+      "id": "specialized_result:RR HOC",
+      "status": "passed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/rr-hoc-canonical-result.qpls",
+          "sha256": "7489f1fa1dc567922b1ae0c5feb45bada68b40823a9500e381931efcaf31f79e"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 6,
+            "result_id": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "status": "completed",
+            "method": "smartpls.higher_order_models",
+            "method_version": "general_sem_pls_higher_order_point_v1",
+            "primary_cell_id": "qpls3.pls.general_sem_higher_order_point",
+            "capability_cell_ids": [
+              "qpls3.pls.algorithm",
+              "qpls3.pls.general_sem_higher_order_point"
+            ],
+            "model_id": "668534dd-5a77-462e-9900-234a59bb7921",
+            "variable_count": 10,
+            "structural_path_count": 1,
+            "interaction_count": 0,
+            "higher_order_count": 1,
+            "higher_order_measurement_types": [
+              "reflective_reflective"
+            ],
+            "table_id": "general_sem_higher_order_targets",
+            "table_row_count": 3,
+            "table_column_count": 15
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "canonical:result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+          "selected_text": "Higher-order PLS point estimates"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "general_sem_higher_order_targets",
+          "already_visible": true
+        }
+      ],
+      "assertion": {
+        "id": "calculate_and_open_specialized_result:specialized_result:RR HOC",
+        "expected": {
+          "fixture": null,
+          "fixture_model_id": null,
+          "fixture_constructs": null,
+          "fixture_derived_terms": null,
+          "fixture_paths": null,
+          "selected_method": null,
+          "selected_inference": null,
+          "selected_moderated_stage": null,
+          "route_expectations_passed": true,
+          "result_identity_expectations_passed": true,
+          "selected_result_id": "canonical:result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+          "selected_result_id_present": true,
+          "table_id": "general_sem_higher_order_targets",
+          "table_shape_passed": true,
+          "header_expectations_passed": true,
+          "row_expectations_passed": true,
+          "navigation_expectations_passed": true,
+          "source_archive_identity": {
+            "archive_schema": 6,
+            "result_id": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "status": "completed",
+            "method": "smartpls.higher_order_models",
+            "method_version": "general_sem_pls_higher_order_point_v1",
+            "primary_cell_id": "qpls3.pls.general_sem_higher_order_point",
+            "capability_cell_ids": [
+              "qpls3.pls.algorithm",
+              "qpls3.pls.general_sem_higher_order_point"
+            ],
+            "model_id": "668534dd-5a77-462e-9900-234a59bb7921",
+            "variable_count": 10,
+            "structural_path_count": 1,
+            "interaction_count": 0,
+            "higher_order_count": 1,
+            "higher_order_measurement_types": [
+              "reflective_reflective"
+            ],
+            "table_id": "general_sem_higher_order_targets",
+            "table_row_count": 3,
+            "table_column_count": 15
+          },
+          "smoke_snapshot": null,
+          "advanced_parameter_revision": null
+        },
+        "observed": {
+          "fixture": null,
+          "fixture_model_id": null,
+          "fixture_constructs": null,
+          "fixture_derived_terms": null,
+          "fixture_paths": null,
+          "selected_method": null,
+          "selected_inference": null,
+          "selected_moderated_stage": null,
+          "route_expectations_passed": true,
+          "result_identity_expectations_passed": true,
+          "selected_result_id": "canonical:result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+          "selected_result_id_present": true,
+          "table_id": "general_sem_higher_order_targets",
+          "table_shape_passed": true,
+          "header_expectations_passed": true,
+          "row_expectations_passed": true,
+          "navigation_expectations_passed": true,
+          "source_archive_identity": {
+            "archive_schema": 6,
+            "result_id": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "status": "completed",
+            "method": "smartpls.higher_order_models",
+            "method_version": "general_sem_pls_higher_order_point_v1",
+            "primary_cell_id": "qpls3.pls.general_sem_higher_order_point",
+            "capability_cell_ids": [
+              "qpls3.pls.algorithm",
+              "qpls3.pls.general_sem_higher_order_point"
+            ],
+            "model_id": "668534dd-5a77-462e-9900-234a59bb7921",
+            "variable_count": 10,
+            "structural_path_count": 1,
+            "interaction_count": 0,
+            "higher_order_count": 1,
+            "higher_order_measurement_types": [
+              "reflective_reflective"
+            ],
+            "table_id": "general_sem_higher_order_targets",
+            "table_row_count": 3,
+            "table_column_count": 15
+          },
+          "smoke_snapshot": null,
+          "advanced_parameter_revision": null
+        },
+        "passed": true
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\06-specialized-result-rr-hoc.png",
+        "sha256": "b15ba17d5d6c6c354352d5b103e2843e0ff9bcc10c6c29e801b42588cb37f54e"
+      },
+      "observation": {
+        "schema_version": 1,
+        "case_id": "specialized_result:RR HOC",
+        "operation": "calculate_and_open_specialized_result",
+        "assertion": {
+          "id": "calculate_and_open_specialized_result:specialized_result:RR HOC",
+          "passed": true,
+          "expected": {
+            "fixture": null,
+            "fixture_model_id": null,
+            "fixture_constructs": null,
+            "fixture_derived_terms": null,
+            "fixture_paths": null,
+            "selected_method": null,
+            "selected_inference": null,
+            "selected_moderated_stage": null,
+            "route_expectations_passed": true,
+            "result_identity_expectations_passed": true,
+            "selected_result_id": "canonical:result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "selected_result_id_present": true,
+            "table_id": "general_sem_higher_order_targets",
+            "table_shape_passed": true,
+            "header_expectations_passed": true,
+            "row_expectations_passed": true,
+            "navigation_expectations_passed": true,
+            "source_archive_identity": {
+              "archive_schema": 6,
+              "result_id": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+              "status": "completed",
+              "method": "smartpls.higher_order_models",
+              "method_version": "general_sem_pls_higher_order_point_v1",
+              "primary_cell_id": "qpls3.pls.general_sem_higher_order_point",
+              "capability_cell_ids": [
+                "qpls3.pls.algorithm",
+                "qpls3.pls.general_sem_higher_order_point"
+              ],
+              "model_id": "668534dd-5a77-462e-9900-234a59bb7921",
+              "variable_count": 10,
+              "structural_path_count": 1,
+              "interaction_count": 0,
+              "higher_order_count": 1,
+              "higher_order_measurement_types": [
+                "reflective_reflective"
+              ],
+              "table_id": "general_sem_higher_order_targets",
+              "table_row_count": 3,
+              "table_column_count": 15
+            },
+            "smoke_snapshot": null,
+            "advanced_parameter_revision": null
+          },
+          "observed": {
+            "fixture": null,
+            "fixture_model_id": null,
+            "fixture_constructs": null,
+            "fixture_derived_terms": null,
+            "fixture_paths": null,
+            "selected_method": null,
+            "selected_inference": null,
+            "selected_moderated_stage": null,
+            "route_expectations_passed": true,
+            "result_identity_expectations_passed": true,
+            "selected_result_id": "canonical:result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+            "selected_result_id_present": true,
+            "table_id": "general_sem_higher_order_targets",
+            "table_shape_passed": true,
+            "header_expectations_passed": true,
+            "row_expectations_passed": true,
+            "navigation_expectations_passed": true,
+            "source_archive_identity": {
+              "archive_schema": 6,
+              "result_id": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc",
+              "status": "completed",
+              "method": "smartpls.higher_order_models",
+              "method_version": "general_sem_pls_higher_order_point_v1",
+              "primary_cell_id": "qpls3.pls.general_sem_higher_order_point",
+              "capability_cell_ids": [
+                "qpls3.pls.algorithm",
+                "qpls3.pls.general_sem_higher_order_point"
+              ],
+              "model_id": "668534dd-5a77-462e-9900-234a59bb7921",
+              "variable_count": 10,
+              "structural_path_count": 1,
+              "interaction_count": 0,
+              "higher_order_count": 1,
+              "higher_order_measurement_types": [
+                "reflective_reflective"
+              ],
+              "table_id": "general_sem_higher_order_targets",
+              "table_row_count": 3,
+              "table_column_count": 15
+            },
+            "smoke_snapshot": null,
+            "advanced_parameter_revision": null
+          }
+        },
+        "screenshot": {
+          "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\06-specialized-result-rr-hoc.png",
+          "sha256": "b15ba17d5d6c6c354352d5b103e2843e0ff9bcc10c6c29e801b42588cb37f54e"
+        }
+      }
+    },
+    {
+      "id": "specialized_result:regression OLS",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/regression-ols-result.qpls",
+          "sha256": "ec38a3bc77e270f6fcad95107d26a6a357ba072dbbb1b012c02a6f3bb3931871"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "d85851e8-c5bb-4d62-b2cc-1c4a50b443ae",
+            "status": "completed",
+            "method": "regression",
+            "method_version": "regression_ols_v1",
+            "payload_kind": "pls_pm_v1",
+            "model_id": "5a5d03f7-d7c8-4fbe-bed2-64e3b4fb593e",
+            "construct_count": 0,
+            "structural_path_count": 0,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [],
+            "regression_type": "ols",
+            "process_model": null,
+            "cbsem_model_type": null,
+            "table_id": "ols_coefficients",
+            "table_backing_key": "coefficients",
+            "table_backing_count": 4
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "d85851e8-c5bb-4d62-b2cc-1c4a50b443ae",
+          "selected_text": "Ordinary Least Squares Regression run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "ols_coefficients",
+          "already_visible": true
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:regression OLS final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"d85851e8-c5bb-4d62-b2cc-1c4a50b443ae\",\"selected_result_id_present\":true,\"table_id\":\"ols_coefficients\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"d85851e8-c5bb-4d62-b2cc-1c4a50b443ae\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_ols_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"5a5d03f7-d7c8-4fbe-bed2-64e3b4fb593e\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"ols\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"ols_coefficients\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"d85851e8-c5bb-4d62-b2cc-1c4a50b443ae\",\"selected_result_id_present\":true,\"table_id\":\"ols_coefficients\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":false,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"d85851e8-c5bb-4d62-b2cc-1c4a50b443ae\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_ols_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"5a5d03f7-d7c8-4fbe-bed2-64e3b4fb593e\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"ols\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"ols_coefficients\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\07-specialized-result-regression-ols-failure.png",
+        "sha256": "0b7f363766296fd364465c2ccd0c880da4b3800b15ba0c71252fda9ba470fc52"
+      }
+    },
+    {
+      "id": "specialized_result:regression logistic",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/regression-logistic-result.qpls",
+          "sha256": "11fe9618e2912568e8cc90d305910a965063859852c4e5c57c8b503247bc2bc0"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "d786cb3b-228f-49db-abc2-0b1256f71723",
+            "status": "completed",
+            "method": "regression",
+            "method_version": "regression_logistic_v2",
+            "payload_kind": "pls_pm_v1",
+            "model_id": "3a2c2782-b1a0-45dd-9ce6-9873674e2901",
+            "construct_count": 0,
+            "structural_path_count": 0,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [],
+            "regression_type": "logistic",
+            "process_model": null,
+            "cbsem_model_type": null,
+            "table_id": "logistic_coefficients",
+            "table_backing_key": "coefficients",
+            "table_backing_count": 4
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "d786cb3b-228f-49db-abc2-0b1256f71723",
+          "selected_text": "Binary Logistic Regression run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "logistic_coefficients",
+          "already_visible": true
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:regression logistic final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"d786cb3b-228f-49db-abc2-0b1256f71723\",\"selected_result_id_present\":true,\"table_id\":\"logistic_coefficients\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"d786cb3b-228f-49db-abc2-0b1256f71723\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_logistic_v2\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"3a2c2782-b1a0-45dd-9ce6-9873674e2901\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"logistic\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"logistic_coefficients\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"d786cb3b-228f-49db-abc2-0b1256f71723\",\"selected_result_id_present\":true,\"table_id\":\"logistic_coefficients\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":false,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"d786cb3b-228f-49db-abc2-0b1256f71723\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_logistic_v2\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"3a2c2782-b1a0-45dd-9ce6-9873674e2901\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"logistic\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"logistic_coefficients\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\08-specialized-result-regression-logistic-failure.png",
+        "sha256": "c1708731828f9f93f6983869a6292c27bd65758b5056eba819b36c47fb62d817"
+      }
+    },
+    {
+      "id": "specialized_result:regression case bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/regression-bootstrap-result.qpls",
+          "sha256": "7fea15b74ce197f0c34ff309c9cfd71f1df2b463be38ddfdce345faede6c38e1"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "e3f7afca-4919-4891-a2c3-f72238656e7a",
+            "status": "completed",
+            "method": "regression",
+            "method_version": "regression_ols_v1+regression_bootstrap_v1",
+            "payload_kind": "pls_pm_v1",
+            "model_id": "99395995-e64f-41b2-a04f-9d413f0291a2",
+            "construct_count": 0,
+            "structural_path_count": 0,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [],
+            "regression_type": "ols",
+            "process_model": null,
+            "cbsem_model_type": null,
+            "table_id": "regression_bootstrap_summary",
+            "table_backing_key": "coefficients",
+            "table_backing_count": 4
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "e3f7afca-4919-4891-a2c3-f72238656e7a",
+          "selected_text": "Ordinary Least Squares Regression with Bootstrap run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "regression_bootstrap_summary",
+          "already_visible": true
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:regression case bootstrap final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"e3f7afca-4919-4891-a2c3-f72238656e7a\",\"selected_result_id_present\":true,\"table_id\":\"regression_bootstrap_summary\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"e3f7afca-4919-4891-a2c3-f72238656e7a\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_ols_v1+regression_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"99395995-e64f-41b2-a04f-9d413f0291a2\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"ols\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"regression_bootstrap_summary\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"e3f7afca-4919-4891-a2c3-f72238656e7a\",\"selected_result_id_present\":true,\"table_id\":\"regression_bootstrap_summary\",\"table_shape_passed\":true,\"header_expectations_passed\":false,\"row_expectations_passed\":false,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"e3f7afca-4919-4891-a2c3-f72238656e7a\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_ols_v1+regression_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"99395995-e64f-41b2-a04f-9d413f0291a2\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"ols\",\"process_model\":null,\"cbsem_model_type\":null,\"table_id\":\"regression_bootstrap_summary\",\"table_backing_key\":\"coefficients\",\"table_backing_count\":4},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\09-specialized-result-regression-case-bootstrap-failure.png",
+        "sha256": "fe698a7af1b384e60a676ae509bf6eb07d6bfa537dfe8b66b82bdf4ec196b740"
+      }
+    },
+    {
+      "id": "specialized_result:PROCESS mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/process-graph-result.qpls",
+          "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+            "status": "completed",
+            "method": "regression",
+            "method_version": "regression_process_v2+regression_process_bootstrap_v1",
+            "payload_kind": "pls_pm_v1",
+            "model_id": "a78bf92a-5d5d-48c4-abeb-dccda83c7e97",
+            "construct_count": 0,
+            "structural_path_count": 0,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [],
+            "regression_type": "process",
+            "process_model": "graph",
+            "cbsem_model_type": null,
+            "table_id": "process_reference_effects",
+            "table_backing_key": "reference_effects",
+            "table_backing_count": 6
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+          "selected_text": "Graph-Defined Path Analysis with Bootstrap run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "process_reference_effects"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:PROCESS mediation final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"selected_result_id_present\":true,\"table_id\":\"process_reference_effects\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_process_v2+regression_process_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"a78bf92a-5d5d-48c4-abeb-dccda83c7e97\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"process\",\"process_model\":\"graph\",\"cbsem_model_type\":null,\"table_id\":\"process_reference_effects\",\"table_backing_key\":\"reference_effects\",\"table_backing_count\":6},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"selected_result_id_present\":true,\"table_id\":\"process_reference_effects\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":false,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_process_v2+regression_process_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"a78bf92a-5d5d-48c4-abeb-dccda83c7e97\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"process\",\"process_model\":\"graph\",\"cbsem_model_type\":null,\"table_id\":\"process_reference_effects\",\"table_backing_key\":\"reference_effects\",\"table_backing_count\":6},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\10-specialized-result-process-mediation-failure.png",
+        "sha256": "b88589962667f206145905b27bab953aba8b33633259028fe9cab44cf2ee4754"
+      }
+    },
+    {
+      "id": "specialized_result:PROCESS moderation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "open_archive",
+          "path": "validation/fixtures/v255/archives/process-graph-result.qpls",
+          "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+        },
+        {
+          "action": "inspect_archive_identity",
+          "identity": {
+            "archive_schema": 5,
+            "result_id": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+            "status": "completed",
+            "method": "regression",
+            "method_version": "regression_process_v2+regression_process_bootstrap_v1",
+            "payload_kind": "pls_pm_v1",
+            "model_id": "a78bf92a-5d5d-48c4-abeb-dccda83c7e97",
+            "construct_count": 0,
+            "structural_path_count": 0,
+            "interaction_count": 0,
+            "higher_order_count": 0,
+            "mediated_effect_count": 0,
+            "moderation_probe_counts": [],
+            "regression_type": "process",
+            "process_model": "graph",
+            "cbsem_model_type": null,
+            "table_id": "process_simple_slopes",
+            "table_backing_key": "simple_slopes",
+            "table_backing_count": 11
+          }
+        },
+        {
+          "action": "select_result",
+          "selected_value": "edd1fd08-6b44-4fc1-8299-3a94b086369e",
+          "selected_text": "Graph-Defined Path Analysis with Bootstrap run"
+        },
+        {
+          "action": "select_result_table",
+          "table_id": "process_simple_slopes"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "specialized_result:PROCESS moderation final assertion failed: {\"expected\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"selected_result_id_present\":true,\"table_id\":\"process_simple_slopes\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":true,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_process_v2+regression_process_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"a78bf92a-5d5d-48c4-abeb-dccda83c7e97\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"process\",\"process_model\":\"graph\",\"cbsem_model_type\":null,\"table_id\":\"process_simple_slopes\",\"table_backing_key\":\"simple_slopes\",\"table_backing_count\":11},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null},\"observed\":{\"fixture\":null,\"fixture_model_id\":null,\"fixture_constructs\":null,\"fixture_derived_terms\":null,\"fixture_paths\":null,\"selected_method\":null,\"selected_inference\":null,\"selected_moderated_stage\":null,\"route_expectations_passed\":true,\"result_identity_expectations_passed\":true,\"selected_result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"selected_result_id_present\":true,\"table_id\":\"process_simple_slopes\",\"table_shape_passed\":true,\"header_expectations_passed\":true,\"row_expectations_passed\":false,\"navigation_expectations_passed\":true,\"source_archive_identity\":{\"archive_schema\":5,\"result_id\":\"edd1fd08-6b44-4fc1-8299-3a94b086369e\",\"status\":\"completed\",\"method\":\"regression\",\"method_version\":\"regression_process_v2+regression_process_bootstrap_v1\",\"payload_kind\":\"pls_pm_v1\",\"model_id\":\"a78bf92a-5d5d-48c4-abeb-dccda83c7e97\",\"construct_count\":0,\"structural_path_count\":0,\"interaction_count\":0,\"higher_order_count\":0,\"mediated_effect_count\":0,\"moderation_probe_counts\":[],\"regression_type\":\"process\",\"process_model\":\"graph\",\"cbsem_model_type\":null,\"table_id\":\"process_simple_slopes\",\"table_backing_key\":\"simple_slopes\",\"table_backing_count\":11},\"smoke_snapshot\":null,\"advanced_parameter_revision\":null}}",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\11-specialized-result-process-moderation-failure.png",
+        "sha256": "75ff3fc5a5a2abb3dd95c71a7c97b21fd292d583a8a3139c60caa81acdd050f8"
+      }
+    },
+    {
+      "id": "specialized_result:parallel mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\12-specialized-result-parallel-mediation-failure.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      }
+    },
+    {
+      "id": "specialized_result:serial mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\13-specialized-result-serial-mediation-failure.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      }
+    },
+    {
+      "id": "specialized_result:single-mediation bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\14-specialized-result-single-mediation-bootstrap-failure.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      }
+    },
+    {
+      "id": "specialized_result:multiple-mediation bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\15-specialized-result-multiple-mediation-bootstrap-failure.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      }
+    },
+    {
+      "id": "specialized_result:simultaneous two-way moderation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Timeout 60000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n",
+      "failure_screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\named_case_driver\\screens\\16-specialized-result-simultaneous-two-way-moderation-failure.png",
+        "sha256": "a554141e319b1c55a3dbb95000eafe41628b35b7b8cb78d50a1457c2db44efdd"
+      }
+    },
+    {
+      "id": "specialized_result:three-way moderation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        }
+      ],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "locator.waitFor: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for getByRole('dialog', { name: 'New Project', exact: true }) to be visible\u001b[22m\n"
+    },
+    {
+      "id": "specialized_result:first-stage moderated mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:second-stage moderated mediation",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:binary moderator probes",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:RF HOC",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:FR HOC",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:FF HOC",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:HOC bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:Advanced Parameter Table revision",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:CFA point",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:recursive SEM point",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:recursive SEM case bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    },
+    {
+      "id": "specialized_result:CFA case bootstrap",
+      "status": "failed",
+      "candidate": "portable",
+      "operation": "calculate_and_open_specialized_result",
+      "steps": [],
+      "assertion": null,
+      "screenshot": null,
+      "failure": "page.goto: Target page, context or browser has been closed"
+    }
+  ],
+  "offline": {
+    "passed": true,
+    "observedRequestCount": 215,
+    "externalRequestCount": 0,
+    "origins": [
+      "http://ipc.localhost",
+      "http://tauri.localhost"
+    ],
+    "externalRequests": []
+  },
+  "failures": [
+    "One or more named cases failed.",
+    "Renderer error observation did not settle: page.waitForTimeout: Target page, context or browser has been closed"
+  ],
+  "process_safety": {
+    "wrapper_owns_candidate_process": true,
+    "candidate_pid_bound": true,
+    "candidate_executable_bound": true,
+    "driver_launches_candidate_processes": false,
+    "driver_terminates_candidate_processes": false,
+    "driver_closes_browser_page_or_context": false
+  },
+  "completed_at": "2026-08-22T11:43:20.931Z"
+}

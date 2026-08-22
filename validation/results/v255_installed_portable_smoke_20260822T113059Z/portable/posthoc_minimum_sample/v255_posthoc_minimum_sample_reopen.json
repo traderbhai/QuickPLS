@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "schema": "quickpls.v255.posthoc_minimum_sample_reopen.v1",
+  "suite_id": "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1",
+  "target_release": "2.55.0",
+  "generated_at": "2026-08-22T11:34:47.031Z",
+  "status": "passed",
+  "phase": "reopen",
+  "console_errors": [],
+  "named_evidence_observations": [],
+  "public_kind": "pls_posthoc_technical_minimum_sample_size",
+  "method_kind": "pls_posthoc_technical_minimum_sample_size",
+  "source_bootstrap_result_id": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+  "new_result_id": "9eaaa8a6-a92e-4fa3-995c-8776f22d81e1",
+  "result_identity": {
+    "type": "schema5_result_run_id",
+    "value": "9eaaa8a6-a92e-4fa3-995c-8776f22d81e1"
+  },
+  "archive_path": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/posthoc_minimum_sample/quickpls-v255-posthoc-minimum-sample.qpls",
+  "archive_sha256": "f4f1abe6aef23c5f543ea17ef947b334bb77d0ea6fb28da070a22e452c0b2b63",
+  "archive": {
+    "kind": "reopened_posthoc_archive",
+    "path": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/posthoc_minimum_sample/quickpls-v255-posthoc-minimum-sample.qpls",
+    "sha256": "f4f1abe6aef23c5f543ea17ef947b334bb77d0ea6fb28da070a22e452c0b2b63",
+    "size_bytes": 41389
+  },
+  "execute_receipt": {
+    "kind": "posthoc_execute_receipt",
+    "path": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/posthoc_minimum_sample/v255_posthoc_minimum_sample_packaged_smoke.json",
+    "sha256": "80dee458b2e7cb555a62f93015f5d73f2f4ace999f2c7b102af10dca5f5c8d43",
+    "size_bytes": 14887
+  },
+  "same_result_identity": true,
+  "same_archive_sha256": true,
+  "observed_result_categories": [
+    "Graphical results",
+    "Final results",
+    "Moderation",
+    "Quality criteria",
+    "Inference",
+    "Run Details"
+  ],
+  "observed_result_labels": [
+    "Model estimates",
+    "Path coefficients",
+    "Outer loadings",
+    "Outer weights",
+    "R-square",
+    "Total effects",
+    "Moderation effects",
+    "Simple slope analysis",
+    "Interaction effect bootstrap inference",
+    "Interaction effect BCa intervals",
+    "Construct reliability and validity",
+    "Cross loadings",
+    "Fornell-Larcker criterion",
+    "HTMT+ bias-corrected bootstrap inference",
+    "Original HTMT bias-corrected bootstrap inference",
+    "Structural model",
+    "Inner VIF values",
+    "f-square effect sizes",
+    "Model fit — descriptive",
+    "Model fit — method details",
+    "Construct cross-validated redundancy",
+    "Post-hoc minimum sample size",
+    "Post-hoc source-run identity",
+    "Bootstrapping",
+    "Bias-corrected and accelerated intervals"
+  ],
+  "observed_posthoc_rows": [
+    {
+      "label": "Technically required sample size",
+      "value": "92"
+    },
+    {
+      "label": "Analytical sample size",
+      "value": "120"
+    },
+    {
+      "label": "Technical requirement",
+      "value": "Met"
+    },
+    {
+      "label": "Driving path",
+      "value": "M (unmatched saved construct) → Y (unmatched saved construct)"
+    },
+    {
+      "label": "Absolute path coefficient",
+      "value": "0.2592"
+    },
+    {
+      "label": "Bootstrap p value (two-sided)",
+      "value": "0.0007"
+    },
+    {
+      "label": "Significant structural paths",
+      "value": "3"
+    },
+    {
+      "label": "Driver selection",
+      "value": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"
+    },
+    {
+      "label": "Formula assumptions",
+      "value": "5% significance, 80% power, directional inverse-square-root test"
+    },
+    {
+      "label": "Method",
+      "value": "Inverse square root"
+    }
+  ],
+  "result_verification": {
+    "selected_run_id": "9eaaa8a6-a92e-4fa3-995c-8776f22d81e1",
+    "selected_run_label": "Post-hoc Technical Minimum Sample Size run",
+    "observed_result_categories": [
+      "Graphical results",
+      "Final results",
+      "Moderation",
+      "Quality criteria",
+      "Inference",
+      "Run Details"
+    ],
+    "observed_result_labels": [
+      "Model estimates",
+      "Path coefficients",
+      "Outer loadings",
+      "Outer weights",
+      "R-square",
+      "Total effects",
+      "Moderation effects",
+      "Simple slope analysis",
+      "Interaction effect bootstrap inference",
+      "Interaction effect BCa intervals",
+      "Construct reliability and validity",
+      "Cross loadings",
+      "Fornell-Larcker criterion",
+      "HTMT+ bias-corrected bootstrap inference",
+      "Original HTMT bias-corrected bootstrap inference",
+      "Structural model",
+      "Inner VIF values",
+      "f-square effect sizes",
+      "Model fit — descriptive",
+      "Model fit — method details",
+      "Construct cross-validated redundancy",
+      "Post-hoc minimum sample size",
+      "Post-hoc source-run identity",
+      "Bootstrapping",
+      "Bias-corrected and accelerated intervals"
+    ],
+    "selected_table_id": "posthoc_minimum_sample_size",
+    "selected_table_title": "Post-hoc minimum sample size",
+    "rows": [
+      {
+        "label": "Technically required sample size",
+        "value": "92"
+      },
+      {
+        "label": "Analytical sample size",
+        "value": "120"
+      },
+      {
+        "label": "Technical requirement",
+        "value": "Met"
+      },
+      {
+        "label": "Driving path",
+        "value": "M (unmatched saved construct) → Y (unmatched saved construct)"
+      },
+      {
+        "label": "Absolute path coefficient",
+        "value": "0.2592"
+      },
+      {
+        "label": "Bootstrap p value (two-sided)",
+        "value": "0.0007"
+      },
+      {
+        "label": "Significant structural paths",
+        "value": "3"
+      },
+      {
+        "label": "Driver selection",
+        "value": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"
+      },
+      {
+        "label": "Formula assumptions",
+        "value": "5% significance, 80% power, directional inverse-square-root test"
+      },
+      {
+        "label": "Method",
+        "value": "Inverse square root"
+      }
+    ],
+    "row_values": {
+      "Technically required sample size": "92",
+      "Analytical sample size": "120",
+      "Technical requirement": "Met",
+      "Driving path": "M (unmatched saved construct) → Y (unmatched saved construct)",
+      "Absolute path coefficient": "0.2592",
+      "Bootstrap p value (two-sided)": "0.0007",
+      "Significant structural paths": "3",
+      "Driver selection": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05",
+      "Formula assumptions": "5% significance, 80% power, directional inverse-square-root test",
+      "Method": "Inverse square root"
+    },
+    "bootstrap_link_verified": true
+  },
+  "screenshots": [
+    {
+      "kind": "posthoc_fresh_reopen",
+      "path": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/posthoc_minimum_sample/screens/05-reopen.png",
+      "sha256": "26c991072d69f1a823eebb2874a46c09096ff6cd4159bf722420b2d218374ea8",
+      "size_bytes": 117474
+    }
+  ],
+  "process_safety": {
+    "attached_endpoint_origin": "http://127.0.0.1:9256",
+    "packaged_page": {
+      "index": 0,
+      "url": "http://tauri.localhost/",
+      "origin": "http://tauri.localhost",
+      "title": "QuickPLS",
+      "shellVisible": true,
+      "tauriRuntime": true
+    },
+    "enumerated_pages": [
+      {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      }
+    ],
+    "wrapper_owns_exact_pid_lifecycle": true,
+    "driver_launches_app_processes": false,
+    "driver_terminates_app_processes": false,
+    "driver_closes_browser_page_or_context": false
+  }
+}

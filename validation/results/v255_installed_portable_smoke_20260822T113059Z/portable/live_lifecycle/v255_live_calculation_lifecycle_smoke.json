@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v255_live_calculation_lifecycle_smoke_v1",
+  "target_release": "2.55.0",
+  "version_authority": "2.55.0",
+  "current_candidate_journey": true,
+  "source_driver": "validation/v254_canvas_results_packaged_smoke.mjs",
+  "complete": true,
+  "passed": true,
+  "console_errors": [],
+  "phases": {
+    "execute": {
+      "phase": "execute",
+      "child_exit_code": 0,
+      "child_signal": null,
+      "child_stdout": "{\n  \"passed\": true,\n  \"complete\": false,\n  \"phase\": \"execute\",\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v255_installed_portable_smoke_20260822T113059Z\\\\portable\\\\live_lifecycle\\\\v254_canvas_results_packaged_smoke.json\",\n  \"screenshots\": [\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/01-indicator-multiselect.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/02-indicator-side.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/03-align.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/04-two-way-dialog.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/05-three-way-dialog.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/06-canvas.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/07-calculate.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/08-progress.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/09-results.png\"\n  ],\n  \"observations\": 9\n}\n",
+      "child_stderr": "",
+      "candidate_process": {
+        "pid": 21704,
+        "executable": "D:\\QuickPLS\\target\\release\\artifacts\\QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-112613_x64_portable.exe"
+      },
+      "console_errors": [],
+      "passed": true,
+      "underlying_report": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/v254_canvas_results_packaged_smoke.json",
+      "underlying_phase": {
+        "fixture": {
+          "columns": [
+            "x_1",
+            "x_2",
+            "y_1",
+            "y_2",
+            "w_1",
+            "w_2",
+            "z_1",
+            "z_2"
+          ],
+          "rowCount": 1200
+        },
+        "alignment": {
+          "selectedCount": 4,
+          "topSpreadPx": 0
+        },
+        "anchorLabel": "Three-way moderating effect: W and Z moderate X to Y",
+        "connectorCount": 2,
+        "route": "Three-way moderationZ extends X × W → Y",
+        "calculationEntry": "monitor",
+        "progress": "Calculation progressqueued0 of 1queued: 0 of 1",
+        "terminalState": "completed",
+        "calculationReadyRevision": {
+          "source": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\quickpls-v254-canvas-results-two-way-source.qpls",
+          "phase": "file_completion"
+        },
+        "save": {
+          "phase": "file_completion",
+          "target": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\quickpls-v255-live-lifecycle.qpls"
+        },
+        "results": {
+          "identity": {
+            "documentId": "result_95762a39-6411-4844-9952-30ce5c295c3b",
+            "runId": "95762a39-6411-4844-9952-30ce5c295c3b",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          },
+          "tableId": "general_sem_three_way_effect",
+          "groupLabel": "Three-Way Moderation",
+          "resultOverlayAnchors": 1
+        }
+      }
+    },
+    "reopen": {
+      "phase": "reopen",
+      "child_exit_code": 0,
+      "child_signal": null,
+      "child_stdout": "{\n  \"passed\": true,\n  \"complete\": true,\n  \"phase\": \"reopen\",\n  \"reportPath\": \"D:\\\\QuickPLS\\\\validation\\\\results\\\\v255_installed_portable_smoke_20260822T113059Z\\\\portable\\\\live_lifecycle\\\\v254_canvas_results_packaged_smoke.json\",\n  \"screenshots\": [\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/01-indicator-multiselect.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/02-indicator-side.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/03-align.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/04-two-way-dialog.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/05-three-way-dialog.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/06-canvas.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/07-calculate.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/08-progress.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/09-results.png\",\n    \"validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/screens/10-reopen.png\"\n  ],\n  \"observations\": 10\n}\n",
+      "child_stderr": "",
+      "candidate_process": {
+        "pid": 51416,
+        "executable": "D:\\QuickPLS\\target\\release\\artifacts\\QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-112613_x64_portable.exe"
+      },
+      "console_errors": [],
+      "passed": true,
+      "underlying_report": "validation/results/v255_installed_portable_smoke_20260822T113059Z/portable/live_lifecycle/v254_canvas_results_packaged_smoke.json",
+      "underlying_phase": {
+        "results": {
+          "identity": {
+            "documentId": "result_95762a39-6411-4844-9952-30ce5c295c3b",
+            "runId": "95762a39-6411-4844-9952-30ce5c295c3b",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          },
+          "tableId": "general_sem_three_way_effect",
+          "groupLabel": "Three-Way Moderation",
+          "resultOverlayAnchors": 1
+        },
+        "sameCanonicalIdentity": true
+      }
+    }
+  },
+  "named_evidence_observations": [
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:observability:running or progress screenshot",
+      "operation": "capture_observability_state",
+      "assertion": {
+        "id": "capture_observability_state:cross_method:observability:running or progress screenshot",
+        "passed": true,
+        "expected": {
+          "progress_text": "Calculation progressqueued0 of 1queued: 0 of 1",
+          "terminal_state": "completed"
+        },
+        "observed": {
+          "progress_text": "Calculation progressqueued0 of 1queued: 0 of 1",
+          "terminal_state": "completed"
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\screens\\08-progress.png",
+        "sha256": "0dc37546d4a718aee6ac765ca9612d5d13c862b483a683b86cc9475538bb91a5"
+      }
+    },
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:persistence:save and fresh reopen",
+      "operation": "exercise_persistence",
+      "assertion": {
+        "id": "exercise_persistence:cross_method:persistence:save and fresh reopen",
+        "passed": true,
+        "expected": {
+          "saved_target": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\quickpls-v255-live-lifecycle.qpls",
+          "same_canonical_identity": true,
+          "reopened_identity": {
+            "documentId": "result_95762a39-6411-4844-9952-30ce5c295c3b",
+            "runId": "95762a39-6411-4844-9952-30ce5c295c3b",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          }
+        },
+        "observed": {
+          "saved_target": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\quickpls-v255-live-lifecycle.qpls",
+          "same_canonical_identity": true,
+          "reopened_identity": {
+            "documentId": "result_95762a39-6411-4844-9952-30ce5c295c3b",
+            "runId": "95762a39-6411-4844-9952-30ce5c295c3b",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          }
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\screens\\10-reopen.png",
+        "sha256": "a3ad33d454f9c27ee683bb87b383fcec2f4264ffa8d9f351557b59d56ec23b04"
+      }
+    },
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:packaged:offline request observation",
+      "operation": "verify_packaged_candidate",
+      "assertion": {
+        "id": "verify_packaged_candidate:cross_method:packaged:offline request observation",
+        "passed": true,
+        "expected": {
+          "execute": {
+            "passed": true,
+            "observedRequestCount": 43,
+            "externalRequestCount": 0,
+            "origins": [
+              "http://ipc.localhost",
+              "http://tauri.localhost"
+            ],
+            "externalRequests": []
+          },
+          "reopen": {
+            "passed": true,
+            "observedRequestCount": 17,
+            "externalRequestCount": 0,
+            "origins": [
+              "http://ipc.localhost",
+              "http://tauri.localhost"
+            ],
+            "externalRequests": []
+          }
+        },
+        "observed": {
+          "execute": {
+            "passed": true,
+            "observedRequestCount": 43,
+            "externalRequestCount": 0,
+            "origins": [
+              "http://ipc.localhost",
+              "http://tauri.localhost"
+            ],
+            "externalRequests": []
+          },
+          "reopen": {
+            "passed": true,
+            "observedRequestCount": 17,
+            "externalRequestCount": 0,
+            "origins": [
+              "http://ipc.localhost",
+              "http://tauri.localhost"
+            ],
+            "externalRequests": []
+          }
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\portable\\live_lifecycle\\screens\\09-results.png",
+        "sha256": "a3ad33d454f9c27ee683bb87b383fcec2f4264ffa8d9f351557b59d56ec23b04"
+      }
+    }
+  ],
+  "failures": [],
+  "completed_at": "2026-08-22T11:34:30.540Z"
+}

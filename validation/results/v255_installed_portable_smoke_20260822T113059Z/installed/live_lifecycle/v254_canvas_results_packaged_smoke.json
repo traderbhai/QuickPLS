@@ -1,0 +1,271 @@
+{
+  "schema_version": 1,
+  "observation_schema": {
+    "schema_version": 1,
+    "required": [
+      "id",
+      "phase",
+      "area",
+      "expected",
+      "observed",
+      "status",
+      "severity",
+      "screenshot"
+    ],
+    "status_values": [
+      "passed",
+      "failed"
+    ],
+    "severity_values": [
+      "none",
+      "low",
+      "medium",
+      "high",
+      "critical"
+    ]
+  },
+  "suite_id": "quickpls_v254_canvas_results_packaged_smoke_v1",
+  "version": "2.54.0",
+  "runtime": "Packaged Tauri WebView2 over isolated local CDP",
+  "projectPath": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/quickpls-v255-live-lifecycle.qpls",
+  "generatedAt": "2026-08-22T11:32:34.937Z",
+  "complete": true,
+  "passed": true,
+  "screenshots": [
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/01-indicator-multiselect.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/02-indicator-side.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/03-align.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/04-two-way-dialog.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/05-three-way-dialog.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/06-canvas.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/07-calculate.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/08-progress.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/09-results.png",
+    "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/10-reopen.png"
+  ],
+  "observations": [
+    {
+      "schema_version": 1,
+      "id": "01-indicator-multiselect",
+      "phase": "execute",
+      "area": "Model navigator",
+      "expected": "Ctrl-selection retains two indicators and exposes one Create construct action.",
+      "observed": "x_1 and x_2 are simultaneously selected in the native indicator list.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/01-indicator-multiselect.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "02-indicator-side",
+      "phase": "execute",
+      "area": "Properties / Appearance",
+      "expected": "A selected construct exposes one compact indicator-position selector.",
+      "observed": "X indicators are set to Left without changing the scientific measurement model.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/02-indicator-side.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "03-align",
+      "phase": "execute",
+      "area": "Canvas Arrange",
+      "expected": "Align top acts on the current multi-selection as one presentation edit.",
+      "observed": "Four constructs remain selected with a 0px top-edge spread.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/03-align.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "04-two-way-dialog",
+      "phase": "execute",
+      "area": "Moderation authoring",
+      "expected": "M on the focal path opens the compact two-way moderation dialog.",
+      "observed": "EffectTwo-way moderationRelationshipX → Y",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/04-two-way-dialog.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "05-three-way-dialog",
+      "phase": "execute",
+      "area": "Moderation authoring",
+      "expected": "M on the two-way anchor extends it with a distinct third moderator.",
+      "observed": "EffectThree-way moderationRelationshipX → Y",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/05-three-way-dialog.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "06-canvas",
+      "phase": "execute",
+      "area": "Model Canvas",
+      "expected": "One compact anchor and two dashed connectors represent the three-way effect without generated-node clutter.",
+      "observed": "Three-way moderating effect: W and Z moderate X to Y; 2 visual connectors; four visible constructs; 3 authored/hierarchy scientific paths.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/06-canvas.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "07-calculate",
+      "phase": "execute",
+      "area": "Calculate",
+      "expected": "The unchanged 18-method catalogue routes PLS-SEM Algorithm to the detected three-way cell.",
+      "observed": "18 methods; Three-way moderationZ extends X × W → Y",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/07-calculate.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "08-progress",
+      "phase": "execute",
+      "area": "Calculation progress",
+      "expected": "Calculation uses the shared progress and cancellation surface.",
+      "observed": "Calculation progressqueued0 of 1queued: 0 of 1",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/08-progress.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "09-results",
+      "phase": "execute",
+      "area": "Results",
+      "expected": "Successful calculation opens categorized, researcher-facing three-way Results.",
+      "observed": "Three-Way Moderation; canonical table general_sem_three_way_effect.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/09-results.png"
+    },
+    {
+      "schema_version": 1,
+      "id": "10-reopen",
+      "phase": "reopen",
+      "area": "Fresh process reopen",
+      "expected": "A fresh packaged process restores the saved model and the same canonical result identity.",
+      "observed": "Document result_a2379642-09fc-4e72-8f78-1d9cfb2cb3c5; run a2379642-09fc-4e72-8f78-1d9cfb2cb3c5; table general_sem_three_way_effect.",
+      "status": "passed",
+      "severity": "none",
+      "recommendation": null,
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T113059Z/installed/live_lifecycle/screens/10-reopen.png"
+    }
+  ],
+  "phases": {
+    "execute": {
+      "passed": true,
+      "checks": {
+        "fixture": {
+          "columns": [
+            "x_1",
+            "x_2",
+            "y_1",
+            "y_2",
+            "w_1",
+            "w_2",
+            "z_1",
+            "z_2"
+          ],
+          "rowCount": 1200
+        },
+        "alignment": {
+          "selectedCount": 4,
+          "topSpreadPx": 0
+        },
+        "anchorLabel": "Three-way moderating effect: W and Z moderate X to Y",
+        "connectorCount": 2,
+        "route": "Three-way moderationZ extends X × W → Y",
+        "calculationEntry": "monitor",
+        "progress": "Calculation progressqueued0 of 1queued: 0 of 1",
+        "terminalState": "completed",
+        "calculationReadyRevision": {
+          "source": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\installed\\live_lifecycle\\quickpls-v254-canvas-results-two-way-source.qpls",
+          "phase": "file_completion"
+        },
+        "save": {
+          "phase": "file_completion",
+          "target": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T113059Z\\installed\\live_lifecycle\\quickpls-v255-live-lifecycle.qpls"
+        },
+        "results": {
+          "identity": {
+            "documentId": "result_a2379642-09fc-4e72-8f78-1d9cfb2cb3c5",
+            "runId": "a2379642-09fc-4e72-8f78-1d9cfb2cb3c5",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          },
+          "tableId": "general_sem_three_way_effect",
+          "groupLabel": "Three-Way Moderation",
+          "resultOverlayAnchors": 1
+        }
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 42,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    },
+    "reopen": {
+      "passed": true,
+      "checks": {
+        "results": {
+          "identity": {
+            "documentId": "result_a2379642-09fc-4e72-8f78-1d9cfb2cb3c5",
+            "runId": "a2379642-09fc-4e72-8f78-1d9cfb2cb3c5",
+            "methodVersion": "qpls.general-sem-pls.three-way.point.v1",
+            "datasetFingerprint": "v2:edd088cfbb93f3d843dfeb0401f5782f262dfaed61f9e646343a8281e3956698",
+            "tableIds": [
+              "general_sem_three_way_effect"
+            ],
+            "chartIds": [
+              "general_sem_three_way_simple_slope_chart"
+            ]
+          },
+          "tableId": "general_sem_three_way_effect",
+          "groupLabel": "Three-Way Moderation",
+          "resultOverlayAnchors": 1
+        },
+        "sameCanonicalIdentity": true
+      },
+      "offline": {
+        "passed": true,
+        "observedRequestCount": 17,
+        "externalRequestCount": 0,
+        "origins": [
+          "http://ipc.localhost",
+          "http://tauri.localhost"
+        ],
+        "externalRequests": []
+      },
+      "consoleErrors": [],
+      "failures": []
+    }
+  },
+  "failures": []
+}
