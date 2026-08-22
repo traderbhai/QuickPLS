@@ -66,6 +66,19 @@ function Get-DiskSnapshot([string]$Label) {
     }
     return [ordered]@{ label = $Label; captured_at = (Get-Date).ToUniversalTime().ToString("o"); drives = $drives }
 }
+function Write-Utf8NoBom([string]$PathValue, [string]$TextValue) {
+    [IO.File]::WriteAllText($PathValue, $TextValue, [Text.UTF8Encoding]::new($false))
+}
+function Test-ExactEmptyArrayProperty($Payload, [string]$PropertyName) {
+    if ($null -eq $Payload) { return $false }
+    $properties = @($Payload.PSObject.Properties | Where-Object { $_.Name -ceq $PropertyName })
+    if ($properties.Count -ne 1) { return $false }
+    $value = $properties[0].Value
+    return (
+        $value -is [array] -and
+        @($value).Count -eq 0
+    )
+}
 function Test-Cdp([string]$Endpoint) { try { $null = Invoke-RestMethod -Uri "$Endpoint/json/version" -TimeoutSec 1; return $true } catch { return $false } }
 function Wait-Cdp([string]$Endpoint, [bool]$Open) {
     $deadline = [DateTime]::UtcNow.AddSeconds(45)
@@ -215,7 +228,17 @@ function Invoke-Driver([string]$Phase, [int]$Port, [string]$PhaseDir, [string]$P
         $reportPath = Join-Path $PhaseDir "v255_cross_method_$Phase.json"
         if (-not (Test-Path -LiteralPath $reportPath -PathType Leaf)) { throw "$Phase driver did not publish its report." }
         $report = Get-Content -LiteralPath $reportPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($report.schema_version -ne 1 -or $report.suite_id -ne "quickpls_v255_cross_method_candidate_driver_v1" -or $report.passed -ne $true -or $report.phase -ne $Phase -or $report.candidate.pid -ne $process.Id -or $report.candidate.sha256 -ne $script:portableHash) { throw "$Phase driver report is not bound to this exact candidate session." }
+        if (
+            $report.schema_version -ne 1 -or
+            $report.suite_id -ne "quickpls_v255_cross_method_candidate_driver_v1" -or
+            $report.passed -ne $true -or
+            $report.phase -ne $Phase -or
+            $report.candidate.pid -ne $process.Id -or
+            $report.candidate.sha256 -ne $script:portableHash -or
+            $report.offline.passed -ne $true -or
+            -not (Test-ExactEmptyArrayProperty $report "failures") -or
+            -not (Test-ExactEmptyArrayProperty $report "console_errors")
+        ) { throw "$Phase driver report is not bound to this exact candidate session with exact zero renderer errors." }
         return [ordered]@{ process = $process; endpoint = $endpoint; report_path = $reportPath; report = $report; stdout = $stdout; stderr = $stderr; profile = $Profile }
     } catch {
         $phaseFailure = $_
@@ -437,7 +460,15 @@ public static class QuickPlsV255Dpi {
     $dpiReportPath = Join-Path $dpiDir "v255_cross_method_dpi_process.json"
     $dpiReport = Get-Content -LiteralPath $dpiReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
     $expectedDpiStatus = if ($WaiveActualWindows200PercentScaling) { "waived" } else { "passed" }
-    if ($dpiReport.passed -ne $true -or $dpiReport.candidate.pid -ne $dpiProcess.Id -or $dpiReport.records[0].effective_dpi -ne $effectiveDpi -or $dpiReport.records[0].scaling_requirement_status -ne $expectedDpiStatus) { throw "DPI/process report is invalid." }
+    if (
+        $dpiReport.passed -ne $true -or
+        $dpiReport.candidate.pid -ne $dpiProcess.Id -or
+        $dpiReport.records[0].effective_dpi -ne $effectiveDpi -or
+        $dpiReport.records[0].scaling_requirement_status -ne $expectedDpiStatus -or
+        $dpiReport.offline.passed -ne $true -or
+        -not (Test-ExactEmptyArrayProperty $dpiReport "failures") -or
+        -not (Test-ExactEmptyArrayProperty $dpiReport "console_errors")
+    ) { throw "DPI/process report is invalid or lacks exact zero renderer errors." }
     if ($WaiveActualWindows200PercentScaling -and (($dpiReport.records[0].waiver | ConvertTo-Json -Depth 10 -Compress) -ne ($dpiWaiverMetadata | ConvertTo-Json -Depth 10 -Compress))) { throw "DPI/process report did not retain the exact approved waiver metadata." }
     $dpiTermination = Stop-OwnedTree $dpiProcess $dpiEndpoint "DPI/process-safety phase complete"; $terminations.Add($dpiTermination); $active = $null
     if ($sentinel.HasExited) { throw "PID-scoped candidate cleanup terminated the independent wrapper sentinel." }
@@ -537,9 +568,10 @@ public static class QuickPlsV255Dpi {
         disk_snapshots = @($diskBefore, $diskAfter)
         phase_reports = @($phaseBindings)
         named_evidence_observations = @($observations)
+        console_errors = @()
         failures = @()
     }
-    $report | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $reportPath -Encoding UTF8
+    Write-Utf8NoBom $reportPath (($report | ConvertTo-Json -Depth 30) + "`n")
     $report
 } catch {
     $runFailure = $_

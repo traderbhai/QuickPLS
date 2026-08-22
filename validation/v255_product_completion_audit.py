@@ -65,6 +65,20 @@ EXPECTED_TRUSTED_DRIVER_SUITES = {
     "quickpls_v255_named_case_driver_v1": 1,
     "quickpls_v255_cross_method_candidate_wrapper_v1": 1,
 }
+CROSS_WRAPPER_SUITE = "quickpls_v255_cross_method_candidate_wrapper_v1"
+CROSS_RENDERER_SUITE = "quickpls_v255_cross_method_candidate_driver_v1"
+CROSS_NATIVE_GUARD_SUITE = "quickpls_v255_windows_unsaved_close_guard_v1"
+CROSS_RENDERER_PHASES = (
+    "imports",
+    "exports",
+    "archives",
+    "legacy_reopen",
+    "autosave_seed",
+    "autosave_recover",
+    "unsaved_close_seed",
+    "dpi_process",
+)
+CROSS_PHASES = (*CROSS_RENDERER_PHASES[:-1], "unsaved_close_guard", "dpi_process")
 EXPECTED_PREEXISTING_FIXED_CASE_IDS = {
     "cross_method:observability:setup screenshot",
     "cross_method:observability:completed Results screenshot",
@@ -775,6 +789,161 @@ def resolved_declared_path(declared: object) -> Path | None:
         return None
 
 
+def exact_empty_console_errors(payload: object) -> bool:
+    return isinstance(payload, dict) and payload.get("console_errors") == []
+
+
+def exact_schema_version(payload: object, expected: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and type(expected) is int
+        and type(payload.get("schema_version")) is int
+        and payload.get("schema_version") == expected
+    )
+
+
+def same_declared_path(left: object, right: object) -> bool:
+    left_path = resolved_declared_path(left)
+    right_path = resolved_declared_path(right)
+    return left_path is not None and left_path == right_path
+
+
+def exact_cross_phase_report_bindings(
+    cross_report_path: Path, wrapper: dict[str, object]
+) -> bool:
+    bindings = wrapper.get("phase_reports")
+    if not isinstance(bindings, list) or len(bindings) != len(CROSS_PHASES):
+        return False
+    if any(
+        not isinstance(binding, dict)
+        or set(binding) != {"phase", "path", "sha256"}
+        for binding in bindings
+    ):
+        return False
+    if any(
+        not isinstance(binding.get("phase"), str)
+        or not isinstance(binding.get("path"), str)
+        or not isinstance(binding.get("sha256"), str)
+        for binding in bindings
+    ):
+        return False
+    binding_by_phase = {
+        binding.get("phase"): binding
+        for binding in bindings
+        if isinstance(binding, dict)
+    }
+    if (
+        len(binding_by_phase) != len(CROSS_PHASES)
+        or set(binding_by_phase) != set(CROSS_PHASES)
+        or len({binding.get("path") for binding in bindings}) != len(CROSS_PHASES)
+        or len({str(binding.get("sha256")).casefold() for binding in bindings})
+        != len(CROSS_PHASES)
+    ):
+        return False
+
+    wrapper_candidate = wrapper.get("candidate")
+    wrapper_candidate = wrapper_candidate if isinstance(wrapper_candidate, dict) else {}
+    wrapper_sha = wrapper_candidate.get("sha256")
+    wrapper_path = wrapper_candidate.get("path")
+    wrapper_sha_lower = str(wrapper_sha).lower() if is_sha256_any_case(wrapper_sha) else ""
+    payloads: dict[str, dict[str, object]] = {}
+    resolved_paths: list[Path] = []
+    resolved_hashes: list[str] = []
+    renderer_pids: list[int] = []
+    for phase in CROSS_PHASES:
+        binding = binding_by_phase[phase]
+        phase_path = report_bound_file(cross_report_path, binding.get("path"))
+        if phase_path is None:
+            return False
+        phase_hash = sha256_path(phase_path)
+        phase_payload = parse_json_path(phase_path)
+        expected_suite = (
+            CROSS_NATIVE_GUARD_SUITE
+            if phase == "unsaved_close_guard"
+            else CROSS_RENDERER_SUITE
+        )
+        if not (
+            hash_matches(binding.get("sha256"), phase_hash)
+            and isinstance(phase_payload, dict)
+            and exact_schema_version(phase_payload, 1)
+            and phase_payload.get("suite_id") == expected_suite
+            and phase_payload.get("passed") is True
+            and phase_payload.get("failures") == []
+        ):
+            return False
+        if phase != "unsaved_close_guard":
+            phase_candidate = phase_payload.get("candidate")
+            phase_candidate = phase_candidate if isinstance(phase_candidate, dict) else {}
+            if not (
+                phase_payload.get("target_release") == "2.55.0"
+                and phase_payload.get("phase") == phase
+                and exact_empty_console_errors(phase_payload)
+                and isinstance(phase_payload.get("offline"), dict)
+                and phase_payload["offline"].get("passed") is True
+                and type(phase_candidate.get("pid")) is int
+                and phase_candidate.get("pid", 0) > 0
+                and hash_matches(phase_candidate.get("sha256"), wrapper_sha_lower)
+                and same_declared_path(phase_candidate.get("path"), wrapper_path)
+                and phase_payload.get("source_commit") == wrapper.get("source_commit")
+            ):
+                return False
+            renderer_pids.append(phase_candidate["pid"])
+        payloads[phase] = phase_payload
+        resolved_paths.append(phase_path)
+        resolved_hashes.append(phase_hash)
+
+    if (
+        len(resolved_paths) != len(set(resolved_paths))
+        or len(resolved_hashes) != len(set(resolved_hashes))
+    ):
+        return False
+    process_safety = wrapper.get("process_safety")
+    process_safety = process_safety if isinstance(process_safety, dict) else {}
+    terminations = process_safety.get("terminations")
+    termination_rows = (
+        [row for row in terminations if isinstance(row, dict)]
+        if isinstance(terminations, list)
+        else []
+    )
+    root_pids = [row.get("root_pid") for row in termination_rows]
+    sentinel_pid = process_safety.get("sentinel_pid")
+    if not (
+        len(renderer_pids) == len(set(renderer_pids)) == len(CROSS_RENDERER_PHASES)
+        and isinstance(terminations, list)
+        and len(terminations) == len(termination_rows)
+        and len(termination_rows) == len(root_pids) == len(CROSS_RENDERER_PHASES)
+        and all(type(pid) is int and pid > 0 for pid in root_pids)
+        and len(set(root_pids)) == len(CROSS_RENDERER_PHASES)
+        and set(root_pids) == set(renderer_pids)
+        and all(
+            row.get("exact_tree_terminated") is True
+            and row.get("endpoint_closed") is True
+            for row in termination_rows
+        )
+        and process_safety.get("exact_pid_tree_cleanup_only") is True
+        and process_safety.get("no_existing_candidate_attached") is True
+        and process_safety.get("sentinel_survived_candidate_cleanup") is True
+        and type(sentinel_pid) is int
+        and sentinel_pid > 0
+        and sentinel_pid not in set(renderer_pids)
+    ):
+        return False
+    seed_candidate = payloads["unsaved_close_seed"].get("candidate")
+    guard_payload = payloads["unsaved_close_guard"]
+    guard_candidate = guard_payload.get("candidate")
+    seed_candidate = seed_candidate if isinstance(seed_candidate, dict) else {}
+    guard_candidate = guard_candidate if isinstance(guard_candidate, dict) else {}
+    return (
+        type(seed_candidate.get("pid")) is int
+        and type(guard_candidate.get("pid")) is int
+        and guard_candidate.get("pid", 0) > 0
+        and guard_candidate.get("pid") == seed_candidate.get("pid")
+        and hash_matches(guard_candidate.get("sha256"), wrapper_sha_lower)
+        and same_declared_path(guard_candidate.get("path"), wrapper_path)
+        and guard_payload.get("cancel_kept_exact_pid_alive") is True
+    )
+
+
 def canonical_consolidated_step_executable(
     report: dict[str, object], declared: object
 ) -> object:
@@ -1198,7 +1367,7 @@ def consolidated_policy_and_disk_contract(
             }
             or disk_gate.get("before") != snapshots_by_label.get(f"before_{step_id}")
             or disk_gate.get("after") != snapshots_by_label.get(f"after_{step_id}")
-            or not isinstance(watcher.get("launched_pid"), int)
+            or type(watcher.get("launched_pid")) is not int
             or watcher.get("launched_pid", 0) <= 0
             or watcher.get("process_tree_termination_is_pid_scoped") is not True
             or watcher.get("emergency_free_gib_exclusive") != 20.25
@@ -2005,7 +2174,7 @@ def publication_report_checks(
         else {}
     )
     checks["publication_method_crawler_passed_exact_suite_and_hashes"] = (
-        method_report.get("schema_version") == 2
+        exact_schema_version(method_report, 2)
         and method_report.get("suite_id") == "quickpls_v255_method_evidence_crawler_v2"
         and method_report.get("target_release") == "2.55.0"
         and method_report.get("mode") == "packaged"
@@ -2565,7 +2734,7 @@ def publication_report_checks(
             install_executable,
             release_artifact_paths["portable"],
         )
-        and isinstance(install_receipt.get("installer_pid"), int)
+        and type(install_receipt.get("installer_pid")) is int
         and install_receipt.get("installer_pid", 0) > 0
         and isinstance(installer_arguments, list)
         and len(installer_arguments) == 2
@@ -2644,12 +2813,14 @@ def publication_report_checks(
         and portable_posthoc.get("execute_receipt_sha256")
         == sha256_path(posthoc_execute_path)
         and posthoc_execute is not None
+        and exact_schema_version(posthoc_execute, 1)
         and posthoc_execute.get("schema")
         == "quickpls.v255.posthoc_minimum_sample_packaged_smoke.v1"
         and posthoc_execute.get("suite_id")
         == "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1"
         and posthoc_execute.get("target_release") == "2.55.0"
         and posthoc_execute.get("status") == "passed"
+        and exact_empty_console_errors(posthoc_execute)
         and posthoc_execute.get("phase") == "execute"
         and posthoc_execute.get("method_kind")
         == "pls_posthoc_technical_minimum_sample_size"
@@ -2669,12 +2840,14 @@ def publication_report_checks(
         and portable_posthoc.get("reopen_receipt_sha256")
         == sha256_path(posthoc_reopen_path)
         and posthoc_reopen is not None
+        and exact_schema_version(posthoc_reopen, 1)
         and posthoc_reopen.get("schema")
         == "quickpls.v255.posthoc_minimum_sample_reopen.v1"
         and posthoc_reopen.get("suite_id")
         == "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1"
         and posthoc_reopen.get("target_release") == "2.55.0"
         and posthoc_reopen.get("status") == "passed"
+        and exact_empty_console_errors(posthoc_reopen)
         and posthoc_reopen.get("phase") == "reopen"
         and posthoc_reopen.get("same_result_identity") is True
         and posthoc_reopen.get("same_archive_sha256") is True
@@ -2760,7 +2933,7 @@ def publication_report_checks(
             or not isinstance(pids, list)
             or len(pids) < 3
             or len(pids) != len(set(pids))
-            or not all(isinstance(pid, int) and pid > 0 for pid in pids)
+            or not all(type(pid) is int and pid > 0 for pid in pids)
         ):
             nested_reports_valid = False
             continue
@@ -2791,15 +2964,16 @@ def publication_report_checks(
         )
         if (
             lifecycle_payload is None
-            or lifecycle_payload.get("schema_version") != 1
+            or not exact_schema_version(lifecycle_payload, 1)
             or lifecycle_payload.get("suite_id")
             != "quickpls_v255_live_calculation_lifecycle_smoke_v1"
             or lifecycle_payload.get("target_release") != "2.55.0"
             or lifecycle_payload.get("complete") is not True
             or lifecycle_payload.get("passed") is not True
-            or lifecycle_payload.get("failures")
+            or lifecycle_payload.get("failures") != []
+            or not exact_empty_console_errors(lifecycle_payload)
             or nested_method_payload is None
-            or nested_method_payload.get("schema_version") != 2
+            or not exact_schema_version(nested_method_payload, 2)
             or nested_method_payload.get("suite_id")
             != "quickpls_v255_method_evidence_crawler_v2"
             or nested_method_payload.get("target_release") != "2.55.0"
@@ -2871,7 +3045,7 @@ def publication_report_checks(
     # drivers. Verify every bound source report here as well so a publication
     # report cannot omit, substitute, or merely name a generic/cross driver.
     named_manifest = read_json(NAMED_ROUTE_MANIFEST_PATH)
-    cross_manifest = read_json(CROSS_METHOD_ROUTE_MANIFEST_PATH)
+    read_json(CROSS_METHOD_ROUTE_MANIFEST_PATH)
     named_manifest_cases = (
         [row for row in named_manifest.get("cases", []) if isinstance(row, dict)]
         if isinstance(named_manifest, dict)
@@ -2991,16 +3165,17 @@ def publication_report_checks(
                     str(row.get("case_id", "")) for row in observation_rows
                 ]
                 if not (
-                    payload.get("schema_version") == 1
+                    exact_schema_version(payload, 1)
                     and payload.get("target_release") == "2.55.0"
                     and payload.get("status") == "passed"
                     and payload.get("passed") is True
                     and payload.get("candidate") == candidate
                     and payload.get("failures") == []
+                    and exact_empty_console_errors(payload)
                     and payload.get("serial") is True
                     and payload.get("maximum_concurrent_cases") == 1
                     and payload.get("offline", {}).get("passed") is True
-                    and isinstance(candidate_process.get("pid"), int)
+                    and type(candidate_process.get("pid")) is int
                     and candidate_process.get("pid") > 0
                     and isinstance(outcome_pids, list)
                     and candidate_process.get("pid") in outcome_pids
@@ -3088,11 +3263,13 @@ def publication_report_checks(
                 ]
                 if not (
                     candidate == "portable"
-                    and payload.get("schema_version") == 1
+                    and exact_schema_version(payload, 1)
                     and payload.get("target_release") == "2.55.0"
                     and payload.get("passed") is True
                     and cross_waiver_state_valid
                     and payload.get("failures") == []
+                    and exact_empty_console_errors(payload)
+                    and exact_cross_phase_report_bindings(report_member, payload)
                     and payload.get("source_commit") == build_commit
                     and payload.get("publication_commit")
                     == publication_source_commit
@@ -3365,12 +3542,13 @@ def publication_report_checks(
         frozen_members_verified = False
         frozen_payloads_verified = False
     checks["publication_frozen_reopen_crawler_passed_and_inventory_bound"] = (
-        frozen_report.get("schema_version") == 1
+        exact_schema_version(frozen_report, 1)
         and frozen_report.get("suite_id")
         == "quickpls_v255_frozen_archive_reopen_crawler_v1"
         and frozen_report.get("status") == "passed"
         and frozen_report.get("target_release") == "2.55.0"
         and frozen_report.get("source_inventory", {}).get("sha256") == inventory_hash
+        and exact_empty_console_errors(frozen_report)
         and len(frozen_receipts) == len(set(frozen_kinds)) == 18
         and set(frozen_kinds) == set(catalogue_kinds())
         and all(

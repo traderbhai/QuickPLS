@@ -22,6 +22,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const FILE_HELPER = path.join(ROOT, "validation", "windows_native_owned_file_dialog.py");
 const SUITE_ID = "quickpls_v255_cross_method_candidate_driver_v1";
 const MANIFEST_SUITE_ID = "quickpls_v255_cross_method_case_manifest_v1";
+const RENDERER_ERROR_SETTLE_MS = 250;
 const PHASES = new Set(["imports", "exports", "archives", "legacy_reopen", "autosave_seed", "autosave_recover", "unsaved_close_seed", "dpi_process"]);
 const DPI_WAIVER_METADATA = Object.freeze({
   waiver_authority: "product_owner",
@@ -46,6 +47,23 @@ async function readJson(file) {
 async function writeJsonNew(file, value) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" });
+}
+function observeRendererErrors(page) {
+  const errors = [];
+  const onPageError = (error) => errors.push({ type: "pageerror", message: error instanceof Error ? error.message : String(error) });
+  const onConsole = (message) => {
+    if (message.type() === "error") errors.push({ type: "console", message: message.text() });
+  };
+  page.on("pageerror", onPageError);
+  page.on("console", onConsole);
+  return {
+    errors,
+    settle: () => page.waitForTimeout(RENDERER_ERROR_SETTLE_MS),
+    stop: () => {
+      page.off("pageerror", onPageError);
+      page.off("console", onConsole);
+    },
+  };
 }
 function parseArgs(argv) {
   const allowed = new Set(["phase", "endpoint", "evidence-dir", "manifest", "fixture-report", "candidate-path", "candidate-sha256", "candidate-pid", "source-commit", "release-report-sha256", "python", "project-path", "effective-dpi", "waive-actual-windows-200-percent-scaling"]);
@@ -370,9 +388,11 @@ async function main() {
   assert(fixturePayload.schema_version === 1 && fixturePayload.suite_id === "quickpls_v255_cross_method_fixture_builder_v1" && fixturePayload.passed === true, "Fixture report is invalid.");
   assert(await fileSha256(args.candidatePath) === args["candidate-sha256"].toLowerCase(), "Candidate bytes changed before driver attach.");
   const { page, enumeratedPages } = await connectToSingleQuickPlsPage({ chromium, endpoint: args.endpoint });
+  const rendererErrors = observeRendererErrors(page);
   const offline = observeFunctionalOfflineRequests(page);
-  let records;
+  let records = [];
   let offlineSummary;
+  const failures = [];
   try {
     records = args.phase === "imports" ? await importsPhase(page, args, manifest, fixturePayload)
       : args.phase === "exports" ? await exportCases(page, args, manifest, new Map(fixturePayload.files.map((row) => [row.role, row])))
@@ -386,14 +406,25 @@ async function main() {
     assert(offlineSummary.passed === true && offlineSummary.externalRequestCount === 0, `Functional network requests escaped offline policy: ${JSON.stringify(offlineSummary)}`);
     const screenshots = records.flatMap((record) => record.screenshot ? [record.screenshot] : Object.values(record.screenshots ?? {}));
     assert(new Set(screenshots.map((item) => item.sha256)).size === screenshots.length, "Phase screenshots are not byte-unique.");
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error));
   } finally {
+    try {
+      await rendererErrors.settle();
+    } catch (error) {
+      failures.push(`Renderer error observation did not settle: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    offlineSummary ??= offline.summary();
     offline.stop();
+    rendererErrors.stop();
   }
+  const consoleErrors = [...rendererErrors.errors];
+  if (consoleErrors.length > 0) failures.push(`Renderer errors were observed: ${JSON.stringify(consoleErrors)}`);
   const report = {
     schema_version: 1,
     suite_id: SUITE_ID,
     target_release: "2.55.0",
-    passed: true,
+    passed: failures.length === 0 && consoleErrors.length === 0,
     phase: args.phase,
     source_commit: args["source-commit"],
     release_artifact_report_sha256: args["release-report-sha256"].toUpperCase(),
@@ -403,10 +434,13 @@ async function main() {
     manifest: { path: args.manifest, sha256: await fileSha256(args.manifest) },
     fixture_report: { path: args.fixtureReport, sha256: await fileSha256(args.fixtureReport) },
     offline: offlineSummary,
+    console_errors: consoleErrors,
     records,
-    failures: [],
+    failures,
   };
   await writeJsonNew(path.join(args.evidenceDir, `v255_cross_method_${args.phase}.json`), report);
+  assert(report.passed, `Cross-method ${args.phase} failed: ${JSON.stringify(report.failures)}`);
+  return report;
 }
 
 try {

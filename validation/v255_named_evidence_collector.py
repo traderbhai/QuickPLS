@@ -39,6 +39,28 @@ COMMIT_RE = re.compile(r"^[0-9a-f]{40}$")
 SAFE_FILE_RE = re.compile(r"[^a-z0-9]+")
 MAX_JSON_BYTES = 32 * 1024 * 1024
 MAX_SCREENSHOT_BYTES = 64 * 1024 * 1024
+CROSS_WRAPPER_SUITE = "quickpls_v255_cross_method_candidate_wrapper_v1"
+CROSS_RENDERER_SUITE = "quickpls_v255_cross_method_candidate_driver_v1"
+CROSS_NATIVE_GUARD_SUITE = "quickpls_v255_windows_unsaved_close_guard_v1"
+CROSS_RENDERER_PHASES = (
+    "imports",
+    "exports",
+    "archives",
+    "legacy_reopen",
+    "autosave_seed",
+    "autosave_recover",
+    "unsaved_close_seed",
+    "dpi_process",
+)
+CROSS_PHASES = (*CROSS_RENDERER_PHASES[:-1], "unsaved_close_guard", "dpi_process")
+TRUSTED_DRIVER_SUITES = {
+    "quickpls_v255_live_calculation_lifecycle_smoke_v1": 1,
+    "quickpls_v255_method_evidence_crawler_v2": 2,
+    "quickpls_v255_frozen_archive_reopen_crawler_v1": 1,
+    "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1": 1,
+    "quickpls_v255_named_case_driver_v1": 1,
+    CROSS_WRAPPER_SUITE: 1,
+}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -262,11 +284,13 @@ def trusted_suite_versions(contract: dict[str, Any]) -> dict[str, int]:
             raise ValueError("trusted driver suite declaration must be an object")
         suite = row.get("suite_id")
         version = row.get("schema_version")
-        if not isinstance(suite, str) or not suite or not isinstance(version, int):
+        if not isinstance(suite, str) or not suite or type(version) is not int:
             raise ValueError("trusted driver suite declaration is incomplete")
         if suite in versions:
             raise ValueError(f"trusted driver suite is duplicated: {suite}")
         versions[suite] = version
+    if versions != TRUSTED_DRIVER_SUITES or len(rows) != len(versions):
+        raise ValueError("collector contract trusted driver suite set is not exact")
     return versions
 
 
@@ -332,6 +356,199 @@ def nested(value: dict[str, Any], *keys: str) -> Any:
     return current
 
 
+def exact_empty_console_errors(payload: object) -> bool:
+    return isinstance(payload, dict) and payload.get("console_errors") == []
+
+
+def exact_schema_version(payload: object, expected: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and type(expected) is int
+        and type(payload.get("schema_version")) is int
+        and payload.get("schema_version") == expected
+    )
+
+
+def hash_matches(declared: object, actual: str) -> bool:
+    return (
+        isinstance(declared, str)
+        and re.fullmatch(r"[0-9a-fA-F]{64}", declared) is not None
+        and declared.casefold() == actual.casefold()
+    )
+
+
+def same_declared_path(left: object, right: object) -> bool:
+    if not isinstance(left, str) or not left or not isinstance(right, str) or not right:
+        return False
+    try:
+        return Path(left).resolve() == Path(right).resolve()
+    except (OSError, ValueError):
+        return False
+
+
+def validate_cross_phase_reports(
+    cross_report_path: Path,
+    payload: dict[str, Any],
+    evidence_root: Path,
+    *,
+    expected_candidate_sha256: object,
+    expected_candidate_path: object,
+    expected_product_version: object,
+    expected_source_commit: object,
+) -> list[dict[str, Any]]:
+    wrapper_candidate = payload.get("candidate")
+    wrapper_candidate = wrapper_candidate if isinstance(wrapper_candidate, dict) else {}
+    if not (
+        wrapper_candidate.get("role") == "portable"
+        and hash_matches(
+            wrapper_candidate.get("sha256"), str(expected_candidate_sha256)
+        )
+        and same_declared_path(
+            wrapper_candidate.get("path"), expected_candidate_path
+        )
+        and wrapper_candidate.get("product_version") == expected_product_version
+        and payload.get("source_commit") == expected_source_commit
+    ):
+        raise ValueError(
+            "cross wrapper is not bound to the selected candidate report outcome"
+        )
+    bindings = payload.get("phase_reports")
+    if not isinstance(bindings, list) or len(bindings) != len(CROSS_PHASES):
+        raise ValueError("cross wrapper must bind exactly nine phase reports")
+    if any(not isinstance(binding, dict) or set(binding) != {"phase", "path", "sha256"} for binding in bindings):
+        raise ValueError("cross phase bindings must contain only phase, path, and sha256")
+    phases = [binding.get("phase") for binding in bindings]
+    if (
+        any(not isinstance(phase, str) for phase in phases)
+        or len(set(phases)) != len(CROSS_PHASES)
+        or set(phases) != set(CROSS_PHASES)
+    ):
+        raise ValueError("cross wrapper phase report set is not exact")
+
+    records_by_phase: dict[str, dict[str, Any]] = {}
+    seen_paths: set[str] = set()
+    seen_hashes: set[str] = set()
+    for binding in bindings:
+        phase = str(binding["phase"])
+        report_path = resolve_bound_file(
+            cross_report_path.parent,
+            binding.get("path"),
+            evidence_root,
+            f"cross phase {phase} report",
+        )
+        actual_hash = sha256_path(report_path)
+        if not hash_matches(binding.get("sha256"), actual_hash):
+            raise ValueError(f"cross phase {phase} SHA-256 does not match current bytes")
+        path_key = str(report_path).casefold()
+        if path_key in seen_paths or actual_hash in seen_hashes:
+            raise ValueError(f"cross phase {phase} reuses another phase report")
+        seen_paths.add(path_key)
+        seen_hashes.add(actual_hash)
+        phase_payload = load_json(report_path)
+        expected_suite = (
+            CROSS_NATIVE_GUARD_SUITE
+            if phase == "unsaved_close_guard"
+            else CROSS_RENDERER_SUITE
+        )
+        if not (
+            exact_schema_version(phase_payload, 1)
+            and phase_payload.get("suite_id") == expected_suite
+            and phase_payload.get("passed") is True
+            and phase_payload.get("failures") == []
+        ):
+            raise ValueError(f"cross phase {phase} is not an exact passing phase report")
+        if phase != "unsaved_close_guard" and not (
+            phase_payload.get("target_release") == TARGET_RELEASE
+            and phase_payload.get("phase") == phase
+            and exact_empty_console_errors(phase_payload)
+            and isinstance(phase_payload.get("offline"), dict)
+            and phase_payload["offline"].get("passed") is True
+        ):
+            raise ValueError(
+                f"cross renderer phase {phase} lacks exact zero console errors or identity"
+            )
+        records_by_phase[phase] = {
+            "phase": phase,
+            "path": report_path,
+            "sha256": actual_hash,
+            "suite_id": expected_suite,
+            "schema_version": 1,
+            "renderer_attached": phase != "unsaved_close_guard",
+            "payload": phase_payload,
+        }
+
+    wrapper_sha = wrapper_candidate.get("sha256")
+    wrapper_path = wrapper_candidate.get("path")
+    renderer_pids: list[int] = []
+    for phase in CROSS_RENDERER_PHASES:
+        phase_payload = records_by_phase[phase]["payload"]
+        phase_candidate = phase_payload.get("candidate")
+        phase_candidate = phase_candidate if isinstance(phase_candidate, dict) else {}
+        if not (
+            type(phase_candidate.get("pid")) is int
+            and phase_candidate.get("pid", 0) > 0
+            and hash_matches(phase_candidate.get("sha256"), str(wrapper_sha))
+            and same_declared_path(phase_candidate.get("path"), wrapper_path)
+            and phase_payload.get("source_commit") == payload.get("source_commit")
+        ):
+            raise ValueError(f"cross renderer phase {phase} is not bound to the wrapper candidate")
+        renderer_pids.append(phase_candidate["pid"])
+
+    process_safety = payload.get("process_safety")
+    process_safety = process_safety if isinstance(process_safety, dict) else {}
+    terminations = process_safety.get("terminations")
+    termination_rows = (
+        [row for row in terminations if isinstance(row, dict)]
+        if isinstance(terminations, list)
+        else []
+    )
+    root_pids = [row.get("root_pid") for row in termination_rows]
+    sentinel_pid = process_safety.get("sentinel_pid")
+    if not (
+        len(renderer_pids) == len(set(renderer_pids)) == len(CROSS_RENDERER_PHASES)
+        and isinstance(terminations, list)
+        and len(terminations) == len(termination_rows)
+        and len(termination_rows) == len(root_pids) == len(CROSS_RENDERER_PHASES)
+        and all(type(pid) is int and pid > 0 for pid in root_pids)
+        and len(set(root_pids)) == len(CROSS_RENDERER_PHASES)
+        and set(root_pids) == set(renderer_pids)
+        and all(
+            row.get("exact_tree_terminated") is True
+            and row.get("endpoint_closed") is True
+            for row in termination_rows
+        )
+        and process_safety.get("exact_pid_tree_cleanup_only") is True
+        and process_safety.get("no_existing_candidate_attached") is True
+        and process_safety.get("sentinel_survived_candidate_cleanup") is True
+        and type(sentinel_pid) is int
+        and sentinel_pid > 0
+        and sentinel_pid not in set(renderer_pids)
+    ):
+        raise ValueError(
+            "cross renderer phase PIDs are not exactly bound to wrapper terminations"
+        )
+
+    seed_candidate = records_by_phase["unsaved_close_seed"]["payload"].get("candidate")
+    guard_candidate = records_by_phase["unsaved_close_guard"]["payload"].get("candidate")
+    seed_candidate = seed_candidate if isinstance(seed_candidate, dict) else {}
+    guard_candidate = guard_candidate if isinstance(guard_candidate, dict) else {}
+    if not (
+        type(seed_candidate.get("pid")) is int
+        and type(guard_candidate.get("pid")) is int
+        and guard_candidate.get("pid", 0) > 0
+        and guard_candidate.get("pid") == seed_candidate.get("pid")
+        and hash_matches(guard_candidate.get("sha256"), str(wrapper_sha))
+        and same_declared_path(guard_candidate.get("path"), wrapper_path)
+        and records_by_phase["unsaved_close_guard"]["payload"].get(
+            "cancel_kept_exact_pid_alive"
+        )
+        is True
+    ):
+        raise ValueError("native unsaved-close guard is not bound to its renderer seed session")
+
+    return [records_by_phase[phase] for phase in CROSS_PHASES]
+
+
 def report_bindings(outcome: dict[str, Any]) -> list[tuple[object, object, str]]:
     bindings: list[tuple[object, object, str]] = [
         (outcome.get("lifecycle"), outcome.get("lifecycle_sha256"), "lifecycle"),
@@ -367,7 +584,14 @@ def report_bindings(outcome: dict[str, Any]) -> list[tuple[object, object, str]]
 def driver_report_passed(payload: dict[str, Any]) -> bool:
     return (
         payload.get("target_release") == TARGET_RELEASE
-        and (payload.get("passed") is True or payload.get("status") in {"passed", "verified"})
+        and (
+            payload.get("passed") is True
+            or (
+                "passed" not in payload
+                and payload.get("status") in {"passed", "verified"}
+            )
+        )
+        and exact_empty_console_errors(payload)
     )
 
 
@@ -402,12 +626,31 @@ def discover_driver_reports(
                 payload = load_json(report_path)
                 suite_id = payload.get("suite_id")
                 schema_version = payload.get("schema_version")
-                if suite_id not in trusted_versions or schema_version != trusted_versions.get(suite_id):
+                if (
+                    suite_id not in trusted_versions
+                    or type(schema_version) is not int
+                    or schema_version != trusted_versions.get(suite_id)
+                ):
                     raise ValueError(
                         f"{role} suite/schema is not trusted: {suite_id!r}/{schema_version!r}"
                     )
                 if not driver_report_passed(payload):
-                    raise ValueError(f"{role} is not a passing 2.55 driver report")
+                    raise ValueError(
+                        f"{role} is not a passing 2.55 driver report with exact zero console errors"
+                    )
+                cross_phase_reports = (
+                    validate_cross_phase_reports(
+                        report_path,
+                        payload,
+                        evidence_root,
+                        expected_candidate_sha256=outcome["executable_sha256"],
+                        expected_candidate_path=outcome.get("executable"),
+                        expected_product_version=outcome["product_version"],
+                        expected_source_commit=outcome.get("build_source_commit"),
+                    )
+                    if suite_id == CROSS_WRAPPER_SUITE
+                    else []
+                )
                 seen.add(key)
                 records.append(
                     {
@@ -420,6 +663,7 @@ def discover_driver_reports(
                         "suite_id": suite_id,
                         "schema_version": schema_version,
                         "payload": payload,
+                        "cross_phase_reports": cross_phase_reports,
                     }
                 )
             except (OSError, ValueError, json.JSONDecodeError) as error:
@@ -534,7 +778,7 @@ def main() -> int:
 
         matrix = load_json(matrix_path)
         source_index = load_json(index_path)
-        manifest = load_json(manifest_path)
+        load_json(manifest_path)
         observation_schema = load_json(observation_schema_path)
         named_case_manifest = load_json(named_case_manifest_path)
         if not (
@@ -591,9 +835,31 @@ def main() -> int:
             candidate_report_path, outcomes, trusted_versions
         )
         failures.extend(driver_failures)
+        discovered_suites = {report["suite_id"] for report in driver_reports}
+        if discovered_suites != set(trusted_versions):
+            failures.append(
+                "trusted_driver_suite_set_mismatch:"
+                f"expected={sorted(trusted_versions)}:observed={sorted(discovered_suites)}"
+            )
         for report in driver_reports:
             if report["suite_id"] == "quickpls_v255_named_case_driver_v1" and report["payload"].get("sources", {}).get("manifest_sha256") != named_case_manifest_hash:
                 failures.append(f"named_case_driver_manifest_hash_mismatch:{report['candidate_name']}:{report['sha256']}")
+
+        staged_source_reports: dict[str, str] = {}
+        for report in driver_reports:
+            source_member = f"named-evidence/source-reports/{report['sha256']}.json"
+            if report["sha256"] not in staged_source_reports:
+                copy_new(report["path"], stage_member(staging, source_member))
+                staged_source_reports[report["sha256"]] = source_member
+            for phase_report in report["cross_phase_reports"]:
+                phase_member = (
+                    f"named-evidence/source-reports/{phase_report['sha256']}.json"
+                )
+                if phase_report["sha256"] not in staged_source_reports:
+                    copy_new(
+                        phase_report["path"], stage_member(staging, phase_member)
+                    )
+                    staged_source_reports[phase_report["sha256"]] = phase_member
         observations, observation_failures = observations_by_case(
             driver_reports, observation_field
         )
@@ -608,7 +874,6 @@ def main() -> int:
         used_observations: set[tuple[str, str]] = set()
         used_receipt_hashes: dict[str, str] = {}
         used_receipt_members: set[str] = set()
-        staged_source_reports: dict[str, str] = {}
 
         for ordinal, row in enumerate(expected, start=1):
             case_id = row["id"]
@@ -896,6 +1161,21 @@ def main() -> int:
                         "supplied_named_observations": len(
                             report["payload"].get(observation_field, []) or []
                         ),
+                        "phase_reports": [
+                            {
+                                "phase": phase_report["phase"],
+                                "member": staged_source_reports[
+                                    phase_report["sha256"]
+                                ],
+                                "sha256": phase_report["sha256"],
+                                "suite_id": phase_report["suite_id"],
+                                "schema_version": phase_report["schema_version"],
+                                "renderer_attached": phase_report[
+                                    "renderer_attached"
+                                ],
+                            }
+                            for phase_report in report["cross_phase_reports"]
+                        ],
                     }
                     for report in driver_reports
                 ],

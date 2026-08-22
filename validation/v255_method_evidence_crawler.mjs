@@ -29,6 +29,7 @@ const MATRIX_PATH = path.join(ROOT, "validation", "v255_method_evidence_matrix.j
 const ARCHIVE_INDEX_PATH = path.join(ROOT, "validation", "v255_frozen_result_archive_index.json");
 const BUNDLE_MANIFEST_PATH = path.join(ROOT, "validation", "v255_evidence_bundle_manifest.json");
 const REUSABLE_ARCHIVE_INVENTORY_PATH = path.join(ROOT, "validation", "v255_reusable_archive_inventory.json");
+const RENDERER_ERROR_SETTLE_MS = 250;
 const TEST_EVIDENCE_TYPES = new Set([
   "component", "domain", "service", "governance",
   "public_command_interaction", "component_domain_integration", "service_component_integration",
@@ -87,6 +88,24 @@ async function exists(file) {
 
 async function fileSha256(file) {
   return sha256(await fs.readFile(file));
+}
+
+function observeRendererErrors(page) {
+  const errors = [];
+  const onPageError = (error) => errors.push({ type: "pageerror", message: error instanceof Error ? error.message : String(error) });
+  const onConsole = (message) => {
+    if (message.type() === "error") errors.push({ type: "console", message: message.text() });
+  };
+  page.on("pageerror", onPageError);
+  page.on("console", onConsole);
+  return {
+    errors,
+    settle: () => page.waitForTimeout(RENDERER_ERROR_SETTLE_MS),
+    stop: () => {
+      page.off("pageerror", onPageError);
+      page.off("console", onConsole);
+    },
+  };
 }
 
 function jsonPointer(payload, pointer) {
@@ -636,6 +655,7 @@ async function runBrowserCrawler(args, matrix, archiveIndex, report, assertions)
   let browser;
   let preview;
   let offline;
+  let rendererErrors;
   try {
     let page;
     let origin;
@@ -647,29 +667,33 @@ async function runBrowserCrawler(args, matrix, archiveIndex, report, assertions)
       await waitForPreview(origin, preview.logs);
       browser = await chromium.launch({ headless: true });
       page = await browser.newPage({ viewport: { width: 1024, height: 700 }, deviceScaleFactor: 1 });
+      rendererErrors = observeRendererErrors(page);
       report.runtime = "production frontend preview";
       await page.goto(`${origin}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout: 45_000 });
     } else {
       const connection = await connectToSingleQuickPlsPage({ chromium, endpoint: args.endpoint });
       browser = connection.browser;
       page = connection.page;
+      rendererErrors = observeRendererErrors(page);
       offline = observeFunctionalOfflineRequests(page);
       report.runtime = "packaged Tauri WebView2 over isolated local CDP";
       origin = PACKAGED_TAURI_ORIGIN;
       await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout: 45_000 });
     }
-    const consoleErrors = [];
-    page.on("pageerror", (error) => consoleErrors.push({ type: "pageerror", message: error.message }));
-    page.on("console", (message) => { if (message.type() === "error") consoleErrors.push({ type: "console", message: message.text() }); });
     await runCalculateCaptures(page, { evidenceRoot: args.evidenceDir, matrix, report });
     await runSetupCrawler(page, { evidenceRoot: args.evidenceDir, matrix, report, assertions });
     await captureRepresentativeResult(page, { evidenceRoot: args.evidenceDir, report, origin });
     await captureViewportSupport(page, { evidenceRoot: args.evidenceDir, report });
-    report.console_errors = consoleErrors;
+    await rendererErrors.settle();
+    report.console_errors = [...rendererErrors.errors];
     report.offline = offline?.summary() ?? { passed: true, mode: "preview" };
-    assert(consoleErrors.length === 0, `Crawler observed console errors: ${JSON.stringify(consoleErrors)}`);
+    assert(report.console_errors.length === 0, `Crawler observed console errors: ${JSON.stringify(report.console_errors)}`);
     assert(report.offline.passed, `Packaged crawler accessed an external origin: ${JSON.stringify(report.offline)}`);
   } finally {
+    if (rendererErrors) {
+      report.console_errors = [...rendererErrors.errors];
+      rendererErrors.stop();
+    }
     offline?.stop();
     if (preview) await browser?.close().catch(() => undefined);
     if (preview) stopPreview(preview.server, Number(args.port ?? 57656));
@@ -707,6 +731,7 @@ const report = {
   serial: true,
   maximum_concurrent_calculations: 1,
   passed: false,
+  console_errors: [],
   matrix_checks: matrixChecks,
   setup_evidence_contract: setupContracts,
   sources: {

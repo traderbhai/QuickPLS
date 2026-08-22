@@ -47,6 +47,44 @@ MAX_SOURCE_REPORT_BYTES = 32 * 1024 * 1024
 MAX_BUNDLE_MEMBERS = 512
 MAX_BUNDLE_UNCOMPRESSED_BYTES = 1024 * 1024 * 1024
 MAX_COMPRESSION_RATIO = 200
+CROSS_WRAPPER_SUITE = "quickpls_v255_cross_method_candidate_wrapper_v1"
+CROSS_RENDERER_SUITE = "quickpls_v255_cross_method_candidate_driver_v1"
+CROSS_NATIVE_GUARD_SUITE = "quickpls_v255_windows_unsaved_close_guard_v1"
+CROSS_RENDERER_PHASES = (
+    "imports",
+    "exports",
+    "archives",
+    "legacy_reopen",
+    "autosave_seed",
+    "autosave_recover",
+    "unsaved_close_seed",
+    "dpi_process",
+)
+CROSS_PHASES = (*CROSS_RENDERER_PHASES[:-1], "unsaved_close_guard", "dpi_process")
+TRUSTED_DRIVER_SUITES = {
+    "quickpls_v255_live_calculation_lifecycle_smoke_v1": 1,
+    "quickpls_v255_method_evidence_crawler_v2": 2,
+    "quickpls_v255_frozen_archive_reopen_crawler_v1": 1,
+    "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1": 1,
+    "quickpls_v255_named_case_driver_v1": 1,
+    CROSS_WRAPPER_SUITE: 1,
+}
+EXPECTED_CANDIDATE_DRIVER_ROLE_SUITES = {
+    "installed": {
+        "lifecycle": "quickpls_v255_live_calculation_lifecycle_smoke_v1",
+        "method_evidence": "quickpls_v255_method_evidence_crawler_v2",
+        "named_evidence_driver_0": "quickpls_v255_named_case_driver_v1",
+    },
+    "portable": {
+        "lifecycle": "quickpls_v255_live_calculation_lifecycle_smoke_v1",
+        "method_evidence": "quickpls_v255_method_evidence_crawler_v2",
+        "frozen_archive_reopen": "quickpls_v255_frozen_archive_reopen_crawler_v1",
+        "posthoc_execute": "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1",
+        "posthoc_reopen": "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1",
+        "named_evidence_driver_0": "quickpls_v255_named_case_driver_v1",
+        "named_evidence_driver_1": CROSS_WRAPPER_SUITE,
+    },
+}
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -105,11 +143,350 @@ def validate_png_bytes(value: bytes) -> tuple[bool, int | None, int | None]:
     return False, None, None
 
 
+def exact_empty_console_errors(payload: object) -> bool:
+    return isinstance(payload, dict) and payload.get("console_errors") == []
+
+
+def exact_schema_version(payload: object, expected: object) -> bool:
+    return (
+        isinstance(payload, dict)
+        and type(expected) is int
+        and type(payload.get("schema_version")) is int
+        and payload.get("schema_version") == expected
+    )
+
+
+def hash_matches(declared: object, actual: object) -> bool:
+    return (
+        isinstance(declared, str)
+        and isinstance(actual, str)
+        and re.fullmatch(r"[0-9a-fA-F]{64}", declared) is not None
+        and re.fullmatch(r"[0-9a-fA-F]{64}", actual) is not None
+        and declared.casefold() == actual.casefold()
+    )
+
+
+def same_declared_path(left: object, right: object) -> bool:
+    if not isinstance(left, str) or not left or not isinstance(right, str) or not right:
+        return False
+    try:
+        return Path(left).resolve() == Path(right).resolve()
+    except (OSError, ValueError):
+        return False
+
+
+def exact_cross_phase_payloads(
+    wrapper: dict[str, Any],
+    records: object,
+    *,
+    expected_candidate_sha256: object,
+    expected_candidate_path: object,
+    expected_product_version: object,
+    expected_source_commit: object,
+) -> bool:
+    if not isinstance(records, list) or len(records) != len(CROSS_PHASES):
+        return False
+    if any(
+        not isinstance(record, dict)
+        or set(record)
+        != {
+            "phase",
+            "member",
+            "sha256",
+            "suite_id",
+            "schema_version",
+            "renderer_attached",
+            "payload",
+        }
+        for record in records
+    ):
+        return False
+    if any(
+        not isinstance(record.get("phase"), str)
+        or not isinstance(record.get("member"), str)
+        or not isinstance(record.get("sha256"), str)
+        for record in records
+    ):
+        return False
+    record_by_phase = {
+        record.get("phase"): record for record in records if isinstance(record, dict)
+    }
+    if (
+        len(record_by_phase) != len(CROSS_PHASES)
+        or set(record_by_phase) != set(CROSS_PHASES)
+        or len({record.get("member") for record in records}) != len(CROSS_PHASES)
+        or len({record.get("sha256") for record in records}) != len(CROSS_PHASES)
+    ):
+        return False
+
+    bindings = wrapper.get("phase_reports")
+    if not isinstance(bindings, list) or len(bindings) != len(CROSS_PHASES):
+        return False
+    if any(
+        not isinstance(binding, dict)
+        or set(binding) != {"phase", "path", "sha256"}
+        for binding in bindings
+    ):
+        return False
+    if any(
+        not isinstance(binding.get("phase"), str)
+        or not isinstance(binding.get("path"), str)
+        or not isinstance(binding.get("sha256"), str)
+        for binding in bindings
+    ):
+        return False
+    binding_by_phase = {
+        binding.get("phase"): binding
+        for binding in bindings
+        if isinstance(binding, dict)
+    }
+    if (
+        len(binding_by_phase) != len(CROSS_PHASES)
+        or set(binding_by_phase) != set(CROSS_PHASES)
+        or len({binding.get("path") for binding in bindings}) != len(CROSS_PHASES)
+        or len({str(binding.get("sha256")).casefold() for binding in bindings})
+        != len(CROSS_PHASES)
+    ):
+        return False
+
+    wrapper_candidate = wrapper.get("candidate")
+    wrapper_candidate = wrapper_candidate if isinstance(wrapper_candidate, dict) else {}
+    if not (
+        wrapper_candidate.get("role") == "portable"
+        and hash_matches(
+            wrapper_candidate.get("sha256"), expected_candidate_sha256
+        )
+        and same_declared_path(
+            wrapper_candidate.get("path"), expected_candidate_path
+        )
+        and wrapper_candidate.get("product_version") == expected_product_version
+        and wrapper.get("source_commit") == expected_source_commit
+    ):
+        return False
+    wrapper_sha = wrapper_candidate.get("sha256")
+    wrapper_path = wrapper_candidate.get("path")
+    renderer_pids: list[int] = []
+    for phase in CROSS_PHASES:
+        record = record_by_phase[phase]
+        phase_payload = record.get("payload")
+        expected_suite = (
+            CROSS_NATIVE_GUARD_SUITE
+            if phase == "unsaved_close_guard"
+            else CROSS_RENDERER_SUITE
+        )
+        if not (
+            hash_matches(binding_by_phase[phase].get("sha256"), record.get("sha256"))
+            and record.get("suite_id") == expected_suite
+            and exact_schema_version(record, 1)
+            and record.get("renderer_attached")
+            is (phase != "unsaved_close_guard")
+            and isinstance(phase_payload, dict)
+            and exact_schema_version(phase_payload, 1)
+            and phase_payload.get("suite_id") == expected_suite
+            and phase_payload.get("passed") is True
+            and phase_payload.get("failures") == []
+        ):
+            return False
+        if phase != "unsaved_close_guard":
+            phase_candidate = phase_payload.get("candidate")
+            phase_candidate = phase_candidate if isinstance(phase_candidate, dict) else {}
+            if not (
+                phase_payload.get("target_release") == TARGET_RELEASE
+                and phase_payload.get("phase") == phase
+                and exact_empty_console_errors(phase_payload)
+                and isinstance(phase_payload.get("offline"), dict)
+                and phase_payload["offline"].get("passed") is True
+                and type(phase_candidate.get("pid")) is int
+                and phase_candidate.get("pid", 0) > 0
+                and hash_matches(phase_candidate.get("sha256"), wrapper_sha)
+                and same_declared_path(phase_candidate.get("path"), wrapper_path)
+                and phase_payload.get("source_commit") == wrapper.get("source_commit")
+            ):
+                return False
+            renderer_pids.append(phase_candidate["pid"])
+
+    process_safety = wrapper.get("process_safety")
+    process_safety = process_safety if isinstance(process_safety, dict) else {}
+    terminations = process_safety.get("terminations")
+    termination_rows = (
+        [row for row in terminations if isinstance(row, dict)]
+        if isinstance(terminations, list)
+        else []
+    )
+    root_pids = [row.get("root_pid") for row in termination_rows]
+    sentinel_pid = process_safety.get("sentinel_pid")
+    if not (
+        len(renderer_pids) == len(set(renderer_pids)) == len(CROSS_RENDERER_PHASES)
+        and isinstance(terminations, list)
+        and len(terminations) == len(termination_rows)
+        and len(termination_rows) == len(root_pids) == len(CROSS_RENDERER_PHASES)
+        and all(type(pid) is int and pid > 0 for pid in root_pids)
+        and len(set(root_pids)) == len(CROSS_RENDERER_PHASES)
+        and set(root_pids) == set(renderer_pids)
+        and all(
+            row.get("exact_tree_terminated") is True
+            and row.get("endpoint_closed") is True
+            for row in termination_rows
+        )
+        and process_safety.get("exact_pid_tree_cleanup_only") is True
+        and process_safety.get("no_existing_candidate_attached") is True
+        and process_safety.get("sentinel_survived_candidate_cleanup") is True
+        and type(sentinel_pid) is int
+        and sentinel_pid > 0
+        and sentinel_pid not in set(renderer_pids)
+    ):
+        return False
+
+    seed_candidate = record_by_phase["unsaved_close_seed"]["payload"].get("candidate")
+    guard_payload = record_by_phase["unsaved_close_guard"]["payload"]
+    guard_candidate = guard_payload.get("candidate")
+    seed_candidate = seed_candidate if isinstance(seed_candidate, dict) else {}
+    guard_candidate = guard_candidate if isinstance(guard_candidate, dict) else {}
+    return (
+        type(seed_candidate.get("pid")) is int
+        and type(guard_candidate.get("pid")) is int
+        and guard_candidate.get("pid", 0) > 0
+        and guard_candidate.get("pid") == seed_candidate.get("pid")
+        and hash_matches(guard_candidate.get("sha256"), wrapper_sha)
+        and same_declared_path(guard_candidate.get("path"), wrapper_path)
+        and guard_payload.get("cancel_kept_exact_pid_alive") is True
+    )
+
+
 def driver_report_passed(payload: dict[str, Any]) -> bool:
     return (
         payload.get("target_release") == TARGET_RELEASE
-        and (payload.get("passed") is True or payload.get("status") in {"passed", "verified"})
+        and (
+            payload.get("passed") is True
+            or (
+                "passed" not in payload
+                and payload.get("status") in {"passed", "verified"}
+            )
+        )
+        and exact_empty_console_errors(payload)
     )
+
+
+def nested(value: object, *keys: str) -> object:
+    current = value
+    for key in keys:
+        if not isinstance(current, dict):
+            return None
+        current = current.get(key)
+    return current
+
+
+def candidate_driver_binding_inventory(
+    candidate_report: object,
+) -> list[tuple[str, str, str, str]] | None:
+    if not isinstance(candidate_report, dict):
+        return None
+    outcomes = candidate_report.get("outcomes")
+    if not isinstance(outcomes, list):
+        return None
+    inventory: list[tuple[str, str, str, str]] = []
+    seen_candidates: set[str] = set()
+    for outcome in outcomes:
+        if not isinstance(outcome, dict):
+            return None
+        candidate = outcome.get("name")
+        if (
+            not isinstance(candidate, str)
+            or candidate not in {"installed", "portable"}
+            or candidate in seen_candidates
+        ):
+            return None
+        seen_candidates.add(candidate)
+        expected_role_suites = EXPECTED_CANDIDATE_DRIVER_ROLE_SUITES[candidate]
+        fixed_bindings: dict[str, tuple[object, object]] = {
+            "lifecycle": (outcome.get("lifecycle"), outcome.get("lifecycle_sha256")),
+            "method_evidence": (
+                outcome.get("evidence"),
+                outcome.get("evidence_sha256"),
+            ),
+            "frozen_archive_reopen": (
+                nested(outcome, "frozen_archive_collection", "aggregate_receipt"),
+                nested(
+                    outcome,
+                    "frozen_archive_collection",
+                    "aggregate_receipt_sha256",
+                ),
+            ),
+            "posthoc_execute": (
+                nested(outcome, "posthoc_collection", "execute_receipt"),
+                nested(outcome, "posthoc_collection", "execute_receipt_sha256"),
+            ),
+            "posthoc_reopen": (
+                nested(outcome, "posthoc_collection", "reopen_receipt"),
+                nested(outcome, "posthoc_collection", "reopen_receipt_sha256"),
+            ),
+        }
+        for role, (path, declared_hash) in fixed_bindings.items():
+            if role not in expected_role_suites:
+                if path is not None or declared_hash is not None:
+                    return None
+                continue
+            if not (
+                isinstance(path, str)
+                and bool(path)
+                and isinstance(declared_hash, str)
+                and SHA256_RE.fullmatch(declared_hash) is not None
+            ):
+                return None
+            inventory.append(
+                (candidate, role, declared_hash, expected_role_suites[role])
+            )
+
+        additional = outcome.get("named_evidence_driver_reports")
+        expected_additional_count = sum(
+            role.startswith("named_evidence_driver_") for role in expected_role_suites
+        )
+        if not isinstance(additional, list) or len(additional) != expected_additional_count:
+            return None
+        for index, row in enumerate(additional):
+            if not isinstance(row, dict) or set(row) != {"path", "sha256"}:
+                return None
+            role = f"named_evidence_driver_{index}"
+            path = row.get("path")
+            declared_hash = row.get("sha256")
+            if not (
+                role in expected_role_suites
+                and isinstance(path, str)
+                and bool(path)
+                and isinstance(declared_hash, str)
+                and SHA256_RE.fullmatch(declared_hash) is not None
+            ):
+                return None
+            inventory.append(
+                (candidate, role, declared_hash, expected_role_suites[role])
+            )
+    return inventory if seen_candidates == {"installed", "portable"} else None
+
+
+def exact_candidate_driver_inventory(
+    candidate_report: object, trusted_rows: object
+) -> bool:
+    expected = candidate_driver_binding_inventory(candidate_report)
+    if expected is None or not isinstance(trusted_rows, list):
+        return False
+    observed: list[tuple[str, str, str, str]] = []
+    for row in trusted_rows:
+        if not isinstance(row, dict):
+            return False
+        candidate = row.get("candidate")
+        role = row.get("role")
+        declared_hash = row.get("sha256")
+        suite_id = row.get("suite_id")
+        if not (
+            isinstance(candidate, str)
+            and isinstance(role, str)
+            and isinstance(declared_hash, str)
+            and SHA256_RE.fullmatch(declared_hash) is not None
+            and isinstance(suite_id, str)
+        ):
+            return False
+        observed.append((candidate, role, declared_hash, suite_id))
+    return Counter(expected) == Counter(observed)
 
 
 def expected_operation(entry: dict[str, Any], contract: dict[str, Any]) -> str | None:
@@ -291,7 +668,7 @@ def validate_index_shape(
         for row in trusted_suites
         if isinstance(row, dict)
         and isinstance(row.get("suite_id"), str)
-        and isinstance(row.get("schema_version"), int)
+        and type(row.get("schema_version")) is int
     } if isinstance(trusted_suites, list) else {}
     expected_groups = {
         "imports",
@@ -319,10 +696,7 @@ def validate_index_shape(
         and candidate_selection.get("default") == "portable"
         and candidate_selection.get("overrides") == {"cross_method:packaged:installed candidate": "installed"}
         and len(trusted_suite_map) == len(trusted_suites or [])
-        and trusted_suite_map.get("quickpls_v255_live_calculation_lifecycle_smoke_v1") == 1
-        and trusted_suite_map.get("quickpls_v255_method_evidence_crawler_v2") == 2
-        and trusted_suite_map.get("quickpls_v255_frozen_archive_reopen_crawler_v1") == 1
-        and trusted_suite_map.get("quickpls_v255_named_case_driver_v1") == 1
+        and trusted_suite_map == TRUSTED_DRIVER_SUITES
         and exact_approved_waiver_contract(
             collector_contract.get("approved_release_waiver")
         )
@@ -686,7 +1060,157 @@ def verify_publication_entries(
             row.get("suite_id"): row.get("schema_version")
             for row in trusted_rows
             if isinstance(row, dict)
+            and isinstance(row.get("suite_id"), str)
+            and type(row.get("schema_version")) is int
         } if isinstance(trusted_rows, list) else {}
+
+        trusted_report_rows_raw = collection_provenance.get("trusted_driver_reports")
+        trusted_report_rows = (
+            [row for row in trusted_report_rows_raw if isinstance(row, dict)]
+            if isinstance(trusted_report_rows_raw, list)
+            else []
+        )
+        trusted_provenance_valid = (
+            isinstance(trusted_report_rows_raw, list)
+            and len(trusted_report_rows) == len(trusted_report_rows_raw)
+            and bool(trusted_report_rows)
+        )
+        trusted_report_members: list[str] = []
+        trusted_report_hashes: list[str] = []
+        trusted_report_suites: set[object] = set()
+        cross_wrapper_count = 0
+        for trusted_report in trusted_report_rows:
+            if set(trusted_report) != {
+                "candidate",
+                "role",
+                "suite_id",
+                "schema_version",
+                "member",
+                "sha256",
+                "supplied_named_observations",
+                "phase_reports",
+            }:
+                trusted_provenance_valid = False
+                continue
+            suite_id = trusted_report.get("suite_id")
+            member = trusted_report.get("member")
+            declared_hash = trusted_report.get("sha256")
+            report_bytes = read_member(member, MAX_SOURCE_REPORT_BYTES)
+            report_payload = (
+                parse_object(report_bytes)
+                if report_bytes is not None
+                and isinstance(declared_hash, str)
+                and sha256_bytes(report_bytes) == declared_hash
+                else None
+            )
+            observations = (
+                report_payload.get("named_evidence_observations")
+                if isinstance(report_payload, dict)
+                else None
+            )
+            if observations is None:
+                observations = []
+            if not (
+                trusted_report.get("candidate") in {"portable", "installed"}
+                and isinstance(trusted_report.get("role"), str)
+                and bool(trusted_report.get("role"))
+                and safe_zip_member(member, file_only=True)
+                and isinstance(declared_hash, str)
+                and SHA256_RE.fullmatch(declared_hash) is not None
+                and member in (declared_collection_members or [])
+                and suite_id in trusted_suites
+                and type(trusted_report.get("schema_version")) is int
+                and trusted_report.get("schema_version") == trusted_suites.get(suite_id)
+                and isinstance(report_payload, dict)
+                and report_payload.get("suite_id") == suite_id
+                and exact_schema_version(
+                    report_payload, trusted_report.get("schema_version")
+                )
+                and driver_report_passed(report_payload)
+                and isinstance(observations, list)
+                and trusted_report.get("supplied_named_observations")
+                == len(observations)
+            ):
+                trusted_provenance_valid = False
+                continue
+            trusted_report_members.append(str(member))
+            trusted_report_hashes.append(declared_hash)
+            trusted_report_suites.add(suite_id)
+            source_payload_cache[(str(member), declared_hash)] = report_payload
+
+            phase_refs = trusted_report.get("phase_reports")
+            if suite_id != CROSS_WRAPPER_SUITE:
+                if phase_refs != []:
+                    trusted_provenance_valid = False
+                continue
+            cross_wrapper_count += 1
+            phase_records: list[dict[str, Any]] = []
+            if not isinstance(phase_refs, list):
+                trusted_provenance_valid = False
+                continue
+            for phase_ref in phase_refs:
+                if not isinstance(phase_ref, dict) or set(phase_ref) != {
+                    "phase",
+                    "member",
+                    "sha256",
+                    "suite_id",
+                    "schema_version",
+                    "renderer_attached",
+                }:
+                    trusted_provenance_valid = False
+                    continue
+                phase_member = phase_ref.get("member")
+                phase_hash = phase_ref.get("sha256")
+                phase_bytes = read_member(phase_member, MAX_SOURCE_REPORT_BYTES)
+                phase_payload = (
+                    parse_object(phase_bytes)
+                    if phase_bytes is not None
+                    and isinstance(phase_hash, str)
+                    and sha256_bytes(phase_bytes) == phase_hash
+                    else None
+                )
+                if not (
+                    safe_zip_member(phase_member, file_only=True)
+                    and isinstance(phase_hash, str)
+                    and SHA256_RE.fullmatch(phase_hash) is not None
+                    and phase_member in (declared_collection_members or [])
+                    and isinstance(phase_payload, dict)
+                ):
+                    trusted_provenance_valid = False
+                    continue
+                phase_records.append({**phase_ref, "payload": phase_payload})
+            expected_outcome = candidate_outcomes.get(
+                str(trusted_report.get("candidate")), {}
+            )
+            if not exact_cross_phase_payloads(
+                report_payload,
+                phase_records,
+                expected_candidate_sha256=candidate_digests.get(
+                    str(trusted_report.get("candidate"))
+                ),
+                expected_candidate_path=expected_outcome.get("executable"),
+                expected_product_version=expected_outcome.get("product_version"),
+                expected_source_commit=candidate_source_commit,
+            ):
+                trusted_provenance_valid = False
+
+        checks[
+            "collector_provenance_binds_every_console_clean_trusted_driver_and_cross_phase"
+        ] = (
+            trusted_provenance_valid
+            and exact_candidate_driver_inventory(
+                candidate_payload, trusted_report_rows
+            )
+            and trusted_report_suites == set(trusted_suites)
+            and cross_wrapper_count == 1
+            and len(trusted_report_members) == len(set(trusted_report_members))
+            == len(trusted_report_rows)
+            and len(trusted_report_hashes) == len(set(trusted_report_hashes))
+            == len(trusted_report_rows)
+        )
+        provenance["trusted_driver_report_count"] = len(trusted_report_rows)
+        provenance["trusted_driver_suite_count"] = len(trusted_report_suites)
+        provenance["cross_phase_report_count"] = len(CROSS_PHASES)
 
         for entry in entries:
             case_id = str(entry.get("id", ""))
@@ -832,6 +1356,7 @@ def verify_publication_entries(
                 and isinstance(source_hash, str)
                 and SHA256_RE.fullmatch(source_hash) is not None
                 and source_ref.get("suite_id") in trusted_suites
+                and type(source_ref.get("schema_version")) is int
                 and source_ref.get("schema_version") == trusted_suites.get(source_ref.get("suite_id"))
                 and isinstance(source_pointer, str)
                 and source_pointer.startswith("/named_evidence_observations/")
@@ -851,7 +1376,9 @@ def verify_publication_entries(
             per_case["source_report_is_exact_passing_trusted_suite"] = (
                 isinstance(source_payload, dict)
                 and source_payload.get("suite_id") == source_ref.get("suite_id")
-                and source_payload.get("schema_version") == source_ref.get("schema_version")
+                and exact_schema_version(
+                    source_payload, source_ref.get("schema_version")
+                )
                 and driver_report_passed(source_payload)
             )
             per_case["generic_driver_binds_executed_named_case_manifest"] = (

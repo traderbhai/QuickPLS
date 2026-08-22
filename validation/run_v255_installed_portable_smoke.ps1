@@ -259,6 +259,16 @@ function Get-DiskSnapshot([string]$Label) {
 function Write-Utf8NoBom([string]$PathValue, [string]$TextValue) {
     [IO.File]::WriteAllText($PathValue, $TextValue, [Text.UTF8Encoding]::new($false))
 }
+function Test-ExactEmptyArrayProperty($Payload, [string]$PropertyName) {
+    if ($null -eq $Payload) { return $false }
+    $properties = @($Payload.PSObject.Properties | Where-Object { $_.Name -ceq $PropertyName })
+    if ($properties.Count -ne 1) { return $false }
+    $value = $properties[0].Value
+    return (
+        $value -is [array] -and
+        @($value).Count -eq 0
+    )
+}
 function Test-Cdp([string]$Endpoint) { try { $null = Invoke-RestMethod -Uri "$Endpoint/json/version" -TimeoutSec 1; return $true } catch { return $false } }
 function Wait-Cdp([string]$Endpoint, [bool]$Open) {
     $deadline = [DateTime]::UtcNow.AddSeconds(45)
@@ -435,7 +445,12 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         $process = $null
 
         $lifecycleReport = Get-Content -LiteralPath (Join-Path $lifecycleEvidence "v255_live_calculation_lifecycle_smoke.json") -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($lifecycleReport.passed -ne $true -or $lifecycleReport.complete -ne $true -or @($lifecycleReport.failures).Count -ne 0) { throw "$Name live lifecycle report is incomplete or failed." }
+        if (
+            $lifecycleReport.passed -ne $true -or
+            $lifecycleReport.complete -ne $true -or
+            -not (Test-ExactEmptyArrayProperty $lifecycleReport "failures") -or
+            -not (Test-ExactEmptyArrayProperty $lifecycleReport "console_errors")
+        ) { throw "$Name live lifecycle report is incomplete, failed, or lacks exact zero renderer errors." }
 
         $effectivePosthocSupplementRelative = $null
         $posthocCollection = $null
@@ -463,7 +478,15 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
             $posthocReopenReceipt = Join-Path $posthocEvidence "v255_posthoc_minimum_sample_reopen.json"
             $posthocExecute = Get-Content -LiteralPath $posthocExecuteReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
             $posthocReopen = Get-Content -LiteralPath $posthocReopenReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($posthocExecute.status -ne "passed" -or $posthocExecute.phase -ne "execute" -or $posthocReopen.status -ne "passed" -or $posthocReopen.phase -ne "reopen" -or $posthocReopen.same_result_identity -ne $true) { throw "Portable post-hoc minimum-sample receipts are incomplete." }
+            if (
+                $posthocExecute.status -ne "passed" -or
+                $posthocExecute.phase -ne "execute" -or
+                -not (Test-ExactEmptyArrayProperty $posthocExecute "console_errors") -or
+                $posthocReopen.status -ne "passed" -or
+                $posthocReopen.phase -ne "reopen" -or
+                $posthocReopen.same_result_identity -ne $true -or
+                -not (Test-ExactEmptyArrayProperty $posthocReopen "console_errors")
+            ) { throw "Portable post-hoc minimum-sample receipts are incomplete or lack exact zero renderer errors." }
             $posthocExecuteReceiptFull = [IO.Path]::GetFullPath($posthocExecuteReceipt)
             if (-not $posthocExecuteReceiptFull.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) {
                 throw "Generated post-hoc receipt must remain beneath the repository root."
@@ -478,8 +501,28 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         if ($evidenceBundle) { $crawlerArguments += @("--evidence-bundle", $evidenceBundle, "--evidence-extract-dir", $BundleExtractDirectory) }
         & $node $driver @crawlerArguments 1> $crawlerStdout 2> $crawlerStderr
         if ($LASTEXITCODE -ne 0) { throw "$Name packaged evidence crawler failed." }
+        $methodReportPath = Join-Path $crawlerEvidence "v255_method_evidence_crawler.json"
+        if (-not (Test-Path -LiteralPath $methodReportPath -PathType Leaf)) { throw "$Name method evidence crawler produced no report." }
+        $methodReport = Get-Content -LiteralPath $methodReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
+        if (
+            $methodReport.schema_version -ne 2 -or
+            $methodReport.suite_id -ne "quickpls_v255_method_evidence_crawler_v2" -or
+            $methodReport.passed -ne $true -or
+            -not (Test-ExactEmptyArrayProperty $methodReport "failures") -or
+            -not (Test-ExactEmptyArrayProperty $methodReport "console_errors") -or
+            $methodReport.offline.passed -ne $true
+        ) { throw "$Name method evidence report is incomplete, false, or lacks exact zero renderer errors." }
+
+        # Every attach-only evidence phase starts from a new wrapper-owned PID.
+        # The method crawler intentionally mutates smoke fixtures, so no later
+        # archive or named-case route may inherit that in-memory dirty workspace.
+        Stop-IsolatedCandidate $process $endpoint
+        $process = $null
+
         $frozenArchiveCollection = $null
         if ($Name -eq "portable") {
+            $process = Start-IsolatedCandidate $candidateFull $endpoint
+            $launchedPids.Add($process.Id)
             $frozenStaging = Join-Path $candidateEvidence "frozen_archive_reopen"
             $frozenStdout = Join-Path $candidateEvidence "frozen_archive_reopen.stdout.log"
             $frozenStderr = Join-Path $candidateEvidence "frozen_archive_reopen.stderr.log"
@@ -490,11 +533,20 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
             $aggregateReceipt = Join-Path $frozenStaging "receipts\v255-frozen-archive-reopen-crawler.json"
             if (-not (Test-Path -LiteralPath $aggregateReceipt -PathType Leaf)) { throw "Portable frozen-archive crawler produced no aggregate receipt." }
             $aggregate = Get-Content -LiteralPath $aggregateReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
-            if ($frozenExit -ne 0 -or $aggregate.status -ne "passed" -or @($aggregate.failures).Count -ne 0) { throw "Portable frozen-archive crawler failed with its freshly generated posthoc run." }
+            if (
+                $frozenExit -ne 0 -or
+                $aggregate.status -ne "passed" -or
+                -not (Test-ExactEmptyArrayProperty $aggregate "failures") -or
+                -not (Test-ExactEmptyArrayProperty $aggregate "console_errors")
+            ) { throw "Portable frozen-archive crawler failed with its freshly generated posthoc run or lacks exact zero renderer errors." }
             $frozenArchiveCollection = [ordered]@{ status = $aggregate.status; exit_code = $frozenExit; aggregate_receipt = $aggregateReceipt; aggregate_receipt_sha256 = (Get-FileHash -LiteralPath $aggregateReceipt -Algorithm SHA256).Hash.ToLowerInvariant(); staging = $frozenStaging; stdout = $frozenStdout; stderr = $frozenStderr; posthoc_supplement = $effectivePosthocSupplementRelative }
+            Stop-IsolatedCandidate $process $endpoint
+            $process = $null
         }
         if ($namedCaseManifestReady) {
-            if (-not $process -or $process.HasExited) { throw "$Name named-case evidence requires the live wrapper-owned candidate process." }
+            $process = Start-IsolatedCandidate $candidateFull $endpoint
+            $launchedPids.Add($process.Id)
+            if ($process.HasExited) { throw "$Name named-case evidence requires the live wrapper-owned candidate process." }
             $namedCaseCandidatePid = $process.Id
             & $node $namedCaseDriver --endpoint $endpoint --manifest $namedCaseManifest --index $namedEvidenceIndex --evidence-dir $namedCaseEvidence --candidate-name $Name --candidate-pid $namedCaseCandidatePid --candidate-path $candidateFull --python $python 1> $namedCaseStdout 2> $namedCaseStderr
             if ($LASTEXITCODE -ne 0) { throw "$Name named-case evidence driver failed." }
@@ -514,7 +566,8 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
                 $namedCaseReport.process_safety.candidate_executable_bound -ne $true -or
                 $namedCaseReport.status -ne "passed" -or
                 $namedCaseReport.passed -ne $true -or
-                @($namedCaseReport.failures).Count -ne 0 -or
+                -not (Test-ExactEmptyArrayProperty $namedCaseReport "failures") -or
+                -not (Test-ExactEmptyArrayProperty $namedCaseReport "console_errors") -or
                 $namedCaseReport.offline.passed -ne $true -or
                 @($namedCaseReport.cases).Count -ne $expectedNamedCaseCount -or
                 @($namedCaseReport.cases | Where-Object { $_.status -ne "passed" }).Count -ne 0 -or
@@ -523,9 +576,6 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
             $namedEvidenceDriverReports = @([ordered]@{ path = $namedCaseReportPath; sha256 = (Get-FileHash -LiteralPath $namedCaseReportPath -Algorithm SHA256).Hash.ToLowerInvariant() })
         }
         $lifecycleReportPath = Join-Path $lifecycleEvidence "v255_live_calculation_lifecycle_smoke.json"
-        $methodReportPath = Join-Path $crawlerEvidence "v255_method_evidence_crawler.json"
-        $methodReport = Get-Content -LiteralPath $methodReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
-        if ($methodReport.passed -ne $true -or @($methodReport.failures).Count -ne 0) { throw "$Name method evidence report is incomplete or false." }
         $candidateOutcome = [ordered]@{ name = $Name; candidate_kind = $(if ($Name -eq "installed") { "fresh_nsis_install" } else { "portable_release_artifact" }); executable = $candidateFull; executable_sha256 = $candidateHash; product_version = $productVersion; build_source_commit = $releasePayload.source.commit; source_tree = $releasePayload.source.tree; source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $(if ($Name -eq "installed") { $installReceipt } else { $null }); install_receipt_sha256 = $(if ($Name -eq "installed") { $installReceiptHash } else { $null }); launched_pids = @($launchedPids); status = "passed"; lifecycle = $lifecycleReportPath; lifecycle_sha256 = (Get-FileHash -LiteralPath $lifecycleReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); lifecycle_execute_stdout = $lifecycleExecuteStdout; lifecycle_execute_stderr = $lifecycleExecuteStderr; lifecycle_reopen_stdout = $lifecycleReopenStdout; lifecycle_reopen_stderr = $lifecycleReopenStderr; evidence = $methodReportPath; evidence_sha256 = (Get-FileHash -LiteralPath $methodReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); evidence_stdout = $crawlerStdout; evidence_stderr = $crawlerStderr; named_evidence_driver_reports = @($namedEvidenceDriverReports); named_evidence_driver_stdout = $(if ($namedCaseManifestReady) { $namedCaseStdout } else { $null }); named_evidence_driver_stderr = $(if ($namedCaseManifestReady) { $namedCaseStderr } else { $null }); posthoc_collection = $posthocCollection; frozen_archive_collection = $frozenArchiveCollection }
     } catch {
         $operationFailure = $_
@@ -634,7 +684,8 @@ try {
         $crossMethodReport.release_artifact_report.sha256 -ne $releaseArtifactReportHash -or
         $crossMethodReport.candidate.path -ne $portableFull -or
         $crossMethodReport.candidate.sha256 -ne $portableHash -or
-        @($crossMethodReport.failures).Count -ne 0 -or
+        -not (Test-ExactEmptyArrayProperty $crossMethodReport "failures") -or
+        -not (Test-ExactEmptyArrayProperty $crossMethodReport "console_errors") -or
         @($crossMethodReport.named_evidence_observations).Count -ne 17 -or
         $crossPassed.Count -ne (17 - $expectedWaiverCount) -or
         -not $waiverContractValid -or

@@ -30,6 +30,7 @@ const ARCHIVE_IDENTITY_HELPER = path.join(ROOT, "validation", "v255_named_archiv
 const TARGET_RELEASE = "2.55.0";
 const SUITE_ID = "quickpls_v255_named_case_driver_v1";
 const MANIFEST_SUITE_ID = "quickpls_v255_named_case_manifest_v1";
+const RENDERER_ERROR_SETTLE_MS = 250;
 const ALLOWED_VIEWS = new Set(["welcome", "home", "data", "models", "model", "runs", "results"]);
 const ALLOWED_STATES = new Set(["attached", "detached", "visible", "hidden"]);
 const SAFE_RESULT_ID = /^[A-Za-z0-9_.:-]+$/u;
@@ -56,6 +57,34 @@ async function readJson(file) {
 async function writeJsonNew(file, payload) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, `${JSON.stringify(payload, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+}
+function observeRendererErrors(page) {
+  const errors = [];
+  const onPageError = (error) => errors.push({ type: "pageerror", message: error instanceof Error ? error.message : String(error) });
+  const onConsole = (message) => {
+    if (message.type() === "error") errors.push({ type: "console", message: message.text() });
+  };
+  page.on("pageerror", onPageError);
+  page.on("console", onConsole);
+  return {
+    errors,
+    settle: () => page.waitForTimeout(RENDERER_ERROR_SETTLE_MS),
+    stop: () => {
+      page.off("pageerror", onPageError);
+      page.off("console", onConsole);
+    },
+  };
+}
+async function waitForOpenedProjectPath(page, archive, timeout) {
+  await page.waitForFunction((target) => {
+    const normalize = (value) => String(value ?? "")
+      .trim()
+      .replace(/\//g, "\\")
+      .replace(/\\+/g, "\\")
+      .toLocaleLowerCase("en-US");
+    const displayed = document.querySelector(".nd-document-context span")?.textContent ?? "";
+    return normalize(displayed) === normalize(target);
+  }, archive, { timeout });
 }
 async function runJsonProcess(executable, argumentsList, timeout) {
   return new Promise((resolve, reject) => {
@@ -255,6 +284,7 @@ function materializeManifestCase(entry) {
     return {
       ...entry,
       steps: [
+        { action: "goto_packaged" },
         { action: "open_archive", path: route.archive, expected_sha256: route.archive_sha256 },
         { action: "inspect_archive_identity", path: route.archive, result_id: route.result_id, table_id: route.table_id, expected: route.archive_identity },
         { action: "select_result", value: route.selected_result_value },
@@ -787,8 +817,11 @@ async function executeStep(page, step, context) {
       if (after !== before) break;
     }
     assert(after !== before, "Saving the Advanced Parameter Table revision did not change the archive bytes.");
+    await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
+    await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
     await page.evaluate((archive) => window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: archive } })), target);
     await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+    await waitForOpenedProjectPath(page, target, timeout);
     const snapshot = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
     assert(snapshot?.model?.advanced_equality_labels?.includes("V255Evidence"), "The saved Advanced Parameter Table equality label did not survive reopen.");
     context.activeFixture = null;
@@ -882,6 +915,7 @@ async function executeStep(page, step, context) {
     }
     await page.evaluate((target) => window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: target } })), archive);
     await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+    await waitForOpenedProjectPath(page, archive, timeout);
     context.activeFixture = null;
     context.lastCalculation = null;
     context.archiveIdentity = null;
@@ -1030,6 +1064,7 @@ async function main() {
     },
     serial: true,
     maximum_concurrent_cases: 1,
+    console_errors: [],
     named_evidence_observations: [],
     cases: [],
     offline: null,
@@ -1044,10 +1079,12 @@ async function main() {
     },
   };
   let offline;
+  let rendererErrors;
   try {
     const { selectedCases } = validateManifest(manifest, index, args.candidateName);
     const connection = await connectToSingleQuickPlsPage({ chromium, endpoint: args.endpoint });
     const page = connection.page;
+    rendererErrors = observeRendererErrors(page);
     offline = observeFunctionalOfflineRequests(page);
     const context = { timeout: args.timeout, evidenceDir: args.evidenceDir, screens, python: args.python, candidatePid: args.candidatePid, candidatePath: args.candidatePath };
     for (let ordinal = 1; ordinal <= selectedCases.length; ordinal += 1) {
@@ -1064,6 +1101,22 @@ async function main() {
   } catch (error) {
     report.failures.push(error instanceof Error ? error.message : String(error));
   } finally {
+    if (rendererErrors) {
+      try {
+        await rendererErrors.settle();
+      } catch (error) {
+        report.failures.push(`Renderer error observation did not settle: ${error instanceof Error ? error.message : String(error)}`);
+      }
+      report.console_errors = [...rendererErrors.errors];
+      rendererErrors.stop();
+    }
+    if (report.console_errors.length > 0) {
+      report.failures.push(`Renderer errors were observed: ${JSON.stringify(report.console_errors)}`);
+    }
+    if (report.failures.length > 0 || report.console_errors.length > 0) {
+      report.status = "failed";
+      report.passed = false;
+    }
     offline?.stop();
     report.completed_at = new Date().toISOString();
     await writeJsonNew(reportPath, report);

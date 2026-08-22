@@ -104,6 +104,7 @@ const report = await fs.stat(reportPath).then(async () => JSON.parse(await fs.re
   source_driver: "validation/v254_canvas_results_packaged_smoke.mjs",
   complete: false,
   passed: false,
+  console_errors: [],
   phases: {},
   named_evidence_observations: [],
   failures: [],
@@ -127,6 +128,7 @@ const phase = {
   child_stdout: outcome.stdout,
   child_stderr: outcome.stderr,
   candidate_process: { pid: candidatePid, executable: candidatePath },
+  console_errors: [],
   passed: false,
 };
 let underlying;
@@ -137,6 +139,9 @@ try {
   assert(underlying.schema_version === 1 && underlying.suite_id === "quickpls_v254_canvas_results_packaged_smoke_v1",
     `Underlying report has the wrong current Canvas identity: ${JSON.stringify({ schema_version: underlying.schema_version, suite_id: underlying.suite_id })}`);
   const underlyingPhase = underlying.phases?.[args.phase];
+  assert(Array.isArray(underlyingPhase?.consoleErrors), `Underlying ${args.phase} phase omitted its renderer-error array.`);
+  phase.console_errors = underlyingPhase.consoleErrors.map((entry) => ({ ...entry }));
+  assert(phase.console_errors.length === 0, `Underlying ${args.phase} phase observed renderer errors: ${JSON.stringify(phase.console_errors)}`);
   assert(underlyingPhase?.passed === true, `Underlying report did not pass ${args.phase}.`);
   if (args.phase === "execute") {
     assert(underlying.phases.execute?.checks?.terminalState === "completed", "Live calculation did not reach completed Results.");
@@ -153,8 +158,16 @@ try {
 }
 report.phases[args.phase] = phase;
 report.complete = report.phases.execute?.passed === true && report.phases.reopen?.passed === true;
-report.passed = report.complete;
-report.failures = Object.entries(report.phases).flatMap(([name, value]) => value.passed ? [] : [`${name}: ${value.failure ?? "phase did not pass"}`]);
+report.console_errors = Object.entries(report.phases).flatMap(([name, value]) => (
+  Array.isArray(value.console_errors)
+    ? value.console_errors
+    : [{ type: "evidence_contract", message: `${name} phase omitted delegated renderer-error evidence.` }]
+));
+report.passed = report.complete && report.console_errors.length === 0;
+report.failures = [
+  ...Object.entries(report.phases).flatMap(([name, value]) => value.passed ? [] : [`${name}: ${value.failure ?? "phase did not pass"}`]),
+  ...(report.console_errors.length > 0 ? [`Renderer errors were observed: ${JSON.stringify(report.console_errors)}`] : []),
+];
 report.named_evidence_observations = [];
 if (report.complete && underlying?.passed === true) {
   const progressScreenshot = screenshotById(underlying, "08-progress");

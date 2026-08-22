@@ -40,6 +40,7 @@ const RESULTS_ROOT = path.join(ROOT, "validation", "results");
 const DEFAULT_INVENTORY = path.join(ROOT, "validation", "v255_reusable_archive_inventory.json");
 const POSTHOC_KIND = "pls_posthoc_technical_minimum_sample_size";
 const TARGET_RELEASE = "2.55.0";
+const RENDERER_ERROR_SETTLE_MS = 250;
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -65,6 +66,23 @@ async function readJson(file) {
 async function writeJsonNew(file, payload) {
   await fs.mkdir(path.dirname(file), { recursive: true });
   await fs.writeFile(file, `${JSON.stringify(payload, null, 2)}\n`, { encoding: "utf8", flag: "wx" });
+}
+function observeRendererErrors(page) {
+  const errors = [];
+  const onPageError = (error) => errors.push({ type: "pageerror", message: error instanceof Error ? error.message : String(error) });
+  const onConsole = (message) => {
+    if (message.type() === "error") errors.push({ type: "console", message: message.text() });
+  };
+  page.on("pageerror", onPageError);
+  page.on("console", onConsole);
+  return {
+    errors,
+    settle: () => page.waitForTimeout(RENDERER_ERROR_SETTLE_MS),
+    stop: () => {
+      page.off("pageerror", onPageError);
+      page.off("console", onConsole);
+    },
+  };
 }
 
 async function fileSha256(file) {
@@ -197,7 +215,9 @@ async function loadPosthocSupplement(file) {
     && supplement?.suite_id === "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1"
     && supplement?.target_release === TARGET_RELEASE
     && supplement?.status === "passed"
-    && supplement?.phase === "execute", "Posthoc supplement must be the passed packaged execute receipt for QuickPLS 2.55.");
+    && supplement?.phase === "execute"
+    && Array.isArray(supplement?.console_errors)
+    && supplement.console_errors.length === 0, "Posthoc supplement must be the passed, renderer-clean packaged execute receipt for QuickPLS 2.55.");
   validateResultIdentity(supplement.result_identity, POSTHOC_KIND);
   assert(supplement.new_result_id === supplement.result_identity.value, "Posthoc supplement result identity does not bind its completed run.");
   assert(supplement.scientific_identity?.capability_cell === "qpls3.pls.posthoc_technical_minimum_sample_size"
@@ -218,6 +238,8 @@ async function loadPosthocSupplement(file) {
     && reopened?.target_release === TARGET_RELEASE
     && reopened?.status === "passed"
     && reopened?.phase === "reopen"
+    && Array.isArray(reopened?.console_errors)
+    && reopened.console_errors.length === 0
     && reopened?.same_result_identity === true
     && reopened?.same_archive_sha256 === true
     && reopened?.new_result_id === supplement.new_result_id
@@ -488,6 +510,7 @@ async function run() {
   const rows = validateInventory(inventory);
   const posthocSupplement = await loadPosthocSupplement(args["posthoc-supplement"]);
   const connection = await connectToIsolatedPackagedPage(args.endpoint, args.timeout);
+  const rendererErrors = observeRendererErrors(connection.page);
   const cache = new Map();
   const methodReceipts = [];
   const failures = [];
@@ -539,6 +562,27 @@ async function run() {
     }
   }
 
+  try {
+    await rendererErrors.settle();
+  } catch (error) {
+    failures.push({
+      method_kind: null,
+      status: "failed",
+      failure_code: "renderer_error_observation_did_not_settle",
+      failure: error instanceof Error ? error.message : String(error),
+    });
+  }
+  const consoleErrors = [...rendererErrors.errors];
+  rendererErrors.stop();
+  if (consoleErrors.length > 0) {
+    failures.push({
+      method_kind: null,
+      status: "failed",
+      failure_code: "renderer_console_error",
+      failure: `Renderer errors were observed: ${JSON.stringify(consoleErrors)}`,
+    });
+  }
+
   const stagedFiles = (await fs.readdir(staging, { recursive: true, withFileTypes: true }))
     .filter((entry) => entry.isFile())
     .map((entry) => slash(path.relative(staging, path.join(entry.parentPath ?? entry.path, entry.name))))
@@ -557,6 +601,7 @@ async function run() {
     serial: true,
     maximum_concurrent_archives: 1,
     method_receipts: methodReceipts,
+    console_errors: consoleErrors,
     named_evidence_observations: [],
     staged_members_before_manifest: stagedFiles,
     failures,

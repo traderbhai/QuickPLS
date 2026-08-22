@@ -47,6 +47,7 @@ const TARGET_RELEASE = "2.55.0";
 const TARGET_ARCHIVE_NAME = "quickpls-v255-posthoc-minimum-sample.qpls";
 const EXECUTE_RECEIPT_NAME = "v255_posthoc_minimum_sample_packaged_smoke.json";
 const REOPEN_RECEIPT_NAME = "v255_posthoc_minimum_sample_reopen.json";
+const RENDERER_ERROR_SETTLE_MS = 250;
 const EXPECTED_POSTHOC_RESULT_TITLE = "Post-hoc minimum sample size";
 const EXPECTED_POSTHOC_RUN_LABEL = /Post-hoc Technical Minimum Sample Size/i;
 
@@ -93,6 +94,23 @@ async function writeJsonNew(file, payload) {
     JSON.stringify(payload, null, 2) + "\n",
     { encoding: "utf8", flag: "wx" },
   );
+}
+function observeRendererErrors(page) {
+  const errors = [];
+  const onPageError = (error) => errors.push({ type: "pageerror", message: error instanceof Error ? error.message : String(error) });
+  const onConsole = (message) => {
+    if (message.type() === "error") errors.push({ type: "console", message: message.text() });
+  };
+  page.on("pageerror", onPageError);
+  page.on("console", onConsole);
+  return {
+    errors,
+    settle: () => page.waitForTimeout(RENDERER_ERROR_SETTLE_MS),
+    stop: () => {
+      page.off("pageerror", onPageError);
+      page.off("console", onConsole);
+    },
+  };
 }
 
 async function fileSha256(file) {
@@ -849,6 +867,7 @@ async function executeJourney(args, evidenceDir, inventoryAbsolute) {
 
   const connection = await connectToIsolatedPackagedPage(args.endpoint, args.timeout);
   const page = connection.page;
+  const rendererErrors = observeRendererErrors(page);
   await openArchive(page, targetArchive, args.timeout);
   const sourceBootstrapVerification = await verifySourceBootstrapResult(
     page,
@@ -899,6 +918,9 @@ async function executeJourney(args, evidenceDir, inventoryAbsolute) {
     resultScreenshot,
     save.screenshot,
   ];
+  await rendererErrors.settle();
+  const consoleErrors = [...rendererErrors.errors];
+  rendererErrors.stop();
   const executeReceiptRelative = repoRelative(executeReceipt);
   const archiveRelative = repoRelative(targetArchive);
   const receipt = {
@@ -908,8 +930,9 @@ async function executeJourney(args, evidenceDir, inventoryAbsolute) {
     target_release: TARGET_RELEASE,
     version_authority: "2.55.0 candidate after the consolidated source gate",
     generated_at: new Date().toISOString(),
-    status: "passed",
+    status: consoleErrors.length === 0 ? "passed" : "failed",
     phase: "execute",
+    console_errors: consoleErrors,
     named_evidence_observations: [],
     public_kind: POSTHOC_KIND,
     method_kind: POSTHOC_KIND,
@@ -989,6 +1012,7 @@ async function executeJourney(args, evidenceDir, inventoryAbsolute) {
     process_safety: processSafety(connection),
   };
   await writeJsonNew(executeReceipt, receipt);
+  assert(receipt.status === "passed", `Renderer errors were observed: ${JSON.stringify(receipt.console_errors)}`);
   return {
     passed: true,
     phase: "execute",
@@ -1011,8 +1035,10 @@ async function reopenJourney(args, evidenceDir) {
     executed?.schema === "quickpls.v255.posthoc_minimum_sample_packaged_smoke.v1"
       && executed.status === "passed"
       && executed.phase === "execute"
+      && Array.isArray(executed.console_errors)
+      && executed.console_errors.length === 0
       && executed.public_kind === POSTHOC_KIND,
-    "The execute receipt is not a passed posthoc packaged journey.",
+    "The execute receipt is not a passed, renderer-clean posthoc packaged journey.",
   );
   assert(
     executed.result_identity?.type === "schema5_result_run_id"
@@ -1039,6 +1065,7 @@ async function reopenJourney(args, evidenceDir) {
 
   const connection = await connectToIsolatedPackagedPage(args.endpoint, args.timeout);
   const page = connection.page;
+  const rendererErrors = observeRendererErrors(page);
   await openArchive(page, archive, args.timeout);
   const resultEvidence = await posthocResultEvidence(
     page,
@@ -1055,6 +1082,9 @@ async function reopenJourney(args, evidenceDir) {
     "05-reopen.png",
     "posthoc_fresh_reopen",
   );
+  await rendererErrors.settle();
+  const consoleErrors = [...rendererErrors.errors];
+  rendererErrors.stop();
   const executeReceiptArtifact = await fileArtifact(executeReceipt, "posthoc_execute_receipt");
   const receipt = {
     schema_version: 1,
@@ -1062,8 +1092,9 @@ async function reopenJourney(args, evidenceDir) {
     suite_id: "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1",
     target_release: TARGET_RELEASE,
     generated_at: new Date().toISOString(),
-    status: "passed",
+    status: consoleErrors.length === 0 ? "passed" : "failed",
     phase: "reopen",
+    console_errors: consoleErrors,
     named_evidence_observations: [],
     public_kind: POSTHOC_KIND,
     method_kind: POSTHOC_KIND,
@@ -1084,6 +1115,7 @@ async function reopenJourney(args, evidenceDir) {
     process_safety: processSafety(connection),
   };
   await writeJsonNew(reopenReceipt, receipt);
+  assert(receipt.status === "passed", `Renderer errors were observed: ${JSON.stringify(receipt.console_errors)}`);
   return {
     passed: true,
     phase: "reopen",
