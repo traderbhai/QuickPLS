@@ -118,7 +118,7 @@ const dataset = (): Dataset & { columnMetadata: ColumnMetadata[] } => {
       name, label: null, column_type: "numeric" as const,
       scale_type: name === "b" ? "binary" as const : "continuous" as const,
       missing_markers: [], theoretical_min: null, theoretical_max: null,
-      value_labels: name === "b" ? { "0": "Group 0", "1": "Group 1" } : {},
+      value_labels: (name === "b" ? { "0": "Group 0", "1": "Group 1" } : {}) as Record<string, string>,
     })),
   };
 };
