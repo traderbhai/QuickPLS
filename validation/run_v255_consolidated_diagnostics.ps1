@@ -56,17 +56,32 @@ if ($LASTEXITCODE -ne 0) { throw "Unable to inspect the source worktree before t
 if ($sourceStatus.Count -ne 0) { throw "The 2.55 consolidated gate requires a clean committed source worktree." }
 $gateScriptSha256 = (Get-FileHash -LiteralPath $PSCommandPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $packageVersionAtGate = (Get-Content -LiteralPath (Join-Path $root "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json).version
+function Resolve-HashableApplication([string]$Requested) {
+    $candidates = @(Get-Command $Requested -CommandType Application -All -ErrorAction Stop)
+    foreach ($candidate in $candidates) {
+        $source = [string]$candidate.Source
+        if ([string]::IsNullOrWhiteSpace($source)) { continue }
+        try {
+            $resolved = [IO.Path]::GetFullPath($source)
+            if (-not (Test-Path -LiteralPath $resolved -PathType Leaf)) { continue }
+            $hash = (Get-FileHash -LiteralPath $resolved -Algorithm SHA256 -ErrorAction Stop).Hash.ToLowerInvariant()
+            return [ordered]@{ requested = $Requested; resolved_path = $resolved; sha256 = $hash }
+        } catch {
+            # Windows App Execution Alias entries can be discoverable yet not
+            # directly readable. Continue to the next executable candidate.
+        }
+    }
+    throw "No readable, hashable application could be resolved for '$Requested'."
+}
 $resolvedTools = [ordered]@{}
 foreach ($entry in $canonicalToolInputs.GetEnumerator()) {
-    $command = Get-Command $entry.Value -CommandType Application -ErrorAction Stop
-    $resolvedTools[$entry.Key] = [ordered]@{
-        requested = $entry.Value
-        resolved_path = $command.Source
-        sha256 = if (Test-Path -LiteralPath $command.Source -PathType Leaf) {
-            (Get-FileHash -LiteralPath $command.Source -Algorithm SHA256).Hash.ToLowerInvariant()
-        } else { $null }
-    }
+    $resolvedTools[$entry.Key] = Resolve-HashableApplication $entry.Value
 }
+$CargoPath = [string]$resolvedTools.CargoPath.resolved_path
+$NpmPath = [string]$resolvedTools.NpmPath.resolved_path
+$NodePath = [string]$resolvedTools.NodePath.resolved_path
+$PythonPath = [string]$resolvedTools.PythonPath.resolved_path
+$GitPath = [string]$resolvedTools.GitPath.resolved_path
 
 function Write-Json([string]$Path, $Value) {
     [IO.File]::WriteAllText($Path, (($Value | ConvertTo-Json -Depth 32) + [Environment]::NewLine), $utf8)
@@ -111,10 +126,21 @@ function ConvertTo-ProcessArgumentLine([object[]]$Arguments) {
     }) -join " ")
 }
 
-function Stop-LaunchedProcessTree([int]$ProcessId) {
+function Stop-LaunchedProcessTree([Diagnostics.Process]$LaunchedProcess) {
     # This PID is returned by Start-Process in this invocation. /T therefore
     # reaches only children of the gate-owned launcher, never the user's app.
-    & taskkill.exe /PID $ProcessId /T /F 1>$null 2>$null
+    # Two bounded attempts avoid leaving a detached hidden test/build process
+    # while also preventing cleanup from blocking report publication forever.
+    $ownedPid = $LaunchedProcess.Id
+    $lastTaskkillExit = -1
+    foreach ($attempt in 1..2) {
+        & taskkill.exe /PID $ownedPid /T /F 1>$null 2>$null
+        $lastTaskkillExit = [int]$LASTEXITCODE
+        $exited = $LaunchedProcess.WaitForExit(5000)
+        if ($lastTaskkillExit -eq 0 -and $exited) { return }
+        if ($exited) { break }
+    }
+    throw "Unable to verify PID-scoped cleanup for launched PID $ownedPid (taskkill exit $lastTaskkillExit)."
 }
 
 function Invoke-Step($Step) {
@@ -125,6 +151,7 @@ function Invoke-Step($Step) {
     $exit = -1
     $errorText = $null
     $watcher = $null
+    $process = $null
     try {
         if (-not $Step.disk_intensive) {
             & $Step.executable @($Step.arguments) 1> $stdout 2> $stderr
@@ -150,8 +177,8 @@ function Invoke-Step($Step) {
                 if ($breaches.Count -gt 0) {
                     $watcher.stopped_for_low_disk = $true
                     $watcher.emergency_breaches = @($breaches | ForEach-Object { $_.Key })
-                    Stop-LaunchedProcessTree $process.Id
                     $errorText = "emergency_disk_floor_reached: $($watcher.emergency_breaches -join ',') must remain above $EmergencyFreeGiB GiB"
+                    Stop-LaunchedProcessTree $process
                     break
                 }
                 Start-Sleep -Milliseconds $DiskWatchIntervalMilliseconds
@@ -161,9 +188,34 @@ function Invoke-Step($Step) {
             $exit = if ($watcher.stopped_for_low_disk) { -1 } else { $process.ExitCode }
         }
     } catch {
-        $errorText = $_.Exception.Message
-        [IO.File]::AppendAllText($stderr, "launch failure: $errorText$([Environment]::NewLine)", $utf8)
-    } finally { $timer.Stop() }
+        $caughtError = $_.Exception.Message
+        $errorText = if ($errorText) { "$errorText; $caughtError" } else { $caughtError }
+        [IO.File]::AppendAllText($stderr, "step failure: $caughtError$([Environment]::NewLine)", $utf8)
+    } finally {
+        if ($null -ne $process) {
+            $stillRunning = $false
+            try {
+                $process.Refresh()
+                $stillRunning = -not $process.HasExited
+            } catch {
+                $cleanupInspectionError = $_.Exception.Message
+                $errorText = if ($errorText) { "$errorText; process_cleanup_inspection_failed: $cleanupInspectionError" } else { "process_cleanup_inspection_failed: $cleanupInspectionError" }
+                $exit = -1
+                [IO.File]::AppendAllText($stderr, "process cleanup inspection failure: $cleanupInspectionError$([Environment]::NewLine)", $utf8)
+            }
+            if ($stillRunning) {
+                try {
+                    Stop-LaunchedProcessTree $process
+                } catch {
+                    $cleanupError = $_.Exception.Message
+                    $errorText = if ($errorText) { "$errorText; process_cleanup_failed: $cleanupError" } else { "process_cleanup_failed: $cleanupError" }
+                    $exit = -1
+                    [IO.File]::AppendAllText($stderr, "process cleanup failure: $cleanupError$([Environment]::NewLine)", $utf8)
+                }
+            }
+        }
+        $timer.Stop()
+    }
     [ordered]@{
         id = $Step.id; description = $Step.description
         executable = $Step.executable; arguments = @($Step.arguments)

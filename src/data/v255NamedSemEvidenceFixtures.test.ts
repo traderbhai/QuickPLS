@@ -8,6 +8,29 @@ const cases: V255NamedSemFixture[] = [
   "hoc_rr", "hoc_rf", "hoc_fr", "hoc_ff", "cfa", "recursive_sem",
 ];
 
+const minimumCovarianceCholeskyPivot = (values: number[][]) => {
+  const means = values[0].map((_, column) => values.reduce((sum, row) => sum + row[column], 0) / values.length);
+  const covariance = means.map((_, row) => means.map((__, column) => values.reduce(
+    (sum, valuesRow) => sum + (valuesRow[row] - means[row]) * (valuesRow[column] - means[column]),
+    0,
+  ) / values.length));
+  const lower = covariance.map((row) => row.map(() => 0));
+  let minimumPivot = Number.POSITIVE_INFINITY;
+  for (let row = 0; row < covariance.length; row += 1) {
+    for (let column = 0; column <= row; column += 1) {
+      const adjusted = covariance[row][column] - Array.from({ length: column }, (_, index) => lower[row][index] * lower[column][index])
+        .reduce((sum, value) => sum + value, 0);
+      if (row === column) {
+        minimumPivot = Math.min(minimumPivot, adjusted);
+        lower[row][column] = Math.sqrt(Math.max(0, adjusted));
+      } else {
+        lower[row][column] = adjusted / lower[column][column];
+      }
+    }
+  }
+  return minimumPivot;
+};
+
 describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
   it.each(cases)("builds deterministic, result-free %s authority input", (fixture) => {
     const first = v255NamedSemEvidenceFixture(fixture);
@@ -25,14 +48,30 @@ describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
     expect(v255NamedSemEvidenceFixture("parallel_mediation").edges).toHaveLength(5);
     expect(v255NamedSemEvidenceFixture("serial_mediation").edges.map((edge) => edge.id)).toContain("path:m1-m2");
     expect(v255NamedSemEvidenceFixture("simultaneous_two_way").nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(2);
-    expect(v255NamedSemEvidenceFixture("three_way").nodes.filter((node) => node.data.semantic === "interaction")).toHaveLength(4);
+    const threeWayInteractions = v255NamedSemEvidenceFixture("three_way").nodes.filter((node) => node.data.semantic === "interaction");
+    expect(threeWayInteractions).toHaveLength(4);
+    expect(threeWayInteractions.find((node) => node.id === "w-z-y")?.data.interaction?.focalRelationId).toBe("path:w-y");
     expect(v255NamedSemEvidenceFixture("moderated_mediation_first").nodes.find((node) => node.data.semantic === "interaction")?.data.interaction?.focalRelationId).toBe("path:x-m1");
     expect(v255NamedSemEvidenceFixture("moderated_mediation_second").nodes.find((node) => node.data.semantic === "interaction")?.data.interaction?.focalRelationId).toBe("path:m1-y");
     expect(v255NamedSemEvidenceFixture("binary_moderation").dataset.columnMetadata.find((column) => column.name === "b")?.scale_type).toBe("binary");
     expect(["hoc_rr", "hoc_rf", "hoc_fr", "hoc_ff"].map((fixture) => v255NamedSemEvidenceFixture(fixture as V255NamedSemFixture).nodes.find((node) => node.data.semantic === "higher_order")?.data.higherOrder?.measurementType)).toEqual([
       "reflective_reflective", "reflective_formative", "formative_reflective", "formative_formative",
     ]);
+    expect(["hoc_rr", "hoc_rf", "hoc_fr", "hoc_ff"].map((fixture) => {
+      const nodes = v255NamedSemEvidenceFixture(fixture as V255NamedSemFixture).nodes;
+      const hoc = nodes.find((node) => node.data.semantic === "higher_order");
+      return [nodes.find((node) => node.id === "c1")?.data.mode, hoc?.data.mode];
+    })).toEqual([
+      ["reflective", "reflective"], ["reflective", "formative"],
+      ["formative", "reflective"], ["formative", "formative"],
+    ]);
     expect(v255NamedSemEvidenceFixture("cfa").edges).toHaveLength(0);
     expect(v255NamedSemEvidenceFixture("recursive_sem").edges).toHaveLength(2);
+  });
+
+  it("provides a strictly positive-definite manifest covariance for CB-SEM evidence", () => {
+    const columns = ["x1", "x2", "x3", "m11", "m12", "m13", "y1", "y2", "y3"];
+    const rows = v255NamedSemEvidenceFixture("cfa").dataset.rows.map((row) => columns.map((column) => Number(row[column])));
+    expect(minimumCovarianceCholeskyPivot(rows)).toBeGreaterThan(1e-8);
   });
 });

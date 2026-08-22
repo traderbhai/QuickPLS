@@ -706,6 +706,34 @@ def resolved_declared_path(declared: object) -> Path | None:
         return None
 
 
+def canonical_consolidated_step_executable(
+    report: dict[str, object], declared: object
+) -> object:
+    if not isinstance(declared, str):
+        return declared
+    policy = report.get("policy", {})
+    tools = policy.get("tools", {}) if isinstance(policy, dict) else {}
+    if not isinstance(tools, dict):
+        return declared
+    for key, requested in CANONICAL_TOOL_INPUTS.items():
+        declaration = tools.get(key)
+        if (
+            not isinstance(declaration, dict)
+            or set(declaration) != {"requested", "resolved_path", "sha256"}
+            or declaration.get("requested") != requested
+            or declaration.get("resolved_path") != declared
+            or not is_sha256(declaration.get("sha256"))
+        ):
+            continue
+        try:
+            resolved = Path(declared).resolve(strict=True)
+        except OSError:
+            continue
+        if resolved.is_file() and sha256_path(resolved) == declaration.get("sha256"):
+            return requested
+    return declared
+
+
 def normalized_step_contract(
     report_path: Path, report: dict[str, object]
 ) -> list[tuple[object, ...]]:
@@ -719,7 +747,14 @@ def normalized_step_contract(
             for value in raw.get("arguments", [])
         )
         result.append(
-            (raw.get("id"), raw.get("description"), raw.get("executable"), arguments)
+            (
+                raw.get("id"),
+                raw.get("description"),
+                canonical_consolidated_step_executable(
+                    report, raw.get("executable")
+                ),
+                arguments,
+            )
         )
     return result
 

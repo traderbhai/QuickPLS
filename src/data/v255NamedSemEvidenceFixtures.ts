@@ -83,21 +83,26 @@ const values = (index: number) => {
   return { x, w, z, b, m1, m2, c1, c2, y, noise };
 };
 
+const indicatorResidual = (index: number, harmonic: number) =>
+  Math.sin(index * (0.101 + harmonic * 0.017) + harmonic * 0.41) * 0.018
+  + Math.cos(index * (0.067 + harmonic * 0.013) + harmonic * 0.29) * 0.011;
+
 const columns = ["x1", "x2", "x3", "m11", "m12", "m13", "m21", "m22", "w1", "w2", "z1", "z2", "b", "c11", "c12", "c21", "c22", "y1", "y2", "y3"];
 
 const dataset = (): Dataset => {
   const rows = Array.from({ length: 360 }, (_, offset) => {
-    const row = values(offset + 1);
+    const index = offset + 1;
+    const row = values(index);
     return {
-      x1: row.x, x2: row.x * 0.91 + row.noise * 0.11, x3: row.x * 0.86 - row.noise * 0.09,
-      m11: row.m1, m12: row.m1 * 0.92 - row.noise * 0.08, m13: row.m1 * 0.87 + row.noise * 0.12,
+      x1: row.x, x2: row.x * 0.91 + row.noise * 0.11 + indicatorResidual(index, 1), x3: row.x * 0.86 - row.noise * 0.09 + indicatorResidual(index, 2),
+      m11: row.m1, m12: row.m1 * 0.92 - row.noise * 0.08 + indicatorResidual(index, 3), m13: row.m1 * 0.87 + row.noise * 0.12 + indicatorResidual(index, 4),
       m21: row.m2, m22: row.m2 * 0.90 + row.noise * 0.10,
       w1: row.w, w2: row.w * 0.89 - row.noise * 0.09,
       z1: row.z, z2: row.z * 0.90 + row.noise * 0.08,
       b: row.b,
       c11: row.c1, c12: row.c1 * 0.91 + row.noise * 0.09,
       c21: row.c2, c22: row.c2 * 0.92 - row.noise * 0.08,
-      y1: row.y, y2: row.y * 0.93 + row.noise * 0.07, y3: row.y * 0.88 - row.noise * 0.10,
+      y1: row.y, y2: row.y * 0.93 + row.noise * 0.07 + indicatorResidual(index, 5), y3: row.y * 0.88 - row.noise * 0.10 + indicatorResidual(index, 6),
     };
   });
   return {
@@ -176,7 +181,7 @@ export function v255NamedSemEvidenceFixture(fixture: V255NamedSemFixture) {
   } else if (fixture === "three_way") {
     const terms = [
       interaction("x-w-y", ["x", "w"], "path:x-y", "y", 40), interaction("x-z-y", ["x", "z"], "path:x-y", "y", 150),
-      interaction("w-z-y", ["w", "z"], "path:x-y", "y", 260), interaction("x-w-z-y", ["x", "w", "z"], "path:x-y", "y", 370),
+      interaction("w-z-y", ["w", "z"], "path:w-y", "y", 260), interaction("x-w-z-y", ["x", "w", "z"], "path:x-y", "y", 370),
     ];
     nodes = [n.x, n.w, n.z, n.y, ...terms];
     edges = [edge("path:x-y", "x", "y"), edge("path:w-y", "w", "y"), edge("path:z-y", "z", "y"), ...terms.map((term) => edge(`path:${term.id}-y`, term.id, "y", true))];
@@ -189,8 +194,8 @@ export function v255NamedSemEvidenceFixture(fixture: V255NamedSemFixture) {
     edges = [edge("path:x-m1", "x", "m1"), edge("path:m1-y", "m1", "y"), edge("path:x-y", "x", "y"), edge(`path:w-${first ? "m1" : "y"}`, "w", first ? "m1" : "y"), edge(`path:${term.id}-${first ? "m1" : "y"}`, term.id, first ? "m1" : "y", true)];
   } else if (fixture.startsWith("hoc_")) {
     const type = fixture.slice(4).toUpperCase();
-    const componentMode: ConstructData["mode"] = type.charAt(1) === "F" ? "formative" : "reflective";
-    const hocMode: ConstructData["mode"] = type.charAt(0) === "F" ? "formative" : "reflective";
+    const componentMode: ConstructData["mode"] = type.charAt(0) === "F" ? "formative" : "reflective";
+    const hocMode: ConstructData["mode"] = type.charAt(1) === "F" ? "formative" : "reflective";
     const c1 = measured("c1", "Component 1", ["c11", "c12"], { x: 40, y: 120 }, componentMode);
     const c2 = measured("c2", "Component 2", ["c21", "c22"], { x: 40, y: 380 }, componentMode);
     const hoc: Node<ConstructData> = { id: "hoc", type: "construct", position: { x: 350, y: 250 }, data: { label: `Service Quality ${type}`, shortName: `SQ${type}`, mode: hocMode, indicators: [], semantic: "higher_order", higherOrder: { id: `hoc:${type.toLowerCase()}`, components: ["c1", "c2"], method: "two_stage", canonicalApproach: "disjoint_two_stage", measurementType: ({ RR: "reflective_reflective", RF: "reflective_formative", FR: "formative_reflective", FF: "formative_formative" } as const)[type as "RR" | "RF" | "FR" | "FF"], stage_one_recipe: null } } };
