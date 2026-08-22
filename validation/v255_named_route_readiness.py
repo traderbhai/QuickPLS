@@ -18,6 +18,12 @@ import sys
 import zipfile
 from typing import Any
 
+from v255_release_waiver import (
+    DPI_WAIVER_CASE_ID,
+    DPI_WAIVER_MANIFEST_DECLARATION,
+    exact_approved_waiver_contract,
+)
+
 
 SUITE_ID = "quickpls_v255_named_route_readiness_v1"
 TARGET_RELEASE = "2.55.0"
@@ -252,6 +258,7 @@ def main() -> int:
     require(len(index_ids) == 55 and set(index_ids) == frozen_ids and len(set(index_ids)) == 55, "Named index is not the exact frozen 55-case set")
     trusted = {(row.get("schema_version"), row.get("suite_id")) for row in index.get("collector_contract", {}).get("trusted_driver_suites", [])}
     require(TRUSTED_GENERIC_SUITE in trusted and TRUSTED_CROSS_SUITE in trusted, "Named index does not trust both exact schema-1 candidate suites")
+    require(exact_approved_waiver_contract(index.get("collector_contract", {}).get("approved_release_waiver")), "Named index lacks the exact product-owner DPI waiver authority")
     require(manifest.get("schema_version") == 1 and manifest.get("suite_id") == "quickpls_v255_named_case_manifest_v1" and manifest.get("target_release") == TARGET_RELEASE, "Named manifest identity is invalid")
     require(manifest.get("status") == "ready" and manifest.get("coverage_status") == "complete" and manifest.get("pending_cases") == [], "Named manifest is not zero-pending and executable")
     fixed = manifest.get("supplied_by_fixed_drivers")
@@ -264,6 +271,11 @@ def main() -> int:
     cross_driver_ids = {entry.get("id") for entry in cross_manifest.get("cases", [])}
     require(cross_manifest.get("schema_version") == 1 and cross_manifest.get("suite_id") == "quickpls_v255_cross_method_case_manifest_v1" and len(cross_driver_ids) == 17, "Cross-method wrapper manifest identity/count is invalid")
     require(set(fixed) == BASE_FIXED | cross_driver_ids and cross_driver_ids <= cross_ids, "Fixed-driver partition is not the exact base-eight plus cross-wrapper seventeen")
+    for entry in cross_manifest.get("cases", []):
+        if entry.get("id") == DPI_WAIVER_CASE_ID:
+            require({"case_id": DPI_WAIVER_CASE_ID, "status": "waived", **entry.get("approved_waiver", {})} == DPI_WAIVER_MANIFEST_DECLARATION, "Cross-method manifest lacks the exact product-owner DPI waiver authority")
+        else:
+            require(entry.get("approved_waiver") is None, "Only the exact DPI case may declare an approved waiver")
     generic_cross = [entry for entry in cases if str(entry.get("id", "")).startswith("cross_method:")]
     require(len(generic_cross) == 4, "Generic named driver must own exactly four cross-method UI cases")
     for entry in generic_cross:
@@ -291,7 +303,7 @@ def main() -> int:
     for token in ("archive_result", "fresh_sem_result", "fresh_cfa_bootstrap_result", "exercise_advanced_parameter_revision", "save_and_reopen_case_revision", "expected_sha256", "named_evidence_observations", "candidate-pid", "candidate-path", "--owner-pid", "--owner-executable", "candidate_process"):
         require(token in driver_text, f"Named driver lacks required fail-closed implementation token: {token}")
     wrapper_text = required_sources[3].read_text(encoding="utf-8")
-    for token in ("--candidate-pid", "--candidate-path", "candidate_process.pid", "candidate_process.executable_sha256", "candidate_pid_bound", "candidate_executable_bound"):
+    for token in ("--candidate-pid", "--candidate-path", "candidate_process.pid", "candidate_process.executable_sha256", "candidate_pid_bound", "candidate_executable_bound", "WaiveActualWindows200PercentScaling"):
         require(token in wrapper_text, f"Packaged wrapper lacks required named-driver process binding: {token}")
     if args.require_git_tracked:
         untracked = sorted(path for path, state in source_states.items() if state != "tracked")

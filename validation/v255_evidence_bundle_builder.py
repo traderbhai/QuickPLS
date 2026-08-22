@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 """Fail-closed deterministic QuickPLS 2.55 evidence-bundle assembler.
 
 This tool does not collect evidence.  It accepts only already passing named and
@@ -7,6 +5,8 @@ frozen crawler outputs, derives the frozen index from parsed receipts, verifies
 every staged byte, and writes new proposal files plus a new ZIP.  It never
 overwrites an input or output.
 """
+
+from __future__ import annotations
 
 import argparse
 import copy
@@ -16,6 +16,14 @@ import stat
 import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+from v255_release_waiver import (
+    DPI_WAIVER_MANIFEST_DECLARATION,
+    exact_case_waiver_receipt_matches_observation,
+    exact_cross_report_waiver_binding,
+    exact_population_status,
+    exact_release_waiver_matches_observation,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = "2.55.0"
@@ -38,6 +46,32 @@ def load(path: Path) -> dict[str, Any]:
 
 def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def canonical_digest(value: Any) -> str:
+    payload = json.dumps(
+        value, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def pointer_value(value: Any, pointer: object) -> Any:
+    if not isinstance(pointer, str) or not pointer.startswith("/"):
+        fail(f"invalid JSON pointer: {pointer!r}")
+    current = value
+    for raw_token in pointer.split("/")[1:]:
+        token = raw_token.replace("~1", "/").replace("~0", "~")
+        if isinstance(current, dict):
+            if token not in current:
+                fail(f"JSON pointer does not resolve: {pointer}")
+            current = current[token]
+        elif isinstance(current, list):
+            if not token.isdigit() or int(token) >= len(current):
+                fail(f"JSON pointer does not resolve: {pointer}")
+            current = current[int(token)]
+        else:
+            fail(f"JSON pointer does not resolve: {pointer}")
+    return current
 
 
 def safe(name: object) -> bool:
@@ -153,8 +187,23 @@ def main() -> int:
     output.mkdir(parents=True, exist_ok=False)
     collector = load(args.named_collector_report.resolve())
     named_index = load(args.named_collected_index.resolve())
-    if not (collector.get("schema_version") == 1 and collector.get("suite_id") == COLLECTOR_SUITE and collector.get("target_release") == TARGET and collector.get("passed") is True and collector.get("status") == "passed" and collector.get("summary", {}).get("collected") == 55 and named_index.get("status") == "verified" and len(named_index.get("entries", [])) == 55):
-        fail("named collector/index are not a passing fully verified 55-case collection")
+    summary = collector.get("summary", {})
+    entries = named_index.get("entries", [])
+    normal_collection = (
+        collector.get("status") == "passed"
+        and summary.get("verified") == 55
+        and summary.get("waived") == 0
+        and named_index.get("status") == "verified"
+        and all(isinstance(entry, dict) and entry.get("status") == "verified" for entry in entries)
+    )
+    waived_collection = (
+        collector.get("status") == "passed_with_waiver"
+        and summary.get("verified") == 54
+        and summary.get("waived") == 1
+        and exact_population_status(entries, named_index.get("status"))
+    )
+    if not (collector.get("schema_version") == 1 and collector.get("suite_id") == COLLECTOR_SUITE and collector.get("target_release") == TARGET and collector.get("passed") is True and summary.get("collected") == 55 and len(entries) == 55 and (normal_collection or waived_collection)):
+        fail("named collector/index are not an exact 55-case collection with zero waivers or the one approved DPI waiver")
     named_members = collector.get("bundle_members")
     if not isinstance(named_members, list) or len(named_members) != len(set(named_members)):
         fail("named collector has no unique exact member inventory")
@@ -163,6 +212,59 @@ def main() -> int:
     expected_named_files = set(named_members) | {args.named_collected_index.resolve().relative_to(named_root).as_posix()}
     if files_below(named_root) != expected_named_files:
         fail("named staging contains missing or undeclared files")
+
+    candidate_member = collector.get("sources", {}).get("candidate_report_member")
+    candidate_path = member_path(named_root, candidate_member)
+    candidate = load(candidate_path)
+    candidate_hash = collector.get("sources", {}).get("candidate_report_sha256")
+    if not isinstance(candidate_hash, str) or digest(candidate_path) != candidate_hash:
+        fail("named collector does not hash-bind its candidate report")
+    if waived_collection:
+        waived_entries = [
+            entry
+            for entry in entries
+            if isinstance(entry, dict) and entry.get("status") == "waived"
+        ]
+        waived_entry = waived_entries[0]
+        receipt_ref = waived_entry.get("receipt", {})
+        receipt_path = member_path(named_root, receipt_ref.get("member"))
+        if digest(receipt_path) != receipt_ref.get("sha256"):
+            fail("waived receipt does not match its collected-index SHA-256")
+        receipt = load(receipt_path)
+        source_ref = receipt.get("source_report", {})
+        source_path = member_path(named_root, source_ref.get("member"))
+        if digest(source_path) != source_ref.get("sha256"):
+            fail("waived source report does not match its collected receipt SHA-256")
+        source = load(source_path)
+        observation = pointer_value(source, source_ref.get("json_pointer"))
+        screenshot_ref = waived_entry.get("screenshot", {})
+        screenshot_path = member_path(named_root, screenshot_ref.get("member"))
+        candidate_waivers = candidate.get("release_waivers")
+        if not (
+            canonical_digest(observation) == source_ref.get("observation_sha256")
+            and isinstance(candidate_waivers, list)
+            and len(candidate_waivers) == 1
+            and exact_release_waiver_matches_observation(
+                candidate_waivers[0], observation
+            )
+            and exact_cross_report_waiver_binding(source, observation)
+            and exact_case_waiver_receipt_matches_observation(receipt, observation)
+            and receipt.get("candidate_report", {}).get("member") == candidate_member
+            and receipt.get("candidate_report", {}).get("sha256") == candidate_hash
+            and receipt.get("screenshot", {}).get("member")
+            == screenshot_ref.get("member")
+            and receipt.get("screenshot", {}).get("sha256")
+            == screenshot_ref.get("sha256")
+            and digest(screenshot_path) == screenshot_ref.get("sha256")
+        ):
+            fail(
+                "waiver is not exactly bound across candidate, cross-report DPI, source observation, receipt, and screenshot"
+            )
+    elif not (
+        candidate.get("qualification_status") == "passed"
+        and candidate.get("release_waivers") == []
+    ):
+        fail("strict named evidence requires an exact zero-waiver candidate report")
 
     frozen_aggregate = load(args.frozen_aggregate_report.resolve())
     frozen_index = derive_frozen(load(args.frozen_index_template.resolve()), frozen_root, frozen_aggregate)
@@ -197,7 +299,7 @@ def main() -> int:
     candidate_member = collector["sources"]["candidate_report_member"]
     schema_member = collector["sources"]["observation_schema_member"]
     named_manifest_member = collector["sources"]["named_case_manifest_member"]
-    manifest["status"] = "verified"
+    manifest["status"] = "verified_with_waiver" if waived_collection else "verified"
     manifest["bundle"].update({"sha256": digest(zip_path), "member_count": len(names), "ordered_member_names_sha256": hashlib.sha256("\n".join(names).encode()).hexdigest(), "compressed_bytes": compressed, "uncompressed_bytes": uncompressed})
     manifest["named_evidence"].update({
         "collector_report": {"member": collector_member, "sha256": digest(member_path(named_root, collector_member))},
@@ -206,11 +308,12 @@ def main() -> int:
         "named_case_manifest": {"member": named_manifest_member, "sha256": collector["sources"]["named_case_manifest_sha256"]},
         "source_commit": collector["provenance"]["source_commit"],
         "candidate_executables": collector["provenance"]["candidate_executables"],
+        "approved_release_waiver": DPI_WAIVER_MANIFEST_DECLARATION,
     })
     write_json_new(output / "v255_named_evidence_index.proposed.json", named_index)
     write_json_new(output / "v255_frozen_result_archive_index.proposed.json", frozen_index)
     write_json_new(output / "v255_evidence_bundle_manifest.proposed.json", manifest)
-    report = {"schema_version": 1, "suite_id": "quickpls_v255_evidence_bundle_builder_v1", "target_release": TARGET, "passed": True, "bundle": str(zip_path), "bundle_sha256": digest(zip_path), "member_count": len(names), "compressed_bytes": compressed, "uncompressed_bytes": uncompressed, "proposals": {"named_index": str(output / "v255_named_evidence_index.proposed.json"), "frozen_index": str(output / "v255_frozen_result_archive_index.proposed.json"), "bundle_manifest": str(output / "v255_evidence_bundle_manifest.proposed.json")}, "apply_rule": "Review then atomically replace the three source contracts; never edit hashes by hand."}
+    report = {"schema_version": 1, "suite_id": "quickpls_v255_evidence_bundle_builder_v1", "target_release": TARGET, "passed": True, "qualification_status": "passed_with_waiver" if waived_collection else "passed", "approved_release_waiver": DPI_WAIVER_MANIFEST_DECLARATION if waived_collection else None, "bundle": str(zip_path), "bundle_sha256": digest(zip_path), "member_count": len(names), "compressed_bytes": compressed, "uncompressed_bytes": uncompressed, "proposals": {"named_index": str(output / "v255_named_evidence_index.proposed.json"), "frozen_index": str(output / "v255_frozen_result_archive_index.proposed.json"), "bundle_manifest": str(output / "v255_evidence_bundle_manifest.proposed.json")}, "apply_rule": "Review then atomically replace the three source contracts; never edit hashes by hand."}
     write_json_new(output / "v255_evidence_bundle_builder.json", report)
     print(json.dumps(report, indent=2))
     return 0

@@ -21,6 +21,13 @@
     "named_case_manifest": { "member": null, "sha256": null },
     "source_commit": null,
     "candidate_executables": { "portable": null, "installed": null },
+    "approved_release_waiver": {
+      "case_id": "cross_method:accessibility:actual Windows 200 percent scaling",
+      "status": "waived",
+      "waiver_authority": "product_owner",
+      "waiver_date": "2026-08-22",
+      "reason": "product owner explicitly authorized ignoring the 200 percent scaling requirement"
+    },
     "source_reports_are_bundle_members": true,
     "unique_case_receipt_and_screenshot_bytes": true,
     "unique_source_report_pointer_per_case": true

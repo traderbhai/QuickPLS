@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory = $true)][string]$ReleaseArtifactReportPath,
     [Parameter(Mandatory = $true)][string]$EvidenceDir,
-    [int]$FirstPort = 9455
+    [int]$FirstPort = 9455,
+    [switch]$WaiveActualWindows200PercentScaling
 )
 
 # Owns every candidate/PID used by the 17 native cross-method routes.  Child
@@ -13,12 +14,18 @@ $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $minimumFreeGiB = 20.0
 $targetRelease = "2.55.0"
 $suiteId = "quickpls_v255_cross_method_candidate_wrapper_v1"
+$dpiWaiverCaseId = "cross_method:accessibility:actual Windows 200 percent scaling"
+$dpiWaiverMetadata = [ordered]@{
+    waiver_authority = "product_owner"
+    waiver_date = "2026-08-22"
+    reason = "product owner explicitly authorized ignoring the 200 percent scaling requirement"
+}
 $releaseReport = [IO.Path]::GetFullPath($ReleaseArtifactReportPath)
 $evidence = [IO.Path]::GetFullPath($EvidenceDir)
 $resultsRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "results"))
 $resultsPrefix = $resultsRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 if (-not $evidence.StartsWith($resultsPrefix, [StringComparison]::OrdinalIgnoreCase) -or (Test-Path -LiteralPath $evidence)) { throw "EvidenceDir must be a new child of $resultsRoot." }
-if ($FirstPort -lt 1024 -or $FirstPort -gt 65000) { throw "FirstPort must be between 1024 and 65000." }
+if ($FirstPort -lt 1024 -or $FirstPort -gt 64993) { throw "FirstPort must be between 1024 and 64993 so all eight reserved ports remain valid." }
 
 $manifestPath = Join-Path $root "validation\v255_cross_method_case_manifest.json"
 $driverPath = Join-Path $root "validation\v255_cross_method_candidate_driver.mjs"
@@ -69,7 +76,7 @@ function Wait-Cdp([string]$Endpoint, [bool]$Open) {
     throw "CDP endpoint did not become $(if ($Open) { 'ready' } else { 'closed' }): $Endpoint"
 }
 function Get-ProcessTree([int]$RootPid) {
-    $all = @(Get-CimInstance Win32_Process -ErrorAction Stop | Select-Object ProcessId, ParentProcessId, ExecutablePath)
+    $all = @(Get-CimInstance Win32_Process -ErrorAction Stop | Select-Object ProcessId, ParentProcessId, ExecutablePath, CreationDate)
     $ids = [System.Collections.Generic.List[int]]::new()
     $ids.Add($RootPid)
     for ($cursor = 0; $cursor -lt $ids.Count; $cursor++) {
@@ -80,18 +87,60 @@ function Get-ProcessTree([int]$RootPid) {
     return @($ids | ForEach-Object {
         $pidValue = $_
         $row = $all | Where-Object { [int]$_.ProcessId -eq $pidValue } | Select-Object -First 1
-        [ordered]@{ pid = $pidValue; parent_pid = if ($row) { [int]$row.ParentProcessId } else { $null }; executable = if ($row) { [string]$row.ExecutablePath } else { $null } }
+        [ordered]@{ pid = $pidValue; parent_pid = if ($row) { [int]$row.ParentProcessId } else { $null }; executable = if ($row -and $row.ExecutablePath) { [IO.Path]::GetFullPath([string]$row.ExecutablePath) } else { $null }; creation_time = if ($row -and $row.CreationDate) { ([DateTime]$row.CreationDate).ToUniversalTime().ToString("o") } else { $null } }
     })
+}
+function Test-OwnedProcessIdentity($Row) {
+    $current = Get-CimInstance Win32_Process -Filter "ProcessId = $([int]$Row.pid)" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $current) { return $false }
+    $currentCreation = if ($current.CreationDate) { ([DateTime]$current.CreationDate).ToUniversalTime().ToString("o") } else { $null }
+    $currentExecutable = if ($current.ExecutablePath) { [IO.Path]::GetFullPath([string]$current.ExecutablePath) } else { $null }
+    if (-not $Row.creation_time -or $currentCreation -ne [string]$Row.creation_time -or
+        (($Row.executable -or $currentExecutable) -and -not [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase))) {
+        throw "PID $($Row.pid) no longer has the captured wrapper-owned creation/executable identity; refusing to terminate it."
+    }
+    return $true
+}
+function Update-OwnedTreeSnapshot($Process) {
+    $treeByPid = @{}
+    $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
+    $savedRoot = @($saved | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+    if ($Process.HasExited -and $savedRoot.Count -eq 1) {
+        $null = Test-OwnedProcessIdentity $savedRoot[0]
+    }
+    foreach ($row in $saved) {
+        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    }
+    foreach ($row in @(Get-ProcessTree -RootPid $Process.Id)) {
+        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    }
+    $snapshot = @($treeByPid.Values)
+    $Process | Add-Member -NotePropertyName QuickPlsOwnedTree -NotePropertyValue $snapshot -Force
+    return $snapshot
 }
 function Stop-OwnedTree($Process, [string]$Endpoint, [string]$Reason) {
     if (-not $Process) { throw "No wrapper-owned process supplied for $Reason." }
-    $tree = @(Get-ProcessTree -RootPid $Process.Id)
+    $tree = @(Update-OwnedTreeSnapshot $Process)
     if (-not $Process.HasExited) {
         & taskkill.exe /PID $Process.Id /T /F *> $null
         $null = $Process.WaitForExit(5000)
     }
+    # If the native root exited first, Windows can leave an owned WebView/CDP
+    # descendant alive. Only PIDs captured from this exact wrapper-owned tree
+    # are eligible for the fallback cleanup.
+    foreach ($row in @($tree | Where-Object { [int]$_.pid -ne [int]$Process.Id })) {
+        if (Test-OwnedProcessIdentity $row) {
+            & taskkill.exe /PID ([int]$row.pid) /T /F *> $null
+        }
+    }
+    $cleanupDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    do {
+        $remaining = @($tree | Where-Object { Test-OwnedProcessIdentity $_ })
+        if ($remaining.Count -eq 0) { break }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $cleanupDeadline)
     Wait-Cdp $Endpoint $false
-    $remaining = @($tree | Where-Object { Get-Process -Id $_.pid -ErrorAction SilentlyContinue })
+    $remaining = @($tree | Where-Object { Test-OwnedProcessIdentity $_ })
     if ($remaining.Count -ne 0) { throw "$Reason left wrapper-owned candidate PIDs running: $($remaining.pid -join ', ')." }
     return [ordered]@{ reason = $Reason; root_pid = $Process.Id; tree_before = $tree; exact_tree_terminated = $true; endpoint_closed = $true; terminated_at = (Get-Date).ToUniversalTime().ToString("o") }
 }
@@ -106,11 +155,23 @@ function Start-Candidate([string]$Endpoint, [string]$Profile, [string]$BrowserAr
     if ($running.Count -ne 0) { throw "The exact portable candidate is already running; refusing to attach or close it." }
     $process = Start-Process -FilePath $script:portablePath -WorkingDirectory $root -WindowStyle Hidden -PassThru
     try {
+        $null = Update-OwnedTreeSnapshot $process
         Wait-Cdp $Endpoint $true
+        $null = Update-OwnedTreeSnapshot $process
         return $process
     } catch {
-        if (-not $process.HasExited) { & taskkill.exe /PID $process.Id /T /F *> $null }
-        throw
+        $startFailure = $_
+        try {
+            $null = Stop-OwnedTree $process $Endpoint "failed candidate startup"
+        } catch {
+            $cleanupFailure = $_
+            if (-not $process.HasExited) {
+                & taskkill.exe /PID $process.Id /T /F *> $null
+                $null = $process.WaitForExit(5000)
+            }
+            if (-not $process.HasExited) { throw "Candidate startup failed and the exact root PID could not be terminated: $($startFailure.Exception.Message); cleanup: $($cleanupFailure.Exception.Message)" }
+        }
+        throw $startFailure
     }
 }
 function Invoke-Driver([string]$Phase, [int]$Port, [string]$PhaseDir, [string]$Profile, [string]$BrowserArguments, [string]$ProjectPath = "", [Nullable[int]]$EffectiveDpi = $null) {
@@ -156,6 +217,29 @@ function Add-NamedObservation([System.Collections.Generic.List[object]]$Rows, $E
         screenshot = [ordered]@{ path = $shotPath; sha256 = $shotHash }
     })
 }
+function Add-WaivedDpiObservation([System.Collections.Generic.List[object]]$Rows, $Entry, $Observed, $Screenshot) {
+    if (-not $WaiveActualWindows200PercentScaling -or [string]$Entry.id -ne $dpiWaiverCaseId) { throw "Only the explicitly approved DPI case can be waived." }
+    $expectedJson = $Entry.expected | ConvertTo-Json -Depth 20 -Compress
+    $observedJson = $Observed | ConvertTo-Json -Depth 20 -Compress
+    $declaredWaiverJson = $Entry.approved_waiver | ConvertTo-Json -Depth 10 -Compress
+    $approvedWaiverJson = $dpiWaiverMetadata | ConvertTo-Json -Depth 10 -Compress
+    if ($expectedJson -eq $observedJson) { throw "The DPI waiver cannot replace a passing DPI=192/DPR=2 observation." }
+    if ($declaredWaiverJson -ne $approvedWaiverJson) { throw "The DPI manifest waiver is not the exact product-owner authority." }
+    $shotPath = [IO.Path]::GetFullPath([string]$Screenshot.path)
+    $evidencePrefix = $evidence.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $shotPath.StartsWith($evidencePrefix, [StringComparison]::OrdinalIgnoreCase) -or -not (Test-Path -LiteralPath $shotPath -PathType Leaf)) { throw "$($Entry.id) screenshot escapes evidence or is missing." }
+    $shotHash = (Get-FileSha $shotPath).ToLowerInvariant()
+    if ($shotHash -ne ([string]$Screenshot.sha256).ToLowerInvariant()) { throw "$($Entry.id) screenshot hash changed." }
+    $Rows.Add([ordered]@{
+        schema_version = 1
+        case_id = [string]$Entry.id
+        operation = [string]$Entry.operation
+        status = "waived"
+        waiver = $dpiWaiverMetadata
+        assertion = [ordered]@{ id = "$($Entry.operation):$($Entry.id)"; passed = $false; expected = $Entry.expected; observed = $Observed }
+        screenshot = [ordered]@{ path = $shotPath; sha256 = $shotHash }
+    })
+}
 
 if (-not (Test-Path -LiteralPath $releaseReport -PathType Leaf)) { throw "Release artifact report is missing." }
 $release = Get-Content -LiteralPath $releaseReport -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -193,6 +277,9 @@ $manifest = Get-Content -LiteralPath $manifestPath -Raw -Encoding UTF8 | Convert
 if ($manifest.schema_version -ne 1 -or $manifest.suite_id -ne "quickpls_v255_cross_method_case_manifest_v1" -or $manifest.target_release -ne $targetRelease -or $manifest.status -ne "ready_for_collection" -or @($manifest.cases).Count -ne 17 -or @($manifest.cases | Select-Object -ExpandProperty id -Unique).Count -ne 17) { throw "Cross-method manifest is not the exact ready 17-case contract." }
 foreach ($entry in @($manifest.cases)) {
     if ($entry.id -notmatch '^cross_method:' -or $entry.operation -notin @("import_dataset", "export_result", "exercise_persistence", "exercise_accessibility", "verify_packaged_candidate") -or $null -eq $entry.expected) { throw "Cross-method manifest contains an invalid case." }
+    if ($entry.id -eq $dpiWaiverCaseId) {
+        if (($entry.approved_waiver | ConvertTo-Json -Depth 10 -Compress) -ne ($dpiWaiverMetadata | ConvertTo-Json -Depth 10 -Compress)) { throw "Cross-method manifest does not carry the exact approved DPI waiver." }
+    } elseif ($null -ne $entry.approved_waiver) { throw "Only the exact DPI case may declare an approved waiver." }
 }
 
 $diskBefore = Get-DiskSnapshot "before cross-method packaged smoke"
@@ -231,6 +318,8 @@ $active = $null
 $terminations = [System.Collections.Generic.List[object]]::new()
 $phaseBindings = [System.Collections.Generic.List[object]]::new()
 $sentinel = $null
+$runFailure = $null
+$cleanupFailure = $null
 try {
     $importsDir = Join-Path $evidence "imports"
     $active = Invoke-Driver -Phase "imports" -Port $FirstPort -PhaseDir $importsDir -Profile (Join-Path $evidence "profile-imports") -BrowserArguments "--remote-debugging-port=$FirstPort --force-device-scale-factor=1 --disable-background-networking --disable-component-update"
@@ -308,15 +397,21 @@ public static class QuickPlsV255Dpi {
     [uint32]$windowPid = 0
     $null = [QuickPlsV255Dpi]::GetWindowThreadProcessId($handle, [ref]$windowPid)
     $effectiveDpi = [int][QuickPlsV255Dpi]::GetDpiForWindow($handle)
-    if ([int]$windowPid -ne $dpiProcess.Id -or $effectiveDpi -ne 192) { throw "Actual Windows 200% scaling requires exact PID DPI=192; observed PID=$windowPid DPI=$effectiveDpi." }
+    if ([int]$windowPid -ne $dpiProcess.Id) { throw "DPI evidence is not bound to the exact candidate PID; observed PID=$windowPid expected=$($dpiProcess.Id)." }
+    if ($WaiveActualWindows200PercentScaling) {
+        if ($effectiveDpi -le 0 -or $effectiveDpi -eq 192) { throw "The approved waiver requires a positive actual non-192 DPI observation; observed DPI=$effectiveDpi." }
+    } elseif ($effectiveDpi -ne 192) { throw "Actual Windows 200% scaling requires exact PID DPI=192; observed PID=$windowPid DPI=$effectiveDpi. Re-run only with -WaiveActualWindows200PercentScaling when the product-owner waiver is intentionally selected." }
     $dpiDir = Join-Path $evidence "dpi_process"
     $dpiStdout = "$dpiDir.stdout.log"; $dpiStderr = "$dpiDir.stderr.log"
     $dpiArgs = @($driverPath, "--phase", "dpi_process", "--endpoint", $dpiEndpoint, "--evidence-dir", $dpiDir, "--manifest", $manifestPath, "--fixture-report", $script:fixtureReportPath, "--candidate-path", $script:portablePath, "--candidate-sha256", $script:portableHash, "--candidate-pid", [string]$dpiProcess.Id, "--source-commit", $script:sourceCommit, "--release-report-sha256", $script:releaseHash, "--python", $python, "--effective-dpi", [string]$effectiveDpi)
+    if ($WaiveActualWindows200PercentScaling) { $dpiArgs += @("--waive-actual-windows-200-percent-scaling", "true") }
     & $node @dpiArgs 1> $dpiStdout 2> $dpiStderr
     if ($LASTEXITCODE -ne 0) { throw "DPI/process attach driver failed; see $dpiStderr." }
     $dpiReportPath = Join-Path $dpiDir "v255_cross_method_dpi_process.json"
     $dpiReport = Get-Content -LiteralPath $dpiReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    if ($dpiReport.passed -ne $true -or $dpiReport.candidate.pid -ne $dpiProcess.Id -or $dpiReport.records[0].effective_dpi -ne 192) { throw "DPI/process report is invalid." }
+    $expectedDpiStatus = if ($WaiveActualWindows200PercentScaling) { "waived" } else { "passed" }
+    if ($dpiReport.passed -ne $true -or $dpiReport.candidate.pid -ne $dpiProcess.Id -or $dpiReport.records[0].effective_dpi -ne $effectiveDpi -or $dpiReport.records[0].scaling_requirement_status -ne $expectedDpiStatus) { throw "DPI/process report is invalid." }
+    if ($WaiveActualWindows200PercentScaling -and (($dpiReport.records[0].waiver | ConvertTo-Json -Depth 10 -Compress) -ne ($dpiWaiverMetadata | ConvertTo-Json -Depth 10 -Compress))) { throw "DPI/process report did not retain the exact approved waiver metadata." }
     $dpiTermination = Stop-OwnedTree $dpiProcess $dpiEndpoint "DPI/process-safety phase complete"; $terminations.Add($dpiTermination); $active = $null
     if ($sentinel.HasExited) { throw "PID-scoped candidate cleanup terminated the independent wrapper sentinel." }
     $sentinelSurvived = $true
@@ -365,16 +460,34 @@ public static class QuickPlsV255Dpi {
     $closeObserved = [ordered]@{ prompt_title = [string]$closeReport.dialog.title; prompt_contains = "before closing?"; buttons = @($closeReport.dialog.buttons); cancel_kept_exact_pid_alive = [bool]$closeReport.cancel_kept_exact_pid_alive }
     Add-NamedObservation $observations $closeEntry $closeObserved $closeReport.screenshot
     $dpiRecord = $dpiReport.records[0]
-    $dpiEntry = @($manifest.cases | Where-Object { $_.id -eq "cross_method:accessibility:actual Windows 200 percent scaling" })[0]
-    $dpiObserved = [ordered]@{ effective_dpi = $effectiveDpi; device_pixel_ratio = [int]$dpiRecord.browser.device_pixel_ratio; clean_profile = $true; forced_scale_argument_present = $false }
-    Add-NamedObservation $observations $dpiEntry $dpiObserved $dpiRecord.screenshots.dpi
+    $dpiEntry = @($manifest.cases | Where-Object { $_.id -eq $dpiWaiverCaseId })[0]
+    $observedDevicePixelRatio = if ($WaiveActualWindows200PercentScaling) { [double]$dpiRecord.browser.device_pixel_ratio } else { [int]$dpiRecord.browser.device_pixel_ratio }
+    $dpiObserved = [ordered]@{ effective_dpi = $effectiveDpi; device_pixel_ratio = $observedDevicePixelRatio; clean_profile = $true; forced_scale_argument_present = $false }
+    if ($WaiveActualWindows200PercentScaling) { Add-WaivedDpiObservation $observations $dpiEntry $dpiObserved $dpiRecord.screenshots.dpi } else { Add-NamedObservation $observations $dpiEntry $dpiObserved $dpiRecord.screenshots.dpi }
     $cdpEntry = @($manifest.cases | Where-Object { $_.id -eq "cross_method:packaged:isolated local CDP" })[0]
     $cdpObserved = [ordered]@{ endpoint_host = "127.0.0.1"; endpoint_preexisting = $false; quickpls_page_count = [int]$dpiReport.quickpls_page_count; origin = [string]$dpiRecord.browser.origin; functional_network_requests = [int]$dpiRecord.functional_network_requests }
     Add-NamedObservation $observations $cdpEntry $cdpObserved $dpiRecord.screenshots.cdp
     $cleanupEntry = @($manifest.cases | Where-Object { $_.id -eq "cross_method:packaged:PID-scoped cleanup only" })[0]
     $cleanupObserved = [ordered]@{ candidate_tree_terminated = [bool]$dpiTermination.exact_tree_terminated; sentinel_survived = $sentinelSurvived; only_wrapper_owned_trees_terminated = $true }
     Add-NamedObservation $observations $cleanupEntry $cleanupObserved $dpiRecord.screenshots.cleanup
-    if ($observations.Count -ne 17 -or @($observations.case_id | Select-Object -Unique).Count -ne 17 -or @($observations.screenshot.sha256 | Select-Object -Unique).Count -ne 17) { throw "Cross-method observations must contain 17 unique case IDs and 17 byte-unique PNGs." }
+    $waivedObservations = @($observations | Where-Object { $_.status -eq "waived" })
+    $passedObservations = @($observations | Where-Object { $_.assertion.passed -eq $true })
+    $expectedWaivedCount = if ($WaiveActualWindows200PercentScaling) { 1 } else { 0 }
+    if ($observations.Count -ne 17 -or @($observations.case_id | Select-Object -Unique).Count -ne 17 -or @($observations.screenshot.sha256 | Select-Object -Unique).Count -ne 17 -or $waivedObservations.Count -ne $expectedWaivedCount -or $passedObservations.Count -ne (17 - $expectedWaivedCount)) { throw "Cross-method observations must contain 17 unique cases: every case passed except the one exact opt-in DPI waiver." }
+
+    $releaseWaivers = @()
+    if ($WaiveActualWindows200PercentScaling) {
+        $releaseWaivers = @([ordered]@{
+            case_id = $dpiWaiverCaseId
+            status = "waived"
+            assertion_passed = $false
+            waiver_authority = $dpiWaiverMetadata.waiver_authority
+            waiver_date = $dpiWaiverMetadata.waiver_date
+            reason = $dpiWaiverMetadata.reason
+            expected = $dpiEntry.expected
+            observed = $dpiObserved
+        })
+    }
 
     $diskAfter = Get-DiskSnapshot "after cross-method packaged smoke"
     $reportPath = Join-Path $evidence "v255_cross_method_candidate_smoke.json"
@@ -383,6 +496,7 @@ public static class QuickPlsV255Dpi {
         suite_id = $suiteId
         target_release = $targetRelease
         passed = $true
+        qualification_status = $(if ($WaiveActualWindows200PercentScaling) { "passed_with_waiver" } else { "passed" })
         source_commit = $script:sourceCommit
         publication_commit = $currentCommit
         source_state = [ordered]@{ tracked_worktree_clean = $true; untracked_paths_confined_to_runtime_evidence = $true; allowed_runtime_evidence_root = $allowedRuntimeRoot }
@@ -391,7 +505,8 @@ public static class QuickPlsV255Dpi {
         manifest = [ordered]@{ path = $manifestPath; sha256 = Get-FileSha $manifestPath }
         fixture_builder = [ordered]@{ path = $builderPath; sha256 = Get-FileSha $builderPath; report_path = $script:fixtureReportPath; report_sha256 = Get-FileSha $script:fixtureReportPath }
         process_safety = [ordered]@{ exact_pid_tree_cleanup_only = $true; no_existing_candidate_attached = $true; sentinel_pid = $sentinel.Id; sentinel_survived_candidate_cleanup = $sentinelSurvived; terminations = @($terminations) }
-        dpi = [ordered]@{ effective_dpi = $effectiveDpi; required_dpi = 192; device_pixel_ratio = [int]$dpiRecord.browser.device_pixel_ratio; display_settings_changed = $false; forced_scale_argument_present = $false; profile_was_fresh = $true }
+        dpi = [ordered]@{ requirement_status = $expectedDpiStatus; effective_dpi = $effectiveDpi; required_dpi = 192; device_pixel_ratio = [double]$dpiRecord.browser.device_pixel_ratio; display_settings_changed = $false; forced_scale_argument_present = $false; profile_was_fresh = $true }
+        release_waivers = $releaseWaivers
         disk_snapshots = @($diskBefore, $diskAfter)
         phase_reports = @($phaseBindings)
         named_evidence_observations = @($observations)
@@ -399,10 +514,35 @@ public static class QuickPlsV255Dpi {
     }
     $report | ConvertTo-Json -Depth 30 | Set-Content -LiteralPath $reportPath -Encoding UTF8
     $report
+} catch {
+    $runFailure = $_
 } finally {
-    if ($active -and $active.process -and -not $active.process.HasExited) { try { $null = Stop-OwnedTree $active.process $active.endpoint "exception cleanup" } catch {} }
-    if ($sentinel -and -not $sentinel.HasExited) { & taskkill.exe /PID $sentinel.Id /T /F *> $null; $null = $sentinel.WaitForExit(5000) }
-    [Environment]::SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", $oldArgs, "Process")
-    [Environment]::SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", $oldProfile, "Process")
-    [Environment]::SetEnvironmentVariable("QUICKPLS_CDP_ENDPOINT", $oldEndpoint, "Process")
+    try {
+        if ($active -and $active.process) { $null = Stop-OwnedTree $active.process $active.endpoint "exception cleanup" }
+    } catch {
+        $cleanupFailure = $_
+    }
+    try {
+        if ($sentinel -and -not $sentinel.HasExited) {
+            & taskkill.exe /PID $sentinel.Id /T /F *> $null
+            $null = $sentinel.WaitForExit(5000)
+            if (-not $sentinel.HasExited) { throw "The independent cleanup sentinel did not exit." }
+        }
+    } catch {
+        if ($cleanupFailure) {
+            $cleanupFailure = [System.Management.Automation.ErrorRecord]::new(
+                [InvalidOperationException]::new("Exact candidate cleanup failed: $($cleanupFailure.Exception.Message); sentinel cleanup failed: $($_.Exception.Message)"),
+                "QuickPlsV255CombinedCleanupFailure",
+                [System.Management.Automation.ErrorCategory]::OperationStopped,
+                $null
+            )
+        } else { $cleanupFailure = $_ }
+    } finally {
+        [Environment]::SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", $oldArgs, "Process")
+        [Environment]::SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", $oldProfile, "Process")
+        [Environment]::SetEnvironmentVariable("QUICKPLS_CDP_ENDPOINT", $oldEndpoint, "Process")
+    }
 }
+if ($runFailure -and $cleanupFailure) { throw "Cross-method smoke failed: $($runFailure.Exception.Message); exact cleanup also failed: $($cleanupFailure.Exception.Message)" }
+if ($runFailure) { throw $runFailure }
+if ($cleanupFailure) { throw $cleanupFailure }

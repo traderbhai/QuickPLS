@@ -6,7 +6,8 @@ param(
     [Parameter(Mandatory = $true)][string]$ConsolidatedReportPath,
     [string]$EvidenceBundlePath = "",
     [string]$EvidenceDir = "",
-    [int]$FirstPort = 9255
+    [int]$FirstPort = 9255,
+    [switch]$WaiveActualWindows200PercentScaling
 )
 
 # This runner launches one hidden, isolated candidate at a time. It never
@@ -19,11 +20,18 @@ $ErrorActionPreference = "Stop"
 $root = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "..")).Path
 $rootPrefix = $root.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 $minimumFreeGiB = 20.0
+$dpiWaiverCaseId = "cross_method:accessibility:actual Windows 200 percent scaling"
+$dpiWaiverMetadata = [ordered]@{
+    waiver_authority = "product_owner"
+    waiver_date = "2026-08-22"
+    reason = "product owner explicitly authorized ignoring the 200 percent scaling requirement"
+}
 $results = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "results"))
 $stamp = (Get-Date).ToUniversalTime().ToString("yyyyMMddTHHmmssZ")
 $evidence = if ([string]::IsNullOrWhiteSpace($EvidenceDir)) { Join-Path $results "v255_installed_portable_smoke_$stamp" } else { [IO.Path]::GetFullPath($EvidenceDir) }
 $prefix = $results.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
 if (-not $evidence.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) -or (Test-Path -LiteralPath $evidence)) { throw "EvidenceDir must be a new child of $results" }
+if ($FirstPort -lt 1024 -or $FirstPort -gt 64973) { throw "FirstPort must be between 1024 and 64973 so the complete installed, portable, and cross-method port range remains valid." }
 $driver = Join-Path $root "validation\v255_method_evidence_crawler.mjs"
 $lifecycleDriver = Join-Path $root "validation\v255_live_calculation_lifecycle_smoke.mjs"
 $frozenArchiveCrawler = Join-Path $root "validation\v255_frozen_archive_reopen_crawler.mjs"
@@ -178,24 +186,93 @@ function Wait-Cdp([string]$Endpoint, [bool]$Open) {
     while ([DateTime]::UtcNow -lt $deadline) { if ((Test-Cdp $Endpoint) -eq $Open) { return }; Start-Sleep -Milliseconds 250 }
     throw "CDP endpoint did not become $(if ($Open) { "ready" } else { "closed" }): $Endpoint"
 }
+function Get-ProcessTree([int]$RootPid) {
+    $all = @(Get-CimInstance Win32_Process -ErrorAction Stop | Select-Object ProcessId, ParentProcessId, ExecutablePath, CreationDate)
+    $ids = [System.Collections.Generic.List[int]]::new()
+    $ids.Add($RootPid)
+    for ($cursor = 0; $cursor -lt $ids.Count; $cursor++) {
+        foreach ($row in @($all | Where-Object { [int]$_.ParentProcessId -eq $ids[$cursor] })) {
+            if (-not $ids.Contains([int]$row.ProcessId)) { $ids.Add([int]$row.ProcessId) }
+        }
+    }
+    return @($ids | ForEach-Object {
+        $pidValue = $_
+        $row = $all | Where-Object { [int]$_.ProcessId -eq $pidValue } | Select-Object -First 1
+        [ordered]@{ pid = $pidValue; parent_pid = if ($row) { [int]$row.ParentProcessId } else { $null }; executable = if ($row -and $row.ExecutablePath) { [IO.Path]::GetFullPath([string]$row.ExecutablePath) } else { $null }; creation_time = if ($row -and $row.CreationDate) { ([DateTime]$row.CreationDate).ToUniversalTime().ToString("o") } else { $null } }
+    })
+}
+function Test-OwnedProcessIdentity($Row) {
+    $current = Get-CimInstance Win32_Process -Filter "ProcessId = $([int]$Row.pid)" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $current) { return $false }
+    $currentCreation = if ($current.CreationDate) { ([DateTime]$current.CreationDate).ToUniversalTime().ToString("o") } else { $null }
+    $currentExecutable = if ($current.ExecutablePath) { [IO.Path]::GetFullPath([string]$current.ExecutablePath) } else { $null }
+    if (-not $Row.creation_time -or $currentCreation -ne [string]$Row.creation_time -or
+        (($Row.executable -or $currentExecutable) -and -not [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase))) {
+        throw "PID $($Row.pid) no longer has the captured harness-owned creation/executable identity; refusing to terminate it."
+    }
+    return $true
+}
+function Update-OwnedTreeSnapshot($Process) {
+    $treeByPid = @{}
+    $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
+    $savedRoot = @($saved | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+    if ($Process.HasExited -and $savedRoot.Count -eq 1) {
+        $null = Test-OwnedProcessIdentity $savedRoot[0]
+    }
+    foreach ($row in $saved) {
+        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    }
+    foreach ($row in @(Get-ProcessTree -RootPid $Process.Id)) {
+        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    }
+    $snapshot = @($treeByPid.Values)
+    $Process | Add-Member -NotePropertyName QuickPlsOwnedTree -NotePropertyValue $snapshot -Force
+    return $snapshot
+}
 function Start-IsolatedCandidate([string]$Candidate, [string]$Endpoint) {
     if (Test-Cdp $Endpoint) { throw "Refusing to attach to an existing CDP endpoint: $Endpoint" }
     $process = Start-Process -FilePath $Candidate -WorkingDirectory $root -WindowStyle Hidden -PassThru
     try {
+        $null = Update-OwnedTreeSnapshot $process
         Wait-Cdp $Endpoint $true
+        $null = Update-OwnedTreeSnapshot $process
         return $process
     } catch {
-        if (-not $process.HasExited) { & taskkill.exe /PID $process.Id /T /F *> $null }
-        throw
+        $startFailure = $_
+        try {
+            Stop-IsolatedCandidate $process $Endpoint
+        } catch {
+            $cleanupFailure = $_
+            if (-not $process.HasExited) {
+                & taskkill.exe /PID $process.Id /T /F *> $null
+                $null = $process.WaitForExit(5000)
+            }
+            if (-not $process.HasExited) { throw "Candidate startup failed and the exact root PID could not be terminated: $($startFailure.Exception.Message); cleanup: $($cleanupFailure.Exception.Message)" }
+        }
+        throw $startFailure
     }
 }
 function Stop-IsolatedCandidate($Process, [string]$Endpoint) {
-    if ($Process -and -not $Process.HasExited) {
+    if (-not $Process) { throw "No harness-owned candidate process was supplied for cleanup." }
+    $tree = @(Update-OwnedTreeSnapshot $Process)
+    if (-not $Process.HasExited) {
         # The only tree eligible for termination is rooted at this harness PID.
         & taskkill.exe /PID $Process.Id /T /F *> $null
         $null = $Process.WaitForExit(5000)
     }
+    foreach ($row in @($tree | Where-Object { [int]$_.pid -ne [int]$Process.Id })) {
+        if (Test-OwnedProcessIdentity $row) {
+            & taskkill.exe /PID ([int]$row.pid) /T /F *> $null
+        }
+    }
+    $cleanupDeadline = [DateTime]::UtcNow.AddSeconds(5)
+    do {
+        $remaining = @($tree | Where-Object { Test-OwnedProcessIdentity $_ })
+        if ($remaining.Count -eq 0) { break }
+        Start-Sleep -Milliseconds 100
+    } while ([DateTime]::UtcNow -lt $cleanupDeadline)
     Wait-Cdp $Endpoint $false
+    if ($remaining.Count -ne 0) { throw "Harness-owned candidate PIDs remained after exact-tree cleanup: $($remaining.pid -join ', ')." }
 }
 function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string]$BundleExtractDirectory) {
     $endpoint = "http://127.0.0.1:$Port"
@@ -343,7 +420,7 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         [ordered]@{ name = $Name; candidate_kind = $(if ($Name -eq "installed") { "fresh_nsis_install" } else { "portable_release_artifact" }); executable = $candidateFull; executable_sha256 = $candidateHash; product_version = $productVersion; build_source_commit = $releasePayload.source.commit; source_tree = $releasePayload.source.tree; source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $(if ($Name -eq "installed") { $installReceipt } else { $null }); install_receipt_sha256 = $(if ($Name -eq "installed") { $installReceiptHash } else { $null }); launched_pids = @($launchedPids); status = "passed"; lifecycle = $lifecycleReportPath; lifecycle_sha256 = (Get-FileHash -LiteralPath $lifecycleReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); lifecycle_execute_stdout = $lifecycleExecuteStdout; lifecycle_execute_stderr = $lifecycleExecuteStderr; lifecycle_reopen_stdout = $lifecycleReopenStdout; lifecycle_reopen_stderr = $lifecycleReopenStderr; evidence = $methodReportPath; evidence_sha256 = (Get-FileHash -LiteralPath $methodReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); evidence_stdout = $crawlerStdout; evidence_stderr = $crawlerStderr; named_evidence_driver_reports = @($namedEvidenceDriverReports); named_evidence_driver_stdout = $(if ($namedCaseManifestReady) { $namedCaseStdout } else { $null }); named_evidence_driver_stderr = $(if ($namedCaseManifestReady) { $namedCaseStderr } else { $null }); posthoc_collection = $posthocCollection; frozen_archive_collection = $frozenArchiveCollection }
     } finally {
         try {
-            Stop-IsolatedCandidate $process $endpoint
+            if ($process) { Stop-IsolatedCandidate $process $endpoint }
         } finally {
             [Environment]::SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", $previousArgs, "Process")
             [Environment]::SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", $previousProfile, "Process")
@@ -397,6 +474,7 @@ if ($evidenceBundle) {
 }
 $outcomes = @()
 $runError = $null
+$crossMethodReport = $null
 try {
     $outcomes += Invoke-Candidate "installed" $installedFull $FirstPort $bundleExtractDirectory
     $snapshots += Get-DiskSnapshot "between installed and portable smoke"
@@ -406,29 +484,49 @@ try {
     $crossMethodEvidence = Join-Path $evidence "portable\cross_method"
     $crossMethodStdout = Join-Path $evidence "portable\cross_method.stdout.log"
     $crossMethodStderr = Join-Path $evidence "portable\cross_method.stderr.log"
-    & powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File $crossMethodWrapper -ReleaseArtifactReportPath $releaseArtifactReport -EvidenceDir $crossMethodEvidence -FirstPort ($FirstPort + 20) 1> $crossMethodStdout 2> $crossMethodStderr
+    $crossMethodArguments = @("-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", $crossMethodWrapper, "-ReleaseArtifactReportPath", $releaseArtifactReport, "-EvidenceDir", $crossMethodEvidence, "-FirstPort", [string]($FirstPort + 20))
+    if ($WaiveActualWindows200PercentScaling) { $crossMethodArguments += "-WaiveActualWindows200PercentScaling" }
+    & powershell.exe @crossMethodArguments 1> $crossMethodStdout 2> $crossMethodStderr
     if ($LASTEXITCODE -ne 0) { throw "Portable cross-method candidate wrapper failed; see $crossMethodStderr." }
     $crossMethodReportPath = Join-Path $crossMethodEvidence "v255_cross_method_candidate_smoke.json"
     if (-not (Test-Path -LiteralPath $crossMethodReportPath -PathType Leaf)) { throw "Portable cross-method wrapper produced no aggregate report." }
     $crossMethodReport = Get-Content -LiteralPath $crossMethodReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
+    $crossWaived = @($crossMethodReport.named_evidence_observations | Where-Object { $_.status -eq "waived" })
+    $crossPassed = @($crossMethodReport.named_evidence_observations | Where-Object { $_.assertion.passed -eq $true })
+    $expectedWaiverCount = if ($WaiveActualWindows200PercentScaling) { 1 } else { 0 }
+    $expectedQualificationStatus = if ($WaiveActualWindows200PercentScaling) { "passed_with_waiver" } else { "passed" }
+    $waiverContractValid = if ($WaiveActualWindows200PercentScaling) {
+        $crossMethodReport.release_waivers.Count -eq 1 -and
+        $crossMethodReport.release_waivers[0].case_id -eq $dpiWaiverCaseId -and
+        $crossMethodReport.release_waivers[0].status -eq "waived" -and
+        $crossMethodReport.release_waivers[0].assertion_passed -eq $false -and
+        $crossMethodReport.release_waivers[0].waiver_authority -eq $dpiWaiverMetadata.waiver_authority -and
+        $crossMethodReport.release_waivers[0].waiver_date -eq $dpiWaiverMetadata.waiver_date -and
+        $crossMethodReport.release_waivers[0].reason -eq $dpiWaiverMetadata.reason -and
+        $crossWaived.Count -eq 1 -and
+        $crossWaived[0].case_id -eq $dpiWaiverCaseId -and
+        $crossWaived[0].assertion.passed -eq $false
+    } else { @($crossMethodReport.release_waivers).Count -eq 0 -and $crossWaived.Count -eq 0 }
     if (
         $crossMethodReport.schema_version -ne 1 -or
         $crossMethodReport.suite_id -ne "quickpls_v255_cross_method_candidate_wrapper_v1" -or
         $crossMethodReport.target_release -ne "2.55.0" -or
         $crossMethodReport.passed -ne $true -or
+        $crossMethodReport.qualification_status -ne $expectedQualificationStatus -or
         $crossMethodReport.source_commit -ne $releasePayload.source.commit -or
         $crossMethodReport.release_artifact_report.sha256 -ne $releaseArtifactReportHash -or
         $crossMethodReport.candidate.path -ne $portableFull -or
         $crossMethodReport.candidate.sha256 -ne $portableHash -or
         @($crossMethodReport.failures).Count -ne 0 -or
         @($crossMethodReport.named_evidence_observations).Count -ne 17 -or
-        @($crossMethodReport.named_evidence_observations | Where-Object { $_.assertion.passed -ne $true }).Count -ne 0 -or
+        $crossPassed.Count -ne (17 - $expectedWaiverCount) -or
+        -not $waiverContractValid -or
         @($crossMethodReport.named_evidence_observations.screenshot.sha256 | Select-Object -Unique).Count -ne 17
     ) { throw "Portable cross-method candidate report is incomplete, false, or unbound." }
     $portableOutcome = @($outcomes | Where-Object { $_.name -eq "portable" })[0]
     $crossMethodBinding = [ordered]@{ path = $crossMethodReportPath; sha256 = (Get-FileHash -LiteralPath $crossMethodReportPath -Algorithm SHA256).Hash.ToLowerInvariant() }
     $portableOutcome["named_evidence_driver_reports"] = @($portableOutcome.named_evidence_driver_reports) + @($crossMethodBinding)
-    $portableOutcome["cross_method_collection"] = [ordered]@{ status = "passed"; report = $crossMethodReportPath; report_sha256 = $crossMethodBinding.sha256; stdout = $crossMethodStdout; stderr = $crossMethodStderr; named_case_count = 17 }
+    $portableOutcome["cross_method_collection"] = [ordered]@{ status = $expectedQualificationStatus; report = $crossMethodReportPath; report_sha256 = $crossMethodBinding.sha256; stdout = $crossMethodStdout; stderr = $crossMethodStderr; named_case_count = 17; passed_case_count = $crossPassed.Count; waived_case_count = $crossWaived.Count }
 } catch { $runError = $_.Exception.Message
 } finally { $snapshots += Get-DiskSnapshot "after packaged smoke" }
 if (-not $runError) {
@@ -441,7 +539,11 @@ if (-not $runError) {
 }
 $outcomeNames = @($outcomes | ForEach-Object { $_.name })
 $allOutcomesPassed = $outcomes.Count -eq 2 -and @($outcomes | Where-Object { $_.status -ne "passed" }).Count -eq 0 -and -not (Compare-Object -ReferenceObject @("installed", "portable") -DifferenceObject $outcomeNames -SyncWindow 0)
-$report = [ordered]@{ schema_version = 3; suite_id = "quickpls_v255_installed_portable_smoke_v3"; target_release = "2.55.0"; passed = $allOutcomesPassed -and -not $runError; publication_source_commit = $sourceCommit; source_worktree_clean = $true; package_version = $packageVersion; candidate_build_source_commit = $releasePayload.source.commit; candidate_build_source_tree = $releasePayload.source.tree; candidate_source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $installReceipt; install_receipt_sha256 = $installReceiptHash; consolidated_report = $consolidatedReport; consolidated_report_sha256 = (Get-FileHash -LiteralPath $consolidatedReport -Algorithm SHA256).Hash.ToLowerInvariant(); tested_source_commit = $consolidatedPayload.source.commit; release_publication_evidence_verified = [bool]$evidenceBundle; publication_evidence_status = $(if ($evidenceBundle) { "verified_bundle_required" } else { "collection_only_pending_curated_v255_result_captures_and_bundle" }); named_evidence_stage = $namedEvidenceStage; named_evidence_report = $namedEvidenceReport; named_evidence_report_sha256 = (Get-FileHash -LiteralPath $namedEvidenceReport -Algorithm SHA256).Hash.ToLowerInvariant(); named_evidence_stdout = $namedEvidenceStdout; named_evidence_stderr = $namedEvidenceStderr; named_evidence_verified = $namedEvidencePayload.passed -eq $true; code_signing = $false; process_safety = "only trees rooted at harness-launched PIDs were terminated"; minimum_free_gib = $minimumFreeGiB; vitest_report = $vitestReport; vitest_report_sha256 = $vitestSha256; evidence_bundle = $evidenceBundle; evidence_bundle_sha256 = $(if ($evidenceBundle) { (Get-FileHash -LiteralPath $evidenceBundle -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }); evidence_bundle_extraction = $bundleExtractDirectory; evidence_bundle_extraction_capacity = $extractionCapacity; outcomes = $outcomes; error = $runError; disk_snapshots = $snapshots }
+$reportPassed = $allOutcomesPassed -and -not $runError
+$qualificationStatus = if (-not $reportPassed) { "failed" } elseif ($WaiveActualWindows200PercentScaling) { "passed_with_waiver" } else { "passed" }
+[object[]]$releaseWaivers = @()
+if ($WaiveActualWindows200PercentScaling -and $crossMethodReport) { [object[]]$releaseWaivers = @($crossMethodReport.release_waivers) }
+$report = [ordered]@{ schema_version = 3; suite_id = "quickpls_v255_installed_portable_smoke_v3"; target_release = "2.55.0"; passed = $reportPassed; qualification_status = $qualificationStatus; release_waivers = $releaseWaivers; publication_source_commit = $sourceCommit; source_worktree_clean = $true; package_version = $packageVersion; candidate_build_source_commit = $releasePayload.source.commit; candidate_build_source_tree = $releasePayload.source.tree; candidate_source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $installReceipt; install_receipt_sha256 = $installReceiptHash; consolidated_report = $consolidatedReport; consolidated_report_sha256 = (Get-FileHash -LiteralPath $consolidatedReport -Algorithm SHA256).Hash.ToLowerInvariant(); tested_source_commit = $consolidatedPayload.source.commit; release_publication_evidence_verified = [bool]$evidenceBundle; publication_evidence_status = $(if ($evidenceBundle) { "verified_bundle_required" } else { "collection_only_pending_curated_v255_result_captures_and_bundle" }); named_evidence_stage = $namedEvidenceStage; named_evidence_report = $namedEvidenceReport; named_evidence_report_sha256 = (Get-FileHash -LiteralPath $namedEvidenceReport -Algorithm SHA256).Hash.ToLowerInvariant(); named_evidence_stdout = $namedEvidenceStdout; named_evidence_stderr = $namedEvidenceStderr; named_evidence_verified = $namedEvidencePayload.passed -eq $true; code_signing = $false; process_safety = "only trees rooted at harness-launched PIDs were terminated"; minimum_free_gib = $minimumFreeGiB; vitest_report = $vitestReport; vitest_report_sha256 = $vitestSha256; evidence_bundle = $evidenceBundle; evidence_bundle_sha256 = $(if ($evidenceBundle) { (Get-FileHash -LiteralPath $evidenceBundle -Algorithm SHA256).Hash.ToLowerInvariant() } else { $null }); evidence_bundle_extraction = $bundleExtractDirectory; evidence_bundle_extraction_capacity = $extractionCapacity; outcomes = $outcomes; error = $runError; disk_snapshots = $snapshots }
 $reportPath = Join-Path $evidence "v255_installed_portable_smoke.json"
 Write-Utf8NoBom $reportPath (($report | ConvertTo-Json -Depth 16) + "`n")
 $report | ConvertTo-Json -Depth 16

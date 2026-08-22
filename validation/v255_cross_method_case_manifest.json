@@ -126,7 +126,12 @@
       "id": "cross_method:accessibility:actual Windows 200 percent scaling",
       "operation": "exercise_accessibility",
       "phase": "dpi_200",
-      "expected": { "effective_dpi": 192, "device_pixel_ratio": 2, "clean_profile": true, "forced_scale_argument_present": false }
+      "expected": { "effective_dpi": 192, "device_pixel_ratio": 2, "clean_profile": true, "forced_scale_argument_present": false },
+      "approved_waiver": {
+        "waiver_authority": "product_owner",
+        "waiver_date": "2026-08-22",
+        "reason": "product owner explicitly authorized ignoring the 200 percent scaling requirement"
+      }
     },
     {
       "id": "cross_method:packaged:isolated local CDP",

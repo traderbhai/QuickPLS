@@ -12,6 +12,16 @@ import zlib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from v255_release_waiver import (
+    DPI_WAIVER_CASE_ID,
+    DPI_WAIVER_METADATA,
+    exact_approved_waiver_contract,
+    exact_case_waiver_receipt_matches_observation,
+    exact_cross_report_waiver_binding,
+    exact_release_waiver_receipt,
+    exact_release_waiver_matches_observation,
+    exact_waived_observation,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MATRIX = ROOT / "validation" / "v255_method_evidence_matrix.json"
@@ -261,6 +271,17 @@ def trusted_suite_versions(contract: dict[str, Any]) -> dict[str, int]:
 
 
 def validate_candidate_report(payload: dict[str, Any]) -> tuple[str, dict[str, dict[str, Any]]]:
+    qualification_status = payload.get("qualification_status")
+    release_waivers = payload.get("release_waivers")
+    waiver_state_valid = (
+        qualification_status == "passed"
+        and release_waivers == []
+    ) or (
+        qualification_status == "passed_with_waiver"
+        and isinstance(release_waivers, list)
+        and len(release_waivers) == 1
+        and exact_release_waiver_receipt(release_waivers[0])
+    )
     if not (
         payload.get("schema_version") == 3
         and payload.get("suite_id") == CANDIDATE_SUITE
@@ -269,6 +290,7 @@ def validate_candidate_report(payload: dict[str, Any]) -> tuple[str, dict[str, d
         and payload.get("source_worktree_clean") is True
         and payload.get("named_evidence_stage") == "source"
         and payload.get("named_evidence_verified") is True
+        and waiver_state_valid
     ):
         raise ValueError("candidate report is not a passing source-stage QuickPLS 2.55 installed/portable smoke")
     source_commit = payload.get("candidate_build_source_commit")
@@ -548,6 +570,7 @@ def main() -> int:
             and contract.get("suite_id") == COLLECTOR_SUITE
             and contract.get("case_receipt_suite_id") == CASE_RECEIPT_SUITE
             and contract.get("candidate_report_suite_id") == CANDIDATE_SUITE
+            and exact_approved_waiver_contract(contract.get("approved_release_waiver"))
         ):
             raise ValueError("named-evidence collector contract has an unsupported identity")
         observation_field = contract.get("driver_observation_field")
@@ -624,6 +647,7 @@ def main() -> int:
             try:
                 assertion = observation.get("assertion")
                 screenshot = observation.get("screenshot")
+                waived = case_id == DPI_WAIVER_CASE_ID and exact_waived_observation(observation)
                 if observation.get("schema_version") != 1:
                     raise ValueError("observation schema_version must be 1")
                 if observation.get("operation") != expected_op:
@@ -632,12 +656,33 @@ def main() -> int:
                     raise ValueError("assertion must be an object")
                 if assertion.get("id") != expected_assertion:
                     raise ValueError("assertion id does not match the frozen case contract")
-                if assertion.get("passed") is not True:
-                    raise ValueError("assertion is not passed")
                 if "expected" not in assertion or "observed" not in assertion:
                     raise ValueError("assertion lacks expected and observed values")
-                if assertion.get("expected") is None or assertion.get("expected") != assertion.get("observed"):
-                    raise ValueError("assertion expected/observed values do not exactly match")
+                if waived:
+                    if assertion.get("passed") is not False:
+                        raise ValueError("the exact approved waiver must retain assertion passed=false")
+                    candidate_waivers = candidate_payload.get("release_waivers")
+                    if not (
+                        isinstance(candidate_waivers, list)
+                        and len(candidate_waivers) == 1
+                        and exact_release_waiver_matches_observation(
+                            candidate_waivers[0], observation
+                        )
+                        and exact_cross_report_waiver_binding(
+                            report.get("payload"), observation
+                        )
+                    ):
+                        raise ValueError(
+                            "waiver receipt, cross-report DPI facts, and source observation do not exactly match"
+                        )
+                elif (
+                    observation.get("status") is not None
+                    or observation.get("waiver") is not None
+                    or assertion.get("passed") is not True
+                    or assertion.get("expected") is None
+                    or assertion.get("expected") != assertion.get("observed")
+                ):
+                    raise ValueError("non-waived assertion is not an exact pass")
                 if not isinstance(screenshot, dict):
                     raise ValueError("observation screenshot must be an object")
                 declared_screenshot_hash = screenshot.get("sha256")
@@ -678,7 +723,7 @@ def main() -> int:
                     "schema_version": 1,
                     "suite_id": CASE_RECEIPT_SUITE,
                     "target_release": TARGET_RELEASE,
-                    "status": "passed",
+                    "status": "waived" if waived else "passed",
                     "case_id": case_id,
                     "scope": row["scope"],
                     "group": row["group"],
@@ -686,7 +731,7 @@ def main() -> int:
                     "operation": expected_op,
                     "assertion": {
                         "id": expected_assertion,
-                        "passed": True,
+                        "passed": False if waived else True,
                         "expected": assertion["expected"],
                         "observed": assertion["observed"],
                     },
@@ -721,6 +766,14 @@ def main() -> int:
                         "expected_value": case_id,
                     },
                 }
+                if waived:
+                    case_receipt["waiver"] = DPI_WAIVER_METADATA
+                    if not exact_case_waiver_receipt_matches_observation(
+                        case_receipt, observation
+                    ):
+                        raise ValueError(
+                            "collected waiver receipt does not exactly bind the source observation and screenshot"
+                        )
                 receipt_bytes = pretty_json_bytes(case_receipt)
                 receipt_hash = sha256_bytes(receipt_bytes)
                 if receipt_hash in used_receipt_hashes:
@@ -735,7 +788,9 @@ def main() -> int:
                 used_receipt_hashes[receipt_hash] = case_id
                 used_receipt_members.add(receipt_member)
                 index_entry = collected_by_id[case_id]
-                index_entry["status"] = "verified"
+                index_entry["status"] = "waived" if waived else "verified"
+                if waived:
+                    index_entry["waiver"] = DPI_WAIVER_METADATA
                 index_entry["screenshot"] = {
                     "member": screenshot_member,
                     "sha256": actual_screenshot_hash,
@@ -750,7 +805,7 @@ def main() -> int:
                 }
                 case_report.update(
                     {
-                        "status": "collected",
+                        "status": "waived_collected" if waived else "collected",
                         "candidate": report["candidate_name"],
                         "candidate_executable_sha256": report["candidate_sha256"],
                         "source_report_member": source_member,
@@ -769,8 +824,23 @@ def main() -> int:
                 failures.append(f"named_case_collection_failed:{case_id}:{error}")
             case_reports.append(case_report)
 
-        collected_count = sum(case.get("status") == "collected" for case in case_reports)
-        collected_index["status"] = "verified" if collected_count == 55 and not failures else "pending_collection"
+        verified_count = sum(case.get("status") == "collected" for case in case_reports)
+        waived_count = sum(case.get("status") == "waived_collected" for case in case_reports)
+        collected_count = verified_count + waived_count
+        expected_waived_count = (
+            1 if candidate_payload.get("qualification_status") == "passed_with_waiver" else 0
+        )
+        if waived_count != expected_waived_count:
+            failures.append(
+                "candidate_and_collected_waiver_state_mismatch:"
+                f"expected={expected_waived_count}:observed={waived_count}"
+            )
+        if collected_count == 55 and not failures and waived_count == 0:
+            collected_index["status"] = "verified"
+        elif collected_count == 55 and not failures and waived_count == 1:
+            collected_index["status"] = "verified_with_waiver"
+        else:
+            collected_index["status"] = "pending_collection"
         output_index_bytes = pretty_json_bytes(collected_index)
         write_new(output_index, output_index_bytes)
         output_index_hash = sha256_bytes(output_index_bytes)
@@ -778,15 +848,15 @@ def main() -> int:
         bundle_members = sorted(
             [candidate_member, collection_member, observation_schema_member, named_case_manifest_member]
             + list(staged_source_reports.values())
-            + [case["screenshot_member"] for case in case_reports if case.get("status") == "collected"]
-            + [case["receipt_member"] for case in case_reports if case.get("status") == "collected"]
+            + [case["screenshot_member"] for case in case_reports if case.get("status") in {"collected", "waived_collected"}]
+            + [case["receipt_member"] for case in case_reports if case.get("status") in {"collected", "waived_collected"}]
         )
         collection_passed = collected_count == 55 and not failures and not missing_cases
         collection_report = {
             "schema_version": 1,
             "suite_id": COLLECTOR_SUITE,
             "target_release": TARGET_RELEASE,
-            "status": "passed" if collection_passed else "blocked",
+            "status": ("passed_with_waiver" if waived_count == 1 else "passed") if collection_passed else "blocked",
             "passed": collection_passed,
             "sources": {
                 "matrix": str(matrix_path),
@@ -842,6 +912,8 @@ def main() -> int:
             "summary": {
                 "required": 55,
                 "collected": collected_count,
+                "verified": verified_count,
+                "waived": waived_count,
                 "missing_concrete_driver": len(missing_cases),
                 "failed": len(failures),
             },

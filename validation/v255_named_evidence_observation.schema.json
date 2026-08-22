@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://quickpls.local/schemas/v255-named-evidence-observations-v1.json",
   "title": "QuickPLS 2.55 case-specific named evidence observations",
-  "description": "Exact additive field schema for a trusted candidate driver report's named_evidence_observations array. The collector additionally requires each case_id to belong to the frozen 55-case matrix, derives the exact operation/assertion ID from the source index, requires expected and observed to be equal, and rejects artifact or source-pointer reuse.",
+  "description": "Exact additive field schema for a trusted candidate driver report's named_evidence_observations array. The collector additionally requires each case_id to belong to the frozen 55-case matrix, derives the exact operation/assertion ID from the source index, requires expected and observed to be equal except for the one exact product-owner-approved DPI waiver, and rejects artifact or source-pointer reuse.",
   "type": "array",
   "items": { "$ref": "#/$defs/observation" },
   "$defs": {
@@ -31,13 +31,24 @@
             "calculate_and_open_specialized_result"
           ]
         },
+        "status": { "const": "waived" },
+        "waiver": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["waiver_authority", "waiver_date", "reason"],
+          "properties": {
+            "waiver_authority": { "const": "product_owner" },
+            "waiver_date": { "const": "2026-08-22" },
+            "reason": { "const": "product owner explicitly authorized ignoring the 200 percent scaling requirement" }
+          }
+        },
         "assertion": {
           "type": "object",
           "additionalProperties": false,
           "required": ["id", "passed", "expected", "observed"],
           "properties": {
             "id": { "type": "string", "minLength": 1 },
-            "passed": { "const": true },
+            "passed": { "type": "boolean" },
             "expected": { "$ref": "#/$defs/jsonValue" },
             "observed": { "$ref": "#/$defs/jsonValue" }
           }
@@ -51,14 +62,31 @@
             "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
           }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": { "required": ["status"] },
+          "then": {
+            "required": ["waiver"],
+            "properties": {
+              "case_id": { "const": "cross_method:accessibility:actual Windows 200 percent scaling" },
+              "operation": { "const": "exercise_accessibility" },
+              "assertion": { "properties": { "passed": { "const": false } } }
+            }
+          },
+          "else": {
+            "properties": { "assertion": { "properties": { "passed": { "const": true } } } },
+            "not": { "required": ["waiver"] }
+          }
+        }
+      ]
     }
   },
   "x-quickpls-runtime-constraints": [
     "case_id must be one exact ID from validation/v255_named_evidence_index.json",
     "operation must equal collector_contract.operation_by_group for that case",
     "assertion.id must equal <operation>:<case_id>",
-    "assertion.expected and assertion.observed must be non-null and deeply equal",
+    "assertion.expected and assertion.observed must be non-null and deeply equal unless the exact approved DPI case is status=waived, passed=false, and records actual unequal DPI/DPR",
     "screenshot must be a CRC-valid PNG below the current candidate evidence root",
     "one source report pointer and one screenshot SHA-256 may support only one named case"
   ]

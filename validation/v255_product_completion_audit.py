@@ -10,6 +10,18 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+from v255_release_waiver import (
+    DPI_WAIVER_CASE_ID,
+    DPI_WAIVER_MANIFEST_DECLARATION,
+    exact_approved_waiver_contract,
+    exact_cross_report_waiver_binding,
+    exact_population_status,
+    exact_release_waiver_receipt,
+    exact_release_waiver_matches_observation,
+    exact_waived_index_entry,
+    exact_waived_observation,
+)
+
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_OUTPUT = ROOT / "validation" / "results" / "v255_product_completion_audit.json"
@@ -141,6 +153,7 @@ NAMED_ROUTE_SUPPORT_FILES = {
     "validation/v255_named_evidence_index.json",
     "validation/v255_named_case_driver.mjs",
     "validation/v255_named_archive_identity.py",
+    "validation/v255_release_waiver.py",
     "validation/windows_native_owned_file_dialog.py",
     "src/data/v255NamedSemEvidenceFixtures.ts",
     "validation/run_v255_installed_portable_smoke.ps1",
@@ -1662,7 +1675,15 @@ def closed_evidence_zip_checks(
         declaration_conflict = True
     else:
         for entry in named_entries:
-            if not isinstance(entry, dict) or entry.get("status") != "verified":
+            if not isinstance(entry, dict) or entry.get("status") not in {
+                "verified",
+                "waived",
+            }:
+                declaration_conflict = True
+                continue
+            if entry.get("status") == "waived" and not exact_waived_index_entry(
+                entry, require_artifacts=True
+            ):
                 declaration_conflict = True
                 continue
             add_declared(
@@ -1690,7 +1711,12 @@ def closed_evidence_zip_checks(
 
     checks["publication_zip_member_declarations_are_complete_safe_and_consistent"] = (
         frozen_archive_index.get("status") == "verified"
-        and named_evidence_index.get("status") == "verified"
+        and (
+            named_evidence_index.get("status") == "verified"
+            or exact_population_status(
+                named_entries, named_evidence_index.get("status")
+            )
+        )
         and not declaration_conflict
         and 1 <= len(declarations) <= MAX_EVIDENCE_FILE_MEMBERS
     )
@@ -2285,6 +2311,16 @@ def publication_report_checks(
         and tracked_manifest.stdout
         else None
     )
+    installed_release_waivers = installed_report.get("release_waivers")
+    installed_waiver_state_valid = (
+        installed_report.get("qualification_status") == "passed"
+        and installed_release_waivers == []
+    ) or (
+        installed_report.get("qualification_status") == "passed_with_waiver"
+        and isinstance(installed_release_waivers, list)
+        and len(installed_release_waivers) == 1
+        and exact_release_waiver_receipt(installed_release_waivers[0])
+    )
     checks["publication_installed_and_portable_report_has_exact_provenance"] = (
         installed_report.get("schema_version") == 3
         and installed_report.get("suite_id")
@@ -2296,6 +2332,7 @@ def publication_report_checks(
         and installed_report.get("source_worktree_clean") is True
         and installed_report.get("release_publication_evidence_verified") is True
         and installed_report.get("code_signing") is False
+        and installed_waiver_state_valid
         and not installed_report.get("error")
         and installed_report.get("consolidated_report_sha256")
         == final_consolidated_hash
@@ -2815,6 +2852,7 @@ def publication_report_checks(
     bound_report_paths: list[Path] = []
     bound_report_hashes: list[str] = []
     observed_case_ids: list[str] = []
+    observed_waived_case_ids: list[str] = []
     observed_screenshot_paths: list[Path] = []
     observed_screenshot_hashes: list[str] = []
     generic_reports_by_candidate: dict[str, int] = {
@@ -2951,6 +2989,16 @@ def publication_report_checks(
                     bound_driver_reports_valid = False
             elif suite_id == "quickpls_v255_cross_method_candidate_wrapper_v1":
                 cross_report_count += 1
+                cross_release_waivers = payload.get("release_waivers")
+                cross_waiver_state_valid = (
+                    payload.get("qualification_status") == "passed"
+                    and cross_release_waivers == []
+                ) or (
+                    payload.get("qualification_status") == "passed_with_waiver"
+                    and isinstance(cross_release_waivers, list)
+                    and len(cross_release_waivers) == 1
+                    and exact_release_waiver_receipt(cross_release_waivers[0])
+                )
                 manifest_binding = (
                     payload.get("manifest", {})
                     if isinstance(payload.get("manifest"), dict)
@@ -2982,6 +3030,7 @@ def publication_report_checks(
                     and payload.get("schema_version") == 1
                     and payload.get("target_release") == "2.55.0"
                     and payload.get("passed") is True
+                    and cross_waiver_state_valid
                     and payload.get("failures") == []
                     and payload.get("source_commit") == build_commit
                     and payload.get("publication_commit")
@@ -3025,6 +3074,21 @@ def publication_report_checks(
 
             for observation in observation_rows:
                 case_id = observation.get("case_id")
+                waived = exact_waived_observation(observation)
+                installed_waiver_matches_observation = (
+                    not waived
+                    or (
+                        isinstance(installed_release_waivers, list)
+                        and len(installed_release_waivers) == 1
+                        and exact_release_waiver_matches_observation(
+                            installed_release_waivers[0], observation
+                        )
+                    )
+                )
+                cross_report_waiver_matches_observation = (
+                    not waived
+                    or exact_cross_report_waiver_binding(payload, observation)
+                )
                 operation = expected_operation_by_id.get(str(case_id))
                 assertion = (
                     observation.get("assertion", {})
@@ -3043,9 +3107,18 @@ def publication_report_checks(
                     and case_id in index_by_id
                     and observation.get("operation") == operation
                     and assertion.get("id") == f"{operation}:{case_id}"
-                    and assertion.get("passed") is True
-                    and assertion.get("expected") is not None
-                    and assertion.get("observed") == assertion.get("expected")
+                    and (
+                        waived
+                        or (
+                            observation.get("status") is None
+                            and observation.get("waiver") is None
+                            and assertion.get("passed") is True
+                            and assertion.get("expected") is not None
+                            and assertion.get("observed") == assertion.get("expected")
+                        )
+                    )
+                    and installed_waiver_matches_observation
+                    and cross_report_waiver_matches_observation
                     and screenshot_path is not None
                     and hash_matches(
                         screenshot.get("sha256"), sha256_path(screenshot_path)
@@ -3055,6 +3128,8 @@ def publication_report_checks(
                     bound_driver_reports_valid = False
                     continue
                 observed_case_ids.append(case_id)
+                if waived:
+                    observed_waived_case_ids.append(case_id)
                 observed_screenshot_paths.append(screenshot_path)
                 observed_screenshot_hashes.append(sha256_path(screenshot_path))
 
@@ -3072,6 +3147,17 @@ def publication_report_checks(
         and len(bound_report_hashes) == len(set(bound_report_hashes)) == 3
         and len(observed_case_ids) == len(set(observed_case_ids)) == 47
         and set(observed_case_ids) == expected_driver_case_ids
+        and (
+            (
+                installed_report.get("qualification_status") == "passed"
+                and observed_waived_case_ids == []
+            )
+            or (
+                installed_report.get("qualification_status")
+                == "passed_with_waiver"
+                and observed_waived_case_ids == [DPI_WAIVER_CASE_ID]
+            )
+        )
         and len(observed_screenshot_paths)
         == len(set(observed_screenshot_paths))
         == 47
@@ -3273,7 +3359,11 @@ def publication_report_checks(
     checks["publication_zip_matches_verified_manifest"] = (
         bundle_manifest.get("schema_version") == 1
         and bundle_manifest.get("target_release") == "2.55.0"
-        and bundle_manifest.get("status") == "verified"
+        and bundle_manifest.get("status") in {"verified", "verified_with_waiver"}
+        and bundle_manifest.get("named_evidence", {}).get(
+            "approved_release_waiver"
+        )
+        == DPI_WAIVER_MANIFEST_DECLARATION
         and isinstance(expected_bundle_hash, str)
         and is_sha256(expected_bundle_hash)
         and sha256_path(evidence_bundle_path) == expected_bundle_hash.lower()
@@ -3523,7 +3613,7 @@ def declared_named_evidence_index_checks(
                 and receipt.get("sha256") is None
                 and binding.get("json_pointer") is None
             )
-        return entry.get("status") == "verified" and all(
+        has_artifacts = all(
             isinstance(value, str) and bool(value)
             for value in (
                 screenshot.get("member"),
@@ -3532,6 +3622,12 @@ def declared_named_evidence_index_checks(
                 receipt.get("sha256"),
                 binding.get("json_pointer"),
             )
+        )
+        return (
+            entry.get("status") == "verified" and has_artifacts
+        ) or (
+            has_artifacts
+            and exact_waived_index_entry(entry, require_artifacts=True)
         )
 
     statuses = [entry.get("status") for entry in entries]
@@ -3558,7 +3654,7 @@ def declared_named_evidence_index_checks(
             all(by_id[case_id].get(field) == value for field, value in row.items())
             for case_id, row in expected_by_id.items()
         ),
-        "named_evidence_index_uses_pending_or_verified_rows": all(
+        "named_evidence_index_uses_pending_verified_or_exactly_waived_rows": all(
             valid_placeholder_or_declaration(entry) for entry in entries
         ),
         "named_evidence_index_collection_status_matches_rows": (
@@ -3566,6 +3662,7 @@ def declared_named_evidence_index_checks(
                 all(status == "verified" for status in statuses)
                 and named_index.get("status") == "verified"
             )
+            or exact_population_status(entries, named_index.get("status"))
             or (
                 any(status == "pending" for status in statuses)
                 and named_index.get("status") == "pending_collection"
@@ -3589,6 +3686,23 @@ def declared_named_evidence_index_checks(
             == "2.55.0"
             and named_index.get("publication_contract", {}).get(
                 "safe_member_paths_only"
+            )
+            is True
+            and exact_approved_waiver_contract(
+                named_index.get("collector_contract", {}).get(
+                    "approved_release_waiver"
+                )
+            )
+            and named_index.get("publication_contract", {}).get(
+                "approved_waiver_count"
+            )
+            == 1
+            and named_index.get("publication_contract", {}).get(
+                "approved_waiver_case_id"
+            )
+            == DPI_WAIVER_CASE_ID
+            and named_index.get("publication_contract", {}).get(
+                "all_other_cases_must_be_verified"
             )
             is True
         ),
@@ -4071,6 +4185,7 @@ def declared_named_route_manifest_checks(
                 referenced_named_files.append(step.get("target"))
 
     cross_routes_valid = len(cross_cases) == len(raw_cross_cases)
+    cross_waiver_contract_valid = True
     for case in cross_cases:
         case_id = case.get("id")
         indexed = index_by_id.get(str(case_id))
@@ -4088,6 +4203,19 @@ def declared_named_route_manifest_checks(
             and case.get("expected") is not None
         ):
             cross_routes_valid = False
+        if case_id == DPI_WAIVER_CASE_ID:
+            approved = case.get("approved_waiver")
+            cross_waiver_contract_valid = cross_waiver_contract_valid and (
+                isinstance(approved, dict)
+                and {
+                    "case_id": DPI_WAIVER_CASE_ID,
+                    "status": "waived",
+                    **approved,
+                }
+                == DPI_WAIVER_MANIFEST_DECLARATION
+            )
+        elif case.get("approved_waiver") is not None:
+            cross_waiver_contract_valid = False
 
     fixture_sources = cross_manifest.get("fixture_sources", {})
     fixture_sources = fixture_sources if isinstance(fixture_sources, dict) else {}
@@ -4138,6 +4266,13 @@ def declared_named_route_manifest_checks(
         )
         else ""
     )
+    installed_wrapper_text = (
+        read_text("validation/run_v255_installed_portable_smoke.ps1")
+        if existing_repo_source_file(
+            "validation/run_v255_installed_portable_smoke.ps1"
+        )
+        else ""
+    )
     driver_surfaces_valid = (
         'const SUITE_ID = "quickpls_v255_named_case_driver_v1"' in named_driver_text
         and 'const MANIFEST_SUITE_ID = "quickpls_v255_named_case_manifest_v1"'
@@ -4146,6 +4281,9 @@ def declared_named_route_manifest_checks(
         and all(f'"{kind}"' in named_driver_text for kind in used_queries)
         and '"quickpls_v255_cross_method_candidate_wrapper_v1"'
         in cross_wrapper_text
+        and "WaiveActualWindows200PercentScaling" in cross_wrapper_text
+        and "Add-WaivedDpiObservation" in cross_wrapper_text
+        and "WaiveActualWindows200PercentScaling" in installed_wrapper_text
     )
 
     return {
@@ -4183,6 +4321,7 @@ def declared_named_route_manifest_checks(
             and set(cross_ids) == EXPECTED_CROSS_METHOD_WRAPPER_CASE_IDS
             and set(cross_ids).issubset(set(fixed_ids))
             and cross_fixture_hashes_valid
+            and cross_waiver_contract_valid
         ),
         "named_executable_routes_are_schema_valid_and_supported": (
             named_routes_valid
@@ -4276,21 +4415,41 @@ def final_named_evidence_report_checks(
         and sources.get("bundle_manifest_sha256") == bundle_manifest_hash
         and sources.get("evidence_bundle_sha256") == bundle_hash
     )
-    checks["publication_named_evidence_has_all_55_verified_cases_once"] = (
-        isinstance(cases, list)
+    installed_release_waivers = installed.get("release_waivers")
+    strict_qualification = (
+        installed.get("qualification_status") == "passed"
+        and installed_release_waivers == []
+    )
+    waived_qualification = (
+        installed.get("qualification_status") == "passed_with_waiver"
+        and isinstance(installed_release_waivers, list)
+        and len(installed_release_waivers) == 1
+        and exact_release_waiver_receipt(installed_release_waivers[0])
+    )
+    expected_waived_count = 1 if waived_qualification else 0
+    expected_verified_count = 55 - expected_waived_count
+    checks["publication_named_evidence_matches_exact_bound_qualification"] = (
+        (strict_qualification or waived_qualification)
+        and isinstance(cases, list)
         and len(cases) == len(case_by_id) == 55
         and set(case_by_id) == expected_case_ids
         and all(
-            case.get("status") == "passed"
+            case.get("status")
+            == (
+                "waived"
+                if expected_waived_count == 1 and case_id == DPI_WAIVER_CASE_ID
+                else "passed"
+            )
             and isinstance(case.get("checks"), dict)
             and bool(case.get("checks"))
             and all(value is True for value in case.get("checks", {}).values())
-            for case in case_by_id.values()
+            for case_id, case in case_by_id.items()
         )
         and report.get("summary", {}).get("required") == 55
         and report.get("summary", {}).get("cross_method_required") == 29
         and report.get("summary", {}).get("specialized_result_required") == 26
-        and report.get("summary", {}).get("verified") == 55
+        and report.get("summary", {}).get("verified") == expected_verified_count
+        and report.get("summary", {}).get("waived") == expected_waived_count
         and report.get("summary", {}).get("pending") == 0
     )
     checks["installed_smoke_hash_binds_the_executed_named_evidence_report"] = (
@@ -4531,12 +4690,20 @@ def main() -> int:
             final_evidence.update(lineage_evidence)
             named_rows = named_evidence_index.get("entries", [])
             checks["publication_named_evidence_index_is_fully_populated"] = (
-                named_evidence_index.get("status") == "verified"
-                and isinstance(named_rows, list)
-                and len(named_rows) == 55
-                and all(
-                    isinstance(row, dict) and row.get("status") == "verified"
-                    for row in named_rows
+                isinstance(named_rows, list)
+                and (
+                    (
+                        named_evidence_index.get("status") == "verified"
+                        and len(named_rows) == 55
+                        and all(
+                            isinstance(row, dict)
+                            and row.get("status") == "verified"
+                            for row in named_rows
+                        )
+                    )
+                    or exact_population_status(
+                        named_rows, named_evidence_index.get("status")
+                    )
                 )
             )
             publication_checks, publication_evidence = publication_report_checks(

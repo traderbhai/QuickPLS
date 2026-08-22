@@ -12,6 +12,18 @@ import zlib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from v255_release_waiver import (
+    DPI_WAIVER_CASE_ID,
+    DPI_WAIVER_MANIFEST_DECLARATION,
+    exact_approved_waiver_contract,
+    exact_case_waiver_receipt_matches_observation,
+    exact_cross_report_waiver_binding,
+    exact_population_status,
+    exact_release_waiver_receipt,
+    exact_release_waiver_matches_observation,
+    exact_waived_index_entry,
+    exact_waived_observation,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_MATRIX = ROOT / "validation" / "v255_method_evidence_matrix.json"
@@ -259,8 +271,12 @@ def validate_index_shape(
         all(actual_by_id[case_id].get(field) == expected_by_id[case_id][field] for field in ("scope", "group", "case"))
         for case_id in expected_by_id
     )
-    checks["entry_statuses_are_pending_or_verified"] = all(
-        entry.get("status") in {"pending", "verified"} for entry in entries
+    checks["entry_statuses_are_pending_verified_or_exactly_waived"] = all(
+        entry.get("status") in {"pending", "verified", "waived"} for entry in entries
+    ) and all(
+        entry.get("id") == DPI_WAIVER_CASE_ID
+        for entry in entries
+        if entry.get("status") == "waived"
     )
     checks["binding_expected_values_equal_entry_ids"] = all(
         isinstance(entry.get("receipt"), dict)
@@ -307,6 +323,9 @@ def validate_index_shape(
         and trusted_suite_map.get("quickpls_v255_method_evidence_crawler_v2") == 2
         and trusted_suite_map.get("quickpls_v255_frozen_archive_reopen_crawler_v1") == 1
         and trusted_suite_map.get("quickpls_v255_named_case_driver_v1") == 1
+        and exact_approved_waiver_contract(
+            collector_contract.get("approved_release_waiver")
+        )
     )
     publication_contract = index.get("publication_contract")
     checks["publication_contract_requires_collector_candidate_source_and_unique_artifacts"] = (
@@ -318,6 +337,9 @@ def validate_index_shape(
         and publication_contract.get("candidate_sha256_and_source_commit_binding_required") is True
         and publication_contract.get("unique_case_artifacts_required") is True
         and publication_contract.get("executed_named_case_manifest_hash_binding_required") is True
+        and publication_contract.get("approved_waiver_count") == 1
+        and publication_contract.get("approved_waiver_case_id") == DPI_WAIVER_CASE_ID
+        and publication_contract.get("all_other_cases_must_be_verified") is True
     )
     checks["pending_and_verified_rows_have_no_partial_artifact_state"] = all(
         (
@@ -344,18 +366,23 @@ def validate_index_shape(
             and isinstance(entry["receipt"].get("binding"), dict)
             and entry["receipt"]["binding"].get("json_pointer") == "/case_id"
         )
+        or exact_waived_index_entry(entry, require_artifacts=True)
         for entry in entries
     )
     checks["index_collection_status_matches_rows"] = (
         (entries and all(entry.get("status") == "verified" for entry in entries) and index.get("status") == "verified")
+        or exact_population_status(entries, index.get("status"))
         or (any(entry.get("status") == "pending" for entry in entries) and index.get("status") == "pending_collection")
     )
     checks["publication_index_is_fully_verified"] = (
         not publication
         or (
-            index.get("status") == "verified"
-            and len(entries) == 55
-            and all(entry.get("status") == "verified" for entry in entries)
+            (
+                index.get("status") == "verified"
+                and len(entries) == 55
+                and all(entry.get("status") == "verified" for entry in entries)
+            )
+            or exact_population_status(entries, index.get("status"))
         )
     )
     for name, passed in checks.items():
@@ -387,7 +414,7 @@ def verify_publication_entries(
     named_case_manifest_ref = named_manifest.get("named_case_manifest") if isinstance(named_manifest.get("named_case_manifest"), dict) else {}
     candidate_digests = named_manifest.get("candidate_executables") if isinstance(named_manifest.get("candidate_executables"), dict) else {}
     checks: dict[str, bool] = {
-        "bundle_manifest_is_verified_for_2_55": manifest.get("status") == "verified"
+        "bundle_manifest_is_verified_for_2_55": manifest.get("status") in {"verified", "verified_with_waiver"}
         and manifest.get("target_release") == TARGET_RELEASE,
         "bundle_manifest_sha256_is_lowercase": isinstance(expected_bundle_hash, str)
         and SHA256_RE.fullmatch(expected_bundle_hash) is not None,
@@ -399,6 +426,8 @@ def verify_publication_entries(
             and named_manifest.get("source_reports_are_bundle_members") is True
             and named_manifest.get("unique_case_receipt_and_screenshot_bytes") is True
             and named_manifest.get("unique_source_report_pointer_per_case") is True
+            and named_manifest.get("approved_release_waiver")
+            == DPI_WAIVER_MANIFEST_DECLARATION
         ),
         "named_evidence_manifest_declares_candidate_provenance": (
             isinstance(named_manifest.get("source_commit"), str)
@@ -508,6 +537,17 @@ def verify_publication_entries(
                     if isinstance(item, dict) and isinstance(item.get("name"), str)
                 }
             candidate_source_commit = candidate_payload.get("candidate_build_source_commit")
+        candidate_release_waivers = candidate_payload.get("release_waivers") if isinstance(candidate_payload, dict) else None
+        candidate_qualification_status = candidate_payload.get("qualification_status") if isinstance(candidate_payload, dict) else None
+        candidate_waiver_state_valid = (
+            candidate_qualification_status == "passed"
+            and candidate_release_waivers == []
+        ) or (
+            candidate_qualification_status == "passed_with_waiver"
+            and isinstance(candidate_release_waivers, list)
+            and len(candidate_release_waivers) == 1
+            and exact_release_waiver_receipt(candidate_release_waivers[0])
+        )
         checks["candidate_report_is_exact_passing_source_stage_run"] = (
             isinstance(candidate_payload, dict)
             and candidate_payload.get("schema_version") == 3
@@ -521,6 +561,7 @@ def verify_publication_entries(
             and set(candidate_outcomes) == {"portable", "installed"}
             and all(candidate_outcomes[name].get("status") == "passed" for name in candidate_outcomes)
             and all(candidate_outcomes[name].get("build_source_commit") == candidate_source_commit for name in candidate_outcomes)
+            and candidate_waiver_state_valid
             and all(
                 isinstance(candidate_outcomes[name].get("executable_sha256"), str)
                 and candidate_outcomes[name]["executable_sha256"].lower() == candidate_digests.get(name)
@@ -538,13 +579,28 @@ def verify_publication_entries(
             if isinstance(item, dict) and isinstance(item.get("id"), str)
         } if isinstance(collection_cases_raw, list) else {}
         expected_ids = {str(entry.get("id", "")) for entry in entries}
+        collected_waiver_count = collection_summary.get("waived")
+        collected_verified_count = collection_summary.get("verified")
+        collector_qualification_valid = (
+            collector_payload.get("status") == "passed"
+            and collected_verified_count == 55
+            and collected_waiver_count == 0
+        ) or (
+            collector_payload.get("status") == "passed_with_waiver"
+            and collected_verified_count == 54
+            and collected_waiver_count == 1
+        )
         checks["collector_report_is_exact_passing_55_case_collection"] = (
             isinstance(collector_payload, dict)
             and collector_payload.get("schema_version") == 1
             and collector_payload.get("suite_id") == COLLECTOR_SUITE
             and collector_payload.get("target_release") == TARGET_RELEASE
-            and collector_payload.get("status") == "passed"
             and collector_payload.get("passed") is True
+            and collector_qualification_valid
+            and (
+                candidate_qualification_status == "passed_with_waiver"
+            )
+            == (collector_payload.get("status") == "passed_with_waiver")
             and not collector_payload.get("failures")
             and not collector_payload.get("missing_concrete_drivers")
             and collection_summary.get("required") == 55
@@ -554,7 +610,8 @@ def verify_publication_entries(
             and isinstance(collection_cases_raw, list)
             and len(collection_cases_raw) == len(collection_cases) == 55
             and set(collection_cases) == expected_ids
-            and all(item.get("status") == "collected" for item in collection_cases.values())
+            and all(item.get("status") in {"collected", "waived_collected"} for item in collection_cases.values())
+            and sum(item.get("status") == "waived_collected" for item in collection_cases.values()) == collected_waiver_count
         )
         checks["collector_report_binds_current_matrix_index_candidate_and_commit"] = (
             collection_sources.get("matrix_sha256") == matrix_hash
@@ -633,6 +690,9 @@ def verify_publication_entries(
 
         for entry in entries:
             case_id = str(entry.get("id", ""))
+            waived = case_id == DPI_WAIVER_CASE_ID and exact_waived_index_entry(
+                entry, require_artifacts=True
+            )
             report: dict[str, Any] = {"id": case_id, "status": "failed", "checks": {}}
             screenshot = entry.get("screenshot") if isinstance(entry.get("screenshot"), dict) else {}
             receipt = entry.get("receipt") if isinstance(entry.get("receipt"), dict) else {}
@@ -650,7 +710,9 @@ def verify_publication_entries(
                 }
             )
             per_case: dict[str, bool] = report["checks"]
-            per_case["entry_is_verified"] = entry.get("status") == "verified"
+            per_case["entry_has_exact_qualification_status"] = (
+                waived or entry.get("status") == "verified"
+            )
             per_case["case_artifact_members_hashes_are_unique"] = (
                 screenshot_members[screenshot_member] == 1
                 and screenshot_hashes[screenshot_hash] == 1
@@ -683,7 +745,7 @@ def verify_publication_entries(
                 and receipt_payload.get("schema_version") == 1
                 and receipt_payload.get("suite_id") == CASE_RECEIPT_SUITE
                 and receipt_payload.get("target_release") == TARGET_RELEASE
-                and receipt_payload.get("status") == "passed"
+                and receipt_payload.get("status") == ("waived" if waived else "passed")
                 and receipt_payload.get("case_id") == case_id
                 and receipt_payload.get("scope") == entry.get("scope")
                 and receipt_payload.get("group") == entry.get("group")
@@ -711,10 +773,24 @@ def verify_publication_entries(
                 isinstance(receipt_payload, dict)
                 and receipt_payload.get("operation") == expected_op
                 and receipt_assertion.get("id") == expected_assertion
-                and receipt_assertion.get("passed") is True
+                and receipt_assertion.get("passed") is (False if waived else True)
                 and "expected" in receipt_assertion
                 and receipt_assertion.get("expected") is not None
-                and receipt_assertion.get("expected") == receipt_assertion.get("observed")
+                and (
+                    exact_waived_observation(
+                        {
+                            "schema_version": 1,
+                            "case_id": case_id,
+                            "operation": expected_op,
+                            "status": "waived",
+                            "waiver": receipt_payload.get("waiver"),
+                            "assertion": receipt_assertion,
+                        }
+                    )
+                    if waived
+                    else receipt_assertion.get("expected")
+                    == receipt_assertion.get("observed")
+                )
             )
 
             receipt_candidate = receipt_payload.get("candidate") if isinstance(receipt_payload, dict) and isinstance(receipt_payload.get("candidate"), dict) else {}
@@ -798,24 +874,51 @@ def verify_publication_entries(
                 source_observation = None
             source_assertion = source_observation.get("assertion") if isinstance(source_observation, dict) and isinstance(source_observation.get("assertion"), dict) else {}
             source_screenshot = source_observation.get("screenshot") if isinstance(source_observation, dict) and isinstance(source_observation.get("screenshot"), dict) else {}
+            source_assertion_valid = (
+                exact_waived_observation(source_observation)
+                if waived
+                else (
+                    source_assertion.get("passed") is True
+                    and source_assertion.get("expected") is not None
+                    and source_assertion.get("expected") == source_assertion.get("observed")
+                    and source_observation.get("status") is None
+                    and source_observation.get("waiver") is None
+                )
+            ) if isinstance(source_observation, dict) else False
             per_case["source_pointer_resolves_exact_case_operation_assertion_and_screenshot"] = (
                 isinstance(source_observation, dict)
                 and source_observation.get("schema_version") == 1
                 and source_observation.get("case_id") == case_id
                 and source_observation.get("operation") == expected_op
                 and source_assertion.get("id") == expected_assertion
-                and source_assertion.get("passed") is True
-                and source_assertion.get("expected") is not None
-                and source_assertion.get("expected") == source_assertion.get("observed")
+                and source_assertion_valid
                 and source_assertion.get("expected") == receipt_assertion.get("expected")
                 and source_assertion.get("observed") == receipt_assertion.get("observed")
                 and source_screenshot.get("sha256") == screenshot_hash
                 and sha256_bytes(canonical_json_bytes(source_observation)) == source_ref.get("observation_sha256")
             )
+            per_case[
+                "waiver_is_exactly_bound_across_candidate_cross_dpi_source_receipt_and_screenshot"
+            ] = (
+                not waived
+                or (
+                    isinstance(candidate_release_waivers, list)
+                    and len(candidate_release_waivers) == 1
+                    and exact_release_waiver_matches_observation(
+                        candidate_release_waivers[0], source_observation
+                    )
+                    and exact_cross_report_waiver_binding(
+                        source_payload, source_observation
+                    )
+                    and exact_case_waiver_receipt_matches_observation(
+                        receipt_payload, source_observation
+                    )
+                )
+            )
             collection_case = collection_cases.get(case_id)
             per_case["collector_report_case_row_binds_all_artifacts_and_provenance"] = (
                 isinstance(collection_case, dict)
-                and collection_case.get("status") == "collected"
+                and collection_case.get("status") == ("waived_collected" if waived else "collected")
                 and collection_case.get("candidate") == candidate_name
                 and collection_case.get("candidate_executable_sha256") == receipt_candidate.get("executable_sha256")
                 and collection_case.get("source_report_member") == source_member
@@ -841,7 +944,7 @@ def verify_publication_entries(
                 key is not None and source_key_counts[key] == 1
             )
             if all(report["checks"].values()):
-                report["status"] = "passed"
+                report["status"] = "waived" if report["id"] == DPI_WAIVER_CASE_ID and exact_waived_index_entry(next((entry for entry in entries if entry.get("id") == report["id"]), None), require_artifacts=True) else "passed"
             else:
                 failures.extend(
                     f"{report['id']}:{name}"
@@ -936,7 +1039,7 @@ def main() -> int:
                 failures.extend(publication_failures)
         else:
             checks["source_stage_allows_pending_collection"] = all(
-                entry.get("status") in {"pending", "verified"} for entry in entries
+                entry.get("status") in {"pending", "verified", "waived"} for entry in entries
             )
             if not checks["source_stage_allows_pending_collection"]:
                 failures.append("source_stage_allows_pending_collection")
@@ -968,6 +1071,7 @@ def main() -> int:
                 "cross_method_required": 29,
                 "specialized_result_required": 26,
                 "verified": sum(case.get("status") == "passed" for case in case_reports),
+                "waived": sum(case.get("status") == "waived" for case in case_reports),
                 "pending": sum(entry.get("status") == "pending" for entry in entries),
                 "failed": len(failures),
             },

@@ -23,6 +23,11 @@ const FILE_HELPER = path.join(ROOT, "validation", "windows_native_owned_file_dia
 const SUITE_ID = "quickpls_v255_cross_method_candidate_driver_v1";
 const MANIFEST_SUITE_ID = "quickpls_v255_cross_method_case_manifest_v1";
 const PHASES = new Set(["imports", "exports", "archives", "legacy_reopen", "autosave_seed", "autosave_recover", "unsaved_close_seed", "dpi_process"]);
+const DPI_WAIVER_METADATA = Object.freeze({
+  waiver_authority: "product_owner",
+  waiver_date: "2026-08-22",
+  reason: "product owner explicitly authorized ignoring the 200 percent scaling requirement",
+});
 
 function assert(value, message) { if (!value) throw new Error(message); }
 function compact(value) { return String(value ?? "").replace(/\s+/g, " ").trim(); }
@@ -43,7 +48,7 @@ async function writeJsonNew(file, value) {
   await fs.writeFile(file, `${JSON.stringify(value, null, 2)}\n`, { flag: "wx" });
 }
 function parseArgs(argv) {
-  const allowed = new Set(["phase", "endpoint", "evidence-dir", "manifest", "fixture-report", "candidate-path", "candidate-sha256", "candidate-pid", "source-commit", "release-report-sha256", "python", "project-path", "effective-dpi"]);
+  const allowed = new Set(["phase", "endpoint", "evidence-dir", "manifest", "fixture-report", "candidate-path", "candidate-sha256", "candidate-pid", "source-commit", "release-report-sha256", "python", "project-path", "effective-dpi", "waive-actual-windows-200-percent-scaling"]);
   const args = {};
   for (let index = 0; index < argv.length; index += 2) {
     const token = argv[index];
@@ -58,6 +63,8 @@ function parseArgs(argv) {
   assert(/^[0-9a-f]{40}$/u.test(args["source-commit"]), "Source commit is invalid.");
   assert(/^[0-9a-f]{64}$/iu.test(args["release-report-sha256"]), "Release report SHA-256 is invalid.");
   assert(/^\d+$/u.test(args["candidate-pid"]) && Number(args["candidate-pid"]) > 0, "Candidate PID is invalid.");
+  assert(args["waive-actual-windows-200-percent-scaling"] === undefined || args["waive-actual-windows-200-percent-scaling"] === "true", "DPI waiver argument must be the exact value true.");
+  assert(args["waive-actual-windows-200-percent-scaling"] === undefined || args.phase === "dpi_process", "The DPI waiver is valid only for the dpi_process phase.");
   const parsed = new URL(args.endpoint);
   assert(parsed.protocol === "http:" && parsed.hostname === "127.0.0.1" && parsed.port, "Endpoint must be explicit HTTP loopback 127.0.0.1.");
   return {
@@ -70,6 +77,7 @@ function parseArgs(argv) {
     python: path.resolve(args.python),
     projectPath: args["project-path"] ? path.resolve(args["project-path"]) : null,
     effectiveDpi: args["effective-dpi"] ? Number(args["effective-dpi"]) : null,
+    waiveActualWindows200PercentScaling: args["waive-actual-windows-200-percent-scaling"] === "true",
   };
 }
 
@@ -321,12 +329,19 @@ async function unsavedCloseSeed(page, args, fixturePayload) {
 }
 
 async function dpiProcess(page, args, offline) {
-  assert(args.effectiveDpi === 192, `Wrapper did not prove effective DPI 192 (observed ${args.effectiveDpi}).`);
+  if (args.waiveActualWindows200PercentScaling) {
+    assert(Number.isInteger(args.effectiveDpi) && args.effectiveDpi > 0 && args.effectiveDpi !== 192, `Waived DPI evidence must retain a positive actual non-192 DPI (observed ${args.effectiveDpi}).`);
+  } else {
+    assert(args.effectiveDpi === 192, `Wrapper did not prove effective DPI 192 (observed ${args.effectiveDpi}).`);
+  }
   const browserState = await page.evaluate(() => ({ device_pixel_ratio: window.devicePixelRatio, origin: window.location.origin, native_shell: Boolean(document.querySelector('.nd-app[data-native-desktop-shell="true"]')) }));
-  assert(browserState.device_pixel_ratio === 2 && browserState.origin === PACKAGED_TAURI_ORIGIN && browserState.native_shell, `DPI/process browser state is invalid: ${JSON.stringify(browserState)}`);
+  assert(Number.isFinite(browserState.device_pixel_ratio) && browserState.device_pixel_ratio > 0 && browserState.origin === PACKAGED_TAURI_ORIGIN && browserState.native_shell, `DPI/process browser state is invalid: ${JSON.stringify(browserState)}`);
+  const expectedDevicePixelRatio = args.effectiveDpi / 96;
+  assert(Math.abs(browserState.device_pixel_ratio - expectedDevicePixelRatio) <= 0.02, `Browser DPR ${browserState.device_pixel_ratio} is inconsistent with native DPI ${args.effectiveDpi} (expected ${expectedDevicePixelRatio}).`);
+  if (!args.waiveActualWindows200PercentScaling) assert(browserState.device_pixel_ratio === 2, `Actual Windows 200 percent evidence requires DPR 2 (observed ${browserState.device_pixel_ratio}).`);
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("quickpls:open-demo-project", { detail: { sampleId: "corporate_reputation" } })));
   await waitToast(page, "Project opened");
-  const dpiScreenshot = await screenshot(page, args.evidenceDir, "actual-windows-200-percent");
+  const dpiScreenshot = await screenshot(page, args.evidenceDir, args.waiveActualWindows200PercentScaling ? `waived-windows-scaling-actual-dpi-${args.effectiveDpi}` : "actual-windows-200-percent");
   await page.evaluate(() => window.dispatchEvent(new CustomEvent("quickpls:navigate-surface", { detail: { surface: "home" } })));
   await page.waitForTimeout(300);
   const cdpScreenshot = await screenshot(page, args.evidenceDir, "isolated-local-cdp");
@@ -334,7 +349,15 @@ async function dpiProcess(page, args, offline) {
   await page.waitForTimeout(300);
   const cleanupScreenshot = await screenshot(page, args.evidenceDir, "pid-scoped-cleanup-before-stop");
   const offlineSummary = offline.summary();
-  return [{ kind: "dpi_process", effective_dpi: args.effectiveDpi, browser: browserState, functional_network_requests: offlineSummary.externalRequestCount, screenshots: { dpi: dpiScreenshot, cdp: cdpScreenshot, cleanup: cleanupScreenshot } }];
+  return [{
+    kind: "dpi_process",
+    scaling_requirement_status: args.waiveActualWindows200PercentScaling ? "waived" : "passed",
+    waiver: args.waiveActualWindows200PercentScaling ? DPI_WAIVER_METADATA : null,
+    effective_dpi: args.effectiveDpi,
+    browser: browserState,
+    functional_network_requests: offlineSummary.externalRequestCount,
+    screenshots: { dpi: dpiScreenshot, cdp: cdpScreenshot, cleanup: cleanupScreenshot },
+  }];
 }
 
 async function main() {
