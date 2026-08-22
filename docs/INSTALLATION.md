@@ -1,12 +1,10 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. Its frozen two-pass consolidated source gate
-passed. A provenance-bound unsigned setup, portable, CLI, and checksum package
-was then built and hash-verified locally. Installed/portable packaged journeys,
-actual Windows 200% evidence, the evidence bundle, and publication remain
-pending. Code signing is excluded.
+Current source version: **2.54.0**. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. Code signing is excluded.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. The local 2.55 candidate is not a download or installed-app claim; use it only for the remaining controlled release gates.
+Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned.
 
 ## Choose An Install Type
 

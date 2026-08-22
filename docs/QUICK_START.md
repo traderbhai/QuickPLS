@@ -1,11 +1,10 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.55 source workflow:
-`Launcher → Data → Canvas → Calculate → Results`. The formal final consolidated
-source gate passed 14/14 steps, and the provenance-bound unsigned 2.55 setup,
-portable, CLI, and checksum package was built and hash-verified. Installed and
-portable packaged journeys, actual Windows 200% evidence, the evidence bundle,
-and publication remain pending; the latest downloadable release remains 2.54.
+This guide follows the Version 2.54 source workflow:
+`Launcher → Data → Canvas → Calculate → Results`. The consolidated source
+diagnostic recorded 8/9 passing steps and the focused remediation pass then
+passed 69/69 targeted tests. The unsigned 2.54 Windows candidate and packaged
+save/fresh-reopen journey are still pending.
 
 ## 1. Start or open a project
 
@@ -86,4 +85,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md), and the [Version 2.55 Release Notes](RELEASE_NOTES_V2_55_0.md).
+For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md), and the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md).

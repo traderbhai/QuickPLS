@@ -10,12 +10,9 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 
 ## What is the current version?
 
-The coordinated source version is 2.55.0. Its frozen two-pass source gate passed
-14/14 final steps. A provenance-bound unsigned setup, portable, CLI, and checksum
-package was then built and hash-verified locally. Installed/portable packaged
-evidence, actual Windows 200% evidence, the evidence bundle, and publication are
-still pending. The latest published public pre-release remains
-[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+The coordinated source version is 2.54.0. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -103,18 +100,6 @@ final unsigned candidate then passed the isolated 10/10 create → calculate →
 Results → save → fresh-reopen packaged journey with zero application-page
 external requests and zero console errors. Release packaging and checksums also
 passed; code signing is excluded. See the [2.54 release notes](RELEASE_NOTES_V2_54_0.md).
-
-## What changes in Version 2.55?
-
-Version 2.55 makes automatic diagram layout and routing model-aware, adds
-presentation-only path bend and moderation-anchor editing, and reuses the full
-read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
-responsive behavior, prioritize scientific blockers, and disclose only controls
-and fixed policies that the engine actually implements. The exact 18-method
-catalogue is unchanged. The final consolidated source gate passed 14/14; candidate
-packaging and hash verification passed, while installed/portable evidence,
-actual Windows 200% evidence, the evidence bundle, and publication remain
-pending. See the [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
 ## How do I create or edit a higher-order construct?
 

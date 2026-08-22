@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current source version: **2.55.0**. Its frozen two-pass consolidated source gate is complete: the formal first pass recorded the finite correction batch and the byte-identical final gate passed all 14 steps. A provenance-bound unsigned candidate package containing setup, portable, CLI, and checksum files has also been built and hash-verified. Installed/portable packaged journeys, actual Windows 200% evidence, the evidence bundle, and publication are still pending and are not claimed here. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current source version: **2.54.0**. Its final unsigned Windows candidate, release-artifact package and checksums, and isolated packaged lifecycle smoke passed. Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -33,22 +33,6 @@ isolated 10/10 create → calculate → Results → save → fresh-reopen packag
 journey with zero application-page external requests and zero console errors.
 The release-artifact package and SHA-256 checksum verification also passed;
 code signing is excluded.
-
-QuickPLS 2.55.0 source adds model-aware diagram routing and editable presentation
-routes, a full read-only PROCESS diagram preview, responsive shared Calculate
-dialogs, scientific-first eligibility messages, and truthful fixed-setting
-summaries for the existing 18 public methods. Its rebaselined interaction suite
-and evidence contracts cover all 18 setup surfaces and 64 declared setup cases,
-and require 29 cross-method journeys and 26 specialized journeys for the
-candidate evidence package. The formal final source
-gate passed 14/14 steps, including full Vitest, focused Rust authority/archive
-lifecycle tests, full TypeScript checking, a production frontend build,
-six-format semantic export readback, the 17-item regression rebaseline, the
-18-method setup crawl, and the final evidence contract. The provenance-bound
-unsigned setup, portable, CLI, and checksum package was subsequently built and
-hash-verified. Installed/portable packaged journeys, actual 200% Windows
-evidence, the evidence bundle, and publication remain pending; the latest
-downloadable release therefore remains 2.54.0.
 
 ## Download
 
@@ -92,7 +76,7 @@ QuickPLS now separates scientific coverage from verification maturity. The optio
 - **Legacy** keeps discontinued or historical analyses readable without advertising them in normal Calculate.
 - Internal evidence states, source hashes, and promotion terminology are confined to validation reports and Run Details rather than repeated throughout the customer workflow.
 
-The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 41 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. This row-level projection does not demote any previously qualified exact cell. Version 2.50 promoted the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Versions 2.51–2.55 change user workflow and presentation or add separately versioned cells without relabelling historical scientific identities. Scoped Standard never implies unrestricted SmartPLS parity.
+The current active-parity baseline contains 43 SmartPLS catalogue rows plus two intentionally excluded legacy rows. No active row is classified as unrestricted SmartPLS parity. The Registry contains 41 scoped-Standard exact cells; its conservative compatibility projection is 27 Standard rows, 16 Labs rows, and two Legacy rows. This row-level projection does not demote any previously qualified exact cell. Version 2.50 promoted the bounded Rank 2 moderated-mediation cell and both bounded Rank 3 CB-SEM cells under the streamlined integration profile. Versions 2.51–2.54 change user workflow and presentation or add separately versioned cells without relabelling historical scientific identities. Scoped Standard never implies unrestricted SmartPLS parity.
 
 The implemented product foundation includes the option-cell registry, universal `SemModelV4` authority, estimator-specific compiled plans, schema-6 project migration, recipe-schema-4 execution receipts, canonical result/comparison/export contracts, deterministic data transformations, Method Details, Run Details, and a synchronized SEM parameter table. The Rank 0–3 Version 2.50 workflows are connected to the production Canvas, calculation, cancellation, Results, export, append, and strict reopen paths.
 
@@ -102,7 +86,6 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
-- [QuickPLS 2.55.0 Release Notes — unsigned candidate built; packaged gates pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [QuickPLS 2.54.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [QuickPLS 2.53.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [QuickPLS 2.52.0 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
@@ -196,11 +179,10 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The Version 2.55.0 provenance-bound unsigned candidate package was built and hash-verified locally, but it is not a public download until its installed/portable, actual-200%-scaling, evidence-bundle, and publication gates pass. The latest published files remain the verified Version 2.54.0 setup, portable app, CLI, and checksums on the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The Version 2.54.0 setup, portable app, CLI, release-artifact manifest, and SHA-256 checksum verification passed for the final unsigned candidate. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Documentation
 
-- [Version 2.55 Release Notes — unsigned candidate built; packaged gates pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [Version 2.54 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)

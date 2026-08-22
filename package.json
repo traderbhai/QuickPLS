@@ -1,7 +1,7 @@
 {
   "name": "quickpls",
   "private": true,
-  "version": "2.55.0",
+  "version": "2.54.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +12,7 @@
     "qpls:workspace:disk-guard": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/shared_build_disk_guard.ps1 -Json",
     "preview": "vite preview",
     "tauri": "tauri",
-    "qpls:release:artifacts": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_unsigned_candidate_build.ps1 -Label v2_55_0_calculate_evidence",
+    "qpls:release:artifacts": "powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_unsigned_candidate_build.ps1 -Label v2_54_0_canvas_results",
     "qpls:release:foundation": "python validation/quickpls_release_foundation.py",
     "qpls:release:operational-foundation": "python validation/quickpls_3_operational_foundation.py",
     "qpls:release:supply-chain": "python validation/quickpls_supply_chain_evidence.py",

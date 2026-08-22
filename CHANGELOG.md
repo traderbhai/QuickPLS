@@ -2,16 +2,6 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
-## [2.55.0] - Unreleased
-
-- Added model-aware Canvas layout and routing that reserves construct/indicator envelopes, avoids eligible obstacles, preserves pinned manual routes, and exposes presentation-only bend and moderation-anchor editing.
-- Replaced the compact PROCESS sketch with the shared read-only diagram renderer and independent Fit/zoom controls.
-- Consolidated the shared Calculate setup surface for 1024×700 use, stable action labels, footer-aware scrolling, scientific-first eligibility, and method-specific fixed-setting disclosure.
-- Rebaselined the interaction harness around current Model/context/keyboard entry and preserved the exact 18-method public catalogue.
-- Added fail-closed setup, cross-method, specialized-result, archive, export, persistence, accessibility, provenance, build, install, and packaged-evidence contracts.
-
-The formal first consolidated pass recorded one finite correction batch. With the gate script held byte-identical, the final pass succeeded 14/14: full Vitest, focused Rust authority/archive/routing/lifecycle tests, full TypeScript checking, production frontend build, six-format semantic export readback, all 17 rebaseline assertions, the exact 18-method setup crawl, and the final evidence contract. A clean-source, provenance-bound unsigned candidate package containing setup, portable, CLI, and checksum files was then built and hash-verified. Installed/portable packaged journeys, actual Windows 200% evidence, the evidence bundle, and publication remain pending. No 2.55 download is claimed yet; the latest published public pre-release remains [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing remains excluded.
-
 ## [2.54.0] - 2026-08-22
 
 - Unified visible Canvas edits behind an authority-aware applied/blocked command path while preserving strict revisions, stable IDs, undo behavior, and presentation metadata.
