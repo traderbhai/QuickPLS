@@ -13,6 +13,7 @@ import {
   buildStrictDesktopModerationIntentV1,
   completedRunNavigationTarget,
   Launcher,
+  namedSemAdvancedEqualitySnapshotV1,
   nativeGeneralSemRevisionCommandDisabledReasonV1,
   nativeCanvasFeatureInventory,
   NATIVE_BUNDLED_SAMPLE_PROJECTS,
@@ -27,6 +28,20 @@ import { buildNativeResultNavigation, completedResultRuns, nativeResultTables } 
 import { completedStructuralPathRandomizationRun } from "./nativeStructuralPathRandomization.testFixture";
 
 describe("native desktop result contracts", () => {
+  it("deduplicates shared Advanced Parameter labels while preserving both exact parameter identities", () => {
+    const parameters = [
+      { kind: "free", id: "loading:x2", label: "X -> x2", target: { kind: "loading", construct: "x", indicator: "x2" }, equality_label: "V255Evidence" },
+      { kind: "free", id: "loading:x3", label: "X -> x3", target: { kind: "loading", construct: "x", indicator: "x3" }, equality_label: "V255Evidence" },
+    ] as const;
+    expect(namedSemAdvancedEqualitySnapshotV1(parameters)).toEqual({
+      labels: ["V255Evidence"],
+      equalities: [
+        { parameter_id: "loading:x2", equality_label: "V255Evidence" },
+        { parameter_id: "loading:x3", equality_label: "V255Evidence" },
+      ],
+    });
+  });
+
   it("counts single, parallel, and serial mediation paths without technical relations", () => {
     const nodes = ["x", "m1", "m2", "y"].map((id) => ({ id, data: {} }));
     const edges = [

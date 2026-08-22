@@ -740,7 +740,9 @@ impl ProjectArchiveDocumentV6 {
         for attachment in &self.canonical_result_documents {
             attachment.ensure_valid(&expected_project_id)?;
             let canonical = attachment.canonical_document();
-            if canonical.general_sem_results.is_some() {
+            if canonical.general_sem_results.is_some()
+                && !is_exact_recipe_v4_cbsem_result(canonical)
+            {
                 if !self.supports_general_sem_v1() {
                     return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
                         subject: format!("canonical result document {}", canonical.document_id),
@@ -13188,6 +13190,85 @@ mod tests {
             .canonical_result_documents
             .push(CanonicalResultDocumentAttachmentV2::from_document(canonical.clone()).unwrap());
         (project, canonical)
+    }
+
+    #[test]
+    fn exact_cfa_typed_results_append_without_weakening_pls_authority() {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../validation/fixtures/v255/archives/cbsem-exact-bootstrap-result.qpls");
+        let loaded = load_project_archive_v6(&fixture).unwrap();
+        let mut exact = loaded.document.canonical_result_documents[0]
+            .canonical_document()
+            .clone();
+        assert!(is_exact_recipe_v4_cbsem_result(&exact));
+        assert!(exact.general_sem_results.is_none());
+
+        let cbsem_identification_results = |document: &CanonicalResultDocumentV2| {
+            serde_json::from_value(serde_json::json!({
+                "schema_version": 1,
+                "identification_diagnostics": [{
+                    "diagnostic_id": "cbsem_identification:model",
+                    "trace": {
+                        "model_id": document.provenance.model_id,
+                        "capability_cell": document.provenance.capability_cell,
+                    },
+                    "scope": "model",
+                    "subject_id": document.provenance.model_id,
+                    "status": "identified",
+                    "code": "identified",
+                    "message": "The resident CFA model is identified.",
+                    "degrees_of_freedom": 0,
+                }],
+            }))
+            .unwrap()
+        };
+        exact.general_sem_results = Some(cbsem_identification_results(&exact));
+        exact.ensure_valid().unwrap();
+
+        let mut source = loaded.document;
+        source.origin = ProjectOriginV6::NewProject;
+        source.sem_generation = Some(ProjectSemGenerationV6::GeneralSemV1);
+        source.canonical_result_documents.clear();
+        source.ensure_valid().unwrap();
+
+        let directory = tempfile::tempdir().unwrap();
+        let destination = directory.path().join("exact-cfa-general-sem-v1.json");
+        write_project_document_v6_new(&destination, &source).unwrap();
+        let source_sha256 = sha256_file_v6(&destination).unwrap();
+        let receipt = append_canonical_result_document_v2_file_v6(
+            &destination,
+            &source_sha256,
+            exact.clone(),
+        )
+        .unwrap();
+        assert_eq!(receipt.canonical_document_id, exact.document_id);
+
+        let reopened = read_project_document_v6(&destination).unwrap();
+        assert!(reopened.supports_general_sem_v1());
+        assert_eq!(reopened.canonical_result_documents.len(), 1);
+        assert_eq!(
+            reopened.canonical_result_documents[0]
+                .canonical_document()
+                .general_sem_results,
+            exact.general_sem_results
+        );
+
+        let (mut pls_project, mut pls_document) = general_sem_schema6_authority_fixture();
+        pls_project.ensure_valid().unwrap();
+        let cbsem_results = cbsem_identification_results(&pls_document);
+        pls_document
+            .general_sem_results
+            .as_mut()
+            .unwrap()
+            .identification_diagnostics = cbsem_results.identification_diagnostics;
+        pls_document.ensure_valid().unwrap();
+        pls_project.canonical_result_documents =
+            vec![CanonicalResultDocumentAttachmentV2::from_document(pls_document).unwrap()];
+        assert!(matches!(
+            pls_project.ensure_valid(),
+            Err(ProjectArchiveV6Error::CanonicalGeneralSemAuthority(message))
+                if message.contains("PLS General SEM result cannot carry CB-SEM")
+        ));
     }
 
     fn general_sem_schema6_single_mediation_authority_fixture()

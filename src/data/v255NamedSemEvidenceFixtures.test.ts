@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { v255NamedSemEvidenceFixture, type V255NamedSemFixture } from "./v255NamedSemEvidenceFixtures";
 
@@ -8,12 +9,16 @@ const cases: V255NamedSemFixture[] = [
   "hoc_rr", "hoc_rf", "hoc_fr", "hoc_ff", "cfa", "recursive_sem",
 ];
 
-const minimumCovarianceCholeskyPivot = (values: number[][]) => {
+const covarianceMatrix = (values: number[][]) => {
   const means = values[0].map((_, column) => values.reduce((sum, row) => sum + row[column], 0) / values.length);
-  const covariance = means.map((_, row) => means.map((__, column) => values.reduce(
+  return means.map((_, row) => means.map((__, column) => values.reduce(
     (sum, valuesRow) => sum + (valuesRow[row] - means[row]) * (valuesRow[column] - means[column]),
     0,
   ) / values.length));
+};
+
+const minimumCovarianceCholeskyPivot = (values: number[][]) => {
+  const covariance = covarianceMatrix(values);
   const lower = covariance.map((row) => row.map(() => 0));
   let minimumPivot = Number.POSITIVE_INFINITY;
   for (let row = 0; row < covariance.length; row += 1) {
@@ -29,6 +34,15 @@ const minimumCovarianceCholeskyPivot = (values: number[][]) => {
     }
   }
   return minimumPivot;
+};
+
+const maximumWithinFactorAbsoluteCorrelation = (values: number[][]) => {
+  const covariance = covarianceMatrix(values);
+  return [[0, 1, 2], [3, 4, 5], [6, 7, 8]].flatMap((group) => group.flatMap((row, rowIndex) => (
+    group.slice(0, rowIndex).map((column) => Math.abs(
+      covariance[row][column] / Math.sqrt(covariance[row][row] * covariance[column][column]),
+    ))
+  ))).reduce((maximum, value) => Math.max(maximum, value), 0);
 };
 
 describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
@@ -92,6 +106,16 @@ describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
   it("provides a strictly positive-definite manifest covariance for CB-SEM evidence", () => {
     const columns = ["x1", "x2", "x3", "m11", "m12", "m13", "y1", "y2", "y3"];
     const rows = v255NamedSemEvidenceFixture("cfa").dataset.rows.map((row) => columns.map((column) => Number(row[column])));
-    expect(minimumCovarianceCholeskyPivot(rows)).toBeGreaterThan(1e-8);
+    expect(minimumCovarianceCholeskyPivot(rows)).toBeGreaterThan(0.02);
+    expect(maximumWithinFactorAbsoluteCorrelation(rows)).toBeLessThan(0.98);
+  });
+
+  it("keeps the native CSV byte values aligned with the deterministic source fixture", () => {
+    const dataset = v255NamedSemEvidenceFixture("cfa").dataset;
+    const [header, ...records] = readFileSync("validation/fixtures/v255/named-sem-evidence.csv", "utf8").trim().split(/\r?\n/u);
+    expect(header.split(",")).toEqual(dataset.columns);
+    expect(records.map((record) => record.split(",").map(Number))).toEqual(
+      dataset.rows.map((row) => dataset.columns.map((column) => Number(row[column]))),
+    );
   });
 });

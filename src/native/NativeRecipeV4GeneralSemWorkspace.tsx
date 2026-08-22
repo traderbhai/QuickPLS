@@ -130,6 +130,7 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
+  adoptActiveProject: openNativeProjectAt,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,

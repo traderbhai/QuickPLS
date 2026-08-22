@@ -577,6 +577,16 @@ describe("General SEM native workspace accessibility", () => {
     expect(source).toContain("Abandon unrecovered job");
   });
 
+  it("adopts each newly activated schema-6 archive as the native project authority", () => {
+    const source = readFileSync("src/native/NativeRecipeV4GeneralSemWorkspace.tsx", "utf8");
+    const defaultServices = source.slice(
+      source.indexOf("const defaultServices"),
+      source.indexOf("export function", source.indexOf("const defaultServices")),
+    );
+    expect(defaultServices).toContain("adoptActiveProject: openNativeProjectAt");
+    expect(source).toContain("await services.adoptActiveProject(createdReceipt.destinationArchivePath)");
+  });
+
   it("suppresses every result fallback after persistence integrity fails", () => {
     expect(selectGeneralSemDisplayedDocumentV1("reopened", "completed", false)).toBe("reopened");
     expect(selectGeneralSemDisplayedDocumentV1(null, "completed", false)).toBe("completed");

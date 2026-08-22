@@ -117,6 +117,74 @@ interface CapturedJobIdentity {
 const ACTIVE_JOB_STATES = new Set<InternalRecipeV4CbsemJobSnapshotV1["state"]>(["queued", "running", "cancelling"]);
 const SHA256 = /^[a-f0-9]{64}$/;
 
+export type StrictCbsemCalculationPublicationV1 =
+  | {
+    status: "ok";
+    identity: InternalSchema6ArchiveIdentityV1;
+    appendOutcome: InternalProjectSchema6ResultAppendOutcomeV1;
+    entry: InternalProjectSchema6CanonicalResultEntryV1;
+    storedEntries: InternalProjectSchema6CanonicalResultEntryV1[];
+  }
+  | {
+    status: "blocked";
+    diagnostic: { code: string; message: string; correctiveAction: string };
+    identity: InternalSchema6ArchiveIdentityV1 | null;
+    appendOutcome: InternalProjectSchema6ResultAppendOutcomeV1 | null;
+  };
+
+export async function strictlyPublishCbsemCalculationResultV1(
+  completed: InternalRecipeV4CbsemCompletedResultV1,
+  recipe: InternalLabsRecipeV4CbsemExecutionRequestV1["recipe"],
+  projectPath: string,
+  services: Pick<NativeRecipeV4CbsemWorkspaceServices, "inspect" | "append" | "read">,
+): Promise<StrictCbsemCalculationPublicationV1> {
+  const inspected = await services.inspect(projectPath);
+  if (inspected.status === "blocked") return {
+    status: "blocked",
+    diagnostic: inspected.diagnostic,
+    identity: null,
+    appendOutcome: null,
+  };
+  let identity = schema6ArchiveIdentityFromInspectionV1(inspected.value);
+  const appended = await appendInternalLabsRecipeV4CbsemResultV1(
+    completed,
+    recipe,
+    identity,
+    services.append,
+  );
+  if (appended.status === "blocked") return {
+    status: "blocked",
+    diagnostic: appended.diagnostic,
+    identity,
+    appendOutcome: appended,
+  };
+  identity = { ...identity, sourceSha256: appended.value.updated_document_sha256 };
+  const reopened = await reopenInternalLabsRecipeV4CbsemResultV1(
+    completed,
+    identity,
+    services.read,
+  );
+  if (reopened.outcome.status === "blocked" || !reopened.entry) return {
+    status: "blocked",
+    diagnostic: reopened.outcome.status === "blocked"
+      ? reopened.outcome.diagnostic
+      : {
+        code: "schema6.cbsem.result_not_found",
+        message: "The reopened schema-6 project does not contain this result document.",
+        correctiveAction: "Append the completed result, then reopen the updated archive.",
+      },
+    identity,
+    appendOutcome: appended,
+  };
+  return {
+    status: "ok",
+    identity,
+    appendOutcome: appended,
+    entry: reopened.entry,
+    storedEntries: storedExactCaseBootstrapEntriesV1(reopened.outcome.value.documents),
+  };
+}
+
 export function NativeRecipeV4CbsemWorkspace({
   modelName,
   experimentalLabsEnabled,
@@ -302,7 +370,10 @@ export function NativeRecipeV4CbsemWorkspace({
     setCompleted(null);
     setCompletedRecipe(null);
     setReopenedEntry(null);
+    setStoredEntries([]);
+    setArchiveIdentity(null);
     setAppendOutcome(null);
+    setArchiveFailure(null);
     setExportFeedback(null);
     identityCancellationRequestedRef.current = false;
     const controller = new AbortController();
@@ -340,44 +411,34 @@ export function NativeRecipeV4CbsemWorkspace({
         setCompletedRecipe(request.recipe);
         setFailure(null);
         if (calculationPresentation) {
-          let document = outcome.completed.canonicalDocument;
-          if (projectPath) {
-            try {
-              const inspected = await services.inspect(projectPath);
-              if (inspected.status === "ok") {
-                let identity = schema6ArchiveIdentityFromInspectionV1(inspected.value);
-                setArchivePath(projectPath);
-                setArchiveIdentity(identity);
-                const appended = await appendInternalLabsRecipeV4CbsemResultV1(
-                  outcome.completed,
-                  request.recipe,
-                  identity,
-                  services.append,
-                );
-                setAppendOutcome(appended);
-                if (appended.status === "ok") {
-                  identity = { ...identity, sourceSha256: appended.value.updated_document_sha256 };
-                  setArchiveIdentity(identity);
-                  const reopened = await reopenInternalLabsRecipeV4CbsemResultV1(
-                    outcome.completed,
-                    identity,
-                    services.read,
-                  );
-                  if (reopened.outcome.status === "ok" && reopened.entry) {
-                    setReopenedEntry(reopened.entry);
-                    setStoredEntries(storedExactCaseBootstrapEntriesV1(reopened.outcome.value.documents));
-                    document = reopened.entry.canonicalDocument;
-                  }
-                }
-              }
-            } catch {
-              // Compatibility projects that cannot accept schema-6 append still
-              // expose the verified in-memory result for this session.
+          setArchivePath(projectPath);
+          try {
+            const publication = await strictlyPublishCbsemCalculationResultV1(
+              outcome.completed,
+              request.recipe,
+              projectPath,
+              services,
+            );
+            setArchiveIdentity(publication.identity);
+            if (publication.appendOutcome) setAppendOutcome(publication.appendOutcome);
+            if (publication.status === "blocked") {
+              setArchiveFailure(publication.diagnostic);
+              return;
             }
+            setReopenedEntry(publication.entry);
+            setStoredEntries(publication.storedEntries);
+            window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+              detail: { document: publication.entry.canonicalDocument, navigate: true },
+            }));
+          } catch (error) {
+            const normalized = internalRecipeV4CbsemFailureV1(error);
+            setArchiveFailure({
+              code: normalized.code,
+              message: normalized.message,
+              correctiveAction: normalized.correctiveAction,
+            });
+            return;
           }
-          window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
-            detail: { document, navigate: true },
-          }));
         }
         window.setTimeout(() => resultHeadingRef.current?.focus(), 0);
       } else if (outcome.status === "completed") {

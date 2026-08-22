@@ -189,7 +189,7 @@ import {
   standardSemGeneralSemModerationV3IdentityV1,
   type StandardSemModelV4EditorIntentV1,
 } from "../domain/standardSemModelV4Authority";
-import type { SemModelV4 } from "../domain/semModelV4";
+import type { SemModelV4, SemParameterV4 } from "../domain/semModelV4";
 import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { useWorkspace } from "../store";
 import type {
@@ -313,6 +313,21 @@ export function nativeGeneralSemRevisionCommandDisabledReasonV1(
   return null;
 }
 
+export function namedSemAdvancedEqualitySnapshotV1(parameters: readonly SemParameterV4[]): {
+  labels: string[];
+  equalities: Array<{ parameter_id: string; equality_label: string }>;
+} {
+  const equalities = parameters
+    .flatMap((parameter) => parameter.kind === "free" && parameter.equality_label
+      ? [{ parameter_id: parameter.id, equality_label: parameter.equality_label }]
+      : [])
+    .sort((left, right) => left.parameter_id.localeCompare(right.parameter_id));
+  return {
+    labels: [...new Set(equalities.map((entry) => entry.equality_label))].sort(),
+    equalities,
+  };
+}
+
 declare global {
   interface Window {
     __QUICKPLS_SMOKE__?: {
@@ -328,7 +343,6 @@ declare global {
         datasetPath: string;
       }) => unknown | Promise<unknown>;
       namedSemEvidenceSnapshot: () => unknown;
-      exerciseNamedAdvancedParameterRevision: () => Promise<unknown>;
       modelCounts: () => { constructs: number; indicators: number };
       modelPreflight: () => { canRun: boolean; ready: number; blockers: number; warnings: number };
       setView: (nextView: string) => void;
@@ -1358,10 +1372,8 @@ export function NativeDesktopApp() {
           });
           const afterMetadata = useWorkspace.getState();
           const binaryMetadata = residentDataset.columnMetadata?.find((column) => column.name === "b");
-          const binaryRowsAreExactZeroOne = residentDataset.rows.length === 0 || residentDataset.rows.every((row) => {
-            const value = row.b;
-            return typeof value === "number" && Number.isFinite(value) && (Object.is(value, 0) || Object.is(value, 1));
-          });
+          const binaryPreviewRowsAreExactZeroOne = residentDataset.rows.length > 0
+            && residentDataset.rows.every((row) => row.b === "0" || row.b === "1");
           if (afterMetadata.projectId !== retainedProjectId
             || afterMetadata.projectPath !== null
             || afterMetadata.generalSemProjectDraftMode?.sourceProjectId !== retainedDraft.sourceProjectId
@@ -1376,7 +1388,7 @@ export function NativeDesktopApp() {
             || binaryMetadata.scale_type !== "binary"
             || binaryMetadata.theoretical_min !== 0
             || binaryMetadata.theoretical_max !== 1
-            || !binaryRowsAreExactZeroOne
+            || !binaryPreviewRowsAreExactZeroOne
             || JSON.stringify(binaryMetadata.value_labels) !== JSON.stringify({ "0": "Group 0", "1": "Group 1" })) {
             throw new Error("The binary named SEM dataset version is not the exact native 0/1 authority.");
           }
@@ -1412,6 +1424,7 @@ export function NativeDesktopApp() {
         const derived = authority?.model.derived_terms ?? [];
         const canonical = generalSemCanonicalResult;
         const selectedLegacy = state.runs.find((run) => run.id === state.selectedResultRunId) ?? null;
+        const advancedEqualitySnapshot = namedSemAdvancedEqualitySnapshotV1(authority?.model.parameters ?? []);
         const cells = canonical?.capability_cells ?? (canonical ? [canonical.provenance.capability_cell] : []);
         const executionCell = canonical?.general_sem_results?.cbsem_bootstrap_receipt?.capability_cell
           ?? canonical?.general_sem_results?.three_way_moderation_bootstrap_receipt?.capability_cell
@@ -1464,14 +1477,8 @@ export function NativeDesktopApp() {
             higher_order_measurement_types: derived
               .flatMap((term) => term.kind === "higher_order" ? [term.measurement_type] : [])
               .sort(),
-            advanced_equality_labels: authority?.model.parameters
-              .flatMap((parameter) => parameter.kind === "free" && parameter.equality_label ? [parameter.equality_label] : [])
-              .sort() ?? [],
-            advanced_equalities: authority?.model.parameters
-              .flatMap((parameter) => parameter.kind === "free" && parameter.equality_label
-                ? [{ parameter_id: parameter.id, equality_label: parameter.equality_label }]
-                : [])
-              .sort((left, right) => left.parameter_id.localeCompare(right.parameter_id)) ?? [],
+            advanced_equality_labels: advancedEqualitySnapshot.labels,
+            advanced_equalities: advancedEqualitySnapshot.equalities,
           },
           canonical_result: canonical ? {
             document_id: canonical.document_id,
@@ -1514,50 +1521,6 @@ export function NativeDesktopApp() {
             regression_type: selectedLegacy.result?.regression?.regression_type ?? null,
             process_model: selectedLegacy.result?.regression?.process?.model ?? null,
           } : null,
-        };
-      },
-      exerciseNamedAdvancedParameterRevision: async () => {
-        const before = useWorkspace.getState();
-        const modelId = before.activeModelId;
-        const authority = modelId ? before.standardSemModelV4Authorities[modelId] ?? null : null;
-        if (!modelId || !authority) throw new Error("A strict Standard SemModelV4 authority is required.");
-        const parameter = authority.model.parameters.find((candidate) => candidate.kind === "free");
-        if (!parameter || parameter.kind !== "free") throw new Error("No free parameter is available for the Advanced Parameter Table revision.");
-        const result = await before.commitStandardSemModelV4Intent({
-          kind: "set_parameter_specification",
-          parameter_id: parameter.id,
-          specification: {
-            kind: "free",
-            start: parameter.start ?? 0.125,
-            lower: parameter.lower ?? null,
-            upper: parameter.upper ?? null,
-            equality_label: "V255Evidence",
-          },
-          label: parameter.label,
-        });
-        if (result.status !== "committed") {
-          const detail = result.status === "blocked"
-            ? result.diagnostic.message
-            : result.status === "stale"
-              ? "the active model authority changed before the revision committed"
-              : result.error instanceof Error
-                ? result.error.message
-                : String(result.error);
-          throw new Error(`Advanced Parameter Table revision was not committed: ${detail}`);
-        }
-        const after = useWorkspace.getState().standardSemModelV4Authorities[modelId];
-        const revised = after?.model.parameters.find((candidate) => candidate.id === parameter.id);
-        if (!after || revised?.kind !== "free" || revised.equality_label !== "V255Evidence") {
-          throw new Error("The Advanced Parameter Table revision did not persist in the active authority.");
-        }
-        return {
-          model_id: modelId,
-          parameter_id: parameter.id,
-          before_model_document_sha256: authority.model_document_sha256,
-          after_model_document_sha256: after.model_document_sha256,
-          equality_label: revised.equality_label,
-          stable_parameter_id: revised.id === parameter.id,
-          changed_authority: after.model_document_sha256 !== authority.model_document_sha256,
         };
       },
       modelCounts: () => {
@@ -3634,7 +3597,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.54.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({

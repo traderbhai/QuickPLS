@@ -162,6 +162,7 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
         "table_id": "exact_case_bootstrap_parameter_intervals",
         "method_version": "cbsem_ml_exact_parameter_table_v3",
         "primary": "qpls3.cbsem.bootstrap", "execution": "qpls3.cbsem.bootstrap",
+        "bootstrap_samples": 1000,
         "topology": (3, 3, 0, (), ()),
     }
     require(len(contracts) == 26, "Internal specialized route contract must contain 26 cases")
@@ -202,6 +203,8 @@ def verify_special_route(repo: pathlib.Path, entry: dict[str, Any], contract: di
     result = route.get("result")
     require(isinstance(result, dict), f"{case_id} exact result identity is absent")
     require(result.get("method_version") == contract["method_version"] and result.get("primary_cell_id") == contract["primary"] and result.get("execution_cell_id") == contract["execution"], f"{case_id} method/cell identity drifted")
+    if "bootstrap_samples" in contract:
+        require(route.get("bootstrap_samples") == contract["bootstrap_samples"], f"{case_id} bootstrap sample contract drifted")
     cells = result.get("capability_cell_ids")
     require(isinstance(cells, list) and len(cells) == len(set(cells)) and contract["primary"] in cells and contract["execution"] in cells, f"{case_id} capability-cell set is incomplete")
     model = route.get("model")

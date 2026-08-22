@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import re
 import unittest
 from pathlib import Path
@@ -208,9 +209,10 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('assert(route.kind === "fresh_sem_result"'):
             named.index('const query = {', named.index('assert(route.kind === "fresh_sem_result"'))
         ]
-        self.assertIn('const prepareCalculationRevision = route.method === "cbsem"', generic_plan)
-        self.assertIn('{ action: "prepare_calculation_revision", method: route.method, inference: route.inference', generic_plan)
-        self.assertIn(': { action: "prepare_calculation_revision" };', generic_plan)
+        self.assertIn('const prepareCalculationRevision = {', generic_plan)
+        self.assertIn('method: route.method,', generic_plan)
+        self.assertIn('inference: route.inference,', generic_plan)
+        self.assertIn('bootstrap_samples: route.bootstrap_samples,', generic_plan)
         self.assertIn('prepareCalculationRevision,', generic_plan)
         exact_cfa_plan = named[
             named.index('if (route.kind === "fresh_cfa_bootstrap_result")'):
@@ -228,12 +230,14 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             calculation_revision.index('name: "Advanced Parameter Table…", exact: true'),
             calculation_revision.index('name: "Continue to Calculate", exact: true'),
         )
-        self.assertIn('if (step.method === "cbsem")', calculation_revision)
-        self.assertIn('estimator.selectOption("qpls.cbsem.v3")', calculation_revision)
+        self.assertIn('new Set(["pls_algorithm", "pls_bootstrap", "cbsem"]).has(step.method)', calculation_revision)
+        self.assertIn('const estimatorId = step.method === "cbsem" ? "qpls.cbsem.v3" : "qpls.pls_sem.v3"', calculation_revision)
+        self.assertIn('step.method === "pls_bootstrap" || (step.method === "cbsem" && step.inference === "case_bootstrap")', calculation_revision)
+        self.assertIn('estimator.selectOption(estimatorId)', calculation_revision)
         self.assertIn('bootstrap.setChecked(caseBootstrap)', calculation_revision)
         self.assertIn('samples.fill(String(step.bootstrap_samples ?? 500))', calculation_revision)
         self.assertLess(
-            calculation_revision.index('estimator.selectOption("qpls.cbsem.v3")'),
+            calculation_revision.index('estimator.selectOption(estimatorId)'),
             calculation_revision.index('await activate.click({ timeout });'),
         )
         self.assertLess(
@@ -242,12 +246,12 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         )
         self.assertLess(
             calculation_revision.index('await activatedAuthority.waitFor({ state: "visible", timeout });'),
-            calculation_revision.index('"The activated calculation authority changed the requested CB-SEM estimator."'),
+            calculation_revision.index('"The activated calculation authority changed the requested estimator."'),
         )
-        self.assertIn('"The activated calculation authority changed the requested CB-SEM inference."', calculation_revision)
-        self.assertIn('"The activated calculation authority changed the requested CB-SEM bootstrap sample count."', calculation_revision)
-        self.assertIn('...(step.method === "cbsem" ? { selected_method: step.method, selected_inference: step.inference } : {})', calculation_revision)
-        self.assertNotIn('required: true, selected_method: step.method', calculation_revision)
+        self.assertIn('"The activated calculation authority changed the requested inference."', calculation_revision)
+        self.assertIn('"The activated calculation authority changed the requested bootstrap sample count."', calculation_revision)
+        self.assertIn('selected_method: step.method,', calculation_revision)
+        self.assertIn('selected_inference: step.inference,', calculation_revision)
         self.assertNotIn('return { action: step.action, required: false }', calculation_revision)
 
         advanced_parameter_revision = named[
@@ -261,6 +265,12 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('target !== sourceTarget', advanced_parameter_revision)
         self.assertIn('await fileSha256(sourceTarget) === sourceSha256', advanced_parameter_revision)
         self.assertIn('context.calculationRevision = { target, initialSha256: targetSha256, sourceTarget, sourceSha256 }', advanced_parameter_revision)
+        self.assertIn('const freeLoadingRows = dialog.locator', advanced_parameter_revision)
+        self.assertIn('compatibleRowIndexes.length === 2', advanced_parameter_revision)
+        self.assertIn('editor.locator(".nd-sem-editor-heading code")', advanced_parameter_revision)
+        self.assertIn('parameterIds.every((parameterId)', advanced_parameter_revision)
+        self.assertIn('activated?.model?.model_id === before.model.model_id', advanced_parameter_revision)
+        self.assertNotIn('activated?.model?.model_id !== before.model.model_id', advanced_parameter_revision)
         self.assertNotIn('page.keyboard.press("Control+s")', advanced_parameter_revision)
 
         reopen_parameter_revision = named[
@@ -269,8 +279,26 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         ]
         self.assertNotIn('page.keyboard.press("Control+s")', reopen_parameter_revision)
         self.assertIn('waitForOpenedProjectPath(page, target, timeout)', reopen_parameter_revision)
-        self.assertIn('stable Advanced Parameter identity did not survive reopen', reopen_parameter_revision)
+        self.assertIn('stable Advanced Parameter identities did not survive reopen', reopen_parameter_revision)
         self.assertIn('model digest differs from the activated revision', reopen_parameter_revision)
+
+        general_workspace = (ROOT / "src" / "native" / "NativeRecipeV4GeneralSemWorkspace.tsx").read_text(encoding="utf-8")
+        self.assertIn("adoptActiveProject: openNativeProjectAt", general_workspace)
+
+        cbsem_workspace = (ROOT / "src" / "native" / "NativeRecipeV4CbsemWorkspace.tsx").read_text(encoding="utf-8")
+        self.assertIn("strictlyPublishCbsemCalculationResultV1", cbsem_workspace)
+        self.assertIn('if (publication.status === "blocked")', cbsem_workspace)
+        self.assertIn("setArchiveFailure(publication.diagnostic)", cbsem_workspace)
+        self.assertIn("document: publication.entry.canonicalDocument", cbsem_workspace)
+        self.assertNotIn("Compatibility projects that cannot accept schema-6 append", cbsem_workspace)
+
+        cfa_observer = named[
+            named.index('if (kind === "cfa_compatibility_result")'):
+            named.index('if (kind === "result_surface")')
+        ]
+        self.assertIn("const canonical = smokeSnapshot?.canonical_result ?? null", cfa_observer)
+        self.assertIn("canonical?.document_id", cfa_observer)
+        self.assertNotIn("#nd-cbsem-compatibility-calculation", cfa_observer)
 
         dialog_helper = named[
             named.index("function createDialogHelper"):
@@ -284,9 +312,16 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('if (step.action === "save_result_archive_supplement")')
         ]
         self.assertIn('requires_requested_revision: false', named)
-        self.assertIn('requires_requested_revision: route.method === "pls_bootstrap"', named)
+        self.assertNotIn('requires_requested_revision: route.method === "pls_bootstrap"', named)
         self.assertNotIn('requires_requested_revision: route.method !== "pls_algorithm"', named)
         self.assertIn('typeof step.requires_requested_revision === "boolean"', run_calculation)
+        active_revision_guard = run_calculation.index("if (!step.requires_requested_revision)")
+        configure_start = run_calculation.index("await configureAndStart();")
+        self.assertLess(active_revision_guard, configure_start)
+        active_revision_contract = run_calculation[active_revision_guard:configure_start]
+        self.assertIn("context.calculationRevision", active_revision_contract)
+        self.assertIn("waitForOpenedProjectPath(page, activeRevision.target, timeout)", active_revision_contract)
+        self.assertIn("fileSha256(activeRevision.target) === activeRevision.initialSha256", active_revision_contract)
         self.assertIn('requestedRevisionHelper = createDialogHelper', run_calculation)
         self.assertLess(
             run_calculation.index('requestedRevisionHelper = createDialogHelper'),
@@ -314,6 +349,24 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertNotIn('name: "Save and activate project…"', run_calculation)
         self.assertNotIn('advancedState.includes("New calculation-ready draft")', run_calculation)
 
+        supplement = named[
+            named.index('if (step.action === "save_result_archive_supplement")'):
+            named.index('if (step.action === "open_archive")')
+        ]
+        self.assertIn("beforeSha256 === context.calculationRevision.initialSha256", supplement)
+        self.assertIn('persistenceMode = "already_persisted"', supplement)
+        self.assertIn('persistenceMode = "explicit_control_s"', supplement)
+        self.assertIn('page.keyboard.press("Control+s")', supplement)
+        self.assertIn("inspectSavedSupplementArchive(context, target, step.table_id, liveIdentity, timeout)", supplement)
+        self.assertLess(
+            supplement.index("beforeSha256 === context.calculationRevision.initialSha256"),
+            supplement.index('page.keyboard.press("Control+s")'),
+        )
+        self.assertLess(
+            supplement.index('page.keyboard.press("Control+s")'),
+            supplement.index("inspectSavedSupplementArchive(context, target, step.table_id, liveIdentity, timeout)"),
+        )
+
         run_loop = named[
             named.index("for (let ordinal = 1; ordinal <= selectedCases.length"):
             named.index("report.offline = offline.summary()")
@@ -321,6 +374,95 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn("if (page.isClosed())", run_loop)
         self.assertIn("selectedCases.slice(ordinal - 1)", run_loop)
         self.assertIn("candidate renderer page closed", run_loop)
+
+    def test_named_result_tables_bind_the_single_visible_surface(self) -> None:
+        named = source("v255_named_case_driver.mjs")
+        helper = named[
+            named.index("async function waitForSingleVisibleLocator"):
+            named.index("function parseArgs")
+        ]
+        self.assertIn("totalCount = await matches.count()", helper)
+        self.assertIn("const visibleMatches = matches.filter({ visible: true })", helper)
+        self.assertIn("visibleCount = await visibleMatches.count()", helper)
+        self.assertIn("if (visibleCount === 1) return visibleMatches", helper)
+        self.assertIn("assert(visibleCount < 2", helper)
+        self.assertIn("${totalCount} total, ${visibleCount} visible", helper)
+        self.assertIn("if (allowAbsent) return null", helper)
+        self.assertNotIn("matches.first()", helper)
+        self.assertNotIn("matches.nth(", helper)
+
+        observe = named[
+            named.index("async function observe"):
+            named.index("function observeCompletedResultIdentity")
+        ]
+        self.assertEqual(
+            3,
+            observe.count(
+                "await waitForSingleVisibleLocator(page, resultTableSelector(query.table_id), context.timeout)"
+            ),
+        )
+
+        supplement = named[
+            named.index('if (step.action === "save_result_archive_supplement")'):
+            named.index('if (step.action === "open_archive")')
+        ]
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), 0, { allowAbsent: true })",
+            supplement,
+        )
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTreeItemSelector(step.table_id), timeout)",
+            supplement,
+        )
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), timeout)",
+            supplement,
+        )
+
+        select_table = named[
+            named.index('if (step.action === "select_result_table")'):
+            named.index('if (step.action === "wait_for")')
+        ]
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), 0, { allowAbsent: true })",
+            select_table,
+        )
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTreeItemSelector(step.table_id), timeout)",
+            select_table,
+        )
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), timeout)",
+            select_table,
+        )
+
+        run_case = named[named.index("async function runCase"):named.index("async function main")]
+        self.assertIn(
+            "waitForSingleVisibleLocator(page, entry.screenshot.selector, context.timeout)",
+            run_case,
+        )
+        self.assertNotRegex(
+            named,
+            r"page\.locator\(resultTableSelector\([^\n]+\)\)\.first\(\)",
+        )
+
+        generic_plan = named[
+            named.index('assert(route.kind === "fresh_sem_result"'):
+            named.index('const query = {', named.index('assert(route.kind === "fresh_sem_result"'))
+        ]
+        self.assertLess(
+            generic_plan.index("prepareCalculationRevision,"),
+            generic_plan.index('action: "run_calculation"'),
+        )
+        self.assertIn("requires_requested_revision: false", generic_plan)
+        self.assertNotIn('route.method === "pls_bootstrap"', generic_plan)
+
+        run_calculation = named[
+            named.index('if (step.action === "run_calculation")'):
+            named.index('if (step.action === "save_result_archive_supplement")')
+        ]
+        self.assertIn("if (step.requires_requested_revision)", run_calculation)
+        self.assertIn("requestedRevisionHelper = createDialogHelper", run_calculation)
 
     def test_named_sem_routes_import_one_curated_native_resident_csv(self) -> None:
         dataset_path = VALIDATION / "fixtures" / "v255" / "named-sem-evidence.csv"
@@ -340,6 +482,43 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         for row in rows[1:]:
             for value in row:
                 self.assertTrue(float(value) == float(value))
+
+        cbsem_column_names = ["x1", "x2", "x3", "m11", "m12", "m13", "y1", "y2", "y3"]
+        cbsem_positions = [rows[0].index(name) for name in cbsem_column_names]
+        cbsem_rows = [[float(row[position]) for position in cbsem_positions] for row in rows[1:]]
+        means = [sum(row[column] for row in cbsem_rows) / len(cbsem_rows) for column in range(9)]
+        covariance = [
+            [
+                sum(
+                    (row[left] - means[left]) * (row[right] - means[right])
+                    for row in cbsem_rows
+                ) / len(cbsem_rows)
+                for right in range(9)
+            ]
+            for left in range(9)
+        ]
+        lower = [[0.0] * 9 for _ in range(9)]
+        minimum_pivot = math.inf
+        for row in range(9):
+            for column in range(row + 1):
+                adjusted = covariance[row][column] - sum(
+                    lower[row][index] * lower[column][index]
+                    for index in range(column)
+                )
+                if row == column:
+                    minimum_pivot = min(minimum_pivot, adjusted)
+                    lower[row][column] = math.sqrt(max(0.0, adjusted))
+                else:
+                    lower[row][column] = adjusted / lower[column][column]
+        maximum_within_factor_correlation = max(
+            abs(covariance[left][right])
+            / math.sqrt(covariance[left][left] * covariance[right][right])
+            for group in ((0, 1, 2), (3, 4, 5), (6, 7, 8))
+            for left_offset, left in enumerate(group)
+            for right in group[:left_offset]
+        )
+        self.assertGreater(minimum_pivot, 0.02)
+        self.assertLess(maximum_within_factor_correlation, 0.98)
 
         service = (ROOT / "src" / "services" / "projectService.ts").read_text(encoding="utf-8")
         user_import = service[
@@ -381,10 +560,9 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('scale_type: "binary"', fixture_hook)
         self.assertIn("theoretical_min: 0", fixture_hook)
         self.assertIn("theoretical_max: 1", fixture_hook)
-        self.assertIn("const binaryRowsAreExactZeroOne = residentDataset.rows.length === 0", fixture_hook)
-        self.assertIn('typeof value === "number" && Number.isFinite(value)', fixture_hook)
-        self.assertIn("Object.is(value, 0) || Object.is(value, 1)", fixture_hook)
-        self.assertIn("!binaryRowsAreExactZeroOne", fixture_hook)
+        self.assertIn("const binaryPreviewRowsAreExactZeroOne = residentDataset.rows.length > 0", fixture_hook)
+        self.assertIn('row.b === "0" || row.b === "1"', fixture_hook)
+        self.assertIn("!binaryPreviewRowsAreExactZeroOne", fixture_hook)
         self.assertIn('value_labels: { "0": "Group 0", "1": "Group 1" }', fixture_hook)
         self.assertIn("residentDataset.id === importedDataset.id", fixture_hook)
         self.assertIn("residentDataset.fingerprint === importedDataset.fingerprint", fixture_hook)
@@ -406,15 +584,19 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         snapshot_start = app.index("namedSemEvidenceSnapshot:", fixture_hook_start)
         snapshot = app[
             snapshot_start:
-            app.index("exerciseNamedAdvancedParameterRevision:", snapshot_start)
+            app.index("modelCounts:", snapshot_start)
         ]
         self.assertIn("three_way_moderation_bootstrap_receipt?.capability_cell", snapshot)
         self.assertIn("three_way_simple_slopes", snapshot)
         self.assertIn("three_way_probe_contracts: threeWayProbeContracts", snapshot)
+        self.assertIn("advanced_equality_labels: advancedEqualitySnapshot.labels", snapshot)
+        self.assertIn("advanced_equalities: advancedEqualitySnapshot.equalities", snapshot)
+        self.assertIn("namedSemAdvancedEqualitySnapshotV1(authority?.model.parameters ?? [])", snapshot)
         self.assertLess(
             snapshot.index("three_way_moderation_bootstrap_receipt?.capability_cell"),
             snapshot.index("inference_receipt?.capability_cell"),
         )
+        self.assertNotIn("exerciseNamedAdvancedParameterRevision", app)
 
         readiness = (VALIDATION / "v255_named_route_readiness.py").read_text(encoding="utf-8")
         audit = (VALIDATION / "v255_product_completion_audit.py").read_text(encoding="utf-8")
@@ -491,6 +673,26 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertEqual("cbsem_exact_recursive_sem_case_bootstrap_v1", recursive["method_version"])
         self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["primary_cell_id"])
         self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["execution_cell_id"])
+        self.assertEqual(
+            ["Point estimate", "Lower", "Upper"],
+            routes["specialized_result:recursive SEM case bootstrap"]["header_contains"],
+        )
+        self.assertEqual(
+            ["Factor variance", "Measurement parameter", "Residual variance", "Structural parameter"],
+            routes["specialized_result:recursive SEM case bootstrap"]["row_contains"],
+        )
+
+        visible_mediation_rows = ["specific_indirect", "Predictor", "Outcome"]
+        for case_id in (
+            "specialized_result:parallel mediation",
+            "specialized_result:single-mediation bootstrap",
+            "specialized_result:multiple-mediation bootstrap",
+        ):
+            self.assertEqual(visible_mediation_rows, routes[case_id]["row_contains"])
+        self.assertEqual(
+            ["Predictor", "Mediator 1", "Mediator 2", "Outcome"],
+            routes["specialized_result:serial mediation"]["row_contains"],
+        )
 
         fresh_cbsem = [
             route
@@ -504,6 +706,15 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertEqual("fresh_cfa_bootstrap_result", exact_cfa["kind"])
         self.assertEqual("cbsem", exact_cfa["method"])
         self.assertEqual("case_bootstrap", exact_cfa["inference"])
+        self.assertEqual(1000, exact_cfa["bootstrap_samples"])
+        self.assertEqual(
+            ["Parameter", "Percentile lower", "Percentile upper"],
+            exact_cfa["header_contains"],
+        )
+        self.assertEqual(
+            ["Factor variance", "Measurement parameter", "Residual variance"],
+            exact_cfa["row_contains"],
+        )
 
     def test_frozen_archive_loop_resets_controller_before_every_exact_path_wait(self) -> None:
         frozen = source("v255_frozen_archive_reopen_crawler.mjs")

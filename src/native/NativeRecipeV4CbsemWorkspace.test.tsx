@@ -8,6 +8,7 @@ import {
   canonicalResultDocumentV2ExportTables,
   CanonicalResultDocumentV2View,
   NativeRecipeV4CbsemWorkspace,
+  strictlyPublishCbsemCalculationResultV1,
   type NativeRecipeV4CbsemWorkspaceServices,
 } from "./NativeRecipeV4CbsemWorkspace";
 
@@ -64,6 +65,96 @@ const services = {
 } as unknown as NativeRecipeV4CbsemWorkspaceServices;
 
 describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
+  it("does not publish a calculation result when schema-6 append or strict readback is blocked", async () => {
+    const canonicalDocument = {
+      document_id: "document-v4",
+      provenance: {
+        project_id: "project-v4",
+        capability_cell: {
+          registry_schema_version: 2,
+          capability_id: "smartpls.cbsem_bootstrapping",
+          cell_id: "qpls3.cbsem.bootstrap",
+          capability_version: "cbsem_exact_case_bootstrap_v1",
+        },
+      },
+    };
+    const completed = {
+      canonicalDocument,
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[0];
+    const recipe = {} as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[1];
+    const inspection = {
+      access: "current_v6_archive",
+      sourceKind: "project_archive",
+      schemaVersion: 6,
+      projectId: "project-v4",
+      sourceArchivePath: "D:\\Study.qpls",
+      sourceArchiveSha256: "a".repeat(64),
+    };
+    const blockedAppend = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: vi.fn().mockResolvedValue({
+        status: "blocked",
+        diagnostic: { code: "append.blocked", message: "Append blocked.", correctiveAction: "Retry safely." },
+      }),
+      read: vi.fn(),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", blockedAppend))
+      .resolves.toMatchObject({ status: "blocked", diagnostic: { code: "append.blocked" } });
+    expect(blockedAppend.read).not.toHaveBeenCalled();
+
+    const blockedRead = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: vi.fn().mockResolvedValue({
+        status: "ok",
+        value: {
+          schema_version: 6,
+          project_id: "project-v4",
+          archive_path: "D:\\Study.qpls",
+          source_document_sha256: "a".repeat(64),
+          updated_document_sha256: "b".repeat(64),
+          canonical_document_id: "document-v4",
+          run_id: "run-v4",
+          canonical_result_document_count: 1,
+          source_verified_at_commit: true,
+          post_write_validated: true,
+          rollback_copy_removed: true,
+        },
+      }),
+      read: vi.fn().mockResolvedValue({
+        status: "blocked",
+        diagnostic: { code: "readback.blocked", message: "Readback blocked.", correctiveAction: "Inspect again." },
+      }),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", blockedRead))
+      .resolves.toMatchObject({ status: "blocked", diagnostic: { code: "readback.blocked" } });
+    expect(blockedRead.read).toHaveBeenCalledOnce();
+
+    const strictSuccess = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: blockedRead.append,
+      read: vi.fn().mockResolvedValue({
+        status: "ok",
+        value: {
+          projectId: "project-v4",
+          archivePath: "D:\\Study.qpls",
+          sourceDocumentSha256: "b".repeat(64),
+          canonicalResultDocumentCount: 1,
+          documents: [{
+            documentId: "document-v4",
+            runId: "run-v4",
+            canonicalDocumentSha256: "c".repeat(64),
+            immutable: true,
+            canonicalDocumentJson: "{}",
+            canonicalDocument,
+          }],
+          sourceRecheckedUnchanged: true,
+        },
+      }),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", strictSuccess))
+      .resolves.toMatchObject({ status: "ok", entry: { documentId: "document-v4" } });
+  });
+
   it("renders the Standard exact workspace, labelled inputs, bootstrap control, layered preflight, and native job action", () => {
     const resident = dataset();
     useWorkspace.setState({

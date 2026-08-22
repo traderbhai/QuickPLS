@@ -125,6 +125,29 @@ function resultTableSelector(tableId) {
   assert(typeof tableId === "string" && SAFE_RESULT_ID.test(tableId), `Unsafe result table ID: ${tableId}`);
   return `[data-result-table-id="${tableId}"], [data-canonical-table-id="${tableId}"]`;
 }
+function resultTreeItemSelector(tableId) {
+  assert(typeof tableId === "string" && SAFE_RESULT_ID.test(tableId), `Unsafe result tree item ID: ${tableId}`);
+  return `[data-result-tree-item-id="canonical:table:${tableId}"], [data-result-tree-item-id="${tableId}"]`;
+}
+async function waitForSingleVisibleLocator(page, selector, timeout, { allowAbsent = false } = {}) {
+  assert(typeof selector === "string" && selector, "Visible locator selection requires a selector.");
+  assert(Number.isInteger(timeout) && timeout >= 0, "Visible locator selection requires a non-negative integer timeout.");
+  const deadline = Date.now() + timeout;
+  let totalCount = 0;
+  let visibleCount = 0;
+  do {
+    const matches = page.locator(selector);
+    totalCount = await matches.count();
+    const visibleMatches = matches.filter({ visible: true });
+    visibleCount = await visibleMatches.count();
+    if (visibleCount === 1) return visibleMatches;
+    assert(visibleCount < 2,
+      `Visible locator selection is ambiguous for ${selector}: ${totalCount} total, ${visibleCount} visible.`);
+    if (allowAbsent) return null;
+    if (Date.now() < deadline) await page.waitForTimeout(Math.min(50, Math.max(1, deadline - Date.now())));
+  } while (Date.now() < deadline);
+  throw new Error(`Visible locator selection timed out for ${selector}: ${totalCount} total, ${visibleCount} visible.`);
+}
 
 function parseArgs(argv) {
   const allowed = new Set(["endpoint", "manifest", "index", "evidence-dir", "candidate-name", "candidate-pid", "candidate-path", "python", "timeout-ms"]);
@@ -239,6 +262,7 @@ function freshSpecializedExpected(entry, route) {
     },
     advanced_parameter_revision: route.advanced_parameter_revision === true ? {
       parameter_id_present: true,
+      parameter_count: 2,
       before_digest_present: true,
       after_digest_present: true,
       equality_label: "V255Evidence",
@@ -356,9 +380,12 @@ function materializeManifestCase(entry) {
     assert(ARCHIVE_SUPPLEMENT_PUBLIC_KINDS.has(route.archive_supplement_public_kind), `${entry.id} archive supplement public method kind is unsupported.`);
     assert(route.archive_supplement_public_kind === route.method, `${entry.id} archive supplement public method kind must equal its executed method.`);
   }
-  const prepareCalculationRevision = route.method === "cbsem"
-    ? { action: "prepare_calculation_revision", method: route.method, inference: route.inference, bootstrap_samples: route.bootstrap_samples }
-    : { action: "prepare_calculation_revision" };
+  const prepareCalculationRevision = {
+    action: "prepare_calculation_revision",
+    method: route.method,
+    inference: route.inference,
+    bootstrap_samples: route.bootstrap_samples,
+  };
   const steps = [
     { action: "goto_packaged" },
     { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
@@ -375,7 +402,7 @@ function materializeManifestCase(entry) {
     bootstrap_samples: route.bootstrap_samples,
     moderated_stage: route.moderated_stage,
     route_contains: route.route_contains,
-    requires_requested_revision: route.method === "pls_bootstrap",
+    requires_requested_revision: false,
     completion_timeout_ms: route.completion_timeout_ms ?? 300_000,
   }, { action: "select_result_table", table_id: route.table_id });
   if (route.archive_supplement_public_kind !== undefined) {
@@ -536,7 +563,7 @@ async function observe(page, query, evidenceDir, context = {}) {
   if (kind === "result_table") {
     assert(typeof query.table_id === "string" && SAFE_RESULT_ID.test(query.table_id), "result_table query requires a safe table_id.");
     const select = page.locator(".nd-results-nav .nd-run-select select");
-    const table = page.locator(resultTableSelector(query.table_id)).first();
+    const table = await waitForSingleVisibleLocator(page, resultTableSelector(query.table_id), context.timeout);
     const selectedResultId = await select.inputValue();
     const tableId = await table.getAttribute("data-result-table-id") ?? await table.getAttribute("data-canonical-table-id");
     const rowCount = await table.locator("tbody tr").count();
@@ -551,7 +578,7 @@ async function observe(page, query, evidenceDir, context = {}) {
   }
   if (kind === "specialized_result") {
     assert(typeof query.table_id === "string" && SAFE_RESULT_ID.test(query.table_id), "specialized_result query requires a safe table_id.");
-    const table = page.locator(resultTableSelector(query.table_id)).first();
+    const table = await waitForSingleVisibleLocator(page, resultTableSelector(query.table_id), context.timeout);
     const select = page.locator(".nd-results-nav .nd-run-select select");
     const rows = await table.locator("tbody tr").allTextContents();
     const headers = await table.locator("thead th").allTextContents();
@@ -617,7 +644,9 @@ async function observe(page, query, evidenceDir, context = {}) {
         legacy_result: smokeSnapshot.legacy_result,
       } : null,
       advanced_parameter_revision: query.include_advanced_parameter_revision === true && context.advancedParameterRevision ? {
-        parameter_id_present: Boolean(context.advancedParameterRevision.parameter_id),
+        parameter_id_present: context.advancedParameterRevision.parameter_ids.length === 2
+          && context.advancedParameterRevision.parameter_ids.every(Boolean),
+        parameter_count: context.advancedParameterRevision.parameter_ids.length,
         before_digest_present: /^[a-f0-9]{64}$/u.test(context.advancedParameterRevision.before_model_document_sha256 ?? ""),
         after_digest_present: /^[a-f0-9]{64}$/u.test(context.advancedParameterRevision.after_model_document_sha256 ?? ""),
         equality_label: context.advancedParameterRevision.equality_label,
@@ -628,11 +657,11 @@ async function observe(page, query, evidenceDir, context = {}) {
   }
   if (kind === "cfa_compatibility_result") {
     assert(typeof query.table_id === "string" && SAFE_RESULT_ID.test(query.table_id), "cfa_compatibility_result query requires a safe table_id.");
-    const table = page.locator(resultTableSelector(query.table_id)).first();
-    const workspace = page.locator('#nd-cbsem-compatibility-calculation[data-smoke-canonical-document-id]').first();
+    const table = await waitForSingleVisibleLocator(page, resultTableSelector(query.table_id), context.timeout);
     const rows = (await table.locator("tbody tr").allTextContents()).map(compact);
     const headers = (await table.locator("thead th").allTextContents()).map(compact);
     const smokeSnapshot = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
+    const canonical = smokeSnapshot?.canonical_result ?? null;
     const includesEvery = (source, expected) => (expected ?? []).every((token) => source.some((value) => value.includes(token)));
     return {
       fixture: context.activeFixture?.fixture ?? null,
@@ -643,11 +672,11 @@ async function observe(page, query, evidenceDir, context = {}) {
       table_shape_passed: rows.length >= Number(query.minimum_rows ?? 1) && headers.length >= Number(query.minimum_columns ?? 1),
       header_expectations_passed: includesEvery(headers, query.header_contains),
       row_expectations_passed: includesEvery(rows, query.row_contains),
-      canonical_document_id_present: Boolean(await workspace.getAttribute("data-smoke-canonical-document-id")),
-      canonical_method_version: await workspace.getAttribute("data-smoke-canonical-method-version"),
-      primary_cell_id: await workspace.getAttribute("data-smoke-canonical-primary-cell"),
-      execution_cell_id: await workspace.getAttribute("data-smoke-canonical-execution-cell"),
-      capability_cell_ids: compact(await workspace.getAttribute("data-smoke-canonical-capability-cells")).split("|").filter(Boolean),
+      canonical_document_id_present: Boolean(canonical?.document_id),
+      canonical_method_version: canonical?.method_version ?? null,
+      primary_cell_id: canonical?.primary_cell_id ?? null,
+      execution_cell_id: canonical?.execution_cell_id ?? null,
+      capability_cell_ids: canonical?.capability_cell_ids ?? [],
       model: smokeSnapshot?.model ? {
         ordinary_construct_count: smokeSnapshot.model.ordinary_construct_count,
         common_factor_count: smokeSnapshot.model.common_factor_count,
@@ -844,6 +873,10 @@ async function executeStep(page, step, context) {
     return { action: step.action, identity: receipt.identity };
   }
   if (step.action === "prepare_calculation_revision") {
+    assert(new Set(["pls_algorithm", "pls_bootstrap", "cbsem"]).has(step.method),
+      `Calculation-ready revision has an unsupported method: ${step.method}`);
+    assert(step.inference === "point" || step.inference === "case_bootstrap",
+      `Calculation-ready revision has invalid inference: ${step.inference}`);
     const target = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId ?? context.activeFixture?.fixture ?? "named")}-calculation-ready.qpls`);
     assert(!await exists(target), `Calculation-ready revision target already exists: ${target}`);
     await page.getByRole("menubar", { name: "Application menu", exact: true }).getByRole("menuitem", { name: "Model", exact: true }).click();
@@ -864,25 +897,23 @@ async function executeStep(page, step, context) {
     }
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
     await advanced.waitFor({ state: "visible", timeout });
-    if (step.method === "cbsem") {
-      assert(step.inference === "point" || step.inference === "case_bootstrap", `CB-SEM calculation-ready revision has invalid inference: ${step.inference}`);
-      const estimator = advanced.locator("#nd-general-sem-estimator-recipe");
-      await estimator.waitFor({ state: "visible", timeout });
-      assert(await estimator.isEnabled(), "The fresh calculation-ready draft cannot select its requested CB-SEM estimator.");
-      await estimator.selectOption("qpls.cbsem.v3");
-      const bootstrap = advanced.locator("#nd-general-sem-bootstrap");
-      await bootstrap.waitFor({ state: "visible", timeout });
-      assert(await bootstrap.isEnabled(), "The fresh CB-SEM calculation-ready draft cannot select its requested inference.");
-      const caseBootstrap = step.inference === "case_bootstrap";
-      await bootstrap.setChecked(caseBootstrap);
-      if (caseBootstrap) {
-        const samples = advanced.locator("#nd-general-sem-bootstrap-samples");
-        await samples.waitFor({ state: "visible", timeout });
-        await samples.fill(String(step.bootstrap_samples ?? 500));
-      }
-      assert(await estimator.inputValue() === "qpls.cbsem.v3", "The calculation-ready draft did not retain the requested CB-SEM estimator before activation.");
-      assert(await bootstrap.isChecked() === caseBootstrap, "The calculation-ready draft did not retain the requested CB-SEM inference before activation.");
+    const estimator = advanced.locator("#nd-general-sem-estimator-recipe");
+    await estimator.waitFor({ state: "visible", timeout });
+    assert(await estimator.isEnabled(), "The fresh calculation-ready draft cannot select its requested estimator.");
+    const estimatorId = step.method === "cbsem" ? "qpls.cbsem.v3" : "qpls.pls_sem.v3";
+    const caseBootstrap = step.method === "pls_bootstrap" || (step.method === "cbsem" && step.inference === "case_bootstrap");
+    await estimator.selectOption(estimatorId);
+    const bootstrap = advanced.locator("#nd-general-sem-bootstrap");
+    await bootstrap.waitFor({ state: "visible", timeout });
+    assert(await bootstrap.isEnabled(), "The fresh calculation-ready draft cannot select its requested inference.");
+    await bootstrap.setChecked(caseBootstrap);
+    if (caseBootstrap) {
+      const samples = advanced.locator("#nd-general-sem-bootstrap-samples");
+      await samples.waitFor({ state: "visible", timeout });
+      await samples.fill(String(step.bootstrap_samples ?? 500));
     }
+    assert(await estimator.inputValue() === estimatorId, "The calculation-ready draft did not retain the requested estimator before activation.");
+    assert(await bootstrap.isChecked() === caseBootstrap, "The calculation-ready draft did not retain the requested inference before activation.");
     const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
     await activate.waitFor({ state: "visible", timeout });
     const activationDeadline = Date.now() + timeout;
@@ -898,16 +929,13 @@ async function executeStep(page, step, context) {
     } finally { helper.stop(); }
     const activatedAuthority = advanced.getByText("Activated calculation authority", { exact: true });
     await activatedAuthority.waitFor({ state: "visible", timeout });
-    if (step.method === "cbsem") {
-      const activatedEstimator = advanced.locator("#nd-general-sem-estimator-recipe");
-      const activatedBootstrap = advanced.locator("#nd-general-sem-bootstrap");
-      const caseBootstrap = step.inference === "case_bootstrap";
-      assert(await activatedEstimator.inputValue() === "qpls.cbsem.v3", "The activated calculation authority changed the requested CB-SEM estimator.");
-      assert(await activatedBootstrap.isChecked() === caseBootstrap, "The activated calculation authority changed the requested CB-SEM inference.");
-      if (caseBootstrap) {
-        const activatedSamples = advanced.locator("#nd-general-sem-bootstrap-samples");
-        assert(await activatedSamples.inputValue() === String(step.bootstrap_samples ?? 500), "The activated calculation authority changed the requested CB-SEM bootstrap sample count.");
-      }
+    const activatedEstimator = advanced.locator("#nd-general-sem-estimator-recipe");
+    const activatedBootstrap = advanced.locator("#nd-general-sem-bootstrap");
+    assert(await activatedEstimator.inputValue() === estimatorId, "The activated calculation authority changed the requested estimator.");
+    assert(await activatedBootstrap.isChecked() === caseBootstrap, "The activated calculation authority changed the requested inference.");
+    if (caseBootstrap) {
+      const activatedSamples = advanced.locator("#nd-general-sem-bootstrap-samples");
+      assert(await activatedSamples.inputValue() === String(step.bootstrap_samples ?? 500), "The activated calculation authority changed the requested bootstrap sample count.");
     }
     const calculateFromAuthority = advanced.locator(".nd-cbsem-v4-actions button.primary:not([disabled])").filter({ hasText: /^Calculate/u }).first();
     await calculateFromAuthority.waitFor({ state: "visible", timeout });
@@ -919,7 +947,8 @@ async function executeStep(page, step, context) {
     return {
       action: step.action,
       required: true,
-      ...(step.method === "cbsem" ? { selected_method: step.method, selected_inference: step.inference } : {}),
+      selected_method: step.method,
+      selected_inference: step.inference,
       target: slash(path.relative(ROOT, target)),
       sha256: context.calculationRevision.initialSha256,
     };
@@ -934,26 +963,46 @@ async function executeStep(page, step, context) {
     await page.getByRole("menuitem", { name: "Advanced Parameter Table…", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Advanced Parameter Table", exact: true });
     await dialog.waitFor({ state: "visible", timeout });
-    const freeParameterRow = dialog.locator('tbody[aria-label="Parameters"] tr').filter({ hasText: /\bFree\b/u }).first();
-    const edit = freeParameterRow.locator(".nd-sem-edit-button");
-    await edit.waitFor({ state: "visible", timeout });
-    const parameterId = compact(await freeParameterRow.locator("code").first().textContent());
-    assert(parameterId, "The visible Advanced Parameter Table free row has no parameter identity.");
-    await edit.click({ timeout });
-    const editor = dialog.locator("#nd-sem-parameter-editor");
-    await editor.waitFor({ state: "visible", timeout });
-    await editor.getByLabel("Equality label", { exact: true }).fill("V255Evidence");
-    await editor.getByRole("button", { name: "Apply", exact: true }).click();
-    await editor.waitFor({ state: "detached", timeout });
+    const freeLoadingRows = dialog.locator('tbody[aria-label="Parameters"] tr')
+      .filter({ hasText: /\bloading\b/iu })
+      .filter({ hasText: /\bfree\b/iu });
+    const candidates = [];
+    for (let index = 0; index < await freeLoadingRows.count(); index += 1) {
+      const row = freeLoadingRows.nth(index);
+      candidates.push({ index, sourceId: compact(await row.locator("code").first().textContent()) });
+    }
+    const sourceGroups = new Map();
+    for (const candidate of candidates) {
+      const group = sourceGroups.get(candidate.sourceId) ?? [];
+      group.push(candidate.index);
+      sourceGroups.set(candidate.sourceId, group);
+    }
+    const compatibleRowIndexes = [...sourceGroups.values()].find((indexes) => indexes.length >= 2)?.slice(0, 2) ?? [];
+    assert(compatibleRowIndexes.length === 2, "The Advanced Parameter Table has no compatible pair of free loading parameters.");
+    const parameterIds = [];
+    for (const rowIndex of compatibleRowIndexes) {
+      const freeParameterRow = freeLoadingRows.nth(rowIndex);
+      const edit = freeParameterRow.locator(".nd-sem-edit-button");
+      await edit.waitFor({ state: "visible", timeout });
+      await edit.click({ timeout });
+      const editor = dialog.locator("#nd-sem-parameter-editor");
+      await editor.waitFor({ state: "visible", timeout });
+      const parameterId = compact(await editor.locator(".nd-sem-editor-heading code").textContent());
+      assert(parameterId && !parameterIds.includes(parameterId), "The opened Advanced Parameter editor has no unique parameter identity.");
+      parameterIds.push(parameterId);
+      await editor.getByLabel("Equality label", { exact: true }).fill("V255Evidence");
+      await editor.getByRole("button", { name: "Apply", exact: true }).click();
+      await editor.waitFor({ state: "detached", timeout });
+    }
     const deadline = Date.now() + timeout;
     let after = null;
     while (Date.now() < deadline) {
       after = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
-      if (after?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence")
+      if (parameterIds.every((parameterId) => after?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence"))
         && after?.model?.model_document_sha256 !== before.model.model_document_sha256) break;
       await page.waitForTimeout(100);
     }
-    assert(after?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence"), "The visible Advanced Parameter Table did not preserve the edited parameter identity/equality label.");
+    assert(parameterIds.every((parameterId) => after?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence")), "The visible Advanced Parameter Table did not preserve both compatible parameter identities/equality labels.");
     assert(after.model.model_document_sha256 !== before.model.model_document_sha256, "The visible Advanced Parameter Table did not change authority.");
     const continueToCalculate = dialog.getByRole("button", { name: "Continue to Calculate", exact: true });
     await continueToCalculate.waitFor({ state: "visible", timeout });
@@ -990,8 +1039,8 @@ async function executeStep(page, step, context) {
     await advanced.getByText("Activated calculation authority", { exact: true }).waitFor({ state: "visible", timeout });
     assert(await estimator.inputValue() === "qpls.cbsem.v3" && !await bootstrap.isChecked(), "The activated Advanced Parameter authority changed its exact CB-SEM point selection.");
     const activated = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
-    assert(activated?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence"), "The activated Advanced Parameter authority lost the edited equality identity.");
-    assert(activated?.model?.model_id !== before.model.model_id, "The Advanced Parameter revision reused the source model identity.");
+    assert(parameterIds.every((parameterId) => activated?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence")), "The activated Advanced Parameter authority lost one of the edited equality identities.");
+    assert(activated?.model?.model_id === before.model.model_id, "The source-preserving Advanced Parameter revision changed the stable model identity.");
     assert(activated?.model?.model_document_sha256 === after.model.model_document_sha256, "The activated Advanced Parameter authority changed the edited model digest.");
     assert(await fileSha256(sourceTarget) === sourceSha256, "Creating the Advanced Parameter revision changed the source archive bytes.");
     const targetSha256 = await fileSha256(target);
@@ -999,7 +1048,7 @@ async function executeStep(page, step, context) {
     if (await close.isVisible().catch(() => false)) await close.click();
     await advanced.waitFor({ state: "hidden", timeout });
     const observed = {
-      parameter_id: parameterId,
+      parameter_ids: parameterIds,
       before_model_document_sha256: before.model.model_document_sha256,
       after_model_document_sha256: activated.model.model_document_sha256,
       before_model_id: before.model.model_id,
@@ -1036,7 +1085,7 @@ async function executeStep(page, step, context) {
     await waitForOpenedProjectPath(page, target, timeout);
     const snapshot = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
     assert(snapshot?.model?.advanced_equality_labels?.includes("V255Evidence"), "The saved Advanced Parameter Table equality label did not survive reopen.");
-    assert(snapshot?.model?.advanced_equalities?.some((item) => item.parameter_id === context.advancedParameterRevision?.parameter_id && item.equality_label === "V255Evidence"), "The stable Advanced Parameter identity did not survive reopen.");
+    assert(context.advancedParameterRevision?.parameter_ids.every((parameterId) => snapshot?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence")), "The stable Advanced Parameter identities did not survive reopen.");
     assert(snapshot?.model?.model_id === context.advancedParameterRevision?.after_model_id, "The reopened Advanced Parameter model identity differs from the activated revision.");
     assert(snapshot?.model?.model_document_sha256 === context.advancedParameterRevision?.after_model_document_sha256, "The reopened Advanced Parameter model digest differs from the activated revision.");
     assert(await fileSha256(target) === targetSha256, "Reopening the Advanced Parameter revision changed its archive bytes.");
@@ -1086,6 +1135,14 @@ async function executeStep(page, step, context) {
     };
     let requestedRevisionHelper = null;
     let requestedRevisionTarget = null;
+    if (!step.requires_requested_revision) {
+      const activeRevision = context.calculationRevision;
+      assert(activeRevision?.target && await exists(activeRevision.target),
+        "An already-activated calculation requires its exact calculation-ready archive.");
+      await waitForOpenedProjectPath(page, activeRevision.target, timeout);
+      assert(await fileSha256(activeRevision.target) === activeRevision.initialSha256,
+        "The active calculation-ready archive changed before calculation started.");
+    }
     if (step.requires_requested_revision) {
       requestedRevisionTarget = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId)}-requested-calculation.qpls`);
       assert(!await exists(requestedRevisionTarget), `Requested-calculation revision target already exists: ${requestedRevisionTarget}`);
@@ -1152,15 +1209,19 @@ async function executeStep(page, step, context) {
     assert(liveIdentity.scientific_identity.method_version === step.method_version, "Completed result method version differs from the manifest route.");
     assert(deepEqual(liveIdentity.scientific_identity.capability_cell_ids, [...step.capability_cell_ids].sort()), "Completed result capability cells differ from the manifest route.");
     const beforeSha256 = await fileSha256(target);
-    await page.keyboard.press("Control+s");
-    const saveDeadline = Date.now() + timeout;
     let afterSha256 = beforeSha256;
-    while (Date.now() < saveDeadline) {
-      await page.waitForTimeout(100);
-      try { afterSha256 = await fileSha256(target); } catch { continue; }
-      if (afterSha256 !== beforeSha256) break;
+    let persistenceMode = "already_persisted";
+    if (beforeSha256 === context.calculationRevision.initialSha256) {
+      persistenceMode = "explicit_control_s";
+      await page.keyboard.press("Control+s");
+      const saveDeadline = Date.now() + timeout;
+      while (Date.now() < saveDeadline) {
+        await page.waitForTimeout(100);
+        try { afterSha256 = await fileSha256(target); } catch { continue; }
+        if (afterSha256 !== beforeSha256) break;
+      }
+      assert(afterSha256 !== beforeSha256, "The completed result was neither autosaved nor persisted by the explicit save command.");
     }
-    assert(afterSha256 !== beforeSha256, "Saving the completed result did not change the existing calculation-ready archive bytes.");
     const archiveIdentity = await inspectSavedSupplementArchive(context, target, step.table_id, liveIdentity, timeout);
 
     await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
@@ -1173,15 +1234,12 @@ async function executeStep(page, step, context) {
     await resultSelect.waitFor({ state: "visible", timeout });
     await resultSelect.locator(`option[value="${liveIdentity.selected_value}"]`).waitFor({ state: "attached", timeout });
     await resultSelect.selectOption(liveIdentity.selected_value);
-    const visibleTable = page.locator(resultTableSelector(step.table_id)).first();
-    if (!await visibleTable.isVisible().catch(() => false)) {
-      const canonicalItem = page.locator(`[data-result-tree-item-id="canonical:table:${step.table_id}"]`);
-      const legacyItem = page.locator(`[data-result-tree-item-id="${step.table_id}"]`);
-      const targetItem = await canonicalItem.count() ? canonicalItem.first() : legacyItem.first();
-      await targetItem.waitFor({ state: "visible", timeout });
+    const visibleTable = await waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), 0, { allowAbsent: true });
+    if (!visibleTable) {
+      const targetItem = await waitForSingleVisibleLocator(page, resultTreeItemSelector(step.table_id), timeout);
       await targetItem.click({ timeout });
+      await waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), timeout);
     }
-    await visibleTable.waitFor({ state: "visible", timeout });
     const reopenedIdentity = await observeCompletedResultIdentity(page);
     assert(deepEqual(reopenedIdentity.result_identity, liveIdentity.result_identity)
       && deepEqual(reopenedIdentity.scientific_identity, liveIdentity.scientific_identity),
@@ -1206,6 +1264,7 @@ async function executeStep(page, step, context) {
     return {
       action: step.action,
       public_kind: step.public_kind,
+      persistence_mode: persistenceMode,
       archive: context.resultArchiveSupplement.archive,
       result_identity: liveIdentity.result_identity,
       archive_identity: archiveIdentity,
@@ -1241,16 +1300,11 @@ async function executeStep(page, step, context) {
   }
   if (step.action === "select_result_table") {
     assert(typeof step.table_id === "string" && SAFE_RESULT_ID.test(step.table_id), "select_result_table requires a safe table_id.");
-    const visibleTable = page.locator(resultTableSelector(step.table_id)).first();
-    if (await visibleTable.isVisible().catch(() => false)) return { action: step.action, table_id: step.table_id, already_visible: true };
-    const legacyId = step.table_id;
-    const canonicalId = `canonical:table:${step.table_id}`;
-    const legacyItem = page.locator(`[data-result-tree-item-id="${legacyId}"]`);
-    const canonicalItem = page.locator(`[data-result-tree-item-id="${canonicalId}"]`);
-    const target = await canonicalItem.count() ? canonicalItem.first() : legacyItem.first();
-    await target.waitFor({ state: "visible", timeout });
+    const visibleTable = await waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), 0, { allowAbsent: true });
+    if (visibleTable) return { action: step.action, table_id: step.table_id, already_visible: true };
+    const target = await waitForSingleVisibleLocator(page, resultTreeItemSelector(step.table_id), timeout);
     await target.click({ timeout });
-    await page.locator(resultTableSelector(step.table_id)).first().waitFor({ state: "visible", timeout });
+    await waitForSingleVisibleLocator(page, resultTableSelector(step.table_id), timeout);
     return { action: step.action, table_id: step.table_id };
   }
   if (step.action === "wait_for") {
@@ -1326,7 +1380,8 @@ async function runCase(page, entry, ordinal, context) {
     assert(deepEqual(observed, entry.assertion.expected), `${entry.id} final assertion failed: ${JSON.stringify({ expected: entry.assertion.expected, observed })}`);
     const screenshotFile = path.join(context.screens, `${String(ordinal).padStart(2, "0")}-${safeFileName(entry.id)}.png`);
     if (entry.screenshot?.selector) {
-      await page.locator(entry.screenshot.selector).first().screenshot({ path: screenshotFile, animations: "disabled" });
+      const screenshotTarget = await waitForSingleVisibleLocator(page, entry.screenshot.selector, context.timeout);
+      await screenshotTarget.screenshot({ path: screenshotFile, animations: "disabled" });
     } else {
       await page.screenshot({ path: screenshotFile, animations: "disabled", fullPage: entry.screenshot?.full_page === true });
     }

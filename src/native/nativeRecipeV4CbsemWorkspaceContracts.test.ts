@@ -24,6 +24,14 @@ describe("CB-SEM Recipe-v4 workspace interaction contracts", () => {
     expect(workspaceSource).not.toContain("buildCanonicalResultDocument");
   });
 
+  it("navigates calculation results only after append and strict schema-6 readback succeed", () => {
+    expect(workspaceSource).toContain("strictlyPublishCbsemCalculationResultV1");
+    expect(workspaceSource).toContain('if (publication.status === "blocked")');
+    expect(workspaceSource).toContain("setArchiveFailure(publication.diagnostic)");
+    expect(workspaceSource).toContain("document: publication.entry.canonicalDocument");
+    expect(workspaceSource).not.toContain("Compatibility projects that cannot accept schema-6 append");
+  });
+
   it("keeps point-only mean replacement separate and exposes exact-bootstrap controls", () => {
     expect(workspaceSource).toContain('useState<AnalysisRecipeV4MissingDataPolicy>("listwise_deletion")');
     expect(workspaceSource).toContain("missing_data: effectiveMissingDataPolicy");

@@ -1,6 +1,6 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. Formal first diagnostic `20260822T142953Z`
+Current source version: **2.54.0**. Formal first diagnostic `20260822T142953Z`
 at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
 reported TypeScript error `TS2339`. The same-script, same-suite formal final

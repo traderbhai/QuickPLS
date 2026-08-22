@@ -84,8 +84,8 @@ const values = (index: number) => {
 };
 
 const indicatorResidual = (index: number, harmonic: number) =>
-  Math.sin(index * (0.101 + harmonic * 0.017) + harmonic * 0.41) * 0.018
-  + Math.cos(index * (0.067 + harmonic * 0.013) + harmonic * 0.29) * 0.011;
+  Math.sin(index * (0.101 + harmonic * 0.017) + harmonic * 0.41) * 0.25
+  + Math.cos(index * (0.067 + harmonic * 0.013) + harmonic * 0.29) * 0.16;
 
 const columns = ["x1", "x2", "x3", "m11", "m12", "m13", "m21", "m22", "w1", "w2", "z1", "z2", "b", "c11", "c12", "c21", "c22", "y1", "y2", "y3"];
 
@@ -94,15 +94,15 @@ const dataset = (): Dataset & { columnMetadata: ColumnMetadata[] } => {
     const index = offset + 1;
     const row = values(index);
     return {
-      x1: row.x, x2: row.x * 0.91 + row.noise * 0.11 + indicatorResidual(index, 1), x3: row.x * 0.86 - row.noise * 0.09 + indicatorResidual(index, 2),
-      m11: row.m1, m12: row.m1 * 0.92 - row.noise * 0.08 + indicatorResidual(index, 3), m13: row.m1 * 0.87 + row.noise * 0.12 + indicatorResidual(index, 4),
+      x1: row.x + indicatorResidual(index, 7), x2: row.x * 0.91 + row.noise * 0.11 + indicatorResidual(index, 1), x3: row.x * 0.86 - row.noise * 0.09 + indicatorResidual(index, 2),
+      m11: row.m1 + indicatorResidual(index, 8), m12: row.m1 * 0.92 - row.noise * 0.08 + indicatorResidual(index, 3), m13: row.m1 * 0.87 + row.noise * 0.12 + indicatorResidual(index, 4),
       m21: row.m2, m22: row.m2 * 0.90 + row.noise * 0.10,
       w1: row.w, w2: row.w * 0.89 - row.noise * 0.09,
       z1: row.z, z2: row.z * 0.90 + row.noise * 0.08,
       b: row.b,
       c11: row.c1, c12: row.c1 * 0.91 + row.noise * 0.09,
       c21: row.c2, c22: row.c2 * 0.92 - row.noise * 0.08,
-      y1: row.y, y2: row.y * 0.93 + row.noise * 0.07 + indicatorResidual(index, 5), y3: row.y * 0.88 - row.noise * 0.10 + indicatorResidual(index, 6),
+      y1: row.y + indicatorResidual(index, 9), y2: row.y * 0.93 + row.noise * 0.07 + indicatorResidual(index, 5), y3: row.y * 0.88 - row.noise * 0.10 + indicatorResidual(index, 6),
     };
   });
   return {
