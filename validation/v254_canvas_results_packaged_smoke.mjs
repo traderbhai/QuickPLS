@@ -48,7 +48,7 @@ function parseArgs(argv) {
     throw new Error("--phase must be headless, execute, or reopen");
   }
   if (values.phase !== "headless") {
-    for (const key of ["endpoint", "project-path", "python"]) {
+    for (const key of ["endpoint", "project-path", "python", "candidate-pid", "candidate-path"]) {
       if (!values[key]) throw new Error(`--${key} is required for ${values.phase}`);
     }
   }
@@ -76,7 +76,7 @@ async function pathExists(file) {
   return fs.stat(file).then(() => true, () => false);
 }
 
-function createDialogHelper({ python, target }) {
+function createDialogHelper({ python, target, candidatePid, candidatePath }) {
   const child = spawn(python, [
     FILE_DIALOG_HELPER,
     "--mode", "save",
@@ -85,6 +85,8 @@ function createDialogHelper({ python, target }) {
     "--window-title", "QuickPLS",
     "--timeout-seconds", "90",
     "--extension", "qpls",
+    "--owner-pid", String(candidatePid),
+    "--owner-executable", candidatePath,
   ], { cwd: ROOT, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
   let pending = "";
   let stderr = "";
@@ -357,8 +359,8 @@ async function createThreeWayModeration(page) {
   return { dialog, summary, add };
 }
 
-async function saveNativeProjectAction(page, python, target, trigger) {
-  const helper = createDialogHelper({ python, target });
+async function saveNativeProjectAction(page, python, target, trigger, candidatePid, candidatePath) {
+  const helper = createDialogHelper({ python, target, candidatePid, candidatePath });
   let completed = false;
   try {
     const ready = await helper.ready;
@@ -394,7 +396,7 @@ async function prepareCalculationReadyRevision(page, args) {
   await advanced.waitFor({ state: "visible", timeout: 30_000 });
   const activate = advanced.locator("button.primary:not([disabled])").filter({ hasText: /^Save and activate project…$/ });
   await activate.waitFor({ state: "visible", timeout: 30_000 });
-  const save = await saveNativeProjectAction(page, args.python, sourceRevisionPath, () => activate.click());
+  const save = await saveNativeProjectAction(page, args.python, sourceRevisionPath, () => activate.click(), args.candidatePid, args.candidatePath);
   const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
   await close.waitFor({ state: "visible", timeout: 30_000 });
   await close.click();
@@ -616,7 +618,7 @@ async function executeJourney(page, args, report, screenshotRoot) {
   const fixturePath = path.join(args.evidenceDir, "canvas-results-input.csv");
   const fixture = await createFixture(fixturePath);
   await createUnifiedProject(page);
-  await importFixture(page, args.python, fixturePath);
+  await importFixture(page, args.python, fixturePath, { candidatePid: args.candidatePid, candidatePath: args.candidatePath });
   await createEmptyModel(page, MODEL_NAME);
 
   await createConstructFromIndicators(page, ["x_1", "x_2"], "X", async () => {
@@ -679,7 +681,7 @@ async function executeJourney(page, args, report, screenshotRoot) {
     expected: "M on the two-way anchor extends it with a distinct third moderator.",
     observed: threeWay.summary,
   });
-  const threeWaySave = await saveNativeProjectAction(page, args.python, args.projectPath, () => threeWay.add.click());
+  const threeWaySave = await saveNativeProjectAction(page, args.python, args.projectPath, () => threeWay.add.click(), args.candidatePid, args.candidatePath);
   await threeWay.dialog.waitFor({ state: "hidden", timeout: 10_000 });
   await page.waitForFunction(() => {
     const anchor = document.querySelector('.moderation-anchor[role="button"]');
@@ -809,9 +811,13 @@ const args = {
   evidenceDir: path.resolve(rawArgs["evidence-dir"]),
   projectPath: path.resolve(rawArgs["project-path"]),
   python: path.resolve(rawArgs.python),
+  candidatePid: Number(rawArgs["candidate-pid"]),
+  candidatePath: path.resolve(rawArgs["candidate-path"]),
 };
 assert(inside(RESULTS_ROOT, args.evidenceDir), "--evidence-dir must remain below validation/results.");
 assert(inside(RESULTS_ROOT, args.projectPath), "--project-path must remain below validation/results.");
+assert(Number.isSafeInteger(args.candidatePid) && args.candidatePid > 0, "--candidate-pid must be a positive integer.");
+assert(await pathExists(args.candidatePath), "--candidate-path must be an existing executable.");
 await fs.mkdir(args.evidenceDir, { recursive: true });
 const screenshotRoot = path.join(args.evidenceDir, "screens");
 await fs.mkdir(screenshotRoot, { recursive: true });

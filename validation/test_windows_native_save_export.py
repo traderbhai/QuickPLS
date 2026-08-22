@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 import unittest
+from tempfile import TemporaryDirectory
 from pathlib import Path
+from unittest.mock import patch
 
 from validation.windows_native_save_export import (
     BUTTON_CLICK_MESSAGE,
     GateFailure,
     submit_save_dialog,
+    visible_quickpls_window,
 )
 
 
@@ -71,6 +74,73 @@ class FakeSaveControl:
 
     def send_message(self, message: int, wparam: int, lparam: int) -> None:
         self.sent_messages.append((message, wparam, lparam))
+
+
+class FakeMainWindow:
+    def __init__(self, pid: int, title: str, handle: int = 100) -> None:
+        self.element_info = type("ElementInfo", (), {"process_id": pid})()
+        self._title = title
+        self.handle = handle
+
+    def window_text(self) -> str:
+        return self._title
+
+
+class FakeDesktop:
+    windows_by_call: list[FakeMainWindow] = []
+
+    def __init__(self, *, backend: str) -> None:
+        if backend != "win32":
+            raise AssertionError(f"Unexpected backend: {backend}")
+
+    def windows(self, *, visible_only: bool) -> list[FakeMainWindow]:
+        if not visible_only:
+            raise AssertionError("Only visible windows may be inspected.")
+        return self.windows_by_call
+
+
+class VisibleQuickPlsWindowTests(unittest.TestCase):
+    def test_exact_owner_executable_basename_replaces_legacy_name_filter(self) -> None:
+        with TemporaryDirectory() as directory:
+            portable = Path(directory) / "QuickPLS_2.55.0_unsigned-preview_x64_portable.exe"
+            portable.write_bytes(b"portable")
+            window = FakeMainWindow(4321, "QuickPLS")
+            FakeDesktop.windows_by_call = [window]
+
+            with patch(
+                "validation.windows_native_save_export.executable_path",
+                return_value=str(portable),
+            ):
+                selected, info = visible_quickpls_window(
+                    "QuickPLS",
+                    FakeDesktop,
+                    object(),
+                    object(),
+                    object(),
+                    expected_pid=4321,
+                    expected_executable=str(portable),
+                )
+
+            self.assertIs(selected, window)
+            self.assertEqual(info["executable"], str(portable))
+
+    def test_legacy_calls_still_require_quickpls_desktop_basename(self) -> None:
+        with TemporaryDirectory() as directory:
+            versioned = Path(directory) / "QuickPLS_versioned_portable.exe"
+            versioned.write_bytes(b"portable")
+            FakeDesktop.windows_by_call = [FakeMainWindow(4321, "QuickPLS")]
+
+            with patch(
+                "validation.windows_native_save_export.executable_path",
+                return_value=str(versioned),
+            ), self.assertRaisesRegex(GateFailure, "quickpls-desktop.exe"):
+                visible_quickpls_window(
+                    "QuickPLS",
+                    FakeDesktop,
+                    object(),
+                    object(),
+                    object(),
+                )
 
 
 class SubmitSaveDialogTests(unittest.TestCase):

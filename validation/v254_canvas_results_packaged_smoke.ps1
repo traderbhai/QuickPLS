@@ -131,13 +131,13 @@ $application = $null
 $runError = $null
 try {
     $application = Start-IsolatedCandidate
-    & $node $driver --phase execute --endpoint $endpoint --evidence-dir $evidence --project-path $projectPath --python $python
+    & $node $driver --phase execute --endpoint $endpoint --evidence-dir $evidence --project-path $projectPath --python $python --candidate-pid $application.Id --candidate-path $desktop
     if ($LASTEXITCODE -ne 0) { throw "Canvas/Results execute phase failed with exit code $LASTEXITCODE." }
     Stop-IsolatedCandidate -Process $application
     $application = $null
 
     $application = Start-IsolatedCandidate
-    & $node $driver --phase reopen --endpoint $endpoint --evidence-dir $evidence --project-path $projectPath --python $python
+    & $node $driver --phase reopen --endpoint $endpoint --evidence-dir $evidence --project-path $projectPath --python $python --candidate-pid $application.Id --candidate-path $desktop
     if ($LASTEXITCODE -ne 0) { throw "Canvas/Results reopen phase failed with exit code $LASTEXITCODE." }
 } catch {
     $runError = $_

@@ -109,7 +109,7 @@ async function fileIdentity(file) {
   return { path: file, size: bytes.length, sha256: sha256(bytes) };
 }
 
-function helperProcess({ python, mode, target, extensions, windowTitle, timeoutSeconds = 45 }) {
+function helperProcess({ python, mode, target, extensions, windowTitle, timeoutSeconds = 45, ownerPid = null, ownerExecutable = null }) {
   const args = [
     FILE_DIALOG_HELPER,
     "--mode", mode,
@@ -118,6 +118,15 @@ function helperProcess({ python, mode, target, extensions, windowTitle, timeoutS
     "--window-title", windowTitle,
     "--timeout-seconds", String(timeoutSeconds),
   ];
+  if ((ownerPid === null) !== (ownerExecutable === null)) {
+    throw new Error("Native file-dialog owner PID and executable must be supplied together.");
+  }
+  if (ownerPid !== null) {
+    if (!Number.isSafeInteger(ownerPid) || ownerPid <= 0 || !path.isAbsolute(ownerExecutable)) {
+      throw new Error("Native file-dialog owner identity is invalid.");
+    }
+    args.push("--owner-pid", String(ownerPid), "--owner-executable", ownerExecutable);
+  }
   for (const extension of extensions) args.push("--extension", extension);
   const child = spawn(python, args, { cwd: ROOT, windowsHide: true, stdio: ["ignore", "pipe", "pipe"] });
   const events = [];
@@ -229,7 +238,7 @@ async function createGeneralSemDraft(page, name, requireStandardAccess = false) 
   await page.locator(".nd-toast").filter({ hasText: /General SEM project draft active/i }).waitFor({ state: "visible", timeout: 15_000 });
 }
 
-async function importFixture(page, python, fixturePath) {
+async function importFixture(page, python, fixturePath, owner = {}) {
   await page.keyboard.press("Control+i");
   const dialog = page.getByRole("dialog", { name: "Import Data", exact: true });
   await dialog.waitFor({ state: "visible", timeout: 10_000 });
@@ -237,7 +246,13 @@ async function importFixture(page, python, fixturePath) {
   await dialog.getByLabel(/^Missing-value markers/).fill("");
   const windowTitle = PACKAGED_MAIN_WINDOW_TITLE;
   const evidence = await withNativeDialog(page, {
-    python, mode: "open", target: fixturePath, extensions: ["csv"], windowTitle,
+    python,
+    mode: "open",
+    target: fixturePath,
+    extensions: ["csv"],
+    windowTitle,
+    ownerPid: owner.candidatePid ?? null,
+    ownerExecutable: owner.candidatePath ?? null,
   }, () => dialog.getByRole("button", { name: "Choose File…", exact: true }).click());
   await page.locator(".nd-data-table tbody tr").first().waitFor({ state: "visible", timeout: 30_000 });
   return evidence;

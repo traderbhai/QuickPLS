@@ -35,7 +35,7 @@ function parseArgs(argv) {
     values[token.slice(2)] = value;
     index += 1;
   }
-  for (const key of ["phase", "endpoint", "evidence-dir", "project-path", "python"]) {
+  for (const key of ["phase", "endpoint", "evidence-dir", "project-path", "python", "candidate-pid", "candidate-path"]) {
     if (!values[key]) throw new Error(`--${key} is required.`);
   }
   if (!new Set(["execute", "reopen"]).has(values.phase)) throw new Error("--phase execute or --phase reopen is required.");
@@ -87,8 +87,12 @@ function screenshotById(underlying, id) {
 const args = parseArgs(process.argv.slice(2));
 const evidenceDir = path.resolve(args["evidence-dir"]);
 const projectPath = path.resolve(args["project-path"]);
+const candidatePid = Number(args["candidate-pid"]);
+const candidatePath = path.resolve(args["candidate-path"]);
 assert(inside(RESULTS, evidenceDir), "--evidence-dir must remain below validation/results.");
 assert(inside(RESULTS, projectPath), "--project-path must remain below validation/results.");
+assert(Number.isSafeInteger(candidatePid) && candidatePid > 0, "--candidate-pid must be a positive integer.");
+assert((await fs.stat(candidatePath)).isFile(), "--candidate-path must be an existing file.");
 const underlyingReportPath = path.join(evidenceDir, "v254_canvas_results_packaged_smoke.json");
 const reportPath = path.join(evidenceDir, "v255_live_calculation_lifecycle_smoke.json");
 const report = await fs.stat(reportPath).then(async () => JSON.parse(await fs.readFile(reportPath, "utf8")), () => ({
@@ -105,7 +109,16 @@ const report = await fs.stat(reportPath).then(async () => JSON.parse(await fs.re
   failures: [],
 }));
 
-const childArgs = [UNDERLYING_DRIVER, "--phase", args.phase, "--endpoint", args.endpoint, "--evidence-dir", evidenceDir, "--project-path", projectPath, "--python", path.resolve(args.python)];
+const childArgs = [
+  UNDERLYING_DRIVER,
+  "--phase", args.phase,
+  "--endpoint", args.endpoint,
+  "--evidence-dir", evidenceDir,
+  "--project-path", projectPath,
+  "--python", path.resolve(args.python),
+  "--candidate-pid", String(candidatePid),
+  "--candidate-path", candidatePath,
+];
 const outcome = await runNode(childArgs);
 const phase = {
   phase: args.phase,
@@ -113,6 +126,7 @@ const phase = {
   child_signal: outcome.signal,
   child_stdout: outcome.stdout,
   child_stderr: outcome.stderr,
+  candidate_process: { pid: candidatePid, executable: candidatePath },
   passed: false,
 };
 let underlying;

@@ -131,6 +131,16 @@ def visible_quickpls_window(
     expected_pid: int | None = None,
     expected_executable: str | None = None,
 ) -> tuple[Any, dict[str, Any]]:
+    expected_executable_path = (
+        Path(expected_executable).resolve(strict=True)
+        if expected_executable is not None
+        else None
+    )
+    expected_executable_name = (
+        expected_executable_path.name.lower()
+        if expected_executable_path is not None
+        else EXPECTED_EXECUTABLE
+    )
     candidates: list[tuple[Any, dict[str, Any]]] = []
     inspected: list[dict[str, Any]] = []
     for window in Desktop(backend="win32").windows(visible_only=True):
@@ -145,7 +155,7 @@ def visible_quickpls_window(
             if title.startswith("QuickPLS"):
                 inspected.append({"pid": pid, "handle": int(window.handle), "title": title, "executableError": str(error)})
             continue
-        if executable_name != EXPECTED_EXECUTABLE:
+        if executable_name != expected_executable_name:
             continue
         info = {
             "pid": pid,
@@ -158,16 +168,16 @@ def visible_quickpls_window(
             title == expected_title
             and (expected_pid is None or pid == expected_pid)
             and (
-                expected_executable is None
+                expected_executable_path is None
                 or Path(executable).resolve(strict=True)
-                == Path(expected_executable).resolve(strict=True)
+                == expected_executable_path
             )
         ):
             candidates.append((window, info))
 
     if len(candidates) != 1:
         raise GateFailure(
-            f"Expected exactly one visible {EXPECTED_EXECUTABLE} main window with title "
+            f"Expected exactly one visible {expected_executable_name} main window with title "
             f"{expected_title!r}; found {len(candidates)}. "
             f"Inspected process windows: {json.dumps(inspected, ensure_ascii=False)}"
         )

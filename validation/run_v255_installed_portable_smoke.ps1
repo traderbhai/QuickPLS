@@ -391,7 +391,7 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         New-Item -ItemType Directory -Path $lifecycleEvidence -Force | Out-Null
         $process = Start-IsolatedCandidate $candidateFull $endpoint
         $launchedPids.Add($process.Id)
-        & $node $lifecycleDriver --phase execute --endpoint $endpoint --evidence-dir $lifecycleEvidence --project-path $projectPath --python $python 1> $lifecycleExecuteStdout 2> $lifecycleExecuteStderr
+        & $node $lifecycleDriver --phase execute --endpoint $endpoint --evidence-dir $lifecycleEvidence --project-path $projectPath --python $python --candidate-pid $process.Id --candidate-path $candidateFull 1> $lifecycleExecuteStdout 2> $lifecycleExecuteStderr
         if ($LASTEXITCODE -ne 0) { throw "$Name live calculation execute phase failed." }
         Stop-IsolatedCandidate $process $endpoint
         $process = $null
@@ -399,7 +399,7 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         # A new hidden process is mandatory: no in-memory state may satisfy reopen.
         $process = Start-IsolatedCandidate $candidateFull $endpoint
         $launchedPids.Add($process.Id)
-        & $node $lifecycleDriver --phase reopen --endpoint $endpoint --evidence-dir $lifecycleEvidence --project-path $projectPath --python $python 1> $lifecycleReopenStdout 2> $lifecycleReopenStderr
+        & $node $lifecycleDriver --phase reopen --endpoint $endpoint --evidence-dir $lifecycleEvidence --project-path $projectPath --python $python --candidate-pid $process.Id --candidate-path $candidateFull 1> $lifecycleReopenStdout 2> $lifecycleReopenStderr
         if ($LASTEXITCODE -ne 0) { throw "$Name fresh-reopen phase failed." }
         Stop-IsolatedCandidate $process $endpoint
         $process = $null
