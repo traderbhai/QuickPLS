@@ -1,0 +1,2443 @@
+{
+  "schema_version": 2,
+  "suite_id": "quickpls_v255_method_evidence_crawler_v2",
+  "target_release": "2.55.0",
+  "version_authority_at_collection": "2.55.0 candidate after the consolidated source gate",
+  "generated_at": "2026-08-22T15:16:14.972Z",
+  "mode": "packaged",
+  "result_evidence_phase": "source",
+  "serial": true,
+  "maximum_concurrent_calculations": 1,
+  "passed": true,
+  "console_errors": [],
+  "matrix_checks": {
+    "matrix_has_exactly_18_methods": true,
+    "matrix_method_ids_are_unique": true,
+    "archive_index_has_exactly_18_methods": true,
+    "archive_index_method_ids_are_unique": true,
+    "archive_index_matches_matrix": true,
+    "serial_execution_is_required": true,
+    "archive_reuse_is_explicit": true,
+    "unverified_archive_evidence_cannot_be_silently_accepted": true,
+    "setup_evidence_schema_is_v2": true,
+    "result_archive_schema_is_v4": true,
+    "calculate_capture_has_exactly_18_methods": true,
+    "setup_case_contract_is_frozen": true,
+    "specialized_result_contract_is_frozen": true,
+    "cross_method_contract_is_frozen": true
+  },
+  "setup_evidence_contract": [
+    {
+      "kind": "pls_algorithm",
+      "expected_setup_cases": [
+        "ordinary reflective model",
+        "formative measurement inversion",
+        "eligible HOC point",
+        "simultaneous two-way moderation point",
+        "bounded three-way moderation point"
+      ],
+      "declared_setup_cases": [
+        "ordinary reflective model",
+        "formative measurement inversion",
+        "eligible HOC point",
+        "simultaneous two-way moderation point",
+        "bounded three-way moderation point"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "plsc",
+      "expected_setup_cases": [
+        "eligible reflective model",
+        "ineligible formative model"
+      ],
+      "declared_setup_cases": [
+        "eligible reflective model",
+        "ineligible formative model"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "wpls",
+      "expected_setup_cases": [
+        "positive case-weight column",
+        "missing weight",
+        "zero or negative weight"
+      ],
+      "declared_setup_cases": [
+        "positive case-weight column",
+        "missing weight",
+        "zero or negative weight"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "gsca",
+      "expected_setup_cases": [
+        "fixed execution summary",
+        "mixed reflective and formative blocks"
+      ],
+      "declared_setup_cases": [
+        "fixed execution summary",
+        "mixed reflective and formative blocks"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "cca",
+      "expected_setup_cases": [
+        "eligible composite model",
+        "unsupported model scope"
+      ],
+      "declared_setup_cases": [
+        "eligible composite model",
+        "unsupported model scope"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "cta_pls",
+      "expected_setup_cases": [
+        "eligible four-indicator block",
+        "ineligible small block"
+      ],
+      "declared_setup_cases": [
+        "eligible four-indicator block",
+        "ineligible small block"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "ipma",
+      "expected_setup_cases": [
+        "explicit target",
+        "fixed all-predecessor scope disclosure",
+        "observed-range disclosure"
+      ],
+      "declared_setup_cases": [
+        "explicit target",
+        "fixed all-predecessor scope disclosure",
+        "observed-range disclosure"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "cbsem",
+      "expected_setup_cases": [
+        "CFA point",
+        "CFA case bootstrap",
+        "recursive SEM point",
+        "recursive SEM case bootstrap",
+        "Advanced parameters",
+        "invalid identification"
+      ],
+      "declared_setup_cases": [
+        "CFA point",
+        "CFA case bootstrap",
+        "recursive SEM point",
+        "recursive SEM case bootstrap",
+        "Advanced parameters",
+        "invalid identification"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "pls_bootstrap",
+      "expected_setup_cases": [
+        "ordinary PLS",
+        "single mediation",
+        "parallel mediation",
+        "serial mediation",
+        "simultaneous two-way moderation",
+        "three-way moderation",
+        "first-stage moderated mediation",
+        "second-stage moderated mediation",
+        "HOC"
+      ],
+      "declared_setup_cases": [
+        "ordinary PLS",
+        "single mediation",
+        "parallel mediation",
+        "serial mediation",
+        "simultaneous two-way moderation",
+        "three-way moderation",
+        "first-stage moderated mediation",
+        "second-stage moderated mediation",
+        "HOC"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "expected_setup_cases": [
+        "eligible reflective PLSc model",
+        "unsupported non-reflective model"
+      ],
+      "declared_setup_cases": [
+        "eligible reflective PLSc model",
+        "unsupported non-reflective model"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "pls_permutation",
+      "expected_setup_cases": [
+        "eligible fixed-score structural paths",
+        "unsupported weighting or topology"
+      ],
+      "declared_setup_cases": [
+        "eligible fixed-score structural paths",
+        "unsupported weighting or topology"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "expected_setup_cases": [
+        "linked completed PLS bootstrap",
+        "missing qualifying bootstrap"
+      ],
+      "declared_setup_cases": [
+        "linked completed PLS bootstrap",
+        "missing qualifying bootstrap"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "expected_setup_cases": [
+        "eligible two-construct path",
+        "invalid topology",
+        "sample-size grid"
+      ],
+      "declared_setup_cases": [
+        "eligible two-construct path",
+        "invalid topology",
+        "sample-size grid"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "mga",
+      "expected_setup_cases": [
+        "two valid groups",
+        "missing group",
+        "undersized group",
+        "configural confirmation"
+      ],
+      "declared_setup_cases": [
+        "two valid groups",
+        "missing group",
+        "undersized group",
+        "configural confirmation"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "predict",
+      "expected_setup_cases": [
+        "fixed 10 folds by 10 repetitions disclosure",
+        "reflective endogenous targets",
+        "unsupported target"
+      ],
+      "declared_setup_cases": [
+        "fixed 10 folds by 10 repetitions disclosure",
+        "reflective endogenous targets",
+        "unsupported target"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "nca",
+      "expected_setup_cases": [
+        "condition and outcome",
+        "CE-FDH",
+        "CR-FDH",
+        "fixed steps alpha workers and seed disclosure",
+        "invalid constant variable"
+      ],
+      "declared_setup_cases": [
+        "condition and outcome",
+        "CE-FDH",
+        "CR-FDH",
+        "fixed steps alpha workers and seed disclosure",
+        "invalid constant variable"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "pca",
+      "expected_setup_cases": [
+        "fixed component count",
+        "variance-retention threshold",
+        "constant variable"
+      ],
+      "declared_setup_cases": [
+        "fixed component count",
+        "variance-retention threshold",
+        "constant variable"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    },
+    {
+      "kind": "regression",
+      "expected_setup_cases": [
+        "OLS",
+        "binary logistic with valid 0 and 1",
+        "binary logistic missing a class",
+        "regression case bootstrap",
+        "graph-defined PROCESS mediation",
+        "graph-defined PROCESS moderation"
+      ],
+      "declared_setup_cases": [
+        "OLS",
+        "binary logistic with valid 0 and 1",
+        "binary logistic missing a class",
+        "regression case bootstrap",
+        "graph-defined PROCESS mediation",
+        "graph-defined PROCESS moderation"
+      ],
+      "exactly_one_entry_per_case": true,
+      "entries_use_recognized_evidence_types": true,
+      "entries_are_explicitly_ready_pending_or_verified": true
+    }
+  ],
+  "presentation_evidence_contract": {
+    "owner_kind": "pls_bootstrap",
+    "expected_cases": [
+      "exact-fit presentation: Not run",
+      "exact-fit presentation: Available",
+      "exact-fit presentation: Partial",
+      "exact-fit presentation: Unavailable",
+      "exact-fit presentation: Failed"
+    ],
+    "declared_cases": [
+      "exact-fit presentation: Not run",
+      "exact-fit presentation: Available",
+      "exact-fit presentation: Partial",
+      "exact-fit presentation: Unavailable",
+      "exact-fit presentation: Failed"
+    ],
+    "exactly_one_pls_bootstrap_owner": true,
+    "cases_are_exact": true,
+    "exactly_one_evidence_entry_per_case": true,
+    "cases_are_excluded_from_archive_result_families": true,
+    "rows": [
+      {
+        "presentation_case": "exact-fit presentation: Not run",
+        "evidence_type": "component",
+        "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx",
+        "replacement_test": "renders exact-fit presentation state Not run from validated run authority",
+        "assertion_identity": {
+          "file": "D:/QuickPLS/src/native/NativeResultsModelFitPresentation.test.tsx",
+          "full_name": "native Results exact-fit presentation contract renders exact-fit presentation state Not run from validated run authority",
+          "title": "renders exact-fit presentation state Not run from validated run authority",
+          "status": "passed"
+        },
+        "passed": true
+      },
+      {
+        "presentation_case": "exact-fit presentation: Available",
+        "evidence_type": "component",
+        "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx",
+        "replacement_test": "renders exact-fit presentation state Available from validated run authority",
+        "assertion_identity": {
+          "file": "D:/QuickPLS/src/native/NativeResultsModelFitPresentation.test.tsx",
+          "full_name": "native Results exact-fit presentation contract renders exact-fit presentation state Available from validated run authority",
+          "title": "renders exact-fit presentation state Available from validated run authority",
+          "status": "passed"
+        },
+        "passed": true
+      },
+      {
+        "presentation_case": "exact-fit presentation: Partial",
+        "evidence_type": "component",
+        "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx",
+        "replacement_test": "renders exact-fit presentation state Partial from validated run authority",
+        "assertion_identity": {
+          "file": "D:/QuickPLS/src/native/NativeResultsModelFitPresentation.test.tsx",
+          "full_name": "native Results exact-fit presentation contract renders exact-fit presentation state Partial from validated run authority",
+          "title": "renders exact-fit presentation state Partial from validated run authority",
+          "status": "passed"
+        },
+        "passed": true
+      },
+      {
+        "presentation_case": "exact-fit presentation: Unavailable",
+        "evidence_type": "component",
+        "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx",
+        "replacement_test": "renders exact-fit presentation state Unavailable from validated run authority",
+        "assertion_identity": {
+          "file": "D:/QuickPLS/src/native/NativeResultsModelFitPresentation.test.tsx",
+          "full_name": "native Results exact-fit presentation contract renders exact-fit presentation state Unavailable from validated run authority",
+          "title": "renders exact-fit presentation state Unavailable from validated run authority",
+          "status": "passed"
+        },
+        "passed": true
+      },
+      {
+        "presentation_case": "exact-fit presentation: Failed",
+        "evidence_type": "component",
+        "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx",
+        "replacement_test": "renders exact-fit presentation state Failed from validated run authority",
+        "assertion_identity": {
+          "file": "D:/QuickPLS/src/native/NativeResultsModelFitPresentation.test.tsx",
+          "full_name": "native Results exact-fit presentation contract renders exact-fit presentation state Failed from validated run authority",
+          "title": "renders exact-fit presentation state Failed from validated run authority",
+          "status": "passed"
+        },
+        "passed": true
+      }
+    ],
+    "structure_passed": true,
+    "passed": true
+  },
+  "sources": {
+    "matrix_sha256": "300ba4b5d243b58ddf34efda89a9b1bbd52493950e19d71325cb1811ee2a9017",
+    "frozen_archive_index_sha256": "b4f807dfd67ca8bd0667ee7d53b47ebb09a02f80e43833a1389bc06b352ca925",
+    "evidence_bundle_manifest_sha256": "7abdf22b048af3bf3a4b46ad21ef738f695161ddeec7c12703eeed7ad5c372db",
+    "reusable_archive_inventory_sha256": "2245a6e88d6256973bb080ba8e1d1ae2ea5524deef2e9f853b8c7e1ddd7a9148",
+    "vitest_report": "validation/results/v255_consolidated_diagnostics_20260822T143620Z/v255_full_vitest.json",
+    "vitest_report_sha256": "b44c0e4847128936e808cfdf9a6286673c1e85e1b7cda2d1f3001d01477e6954"
+  },
+  "setups": [
+    {
+      "kind": "pls_algorithm",
+      "setup_case": "ordinary reflective model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/nativeAnalysisRecipe.test.ts",
+      "replacement_test": "builds the exact mutually exclusive algorithm, bootstrap, and permutation settings",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeAnalysisRecipe.test.ts",
+        "full_name": "primary native PLS calculation payloads builds the exact mutually exclusive algorithm, bootstrap, and permutation settings",
+        "title": "builds the exact mutually exclusive algorithm, bootstrap, and permutation settings",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_algorithm",
+      "setup_case": "formative measurement inversion",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/modelEditCommandGatewayV1.test.ts",
+      "replacement_test": "plans construct, measurement, path, HOC, and moderation edits through resident strict intents",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/modelEditCommandGatewayV1.test.ts",
+        "full_name": "model edit command gateway v1 domain plans construct, measurement, path, HOC, and moderation edits through resident strict intents",
+        "title": "plans construct, measurement, path, HOC, and moderation edits through resident strict intents",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_algorithm",
+      "setup_case": "eligible HOC point",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+        "title": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_algorithm",
+      "setup_case": "simultaneous two-way moderation point",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "title": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_algorithm",
+      "setup_case": "bounded three-way moderation point",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "detects a three-way term and routes point/bootstrap through distinct bounded cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing detects a three-way term and routes point/bootstrap through distinct bounded cells",
+        "title": "detects a three-way term and routes point/bootstrap through distinct bounded cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "plsc",
+      "setup_case": "eligible reflective model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+        "title": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "plsc",
+      "setup_case": "ineligible formative model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "blocks PLSc and CB-SEM for formative constructs",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability blocks PLSc and CB-SEM for formative constructs",
+        "title": "blocks PLSc and CB-SEM for formative constructs",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "wpls",
+      "setup_case": "positive case-weight column",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "requires positive numeric WPLS weights",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability requires positive numeric WPLS weights",
+        "title": "requires positive numeric WPLS weights",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "wpls",
+      "setup_case": "missing weight",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "requires positive numeric WPLS weights",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability requires positive numeric WPLS weights",
+        "title": "requires positive numeric WPLS weights",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "wpls",
+      "setup_case": "zero or negative weight",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "requires positive numeric WPLS weights",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability requires positive numeric WPLS weights",
+        "title": "requires positive numeric WPLS weights",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "gsca",
+      "setup_case": "fixed execution summary",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders GSCA as a fixed ALS component-model workflow without PLS or inference controls",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders GSCA as a fixed ALS component-model workflow without PLS or inference controls",
+        "title": "renders GSCA as a fixed ALS component-model workflow without PLS or inference controls",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "gsca",
+      "setup_case": "mixed reflective and formative blocks",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "accepts the bounded mixed-block GSCA ALS scope and blocks unsupported model/settings shapes",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness accepts the bounded mixed-block GSCA ALS scope and blocks unsupported model/settings shapes",
+        "title": "accepts the bounded mixed-block GSCA ALS scope and blocks unsupported model/settings shapes",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cca",
+      "setup_case": "eligible composite model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeAnalysisRecipe.test.ts",
+      "replacement_test": "maps only the bounded standardized CCA composite residual scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeAnalysisRecipe.test.ts",
+        "full_name": "advanced validated backend family mappings maps only the bounded standardized CCA composite residual scope",
+        "title": "maps only the bounded standardized CCA composite residual scope",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cca",
+      "setup_case": "unsupported model scope",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeAnalysisRecipe.test.ts",
+      "replacement_test": "maps only the bounded standardized CCA composite residual scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeAnalysisRecipe.test.ts",
+        "full_name": "advanced validated backend family mappings maps only the bounded standardized CCA composite residual scope",
+        "title": "maps only the bounded standardized CCA composite residual scope",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cta_pls",
+      "setup_case": "eligible four-indicator block",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeCtaPls.test.ts",
+      "replacement_test": "accepts reflective or formative ordinary blocks and reports complete cases",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+        "full_name": "native CTA-PLS setup contract accepts reflective or formative ordinary blocks and reports complete cases",
+        "title": "accepts reflective or formative ordinary blocks and reports complete cases",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cta_pls",
+      "setup_case": "ineligible small block",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeCtaPls.test.ts",
+      "replacement_test": "fails closed for ineligible blocks, special constructs, PCA weighting, resampling, and case weights",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeCtaPls.test.ts",
+        "full_name": "native CTA-PLS setup contract fails closed for ineligible blocks, special constructs, PCA weighting, resampling, and case weights",
+        "title": "fails closed for ineligible blocks, special constructs, PCA weighting, resampling, and case weights",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "ipma",
+      "setup_case": "explicit target",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeAnalysisRecipe.test.ts",
+      "replacement_test": "maps one ID-backed endogenous IPMA target into the fixed native recipe scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeAnalysisRecipe.test.ts",
+        "full_name": "advanced validated backend family mappings maps one ID-backed endogenous IPMA target into the fixed native recipe scope",
+        "title": "maps one ID-backed endogenous IPMA target into the fixed native recipe scope",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "ipma",
+      "setup_case": "fixed all-predecessor scope disclosure",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders one ID-backed endogenous IPMA target with fixed truthful settings",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders one ID-backed endogenous IPMA target with fixed truthful settings",
+        "title": "renders one ID-backed endogenous IPMA target with fixed truthful settings",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "ipma",
+      "setup_case": "observed-range disclosure",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders one ID-backed endogenous IPMA target with fixed truthful settings",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders one ID-backed endogenous IPMA target with fixed truthful settings",
+        "title": "renders one ID-backed endogenous IPMA target with fixed truthful settings",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "CFA point",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "title": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "CFA case bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "keeps CFA case bootstrap on its existing exact compatibility cell",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing keeps CFA case bootstrap on its existing exact compatibility cell",
+        "title": "keeps CFA case bootstrap on its existing exact compatibility cell",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "recursive SEM point",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "title": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "recursive SEM case bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "title": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "Advanced parameters",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeSemParameterTable.test.ts",
+      "replacement_test": "renders Advanced Parameter Table as a labelled, focusable modal region",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeSemParameterTable.test.ts",
+        "full_name": "native SEM parameter table inputs renders Advanced Parameter Table as a labelled, focusable modal region",
+        "title": "renders Advanced Parameter Table as a labelled, focusable modal region",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "cbsem",
+      "setup_case": "invalid identification",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/generalSemCapabilityPreflightV1.test.ts",
+      "replacement_test": "authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/generalSemCapabilityPreflightV1.test.ts",
+        "full_name": "General SEM capability preflight v1 authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery",
+        "title": "authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "ordinary PLS",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/generalSemCapabilityPreflightV1.test.ts",
+      "replacement_test": "admits percentile two-sided bootstrap only with both exact capability cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/generalSemCapabilityPreflightV1.test.ts",
+        "full_name": "General SEM capability preflight v1 admits percentile two-sided bootstrap only with both exact capability cells",
+        "title": "admits percentile two-sided bootstrap only with both exact capability cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "single mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes a single-path mediation bootstrap through its distinct exact cell",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes a single-path mediation bootstrap through its distinct exact cell",
+        "title": "routes a single-path mediation bootstrap through its distinct exact cell",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "parallel mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+        "title": "routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "serial mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+        "title": "routes mediation point and multiple-mediation bootstrap through their unchanged cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "simultaneous two-way moderation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "title": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "three-way moderation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "detects a three-way term and routes point/bootstrap through distinct bounded cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing detects a three-way term and routes point/bootstrap through distinct bounded cells",
+        "title": "detects a three-way term and routes point/bootstrap through distinct bounded cells",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "first-stage moderated mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "offers fixed five-target moderated mediation only from PLS bootstrapping",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing offers fixed five-target moderated mediation only from PLS bootstrapping",
+        "title": "offers fixed five-target moderated mediation only from PLS bootstrapping",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "second-stage moderated mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "offers fixed five-target moderated mediation only from PLS bootstrapping",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing offers fixed five-target moderated mediation only from PLS bootstrapping",
+        "title": "offers fixed five-target moderated mediation only from PLS bootstrapping",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_case": "HOC",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+        "title": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "setup_case": "eligible reflective PLSc model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+        "title": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "setup_case": "unsupported non-reflective model",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "blocks PLSc bootstrap settings outside the frozen bounded contract",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness blocks PLSc bootstrap settings outside the frozen bounded contract",
+        "title": "blocks PLSc bootstrap settings outside the frozen bounded contract",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_permutation",
+      "setup_case": "eligible fixed-score structural paths",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "accepts bounded permutation inference and keeps it separate from bootstrapping",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness accepts bounded permutation inference and keeps it separate from bootstrapping",
+        "title": "accepts bounded permutation inference and keeps it separate from bootstrapping",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_permutation",
+      "setup_case": "unsupported weighting or topology",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "accepts bounded permutation inference and keeps it separate from bootstrapping",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness accepts bounded permutation inference and keeps it separate from bootstrapping",
+        "title": "accepts bounded permutation inference and keeps it separate from bootstrapping",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "setup_case": "linked completed PLS bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsPosthocSampleSize.test.ts",
+      "replacement_test": "selects the smallest significant path from complete linked bootstrap inference",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsPosthocSampleSize.test.ts",
+        "full_name": "PLS posthoc minimum sample size selects the smallest significant path from complete linked bootstrap inference",
+        "title": "selects the smallest significant path from complete linked bootstrap inference",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "setup_case": "missing qualifying bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/nativePlsPosthocSampleSize.test.ts",
+      "replacement_test": "shows a corrective unavailable result when bootstrap inference was not run",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsPosthocSampleSize.test.ts",
+        "full_name": "PLS posthoc minimum sample size shows a corrective unavailable result when bootstrap inference was not run",
+        "title": "shows a corrective unavailable result when bootstrap inference was not run",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "setup_case": "eligible two-construct path",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "exposes the bounded, calibrated prospective PLS sample-size and power workflow",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability exposes the bounded, calibrated prospective PLS sample-size and power workflow",
+        "title": "exposes the bounded, calibrated prospective PLS sample-size and power workflow",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "setup_case": "invalid topology",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodApplicability.test.ts",
+      "replacement_test": "fails closed when the power model or explicit grid leaves the bounded scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodApplicability.test.ts",
+        "full_name": "methodApplicability fails closed when the power model or explicit grid leaves the bounded scope",
+        "title": "fails closed when the power model or explicit grid leaves the bounded scope",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "setup_case": "sample-size grid",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders the bounded prospective power v2 workflow as scoped Standard",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders the bounded prospective power v2 workflow as scoped Standard",
+        "title": "renders the bounded prospective power v2 workflow as scoped Standard",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "mga",
+      "setup_case": "two valid groups",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "requires an explicit, non-indicator A-versus-B plan for combined MICOM and permutation MGA",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness requires an explicit, non-indicator A-versus-B plan for combined MICOM and permutation MGA",
+        "title": "requires an explicit, non-indicator A-versus-B plan for combined MICOM and permutation MGA",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "mga",
+      "setup_case": "missing group",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeMga.test.ts",
+      "replacement_test": "discloses missing and unselected rows and enforces a bounded permutation plan",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeMga.test.ts",
+        "full_name": "native combined MICOM and two-group permutation MGA setup contract discloses missing and unselected rows and enforces a bounded permutation plan",
+        "title": "discloses missing and unselected rows and enforces a bounded permutation plan",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "mga",
+      "setup_case": "undersized group",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeMga.test.ts",
+      "replacement_test": "discloses missing and unselected rows and enforces a bounded permutation plan",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeMga.test.ts",
+        "full_name": "native combined MICOM and two-group permutation MGA setup contract discloses missing and unselected rows and enforces a bounded permutation plan",
+        "title": "discloses missing and unselected rows and enforces a bounded permutation plan",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "mga",
+      "setup_case": "configural confirmation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "shows MICOM and permutation MGA as Supported while enforcing the bounded v4 group setup",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts shows MICOM and permutation MGA as Supported while enforcing the bounded v4 group setup",
+        "title": "shows MICOM and permutation MGA as Supported while enforcing the bounded v4 group setup",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "predict",
+      "setup_case": "fixed 10 folds by 10 repetitions disclosure",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+        "title": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "predict",
+      "setup_case": "reflective endogenous targets",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+        "title": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "predict",
+      "setup_case": "unsupported target",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "accepts indicator PLSpredict / CVPAT and blocks unsupported or underpowered shapes",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness accepts indicator PLSpredict / CVPAT and blocks unsupported or underpowered shapes",
+        "title": "accepts indicator PLSpredict / CVPAT and blocks unsupported or underpowered shapes",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "nca",
+      "setup_case": "condition and outcome",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "allows standalone NCA without constructing a SEM model",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness allows standalone NCA without constructing a SEM model",
+        "title": "allows standalone NCA without constructing a SEM model",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "nca",
+      "setup_case": "CE-FDH",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "title": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "nca",
+      "setup_case": "CR-FDH",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "title": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "nca",
+      "setup_case": "fixed steps alpha workers and seed disclosure",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "title": "renders a bounded observed-variable NCA setup without SEM controls or claims",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "nca",
+      "setup_case": "invalid constant variable",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "blocks invalid NCA variables and permutation bounds before dispatch",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness blocks invalid NCA variables and permutation bounds before dispatch",
+        "title": "blocks invalid NCA variables and permutation bounds before dispatch",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pca",
+      "setup_case": "fixed component count",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "allows standalone PCA without a SEM model and validates retention before dispatch",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness allows standalone PCA without a SEM model and validates retention before dispatch",
+        "title": "allows standalone PCA without a SEM model and validates retention before dispatch",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pca",
+      "setup_case": "variance-retention threshold",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders model-free PCA variable and retention controls with fixed scientific scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders model-free PCA variable and retention controls with fixed scientific scope",
+        "title": "renders model-free PCA variable and retention controls with fixed scientific scope",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "pca",
+      "setup_case": "constant variable",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativePlsReadiness.test.ts",
+      "replacement_test": "allows standalone PCA without a SEM model and validates retention before dispatch",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativePlsReadiness.test.ts",
+        "full_name": "nativePlsReadiness allows standalone PCA without a SEM model and validates retention before dispatch",
+        "title": "allows standalone PCA without a SEM model and validates retention before dispatch",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "OLS",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/domain/methodCapabilityRegistryV2.test.ts",
+      "replacement_test": "selects OLS, logistic, bootstrap, and PROCESS cells from regression settings",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/methodCapabilityRegistryV2.test.ts",
+        "full_name": "Analysis method to Capability Registry V2 bridge selects OLS, logistic, bootstrap, and PROCESS cells from regression settings",
+        "title": "selects OLS, logistic, bootstrap, and PROCESS cells from regression settings",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "binary logistic with valid 0 and 1",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "renders strict model-free binary logistic setup with a complete 0/1 profile",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts renders strict model-free binary logistic setup with a complete 0/1 profile",
+        "title": "renders strict model-free binary logistic setup with a complete 0/1 profile",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "binary logistic missing a class",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "produces a targeted 0/1 correction from the complete-dataset logistic profile",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog blocker presentation produces a targeted 0/1 correction from the complete-dataset logistic profile",
+        "title": "produces a targeted 0/1 correction from the complete-dataset logistic profile",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "regression case bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "component",
+      "replacement_file": "src/native/NativeCalculationDialog.test.ts",
+      "replacement_test": "stops regression-bootstrap setup at 50 selected predictors and controls",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeCalculationDialog.test.ts",
+        "full_name": "NativeCalculationDialog contracts stops regression-bootstrap setup at 50 selected predictors and controls",
+        "title": "stops regression-bootstrap setup at 50 selected predictors and controls",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "graph-defined PROCESS mediation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeProcess.test.ts",
+      "replacement_test": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeProcess.test.ts",
+        "full_name": "native graph-defined PROCESS accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+        "title": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+        "status": "passed"
+      }
+    },
+    {
+      "kind": "regression",
+      "setup_case": "graph-defined PROCESS moderation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "domain",
+      "replacement_file": "src/native/nativeProcess.test.ts",
+      "replacement_test": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeProcess.test.ts",
+        "full_name": "native graph-defined PROCESS accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+        "title": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation",
+        "status": "passed"
+      }
+    }
+  ],
+  "calculate_captures": [
+    {
+      "kind": "pls_algorithm",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/001-setup-pls_algorithm-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "plsc",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/002-setup-plsc-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "wpls",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/003-setup-wpls-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "gsca",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/004-setup-gsca-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "cca",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/005-setup-cca-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "cta_pls",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/006-setup-cta_pls-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "ipma",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/007-setup-ipma-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "cbsem",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/008-setup-cbsem-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "pls_bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/009-setup-pls_bootstrap-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/010-setup-plsc_bootstrap-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "pls_permutation",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/011-setup-pls_permutation-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/012-setup-pls_posthoc_technical_minimum_sample_size-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/013-setup-pls_sample_size_power-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "mga",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/014-setup-mga-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "predict",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/015-setup-predict-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "nca",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/016-setup-nca-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "pca",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/017-setup-pca-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    },
+    {
+      "kind": "regression",
+      "status": "passed",
+      "executed": true,
+      "evidence_type": "browser",
+      "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/018-setup-regression-calculate-capture.png",
+      "controlled_fixture": {
+        "smoke_fixture": "large",
+        "required_selectors": [
+          "h3"
+        ]
+      },
+      "assertion_identity": {
+        "required_text": [],
+        "required_selectors": [
+          "h3"
+        ]
+      }
+    }
+  ],
+  "archive_inventory": [
+    {
+      "kind": "pls_algorithm",
+      "status": "pending",
+      "representative_results": [
+        "measurement model",
+        "structural model",
+        "direct and total effects",
+        "HOC",
+        "two-way moderation",
+        "three-way moderation"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "plsc",
+      "status": "pending",
+      "representative_results": [
+        "consistent coefficients",
+        "corrected reliability",
+        "model assessment"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "wpls",
+      "status": "pending",
+      "representative_results": [
+        "weighted measurement model",
+        "weighted structural model",
+        "run details"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "gsca",
+      "status": "pending",
+      "representative_results": [
+        "component weights",
+        "loadings",
+        "paths",
+        "FIT and diagnostics"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "cca",
+      "status": "pending",
+      "representative_results": [
+        "composite residuals",
+        "diagnostics"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "cta_pls",
+      "status": "pending",
+      "representative_results": [
+        "tetrads",
+        "descriptive diagnostics"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "ipma",
+      "status": "pending",
+      "representative_results": [
+        "construct importance-performance",
+        "indicator performance",
+        "map"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "cbsem",
+      "status": "pending",
+      "representative_results": [
+        "parameters",
+        "model fit",
+        "identification",
+        "bootstrap inference"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "pls_bootstrap",
+      "status": "pending",
+      "representative_results": [
+        "bootstrap inference",
+        "specific indirect effects",
+        "total indirect effects",
+        "conditional effects",
+        "simple slopes",
+        "moderated mediation",
+        "HOC bootstrap"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "status": "pending",
+      "representative_results": [
+        "corrected point estimates",
+        "percentile inference",
+        "conditional BCa inference",
+        "failure ledger"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "pls_permutation",
+      "status": "pending",
+      "representative_results": [
+        "path randomization",
+        "unadjusted pathwise p values",
+        "run details"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "status": "pending",
+      "representative_results": [
+        "weakest significant path",
+        "technical minimum sample size",
+        "source-run identity"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "status": "pending",
+      "representative_results": [
+        "power curve",
+        "sample-size grid",
+        "Wilson intervals",
+        "simulation receipt"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "mga",
+      "status": "pending",
+      "representative_results": [
+        "MICOM steps",
+        "group-specific estimates",
+        "permutation MGA",
+        "excluded-row ledger"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "predict",
+      "status": "pending",
+      "representative_results": [
+        "indicator prediction",
+        "IA benchmark",
+        "LM benchmark",
+        "CVPAT"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "nca",
+      "status": "pending",
+      "representative_results": [
+        "effect sizes",
+        "ceiling lines",
+        "bottleneck table",
+        "permutation inference"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "pca",
+      "status": "pending",
+      "representative_results": [
+        "eigenvalues",
+        "loadings",
+        "scores",
+        "explained variance"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    },
+    {
+      "kind": "regression",
+      "status": "pending",
+      "representative_results": [
+        "fit",
+        "coefficients",
+        "odds ratios",
+        "bootstrap inference",
+        "PROCESS effects",
+        "simple slopes",
+        "Johnson-Neyman where eligible"
+      ],
+      "evidence": [],
+      "passed": false,
+      "reason": "completed-result archive evidence is pending and is a release blocker"
+    }
+  ],
+  "evidence_bundle": {
+    "passed": false,
+    "manifest_status": "pending_collection",
+    "release_asset_name": "QuickPLS-2.55-evidence.zip",
+    "reason": "The release-attachable evidence ZIP manifest is pending and is a release blocker."
+  },
+  "reusable_archive_inventory": {
+    "schema_version": "quickpls.v255.reusable_archive_inventory.v2",
+    "rows": [
+      {
+        "kind": "pls_algorithm",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.54.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/schema6-results.qpls",
+            "exists": true,
+            "sha256": "c291a3d65ef4f2f5622221d8720bcf4acbf655033475675aad48ffd421048281"
+          },
+          {
+            "path": "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/v254_canvas_results_packaged_smoke.json",
+            "exists": true,
+            "sha256": "4eb240624116bef4449667f092f67a00c6d32f49dd0c17e6f9ae740c1cfb02a1"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "plsc",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+            "exists": true,
+            "sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "exists": true,
+            "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e"
+          }
+        ],
+        "prior_screenshot_count": 1,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "wpls",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+            "exists": true,
+            "sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "exists": true,
+            "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e"
+          }
+        ],
+        "prior_screenshot_count": 1,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "gsca",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/gsca-result.qpls",
+            "exists": true,
+            "sha256": "f518ae82440fe813570af80214e60cb5936e80e651686fcb7c7ff51021c617b5"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_gsca.json",
+            "exists": true,
+            "sha256": "0bec6a4b7b2543db6d0b9bb70c19af80cd2641188704b3f2c2191508e7074841"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "cca",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/cca-result.qpls",
+            "exists": true,
+            "sha256": "315bbde1b5450bb1bb098638ccd102a3770fd506abc846da669e1e07b4316107"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "exists": true,
+            "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "cta_pls",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/cta-pls-result.qpls",
+            "exists": true,
+            "sha256": "289c7e76ed0a60a58f81a4282cbfad772c27e728c751121c4356c4e175bf8d21"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_cta_pls.json",
+            "exists": true,
+            "sha256": "e40566760a1f2781c1e1a89b48e32ada05d940a3b52174732d288708be40ad25"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "ipma",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/ipma-result.qpls",
+            "exists": true,
+            "sha256": "bf9ae95f051b3211b1ded2416006ae15f4c589bfb94e7777b5423e6b8b138529"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "exists": true,
+            "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "cbsem",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/cbsem-exact-bootstrap-result.qpls",
+            "exists": true,
+            "sha256": "aea81288ab5e9f9114d950bb7b02fb5be9b2ac62111179a08b2752bf3b3a8616"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_cbsem_exact_bootstrap.json",
+            "exists": true,
+            "sha256": "33383ca5bc9b1909892c59e980ea0415093768e9031df88065d486269de07fb3"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "pls_bootstrap",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls",
+            "exists": true,
+            "sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance.json",
+            "exists": true,
+            "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "plsc_bootstrap",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/plsc-bootstrap-result.qpls",
+            "exists": true,
+            "sha256": "95b097b3c971bfdca5b75f6a22f727df5a3fd6c522145a9835af64fc8ca82692"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_plsc_bootstrap.json",
+            "exists": true,
+            "sha256": "8c1ea55fb94be95db224f557c08927d62b580db9455425da009d741604ed0222"
+          }
+        ],
+        "prior_screenshot_count": 1,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "pls_permutation",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/pls-permutation-result.qpls",
+            "exists": true,
+            "sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json",
+            "exists": true,
+            "sha256": "2039948a610d4f5a0e2b32193397dea621da537bb0b7ca16926fe0fb812c5fe3"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "pls_posthoc_technical_minimum_sample_size",
+        "reuse_state": "no_packaged_completed_result_found",
+        "source_release": null,
+        "passed": false,
+        "reason": "This method requires a new packaged scientific run before publication evidence can be built."
+      },
+      {
+        "kind": "pls_sample_size_power",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/pls-sample-size-power-result.qpls",
+            "exists": true,
+            "sha256": "cca7a8a5857fdaf22fec6318a56b82326033249422ad6de26569a15e7e3b21f4"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_pls_sample_size_power.json",
+            "exists": true,
+            "sha256": "42eca20b15ce793705f35783c2516cc86a728e4e07c818cba4ae76099aa419f0"
+          }
+        ],
+        "prior_screenshot_count": 1,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "mga",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/mga-result.qpls",
+            "exists": true,
+            "sha256": "6e5dab3ef12454523bc6bae721d2ab7f34e69458ddabfb695bd64cf7b4c7ef72"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_mga.json",
+            "exists": true,
+            "sha256": "1d04ffee875c456e576bb8c888cd8d9e5374b67b51102c01c6b0ee99418e6eff"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "predict",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/predict-result.qpls",
+            "exists": true,
+            "sha256": "62ebd013787bdba09ee496427bb28c4d560c32cc36a3c1db373151da9d784455"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_prediction.json",
+            "exists": true,
+            "sha256": "b73b0894b183eb8f1e8d5d792a25d60a0997841ecc274e8b479a76d70868b774"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "nca",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/nca-result.qpls",
+            "exists": true,
+            "sha256": "3a90877799a3907880fb3cd08f2260bddc8150c3372d8251000f2c2fad5f4879"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_nca.json",
+            "exists": true,
+            "sha256": "83c4cec2a02ffd66e3fd10e4867b15ced64b5edaa96f0c53622ced2ee3beec48"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "pca",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/pca-result.qpls",
+            "exists": true,
+            "sha256": "453e360252cd10a8e5212fe0c5d50be2d37bd67d2b9249dc60d3a30618af396e"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_pca.json",
+            "exists": true,
+            "sha256": "b0a771026f5b015884472b765c44b8acc684d57db8b3fae0dd7975ab00e6635c"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      },
+      {
+        "kind": "regression",
+        "reuse_state": "reusable_verified_prior_release",
+        "source_release": "2.47.0",
+        "passed": true,
+        "files": [
+          {
+            "path": "validation/fixtures/v255/archives/process-graph-result.qpls",
+            "exists": true,
+            "sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e"
+          },
+          {
+            "path": "validation/results/v247_tauri_native_acceptance_process_v2.json",
+            "exists": true,
+            "sha256": "a28351c928b51e09c78a7e4931b6858cef88bf358d738a37bc7713a309b62020"
+          }
+        ],
+        "prior_screenshot_count": 2,
+        "current_ui_capture_required": true
+      }
+    ],
+    "reusable_count": 17,
+    "later_new_packaged_runs": [
+      "pls_posthoc_technical_minimum_sample_size"
+    ]
+  },
+  "viewport_support": {
+    "width": 1024,
+    "height": 700,
+    "model_surface_visible": true,
+    "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/viewport-1024x700-model.png",
+    "status": "passed"
+  },
+  "named_evidence_observations": [
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:observability:setup screenshot",
+      "operation": "capture_observability_state",
+      "assertion": {
+        "id": "capture_observability_state:cross_method:observability:setup screenshot",
+        "passed": true,
+        "expected": {
+          "state": "calculate_setup_visible",
+          "method_kind": "pls_algorithm",
+          "executed": true,
+          "selected_method_assertion_passed": true
+        },
+        "observed": {
+          "state": "calculate_setup_visible",
+          "method_kind": "pls_algorithm",
+          "executed": true,
+          "selected_method_assertion_passed": true
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\portable\\method_crawler\\screens\\001-setup-pls_algorithm-calculate-capture.png",
+        "sha256": "5622be78d2d8b30b1112d64a436e366169d0fec3dfac50e73ef9cfd4eee6810d"
+      }
+    },
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:observability:completed Results screenshot",
+      "operation": "capture_observability_state",
+      "assertion": {
+        "id": "capture_observability_state:cross_method:observability:completed Results screenshot",
+        "passed": true,
+        "expected": {
+          "state": "completed_results_visible",
+          "heading": "Results",
+          "navigation": [],
+          "visible_result_table_ids": []
+        },
+        "observed": {
+          "state": "completed_results_visible",
+          "heading": "Results",
+          "navigation": [],
+          "visible_result_table_ids": []
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\portable\\method_crawler\\screens\\results-reference-surface.png",
+        "sha256": "28eb69c8b9577545a2e023118c6d08da96931a14ca594fc371ef6134e002ea63"
+      }
+    },
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:accessibility:1024x700",
+      "operation": "exercise_accessibility",
+      "assertion": {
+        "id": "exercise_accessibility:cross_method:accessibility:1024x700",
+        "passed": true,
+        "expected": {
+          "viewport_width": 1024,
+          "viewport_height": 700,
+          "model_surface_visible": true
+        },
+        "observed": {
+          "viewport_width": 1024,
+          "viewport_height": 700,
+          "model_surface_visible": true
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\portable\\method_crawler\\screens\\viewport-1024x700-model.png",
+        "sha256": "e7567c9510949fad76bcb53868e0786fd77ddbc5175e2c61007033b64fe1b470"
+      }
+    }
+  ],
+  "failures": [],
+  "runtime": "packaged Tauri WebView2 over isolated local CDP",
+  "reference_result_surface": {
+    "screenshot": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/method_crawler/screens/results-reference-surface.png",
+    "heading": "Results",
+    "navigation": [],
+    "visible_result_table_ids": [],
+    "status": "passed",
+    "note": "This is a navigation/rendering reference only. Per-method completed Result evidence is controlled by the archive index."
+  },
+  "offline": {
+    "passed": true,
+    "observedRequestCount": 26,
+    "externalRequestCount": 0,
+    "origins": [
+      "http://ipc.localhost",
+      "http://tauri.localhost"
+    ],
+    "externalRequests": []
+  },
+  "completed_at": "2026-08-22T15:16:24.360Z"
+}

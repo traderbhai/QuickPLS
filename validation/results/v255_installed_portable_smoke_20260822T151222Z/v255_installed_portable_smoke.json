@@ -1,0 +1,110 @@
+{
+    "schema_version":  3,
+    "suite_id":  "quickpls_v255_installed_portable_smoke_v3",
+    "target_release":  "2.55.0",
+    "passed":  false,
+    "qualification_status":  "failed",
+    "release_waivers":  [
+
+                        ],
+    "publication_source_commit":  "b1f7174f5f725e41418d94d1e80895de1f41efac",
+    "source_worktree_clean":  true,
+    "package_version":  "2.55.0",
+    "candidate_build_source_commit":  "b1f7174f5f725e41418d94d1e80895de1f41efac",
+    "candidate_build_source_tree":  "c84f9c34009e48f28a4ef35048ec46f06fecdcc1",
+    "candidate_source_manifest_sha256":  "423E6FB9311A9BDD746921AB20FB7E51A7A907CA1B1913646337E539A9FC6DAD",
+    "release_artifact_report":  "D:\\QuickPLS\\target\\release\\artifacts\\v255_release_artifacts_20260822T145055Z.json",
+    "release_artifact_report_sha256":  "D5B01B7A49650256C9B69393C17E74129E91349655CFA7456E230CDF5B94544B",
+    "install_receipt":  "D:\\QuickPLS\\target\\release\\artifacts\\v255_isolated_install_20260822T145055Z.json",
+    "install_receipt_sha256":  "6B33A3FF8BB6D9E43A6EE1153B901717212E0841AA267C7B7E369B77B8678585",
+    "consolidated_report":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260822T143620Z\\v255_consolidated_diagnostics.json",
+    "consolidated_report_sha256":  "bb8e98e56ed326de82d607832ef184328ab966453a52fcb272f85a5bfe89f9b8",
+    "tested_source_commit":  "31476a75e70523b4447feddf90bfeed6d5db3295",
+    "release_publication_evidence_verified":  false,
+    "publication_evidence_status":  "collection_only_pending_curated_v255_result_captures_and_bundle",
+    "named_evidence_stage":  "source",
+    "named_evidence_report":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\v255_named_evidence_verifier.json",
+    "named_evidence_report_sha256":  "6da3a02b7213865f5ffb55394514bf12fe43ea9167e17369ccc470cc11cb9127",
+    "named_evidence_stdout":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\named_evidence_verifier.stdout.log",
+    "named_evidence_stderr":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\named_evidence_verifier.stderr.log",
+    "named_evidence_verified":  true,
+    "code_signing":  false,
+    "process_safety":  "only trees rooted at harness-launched PIDs were terminated",
+    "minimum_free_gib":  20,
+    "vitest_report":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260822T143620Z\\v255_full_vitest.json",
+    "vitest_report_sha256":  "b44c0e4847128936e808cfdf9a6286673c1e85e1b7cda2d1f3001d01477e6954",
+    "evidence_bundle":  null,
+    "evidence_bundle_sha256":  null,
+    "evidence_bundle_extraction":  null,
+    "evidence_bundle_extraction_capacity":  null,
+    "outcomes":  [
+                     {
+                         "name":  "installed",
+                         "candidate_kind":  "fresh_nsis_install",
+                         "executable":  "C:\\Users\\mohd.naved\\AppData\\Local\\QuickPLSValidation\\v255-install-20260822T145055Z\\quickpls-desktop.exe",
+                         "executable_sha256":  "9352677F1338790414DCB7CB67EAC45472C795553664DDC0C2E3725660BE9216",
+                         "product_version":  "2.55.0",
+                         "build_source_commit":  "b1f7174f5f725e41418d94d1e80895de1f41efac",
+                         "source_tree":  "c84f9c34009e48f28a4ef35048ec46f06fecdcc1",
+                         "source_manifest_sha256":  "423E6FB9311A9BDD746921AB20FB7E51A7A907CA1B1913646337E539A9FC6DAD",
+                         "release_artifact_report":  "D:\\QuickPLS\\target\\release\\artifacts\\v255_release_artifacts_20260822T145055Z.json",
+                         "release_artifact_report_sha256":  "D5B01B7A49650256C9B69393C17E74129E91349655CFA7456E230CDF5B94544B",
+                         "install_receipt":  "D:\\QuickPLS\\target\\release\\artifacts\\v255_isolated_install_20260822T145055Z.json",
+                         "install_receipt_sha256":  "6B33A3FF8BB6D9E43A6EE1153B901717212E0841AA267C7B7E369B77B8678585",
+                         "launched_pids":  [
+                                               59488,
+                                               6084,
+                                               47472,
+                                               36768
+                                           ],
+                         "status":  "passed",
+                         "lifecycle":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\live_lifecycle\\v255_live_calculation_lifecycle_smoke.json",
+                         "lifecycle_sha256":  "98161112a1c196c6b87ddc149c8407abe48bb059fd19232a493697bdd4b8bba2",
+                         "lifecycle_execute_stdout":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\lifecycle_execute.stdout.log",
+                         "lifecycle_execute_stderr":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\lifecycle_execute.stderr.log",
+                         "lifecycle_reopen_stdout":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\lifecycle_reopen.stdout.log",
+                         "lifecycle_reopen_stderr":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\lifecycle_reopen.stderr.log",
+                         "evidence":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\method_crawler\\v255_method_evidence_crawler.json",
+                         "evidence_sha256":  "8cf870219871cb290694384af969ab645d54bf96ad4f8958da82eea6e179187a",
+                         "evidence_stdout":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\method_crawler.stdout.log",
+                         "evidence_stderr":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\method_crawler.stderr.log",
+                         "named_evidence_driver_reports":  [
+                                                               {
+                                                                   "path":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\named_case_driver\\v255_named_case_driver.json",
+                                                                   "sha256":  "859319252df06906c6a77e05d3c2975b2c035c7d23d5c41139472b17e72bc9ab"
+                                                               }
+                                                           ],
+                         "named_evidence_driver_stdout":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\named_case_driver.stdout.log",
+                         "named_evidence_driver_stderr":  "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\installed\\named_case_driver.stderr.log",
+                         "posthoc_collection":  null,
+                         "frozen_archive_collection":  null
+                     }
+                 ],
+    "error":  "portable named-case evidence driver failed.",
+    "disk_snapshots":  [
+                           {
+                               "label":  "before packaged smoke",
+                               "captured_at":  "2026-08-22T15:12:25.4190665Z",
+                               "drives":  {
+                                              "C":  23.074,
+                                              "D":  34.193
+                                          }
+                           },
+                           {
+                               "label":  "between installed and portable smoke",
+                               "captured_at":  "2026-08-22T15:14:25.8563605Z",
+                               "drives":  {
+                                              "C":  23.045,
+                                              "D":  34.173
+                                          }
+                           },
+                           {
+                               "label":  "after packaged smoke",
+                               "captured_at":  "2026-08-22T15:17:01.3349791Z",
+                               "drives":  {
+                                              "C":  22.997,
+                                              "D":  34.149
+                                          }
+                           }
+                       ]
+}

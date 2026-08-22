@@ -1,0 +1,413 @@
+{
+  "schema_version": 1,
+  "schema": "quickpls.v255.posthoc_minimum_sample_packaged_smoke.v1",
+  "suite_id": "quickpls_v255_posthoc_minimum_sample_packaged_smoke_v1",
+  "target_release": "2.55.0",
+  "version_authority": "2.55.0 candidate after the consolidated source gate",
+  "generated_at": "2026-08-22T15:16:02.048Z",
+  "status": "passed",
+  "phase": "execute",
+  "console_errors": [],
+  "named_evidence_observations": [],
+  "public_kind": "pls_posthoc_technical_minimum_sample_size",
+  "method_kind": "pls_posthoc_technical_minimum_sample_size",
+  "reuse_state": "new_scientific_run_supplied",
+  "new_scientific_run_required": false,
+  "current_ui_capture_required": false,
+  "source_release": "2.55.0-candidate",
+  "source_bootstrap_result_id": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+  "new_result_id": "f37b53f7-8bd5-43a0-b19e-89cb78d571c3",
+  "result_identity": {
+    "type": "schema5_result_run_id",
+    "value": "f37b53f7-8bd5-43a0-b19e-89cb78d571c3"
+  },
+  "scientific_identity": {
+    "capability_cell": "qpls3.pls.posthoc_technical_minimum_sample_size",
+    "capability_version": "pls_posthoc_technical_minimum_sample_size_v2",
+    "method_version": "inverse_square_root_posthoc_v2",
+    "selection_rule": "smallest_absolute_statistically_significant_structural_path",
+    "significance_source": "pls_bootstrap_normal_reference_two_sided"
+  },
+  "archive_path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/quickpls-v255-posthoc-minimum-sample.qpls",
+  "archive_sha256": "d154fc2d132de30e6e4e3fe9544dc27450dc07f3c6386d034c51e29553b081e1",
+  "archive": {
+    "kind": "saved_posthoc_archive",
+    "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/quickpls-v255-posthoc-minimum-sample.qpls",
+    "sha256": "d154fc2d132de30e6e4e3fe9544dc27450dc07f3c6386d034c51e29553b081e1",
+    "size_bytes": 41379,
+    "copied_from": "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls",
+    "source_sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d",
+    "copied_before_run_sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d",
+    "changed_after_save": true
+  },
+  "prior_receipt": {
+    "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/v255_posthoc_minimum_sample_packaged_smoke.json",
+    "json_pointer": "/new_result_id",
+    "verification_status": "passed"
+  },
+  "source_bootstrap": {
+    "inventory": {
+      "kind": "reusable_archive_inventory",
+      "path": "validation/v255_reusable_archive_inventory.json",
+      "sha256": "2245a6e88d6256973bb080ba8e1d1ae2ea5524deef2e9f853b8c7e1ddd7a9148",
+      "size_bytes": 72930
+    },
+    "inventory_row_public_kind": "pls_bootstrap",
+    "scientific_identity": {
+      "stored_method": "pls_pm",
+      "method_version_tokens": [
+        "pls_two_stage_moderation_v1",
+        "indexed_resampling_v4"
+      ]
+    },
+    "source_release": "2.47.0",
+    "archive": {
+      "kind": "source_pls_bootstrap_archive",
+      "path": "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls",
+      "sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d",
+      "size_bytes": 28542
+    },
+    "receipt": {
+      "kind": "source_pls_bootstrap_receipt",
+      "path": "validation/results/v247_tauri_native_acceptance.json",
+      "sha256": "3b43522cef76c2592b2d1eb694c2d4bdee7cebddae193271581e18062e487f8e",
+      "size_bytes": 666842,
+      "json_pointer": "/checks/moderationBootstrapResult/runId",
+      "pointer_value": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+      "declared_identity_directly_bound": true
+    },
+    "prior_screenshots": [
+      "validation/results/screens/v247-native-desktop-acceptance/56-tauri-native-moderation-bootstrap-interaction-inference-1536x794.png",
+      "validation/results/screens/v247-native-desktop-acceptance/57-tauri-native-moderation-bootstrap-conditional-effect-plot-1536x794.png"
+    ],
+    "verification": {
+      "declared_run_id": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+      "selected_run_id": "fa5ac33f-4b8a-458b-a889-7b005d95b403",
+      "selected_run_label": "PLS-SEM Bootstrapping run",
+      "result_categories": [
+        "Graphical results",
+        "Final results",
+        "Moderation",
+        "Quality criteria",
+        "Inference",
+        "Run Details"
+      ],
+      "bootstrap_result_labels": [
+        "Interaction effect bootstrap inference",
+        "HTMT+ bias-corrected bootstrap inference",
+        "Original HTMT bias-corrected bootstrap inference",
+        "Bootstrapping"
+      ],
+      "inspected_bootstrap_item": "Bootstrapping",
+      "inspected_table_id": "bootstrap_percentile",
+      "passed": true
+    }
+  },
+  "calculate_setup": {
+    "public_method_kind": "pls_posthoc_technical_minimum_sample_size",
+    "selected_method": "Post-hoc Technical Minimum Sample Size",
+    "selected_aria": "true",
+    "public_method_count": 18,
+    "public_method_labels": [
+      "PLS-SEM Algorithm",
+      "Consistent PLS",
+      "Weighted PLS",
+      "GSCA",
+      "CCA composite residual diagnostics",
+      "Confirmatory Tetrad Analysis",
+      "Importance-Performance Map Analysis",
+      "CB-SEM / CFA",
+      "PLS-SEM Bootstrapping",
+      "PLSc Consistent Bootstrapping",
+      "Structural Path Randomization",
+      "Post-hoc Technical Minimum Sample Size",
+      "PLS-SEM Sample Size and Power",
+      "MICOM and Two-Group Permutation MGA",
+      "PLSpredict / CVPAT",
+      "Necessary Condition Analysis",
+      "Principal Component Analysis",
+      "Regression"
+    ],
+    "settings": {
+      "weighting_scheme": "path",
+      "result_data": "standardized",
+      "maximum_iterations": 3000,
+      "tolerance": 1e-7,
+      "bootstrap_samples": 1000,
+      "confidence_level_percent": 95,
+      "seed": 20260822,
+      "workers": 2
+    },
+    "studentized_control_count": 0,
+    "blockers": [],
+    "start_label": "Start calculation",
+    "start_enabled": true
+  },
+  "source_bootstrap_link": {
+    "same_loaded_project_archive": true,
+    "declared_source_bootstrap_run_present": true,
+    "contracted_posthoc_bootstrap_settings_verified": true,
+    "new_run_uses_linked_full_model_bootstrap_plan": true,
+    "prior_source_run_numerically_reused_by_engine": false,
+    "note": "The prior run proves a qualifying completed bootstrap archive and model. The posthoc method executes its own linked case-bootstrap plan; it does not claim to reuse prior replicate values."
+  },
+  "lifecycle": {
+    "progress": {
+      "perceptible": true,
+      "state": {
+        "status": "queued",
+        "aria_busy": "true",
+        "phase": "Queued",
+        "message": "Native engine accepted the calculation job.",
+        "progress_value": "0",
+        "progress_max": "100",
+        "log_entries": 3
+      },
+      "screenshot": {
+        "kind": "posthoc_progress",
+        "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/screens/02-progress.png",
+        "sha256": "a17ddf3222c1823fd6bf7fad302fbecbba277913b987846ea999aace6d1b9d2e",
+        "size_bytes": 204970
+      }
+    },
+    "added_results": [
+      {
+        "value": "f37b53f7-8bd5-43a0-b19e-89cb78d571c3",
+        "label": "Post-hoc Technical Minimum Sample Size run"
+      }
+    ],
+    "terminal_state": "completed",
+    "save": {
+      "toast": "Project savedD:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T151222Z\\portable\\posthoc_minimum_sample\\quickpls-v255-posthoc-minimum-sample.qpls",
+      "title_clean": true
+    }
+  },
+  "observed_result_categories": [
+    "Graphical results",
+    "Final results",
+    "Moderation",
+    "Quality criteria",
+    "Inference",
+    "Run Details"
+  ],
+  "observed_result_labels": [
+    "Model estimates",
+    "Path coefficients",
+    "Outer loadings",
+    "Outer weights",
+    "R-square",
+    "Total effects",
+    "Moderation effects",
+    "Simple slope analysis",
+    "Interaction effect bootstrap inference",
+    "Interaction effect BCa intervals",
+    "Construct reliability and validity",
+    "Cross loadings",
+    "Fornell-Larcker criterion",
+    "HTMT+ bias-corrected bootstrap inference",
+    "Original HTMT bias-corrected bootstrap inference",
+    "Structural model",
+    "Inner VIF values",
+    "f-square effect sizes",
+    "Model fit — descriptive",
+    "Model fit — method details",
+    "Construct cross-validated redundancy",
+    "Post-hoc minimum sample size",
+    "Post-hoc source-run identity",
+    "Bootstrapping",
+    "Bias-corrected and accelerated intervals"
+  ],
+  "observed_posthoc_rows": [
+    {
+      "label": "Technically required sample size",
+      "value": "92"
+    },
+    {
+      "label": "Analytical sample size",
+      "value": "120"
+    },
+    {
+      "label": "Technical requirement",
+      "value": "Met"
+    },
+    {
+      "label": "Driving path",
+      "value": "M (unmatched saved construct) → Y (unmatched saved construct)"
+    },
+    {
+      "label": "Absolute path coefficient",
+      "value": "0.2592"
+    },
+    {
+      "label": "Bootstrap p value (two-sided)",
+      "value": "0.0007"
+    },
+    {
+      "label": "Significant structural paths",
+      "value": "3"
+    },
+    {
+      "label": "Driver selection",
+      "value": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"
+    },
+    {
+      "label": "Formula assumptions",
+      "value": "5% significance, 80% power, directional inverse-square-root test"
+    },
+    {
+      "label": "Method",
+      "value": "Inverse square root"
+    }
+  ],
+  "result_verification": {
+    "selected_run_id": "f37b53f7-8bd5-43a0-b19e-89cb78d571c3",
+    "selected_run_label": "Post-hoc Technical Minimum Sample Size run",
+    "observed_result_categories": [
+      "Graphical results",
+      "Final results",
+      "Moderation",
+      "Quality criteria",
+      "Inference",
+      "Run Details"
+    ],
+    "observed_result_labels": [
+      "Model estimates",
+      "Path coefficients",
+      "Outer loadings",
+      "Outer weights",
+      "R-square",
+      "Total effects",
+      "Moderation effects",
+      "Simple slope analysis",
+      "Interaction effect bootstrap inference",
+      "Interaction effect BCa intervals",
+      "Construct reliability and validity",
+      "Cross loadings",
+      "Fornell-Larcker criterion",
+      "HTMT+ bias-corrected bootstrap inference",
+      "Original HTMT bias-corrected bootstrap inference",
+      "Structural model",
+      "Inner VIF values",
+      "f-square effect sizes",
+      "Model fit — descriptive",
+      "Model fit — method details",
+      "Construct cross-validated redundancy",
+      "Post-hoc minimum sample size",
+      "Post-hoc source-run identity",
+      "Bootstrapping",
+      "Bias-corrected and accelerated intervals"
+    ],
+    "selected_table_id": "posthoc_minimum_sample_size",
+    "selected_table_title": "Post-hoc minimum sample size",
+    "rows": [
+      {
+        "label": "Technically required sample size",
+        "value": "92"
+      },
+      {
+        "label": "Analytical sample size",
+        "value": "120"
+      },
+      {
+        "label": "Technical requirement",
+        "value": "Met"
+      },
+      {
+        "label": "Driving path",
+        "value": "M (unmatched saved construct) → Y (unmatched saved construct)"
+      },
+      {
+        "label": "Absolute path coefficient",
+        "value": "0.2592"
+      },
+      {
+        "label": "Bootstrap p value (two-sided)",
+        "value": "0.0007"
+      },
+      {
+        "label": "Significant structural paths",
+        "value": "3"
+      },
+      {
+        "label": "Driver selection",
+        "value": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"
+      },
+      {
+        "label": "Formula assumptions",
+        "value": "5% significance, 80% power, directional inverse-square-root test"
+      },
+      {
+        "label": "Method",
+        "value": "Inverse square root"
+      }
+    ],
+    "row_values": {
+      "Technically required sample size": "92",
+      "Analytical sample size": "120",
+      "Technical requirement": "Met",
+      "Driving path": "M (unmatched saved construct) → Y (unmatched saved construct)",
+      "Absolute path coefficient": "0.2592",
+      "Bootstrap p value (two-sided)": "0.0007",
+      "Significant structural paths": "3",
+      "Driver selection": "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05",
+      "Formula assumptions": "5% significance, 80% power, directional inverse-square-root test",
+      "Method": "Inverse square root"
+    },
+    "bootstrap_link_verified": true
+  },
+  "screenshots": [
+    {
+      "kind": "posthoc_calculate_setup",
+      "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/screens/01-setup.png",
+      "sha256": "e694af216cd44bc3eeda6472b5054c266d41dca1add2292f1a4bae84b65fd6f4",
+      "size_bytes": 220730
+    },
+    {
+      "kind": "posthoc_progress",
+      "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/screens/02-progress.png",
+      "sha256": "a17ddf3222c1823fd6bf7fad302fbecbba277913b987846ea999aace6d1b9d2e",
+      "size_bytes": 204970
+    },
+    {
+      "kind": "posthoc_completed_results",
+      "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/screens/03-results.png",
+      "sha256": "8ccfea0ec2911f9e69a654fd97edd9475d3e027fe5591b2317b5f8d8e212c8b3",
+      "size_bytes": 123049
+    },
+    {
+      "kind": "posthoc_saved_results",
+      "path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/screens/04-saved.png",
+      "sha256": "9484133c6d28d125ea7ace610f27b91c533ce9ae8ac07eaf27f85fcb14e8a424",
+      "size_bytes": 127644
+    }
+  ],
+  "reopen_verification": {
+    "status": "pending_fresh_process_phase",
+    "receipt_path": "validation/results/v255_installed_portable_smoke_20260822T151222Z/portable/posthoc_minimum_sample/v255_posthoc_minimum_sample_reopen.json"
+  },
+  "process_safety": {
+    "attached_endpoint_origin": "http://127.0.0.1:9256",
+    "packaged_page": {
+      "index": 0,
+      "url": "http://tauri.localhost/",
+      "origin": "http://tauri.localhost",
+      "title": "QuickPLS",
+      "shellVisible": true,
+      "tauriRuntime": true
+    },
+    "enumerated_pages": [
+      {
+        "index": 0,
+        "url": "http://tauri.localhost/",
+        "origin": "http://tauri.localhost",
+        "title": "QuickPLS",
+        "shellVisible": true,
+        "tauriRuntime": true
+      }
+    ],
+    "wrapper_owns_exact_pid_lifecycle": true,
+    "driver_launches_app_processes": false,
+    "driver_terminates_app_processes": false,
+    "driver_closes_browser_page_or_context": false
+  }
+}
