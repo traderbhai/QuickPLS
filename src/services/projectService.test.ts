@@ -71,6 +71,12 @@ async function sha256Text(value: string) {
 
 vi.mock("@tauri-apps/api/core", () => ({ invoke: mocks.invoke }));
 vi.mock("@tauri-apps/plugin-dialog", () => ({ open: vi.fn(), save: mocks.save }));
+vi.mock("../internalProjectArchiveV6SessionStore", () => ({
+  useInternalProjectArchiveV6Session: { getState: () => ({ session: null }) },
+}));
+vi.mock("../store", () => ({
+  useWorkspace: { getState: () => ({ generalSemPublicationPending: false }) },
+}));
 
 function legacyRecipeV4PlsResultFixture() {
   return {
