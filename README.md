@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current source version: **2.55.0**. Formal first diagnostic `20260822T142953Z` at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error `TS2339`. The same-script, same-suite formal final diagnostic `20260822T202919Z` at source `de439880067b2083d881d935f59369f602768499` passed 14/14, including 453/453 Vitest suites, 1707/1707 tests, all 17 rebaseline assertions, and zero captured console errors. Its authoritative report is `validation/results/v255_consolidated_diagnostics_20260822T202919Z/v255_consolidated_diagnostics.json` with SHA-256 `5edd87da8b45f4ce7ebdfaa51f60c535364d6a1eced3e20832a719b5c5ef0d07`; the gate evidence is recorded in commit `099ef03`. The retained first failure and final pass use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`, are separate evidence records, and are not byte-identical. Renderer console/page-error evidence fails closed, attach-only phases use fresh wrapper-owned processes, and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are closed. This is source evidence, not packaged validation. The intermediate diagnostic attempt `20260822T202158Z`, the candidate build `20260822T190446Z`, its portable probe `20260822T192919Z`, and all earlier 2.55 candidate, install, or smoke attempts are historical and ineligible. One new provenance-bound unsigned candidate build, isolated install, and full installed-and-portable smoke remain pending, followed by evidence collection, bundling, and publication. Exactly one named case—the actual Windows 200% scaling case—may use the opt-in owner waiver; its real DPI screenshot and receipt remain mandatory, its status remains `waived` rather than `passed`, and the other 54 named cases must pass. If an existing registered QuickPLS installation must be removed, only its exact registered uninstaller may be used; project files, recovery data, and QuickPLS application user data must remain untouched. Portable evidence does not replace installed evidence. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe bounded analytical capability, not installer signing state.
+Current source version: **2.54.0**. Formal first diagnostic `20260822T142953Z` at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error `TS2339`. The same-script, same-suite formal final diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest suites, 1697/1697 tests, all 17 rebaseline assertions, and zero captured console errors. Both formal records use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`; they are separate evidence records and are not byte-identical. Renderer console/page-error evidence fails closed, attach-only phases use fresh wrapper-owned processes, and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are closed. This is source evidence, not packaged validation. Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and every earlier 2.55 candidate, install, or smoke attempt are historical and ineligible. One new provenance-bound unsigned candidate build, isolated install, and full installed-and-portable smoke remain pending, followed by evidence collection, bundling, and publication. Exactly one named case—the actual Windows 200% scaling case—may use the opt-in owner waiver; its real DPI screenshot and receipt remain mandatory, its status remains `waived` rather than `passed`, and the other 54 named cases must pass. If an existing registered QuickPLS installation must be removed, only its exact registered uninstaller may be used; project files, recovery data, and QuickPLS application user data must remain untouched. Portable evidence does not replace installed evidence. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe bounded analytical capability, not installer signing state.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -44,14 +44,11 @@ candidate evidence package. Formal first diagnostic `20260822T142953Z` at source
 `2e3a23f` executed all 14 steps and passed 13; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
 reported TypeScript error `TS2339`. The same-script, same-suite formal final
-diagnostic `20260822T202919Z` at source
-`de439880067b2083d881d935f59369f602768499` passed 14/14, including 453/453
-Vitest suites, 1707/1707 tests, all 17 rebaseline assertions, and zero captured
-console errors. Its authoritative report is
-`validation/results/v255_consolidated_diagnostics_20260822T202919Z/v255_consolidated_diagnostics.json`
-with SHA-256 `5edd87da8b45f4ce7ebdfaa51f60c535364d6a1eced3e20832a719b5c5ef0d07`.
-The retained first failure and final pass are separate evidence records and are
-not byte-identical.
+diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14,
+including 453/453 Vitest suites, 1697/1697 tests, all 17 rebaseline assertions,
+and zero captured console errors. Both formal records used runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`.
+The formal reports are separate evidence records and are not byte-identical.
 The final pass includes full Vitest, focused Rust authority/archive lifecycle
 tests, full TypeScript checking, a production frontend build, six-format
 semantic export readback, the 17-item regression rebaseline, the 18-method setup
@@ -64,9 +61,9 @@ must pass. A fresh unsigned setup, portable, CLI, and checksum package,
 installed and portable journeys, the evidence bundle, and publication all
 remain pending; the latest downloadable release therefore remains 2.54.0.
 
-The intermediate diagnostic attempt `20260822T202158Z`, the candidate build
-`20260822T190446Z`, its portable probe `20260822T192919Z`, and all earlier 2.55
-candidate, install, or smoke attempts are historical and ineligible.
+Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
+every earlier 2.55 candidate, install, or smoke attempt are historical and
+ineligible.
 Exact typed post-hoc authority now takes precedence over the generic bootstrap
 fallback, but it still requires fresh packaged validation. The install comparison
 accepts only Tauri's exact three-byte `UNK` → `NSS` marker transition and rejects

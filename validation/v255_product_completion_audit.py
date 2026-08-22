@@ -228,7 +228,13 @@ POST_GATE_VERSION_SUBSTITUTIONS = (
     ("v2_54_0_canvas_results", "v2_55_0_calculate_evidence"),
 )
 POST_GATE_VERSION_PATH_SUBSTITUTIONS = {
-    "validation/test_package_release_artifacts.py": (("v2.53.0", "v2.54.0"),),
+    "validation/test_package_release_artifacts.py": (
+        ("v2.53.0", "v2.54.0"),
+        (
+            "[`v2.55.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.55.0)",
+            "[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0)",
+        ),
+    ),
 }
 CANONICAL_TOOL_INPUTS = {
     "CargoPath": "cargo",
@@ -451,17 +457,22 @@ def git_show_text(commit: str, relative: str) -> str | None:
         return None
 
 
+def post_gate_version_text(relative: str, before: str) -> str:
+    expected = before
+    for old, new in POST_GATE_VERSION_SUBSTITUTIONS:
+        expected = expected.replace(old, new)
+    for old, new in POST_GATE_VERSION_PATH_SUBSTITUTIONS.get(relative, ()):
+        expected = expected.replace(old, new)
+    return expected
+
+
 def exact_version_only_post_gate_change(final_commit: str, relative: str) -> bool:
     before = git_show_text(final_commit, relative)
     current_path = ROOT / relative
     if before is None or not current_path.is_file():
         return False
     after = current_path.read_text(encoding="utf-8").replace("\r\n", "\n")
-    expected = before
-    for old, new in POST_GATE_VERSION_SUBSTITUTIONS:
-        expected = expected.replace(old, new)
-    for old, new in POST_GATE_VERSION_PATH_SUBSTITUTIONS.get(relative, ()):
-        expected = expected.replace(old, new)
+    expected = post_gate_version_text(relative, before)
     return expected != before and after == expected
 
 
