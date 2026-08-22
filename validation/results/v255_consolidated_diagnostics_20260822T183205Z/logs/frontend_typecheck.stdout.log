@@ -1,0 +1,4 @@
+
+> quickpls@2.54.0 typecheck:full
+> tsc -b
+

@@ -1,0 +1,398 @@
+{
+  "schema_version": 3,
+  "suite_id": "quickpls_v255_rebased_interaction_contracts_v3",
+  "passed": true,
+  "checks": {
+    "expected_replacement_count": true,
+    "replacement_ids_unique": true,
+    "every_item_declares_an_interaction_route": true,
+    "every_item_is_addressable_by_the_browser_harness": true,
+    "fixture_manifest_has_one_case_per_browser_rebaseline_item": true,
+    "every_rebaseline_row_declares_one_evidence_type": true,
+    "test_backed_rows_name_a_current_replacement_test": true,
+    "browser_rows_name_a_controlled_browser_fixture": true,
+    "source_literal_assertions_are_not_the_replacement_policy": true,
+    "exact_18_method_contract_is_retained": true,
+    "matrix_methods_are_unique": true
+  },
+  "vitest_report": "validation/results/v255_consolidated_diagnostics_20260822T183205Z/v255_full_vitest.json",
+  "vitest_report_sha256": "d4df06e213025f70787cbc0d697531ca9c281ddd42540e23eb77d1dc0a453ba5",
+  "cases": [
+    {
+      "id": "REB-001",
+      "route": [
+        "keyboard",
+        "context_menu",
+        "model_menu",
+        "properties"
+      ],
+      "contract": "Exercise Enter on selected construct, path, HOC, and moderation targets and verify the same authority-aware edit command used by menus and context menus.",
+      "evidence_type": "public_command_interaction",
+      "executed": true,
+      "replacement_file": "src/native/nativeCommands.test.ts",
+      "replacement_test": "routes Enter, Model menu, and context-menu edits through the same model action",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeCommands.test.ts",
+        "full_name": "native command registry routes Enter, Model menu, and context-menu edits through the same model action",
+        "title": "routes Enter, Model menu, and context-menu edits through the same model action",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.540Z",
+      "completed_at": "2026-08-22T18:40:59.543Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-002",
+      "route": [
+        "calculate",
+        "method_details",
+        "primary_blocker"
+      ],
+      "contract": "Assert exact Registry capability identities, supported state, topology, inference choice, and concise recovery action without requiring tutorial text.",
+      "evidence_type": "component_domain_integration",
+      "executed": true,
+      "replacement_file": "src/native/GeneralSemEstimatorCompatibilityPanel.test.tsx",
+      "replacement_test": "renders exact Standard bootstrap cells with one supported estimator and one corrective blocker",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/GeneralSemEstimatorCompatibilityPanel.test.tsx",
+        "full_name": "GeneralSemEstimatorCompatibilityPanel renders exact Standard bootstrap cells with one supported estimator and one corrective blocker",
+        "title": "renders exact Standard bootstrap cells with one supported estimator and one corrective blocker",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-003",
+      "route": [
+        "archive_open",
+        "calculate",
+        "cbsem_inference"
+      ],
+      "contract": "Keep schema-3 archives historical while routing new eligible CFA and recursive inference through CB-SEM Calculate options.",
+      "evidence_type": "service_component_integration",
+      "executed": true,
+      "replacement_file": "src/native/nativeCbsemBootstrap.test.ts",
+      "replacement_test": "keeps the historical schema-3 recipe explicit but routes new inference through CB-SEM Calculate",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeCbsemBootstrap.test.ts",
+        "full_name": "historical native CB-SEM bootstrap v2 compatibility keeps the historical schema-3 recipe explicit but routes new inference through CB-SEM Calculate",
+        "title": "keeps the historical schema-3 recipe explicit but routes new inference through CB-SEM Calculate",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-004",
+      "route": [
+        "file_menu",
+        "dialog_cancel",
+        "dialog_confirm"
+      ],
+      "contract": "Drive each project-replacement command with dirty work and verify cancel preserves the active project while confirm follows the versioned save path.",
+      "evidence_type": "public_service_interaction",
+      "executed": true,
+      "replacement_file": "src/native/nativeProjectLifecycle.test.ts",
+      "replacement_test": "preserves dirty work on Cancel and replaces it only after discard or a completed save",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeProjectLifecycle.test.ts",
+        "full_name": "native project lifecycle preserves dirty work on Cancel and replaces it only after discard or a completed save",
+        "title": "preserves dirty work on Cancel and replaces it only after discard or a completed save",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-005",
+      "route": [
+        "calculate",
+        "revision_dialog",
+        "save"
+      ],
+      "contract": "Verify an advanced scientific model requires one calculation-ready revision and cannot be persisted through a legacy writer.",
+      "evidence_type": "store_authority_interaction",
+      "executed": true,
+      "replacement_file": "src/store.standardSemModelV4Authority.test.ts",
+      "replacement_test": "locks a bound source, then appends an unlocked new-identity authority",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/store.standardSemModelV4Authority.test.ts",
+        "full_name": "Standard SemModelV4 store authority locks a bound source, then appends an unlocked new-identity authority",
+        "title": "locks a bound source, then appends an unlocked new-identity authority",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-006",
+      "route": [
+        "canvas",
+        "results",
+        "dirty_guard"
+      ],
+      "contract": "Verify dirty guards derive from the active strict model authority independent of the visible Canvas or Results surface.",
+      "evidence_type": "public_domain_contract",
+      "executed": true,
+      "replacement_file": "src/native/nativeProjectLifecycle.test.ts",
+      "replacement_test": "uses strict authority anchors and pending native work instead of the projected graph signature",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeProjectLifecycle.test.ts",
+        "full_name": "native project lifecycle uses strict authority anchors and pending native work instead of the projected graph signature",
+        "title": "uses strict authority anchors and pending native work instead of the projected graph signature",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-007",
+      "route": [
+        "archive_open",
+        "properties",
+        "revision_dialog"
+      ],
+      "contract": "Open a marked archive and verify strict authority, calculation readiness, immutable source identity, and revision-only scientific mutation.",
+      "evidence_type": "store_archive_activation",
+      "executed": true,
+      "replacement_file": "src/store.standardSemModelV4Authority.test.ts",
+      "replacement_test": "activates descriptor-only schema-6 data and keeps multiple strict models switchable without legacy science",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/store.standardSemModelV4Authority.test.ts",
+        "full_name": "Standard SemModelV4 store authority activates descriptor-only schema-6 data and keeps multiple strict models switchable without legacy science",
+        "title": "activates descriptor-only schema-6 data and keeps multiple strict models switchable without legacy science",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.544Z",
+      "completed_at": "2026-08-22T18:40:59.544Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-008",
+      "route": [
+        "calculate",
+        "outcome_selector",
+        "primary_blocker"
+      ],
+      "contract": "Profile the selected outcome, reject missing classes or non-binary values, then verify the same validated profile reaches native job creation.",
+      "evidence_type": "public_request_readiness_integration",
+      "executed": true,
+      "replacement_file": "src/native/nativeCalculationRequest.test.ts",
+      "replacement_test": "revalidates the same binary outcome profile carried by logistic job dispatch",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeCalculationRequest.test.ts",
+        "full_name": "native calculation request revalidates the same binary outcome profile carried by logistic job dispatch",
+        "title": "revalidates the same binary outcome profile carried by logistic job dispatch",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.545Z",
+      "completed_at": "2026-08-22T18:40:59.545Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-009",
+      "route": [
+        "calculate",
+        "cbsem_inference"
+      ],
+      "contract": "Route point and case-bootstrap settings to the exact CB-SEM capability from the single Calculate dialog.",
+      "evidence_type": "public_routing_contract",
+      "executed": true,
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "title": "routes common-factor models to CB-SEM point or recursive case bootstrap",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.545Z",
+      "completed_at": "2026-08-22T18:40:59.545Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-010",
+      "route": [
+        "canvas",
+        "calculate",
+        "primary_blocker"
+      ],
+      "contract": "Accept qualified simultaneous two-way and bounded three-way interaction_v2 models and retain corrective blocking for mixed or higher-order unsupported shapes.",
+      "evidence_type": "public_routing_contract",
+      "executed": true,
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "title": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.545Z",
+      "completed_at": "2026-08-22T18:40:59.545Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-011",
+      "route": [
+        "archive_open",
+        "calculate",
+        "cbsem_inference"
+      ],
+      "contract": "Reach the compatibility executor only through a resolved CB-SEM Calculate plan while keeping historical schema-3 identity unchanged.",
+      "evidence_type": "public_routing_contract",
+      "executed": true,
+      "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts",
+      "replacement_test": "keeps CFA case bootstrap on its existing exact compatibility cell",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/unifiedSemCalculationV1.test.ts",
+        "full_name": "unified SEM Calculate routing keeps CFA case bootstrap on its existing exact compatibility cell",
+        "title": "keeps CFA case bootstrap on its existing exact compatibility cell",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.545Z",
+      "completed_at": "2026-08-22T18:40:59.545Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-012",
+      "route": [
+        "model_menu",
+        "advanced_parameters",
+        "keyboard",
+        "revision_dialog"
+      ],
+      "contract": "Verify modal semantics, labelled sections, keyboard traversal, Escape, focus restoration, and a versioned apply action.",
+      "evidence_type": "component_render_contract",
+      "executed": true,
+      "replacement_file": "src/native/NativeSemParameterTable.test.ts",
+      "replacement_test": "renders Advanced Parameter Table as a labelled, focusable modal region",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeSemParameterTable.test.ts",
+        "full_name": "native SEM parameter table inputs renders Advanced Parameter Table as a labelled, focusable modal region",
+        "title": "renders Advanced Parameter Table as a labelled, focusable modal region",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.545Z",
+      "completed_at": "2026-08-22T18:40:59.545Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-013",
+      "route": [
+        "canvas",
+        "calculate",
+        "advanced_parameters"
+      ],
+      "contract": "Open Advanced parameters from Canvas or eligible CB-SEM Calculate and verify rows derive from the resident strict SemModelV4 authority.",
+      "evidence_type": "public_projection_contract",
+      "executed": true,
+      "replacement_file": "src/domain/semParameterTableV4.test.ts",
+      "replacement_test": "derives parameter rows directly from a resident SemModelV4 authority and its source trace",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/semParameterTableV4.test.ts",
+        "full_name": "SemModelV4 parameter-table projection derives parameter rows directly from a resident SemModelV4 authority and its source trace",
+        "title": "derives parameter rows directly from a resident SemModelV4 authority and its source trace",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.546Z",
+      "completed_at": "2026-08-22T18:40:59.546Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-014",
+      "route": [
+        "properties",
+        "expert_controls",
+        "labs_preference"
+      ],
+      "contract": "Expose qualified Standard representation controls in Expert properties and retain only genuinely unqualified covariance features behind Labs.",
+      "evidence_type": "component_registry_integration",
+      "executed": true,
+      "replacement_file": "src/native/NativeSemScientificAuthoring.test.tsx",
+      "replacement_test": "exposes Standard representation controls while keeping unqualified covariance authoring Labs-scoped",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/NativeSemScientificAuthoring.test.tsx",
+        "full_name": "SemModelV4 scientific authoring UI exposes Standard representation controls while keeping unqualified covariance authoring Labs-scoped",
+        "title": "exposes Standard representation controls while keeping unqualified covariance authoring Labs-scoped",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.546Z",
+      "completed_at": "2026-08-22T18:40:59.546Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-015",
+      "route": [
+        "data_menu",
+        "recode_dialog",
+        "busy_state"
+      ],
+      "contract": "Verify Recode busy state blocks dismissal and unrelated dialogs cannot consume or report its completion.",
+      "evidence_type": "public_async_service_interaction",
+      "executed": true,
+      "replacement_file": "src/native/nativeScopedSubmission.test.ts",
+      "replacement_test": "keeps Recode busy through completion and rejects a superseded dialog scope",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/native/nativeScopedSubmission.test.ts",
+        "full_name": "native scoped async submission keeps Recode busy through completion and rejects a superseded dialog scope",
+        "title": "keeps Recode busy through completion and rejects a superseded dialog scope",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.546Z",
+      "completed_at": "2026-08-22T18:40:59.546Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-016",
+      "route": [
+        "calculate",
+        "recipe",
+        "archive_reopen"
+      ],
+      "contract": "Expect Standard access and recipe surface while preserving the exact native command, source SHA guard, and strict reopened transaction.",
+      "evidence_type": "native_service_boundary",
+      "executed": true,
+      "replacement_file": "src/services/internalGeneralSemModeratedMediationRevisionV2Service.test.ts",
+      "replacement_test": "uses the exact native v2 command and returns only a strictly reopened transaction",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/services/internalGeneralSemModeratedMediationRevisionV2Service.test.ts",
+        "full_name": "internal moderated-mediation revision service boundary uses the exact native v2 command and returns only a strictly reopened transaction",
+        "title": "uses the exact native v2 command and returns only a strictly reopened transaction",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.546Z",
+      "completed_at": "2026-08-22T18:40:59.546Z",
+      "status": "passed"
+    },
+    {
+      "id": "REB-017",
+      "route": [
+        "calculate",
+        "registry_receipt"
+      ],
+      "contract": "Assert the current frozen Registry counts and exact identities, including the single-mediation and three-way cells, without deriving product behavior from row labels.",
+      "evidence_type": "static_registry_governance",
+      "executed": true,
+      "replacement_file": "src/domain/capabilityRegistryV2.test.ts",
+      "replacement_test": "loads the current frozen Registry baseline and promoted 2.53 cell identities",
+      "assertion_identity": {
+        "file": "D:/QuickPLS/src/domain/capabilityRegistryV2.test.ts",
+        "full_name": "Capability Registry V2 frontend adapter loads the current frozen Registry baseline and promoted 2.53 cell identities",
+        "title": "loads the current frozen Registry baseline and promoted 2.53 cell identities",
+        "status": "passed"
+      },
+      "started_at": "2026-08-22T18:40:59.546Z",
+      "completed_at": "2026-08-22T18:40:59.546Z",
+      "status": "passed"
+    }
+  ],
+  "failures": [],
+  "console_errors": []
+}
