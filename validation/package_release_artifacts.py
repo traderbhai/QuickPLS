@@ -15,6 +15,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
@@ -25,6 +26,21 @@ ROOT = Path(__file__).resolve().parents[1]
 RELEASE_DIR = Path(os.environ.get("QPLS_RELEASE_DIR", ROOT / "target" / "release"))
 ARTIFACT_DIR = ROOT / "target" / "release" / "artifacts"
 REPORT = ROOT / "validation" / "results" / "release_artifacts.json"
+
+SOURCE_PROVENANCE_SCHEMA = 1
+BUILD_SESSION_SCHEMA = 2
+BUILD_SESSION_SUITE = "quickpls_unsigned_candidate_build_session_v2"
+GIB_BYTES = 1024**3
+BUILD_DISK_FLOOR_GIB = 20.0
+BUILD_DISK_FLOOR_BYTES = int(BUILD_DISK_FLOOR_GIB * GIB_BYTES)
+BUILD_PREFLIGHT_REQUIRED_GIB = {"C": 26.5, "D": 20.5}
+BUILD_PREFLIGHT_REQUIRED_BYTES = {
+    drive: int(required_gib * GIB_BYTES)
+    for drive, required_gib in BUILD_PREFLIGHT_REQUIRED_GIB.items()
+}
+BUILD_PREFLIGHT_RESERVE_GIB = {"C": 6.5, "D": 0.5}
+BUILD_DISK_POLL_INTERVAL_MS = 1000
+BUILD_DISK_BREACH_ACTION = "terminate_only_exact_wrapper_owned_process_tree"
 
 TIMESTAMP_PATTERN = re.compile(r"^[0-9]{8}-[0-9]{6}$")
 VERSION_FILENAME_PATTERN = re.compile(r"^[0-9A-Za-z][0-9A-Za-z.+-]*$")
@@ -88,7 +104,7 @@ def _read_json(path: Path, label: str) -> dict[str, Any]:
 
     try:
         value = json.loads(
-            path.read_text(encoding="utf-8"),
+            path.read_text(encoding="utf-8-sig"),
             object_pairs_hook=reject_duplicate_keys,
             parse_constant=reject_non_finite,
         )
@@ -300,6 +316,68 @@ def sha256(path: Path) -> str:
     return digest.hexdigest().upper()
 
 
+def _git_bytes(root: Path, *arguments: str) -> bytes:
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *arguments],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        detail = ""
+        if isinstance(error, subprocess.CalledProcessError):
+            detail = error.stderr.decode("utf-8", errors="replace").strip()
+        raise SystemExit(f"Git provenance command failed ({' '.join(arguments)}): {detail}") from error
+    return completed.stdout
+
+
+def read_clean_source_provenance(root: Path = ROOT) -> dict[str, Any]:
+    """Bind a candidate to one exact clean Git commit and tracked source tree."""
+
+    root = root.resolve()
+    top_level = Path(_git_bytes(root, "rev-parse", "--show-toplevel").decode("utf-8").strip()).resolve()
+    if top_level != root:
+        raise SystemExit(f"Release root is not the Git top level: root={root}, git={top_level}")
+    status = _git_bytes(root, "status", "--porcelain=v1", "--untracked-files=all")
+    if status:
+        rendered = status.decode("utf-8", errors="replace").strip()
+        raise SystemExit(f"Release packaging requires a clean source worktree: {rendered}")
+    commit = _git_bytes(root, "rev-parse", "HEAD").decode("ascii").strip().lower()
+    tree = _git_bytes(root, "rev-parse", "HEAD^{tree}").decode("ascii").strip().lower()
+    if not re.fullmatch(r"[0-9a-f]{40}", commit) or not re.fullmatch(r"[0-9a-f]{40}", tree):
+        raise SystemExit("Git source commit/tree identity is malformed")
+    tracked_manifest = _git_bytes(root, "ls-tree", "-r", "-z", "--full-tree", "HEAD")
+    tracked_files = tuple(item for item in tracked_manifest.split(b"\0") if item)
+    if not tracked_files:
+        raise SystemExit("Git tracked-source manifest is empty")
+
+    authority_paths = (
+        "package.json",
+        "package-lock.json",
+        "Cargo.toml",
+        "Cargo.lock",
+        "src-tauri/tauri.conf.json",
+        "validation/quickpls_release_channels.json",
+    )
+    authorities: list[dict[str, object]] = []
+    for relative in authority_paths:
+        path = root / relative
+        size, digest = _file_identity(path)
+        authorities.append({"path": relative, "bytes": size, "sha256": digest})
+
+    return {
+        "schema_version": SOURCE_PROVENANCE_SCHEMA,
+        "repository_root": str(root),
+        "commit": commit,
+        "tree": tree,
+        "worktree_clean": True,
+        "tracked_file_count": len(tracked_files),
+        "tracked_manifest_sha256": hashlib.sha256(tracked_manifest).hexdigest().upper(),
+        "version_authorities": authorities,
+    }
+
+
 def _display_path(path: Path, root: Path) -> str:
     resolved = path.resolve()
     try:
@@ -383,12 +461,290 @@ def _validated_timestamp(value: str | None) -> str:
     return timestamp
 
 
+def _parse_utc_timestamp(value: object, label: str) -> datetime:
+    if not isinstance(value, str) or not value.endswith("Z"):
+        raise SystemExit(f"{label} must be an ISO-8601 UTC timestamp ending in Z")
+    try:
+        parsed = datetime.fromisoformat(value[:-1] + "+00:00")
+    except ValueError as error:
+        raise SystemExit(f"{label} is not a valid ISO-8601 UTC timestamp") from error
+    if parsed.tzinfo is None or parsed.utcoffset() != timezone.utc.utcoffset(parsed):
+        raise SystemExit(f"{label} must be UTC")
+    return parsed
+
+
+def _validate_log_binding(item: object, label: str) -> dict[str, object]:
+    if not isinstance(item, dict):
+        raise SystemExit(f"{label} must be an object")
+    if set(item) != {"path", "bytes", "sha256"}:
+        raise SystemExit(f"{label} keys do not match the frozen build-log schema")
+    path_value = item.get("path")
+    if not isinstance(path_value, str) or not path_value:
+        raise SystemExit(f"{label}.path must be a non-empty absolute path")
+    path = Path(path_value)
+    if not path.is_absolute() or not path.is_file():
+        raise SystemExit(f"{label}.path is not an existing absolute file: {path}")
+    size, digest = _file_identity(path)
+    if item.get("bytes") != size or str(item.get("sha256", "")).upper() != digest:
+        raise SystemExit(f"{label} does not match the current log bytes")
+    return {"path": str(path.resolve()), "bytes": size, "sha256": digest}
+
+
+def _is_json_integer(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _validate_exact_drive_bytes(value: object, label: str) -> dict[str, int]:
+    if not isinstance(value, dict) or set(value) != {"C", "D"}:
+        raise SystemExit(f"{label} must report exact byte counts for C and D")
+    if any(not _is_json_integer(item) or item < 0 for item in value.values()):
+        raise SystemExit(f"{label} must contain non-negative integer byte counts")
+    return {"C": int(value["C"]), "D": int(value["D"])}
+
+
+def _validate_build_disk_watcher(
+    value: object,
+    *,
+    started_at: datetime,
+    completed_at: datetime,
+) -> None:
+    if not isinstance(value, dict) or set(value) != {
+        "policy",
+        "preflight",
+        "samples",
+        "breach_detected",
+        "exact_pid_tree_only",
+    }:
+        raise SystemExit("Build disk watcher does not match the frozen schema")
+    if value.get("breach_detected") is not False or value.get("exact_pid_tree_only") is not True:
+        raise SystemExit("Build disk watcher must prove a breach-free exact-PID-tree build")
+
+    policy = value.get("policy")
+    expected_policy = {
+        "minimum_free_gib_exclusive": BUILD_DISK_FLOOR_GIB,
+        "minimum_free_bytes_exclusive": BUILD_DISK_FLOOR_BYTES,
+        "preflight_reserve_gib": BUILD_PREFLIGHT_RESERVE_GIB,
+        "preflight_required_free_gib_exclusive": BUILD_PREFLIGHT_REQUIRED_GIB,
+        "preflight_required_free_bytes_exclusive": BUILD_PREFLIGHT_REQUIRED_BYTES,
+        "poll_interval_ms": BUILD_DISK_POLL_INTERVAL_MS,
+        "breach_action": BUILD_DISK_BREACH_ACTION,
+    }
+    if policy != expected_policy:
+        raise SystemExit("Build disk-watcher policy does not match the frozen release-safety policy")
+
+    preflight = value.get("preflight")
+    if not isinstance(preflight, dict) or set(preflight) != {
+        "captured_at",
+        "observed_free_bytes",
+        "required_free_bytes_exclusive",
+        "required_free_gib_exclusive",
+        "passed",
+    }:
+        raise SystemExit("Build disk-watcher preflight does not match the frozen schema")
+    if (
+        preflight.get("passed") is not True
+        or preflight.get("required_free_bytes_exclusive") != BUILD_PREFLIGHT_REQUIRED_BYTES
+        or preflight.get("required_free_gib_exclusive") != BUILD_PREFLIGHT_REQUIRED_GIB
+    ):
+        raise SystemExit("Build disk-watcher preflight does not bind the required reserve thresholds")
+    preflight_at = _parse_utc_timestamp(preflight.get("captured_at"), "build disk preflight captured_at")
+    if preflight_at > started_at:
+        raise SystemExit("Build disk preflight must complete before the build-session start")
+    observed = _validate_exact_drive_bytes(
+        preflight.get("observed_free_bytes"), "build disk preflight observed_free_bytes"
+    )
+    if any(observed[drive] <= required for drive, required in BUILD_PREFLIGHT_REQUIRED_BYTES.items()):
+        raise SystemExit("Build disk preflight did not retain the required C/D reserve")
+
+    samples = value.get("samples")
+    if not isinstance(samples, list) or not samples:
+        raise SystemExit("Build disk watcher must contain command-bound samples")
+    expected_command_ids = ("tauri_desktop_bundle", "locked_release_cli")
+    states_by_command: dict[str, list[str]] = {command_id: [] for command_id in expected_command_ids}
+    root_pid_by_command: dict[str, int] = {}
+    previous_time = started_at
+    previous_command_index = 0
+    for index, sample in enumerate(samples):
+        label = f"build disk watcher sample {index}"
+        if not isinstance(sample, dict) or set(sample) != {
+            "captured_at",
+            "command_id",
+            "root_pid",
+            "process_tree_pids",
+            "state",
+            "free_bytes",
+            "floor_breached",
+        }:
+            raise SystemExit(f"{label} does not match the frozen schema")
+        command_id = sample.get("command_id")
+        if command_id not in states_by_command:
+            raise SystemExit(f"{label} has an unknown command_id")
+        command_index = expected_command_ids.index(command_id)
+        if command_index < previous_command_index:
+            raise SystemExit("Build disk-watcher command samples are not in execution order")
+        previous_command_index = command_index
+        state = sample.get("state")
+        if state not in {"running", "completed"}:
+            raise SystemExit(f"{label}.state must be running or completed")
+        root_pid = sample.get("root_pid")
+        if not _is_json_integer(root_pid) or root_pid <= 0:
+            raise SystemExit(f"{label}.root_pid must be a positive integer")
+        bound_root_pid = root_pid_by_command.setdefault(command_id, root_pid)
+        if root_pid != bound_root_pid:
+            raise SystemExit(f"{label}.root_pid changed within one build command")
+        process_tree = sample.get("process_tree_pids")
+        if (
+            not isinstance(process_tree, list)
+            or not process_tree
+            or any(not _is_json_integer(pid) or pid <= 0 for pid in process_tree)
+            or process_tree != sorted(set(process_tree))
+            or root_pid not in process_tree
+        ):
+            raise SystemExit(f"{label}.process_tree_pids is not a sorted exact PID set containing the root")
+        free_bytes = _validate_exact_drive_bytes(sample.get("free_bytes"), f"{label}.free_bytes")
+        if sample.get("floor_breached") is not False or any(
+            free_bytes[drive] <= BUILD_DISK_FLOOR_BYTES for drive in ("C", "D")
+        ):
+            raise SystemExit(f"{label} reached the strict 20 GiB release floor")
+        captured_at = _parse_utc_timestamp(sample.get("captured_at"), f"{label}.captured_at")
+        if captured_at < previous_time or captured_at > completed_at:
+            raise SystemExit("Build disk-watcher sample timestamps are outside the ordered build interval")
+        previous_time = captured_at
+        states_by_command[command_id].append(state)
+
+    for command_id, states in states_by_command.items():
+        if not states or states[-1] != "completed" or states.count("completed") != 1 or "running" not in states:
+            raise SystemExit(
+                f"Build disk watcher must contain running samples followed by one completed sample for {command_id}"
+            )
+
+
+def validate_build_session(
+    path: Path,
+    *,
+    root: Path,
+    release_dir: Path,
+    version: str,
+    source: dict[str, Any],
+) -> dict[str, Any]:
+    """Verify the wrapper's fresh-target build invocation before preserving artifacts."""
+
+    receipt_identity_before = _file_identity(path.resolve())
+    session = _read_json(path.resolve(), "unsigned candidate build session")
+    required = {
+        "schema_version",
+        "suite_id",
+        "passed",
+        "target_release",
+        "source",
+        "target_directory",
+        "target_preexisting",
+        "started_at_utc",
+        "completed_at_utc",
+        "environment",
+        "commands",
+        "minimum_free_gib",
+        "disk_snapshots",
+        "disk_watcher",
+    }
+    if set(session) != required:
+        raise SystemExit("Unsigned candidate build-session keys do not match the frozen schema")
+    if (
+        session.get("schema_version") != BUILD_SESSION_SCHEMA
+        or session.get("suite_id") != BUILD_SESSION_SUITE
+        or session.get("passed") is not True
+        or session.get("target_release") != version
+        or session.get("target_preexisting") is not False
+        or session.get("environment") != {"CARGO_INCREMENTAL": "0"}
+        or session.get("minimum_free_gib") != BUILD_DISK_FLOOR_GIB
+    ):
+        raise SystemExit("Unsigned candidate build session is not a passing fresh-target session")
+    session_source = session.get("source")
+    if session_source != source:
+        raise SystemExit("Build-session source provenance does not match the current clean source")
+    target = Path(str(session.get("target_directory", "")))
+    if not target.is_absolute() or target.resolve() != release_dir.parent.resolve():
+        raise SystemExit("Build-session target directory does not own the supplied release directory")
+    started = session.get("started_at_utc")
+    completed = session.get("completed_at_utc")
+    started_at = _parse_utc_timestamp(started, "build started_at_utc")
+    completed_at = _parse_utc_timestamp(completed, "build completed_at_utc")
+    if completed_at <= started_at:
+        raise SystemExit("Build-session timestamps are not strictly ordered")
+    _validate_build_disk_watcher(
+        session.get("disk_watcher"),
+        started_at=started_at,
+        completed_at=completed_at,
+    )
+
+    commands = session.get("commands")
+    if not isinstance(commands, list) or len(commands) != 2:
+        raise SystemExit("Build session must contain exactly the desktop and CLI build commands")
+    disk_snapshots = session.get("disk_snapshots")
+    if not isinstance(disk_snapshots, list) or len(disk_snapshots) != 2:
+        raise SystemExit("Build session must contain exactly two disk-space snapshots")
+    for snapshot in disk_snapshots:
+        if not isinstance(snapshot, dict) or set(snapshot) != {"label", "captured_at", "drives"}:
+            raise SystemExit("Build disk-space snapshot does not match the frozen schema")
+        drives = snapshot.get("drives")
+        if not isinstance(drives, dict) or set(drives) != {"C", "D"}:
+            raise SystemExit("Build disk-space snapshot must report exactly C and D")
+        if any(not isinstance(value, (int, float)) or value <= 20.0 for value in drives.values()):
+            raise SystemExit("Build disk-space snapshot does not retain strictly more than 20 GiB")
+
+    expected = (
+        (
+            "tauri_desktop_bundle",
+            {"npm", "npm.cmd", "npm.exe"},
+            ["run", "tauri", "--", "build", "--bundles", "nsis", "--ci", "--", "--locked"],
+        ),
+        ("locked_release_cli", {"cargo", "cargo.exe"}, ["build", "--locked", "--release", "-p", "qpls-cli"]),
+    )
+    normalized: list[dict[str, Any]] = []
+    for index, (command, (expected_id, expected_names, expected_arguments)) in enumerate(zip(commands, expected, strict=True)):
+        if not isinstance(command, dict):
+            raise SystemExit(f"Build command {index} is not an object")
+        if set(command) != {"id", "executable", "arguments", "exit_code", "stdout", "stderr"}:
+            raise SystemExit(f"Build command {index} keys do not match the frozen schema")
+        executable = Path(str(command.get("executable", "")))
+        if (
+            command.get("id") != expected_id
+            or command.get("arguments") != expected_arguments
+            or command.get("exit_code") != 0
+            or not executable.is_absolute()
+            or not executable.is_file()
+            or executable.name.lower() not in expected_names
+        ):
+            raise SystemExit(f"Build command {expected_id} did not record the exact successful invocation")
+        normalized.append(
+            {
+                "id": expected_id,
+                "executable": str(executable.resolve()),
+                "arguments": expected_arguments,
+                "exit_code": 0,
+                "stdout": _validate_log_binding(command.get("stdout"), f"{expected_id}.stdout"),
+                "stderr": _validate_log_binding(command.get("stderr"), f"{expected_id}.stderr"),
+            }
+        )
+    receipt_identity_after = _file_identity(path.resolve())
+    if receipt_identity_after != receipt_identity_before:
+        raise SystemExit("Unsigned candidate build-session receipt changed while it was validated")
+    return {
+        **session,
+        "target_directory": str(target.resolve()),
+        "commands": normalized,
+        "receipt_path": str(path.resolve()),
+        "receipt_sha256": receipt_identity_after[1],
+    }
+
+
 def package_release_artifacts(
     *,
     root: Path = ROOT,
     release_dir: Path = RELEASE_DIR,
     artifact_dir: Path = ARTIFACT_DIR,
     report_path: Path = REPORT,
+    build_session_path: Path,
     channel: str = "unsigned-preview",
     label: str = "manual_release",
     timestamp: str | None = None,
@@ -397,7 +753,17 @@ def package_release_artifacts(
     release_dir = release_dir.resolve()
     artifact_dir = artifact_dir.resolve()
     report_path = report_path.resolve()
+    if report_path.exists():
+        raise SystemExit(f"Refusing to overwrite release artifact report: {report_path}")
     version, version_contract = read_version_contract(root)
+    source_provenance = read_clean_source_provenance(root)
+    build_session = validate_build_session(
+        build_session_path,
+        root=root,
+        release_dir=release_dir,
+        version=version,
+        source=source_provenance,
+    )
     channel_contract = read_release_channel_contract(root, expected_version=version)
     channel_policy = channel_contract["channels"].get(channel)
     if channel_policy is None:
@@ -425,6 +791,20 @@ def package_release_artifacts(
             artifact_dir / f"{stem}_setup.exe",
         ),
     )
+    build_started_epoch = _parse_utc_timestamp(
+        build_session["started_at_utc"], "build started_at_utc"
+    ).timestamp()
+    build_completed_epoch = _parse_utc_timestamp(
+        build_session["completed_at_utc"], "build completed_at_utc"
+    ).timestamp()
+    for role, source, _destination in sources:
+        if not source.is_file():
+            raise SystemExit(f"Missing {role} build output: {source}")
+        modified = source.stat().st_mtime
+        if modified < build_started_epoch - 2.0 or modified > build_completed_epoch + 2.0:
+            raise SystemExit(
+                f"{role} build output timestamp falls outside the recorded fresh build session: {source}"
+            )
     checksum_path = artifact_dir / f"{stem}_checksums.txt"
     collisions = [str(destination) for _, _, destination in sources if destination.exists()]
     if checksum_path.exists():
@@ -460,6 +840,8 @@ def package_release_artifacts(
                 "copy_verified": True,
             }
         )
+        if read_clean_source_provenance(root) != source_provenance:
+            raise SystemExit("Clean source provenance changed while release artifacts were packaged")
     except BaseException:
         for created_path in reversed(created):
             if created_path.exists():
@@ -467,11 +849,13 @@ def package_release_artifacts(
         raise
 
     report = {
-        "schema_version": 2,
+        "schema_version": 3,
         "target": "QuickPLS unsigned preview artifact preservation",
         "passed": True,
         "version": version,
         "version_contract": version_contract,
+        "source": source_provenance,
+        "build": build_session,
         "release_channel": channel,
         "channel_policy": channel_policy,
         "trust": {
@@ -492,13 +876,32 @@ def package_release_artifacts(
             "authorizes beta, stable, or competitor-ready distribution."
         ),
     }
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    report_text = json.dumps(report, indent=2) + "\n"
+    report_created = False
+    try:
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        with report_path.open("x", encoding="utf-8", newline="\n") as handle:
+            report_created = True
+            handle.write(report_text)
+        if report_path.read_text(encoding="utf-8") != report_text:
+            raise SystemExit(f"Release artifact report read-back mismatch: {report_path}")
+    except BaseException:
+        if report_created and report_path.exists():
+            report_path.unlink()
+        for created_path in reversed(created):
+            if created_path.exists():
+                created_path.unlink()
+        raise
     return report
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--source-provenance-only",
+        action="store_true",
+        help="Print the exact clean Git source provenance and do not package artifacts.",
+    )
     parser.add_argument(
         "--channel",
         default="unsigned-preview",
@@ -507,8 +910,31 @@ def main() -> None:
     )
     parser.add_argument("--label", default="manual_release", help="Milestone/build label to include in artifact names.")
     parser.add_argument("--timestamp", default=None, help="Optional UTC timestamp override, e.g. 20260722-120000.")
+    parser.add_argument("--release-dir", type=Path, default=RELEASE_DIR)
+    parser.add_argument("--artifact-dir", type=Path, default=ARTIFACT_DIR)
+    parser.add_argument("--report", type=Path, default=REPORT)
+    parser.add_argument(
+        "--build-session",
+        type=Path,
+        help="Mandatory passing build-session receipt created by the isolated candidate-build wrapper.",
+    )
     args = parser.parse_args()
-    report = package_release_artifacts(channel=args.channel, label=args.label, timestamp=args.timestamp)
+    if args.source_provenance_only:
+        if args.build_session is not None:
+            parser.error("--source-provenance-only cannot be combined with --build-session")
+        print(json.dumps(read_clean_source_provenance(ROOT), indent=2))
+        return
+    if args.build_session is None:
+        parser.error("--build-session is required for release artifact packaging")
+    report = package_release_artifacts(
+        release_dir=args.release_dir,
+        artifact_dir=args.artifact_dir,
+        report_path=args.report,
+        build_session_path=args.build_session,
+        channel=args.channel,
+        label=args.label,
+        timestamp=args.timestamp,
+    )
     print(json.dumps(report, indent=2))
 
 

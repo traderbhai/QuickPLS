@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
 import tempfile
 import unittest
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
@@ -93,6 +95,25 @@ version = "{version}"
 """.format(version=version),
         encoding="utf-8",
     )
+    (root / ".gitignore").write_text("target/\nvalidation/results/\n", encoding="utf-8")
+    subprocess.run(["git", "init", str(root)], check=True, capture_output=True)
+    subprocess.run(["git", "-C", str(root), "add", "."], check=True, capture_output=True)
+    subprocess.run(
+        [
+            "git",
+            "-C",
+            str(root),
+            "-c",
+            "user.name=QuickPLS Test",
+            "-c",
+            "user.email=quickpls-test@example.invalid",
+            "commit",
+            "-m",
+            "fixture",
+        ],
+        check=True,
+        capture_output=True,
+    )
 
 
 def write_release_inputs(root: Path, version: str = VERSION) -> Path:
@@ -103,6 +124,130 @@ def write_release_inputs(root: Path, version: str = VERSION) -> Path:
     (release_dir / "qpls.exe").write_bytes(b"quickpls-cli")
     (nsis / f"QuickPLS_{version}_x64-setup.exe").write_bytes(b"nsis-setup")
     return release_dir
+
+
+def write_build_session(root: Path, release_dir: Path, version: str = VERSION) -> Path:
+    source = release.read_clean_source_provenance(root)
+    now = datetime.now(timezone.utc)
+    preflight_at = (now - timedelta(seconds=61)).isoformat().replace("+00:00", "Z")
+    started = (now - timedelta(seconds=60)).isoformat().replace("+00:00", "Z")
+    completed = (now + timedelta(seconds=60)).isoformat().replace("+00:00", "Z")
+    sample_times = [
+        (now - timedelta(seconds=50)).isoformat().replace("+00:00", "Z"),
+        (now - timedelta(seconds=40)).isoformat().replace("+00:00", "Z"),
+        (now + timedelta(seconds=10)).isoformat().replace("+00:00", "Z"),
+        (now + timedelta(seconds=20)).isoformat().replace("+00:00", "Z"),
+    ]
+    logs = root / "target" / "build-logs"
+    logs.mkdir(parents=True)
+    tools = root / "target" / "test-tools"
+    tools.mkdir(parents=True)
+    npm = tools / "npm.cmd"
+    cargo = tools / "cargo.exe"
+    npm.write_bytes(b"test npm shim")
+    cargo.write_bytes(b"test cargo shim")
+
+    def log_binding(name: str) -> dict[str, object]:
+        path = logs / name
+        path.write_text(f"{name} passed\n", encoding="utf-8")
+        return {"path": str(path.resolve()), "bytes": path.stat().st_size, "sha256": sha256(path)}
+
+    session = {
+        "schema_version": 2,
+        "suite_id": "quickpls_unsigned_candidate_build_session_v2",
+        "passed": True,
+        "target_release": version,
+        "source": source,
+        "target_directory": str(release_dir.parent.resolve()),
+        "target_preexisting": False,
+        "started_at_utc": started,
+        "completed_at_utc": completed,
+        "environment": {"CARGO_INCREMENTAL": "0"},
+        "commands": [
+            {
+                "id": "tauri_desktop_bundle",
+                "executable": str(npm.resolve()),
+                "arguments": ["run", "tauri", "--", "build", "--bundles", "nsis", "--ci", "--", "--locked"],
+                "exit_code": 0,
+                "stdout": log_binding("tauri.stdout.log"),
+                "stderr": log_binding("tauri.stderr.log"),
+            },
+            {
+                "id": "locked_release_cli",
+                "executable": str(cargo.resolve()),
+                "arguments": ["build", "--locked", "--release", "-p", "qpls-cli"],
+                "exit_code": 0,
+                "stdout": log_binding("cargo.stdout.log"),
+                "stderr": log_binding("cargo.stderr.log"),
+            },
+        ],
+        "minimum_free_gib": 20.0,
+        "disk_snapshots": [
+            {"label": "before build", "captured_at": started, "drives": {"C": 25.0, "D": 25.0}},
+            {"label": "after build", "captured_at": completed, "drives": {"C": 24.0, "D": 24.0}},
+        ],
+        "disk_watcher": {
+            "policy": {
+                "minimum_free_gib_exclusive": release.BUILD_DISK_FLOOR_GIB,
+                "minimum_free_bytes_exclusive": release.BUILD_DISK_FLOOR_BYTES,
+                "preflight_reserve_gib": release.BUILD_PREFLIGHT_RESERVE_GIB,
+                "preflight_required_free_gib_exclusive": release.BUILD_PREFLIGHT_REQUIRED_GIB,
+                "preflight_required_free_bytes_exclusive": release.BUILD_PREFLIGHT_REQUIRED_BYTES,
+                "poll_interval_ms": release.BUILD_DISK_POLL_INTERVAL_MS,
+                "breach_action": release.BUILD_DISK_BREACH_ACTION,
+            },
+            "preflight": {
+                "captured_at": preflight_at,
+                "observed_free_bytes": {"C": 30 * release.GIB_BYTES, "D": 25 * release.GIB_BYTES},
+                "required_free_bytes_exclusive": release.BUILD_PREFLIGHT_REQUIRED_BYTES,
+                "required_free_gib_exclusive": release.BUILD_PREFLIGHT_REQUIRED_GIB,
+                "passed": True,
+            },
+            "samples": [
+                {
+                    "captured_at": sample_times[0],
+                    "command_id": "tauri_desktop_bundle",
+                    "root_pid": 1101,
+                    "process_tree_pids": [1101, 1103],
+                    "state": "running",
+                    "free_bytes": {"C": 29 * release.GIB_BYTES, "D": 24 * release.GIB_BYTES},
+                    "floor_breached": False,
+                },
+                {
+                    "captured_at": sample_times[1],
+                    "command_id": "tauri_desktop_bundle",
+                    "root_pid": 1101,
+                    "process_tree_pids": [1101],
+                    "state": "completed",
+                    "free_bytes": {"C": 28 * release.GIB_BYTES, "D": 24 * release.GIB_BYTES},
+                    "floor_breached": False,
+                },
+                {
+                    "captured_at": sample_times[2],
+                    "command_id": "locked_release_cli",
+                    "root_pid": 1201,
+                    "process_tree_pids": [1201, 1203],
+                    "state": "running",
+                    "free_bytes": {"C": 27 * release.GIB_BYTES, "D": 24 * release.GIB_BYTES},
+                    "floor_breached": False,
+                },
+                {
+                    "captured_at": sample_times[3],
+                    "command_id": "locked_release_cli",
+                    "root_pid": 1201,
+                    "process_tree_pids": [1201],
+                    "state": "completed",
+                    "free_bytes": {"C": 26 * release.GIB_BYTES, "D": 24 * release.GIB_BYTES},
+                    "floor_breached": False,
+                },
+            ],
+            "breach_detected": False,
+            "exact_pid_tree_only": True,
+        },
+    }
+    path = root / "target" / "v255_build_session.json"
+    path.write_text(json.dumps(session), encoding="utf-8")
+    return path
 
 
 class VersionContractTests(unittest.TestCase):
@@ -157,9 +302,11 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertEqual(set(evidence["cargo_lock_quickpls_packages"]), REPOSITORY_CARGO_PACKAGES)
         self.assertEqual(
             package["scripts"]["qpls:release:artifacts"],
-            "python validation/package_release_artifacts.py --channel unsigned-preview "
-            f"--label {REPOSITORY_ARTIFACT_LABEL}",
+            "powershell -NoProfile -ExecutionPolicy Bypass -File "
+            "validation/run_v255_unsigned_candidate_build.ps1 "
+            f"-Label {REPOSITORY_ARTIFACT_LABEL}",
         )
+        self.assertEqual(package["scripts"]["qpls:desktop:build-versioned"], "npm run qpls:release:artifacts")
         self.assertEqual(prototype.count('const releaseVersion = "2.54.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
@@ -236,6 +383,7 @@ class ArtifactPackagingTests(unittest.TestCase):
             root = Path(temp)
             write_release_contract(root)
             release_dir = write_release_inputs(root)
+            build_session = write_build_session(root, release_dir)
             artifact_dir = release_dir / "artifacts"
             report_path = root / "validation" / "results" / "release_artifacts.json"
 
@@ -244,6 +392,7 @@ class ArtifactPackagingTests(unittest.TestCase):
                 release_dir=release_dir,
                 artifact_dir=artifact_dir,
                 report_path=report_path,
+                build_session_path=build_session,
                 channel="unsigned-preview",
                 label="wave 8 candidate",
                 timestamp="20260813-120102",
@@ -258,7 +407,10 @@ class ArtifactPackagingTests(unittest.TestCase):
             ]
             self.assertEqual([Path(item["path"]).name for item in report["artifacts"]], expected_names)
             self.assertEqual([item["role"] for item in report["artifacts"]], ["portable", "cli", "setup", "checksums"])
-            self.assertEqual(report["schema_version"], 2)
+            self.assertEqual(report["schema_version"], 3)
+            self.assertTrue(report["source"]["worktree_clean"])
+            self.assertEqual(report["build"]["suite_id"], "quickpls_unsigned_candidate_build_session_v2")
+            self.assertEqual(report["build"]["source"], report["source"])
             self.assertEqual(report["release_channel"], "unsigned-preview")
             self.assertEqual(report["trust"]["status"], "not_verified")
             self.assertFalse(report["trust"]["stable_eligible"])
@@ -283,6 +435,7 @@ class ArtifactPackagingTests(unittest.TestCase):
                     release_dir=release_dir,
                     artifact_dir=artifact_dir,
                     report_path=report_path,
+                    build_session_path=build_session,
                     channel="unsigned-preview",
                     label="wave 8 candidate",
                     timestamp="20260813-120102",
@@ -293,6 +446,7 @@ class ArtifactPackagingTests(unittest.TestCase):
             root = Path(temp)
             write_release_contract(root)
             release_dir = write_release_inputs(root)
+            build_session = write_build_session(root, release_dir)
             artifact_dir = release_dir / "artifacts"
             report_path = root / "validation" / "results" / "release_artifacts.json"
 
@@ -303,11 +457,96 @@ class ArtifactPackagingTests(unittest.TestCase):
                         release_dir=release_dir,
                         artifact_dir=artifact_dir,
                         report_path=report_path,
+                        build_session_path=build_session,
                         channel=channel,
                         label="must fail",
                         timestamp="20260813-120103",
                     )
             self.assertFalse(artifact_dir.exists())
+
+    def test_packaging_rejects_dirty_source_before_copying(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_release_contract(root)
+            release_dir = write_release_inputs(root)
+            build_session = write_build_session(root, release_dir)
+            (root / "package.json").write_text(
+                (root / "package.json").read_text(encoding="utf-8") + "\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaises(SystemExit):
+                release.package_release_artifacts(
+                    root=root,
+                    release_dir=release_dir,
+                    artifact_dir=release_dir / "artifacts",
+                    report_path=root / "validation" / "results" / "release_artifacts.json",
+                    build_session_path=build_session,
+                    channel="unsigned-preview",
+                    label="dirty must fail",
+                    timestamp="20260813-120104",
+                )
+            self.assertFalse((release_dir / "artifacts").exists())
+
+    def test_packaging_rejects_mutated_build_log_before_copying(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_release_contract(root)
+            release_dir = write_release_inputs(root)
+            build_session = write_build_session(root, release_dir)
+            session = json.loads(build_session.read_text(encoding="utf-8"))
+            Path(session["commands"][0]["stdout"]["path"]).write_text("mutated\n", encoding="utf-8")
+
+            with self.assertRaises(SystemExit):
+                release.package_release_artifacts(
+                    root=root,
+                    release_dir=release_dir,
+                    artifact_dir=release_dir / "artifacts",
+                    report_path=root / "validation" / "results" / "release_artifacts.json",
+                    build_session_path=build_session,
+                    channel="unsigned-preview",
+                    label="mutated log must fail",
+                    timestamp="20260813-120105",
+                )
+            self.assertFalse((release_dir / "artifacts").exists())
+
+    def test_packaging_rejects_weakened_or_breached_build_disk_watcher(self) -> None:
+        mutations = {
+            "reduced C preflight reserve": lambda session: session["disk_watcher"]["policy"].update(
+                {"preflight_required_free_gib_exclusive": {"C": 25.0, "D": 20.5}}
+            ),
+            "unbound process tree": lambda session: session["disk_watcher"]["samples"][0].update(
+                {"process_tree_pids": [1103]}
+            ),
+            "floor breach": lambda session: session["disk_watcher"]["samples"][0].update(
+                {"free_bytes": {"C": 20 * release.GIB_BYTES, "D": 24 * release.GIB_BYTES}}
+            ),
+            "missing completed sample": lambda session: session["disk_watcher"].update(
+                {"samples": session["disk_watcher"]["samples"][:-1]}
+            ),
+        }
+        for name, mutate in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                write_release_contract(root)
+                release_dir = write_release_inputs(root)
+                build_session = write_build_session(root, release_dir)
+                session = json.loads(build_session.read_text(encoding="utf-8"))
+                mutate(session)
+                build_session.write_text(json.dumps(session), encoding="utf-8")
+
+                with self.assertRaises(SystemExit):
+                    release.package_release_artifacts(
+                        root=root,
+                        release_dir=release_dir,
+                        artifact_dir=release_dir / "artifacts",
+                        report_path=root / "validation" / "results" / "release_artifacts.json",
+                        build_session_path=build_session,
+                        channel="unsigned-preview",
+                        label="unsafe watcher must fail",
+                        timestamp="20260813-120106",
+                    )
+                self.assertFalse((release_dir / "artifacts").exists())
 
     def test_channel_contract_rejects_version_drift_and_policy_weakening(self) -> None:
         mutations = {
