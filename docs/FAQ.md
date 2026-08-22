@@ -10,19 +10,9 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 
 ## What is the current version?
 
-The coordinated source version is 2.55.0. Its post-hoc-corrected formal reports,
-`20260822T064330Z` at source `0ae22eb` and `20260822T064832Z` at source
-`0238e20`, each passed 14/14 using the same diagnostic script and suite
-contract. Exact typed post-hoc PLS authority now takes precedence over the
-generic bootstrap fallback during reopen, and its focused identity suite passed
-17/17; that correction has not yet been validated in a packaged candidate. All
-earlier candidates, including `20260822T052553Z`, are ineligible because the
-current validation and product correction postdate them. The separate install
-comparison now accepts only Tauri's exact three-byte `UNK` → `NSS` marker
-transition and rejects every other byte difference. A fresh unsigned candidate,
-installed and portable packaged evidence, the evidence bundle, and publication
-are still pending. The latest published public pre-release remains
-[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+The coordinated source version is 2.54.0. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -110,28 +100,6 @@ final unsigned candidate then passed the isolated 10/10 create → calculate →
 Results → save → fresh-reopen packaged journey with zero application-page
 external requests and zero console errors. Release packaging and checksums also
 passed; code signing is excluded. See the [2.54 release notes](RELEASE_NOTES_V2_54_0.md).
-
-## What changes in Version 2.55?
-
-Version 2.55 makes automatic diagram layout and routing model-aware, adds
-presentation-only path bend and moderation-anchor editing, and reuses the full
-read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
-responsive behavior, prioritize scientific blockers, and disclose only controls
-and fixed policies that the engine actually implements. The exact 18-method
-catalogue is unchanged. Both post-hoc-corrected consolidated source-gate passes
-succeeded 14/14 using the same diagnostic script and suite contract.
-The product owner authorized one opt-in waiver only for the actual Windows 200%
-scaling case; its actual observed DPI screenshot and receipt remain required,
-and all other 54 named cases remain mandatory. A fresh candidate, installed and
-portable evidence, the evidence bundle, and publication remain pending. See the
-[2.55 release notes](RELEASE_NOTES_V2_55_0.md).
-
-Every earlier candidate, including `20260822T052553Z`, is ineligible because
-the current formal validation and post-hoc reopen-label correction postdate it.
-The focused 17/17 source test covers the exact typed identity correction, not a
-packaged executable. The install wrapper separately accepts only the exact
-Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte
-difference; a fresh candidate, install, and smoke run is still required.
 
 ## How do I create or edit a higher-order construct?
 

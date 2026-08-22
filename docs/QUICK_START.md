@@ -1,20 +1,10 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.55 source workflow:
-`Launcher → Data → Canvas → Calculate → Results`. The post-hoc-corrected
-formal source reports `20260822T064330Z` at source `0ae22eb` and
-`20260822T064832Z` at source `0238e20` each passed 14/14 using the same
-diagnostic script and suite contract. A fresh unsigned 2.55 candidate, installed
-and portable packaged journeys, the evidence bundle, and publication remain
-pending; the latest downloadable release remains 2.54.
-
-All earlier candidates, including `20260822T052553Z`, are ineligible because the
-current formal validation and post-hoc reopen-label correction postdate them.
-The exact typed post-hoc authority correction passed its focused identity suite
-17/17 but has not yet been validated in a packaged executable. The install
-wrapper separately accepts only Tauri's exact three-byte `UNK` → `NSS` marker
-transition and rejects every other byte difference. Fresh candidate, install,
-and smoke evidence is still required.
+This guide follows the Version 2.54 source workflow:
+`Launcher → Data → Canvas → Calculate → Results`. The consolidated source
+diagnostic recorded 8/9 passing steps and the focused remediation pass then
+passed 69/69 targeted tests. The unsigned 2.54 Windows candidate and packaged
+save/fresh-reopen journey are still pending.
 
 ## 1. Start or open a project
 
@@ -95,4 +85,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md), and the [Version 2.55 Release Notes](RELEASE_NOTES_V2_55_0.md).
+For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md), and the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md).
