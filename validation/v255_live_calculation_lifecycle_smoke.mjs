@@ -2,7 +2,8 @@
 /**
  * QuickPLS 2.55 live candidate lifecycle proof.
  *
- * The underlying moderation journey creates a real model, starts an actual
+ * The underlying current Canvas journey creates a real model through grouped
+ * indicator selection, authors two- and three-way moderation, starts an actual
  * current-engine calculation, waits for categorized Results, saves through the
  * native dialog, and reopens from a fresh isolated application process. It is
  * intentionally separate from the archive breadth index: frozen evidence may
@@ -17,7 +18,7 @@ import { fileURLToPath } from "node:url";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RESULTS = path.join(ROOT, "validation", "results");
-const UNDERLYING_DRIVER = path.join(ROOT, "validation", "v253_mediation_moderation_packaged_smoke.mjs");
+const UNDERLYING_DRIVER = path.join(ROOT, "validation", "v254_canvas_results_packaged_smoke.mjs");
 
 function assert(condition, message) { if (!condition) throw new Error(message); }
 function inside(parent, candidate) {
@@ -42,9 +43,19 @@ function parseArgs(argv) {
 }
 function runNode(argumentsList) {
   return new Promise((resolve, reject) => {
-    const child = spawn(process.execPath, argumentsList, { cwd: ROOT, windowsHide: true, stdio: "inherit" });
+    const child = spawn(process.execPath, argumentsList, {
+      cwd: ROOT,
+      windowsHide: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => { stdout += chunk; });
+    child.stderr.setEncoding("utf8");
+    child.stderr.on("data", (chunk) => { stderr += chunk; });
     child.once("error", reject);
-    child.once("exit", (code, signal) => resolve({ code, signal }));
+    child.once("exit", (code, signal) => resolve({ code, signal, stdout, stderr }));
   });
 }
 
@@ -78,15 +89,15 @@ const evidenceDir = path.resolve(args["evidence-dir"]);
 const projectPath = path.resolve(args["project-path"]);
 assert(inside(RESULTS, evidenceDir), "--evidence-dir must remain below validation/results.");
 assert(inside(RESULTS, projectPath), "--project-path must remain below validation/results.");
-const underlyingReportPath = path.join(evidenceDir, "v253_mediation_moderation_packaged_smoke.json");
+const underlyingReportPath = path.join(evidenceDir, "v254_canvas_results_packaged_smoke.json");
 const reportPath = path.join(evidenceDir, "v255_live_calculation_lifecycle_smoke.json");
 const report = await fs.stat(reportPath).then(async () => JSON.parse(await fs.readFile(reportPath, "utf8")), () => ({
   schema_version: 1,
   suite_id: "quickpls_v255_live_calculation_lifecycle_smoke_v1",
   target_release: "2.55.0",
-  version_authority: "2.54.0 until the 2.55 release gate succeeds",
+  version_authority: "2.55.0",
   current_candidate_journey: true,
-  source_driver: "validation/v253_mediation_moderation_packaged_smoke.mjs",
+  source_driver: "validation/v254_canvas_results_packaged_smoke.mjs",
   complete: false,
   passed: false,
   phases: {},
@@ -96,11 +107,21 @@ const report = await fs.stat(reportPath).then(async () => JSON.parse(await fs.re
 
 const childArgs = [UNDERLYING_DRIVER, "--phase", args.phase, "--endpoint", args.endpoint, "--evidence-dir", evidenceDir, "--project-path", projectPath, "--python", path.resolve(args.python)];
 const outcome = await runNode(childArgs);
-const phase = { phase: args.phase, child_exit_code: outcome.code, child_signal: outcome.signal, passed: false };
+const phase = {
+  phase: args.phase,
+  child_exit_code: outcome.code,
+  child_signal: outcome.signal,
+  child_stdout: outcome.stdout,
+  child_stderr: outcome.stderr,
+  passed: false,
+};
 let underlying;
 try {
-  assert(outcome.code === 0 && !outcome.signal, `Underlying current-candidate journey failed: ${JSON.stringify(outcome)}`);
+  assert(outcome.code === 0 && !outcome.signal,
+    `Underlying current-candidate journey failed: ${JSON.stringify({ code: outcome.code, signal: outcome.signal, stderr: outcome.stderr })}`);
   underlying = JSON.parse(await fs.readFile(underlyingReportPath, "utf8"));
+  assert(underlying.schema_version === 1 && underlying.suite_id === "quickpls_v254_canvas_results_packaged_smoke_v1",
+    `Underlying report has the wrong current Canvas identity: ${JSON.stringify({ schema_version: underlying.schema_version, suite_id: underlying.suite_id })}`);
   const underlyingPhase = underlying.phases?.[args.phase];
   assert(underlyingPhase?.passed === true, `Underlying report did not pass ${args.phase}.`);
   if (args.phase === "execute") {
@@ -122,9 +143,9 @@ report.passed = report.complete;
 report.failures = Object.entries(report.phases).flatMap(([name, value]) => value.passed ? [] : [`${name}: ${value.failure ?? "phase did not pass"}`]);
 report.named_evidence_observations = [];
 if (report.complete && underlying?.passed === true) {
-  const progressScreenshot = screenshotById(underlying, "04-progress");
-  const resultsScreenshot = screenshotById(underlying, "05-results");
-  const reopenScreenshot = screenshotById(underlying, "06-reopen");
+  const progressScreenshot = screenshotById(underlying, "08-progress");
+  const resultsScreenshot = screenshotById(underlying, "09-results");
+  const reopenScreenshot = screenshotById(underlying, "10-reopen");
   assert(progressScreenshot && resultsScreenshot && reopenScreenshot, "Live lifecycle evidence lacks progress, Results, or reopen screenshots.");
   report.named_evidence_observations.push(await namedObservation({
     caseId: "cross_method:observability:running or progress screenshot",
