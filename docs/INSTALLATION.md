@@ -1,6 +1,6 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. Formal diagnostic `20260822T104806Z` at
+Current source version: **2.54.0**. Formal diagnostic `20260822T104806Z` at
 source `5ac7d8e` executed all 14 steps and passed 13; only
 `frontend_typecheck` failed. One remediation batch corrected that typed fixture,
 and the same-script, same-suite final diagnostic `20260822T105458Z` at source `6289b44`
