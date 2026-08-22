@@ -1,6 +1,6 @@
 # QuickPLS 2.55.0 Release Notes
 
-Status: source gate complete; unsigned candidate and packaged release evidence pending.
+Status: source gate and provenance-bound unsigned candidate complete; installed/portable evidence, actual Windows 200% evidence, evidence bundle, merge/tag, and publication pending.
 
 QuickPLS 2.55 focuses on professional Calculate setup, model-aware diagram layout, and a fail-closed current-method evidence architecture and collection workflow. It preserves the existing 18 public Calculate methods and does not relabel or replace historical scientific identities.
 
@@ -51,13 +51,27 @@ The formal first consolidated pass recorded the complete finite correction batch
 13. `method_setup_crawler` — the exact 18-method setup crawler; and
 14. `v255_final_evidence_contract` — final evidence contract.
 
-The qualifying final report is stored under `validation/results/v255_consolidated_diagnostics_20260822T020700Z/` and is paired with the committed formal first-pass report under `validation/results/v255_consolidated_diagnostics_20260822T015826Z/`.
+The qualifying final report is stored under `validation/results/v255_consolidated_diagnostics_20260822T024416Z/` and is paired with the committed formal first-pass report under `validation/results/v255_consolidated_diagnostics_20260822T015826Z/`.
+
+## Unsigned candidate checkpoint
+
+The clean Version 2.55.0 commit `01819049e3ac8107f4cb5cbaa55075ab3341ab88` produced one fresh provenance-bound candidate. Its release-artifact report is `target/release/artifacts/v255_release_artifacts_20260822T025146Z.json` with SHA-256 `A6182E3BF654AABC8AA6A4EA8754F5171BE88A2A24B7C2E38D7C706D9DF905BC`. The report records a passing build session, exact clean source/tree/manifest identities, exact build commands, no disk-floor breach, and verified source-to-copy equality.
+
+| Candidate file | Bytes | SHA-256 |
+|---|---:|---|
+| `QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-030952_x64_setup.exe` | 228,445,531 | `DA90DA1F95CB396E01E12BD242B20F3903503BE87B39A5FE2956647A50311F23` |
+| `QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-030952_x64_portable.exe` | 63,641,088 | `55DDFF91D7129648E333F402FF94FA78F268E35FF166E40592274C4DEF8F1C11` |
+| `QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-030952_x64_cli.exe` | 32,462,848 | `5EABF34CC573B5EA372D50EFA59AD79462A9D13365BDE08194914E488CB046CF` |
+| `QuickPLS_2.55.0_unsigned-preview_v2_55_0_calculate_evidence_20260822-030952_x64_checksums.txt` | 469 | `D959D6237327F36C35BC496D139790A43376B42DFFA40BB4008536B44D1EC6CD` |
+
+These are local release-gate artifacts, not published downloads. Their successful build and hashing do not substitute for installed/portable UI evidence.
 
 ## What is not yet claimed
 
-- No 2.55 unsigned installer, portable executable, CLI package, or checksum set is claimed yet.
 - Installed and portable packaged journeys have not yet completed.
 - Actual Windows 200% scaling evidence has not yet completed.
+- The closed current-method evidence bundle has not yet been collected and verified.
+- The release branch has not yet been merged or tagged.
 - The GitHub 2.55 release has not been published.
 - Code signing is excluded.
 

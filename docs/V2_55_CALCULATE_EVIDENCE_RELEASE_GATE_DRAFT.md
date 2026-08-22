@@ -1,8 +1,8 @@
 # QuickPLS 2.55 — Calculate and Method Evidence Gate
 
-Status: consolidated source gate complete; candidate and publication gates pending.
+Status: consolidated source gate and unsigned candidate complete; installed/portable evidence, actual Windows 200% evidence, bundle, final audit, merge/tag, and publication gates pending.
 
-The formal first consolidated pass recorded the finite correction batch and the byte-identical final pass succeeded 14/14. Version authorities are now **2.55.0** for the provenance-bound candidate phase. Portable and installed smoke, actual Windows 200% evidence, final evidence collection, and publication remain mandatory; this checkpoint does not claim a downloadable 2.55 release or promote a capability.
+The formal first consolidated pass recorded the finite correction batch and the byte-identical final pass succeeded 14/14. Version authorities are **2.55.0**, and one fresh clean-source provenance-bound setup, portable, CLI, and checksum package has been built and hash-verified. Portable and installed smoke, actual Windows 200% evidence, final evidence collection, and publication remain mandatory; this checkpoint does not claim a downloadable 2.55 release or promote a capability.
 
 ## Scope
 
@@ -35,7 +35,7 @@ The 2.55 gate covers the shared Calculate dialog, method-specific eligibility an
 4. Correct the collected failure batch.
 5. Run the identical diagnostic script once more.
 6. Bump and commit only the approved 2.55 version authorities. The 2.55 commit must descend from the green source-gate commit and contain no post-gate product-code change.
-7. Build one unsigned Windows candidate from that clean 2.55.0 commit with `run_v255_unsigned_candidate_build.ps1`. Do not pass ad hoc executable paths to later gates. The build wrapper requires C: strictly above 26.5 GiB and D: strictly above 20.5 GiB before starting, preserves the strict 20 GiB floor while each exact build process tree runs, and emits the authoritative release-artifact report.
+7. **Complete:** build one unsigned Windows candidate from that clean 2.55.0 commit with `run_v255_unsigned_candidate_build.ps1`. The passing report is `target/release/artifacts/v255_release_artifacts_20260822T025146Z.json`, SHA-256 `A6182E3BF654AABC8AA6A4EA8754F5171BE88A2A24B7C2E38D7C706D9DF905BC`. Do not pass ad hoc executable paths to later gates. The build wrapper requires C: strictly above 26.5 GiB and D: strictly above 20.5 GiB before starting, preserves the strict 20 GiB floor while each exact build process tree runs, and emits the authoritative release-artifact report.
 8. Install that report's exact NSIS setup into a fresh isolated destination with `run_v255_isolated_install.ps1`. Then run `validation/run_v255_installed_portable_smoke.ps1` with the release-artifact report and install receipt, plus the green consolidated report and its exact Vitest JSON. The smoke derives and rehashes both candidates instead of accepting arbitrary paths. For each candidate it performs a real Calculate → Results → native save → fresh-process reopen journey before its serial breadth crawl. It uses hidden, isolated WebView2/CDP sessions and will only terminate PID trees it created. The portable pass additionally executes the 17 native cross-method routes, including actual Windows effective DPI=192 without changing display settings. Then collect current 2.55 reopen captures, the required post-hoc run, and all specialized/cross-method evidence; build the ZIP, update its curated SHA-256 manifest, and rerun the packaged smoke with `-EvidenceBundlePath` for publication verification.
    The portable pass also runs `v255_frozen_archive_reopen_crawler.mjs` serially: it reopens the 17 reusable archives, stages new current Results captures, and records the one required post-hoc supplement as an explicit block until supplied.
    Without a bundle, the runner checks that the named-evidence index is structurally complete while allowing pending rows. With a bundle, it runs the publication verifier and records the resulting report hash in the installed/portable aggregate receipt.
@@ -46,10 +46,13 @@ The 2.55 gate covers the shared Calculate dialog, method-specific eligibility an
 ## Current Deliberate Gaps
 
 - The 64 setup routes and 18 Calculate captures are declared, but the frozen-result archive index, named-evidence index, and evidence ZIP manifest remain `pending_collection`. They may remain pending during the source gate; every pending Result family or unbound ZIP member blocks publication verification.
-- The 14-step consolidated source gate, including its source-level browser crawls, passed in the committed first/final evidence pair. Candidate build, installation, portable/native DPI routes, evidence-bundle collection, and publication have not yet run.
+- The 14-step consolidated source gate, including its source-level browser crawls, passed in the committed first/final evidence pair. The clean-source unsigned candidate and checksum package also passed. Installation, portable/native DPI routes, evidence-bundle collection, and publication have not yet run.
+- The current Windows account has an existing registered QuickPLS installation, so the isolated-install guard correctly refused to replace it. The current session is 120 DPI (125%), not the required actual 192 DPI (200%). Continue the packaged gate only in a clean disposable Windows account or VM already configured at real 200% scaling; do not weaken either guard.
 - The release remains unsigned; code signing is outside this program.
 
-## Commands for the Later Gate
+## Commands and current handoff
+
+The successful candidate is bound by `target/release/artifacts/v255_release_artifacts_20260822T025146Z.json` (SHA-256 `A6182E3BF654AABC8AA6A4EA8754F5171BE88A2A24B7C2E38D7C706D9DF905BC`) to source commit `01819049e3ac8107f4cb5cbaa55075ab3341ab88`. The first two commands below are retained as reproducibility references; do not rebuild merely to continue the packaged gate. Run the isolated-install and later commands in the clean 200% Windows environment described above.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_consolidated_diagnostics.ps1
@@ -61,15 +64,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_unsigned
   -Label v2_55_0_calculate_evidence
 
 powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_isolated_install.ps1 `
-  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_release_artifacts.json `
+  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/v255_release_artifacts_20260822T025146Z.json `
   -InstallRoot <new-isolated-install-directory> `
-  -ReceiptPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_isolated_install.json
+  -ReceiptPath D:/QuickPLS/target/release/artifacts/v255_isolated_install_20260822T025146Z.json
 
 powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_installed_portable_smoke.ps1 `
-  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_release_artifacts.json `
-  -InstallReceiptPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_isolated_install.json `
-  -VitestReportPath <validation/results/.../v255_full_vitest.json> `
-  -ConsolidatedReportPath <validation/results/.../v255_consolidated_diagnostics.json>
+  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/v255_release_artifacts_20260822T025146Z.json `
+  -InstallReceiptPath D:/QuickPLS/target/release/artifacts/v255_isolated_install_20260822T025146Z.json `
+  -VitestReportPath validation/results/v255_consolidated_diagnostics_20260822T024416Z/v255_full_vitest.json `
+  -ConsolidatedReportPath validation/results/v255_consolidated_diagnostics_20260822T024416Z/v255_consolidated_diagnostics.json
 
 # Collect the 55 candidate-bound named observations into a new staging tree.
 python validation/v255_named_evidence_collector.py `
@@ -94,10 +97,10 @@ python validation/v255_evidence_bundle_builder.py `
 # Final publication verification after current 2.55 evidence has been captured
 # and its release-attachment ZIP and source manifest have been curated.
 powershell -NoProfile -ExecutionPolicy Bypass -File validation/run_v255_installed_portable_smoke.ps1 `
-  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_release_artifacts.json `
-  -InstallReceiptPath D:/QuickPLS/target/release/artifacts/<new-v255-artifact-directory>/v255_isolated_install.json `
-  -VitestReportPath <validation/results/.../v255_full_vitest.json> `
-  -ConsolidatedReportPath <validation/results/.../v255_consolidated_diagnostics.json> `
+  -ReleaseArtifactReportPath D:/QuickPLS/target/release/artifacts/v255_release_artifacts_20260822T025146Z.json `
+  -InstallReceiptPath D:/QuickPLS/target/release/artifacts/v255_isolated_install_20260822T025146Z.json `
+  -VitestReportPath validation/results/v255_consolidated_diagnostics_20260822T024416Z/v255_full_vitest.json `
+  -ConsolidatedReportPath validation/results/v255_consolidated_diagnostics_20260822T024416Z/v255_consolidated_diagnostics.json `
   -EvidenceBundlePath <new-bundle-output>/QuickPLS-2.55-evidence.zip
 
 python validation/v255_product_completion_audit.py --publication-stage `

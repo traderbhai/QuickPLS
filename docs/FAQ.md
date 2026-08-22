@@ -11,9 +11,11 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 ## What is the current version?
 
 The coordinated source version is 2.55.0. Its frozen two-pass source gate passed
-14/14 final steps. The provenance-bound unsigned candidate, installed/portable
-packaged evidence, and actual Windows 200% evidence are still pending. The latest
-published public pre-release remains [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+14/14 final steps. A provenance-bound unsigned setup, portable, CLI, and checksum
+package was then built and hash-verified locally. Installed/portable packaged
+evidence, actual Windows 200% evidence, the evidence bundle, and publication are
+still pending. The latest published public pre-release remains
+[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -110,8 +112,9 @@ read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
 responsive behavior, prioritize scientific blockers, and disclose only controls
 and fixed policies that the engine actually implements. The exact 18-method
 catalogue is unchanged. The final consolidated source gate passed 14/14; candidate
-packaging, installed/portable evidence, actual Windows 200% evidence, and
-publication remain pending. See the [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
+packaging and hash verification passed, while installed/portable evidence,
+actual Windows 200% evidence, the evidence bundle, and publication remain
+pending. See the [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
 ## How do I create or edit a higher-order construct?
 

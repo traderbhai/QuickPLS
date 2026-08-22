@@ -2,9 +2,10 @@
 
 This guide follows the Version 2.55 source workflow:
 `Launcher → Data → Canvas → Calculate → Results`. The formal final consolidated
-source gate passed 14/14 steps. The provenance-bound unsigned 2.55 candidate,
-installed/portable packaged journeys, actual Windows 200% evidence, and
-publication remain pending; the latest downloadable release remains 2.54.
+source gate passed 14/14 steps, and the provenance-bound unsigned 2.55 setup,
+portable, CLI, and checksum package was built and hash-verified. Installed and
+portable packaged journeys, actual Windows 200% evidence, the evidence bundle,
+and publication remain pending; the latest downloadable release remains 2.54.
 
 ## 1. Start or open a project
 

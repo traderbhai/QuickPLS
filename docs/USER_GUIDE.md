@@ -3,9 +3,10 @@
 This guide describes the Version 2.55 source workflow.
 QuickPLS runs analyses locally without an account, cloud service, R, or Python
 at runtime. The formal final consolidated source gate passed all 14 steps. The
-provenance-bound unsigned 2.55 candidate, installed/portable packaged journeys,
-actual Windows 200% evidence, and publication remain pending. The verified
-2.54 release remains available; code signing is excluded.
+provenance-bound unsigned 2.55 setup, portable, CLI, and checksum package was
+built and hash-verified. Installed/portable packaged journeys, actual Windows
+200% evidence, the evidence bundle, and publication remain pending. The
+verified 2.54 release remains available; code signing is excluded.
 
 ## Projects and scientific authority
 

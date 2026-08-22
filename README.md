@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current source version: **2.55.0**. Its frozen two-pass consolidated source gate is complete: the formal first pass recorded the finite correction batch and the byte-identical final gate passed all 14 steps. The provenance-bound unsigned candidate, installed/portable packaged evidence, and actual Windows 200% evidence are still pending and are not claimed here. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current source version: **2.55.0**. Its frozen two-pass consolidated source gate is complete: the formal first pass recorded the finite correction batch and the byte-identical final gate passed all 14 steps. A provenance-bound unsigned candidate package containing setup, portable, CLI, and checksum files has also been built and hash-verified. Installed/portable packaged journeys, actual Windows 200% evidence, the evidence bundle, and publication are still pending and are not claimed here. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -44,9 +44,11 @@ candidate evidence package. The formal final source
 gate passed 14/14 steps, including full Vitest, focused Rust authority/archive
 lifecycle tests, full TypeScript checking, a production frontend build,
 six-format semantic export readback, the 17-item regression rebaseline, the
-18-method setup crawl, and the final evidence contract. Candidate packaging,
-installed/portable journeys, actual 200% Windows evidence, and publication remain
-pending; the latest downloadable release therefore remains 2.54.0.
+18-method setup crawl, and the final evidence contract. The provenance-bound
+unsigned setup, portable, CLI, and checksum package was subsequently built and
+hash-verified. Installed/portable packaged journeys, actual 200% Windows
+evidence, the evidence bundle, and publication remain pending; the latest
+downloadable release therefore remains 2.54.0.
 
 ## Download
 
@@ -100,7 +102,7 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
-- [QuickPLS 2.55.0 Release Notes — source gate complete; candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
+- [QuickPLS 2.55.0 Release Notes — unsigned candidate built; packaged gates pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [QuickPLS 2.54.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [QuickPLS 2.53.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [QuickPLS 2.52.0 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
@@ -194,11 +196,11 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The Version 2.54.0 setup, portable app, CLI, release-artifact manifest, and SHA-256 checksum verification passed for the final unsigned candidate. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. The Version 2.55.0 provenance-bound unsigned candidate package was built and hash-verified locally, but it is not a public download until its installed/portable, actual-200%-scaling, evidence-bundle, and publication gates pass. The latest published files remain the verified Version 2.54.0 setup, portable app, CLI, and checksums on the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Documentation
 
-- [Version 2.55 Release Notes — source gate complete; candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
+- [Version 2.55 Release Notes — unsigned candidate built; packaged gates pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [Version 2.54 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
