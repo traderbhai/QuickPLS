@@ -273,7 +273,13 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('target !== sourceTarget', advanced_parameter_revision)
         self.assertIn('await fileSha256(sourceTarget) === sourceSha256', advanced_parameter_revision)
         self.assertIn('context.calculationRevision = { target, initialSha256: targetSha256, sourceTarget, sourceSha256 }', advanced_parameter_revision)
-        self.assertIn('const freeLoadingRows = dialog.locator', advanced_parameter_revision)
+        self.assertIn('const parameterRows = dialog.locator(\'tbody[aria-label="Parameters"] tr:not(.nd-sem-section-row)\')', advanced_parameter_revision)
+        self.assertIn('objectKind !== "Loading"', advanced_parameter_revision)
+        self.assertIn('!specification.startsWith("Free;")', advanced_parameter_revision)
+        self.assertIn('compatibilityKey: target[1].trim()', advanced_parameter_revision)
+        self.assertIn('const compatibilityGroups = new Map()', advanced_parameter_revision)
+        self.assertNotIn('const freeLoadingRows = dialog.locator', advanced_parameter_revision)
+        self.assertNotIn('const sourceGroups = new Map()', advanced_parameter_revision)
         self.assertIn('compatibleRowIndexes.length === 2', advanced_parameter_revision)
         self.assertIn('editor.locator(".nd-sem-editor-heading code")', advanced_parameter_revision)
         self.assertIn('parameterIds.every((parameterId)', advanced_parameter_revision)
@@ -349,12 +355,17 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         )
         self.assertLess(
             run_calculation.index('const completed = await requestedRevisionHelper.completed'),
-            run_calculation.index('const calculationProgress = page.locator'),
+            run_calculation.index('const advancedProgress = advanced.locator'),
         )
-        self.assertIn('.nd-cbsem-v4-monitor, .nd-results-workspace', run_calculation)
-        self.assertIn('requestedRevisionReady = await advanced.getByText("Activated calculation authority", { exact: true }).isVisible()', run_calculation)
-        self.assertIn('|| await calculationProgress.isVisible()', run_calculation)
-        self.assertIn('!calculationProgressVisible', run_calculation)
+        self.assertIn('const advancedProgress = advanced.locator(".nd-cbsem-v4-monitor").filter({ visible: true })', run_calculation)
+        self.assertIn('const resultsWorkspace = page.locator(".nd-results-workspace").filter({ visible: true })', run_calculation)
+        self.assertIn('|| await advancedProgress.isVisible()', run_calculation)
+        self.assertIn('|| await activatedAuthority.isVisible()', run_calculation)
+        self.assertIn('assert(transitionReady', run_calculation)
+        self.assertNotIn('.nd-cbsem-v4-monitor, .nd-results-workspace', run_calculation)
+        self.assertNotIn('calculationProgressVisible', run_calculation)
+        self.assertIn('Calculation publication failed:', run_calculation)
+        self.assertIn('compact(await advancedProgress.textContent())', run_calculation)
         self.assertIn('#nd-cbsem-compatibility-calculation .nd-cbsem-v4-archive .nd-cbsem-v4-failure', run_calculation)
         self.assertNotIn('terminal: "exact_cfa_compatibility_result"', run_calculation)
         self.assertEqual(run_calculation.count('await configureAndStart();'), 1)
@@ -730,7 +741,7 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             exact_cfa["header_contains"],
         )
         self.assertEqual(
-            ["factor_variance_", "measurement_parameter_", "residual_variance_"],
+            ["Factor variance", "Measurement parameter", "Residual variance"],
             exact_cfa["row_contains"],
         )
 

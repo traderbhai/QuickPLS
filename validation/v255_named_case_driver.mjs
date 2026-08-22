@@ -969,25 +969,28 @@ async function executeStep(page, step, context) {
     await page.getByRole("menuitem", { name: "Advanced Parameter Table…", exact: true }).click();
     const dialog = page.getByRole("dialog", { name: "Advanced Parameter Table", exact: true });
     await dialog.waitFor({ state: "visible", timeout });
-    const freeLoadingRows = dialog.locator('tbody[aria-label="Parameters"] tr')
-      .filter({ hasText: /\bloading\b/iu })
-      .filter({ hasText: /\bfree\b/iu });
+    const parameterRows = dialog.locator('tbody[aria-label="Parameters"] tr:not(.nd-sem-section-row)');
     const candidates = [];
-    for (let index = 0; index < await freeLoadingRows.count(); index += 1) {
-      const row = freeLoadingRows.nth(index);
-      candidates.push({ index, sourceId: compact(await row.locator("code").first().textContent()) });
+    for (let index = 0; index < await parameterRows.count(); index += 1) {
+      const row = parameterRows.nth(index);
+      const objectKind = compact(await row.locator("td").nth(0).textContent());
+      const specification = compact(await row.locator("td").nth(2).textContent());
+      if (objectKind !== "Loading" || !specification.startsWith("Free;")) continue;
+      const target = /^Free;\s*(.+?)\s+→\s+/u.exec(specification);
+      if (!target?.[1]) continue;
+      candidates.push({ index, compatibilityKey: target[1].trim() });
     }
-    const sourceGroups = new Map();
+    const compatibilityGroups = new Map();
     for (const candidate of candidates) {
-      const group = sourceGroups.get(candidate.sourceId) ?? [];
+      const group = compatibilityGroups.get(candidate.compatibilityKey) ?? [];
       group.push(candidate.index);
-      sourceGroups.set(candidate.sourceId, group);
+      compatibilityGroups.set(candidate.compatibilityKey, group);
     }
-    const compatibleRowIndexes = [...sourceGroups.values()].find((indexes) => indexes.length >= 2)?.slice(0, 2) ?? [];
-    assert(compatibleRowIndexes.length === 2, "The Advanced Parameter Table has no compatible pair of free loading parameters.");
+    const compatibleRowIndexes = [...compatibilityGroups.values()].find((indexes) => indexes.length >= 2)?.slice(0, 2) ?? [];
+    assert(compatibleRowIndexes.length === 2, `The Advanced Parameter Table has no compatible pair of free loading parameters: ${JSON.stringify(candidates)}`);
     const parameterIds = [];
     for (const rowIndex of compatibleRowIndexes) {
-      const freeParameterRow = freeLoadingRows.nth(rowIndex);
+      const freeParameterRow = parameterRows.nth(rowIndex);
       const edit = freeParameterRow.locator(".nd-sem-edit-button");
       await edit.waitFor({ state: "visible", timeout });
       await edit.click({ timeout });
@@ -1167,38 +1170,34 @@ async function executeStep(page, step, context) {
       requestedRevisionHelper?.stop();
     }
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
-    const calculationProgress = page.locator(".nd-cbsem-v4-monitor, .nd-results-workspace").first();
-    if (step.requires_requested_revision) {
-      const requestedRevisionDeadline = Date.now() + timeout;
-      let requestedRevisionReady = false;
-      while (Date.now() < requestedRevisionDeadline) {
-        requestedRevisionReady = await advanced.getByText("Activated calculation authority", { exact: true }).isVisible().catch(() => false)
-          || await calculationProgress.isVisible().catch(() => false);
-        if (requestedRevisionReady) break;
-        await page.waitForTimeout(100);
-      }
-      assert(requestedRevisionReady, "The requested calculation authority neither activated nor continued into calculation progress.");
+    const advancedProgress = advanced.locator(".nd-cbsem-v4-monitor").filter({ visible: true });
+    const activatedAuthority = advanced.getByText("Activated calculation authority", { exact: true }).filter({ visible: true });
+    const exactCompatibility = advanced.locator("#nd-cbsem-compatibility-calculation").filter({ visible: true });
+    const resultsWorkspace = page.locator(".nd-results-workspace").filter({ visible: true });
+    const transitionDeadline = Date.now() + (step.requires_requested_revision ? timeout : Math.min(timeout, 30_000));
+    let transitionReady = false;
+    while (Date.now() < transitionDeadline) {
+      transitionReady = await resultsWorkspace.isVisible().catch(() => false)
+        || await exactCompatibility.isVisible().catch(() => false)
+        || await advancedProgress.isVisible().catch(() => false)
+        || await activatedAuthority.isVisible().catch(() => false);
+      if (transitionReady) break;
+      await page.waitForTimeout(100);
     }
-    const revisionDeadline = Date.now() + Math.min(timeout, 30_000);
-    while (Date.now() < revisionDeadline
-      && !await advanced.isVisible().catch(() => false)
-      && !await calculationProgress.isVisible().catch(() => false)) await page.waitForTimeout(100);
-    const exactCompatibility = await advanced.locator("#nd-cbsem-compatibility-calculation").isVisible().catch(() => false);
-    const advancedVisible = await advanced.isVisible().catch(() => false);
-    const calculationProgressVisible = await calculationProgress.isVisible().catch(() => false);
-    const advancedState = advancedVisible ? compact(await advanced.textContent()) : "";
-    if (advancedVisible && !exactCompatibility && !calculationProgressVisible) {
-      assert(advancedState.includes("Activated calculation authority"), `Unexpected advanced calculation authority state: ${advancedState}`);
-    }
+    assert(transitionReady, `The calculation authority neither activated nor continued into calculation progress: ${compact(await advanced.textContent().catch(() => ""))}`);
     const deadline = Date.now() + Number(step.completion_timeout_ms ?? 300_000);
     while (Date.now() < deadline) {
-      if (await page.locator(".nd-results-workspace").isVisible().catch(() => false)) return { action: step.action, ...context.lastCalculation, terminal: "results" };
-      const exactPublicationFailure = page.locator("#nd-cbsem-compatibility-calculation .nd-cbsem-v4-archive .nd-cbsem-v4-failure");
+      if (await resultsWorkspace.isVisible().catch(() => false)) return { action: step.action, ...context.lastCalculation, terminal: "results" };
+      const exactPublicationFailure = advanced.locator("#nd-cbsem-compatibility-calculation .nd-cbsem-v4-archive .nd-cbsem-v4-failure").filter({ visible: true });
       if (await exactPublicationFailure.isVisible().catch(() => false)) {
         throw new Error(`Exact CFA result publication failed: ${compact(await exactPublicationFailure.textContent())}`);
       }
-      const state = compact(await page.locator(".nd-cbsem-v4-state").textContent().catch(() => "")).toLowerCase();
-      if (["failed", "cancelled"].includes(state)) throw new Error(`Calculation ended ${state}: ${compact(await page.locator(".nd-cbsem-v4-monitor").textContent())}`);
+      const calculationFailure = advanced.locator(".nd-cbsem-v4-failure").filter({ visible: true });
+      if (await calculationFailure.isVisible().catch(() => false)) {
+        throw new Error(`Calculation publication failed: ${compact(await calculationFailure.textContent())}`);
+      }
+      const state = compact(await advanced.locator(".nd-cbsem-v4-state").filter({ visible: true }).textContent().catch(() => "")).toLowerCase();
+      if (["failed", "cancelled"].includes(state)) throw new Error(`Calculation ended ${state}: ${compact(await advancedProgress.textContent())}`);
       await page.waitForTimeout(250);
     }
     throw new Error(`Calculation did not open Results within the bounded timeout: ${context.lastCalculation?.routeText ?? ""}`);
