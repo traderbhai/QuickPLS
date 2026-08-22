@@ -56,6 +56,62 @@ function Write-Utf8NoBom([string]$PathValue, [string]$TextValue) {
     [IO.File]::WriteAllText($PathValue, $TextValue, [Text.UTF8Encoding]::new($false))
 }
 
+function Get-InstalledPortableEquivalence([string]$InstalledPath, [string]$PortablePath) {
+    $portableMarker = "__TAURI_BUNDLE_TYPE_VAR_UNK"
+    $installedMarker = "__TAURI_BUNDLE_TYPE_VAR_NSS"
+    $portableMarkerBytes = [Text.Encoding]::ASCII.GetBytes($portableMarker)
+    $installedMarkerBytes = [Text.Encoding]::ASCII.GetBytes($installedMarker)
+    if ($portableMarkerBytes.Length -ne $installedMarkerBytes.Length) {
+        throw "The Tauri installed/portable marker contract has unequal marker lengths."
+    }
+
+    $portableBytes = [IO.File]::ReadAllBytes($PortablePath)
+    $installedBytes = [IO.File]::ReadAllBytes($InstalledPath)
+    if ($portableBytes.Length -ne $installedBytes.Length) {
+        throw "Installed and portable executables differ in length."
+    }
+
+    $portableText = [Text.Encoding]::ASCII.GetString($portableBytes)
+    $installedText = [Text.Encoding]::ASCII.GetString($installedBytes)
+    $portableOffset = $portableText.IndexOf($portableMarker, [StringComparison]::Ordinal)
+    $installedOffset = $installedText.IndexOf($installedMarker, [StringComparison]::Ordinal)
+    if (
+        $portableOffset -lt 0 -or
+        $installedOffset -lt 0 -or
+        $portableText.IndexOf($portableMarker, $portableOffset + 1, [StringComparison]::Ordinal) -ge 0 -or
+        $installedText.IndexOf($installedMarker, $installedOffset + 1, [StringComparison]::Ordinal) -ge 0
+    ) {
+        throw "Installed and portable executables must each contain exactly one expected Tauri bundle marker."
+    }
+    if ($portableOffset -ne $installedOffset) {
+        throw "Installed and portable Tauri bundle markers occur at different offsets."
+    }
+
+    $normalizedInstalledBytes = [byte[]]($installedBytes.Clone())
+    for ($index = 0; $index -lt $portableMarkerBytes.Length; $index++) {
+        $normalizedInstalledBytes[$installedOffset + $index] = $portableMarkerBytes[$index]
+    }
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        $normalizedInstalledSha = ([BitConverter]::ToString($sha256.ComputeHash($normalizedInstalledBytes))).Replace("-", "")
+        $portableBytesSha = ([BitConverter]::ToString($sha256.ComputeHash($portableBytes))).Replace("-", "")
+    } finally {
+        $sha256.Dispose()
+    }
+    if ($normalizedInstalledSha -ne $portableBytesSha) {
+        throw "Installed and portable executables differ outside the single Tauri NSIS bundle marker."
+    }
+
+    [ordered]@{
+        kind = "tauri_nsis_bundle_marker_variant_v1"
+        passed = $true
+        portable_marker = $portableMarker
+        installed_marker = $installedMarker
+        marker_offset = $portableOffset
+        all_other_bytes_identical = $true
+    }
+}
+
 $existingProcesses = @(
     Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
         Where-Object { $_.Name -in @("QuickPLS.exe", "quickpls-desktop.exe") }
@@ -138,11 +194,16 @@ if ($installedCandidates.Count -ne 1) {
 }
 $installed = $installedCandidates[0].FullName
 $installedSha = (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash.ToUpperInvariant()
-if ($installedSha -ne $portableSha) {
-    throw "The executable installed by the exact setup artifact is not byte-identical to the reported portable candidate."
+if ($installedSha -eq $portableSha) {
+    throw "Installed and portable executable hashes must be distinct Tauri package identities."
 }
-if ((Get-FileHash -LiteralPath $reportPath -Algorithm SHA256).Hash.ToUpperInvariant() -ne $reportSha -or (Get-FileHash -LiteralPath $portable -Algorithm SHA256).Hash.ToUpperInvariant() -ne $portableSha) {
-    throw "The release report or portable candidate changed while installation evidence was collected."
+$installedPortableEquivalence = Get-InstalledPortableEquivalence $installed $portable
+if (
+    (Get-FileHash -LiteralPath $reportPath -Algorithm SHA256).Hash.ToUpperInvariant() -ne $reportSha -or
+    (Get-FileHash -LiteralPath $portable -Algorithm SHA256).Hash.ToUpperInvariant() -ne $portableSha -or
+    (Get-FileHash -LiteralPath $installed -Algorithm SHA256).Hash.ToUpperInvariant() -ne $installedSha
+) {
+    throw "The release report, portable candidate, or installed candidate changed while installation evidence was collected."
 }
 $diskAfter = Get-DiskSnapshot "after isolated NSIS install"
 New-Item -ItemType Directory -Path (Split-Path -Parent $receipt) -Force | Out-Null
@@ -172,6 +233,7 @@ $payload = [ordered]@{
     installed_executable_sha256 = $installedSha
     portable_artifact = $portable
     portable_artifact_sha256 = $portableSha
+    installed_portable_equivalence = $installedPortableEquivalence
     product_version = $installedCandidates[0].VersionInfo.ProductVersion
     minimum_free_gib = $minimumFreeGiB
     disk_snapshots = @($diskBefore, $diskAfter)

@@ -77,6 +77,61 @@ function Resolve-ReleaseMember([string]$Declared) {
     if ([IO.Path]::IsPathRooted($Declared)) { return [IO.Path]::GetFullPath($Declared) }
     return [IO.Path]::GetFullPath((Join-Path $root $Declared))
 }
+function Get-InstalledPortableEquivalence([string]$InstalledPath, [string]$PortablePath) {
+    $portableMarker = "__TAURI_BUNDLE_TYPE_VAR_UNK"
+    $installedMarker = "__TAURI_BUNDLE_TYPE_VAR_NSS"
+    $portableMarkerBytes = [Text.Encoding]::ASCII.GetBytes($portableMarker)
+    $installedMarkerBytes = [Text.Encoding]::ASCII.GetBytes($installedMarker)
+    if ($portableMarkerBytes.Length -ne $installedMarkerBytes.Length) {
+        throw "The Tauri installed/portable marker contract has unequal marker lengths."
+    }
+
+    $portableBytes = [IO.File]::ReadAllBytes($PortablePath)
+    $installedBytes = [IO.File]::ReadAllBytes($InstalledPath)
+    if ($portableBytes.Length -ne $installedBytes.Length) {
+        throw "Installed and portable executables differ in length."
+    }
+
+    $portableText = [Text.Encoding]::ASCII.GetString($portableBytes)
+    $installedText = [Text.Encoding]::ASCII.GetString($installedBytes)
+    $portableOffset = $portableText.IndexOf($portableMarker, [StringComparison]::Ordinal)
+    $installedOffset = $installedText.IndexOf($installedMarker, [StringComparison]::Ordinal)
+    if (
+        $portableOffset -lt 0 -or
+        $installedOffset -lt 0 -or
+        $portableText.IndexOf($portableMarker, $portableOffset + 1, [StringComparison]::Ordinal) -ge 0 -or
+        $installedText.IndexOf($installedMarker, $installedOffset + 1, [StringComparison]::Ordinal) -ge 0
+    ) {
+        throw "Installed and portable executables must each contain exactly one expected Tauri bundle marker."
+    }
+    if ($portableOffset -ne $installedOffset) {
+        throw "Installed and portable Tauri bundle markers occur at different offsets."
+    }
+
+    $normalizedInstalledBytes = [byte[]]($installedBytes.Clone())
+    for ($index = 0; $index -lt $portableMarkerBytes.Length; $index++) {
+        $normalizedInstalledBytes[$installedOffset + $index] = $portableMarkerBytes[$index]
+    }
+    $sha256 = [Security.Cryptography.SHA256]::Create()
+    try {
+        $normalizedInstalledSha = ([BitConverter]::ToString($sha256.ComputeHash($normalizedInstalledBytes))).Replace("-", "")
+        $portableBytesSha = ([BitConverter]::ToString($sha256.ComputeHash($portableBytes))).Replace("-", "")
+    } finally {
+        $sha256.Dispose()
+    }
+    if ($normalizedInstalledSha -ne $portableBytesSha) {
+        throw "Installed and portable executables differ outside the single Tauri NSIS bundle marker."
+    }
+
+    [ordered]@{
+        kind = "tauri_nsis_bundle_marker_variant_v1"
+        passed = $true
+        portable_marker = $portableMarker
+        installed_marker = $installedMarker
+        marker_offset = $portableOffset
+        all_other_bytes_identical = $true
+    }
+}
 $releasePayload = Get-Content -LiteralPath $releaseArtifactReport -Raw -Encoding UTF8 | ConvertFrom-Json
 if (
     $releasePayload.schema_version -ne 3 -or
@@ -136,6 +191,26 @@ foreach ($candidate in @($portableFull, $setupFull, $installedFull)) {
 $portableHash = (Get-FileHash -LiteralPath $portableFull -Algorithm SHA256).Hash.ToUpperInvariant()
 $setupHash = (Get-FileHash -LiteralPath $setupFull -Algorithm SHA256).Hash.ToUpperInvariant()
 $installedHash = (Get-FileHash -LiteralPath $installedFull -Algorithm SHA256).Hash.ToUpperInvariant()
+$actualInstalledPortableEquivalence = Get-InstalledPortableEquivalence $installedFull $portableFull
+$receiptInstalledPortableEquivalence = $installPayload.installed_portable_equivalence
+$expectedEquivalenceProperties = @("all_other_bytes_identical", "installed_marker", "kind", "marker_offset", "passed", "portable_marker")
+$receiptEquivalenceProperties = @($receiptInstalledPortableEquivalence.PSObject.Properties.Name | Sort-Object)
+if (
+    $receiptEquivalenceProperties.Count -ne $expectedEquivalenceProperties.Count -or
+    @(Compare-Object -ReferenceObject $expectedEquivalenceProperties -DifferenceObject $receiptEquivalenceProperties -SyncWindow 0).Count -ne 0 -or
+    -not ($receiptInstalledPortableEquivalence.kind -is [string]) -or
+    $receiptInstalledPortableEquivalence.kind -ne $actualInstalledPortableEquivalence.kind -or
+    -not ($receiptInstalledPortableEquivalence.passed -is [bool]) -or
+    $receiptInstalledPortableEquivalence.passed -ne $true -or
+    -not ($receiptInstalledPortableEquivalence.portable_marker -is [string]) -or
+    $receiptInstalledPortableEquivalence.portable_marker -ne $actualInstalledPortableEquivalence.portable_marker -or
+    -not ($receiptInstalledPortableEquivalence.installed_marker -is [string]) -or
+    $receiptInstalledPortableEquivalence.installed_marker -ne $actualInstalledPortableEquivalence.installed_marker -or
+    -not ($receiptInstalledPortableEquivalence.marker_offset -is [int] -or $receiptInstalledPortableEquivalence.marker_offset -is [long]) -or
+    $receiptInstalledPortableEquivalence.marker_offset -ne $actualInstalledPortableEquivalence.marker_offset -or
+    -not ($receiptInstalledPortableEquivalence.all_other_bytes_identical -is [bool]) -or
+    $receiptInstalledPortableEquivalence.all_other_bytes_identical -ne $true
+) { throw "Install receipt does not exactly bind the revalidated installed/portable Tauri NSIS marker equivalence." }
 if (
     $portableHash -ne ([string]$portableRows[0].sha256).ToUpperInvariant() -or
     $portableRows[0].copy_verified -ne $true -or
@@ -145,9 +220,13 @@ if (
     -not ([IO.Path]::GetFullPath([string]$installPayload.portable_artifact)).Equals($portableFull, [StringComparison]::OrdinalIgnoreCase) -or
     $portableHash -ne ([string]$installPayload.portable_artifact_sha256).ToUpperInvariant() -or
     $installedHash -ne ([string]$installPayload.installed_executable_sha256).ToUpperInvariant() -or
-    $installedHash -ne $portableHash -or
+    $installedHash -eq $portableHash -or
     -not ([IO.Path]::GetFullPath([string]$installPayload.setup)).Equals($setupFull, [StringComparison]::OrdinalIgnoreCase)
-) { throw "Portable, setup, and installed executable hashes are not mutually bound." }
+) { throw "Portable, setup, and distinct installed executable hashes are not mutually bound." }
+if (
+    (Get-FileHash -LiteralPath $portableFull -Algorithm SHA256).Hash.ToUpperInvariant() -ne $portableHash -or
+    (Get-FileHash -LiteralPath $installedFull -Algorithm SHA256).Hash.ToUpperInvariant() -ne $installedHash
+) { throw "Installed or portable executable bytes changed while marker equivalence was revalidated." }
 if ($portableFull.Equals($installedFull, [StringComparison]::OrdinalIgnoreCase)) { throw "Installed and portable candidates must remain distinct files." }
 
 $vitestPayload = Get-Content -LiteralPath $vitestReport -Raw -Encoding UTF8 | ConvertFrom-Json

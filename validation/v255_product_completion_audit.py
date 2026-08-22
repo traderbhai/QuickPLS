@@ -10,6 +10,11 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
 
+from general_sem_rank0_packaged_runner import (
+    TAURI_NSIS_BUNDLE_MARKER,
+    TAURI_PORTABLE_BUNDLE_MARKER,
+    _is_exact_tauri_nsis_bundle_variant,
+)
 from v255_release_waiver import (
     DPI_WAIVER_CASE_ID,
     DPI_WAIVER_MANIFEST_DECLARATION,
@@ -251,6 +256,57 @@ def sha256(relative: str) -> str:
 
 def sha256_path(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def exact_installed_portable_equivalence(
+    value: object,
+    installed_executable: Path | None,
+    portable_executable: Path | None,
+) -> bool:
+    """Bind the install receipt to Tauri's sole permitted NSIS byte rewrite."""
+
+    if (
+        not isinstance(value, dict)
+        or set(value)
+        != {
+            "kind",
+            "passed",
+            "portable_marker",
+            "installed_marker",
+            "marker_offset",
+            "all_other_bytes_identical",
+        }
+        or installed_executable is None
+        or portable_executable is None
+        or not installed_executable.is_file()
+        or not portable_executable.is_file()
+    ):
+        return False
+
+    marker_offset = value.get("marker_offset")
+    if (
+        value.get("kind") != "tauri_nsis_bundle_marker_variant_v1"
+        or value.get("passed") is not True
+        or value.get("portable_marker")
+        != TAURI_PORTABLE_BUNDLE_MARKER.decode("ascii")
+        or value.get("installed_marker")
+        != TAURI_NSIS_BUNDLE_MARKER.decode("ascii")
+        or value.get("all_other_bytes_identical") is not True
+        or not isinstance(marker_offset, int)
+        or isinstance(marker_offset, bool)
+        or marker_offset < 0
+    ):
+        return False
+
+    portable_bytes = portable_executable.read_bytes()
+    return bool(
+        sha256_path(installed_executable) != sha256_path(portable_executable)
+        and portable_bytes.count(TAURI_PORTABLE_BUNDLE_MARKER) == 1
+        and marker_offset == portable_bytes.index(TAURI_PORTABLE_BUNDLE_MARKER)
+        and _is_exact_tauri_nsis_bundle_variant(
+            installed_executable, portable_executable
+        )
+    )
 
 
 def is_sha256(value: object) -> bool:
@@ -2503,7 +2559,12 @@ def publication_report_checks(
             sha256_path(install_executable),
         )
         and sha256_path(install_executable)
-        == sha256_path(release_artifact_paths["portable"])
+        != sha256_path(release_artifact_paths["portable"])
+        and exact_installed_portable_equivalence(
+            install_receipt.get("installed_portable_equivalence"),
+            install_executable,
+            release_artifact_paths["portable"],
+        )
         and isinstance(install_receipt.get("installer_pid"), int)
         and install_receipt.get("installer_pid", 0) > 0
         and isinstance(installer_arguments, list)
