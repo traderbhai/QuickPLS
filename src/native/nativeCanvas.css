@@ -353,6 +353,9 @@
 .nd-canvas-host .sem-edge-label.selected,
 .nd-canvas-host .sem-edge-label:hover { box-shadow: 0 0 0 2px rgb(8 107 157 / 34%); }
 .nd-canvas-host .sem-edge-label.selected { color: var(--nd-canvas-accent-dark); background: var(--nd-blue-50); font-weight: 700; }
+.nd-canvas-host .sem-edge-bend-handle { position: absolute; width: 13px; height: 13px; padding: 0; border: 2px solid var(--nd-canvas-accent-dark); border-radius: 2px; background: white; box-shadow: 0 1px 3px rgb(0 0 0 / 20%); cursor: move; pointer-events: all; }
+.nd-canvas-host .sem-edge-bend-handle:hover,
+.nd-canvas-host .sem-edge-bend-handle:focus-visible { background: var(--nd-blue-50); outline: 2px solid var(--nd-color-focus); outline-offset: 2px; }
 
 .nd-canvas-host .smartpls-result-canvas .smartpls-structural-edge .react-flow__edge-path { stroke: #222; stroke-width: 1.55; }
 .nd-canvas-host .smartpls-result-canvas .smartpls-measurement-edge .react-flow__edge-path { stroke: #454b4e; stroke-width: 1.12; }

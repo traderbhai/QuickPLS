@@ -137,6 +137,86 @@ describe("workspace model edit command gateway v1", () => {
     expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]).toMatchObject({ routing: "straight", pinned: false });
   });
 
+  it("persists editable polyline bends as one presentation transaction and restores them through undo", async () => {
+    const edge = useWorkspace.getState().edges.find((candidate) => !candidate.id.startsWith("measurement::"))!;
+    const before = structuredClone(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]);
+    await expect(useWorkspace.getState().executeModelEditCommand({
+      kind: "set_path_routing",
+      relationId: edge.id,
+      routing: "polyline",
+    })).resolves.toMatchObject({ status: "applied", transaction: "presentation" });
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]).toMatchObject({
+      routing: "polyline",
+      pinned: true,
+      bendPoints: [expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) })],
+    });
+
+    await expect(useWorkspace.getState().executeModelEditCommand({
+      kind: "set_path_bend_points",
+      relationId: edge.id,
+      points: [{ x: 320, y: 70 }, { x: 420, y: 170 }],
+    })).resolves.toMatchObject({ status: "applied", transaction: "presentation", affected: { relationshipIds: [edge.id] } });
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]?.bendPoints).toEqual([{ x: 320, y: 70 }, { x: 420, y: 170 }]);
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]?.routing).toBe("polyline");
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.edgeLayouts[edge.id]).toEqual(before);
+  });
+
+  it("stores moderation anchor movement only in presentation metadata", async () => {
+    const state = useWorkspace.getState();
+    const focal = state.edges.find((edge) => !edge.id.startsWith("measurement::") && edge.data?.role !== "covariance")!;
+    const predictor = state.nodes.find((node) => node.id === focal.source)!;
+    const outcome = state.nodes.find((node) => node.id === focal.target)!;
+    const moderator = {
+      ...predictor,
+      id: "moderator:anchor-test",
+      position: { x: predictor.position.x, y: predictor.position.y + 400 },
+      data: { ...predictor.data, label: "Moderator", shortName: "W" },
+    };
+    const interaction = {
+      ...predictor,
+      id: "interaction:anchor-test",
+      position: { x: 0, y: 0 },
+      data: {
+        ...predictor.data,
+        label: "X × W",
+        shortName: "XW",
+        indicators: [],
+        semantic: "interaction" as const,
+        interaction: {
+          kind: "interaction_v2" as const,
+          termId: "term:anchor-test",
+          operands: [predictor.id, moderator.id] as [string, string],
+          focalRelationId: focal.id,
+          outcome: outcome.id,
+          canonicalMethod: "two_stage" as const,
+          hierarchyPolicy: "strong" as const,
+        },
+      },
+    };
+    useWorkspace.setState({ nodes: [...state.nodes, moderator, interaction] });
+    const scientificBefore = structuredClone({ nodes: useWorkspace.getState().nodes, edges: useWorkspace.getState().edges });
+
+    await expect(useWorkspace.getState().executeModelEditCommand({
+      kind: "set_moderation_anchor_fraction",
+      interactionTermId: "term:anchor-test",
+      fraction: 0.01,
+    })).resolves.toMatchObject({ status: "applied", transaction: "presentation", affected: { relationshipIds: [focal.id] } });
+    expect(useWorkspace.getState().diagramLayout.moderationAnchorFractions).toMatchObject({ "term:anchor-test": 0.2 });
+    await expect(useWorkspace.getState().executeModelEditCommand({
+      kind: "set_moderation_anchor_fraction",
+      interactionTermId: "term:anchor-test",
+      fraction: 0.99,
+    })).resolves.toMatchObject({ status: "applied", transaction: "presentation", affected: { relationshipIds: [focal.id] } });
+    expect(useWorkspace.getState().diagramLayout.moderationAnchorFractions).toMatchObject({ "term:anchor-test": 0.8 });
+    expect({ nodes: useWorkspace.getState().nodes, edges: useWorkspace.getState().edges }).toEqual(scientificBefore);
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.moderationAnchorFractions).toMatchObject({ "term:anchor-test": 0.2 });
+    useWorkspace.getState().undo();
+    expect(useWorkspace.getState().diagramLayout.moderationAnchorFractions?.["term:anchor-test"]).toBeUndefined();
+  });
+
   it("moves legacy indicators atomically and keeps unrelated presentation metadata", async () => {
     const initial = useWorkspace.getState();
     const target = initial.nodes[0]!;

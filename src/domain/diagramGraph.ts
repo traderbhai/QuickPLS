@@ -3,14 +3,29 @@ import type { AnalysisRun, ConstructData, DiagramLayoutState, DiagramMode, Diagr
 import {
   deriveModerationAnchorProjections,
   hiddenInteractionNodeIds,
+  isModerationAnchorData,
+  isModerationConnectorData,
   moderationAnchorNodeId,
-  moderationAnchorPosition,
   moderationConnectorEdgeId,
   type ModerationAnchorProjectionV1,
   type ModerationConnectorProjectionV1,
   type ResultOverlaySelectionV1,
 } from "./moderationDiagramProjectionV1";
-import { SEM_SIZES, boxCenter, measureDiagramQuality, routeBetweenBoxes, semNodeBox, smartIndicatorPosition } from "./semGeometry";
+import {
+  SEM_SIZES,
+  boxCenter,
+  measureDiagramQuality,
+  pointAtPolylineFraction,
+  polylineMidpoint,
+  renderedEdgePolyline,
+  routeBetweenBoxes,
+  routePolylineAroundObstacles,
+  semNodeBox,
+  semRectsOverlap,
+  smartIndicatorPosition,
+  type SemPoint,
+  type SemRect,
+} from "./semGeometry";
 
 export interface IndicatorNodeData extends Record<string, unknown> {
   constructId: string;
@@ -53,6 +68,8 @@ export interface DiagramGraphOptions {
   moderationAnchorFractions?: Readonly<Record<string, number>>;
   /** Optional visual connector routing points, keyed by moderation connector edge id. */
   moderationConnectorBendPoints?: Readonly<Record<string, readonly XYPosition[]>>;
+  /** Optional transient anchors for read-only previews that have no scientific interaction nodes. */
+  moderationAnchorProjections?: readonly ModerationAnchorProjectionV1[];
 }
 
 const LATENT_WIDTH = 150;
@@ -62,11 +79,9 @@ const INDICATOR_HEIGHT = 34;
 const MEASUREMENT_GAP = 88;
 const INDICATOR_ROW_GAP = 42;
 const SMARTPLS_LATENT_WIDTH = SEM_SIZES.smartplsEllipse.width;
-const SMARTPLS_LATENT_HEIGHT = SEM_SIZES.smartplsEllipse.height;
 const SMARTPLS_LATENT_NODE_HEIGHT = SEM_SIZES.smartplsLatent.height;
 const SMARTPLS_INDICATOR_WIDTH = SEM_SIZES.smartplsIndicator.width;
 const SMARTPLS_INDICATOR_HEIGHT = SEM_SIZES.smartplsIndicator.height;
-const SMARTPLS_COLUMN_GAP = 270;
 const SMARTPLS_VERTICAL_GAP = 320;
 
 export const isIndicatorNodeId = (id: string) => id.startsWith("indicator::");
@@ -98,7 +113,7 @@ export function buildDiagramGraph(
       || (!generatedInteractionIds.has(edge.source) && !generatedInteractionIds.has(edge.target)));
   const paperStyle = mode === "sem" || mode === "publication" || mode === "smartpls_result";
   const lockedResultMode = mode === "smartpls_result" || mode === "publication";
-  const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(displayModelNodes, structuralEdges) : null;
+  const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(displayModelNodes, structuralEdges, options.layout) : null;
   const structuralShape = structuralShapeMaps(displayModelNodes, structuralEdges);
   const result = run?.status === "completed" ? run.result : undefined;
   const compatible = result ? resultMatchesModel(modelNodes, scientificStructuralEdges, result) : true;
@@ -136,7 +151,7 @@ export function buildDiagramGraph(
     const sourceNode = visualNodes.find((node) => node.id === edge.source);
     const targetNode = visualNodes.find((node) => node.id === edge.target);
     const route = paperStyle && sourceNode && targetNode ? routeSides(sourceNode, targetNode) : null;
-    const routing = structuralRouting(edge, paperStyle, options.layout);
+    const routeLayout = structuralRouting(edge, paperStyle, options.layout);
     return {
       ...edge,
       type: paperStyle ? "semEdge" : edge.type ?? "smoothstep",
@@ -149,22 +164,30 @@ export function buildDiagramGraph(
       markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 16 : 16, height: paperStyle ? 16 : 16, color: paperStyle ? "#222" : undefined },
       className: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
       selectable: !lockedResultMode,
-      data: { ...edge.data, routing, labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge" },
+      data: {
+        ...edge.data,
+        routing: routeLayout.routing,
+        ...(routeLayout.bendPoints?.length ? { bendPoints: routeLayout.bendPoints } : {}),
+        labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset,
+        edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
+      },
     };
   });
 
-  const moderationAnchors = deriveModerationAnchorProjections(
-    modelNodes,
-    modelEdges,
-    options.moderationAnchorFractions ?? options.layout?.moderationAnchorFractions,
-  );
+  const moderationAnchors = options.moderationAnchorProjections
+    ? [...options.moderationAnchorProjections]
+    : deriveModerationAnchorProjections(
+      modelNodes,
+      modelEdges,
+      options.moderationAnchorFractions ?? options.layout?.moderationAnchorFractions,
+    );
   for (const anchor of moderationAnchors) {
     const focalEdge = visualEdges.find((edge) => edge.id === anchor.focalRelationId);
     const sourceNode = focalEdge ? visualNodes.find((node) => node.id === focalEdge.source) : undefined;
     const targetNode = focalEdge ? visualNodes.find((node) => node.id === focalEdge.target) : undefined;
     if (!focalEdge || !sourceNode || !targetNode) continue;
-    const focalRoute = routeBetweenBoxes(semNodeBox(sourceNode), semNodeBox(targetNode));
-    const position = moderationAnchorPosition(focalRoute.start, focalRoute.end, anchor.fraction);
+    const focalPoint = pointAtPolylineFraction(renderedEdgePolyline(focalEdge, sourceNode, targetNode), anchor.fraction);
+    const position = { x: focalPoint.x - 11, y: focalPoint.y - 11 };
     const anchorId = moderationAnchorNodeId(anchor.interactionTermId);
     const highlightedByResult = Boolean(options.resultOverlay?.interactionTermIds.includes(anchor.interactionTermId));
     const selected = options.selectedInteractionTermId === anchor.interactionTermId || highlightedByResult;
@@ -173,7 +196,7 @@ export function buildDiagramGraph(
       type: "moderationAnchor",
       position,
       data: { ...anchor, editable: !lockedResultMode },
-      draggable: false,
+      draggable: !lockedResultMode,
       connectable: !lockedResultMode && anchor.order === 2,
       deletable: false,
       selectable: true,
@@ -314,8 +337,15 @@ export function buildDiagramGraph(
   if (mode !== "compact") {
     for (const node of displayModelNodes) {
       const latentPosition = visualNodes.find((visualNode) => visualNode.id === node.id)?.position ?? node.position;
-      const placement = smartplsPlacement?.indicators.get(node.id)
-        ?? indicatorPositionsForConstruct(node, latentPosition, paperStyle, structuralShape, options.layout);
+      const automaticPlacement = smartplsPlacement?.indicators.get(node.id);
+      const placement = automaticPlacement
+        ? automaticPlacement.map((point, index) => {
+            const saved = options.layout?.indicatorLayouts[node.id]?.[node.data.indicators[index] ?? ""];
+            return saved?.side === "free" && Number.isFinite(saved.x) && Number.isFinite(saved.y)
+              ? { x: Number(saved.x), y: Number(saved.y) }
+              : point;
+          })
+        : indicatorPositionsForConstruct(node, latentPosition, paperStyle, structuralShape, options.layout);
       node.data.indicators.forEach((indicator, index) => {
         const estimate = loadingByConstruct.get(node.id)?.get(indicator);
         const indicatorPosition = placement[index] ?? latentPosition;
@@ -366,7 +396,10 @@ export function buildDiagramGraph(
     }
   }
 
-  const edgesWithLabelOffsets = applyAutomaticEdgeLabelOffsets(visualEdges, visualNodes);
+  const routedEdges = paperStyle ? applyAutomaticEdgeRoutes(visualEdges, visualNodes, options.layout) : visualEdges;
+  repositionModerationAnchors(routedEdges, visualNodes);
+  const connectorRoutedEdges = paperStyle ? applyAutomaticModerationConnectorRoutes(routedEdges, visualNodes) : routedEdges;
+  const edgesWithLabelOffsets = applyAutomaticEdgeLabelOffsets(connectorRoutedEdges, visualNodes);
 
   return {
     nodes: visualNodes,
@@ -381,7 +414,8 @@ export function buildDiagramGraph(
 }
 
 function applyAutomaticEdgeLabelOffsets(edges: Edge[], nodes: DiagramGraph["nodes"]): Edge[] {
-  const occupied = new Map<string, number>();
+  const nodeRects: SemRect[] = nodes.map((node) => semNodeBox(node));
+  const occupied: SemRect[] = [];
   return edges.map((edge) => {
     const label = typeof edge.label === "string" ? edge.label : "";
     if (!label) return edge;
@@ -390,17 +424,93 @@ function applyAutomaticEdgeLabelOffsets(edges: Edge[], nodes: DiagramGraph["node
     const source = nodes.find((node) => node.id === edge.source);
     const target = nodes.find((node) => node.id === edge.target);
     if (!source || !target) return edge;
-    const mid = {
-      x: (source.position.x + target.position.x) / 2,
-      y: (source.position.y + target.position.y) / 2,
+    const mid = polylineMidpoint(renderedEdgePolyline(edge, source, target));
+    const width = Math.min(190, Math.max(34, label.length * 7 + 14));
+    const height = 20;
+    const candidates = [
+      { x: 0, y: -18 },
+      { x: 0, y: 18 },
+      { x: 22, y: 0 },
+      { x: -22, y: 0 },
+      { x: 24, y: -18 },
+      { x: -24, y: -18 },
+      { x: 24, y: 18 },
+      { x: -24, y: 18 },
+    ];
+    const chosen = candidates.find((offset) => {
+      const rect = { x: mid.x + offset.x - width / 2, y: mid.y + offset.y - height / 2, width, height };
+      return !nodeRects.some((nodeRect) => semRectsOverlap(rect, nodeRect))
+        && !occupied.some((labelRect) => semRectsOverlap(rect, labelRect));
+    }) ?? { x: 0, y: -18 - occupied.length * 4 };
+    occupied.push({ x: mid.x + chosen.x - width / 2, y: mid.y + chosen.y - height / 2, width, height });
+    return { ...edge, data: { ...edge.data, labelOffset: chosen } };
+  });
+}
+
+function finiteBendPoints(value: unknown): SemPoint[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((point): SemPoint[] => {
+    if (!point || typeof point !== "object") return [];
+    const x = Number((point as { x?: unknown }).x);
+    const y = Number((point as { y?: unknown }).y);
+    return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
+  });
+}
+
+function applyAutomaticEdgeRoutes(edges: Edge[], nodes: DiagramGraph["nodes"], layout?: DiagramLayoutState): Edge[] {
+  return edges.map((edge) => {
+    const className = String(edge.className ?? edge.data?.edgeClassName ?? "");
+    const structural = className.includes("structural-edge") || className.includes("control-edge");
+    const measurement = className.includes("measurement-edge");
+    if (!structural && !measurement) return edge;
+    const savedRoute = structural ? layout?.edgeLayouts[edge.id] : undefined;
+    if (savedRoute?.pinned) return edge;
+    const source = nodes.find((node) => node.id === edge.source);
+    const target = nodes.find((node) => node.id === edge.target);
+    if (!source || !target) return edge;
+    const route = renderedEdgePolyline(edge, source, target);
+    const obstacles = nodes
+      .filter((node) => node.id !== edge.source && node.id !== edge.target)
+      .filter((node) => !(isModerationAnchorData(node.data) && node.data.focalRelationId === edge.id))
+      .map((node) => semNodeBox(node));
+    const bends = routePolylineAroundObstacles(route[0]!, route[route.length - 1]!, obstacles, measurement ? 8 : 14);
+    if (!bends.length) {
+      return { ...edge, data: { ...edge.data, routing: "straight", bendPoints: undefined } };
+    }
+    return { ...edge, data: { ...edge.data, routing: "polyline", bendPoints: bends } };
+  });
+}
+
+function repositionModerationAnchors(edges: Edge[], nodes: DiagramGraph["nodes"]): void {
+  for (const anchorNode of nodes) {
+    if (!isModerationAnchorData(anchorNode.data)) continue;
+    const anchor = anchorNode.data;
+    const focal = edges.find((edge) => edge.id === anchor.focalRelationId);
+    const source = focal ? nodes.find((node) => node.id === focal.source) : undefined;
+    const target = focal ? nodes.find((node) => node.id === focal.target) : undefined;
+    if (!focal || !source || !target) continue;
+    const point = pointAtPolylineFraction(renderedEdgePolyline(focal, source, target), anchor.fraction);
+    anchorNode.position = { x: point.x - 11, y: point.y - 11 };
+  }
+}
+
+function applyAutomaticModerationConnectorRoutes(edges: Edge[], nodes: DiagramGraph["nodes"]): Edge[] {
+  return edges.map((edge) => {
+    if (!isModerationConnectorData(edge.data)) return edge;
+    const storedBends = finiteBendPoints(edge.data.bendPoints);
+    const source = nodes.find((node) => node.id === edge.source);
+    const target = nodes.find((node) => node.id === edge.target);
+    if (!source || !target) return edge;
+    const sides = moderationConnectorSides(boxCenter(semNodeBox(source)), boxCenter(semNodeBox(target)));
+    const handledEdge = { ...edge, sourceHandle: handleId("source", sides.source), targetHandle: handleId("target", sides.target) };
+    if (storedBends.length) return handledEdge;
+    const route = renderedEdgePolyline(handledEdge, source, target);
+    const obstacles = nodes.filter((node) => node.id !== edge.source && node.id !== edge.target).map((node) => semNodeBox(node));
+    const bends = routePolylineAroundObstacles(route[0]!, route[route.length - 1]!, obstacles, 10);
+    return {
+      ...handledEdge,
+      ...(bends.length ? { data: { ...edge.data, routing: "polyline", bendPoints: bends } } : {}),
     };
-    const key = `${Math.round(mid.x / 40)}:${Math.round(mid.y / 24)}`;
-    const count = occupied.get(key) ?? 0;
-    occupied.set(key, count + 1);
-    if (count === 0) return edge;
-    const spread = Math.ceil(count / 2) * 16;
-    const sign = count % 2 === 0 ? -1 : 1;
-    return { ...edge, data: { ...edge.data, labelOffset: { x: 0, y: sign * spread } } };
   });
 }
 
@@ -509,7 +619,53 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
   };
 }
 
-function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges: Edge[]) {
+interface RelativeEnvelope extends SemRect {
+  indicatorPositions: XYPosition[];
+}
+
+function presentationEnvelopeForConstruct(
+  node: Node<ConstructData>,
+  shape: ReturnType<typeof structuralShapeMaps>,
+  finalLevel: boolean,
+  columnIndex: number,
+  columnSize: number,
+  layout?: DiagramLayoutState,
+): RelativeEnvelope {
+  const saved = layout?.indicatorLayouts[node.id];
+  const defaultSide = indicatorSide(node.id, shape, finalLevel, columnIndex, columnSize);
+  const positions: Array<XYPosition | undefined> = new Array(node.data.indicators.length);
+  const bySide = new Map<Exclude<IndicatorSide, "free">, Array<{ indicator: string; index: number; order: number }>>();
+  node.data.indicators.forEach((indicator, index) => {
+    const item = saved?.[indicator];
+    if (item?.side === "free" && Number.isFinite(item.x) && Number.isFinite(item.y)) {
+      positions[index] = { x: Number(item.x) - node.position.x, y: Number(item.y) - node.position.y };
+      return;
+    }
+    const side = item?.side && item.side !== "free" ? item.side : defaultSide;
+    bySide.set(side, [...(bySide.get(side) ?? []), { indicator, index, order: item?.order ?? index }]);
+  });
+  for (const [side, entries] of bySide) {
+    const ordered = [...entries].sort((left, right) => left.order - right.order || left.indicator.localeCompare(right.indicator));
+    const generated = smartplsIndicatorPositions({ x: 0, y: 0 }, ordered.length, side);
+    ordered.forEach((entry, index) => { positions[entry.index] = generated[index]!; });
+  }
+  const rects: SemRect[] = [
+    { x: 0, y: 0, width: SMARTPLS_LATENT_WIDTH, height: SMARTPLS_LATENT_NODE_HEIGHT },
+    ...positions.flatMap((position, index): SemRect[] => {
+      const indicator = node.data.indicators[index];
+      const savedPosition = indicator ? saved?.[indicator] : undefined;
+      if (!position || (savedPosition?.side === "free" && Number.isFinite(savedPosition.x) && Number.isFinite(savedPosition.y))) return [];
+      return [{ x: position.x, y: position.y, width: SMARTPLS_INDICATOR_WIDTH, height: SMARTPLS_INDICATOR_HEIGHT }];
+    }),
+  ];
+  const left = Math.min(...rects.map((rect) => rect.x));
+  const top = Math.min(...rects.map((rect) => rect.y));
+  const right = Math.max(...rects.map((rect) => rect.x + rect.width));
+  const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
+  return { x: left, y: top, width: right - left, height: bottom - top, indicatorPositions: positions.map((point) => point ?? { x: 0, y: 0 }) };
+}
+
+function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges: Edge[], layout?: DiagramLayoutState) {
   const shape = structuralShapeMaps(modelNodes, structuralEdges);
 
   const level = new Map<string, number>();
@@ -530,22 +686,50 @@ function smartplsLayout(modelNodes: Array<Node<ConstructData>>, structuralEdges:
   }
   const orderedLevels = orderSmartplsLevels(byLevel, shape);
 
+  const envelopes = new Map<string, RelativeEnvelope>();
+  const maxLevel = Math.max(...level.values(), 0);
+  for (const [currentLevel, columnNodes] of orderedLevels) {
+    columnNodes.forEach((node, index) => envelopes.set(node.id, presentationEnvelopeForConstruct(
+      node,
+      shape,
+      currentLevel === maxLevel,
+      index,
+      columnNodes.length,
+      layout,
+    )));
+  }
+  const horizontalLane = 130;
+  const verticalLane = 92;
+  const columnMetrics = new Map([...orderedLevels].map(([currentLevel, columnNodes]) => {
+    const columnEnvelopes = columnNodes.map((node) => envelopes.get(node.id)!);
+    return [currentLevel, {
+      left: Math.min(...columnEnvelopes.map((envelope) => envelope.x)),
+      right: Math.max(...columnEnvelopes.map((envelope) => envelope.x + envelope.width)),
+      height: columnEnvelopes.reduce((sum, envelope) => sum + envelope.height, 0) + Math.max(0, columnEnvelopes.length - 1) * verticalLane,
+    }] as const;
+  }));
+  const globalHeight = Math.max(...[...columnMetrics.values()].map((metric) => metric.height), 1);
+  const levelX = new Map<number, number>();
+  let horizontalCursor = 80;
+  for (const currentLevel of [...orderedLevels.keys()].sort((left, right) => left - right)) {
+    const metric = columnMetrics.get(currentLevel)!;
+    levelX.set(currentLevel, horizontalCursor - metric.left);
+    horizontalCursor += metric.right - metric.left + horizontalLane;
+  }
   const latents = new Map<string, XYPosition>();
   const indicators = new Map<string, XYPosition[]>();
-  const maxStack = Math.max(...[...orderedLevels.values()].map((nodes) => nodes.length), 1);
-  const canvasTop = 80;
-  const maxLevel = Math.max(...level.values(), 0);
   for (const [currentLevel, columnNodes] of [...orderedLevels.entries()].sort(([a], [b]) => a - b)) {
-    const columnHeight = (columnNodes.length - 1) * SMARTPLS_VERTICAL_GAP;
-    const globalHeight = (maxStack - 1) * SMARTPLS_VERTICAL_GAP;
-    const startY = canvasTop + Math.max(0, (globalHeight - columnHeight) / 2);
+    const columnHeight = columnMetrics.get(currentLevel)!.height;
+    let verticalCursor = 80 + Math.max(0, (globalHeight - columnHeight) / 2);
     columnNodes.forEach((node, index) => {
+      const envelope = envelopes.get(node.id)!;
       const position = {
-        x: 170 + currentLevel * SMARTPLS_COLUMN_GAP,
-        y: startY + index * SMARTPLS_VERTICAL_GAP,
+        x: levelX.get(currentLevel)!,
+        y: verticalCursor - envelope.y,
       };
       latents.set(node.id, position);
-      indicators.set(node.id, smartplsIndicatorPositions(position, node.data.indicators.length, indicatorSide(node.id, shape, currentLevel === maxLevel, index, columnNodes.length)));
+      indicators.set(node.id, envelope.indicatorPositions.map((point) => ({ x: position.x + point.x, y: position.y + point.y })));
+      verticalCursor += envelope.height + verticalLane;
     });
   }
   return { latents, indicators };
@@ -598,13 +782,25 @@ function smartplsBarycenter(node: Node<ConstructData>, neighbors: Map<string, st
   return indexes.reduce((sum, index) => sum + index, 0) / indexes.length;
 }
 
-export function layoutSmartplsModel(modelNodes: Array<Node<ConstructData>>, modelEdges: Edge[]): Array<Node<ConstructData>> {
+export function layoutSmartplsModel(modelNodes: Array<Node<ConstructData>>, modelEdges: Edge[], layout?: DiagramLayoutState): Array<Node<ConstructData>> {
   const hiddenInteractions = hiddenInteractionNodeIds(modelNodes, modelEdges);
   const visibleNodes = modelNodes.filter((node) => !hiddenInteractions.has(node.id));
+  const movableEnvelopeNodes = visibleNodes.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      // Free indicators remain at persisted absolute Canvas coordinates when
+      // constructs move; exclude them from construct-relative arrangement.
+      indicators: node.data.indicators.filter((indicator) => {
+        const item = layout?.indicatorLayouts[node.id]?.[indicator];
+        return item?.side !== "free" || !Number.isFinite(item.x) || !Number.isFinite(item.y);
+      }),
+    },
+  }));
   const structuralEdges = modelEdges.filter((edge) => edge.data?.role !== "covariance"
     && !hiddenInteractions.has(edge.source)
     && !hiddenInteractions.has(edge.target));
-  const placement = smartplsLayout(visibleNodes, structuralEdges);
+  const placement = smartplsLayout(movableEnvelopeNodes, structuralEdges, layout);
   return modelNodes.map((node) => ({ ...node, position: placement.latents.get(node.id) ?? node.position }));
 }
 
@@ -643,13 +839,14 @@ function handleId(kind: "source" | "target", side: "left" | "right" | "top" | "b
   return `${kind}-${side}`;
 }
 
-function structuralRouting(edge: Edge, paperStyle: boolean, layout?: DiagramLayoutState) {
-  if (!paperStyle) return edge.type ?? "smoothstep";
+function structuralRouting(edge: Edge, paperStyle: boolean, layout?: DiagramLayoutState): { routing: string; bendPoints?: XYPosition[] } {
+  if (!paperStyle) return { routing: edge.type ?? "smoothstep" };
   const saved = layout?.edgeLayouts[edge.id];
-  if (!saved?.pinned) return "straight";
-  if (saved.routing === "orthogonal") return "smoothstep";
-  if (saved.routing === "curved") return "default";
-  return "straight";
+  if (!saved?.pinned) return { routing: "straight" };
+  if (saved.routing === "orthogonal") return { routing: "smoothstep" };
+  if (saved.routing === "curved") return { routing: "default" };
+  if (saved.routing === "polyline" && saved.bendPoints?.length) return { routing: "polyline", bendPoints: saved.bendPoints.map((point) => ({ ...point })) };
+  return { routing: "straight" };
 }
 
 function moderationConnectorSides(

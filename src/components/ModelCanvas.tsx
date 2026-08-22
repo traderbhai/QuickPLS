@@ -23,7 +23,7 @@ import {
   MODERATION_FOCUS_EVENT,
   type ResultOverlaySelectionV1,
 } from "../domain/moderationDiagramProjectionV1";
-import { SEM_SIZES, boxCenter, semNodeBox } from "../domain/semGeometry";
+import { SEM_SIZES, boxCenter, fractionAlongPolyline, pointAtPolylineFraction, renderedEdgePolyline, semNodeBox, type SemPoint } from "../domain/semGeometry";
 import { nearestNativeModerationDropTarget, type NativeModerationDropTarget } from "../native/nativeModeration";
 import {
   nativeCanvasSemanticZoomLevelV1,
@@ -139,6 +139,18 @@ export function shouldAutoFitModelCanvasAfterNodeGrowth(input: {
   preserveViewportForDrop: boolean;
 }): boolean {
   return !input.preserveViewportForDrop && !(input.strictAuthority && input.persistedViewport);
+}
+
+export function moderationAnchorDropProjectionV1(
+  polyline: readonly SemPoint[],
+  droppedPosition: { x: number; y: number },
+): { fraction: number; position: { x: number; y: number } } {
+  const fraction = Math.min(0.8, Math.max(0.2, fractionAlongPolyline(polyline, {
+    x: droppedPosition.x + 11,
+    y: droppedPosition.y + 11,
+  })));
+  const center = pointAtPolylineFraction(polyline, fraction);
+  return { fraction, position: { x: center.x - 11, y: center.y - 11 } };
 }
 
 export function ModelCanvas({
@@ -313,12 +325,13 @@ export function ModelCanvas({
     }
   }, [graph.nodes, selectedInteractionTermId]);
   const runModelEditCommand = (command: ModelEditCommandV1) => {
-    void executeModelEditCommand(command).then((result) => {
+    return executeModelEditCommand(command).then((result) => {
       setActionFeedback({
         message: result.status === "applied"
           ? "Diagram updated."
           : `${result.message} ${result.correctiveAction}`,
       });
+      return result;
     });
   };
   const selectedConstructIds = () => [...new Set([
@@ -564,7 +577,7 @@ export function ModelCanvas({
       && Math.abs(center.y - (node.position.y + 29)) < 70);
   };
   const updateDragGuide = (dragged: Node) => {
-    if (!flow || isIndicatorNodeId(dragged.id)) {
+    if (!flow || isIndicatorNodeId(dragged.id) || isModerationAnchorData(dragged.data)) {
       setDragGuide(null);
       return;
     }
@@ -998,6 +1011,35 @@ export function ModelCanvas({
         cancelPendingDragGuide();
         setDragGuide(null);
         updateModerationDropTarget(null);
+        if (isModerationAnchorData(node.data)) {
+          const anchor = node.data;
+          const focal = visibleGraph.edges.find((edge) => edge.id === anchor.focalRelationId);
+          const source = focal ? canvasNodes.find((candidate) => candidate.id === focal.source) : undefined;
+          const target = focal ? canvasNodes.find((candidate) => candidate.id === focal.target) : undefined;
+          if (focal && source && target) {
+            const projection = moderationAnchorDropProjectionV1(renderedEdgePolyline(focal, source, target), node.position);
+            setCanvasNodes((current) => current.map((candidate) => candidate.id === node.id
+              ? { ...candidate, position: projection.position }
+              : candidate));
+            void runModelEditCommand({
+              kind: "set_moderation_anchor_fraction",
+              interactionTermId: anchor.interactionTermId,
+              fraction: projection.fraction,
+            }).then((result) => {
+              if (result.status === "applied") return;
+              const resident = graph.nodes.find((candidate) => candidate.id === node.id);
+              if (resident) setCanvasNodes((current) => current.map((candidate) => candidate.id === node.id
+                ? { ...candidate, position: { ...resident.position } }
+                : candidate));
+            }).catch(() => {
+              const resident = graph.nodes.find((candidate) => candidate.id === node.id);
+              if (resident) setCanvasNodes((current) => current.map((candidate) => candidate.id === node.id
+                ? { ...candidate, position: { ...resident.position } }
+                : candidate));
+            });
+          }
+          return;
+        }
         const indicator = parseIndicatorNodeId(node.id);
         if (!indicator) {
           if (!isModerationAnchorData(node.data)) {

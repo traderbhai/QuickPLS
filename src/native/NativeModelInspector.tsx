@@ -645,8 +645,8 @@ export function NativeModelInspector({
           </> : null}
           <p className="nd-property-note">Move the construct with the canvas, keyboard focus, or Arrange command. Its saved position is presentation-only.</p>
         </> : selectedPath ? <>
-          <label>Routing<select value={routing} onChange={(event) => void executeModelEdit({ kind: "set_path_routing", relationId: selectedPath.id, routing: event.target.value as "straight" | "curved" | "orthogonal" })}><option value="straight">Straight</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option></select></label>
-          <div className="nd-inline-actions"><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_route", relationId: selectedPath.id })}>Reset route</button><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_label", relationId: selectedPath.id })}>Reset label position</button></div>
+          <label>Routing<select value={routing} onChange={(event) => void executeModelEdit({ kind: "set_path_routing", relationId: selectedPath.id, routing: event.target.value as "straight" | "curved" | "orthogonal" | "polyline" })}><option value="straight">Straight</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option><option value="polyline">Polyline (editable bends)</option></select></label>
+          <div className="nd-inline-actions"><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_route", relationId: selectedPath.id })}>Reset route</button><button type="button" onClick={() => void executeModelEdit({ kind: "reset_path_label", relationId: selectedPath.id })}>Reset label</button></div>
           <p className="nd-property-note">Routing changes presentation only; it does not change the scientific relationship.</p>
         </> : <div className="nd-pane-empty">Select an object to inspect its presentation settings.</div>}
       </form> : null}

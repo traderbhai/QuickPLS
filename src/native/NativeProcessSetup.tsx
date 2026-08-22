@@ -1,5 +1,6 @@
 import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
+import { ReadOnlyDiagramViewport } from "../components/ReadOnlyDiagramViewport";
 import type {
   AnalysisUiSettings,
   NativeProcessGraphRelationshipConfig,
@@ -19,6 +20,7 @@ import {
   parseNativeProcessGraph,
 } from "./nativeProcess";
 import { nativeOlsCsvValues } from "./nativeOls";
+import { nativeProcessPreviewDiagramV1 } from "./nativeProcessPreviewDiagramV1";
 
 interface NativeProcessSetupProps {
   settings: AnalysisUiSettings;
@@ -62,61 +64,19 @@ function ProcessGraphPreview({
   graph: NativeProcessGraphRelationshipConfig;
   outcome: string;
 }) {
-  const nodes = [...new Set([graph.focal_predictor, ...graph.paths.flatMap((path) => [path.from, path.to]), outcome])]
-    .filter(Boolean);
-  const width = Math.max(420, nodes.length * 112);
-  const positions = new Map(nodes.map((node, index) => [node, {
-    x: 56 + index * ((width - 112) / Math.max(1, nodes.length - 1)),
-    y: 54 + (index % 2) * 48,
-  }]));
+  const diagram = useMemo(() => nativeProcessPreviewDiagramV1(graph, outcome), [graph, outcome]);
+  const description = graph.paths.length
+    ? graph.paths.map((path) => {
+      const moderation = graph.moderations.find((row) => row.from === path.from && row.to === path.to);
+      return `${pathLabel(path)}${moderation ? ` moderated by ${moderation.moderator}${moderation.conditioning_moderator ? ` and ${moderation.conditioning_moderator}` : ""}` : ""}`;
+    }).join("; ")
+    : "No directed paths have been defined.";
   return (
     <figure id="nd-process-graph-preview" className="nd-process-graph-preview">
       <figcaption>Relationship preview</figcaption>
-      <div className="nd-process-graph-scroll">
-        <svg viewBox={`0 0 ${width} 150`} role="img" aria-labelledby="nd-process-preview-title nd-process-preview-description">
-          <title id="nd-process-preview-title">Graph-defined path analysis preview</title>
-          <desc id="nd-process-preview-description">
-            {graph.paths.length
-              ? graph.paths.map((path) => {
-                const moderation = graph.moderations.find((row) => row.from === path.from && row.to === path.to);
-                return `${pathLabel(path)}${moderation ? ` moderated by ${moderation.moderator}${moderation.conditioning_moderator ? ` and ${moderation.conditioning_moderator}` : ""}` : ""}`;
-              }).join("; ")
-              : "No directed paths have been defined."}
-          </desc>
-          <defs>
-            <marker id="nd-process-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" />
-            </marker>
-          </defs>
-          {graph.paths.map((path) => {
-            const source = positions.get(path.from);
-            const target = positions.get(path.to);
-            if (!source || !target) return null;
-            const moderation = graph.moderations.find((row) => row.from === path.from && row.to === path.to);
-            return (
-              <g key={pathToken(path)}>
-                <line x1={source.x + 34} y1={source.y} x2={target.x - 34} y2={target.y} markerEnd="url(#nd-process-arrow)" />
-                {moderation ? (
-                  <text x={(source.x + target.x) / 2} y={(source.y + target.y) / 2 - 7} textAnchor="middle">
-                    {[moderation.moderator, moderation.conditioning_moderator].filter(Boolean).join(" x ")}
-                  </text>
-                ) : null}
-              </g>
-            );
-          })}
-          {nodes.map((node) => {
-            const position = positions.get(node)!;
-            const moderator = graph.moderators.find((row) => row.variable === node);
-            return (
-              <g key={node}>
-                <rect x={position.x - 34} y={position.y - 17} width="68" height="34" rx="7" />
-                <text x={position.x} y={position.y + 4} textAnchor="middle">{node}</text>
-                {moderator ? <text className="nd-process-node-role" x={position.x} y={position.y + 31} textAnchor="middle">{moderator.scale === "binary_0_1" ? "binary moderator" : "moderator"}</text> : null}
-              </g>
-            );
-          })}
-        </svg>
-      </div>
+      <span id="nd-process-preview-title" className="sr-only">Graph-defined path analysis preview</span>
+      <span id="nd-process-preview-description" className="sr-only">{description}</span>
+      <ReadOnlyDiagramViewport graph={diagram} ariaLabel={`Graph-defined path analysis preview. ${description}`} />
     </figure>
   );
 }

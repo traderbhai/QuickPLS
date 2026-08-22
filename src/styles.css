@@ -1825,6 +1825,8 @@ button:focus-visible, input:focus-visible, select:focus-visible, .react-flow__no
 .inspector-section label, .inspector-section fieldset, .inspector-section .indicator-table, .inspector-section .inspector-section-title, .inspector-section .indicator-picker, .inspector-section .method-note { margin-left: 10px; margin-right: 10px; }
 .inspector-actions.wrap { flex-wrap: wrap; padding: 0 10px; gap: 6px; }
 .sem-edge-label.selected { border-color: var(--accent-dark); box-shadow: 0 0 0 3px rgba(11,159,163,.18); }
+.sem-edge-bend-handle { position: absolute; width: 13px; height: 13px; padding: 0; border: 2px solid #087b80; border-radius: 2px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); cursor: move; pointer-events: all; }
+.sem-edge-bend-handle:hover, .sem-edge-bend-handle:focus-visible { background: #dff7f6; outline: 2px solid rgba(11,159,163,.45); outline-offset: 2px; }
 .run-guidance-grid { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 10px; }
 .run-guidance-grid article { min-height: 118px; padding: 13px; display: grid; grid-template-columns: 22px minmax(0,1fr); gap: 9px; border: 1px solid var(--border); background: white; }
 .run-guidance-grid svg { color: var(--accent-dark); }

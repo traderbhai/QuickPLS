@@ -1,6 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import { buildDiagramGraph } from "./diagramGraph";
-import { SEM_SIZES, routeBetweenBoxes, semNodeBox } from "./semGeometry";
+import { SEM_SIZES, polylineMidpoint, renderedEdgePolyline, routeBetweenBoxes, semNodeBox } from "./semGeometry";
 import type { AnalysisRun, ConstructData, DiagramLayoutState, PublicationDiagramSettings } from "../types";
 import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING, nativeStructuralPathRandomizationProjection } from "../native/nativeStructuralPathRandomization";
 import { isModerationAnchorData, isModerationConnectorData } from "./moderationDiagramProjectionV1";
@@ -35,7 +35,7 @@ export function publicationDiagramSvg(nodes: Array<Node<ConstructData>>, edges: 
   const options = normalizeSettings(settings);
   const graph = buildDiagramGraph(nodes, edges, options.mode, options.overlayMode, run, { layout, layoutSource: options.layoutSource });
   const smartpls = options.mode === "smartpls_result";
-  const bounds = diagramBounds(graph.nodes, smartpls);
+  const bounds = diagramBounds(graph.nodes, graph.edges, smartpls);
   const width = Math.max(smartpls ? 720 : 640, bounds.width + PADDING * 2);
   const height = Math.max(smartpls ? 430 : 420, bounds.height + PADDING * 2 + 34);
   const palette = paletteClass(options.palette, smartpls);
@@ -97,17 +97,22 @@ function paletteClass(palette: PublicationDiagramSettings["palette"], smartpls: 
   return palette === "monochrome" || palette === "grayscale" ? "mono" : "color";
 }
 
-function diagramBounds(nodes: Array<Node>, smartpls: boolean) {
+function diagramBounds(nodes: Array<Node>, edges: Edge[], smartpls: boolean) {
   if (nodes.length === 0) return { minX: 0, minY: 0, width: 640, height: 420 };
   const dimensions = (node: Node) => isModerationAnchorData(node.data)
     ? { width: MODERATION_ANCHOR_SIZE, height: MODERATION_ANCHOR_SIZE }
     : node.type === "indicator"
       ? (smartpls ? { width: SMARTPLS_SIZE.indicatorWidth, height: SMARTPLS_SIZE.indicatorHeight } : { width: QUICKPLS_SIZE.indicatorWidth, height: QUICKPLS_SIZE.indicatorHeight })
       : (smartpls ? { width: SMARTPLS_SIZE.latentWidth, height: SMARTPLS_SIZE.latentHeight } : { width: QUICKPLS_SIZE.latentWidth, height: QUICKPLS_SIZE.latentHeight });
-  const minX = Math.min(...nodes.map((node) => node.position.x));
-  const minY = Math.min(...nodes.map((node) => node.position.y));
-  const maxX = Math.max(...nodes.map((node) => node.position.x + dimensions(node).width));
-  const maxY = Math.max(...nodes.map((node) => node.position.y + dimensions(node).height));
+  const routePoints = edges.flatMap((edge) => {
+    const source = nodes.find((node) => node.id === edge.source);
+    const target = nodes.find((node) => node.id === edge.target);
+    return source && target ? renderedEdgePolyline(edge, source, target) : [];
+  });
+  const minX = Math.min(...nodes.map((node) => node.position.x), ...routePoints.map((point) => point.x));
+  const minY = Math.min(...nodes.map((node) => node.position.y), ...routePoints.map((point) => point.y));
+  const maxX = Math.max(...nodes.map((node) => node.position.x + dimensions(node).width), ...routePoints.map((point) => point.x));
+  const maxY = Math.max(...nodes.map((node) => node.position.y + dimensions(node).height), ...routePoints.map((point) => point.y));
   return { minX, minY, width: maxX - minX, height: maxY - minY };
 }
 
@@ -167,9 +172,6 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
   const source = nodes.find((node) => node.id === edge.source);
   const target = nodes.find((node) => node.id === edge.target);
   if (!source || !target) return "";
-  const route = routeBetweenBoxes(projectedBox(source, bounds, smartpls), projectedBox(target, bounds, smartpls));
-  const start = route.start;
-  const end = route.end;
   const rawLabel = typeof edge.label === "string" ? edge.label : "";
   const moderationConnector = isModerationConnectorData(edge.data);
   const measurement = String(edge.className ?? "").includes("measurement-edge");
@@ -179,6 +181,12 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
     : String(edge.className ?? "").includes("covariance-edge") ? "covariance"
       : moderationConnector ? "moderation-connector"
         : "edge";
+  const covarianceRoute = routeBetweenBoxes(projectedBox(source, bounds, smartpls), projectedBox(target, bounds, smartpls));
+  const renderedRoute = className === "covariance"
+    ? [covarianceRoute.start, covarianceRoute.end]
+    : renderedEdgePolyline(edge, source, target).map((point) => project(point, bounds));
+  const start = renderedRoute[0] ?? covarianceRoute.start;
+  const end = renderedRoute[renderedRoute.length - 1] ?? covarianceRoute.end;
   const marker = className === "covariance" ? `marker-start="url(#arrow-start)" marker-end="url(#arrow)"` : `marker-end="url(#arrow)"`;
   const offset = edge.data?.labelOffset && typeof edge.data.labelOffset === "object"
     ? edge.data.labelOffset as { x?: number; y?: number }
@@ -189,22 +197,14 @@ function renderEdge(edge: Edge, nodes: Array<Node>, bounds: { minX: number; minY
   const automaticLabelOffset = smartpls && structural
     ? { x: (-dy / length) * 9, y: (dx / length) * 9 - 2 }
     : { x: 0, y: smartpls ? -2 : -5 };
+  const routeMid = polylineMidpoint(renderedRoute);
   const mid = {
-    x: (start.x + end.x) / 2 + automaticLabelOffset.x + Number(offset.x ?? 0),
-    y: (start.y + end.y) / 2 + automaticLabelOffset.y + Number(offset.y ?? 0),
+    x: routeMid.x + automaticLabelOffset.x + Number(offset.x ?? 0),
+    y: routeMid.y + automaticLabelOffset.y + Number(offset.y ?? 0),
   };
-  const bendPoints = moderationConnector && Array.isArray(edge.data?.bendPoints)
-    ? edge.data.bendPoints.flatMap((point): Array<{ x: number; y: number }> => (
-      point && typeof point === "object"
-        && Number.isFinite(Number((point as { x?: unknown }).x))
-        && Number.isFinite(Number((point as { y?: unknown }).y))
-        ? [project({ x: Number((point as { x: unknown }).x), y: Number((point as { y: unknown }).y) }, bounds)]
-        : []
-    ))
-    : [];
   const d = className === "covariance"
     ? `M${start.x},${start.y} Q${mid.x},${mid.y - 50} ${end.x},${end.y}`
-    : `M${start.x},${start.y} ${[...bendPoints, end].map((point) => `L${point.x},${point.y}`).join(" ")}`;
+    : `M${start.x},${start.y} ${renderedRoute.slice(1).map((point) => `L${point.x},${point.y}`).join(" ")}`;
   const labelWidth = Math.max(30, label.length * (smartpls ? 5 : 6) + 10);
   const labelMarkup = label ? `<rect class="label-bg" x="${mid.x - labelWidth / 2}" y="${mid.y - 12}" width="${labelWidth}" height="15" rx="2"/><text x="${mid.x}" y="${mid.y}" text-anchor="middle" class="edge-label">${escapeXml(label)}</text>` : "";
   return `<path class="${className}" d="${d}" ${marker}/>

@@ -2,14 +2,17 @@ import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import type { ModerationAnchorProjectionV1 } from "../domain/moderationDiagramProjectionV1";
 
 export function ModerationAnchorNode({ data, selected }: NodeProps<Node<ModerationAnchorProjectionV1>>) {
+  const editable = data.editable === true;
   return <div
     className={`moderation-anchor${selected ? " selected" : ""}`}
-    role="button"
-    tabIndex={0}
+    role={editable ? "button" : "img"}
+    tabIndex={editable ? 0 : undefined}
     aria-label={data.label}
-    aria-keyshortcuts={data.editable ? "Enter Delete" : undefined}
-    title={data.editable ? `${data.label}. Enter edits; Delete removes the moderating effect.` : data.label}
-    onFocus={() => window.dispatchEvent(new CustomEvent("quickpls:moderation-focus", { detail: { interactionTermId: data.interactionTermId } }))}
+    aria-keyshortcuts={editable ? "Enter Delete" : undefined}
+    title={editable ? `${data.label}. Enter edits; Delete removes the moderating effect.` : data.label}
+    onFocus={() => {
+      if (editable) window.dispatchEvent(new CustomEvent("quickpls:moderation-focus", { detail: { interactionTermId: data.interactionTermId } }));
+    }}
   >
     <Handle className="moderation-anchor-handle" id="target-left" type="target" position={Position.Left} />
     <Handle className="moderation-anchor-handle" id="target-right" type="target" position={Position.Right} />

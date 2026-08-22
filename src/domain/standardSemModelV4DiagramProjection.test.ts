@@ -386,12 +386,24 @@ describe("StandardSemModelV4 diagram projection", () => {
 
   it("strictly parses presentation-only layout and rejects identity or numeric drift", () => {
     const projected = projectStandardSemModelV4DiagramV1(authority());
+    const relationshipId = Object.keys(projected.diagramLayout.edgeLayouts)[0]!;
+    projected.diagramLayout.edgeLayouts[relationshipId] = {
+      routing: "polyline",
+      bendPoints: [{ x: 310, y: 74 }, { x: 410, y: 166 }],
+      pinned: true,
+    };
     const parsed = parseStandardSemModelV4DiagramLayoutV1({
       schema_version: 1,
       model_id: "standard-model",
       diagram_layout: projected.diagramLayout,
     });
     expect(Object.isFrozen(parsed.diagram_layout)).toBe(true);
+    expect(parsed.diagram_layout.edgeLayouts[relationshipId]).toEqual({
+      routing: "polyline",
+      bendPoints: [{ x: 310, y: 74 }, { x: 410, y: 166 }],
+      labelOffset: undefined,
+      pinned: true,
+    });
     expect(projectStandardSemModelV4DiagramV1(authority(), parsed)).toEqual(projected);
     expect(() => parseStandardSemModelV4DiagramLayoutV1({ ...parsed, model_id: " standard-model " }))
       .toThrowError(expect.objectContaining({ code: "standard_sem_projection.stable_id_invalid" }));

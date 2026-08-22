@@ -1,4 +1,4 @@
-import type { Edge, Node, XYPosition } from "@xyflow/react";
+import { Position, getBezierPath, getSmoothStepPath, type Edge, type Node, type XYPosition } from "@xyflow/react";
 
 export type SemSide = "left" | "right" | "top" | "bottom";
 export type SemNodeKind = "latent" | "indicator" | "compact";
@@ -21,6 +21,13 @@ export interface SemBox extends SemSize {
 export interface SemPoint {
   x: number;
   y: number;
+}
+
+export interface SemRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 export interface SemRoute {
@@ -52,6 +59,9 @@ export const SEM_SIZES = {
 export function semNodeBox(node: Pick<Node, "type" | "position">): SemBox {
   if (node.type === "indicator") {
     return { x: node.position.x, y: node.position.y, kind: "indicator", ...SEM_SIZES.smartplsIndicator };
+  }
+  if (node.type === "moderationAnchor") {
+    return { x: node.position.x, y: node.position.y, width: 22, height: 22, kind: "compact", ellipse: true };
   }
   if (node.type === "latent") {
     return {
@@ -123,12 +133,273 @@ export function routeBetweenBoxes(sourceBox: SemBox, targetBox: SemBox): SemRout
   };
 }
 
+function sideFromHandleId(handleId: string | null | undefined): SemSide | undefined {
+  const side = handleId?.split("-").at(-1);
+  return side === "left" || side === "right" || side === "top" || side === "bottom"
+    ? side
+    : undefined;
+}
+
+export function pointOnBoxSide(box: SemBox, side: SemSide): SemPoint {
+  const center = boxCenter(box);
+  const halfWidth = box.ellipse ? (box.ellipseWidth ?? box.width) / 2 : box.width / 2;
+  const halfHeight = box.ellipse ? (box.ellipseHeight ?? box.height) / 2 : box.height / 2;
+  if (side === "left") return { x: center.x - halfWidth, y: center.y };
+  if (side === "right") return { x: center.x + halfWidth, y: center.y };
+  if (side === "top") return { x: center.x, y: center.y - halfHeight };
+  return { x: center.x, y: center.y + halfHeight };
+}
+
+function sampledSvgPath(path: string): SemPoint[] {
+  const tokens = path.match(/[MLCQ]|[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi) ?? [];
+  const points: SemPoint[] = [];
+  let index = 0;
+  let current: SemPoint = { x: 0, y: 0 };
+  const number = () => Number(tokens[index++]);
+  while (index < tokens.length) {
+    const command = tokens[index++]?.toUpperCase();
+    if (command === "M" || command === "L") {
+      current = { x: number(), y: number() };
+      points.push(current);
+      continue;
+    }
+    if (command === "C") {
+      const start = current;
+      const control1 = { x: number(), y: number() };
+      const control2 = { x: number(), y: number() };
+      const end = { x: number(), y: number() };
+      for (let step = 1; step <= 24; step += 1) {
+        const t = step / 24;
+        const inverse = 1 - t;
+        points.push({
+          x: inverse ** 3 * start.x + 3 * inverse ** 2 * t * control1.x + 3 * inverse * t ** 2 * control2.x + t ** 3 * end.x,
+          y: inverse ** 3 * start.y + 3 * inverse ** 2 * t * control1.y + 3 * inverse * t ** 2 * control2.y + t ** 3 * end.y,
+        });
+      }
+      current = end;
+      continue;
+    }
+    if (command === "Q") {
+      const start = current;
+      const control = { x: number(), y: number() };
+      const end = { x: number(), y: number() };
+      for (let step = 1; step <= 8; step += 1) {
+        const t = step / 8;
+        const inverse = 1 - t;
+        points.push({
+          x: inverse ** 2 * start.x + 2 * inverse * t * control.x + t ** 2 * end.x,
+          y: inverse ** 2 * start.y + 2 * inverse * t * control.y + t ** 2 * end.y,
+        });
+      }
+      current = end;
+      continue;
+    }
+    return [];
+  }
+  return points;
+}
+
+/**
+ * Mirrors the endpoints React Flow renders for named cardinal handles. This is
+ * the shared presentation authority for routing, labels, and moderation
+ * anchors; persisted bend points remain unchanged.
+ */
+export function renderedEdgePolyline(
+  edge: Pick<Edge, "sourceHandle" | "targetHandle" | "data">,
+  sourceNode: Pick<Node, "type" | "position">,
+  targetNode: Pick<Node, "type" | "position">,
+): SemPoint[] {
+  const sourceBox = semNodeBox(sourceNode);
+  const targetBox = semNodeBox(targetNode);
+  const fallback = routeBetweenBoxes(sourceBox, targetBox);
+  const sourceSide = sideFromHandleId(edge.sourceHandle);
+  const targetSide = sideFromHandleId(edge.targetHandle);
+  const rawBends = (edge.data as { bendPoints?: unknown } | undefined)?.bendPoints;
+  const routing = String((edge.data as { routing?: unknown } | undefined)?.routing ?? "straight");
+  const bends = Array.isArray(rawBends)
+    ? rawBends.flatMap((point): SemPoint[] => {
+        if (!point || typeof point !== "object") return [];
+        const x = Number((point as { x?: unknown }).x);
+        const y = Number((point as { y?: unknown }).y);
+        return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
+      })
+    : [];
+  const start = sourceSide ? pointOnBoxSide(sourceBox, sourceSide) : fallback.start;
+  const end = targetSide ? pointOnBoxSide(targetBox, targetSide) : fallback.end;
+  const sourcePosition = (sourceSide ?? fallback.source) as Position;
+  const targetPosition = (targetSide ?? fallback.target) as Position;
+  if (routing === "default") {
+    const sampled = sampledSvgPath(getBezierPath({
+      sourceX: start.x,
+      sourceY: start.y,
+      targetX: end.x,
+      targetY: end.y,
+      sourcePosition,
+      targetPosition,
+    })[0]);
+    return sampled.length >= 2 ? sampled : [start, end];
+  }
+  if (routing === "smoothstep") {
+    const sampled = sampledSvgPath(getSmoothStepPath({
+      sourceX: start.x,
+      sourceY: start.y,
+      targetX: end.x,
+      targetY: end.y,
+      sourcePosition,
+      targetPosition,
+      borderRadius: 8,
+    })[0]);
+    return sampled.length >= 2 ? sampled : [start, end];
+  }
+  return [start, ...bends, end];
+}
+
 export function distance(left: SemPoint, right: SemPoint): number {
   return Math.hypot(right.x - left.x, right.y - left.y);
 }
 
 export function translatePoint(point: SemPoint, delta: SemPoint): SemPoint {
   return { x: point.x + delta.x, y: point.y + delta.y };
+}
+
+export function inflateSemRect(rect: SemRect, margin: number): SemRect {
+  return {
+    x: rect.x - margin,
+    y: rect.y - margin,
+    width: rect.width + margin * 2,
+    height: rect.height + margin * 2,
+  };
+}
+
+export function polylineMidpoint(points: readonly SemPoint[]): SemPoint {
+  if (!points.length) return { x: 0, y: 0 };
+  if (points.length === 1) return { ...points[0]! };
+  const lengths = points.slice(1).map((point, index) => distance(points[index]!, point));
+  const halfway = lengths.reduce((sum, length) => sum + length, 0) / 2;
+  let consumed = 0;
+  for (let index = 0; index < lengths.length; index += 1) {
+    const length = lengths[index]!;
+    if (consumed + length >= halfway && length > 0) {
+      const start = points[index]!;
+      const end = points[index + 1]!;
+      const fraction = (halfway - consumed) / length;
+      return {
+        x: start.x + (end.x - start.x) * fraction,
+        y: start.y + (end.y - start.y) * fraction,
+      };
+    }
+    consumed += length;
+  }
+  return { ...points[points.length - 1]! };
+}
+
+export function pointAtPolylineFraction(points: readonly SemPoint[], requestedFraction: number): SemPoint {
+  if (!points.length) return { x: 0, y: 0 };
+  if (points.length === 1) return { ...points[0]! };
+  const fraction = Math.min(1, Math.max(0, requestedFraction));
+  const lengths = points.slice(1).map((point, index) => distance(points[index]!, point));
+  const target = lengths.reduce((sum, length) => sum + length, 0) * fraction;
+  let consumed = 0;
+  for (let index = 0; index < lengths.length; index += 1) {
+    const length = lengths[index]!;
+    if (consumed + length >= target && length > 0) {
+      const start = points[index]!;
+      const end = points[index + 1]!;
+      const local = (target - consumed) / length;
+      return { x: start.x + (end.x - start.x) * local, y: start.y + (end.y - start.y) * local };
+    }
+    consumed += length;
+  }
+  return { ...points[points.length - 1]! };
+}
+
+export function fractionAlongSegment(start: SemPoint, end: SemPoint, point: SemPoint): number {
+  const dx = end.x - start.x;
+  const dy = end.y - start.y;
+  const lengthSquared = dx * dx + dy * dy;
+  if (lengthSquared < 1e-9) return 0.5;
+  return Math.min(1, Math.max(0, ((point.x - start.x) * dx + (point.y - start.y) * dy) / lengthSquared));
+}
+
+export function fractionAlongPolyline(points: readonly SemPoint[], point: SemPoint): number {
+  if (points.length < 2) return 0.5;
+  const segmentLengths = points.slice(1).map((candidate, index) => distance(points[index]!, candidate));
+  const total = segmentLengths.reduce((sum, length) => sum + length, 0);
+  if (total < 1e-9) return 0.5;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  let bestAlong = total / 2;
+  let consumed = 0;
+  for (let index = 0; index < segmentLengths.length; index += 1) {
+    const start = points[index]!;
+    const end = points[index + 1]!;
+    const fraction = fractionAlongSegment(start, end, point);
+    const projected = { x: start.x + (end.x - start.x) * fraction, y: start.y + (end.y - start.y) * fraction };
+    const projectedDistance = distance(projected, point);
+    if (projectedDistance < bestDistance) {
+      bestDistance = projectedDistance;
+      bestAlong = consumed + segmentLengths[index]! * fraction;
+    }
+    consumed += segmentLengths[index]!;
+  }
+  return Math.min(1, Math.max(0, bestAlong / total));
+}
+
+/**
+ * Returns a deterministic two-bend detour only when the direct segment crosses
+ * an obstacle. Callers exclude the source and target objects themselves.
+ */
+export function routePolylineAroundObstacles(
+  start: SemPoint,
+  end: SemPoint,
+  obstacles: readonly SemRect[],
+  clearance = 12,
+): SemPoint[] {
+  const inflated = obstacles.map((rect) => inflateSemRect(rect, clearance));
+  const directBlockers = inflated.filter((rect) => segmentIntersectsRect(start, end, rect));
+  if (!directBlockers.length) return [];
+  const bounds = directBlockers.reduce((current, rect) => ({
+    left: Math.min(current.left, rect.x),
+    right: Math.max(current.right, rect.x + rect.width),
+    top: Math.min(current.top, rect.y),
+    bottom: Math.max(current.bottom, rect.y + rect.height),
+  }), { left: Number.POSITIVE_INFINITY, right: Number.NEGATIVE_INFINITY, top: Number.POSITIVE_INFINITY, bottom: Number.NEGATIVE_INFINITY });
+  const candidates: SemPoint[][] = [
+    [{ x: start.x, y: bounds.top - clearance }, { x: end.x, y: bounds.top - clearance }],
+    [{ x: start.x, y: bounds.bottom + clearance }, { x: end.x, y: bounds.bottom + clearance }],
+    [{ x: bounds.left - clearance, y: start.y }, { x: bounds.left - clearance, y: end.y }],
+    [{ x: bounds.right + clearance, y: start.y }, { x: bounds.right + clearance, y: end.y }],
+  ];
+  const score = (bends: readonly SemPoint[]) => {
+    const points = [start, ...bends, end];
+    const crossings = points.slice(1).reduce((sum, point, index) => sum + inflated.filter((rect) => segmentIntersectsRect(points[index]!, point, rect)).length, 0);
+    const length = points.slice(1).reduce((sum, point, index) => sum + distance(points[index]!, point), 0);
+    return crossings * 1_000_000 + length;
+  };
+  return candidates.sort((left, right) => score(left) - score(right))[0] ?? [];
+}
+
+export function semRectsOverlap(left: SemRect, right: SemRect): boolean {
+  return left.x < right.x + right.width
+    && left.x + left.width > right.x
+    && left.y < right.y + right.height
+    && left.y + left.height > right.y;
+}
+
+function segmentIntersectsRect(start: SemPoint, end: SemPoint, rect: SemRect): boolean {
+  if (pointInsideRect(start, rect) || pointInsideRect(end, rect)) return true;
+  const topLeft = { x: rect.x, y: rect.y };
+  const topRight = { x: rect.x + rect.width, y: rect.y };
+  const bottomRight = { x: rect.x + rect.width, y: rect.y + rect.height };
+  const bottomLeft = { x: rect.x, y: rect.y + rect.height };
+  return segmentsIntersect(start, end, topLeft, topRight)
+    || segmentsIntersect(start, end, topRight, bottomRight)
+    || segmentsIntersect(start, end, bottomRight, bottomLeft)
+    || segmentsIntersect(start, end, bottomLeft, topLeft);
+}
+
+function pointInsideRect(point: SemPoint, rect: SemRect): boolean {
+  return point.x > rect.x && point.x < rect.x + rect.width
+    && point.y > rect.y && point.y < rect.y + rect.height;
 }
 
 export function measureDiagramQuality(nodes: Array<Node>, edges: Edge[]): SemDiagramQuality {

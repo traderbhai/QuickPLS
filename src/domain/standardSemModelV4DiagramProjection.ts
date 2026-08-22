@@ -381,7 +381,7 @@ function presentationLayoutSeed(model: SemModelV4): Partial<DiagramLayoutState> 
   for (const node of model.presentation.nodes) constructLayouts[node.variable] = { x: node.x, y: node.y };
   const edgeLayouts: DiagramLayoutState["edgeLayouts"] = {};
   for (const edge of model.presentation.edges) {
-    const routing = edge.routing === "straight" || edge.routing === "curved" || edge.routing === "orthogonal" ? edge.routing : undefined;
+    const routing = edge.routing === "straight" || edge.routing === "curved" || edge.routing === "orthogonal" || edge.routing === "polyline" ? edge.routing : undefined;
     if (routing) edgeLayouts[edge.relation] = { routing };
   }
   return {
@@ -495,7 +495,7 @@ function parseDiagramLayout(value: unknown): DiagramLayoutState {
   const edgeLayouts: DiagramLayoutState["edgeLayouts"] = {};
   for (const [id, raw] of Object.entries(object(layout.edgeLayouts, "layout.diagram_layout.edgeLayouts"))) {
     const item = exact(raw, ["routing", "bendPoints", "labelOffset", "pinned"], ["routing"], `layout.diagram_layout.edgeLayouts.${id}`);
-    if (!["straight", "curved", "orthogonal"].includes(String(item.routing))) fail("standard_sem_projection.routing_invalid", id, "The edge routing is invalid.");
+    if (!["straight", "curved", "orthogonal", "polyline"].includes(String(item.routing))) fail("standard_sem_projection.routing_invalid", id, "The edge routing is invalid.");
     const points = item.bendPoints === undefined ? undefined : parsePoints(item.bendPoints, `${id}.bendPoints`);
     const labelOffset = item.labelOffset === undefined ? undefined : parsePoint(item.labelOffset, `${id}.labelOffset`);
     edgeLayouts[id] = { routing: item.routing as DiagramLayoutState["edgeLayouts"][string]["routing"], bendPoints: points, labelOffset, pinned: optionalBoolean(item.pinned, `${id}.pinned`) };

@@ -1571,7 +1571,7 @@ const applyPresentationModelEditV1 = (
     };
   }
 
-  if (command.kind === "set_path_routing" || command.kind === "reset_path_route"
+  if (command.kind === "set_path_routing" || command.kind === "set_path_bend_points" || command.kind === "reset_path_route"
     || command.kind === "nudge_path_label" || command.kind === "reset_path_label") {
     const edge = state.edges.find((candidate) => candidate.id === command.relationId);
     if (!edge) return blockedModelEditTransitionV1("model_edit.path_unavailable", `Relationship '${command.relationId}' is not present on the Canvas.`, "Refresh the model and select the path again.");
@@ -1579,10 +1579,30 @@ const applyPresentationModelEditV1 = (
     let next = { ...current };
     let edges = state.edges;
     if (command.kind === "set_path_routing") {
-      if (current.routing === command.routing) return blockedModelEditTransitionV1("model_edit.no_change", "The path already uses that routing style.", "Choose a different routing style or cancel the edit.");
-      next = { ...next, routing: command.routing, pinned: command.routing !== "straight" || Boolean(next.labelOffset) || Boolean(next.bendPoints?.length) };
+      if (current.routing === command.routing && (command.routing !== "polyline" || Boolean(current.bendPoints?.length))) {
+        return blockedModelEditTransitionV1("model_edit.no_change", "The path already uses that routing style.", "Choose a different routing style or cancel the edit.");
+      }
+      const source = state.nodes.find((node) => node.id === edge.source);
+      const target = state.nodes.find((node) => node.id === edge.target);
+      const defaultPolylineBend = command.routing === "polyline" && !next.bendPoints?.length && source && target
+        ? [{
+            x: Math.round((source.position.x + target.position.x) / 2 + 52),
+            y: Math.round((source.position.y + target.position.y) / 2 - 36),
+          }]
+        : next.bendPoints;
+      next = { ...next, routing: command.routing, bendPoints: command.routing === "polyline" ? defaultPolylineBend : next.bendPoints, pinned: command.routing !== "straight" || Boolean(next.labelOffset) || Boolean(defaultPolylineBend?.length) };
       const edgeType: PathRouting = command.routing === "orthogonal" ? "smoothstep" : command.routing === "curved" ? "default" : "straight";
       edges = state.edges.map((candidate) => candidate.id === edge.id ? { ...candidate, type: edgeType } : candidate);
+    } else if (command.kind === "set_path_bend_points") {
+      const points = command.points.map((point) => ({ x: Number(point.x), y: Number(point.y) }));
+      if (!points.length || points.length > 12 || points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+        return blockedModelEditTransitionV1("model_edit.path_bends_invalid", "A polyline needs between one and twelve finite bend points.", "Move an existing bend handle or reset the route.");
+      }
+      if (current.routing === "polyline" && JSON.stringify(current.bendPoints ?? []) === JSON.stringify(points)) {
+        return blockedModelEditTransitionV1("model_edit.no_change", "The path bend points are unchanged.", "Move a bend handle or cancel the edit.");
+      }
+      next = { ...next, routing: "polyline", bendPoints: points, pinned: true };
+      edges = state.edges.map((candidate) => candidate.id === edge.id ? { ...candidate, type: "straight" } : candidate);
     } else if (command.kind === "reset_path_route") {
       if (current.routing === "straight" && !current.bendPoints?.length) return blockedModelEditTransitionV1("model_edit.no_change", "The path route already uses its default.", "Keep the current route or choose another path.");
       next = { ...next, routing: "straight", bendPoints: undefined, pinned: Boolean(next.labelOffset) };
@@ -1605,6 +1625,42 @@ const applyPresentationModelEditV1 = (
       status: "applied",
       state: { ...state, ...historyPatch(state), edges, diagramLayout },
       affected: { constructIds: [], indicatorIds: [], relationshipIds: [edge.id] },
+    };
+  }
+
+  if (command.kind === "set_moderation_anchor_fraction") {
+    if (!Number.isFinite(command.fraction)) {
+      return blockedModelEditTransitionV1("model_edit.moderation_anchor_invalid", "The moderation anchor position is unavailable.", "Move the anchor onto its focal path and retry.");
+    }
+    const fraction = Math.min(0.8, Math.max(0.2, command.fraction));
+    const interactionNode = state.nodes.find((node) => node.data.semantic === "interaction"
+      && node.data.interaction
+      && (node.data.interaction.termId?.trim() || node.id) === command.interactionTermId);
+    if (!interactionNode?.data.interaction) {
+      return blockedModelEditTransitionV1("model_edit.moderation_unavailable", "The moderating effect is no longer present.", "Refresh the Canvas and select an existing moderating effect.");
+    }
+    const current = state.diagramLayout.moderationAnchorFractions?.[command.interactionTermId] ?? 0.5;
+    if (Math.abs(current - fraction) < 0.001) {
+      return blockedModelEditTransitionV1("model_edit.no_change", "The moderation anchor is already at that position.", "Move it farther along the focal path or cancel the edit.");
+    }
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        diagramLayout: {
+          ...state.diagramLayout,
+          moderationAnchorFractions: {
+            ...(state.diagramLayout.moderationAnchorFractions ?? {}),
+            [command.interactionTermId]: fraction,
+          },
+        },
+      },
+      affected: {
+        constructIds: [],
+        indicatorIds: [],
+        relationshipIds: interactionNode.data.interaction.focalRelationId ? [interactionNode.data.interaction.focalRelationId] : [],
+      },
     };
   }
 

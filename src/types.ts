@@ -65,7 +65,7 @@ export type DiagramMode = "compact" | "sem" | "publication" | "smartpls_result";
 export type DiagramOverlayMode = "model" | "loadings" | "paths_r2" | "significance" | "quality" | "cbsem_standardized" | "cbsem_residuals" | "modification_indices";
 export type DiagramToolMode = "select" | "pan" | "construct" | "indicator" | "path" | "covariance" | "residual" | "caption" | "measurement" | "interaction" | "higher_order";
 export type IndicatorSide = "left" | "right" | "top" | "bottom" | "free";
-export type EdgeRouteStyle = "straight" | "curved" | "orthogonal";
+export type EdgeRouteStyle = "straight" | "curved" | "orthogonal" | "polyline";
 
 export interface DiagramPoint {
   x: number;
@@ -194,9 +194,11 @@ export type ModelEditCommandV1 =
   | { kind: "move_indicator"; constructId: string; column: string; position: DiagramPoint }
   | { kind: "reset_indicator_layout"; constructId: string; column?: string }
   | { kind: "set_path_routing"; relationId: string; routing: EdgeRouteStyle }
+  | { kind: "set_path_bend_points"; relationId: string; points: DiagramPoint[] }
   | { kind: "reset_path_route"; relationId: string }
   | { kind: "nudge_path_label"; relationId: string; offset: DiagramPoint }
   | { kind: "reset_path_label"; relationId: string }
+  | { kind: "set_moderation_anchor_fraction"; interactionTermId: string; fraction: number }
   | { kind: "set_standard_sem_presentation"; presentation: StandardSemPresentationLayoutV1 }
   | { kind: "set_construct_pinned"; constructId: string; pinned: boolean }
   | { kind: "align_constructs"; constructIds: string[]; target: "left" | "centerX" | "right" | "top" | "centerY" | "bottom" }

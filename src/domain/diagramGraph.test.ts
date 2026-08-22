@@ -278,6 +278,75 @@ describe("SEM diagram graph", () => {
     expect(arranged.find((node) => node.id === "x")?.position).not.toEqual(nodes.find((node) => node.id === "x")?.position);
   });
 
+  it("reserves complete indicator envelopes and a structural lane during automatic arrangement", () => {
+    const envelopeNodes: Array<Node<ConstructData>> = [
+      { id: "left", type: "construct", position: { x: 0, y: 0 }, data: { label: "Left", shortName: "L", mode: "reflective", indicators: Array.from({ length: 8 }, (_, index) => `l${index + 1}`) } },
+      { id: "right", type: "construct", position: { x: 200, y: 0 }, data: { label: "Right", shortName: "R", mode: "reflective", indicators: Array.from({ length: 8 }, (_, index) => `r${index + 1}`) } },
+    ];
+    const envelopeEdges: Edge[] = [{ id: "left-right", source: "left", target: "right" }];
+    const arranged = layoutSmartplsModel(envelopeNodes, envelopeEdges);
+    const graph = buildDiagramGraph(arranged, envelopeEdges, "sem", "model");
+    const leftObjects = graph.nodes.filter((node) => node.id === "left" || node.id.startsWith("indicator::left::"));
+    const rightObjects = graph.nodes.filter((node) => node.id === "right" || node.id.startsWith("indicator::right::"));
+    const leftRight = Math.max(...leftObjects.map((node) => node.position.x + (node.type === "indicator" ? 88 : 104)));
+    const rightLeft = Math.min(...rightObjects.map((node) => node.position.x));
+    expect(rightLeft - leftRight).toBeGreaterThanOrEqual(100);
+  });
+
+  it("keeps free indicators at their absolute coordinates without inflating tidy result layout", () => {
+    const freeLayout = defaultDiagramLayout(nodes, edges);
+    freeLayout.indicatorLayouts.x.x1 = { side: "free", x: 1_700, y: 920, order: 0, pinned: true };
+    const graph = buildDiagramGraph(nodes, edges, "smartpls_result", "model", undefined, {
+      layout: freeLayout,
+      layoutSource: "tidy_publication",
+    });
+    const predictor = graph.nodes.find((node) => node.id === "x")!;
+    const outcome = graph.nodes.find((node) => node.id === "y")!;
+    const freeIndicator = graph.nodes.find((node) => node.id === indicatorNodeId("x", "x1"))!;
+
+    expect(freeIndicator.position).toEqual({ x: 1_700, y: 920 });
+    expect(outcome.position.x - predictor.position.x).toBeLessThan(700);
+  });
+
+  it("routes structural and measurement arrows around intervening construct bodies", () => {
+    const obstacleNodes: Array<Node<ConstructData>> = [
+      { id: "source", type: "construct", position: { x: 0, y: 80 }, data: { label: "Source", shortName: "S", mode: "reflective", indicators: ["s1"] } },
+      { id: "blocker", type: "construct", position: { x: 250, y: 80 }, data: { label: "Blocker", shortName: "B", mode: "reflective", indicators: [] } },
+      { id: "target", type: "construct", position: { x: 500, y: 80 }, data: { label: "Target", shortName: "T", mode: "reflective", indicators: [] } },
+    ];
+    const obstacleEdges: Edge[] = [{ id: "source-target", source: "source", target: "target", label: "Effect" }];
+    const layout = defaultDiagramLayout(obstacleNodes, obstacleEdges);
+    layout.indicatorLayouts.source.s1 = { side: "free", x: 500, y: 100, order: 0, pinned: true };
+    const graph = buildDiagramGraph(obstacleNodes, obstacleEdges, "sem", "model", undefined, { layout });
+    expect(graph.edges.find((edge) => edge.id === "source-target")?.data).toMatchObject({ routing: "polyline" });
+    expect(graph.edges.find((edge) => edge.id === "measurement::source::s1")?.data).toMatchObject({ routing: "polyline" });
+
+    layout.edgeLayouts["source-target"] = { routing: "straight", pinned: true, labelOffset: { x: 12, y: -8 } };
+    const pinned = buildDiagramGraph(obstacleNodes, obstacleEdges, "sem", "model", undefined, { layout });
+    expect(pinned.edges.find((edge) => edge.id === "source-target")?.data).toMatchObject({
+      routing: "straight",
+      labelOffset: { x: 12, y: -8 },
+    });
+  });
+
+  it("keeps manual polyline bends and separates colliding automatic path labels", () => {
+    const parallelEdges: Edge[] = [
+      { id: "first", source: "x", target: "y", label: "First effect" },
+      { id: "second", source: "x", target: "y", label: "Second effect" },
+    ];
+    const automatic = buildDiagramGraph(nodes, parallelEdges, "sem", "model");
+    expect(automatic.edges.find((edge) => edge.id === "first")?.data?.labelOffset)
+      .not.toEqual(automatic.edges.find((edge) => edge.id === "second")?.data?.labelOffset);
+
+    const layout = defaultDiagramLayout(nodes, edges);
+    layout.edgeLayouts["x-y"] = { routing: "polyline", bendPoints: [{ x: 360, y: 40 }, { x: 440, y: 160 }], pinned: true };
+    const manual = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+    expect(manual.edges.find((edge) => edge.id === "x-y")?.data).toMatchObject({
+      routing: "polyline",
+      bendPoints: [{ x: 360, y: 40 }, { x: 440, y: 160 }],
+    });
+  });
+
   it("orders SmartPLS arrangement by structural neighbors to reduce crossings", () => {
     const crossingNodes: Array<Node<ConstructData>> = [
       { id: "a", type: "construct", position: { x: 0, y: 300 }, data: { label: "A", shortName: "A", mode: "reflective", indicators: ["a1"] } },

@@ -103,6 +103,15 @@ describe("publication diagram SVG", () => {
     expect(shifted).not.toBe(baseline);
   });
 
+  it("exports persisted structural polyline bends without changing the model", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    layout.edgeLayouts["x-y"] = { routing: "polyline", bendPoints: [{ x: 330, y: 45 }, { x: 430, y: 175 }], pinned: true };
+    const before = structuredClone({ nodes, edges });
+    const svg = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);
+    expect(svg).toMatch(/<path class="edge" d="M[^\"]+ L[^\"]+ L[^\"]+"/);
+    expect({ nodes, edges }).toEqual(before);
+  });
+
   it("exports moderation as a compact anchor with its persisted visual connector route", () => {
     const moderator: Node<ConstructData> = {
       id: "w",
@@ -143,5 +152,45 @@ describe("publication diagram SVG", () => {
     expect(svg).toContain('class="moderation-connector"');
     expect(svg).toContain('aria-label="Moderating effect: Moderator moderates Predictor to Outcome"');
     expect(svg).not.toContain("moderation-anchor::term%3Axw");
+  });
+
+  it("exports curved and orthogonal moderated focal paths from the same rendered geometry as the anchor", () => {
+    const moderator: Node<ConstructData> = {
+      id: "w",
+      type: "construct",
+      position: { x: 230, y: 220 },
+      data: { label: "Moderator", shortName: "W", mode: "reflective", indicators: ["w1"] },
+    };
+    const interaction: Node<ConstructData> = {
+      id: "xw",
+      type: "construct",
+      position: { x: 0, y: 0 },
+      data: {
+        label: "X × W",
+        shortName: "XW",
+        mode: "formative",
+        indicators: [],
+        semantic: "interaction",
+        interaction: {
+          kind: "interaction_v2",
+          termId: "term:xw",
+          operands: ["x", "w"],
+          focalRelationId: "x-y",
+          outcome: "y",
+          canonicalMethod: "two_stage",
+          hierarchyPolicy: "strong",
+        },
+      },
+    };
+    const modelNodes = [...nodes, moderator, interaction];
+    for (const routing of ["curved", "orthogonal"] as const) {
+      const layout = defaultDiagramLayout(modelNodes, edges);
+      layout.edgeLayouts["x-y"] = { routing, pinned: true };
+      layout.moderationAnchorFractions = { "term:xw": 0.68 };
+      const svg = publicationDiagramSvg(modelNodes, edges, undefined, { layoutSource: "current_canvas" }, layout);
+      const focalPath = svg.match(/<path class="edge" d="([^"]+)"/)?.[1] ?? "";
+      expect((focalPath.match(/L/g) ?? []).length).toBeGreaterThan(2);
+      expect(svg).toContain('class="moderation-anchor-export"');
+    }
   });
 });

@@ -192,6 +192,23 @@ describe("model edit command gateway v1 domain", () => {
     expect(arranged.movedConstructIds).not.toContain("x");
   });
 
+  it("keeps absolute free indicators out of movable construct envelopes during arrangement", () => {
+    const farLeftLayout = defaultDiagramLayout(nodes, edges);
+    farLeftLayout.indicatorLayouts.x.x1 = { side: "free", x: -5_000, y: 4_000, order: 0, pinned: true };
+    const farRightLayout = defaultDiagramLayout(nodes, edges);
+    farRightLayout.indicatorLayouts.x.x1 = { side: "free", x: 5_000, y: -4_000, order: 0, pinned: true };
+
+    for (const direction of ["horizontal", "vertical", "smartpls"] as const) {
+      const arrangedFromLeft = arrangeModelPreservingLayoutV1(nodes, edges, farLeftLayout, direction);
+      const arrangedFromRight = arrangeModelPreservingLayoutV1(nodes, edges, farRightLayout, direction);
+
+      expect(arrangedFromLeft.nodes.map((node) => ({ id: node.id, position: node.position })))
+        .toEqual(arrangedFromRight.nodes.map((node) => ({ id: node.id, position: node.position })));
+      expect(arrangedFromLeft.diagramLayout.indicatorLayouts.x.x1).toEqual(farLeftLayout.indicatorLayouts.x.x1);
+      expect(arrangedFromRight.diagramLayout.indicatorLayouts.x.x1).toEqual(farRightLayout.indicatorLayouts.x.x1);
+    }
+  });
+
   it("tidies only the requested local subgraph", () => {
     const third: Node<ConstructData> = { id: "z", type: "construct", position: { x: 990, y: 610 }, data: { label: "Unrelated", shortName: "Z", mode: "reflective", indicators: ["z1"] } };
     const localNodes = [...nodes, third];

@@ -601,8 +601,8 @@ export function arrangeModelPreservingLayoutV1(
   direction: "horizontal" | "vertical" | "smartpls",
 ) {
   const proposed = direction === "smartpls"
-    ? layoutSmartplsModel(nodes, edges)
-    : layoutModel(nodes, edges, direction);
+    ? layoutSmartplsModel(nodes, edges, layout)
+    : layoutModel(nodes, edges, direction, layout);
   const nextNodes = proposed.map((node) => {
     const current = nodes.find((candidate) => candidate.id === node.id) ?? node;
     return layout.constructLayouts[node.id]?.pinned
@@ -639,7 +639,7 @@ export function tidyConstructsPreservingLayoutV1(
   }
   const selectedIds = new Set(selected.map((node) => node.id));
   const selectedEdges = edges.filter((edge) => selectedIds.has(edge.source) && selectedIds.has(edge.target));
-  const proposal = layoutSmartplsModel(selected, selectedEdges);
+  const proposal = layoutSmartplsModel(selected, selectedEdges, layout);
   const proposalMinX = Math.min(...proposal.map((node) => node.position.x));
   const proposalMinY = Math.min(...proposal.map((node) => node.position.y));
   const currentMinX = Math.min(...selected.map((node) => node.position.x));

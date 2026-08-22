@@ -111,12 +111,13 @@ struct StandardSemIndicatorLayoutV1 {
     pinned: Option<bool>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 enum StandardSemEdgeRoutingV1 {
     Straight,
     Curved,
     Orthogonal,
+    Polyline,
 }
 
 #[derive(Debug, Deserialize)]
@@ -1701,6 +1702,25 @@ mod tests {
             Err(ProjectArchiveV6SaveCopyError::DestinationExtension)
         ));
         validate_destination_name(Path::new(r"D:\study-copy.qpls")).unwrap();
+    }
+
+    #[test]
+    fn standard_sem_edge_routing_round_trips_historical_and_polyline_wire_values() {
+        for (routing, encoded) in [
+            (StandardSemEdgeRoutingV1::Straight, r#""straight""#),
+            (StandardSemEdgeRoutingV1::Curved, r#""curved""#),
+            (
+                StandardSemEdgeRoutingV1::Orthogonal,
+                r#""orthogonal""#,
+            ),
+            (StandardSemEdgeRoutingV1::Polyline, r#""polyline""#),
+        ] {
+            let serialized = serde_json::to_vec(&routing).unwrap();
+            assert_eq!(serialized.as_slice(), encoded.as_bytes());
+            let reopened: StandardSemEdgeRoutingV1 =
+                serde_json::from_slice(&serialized).unwrap();
+            assert_eq!(reopened, routing);
+        }
     }
 
     #[cfg(windows)]

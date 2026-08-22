@@ -1,11 +1,16 @@
 import type { Edge, Node, XYPosition } from "@xyflow/react";
-import type { ConstructData } from "../types";
+import type { ConstructData, DiagramLayoutState, IndicatorSide } from "../types";
+import { SEM_SIZES, smartIndicatorPosition, type SemRect } from "./semGeometry";
 
-const COLUMN_GAP = 240;
 const ROW_GAP = 190;
 const ORIGIN: XYPosition = { x: 80, y: 85 };
 
-export function layoutModel(nodes: Array<Node<ConstructData>>, edges: Edge[], direction: "horizontal" | "vertical" = "horizontal"): Array<Node<ConstructData>> {
+export function layoutModel(
+  nodes: Array<Node<ConstructData>>,
+  edges: Edge[],
+  direction: "horizontal" | "vertical" = "horizontal",
+  layout?: DiagramLayoutState,
+): Array<Node<ConstructData>> {
   if (nodes.length === 0) return [];
 
   const nodeIds = new Set(nodes.map((node) => node.id));
@@ -45,19 +50,96 @@ export function layoutModel(nodes: Array<Node<ConstructData>>, edges: Edge[], di
 
   const orderedColumns = orderColumns(columns, parents, children);
 
-  const positions = new Map<string, XYPosition>();
-  for (const [column, columnNodes] of [...orderedColumns.entries()].sort(([a], [b]) => a - b)) {
-    const columnOffset = Math.max(0, (Math.max(...[...orderedColumns.values()].map((items) => items.length), 1) - columnNodes.length) * ROW_GAP / 2);
-    columnNodes.forEach((node, row) => positions.set(node.id, direction === "horizontal" ? {
-      x: ORIGIN.x + column * COLUMN_GAP,
-      y: ORIGIN.y + columnOffset + row * ROW_GAP,
-    } : {
-      x: ORIGIN.x + columnOffset + row * COLUMN_GAP,
-      y: ORIGIN.y + column * ROW_GAP,
-    }));
-  }
+  const envelopes = new Map(nodes.map((node) => [node.id, modelNodeEnvelope(
+    node,
+    layout,
+    (parents.get(node.id)?.length ?? 0) === 0 ? "left" : (children.get(node.id)?.length ?? 0) === 0 ? "right" : "top",
+  )]));
+  const positions = direction === "horizontal"
+    ? horizontalEnvelopeLayout(orderedColumns, envelopes)
+    : verticalEnvelopeLayout(orderedColumns, envelopes);
 
   return nodes.map((node) => ({ ...node, position: positions.get(node.id) ?? node.position }));
+}
+
+function modelNodeEnvelope(node: Node<ConstructData>, layout: DiagramLayoutState | undefined, fallbackSide: Exclude<IndicatorSide, "free">): SemRect {
+  const positions: XYPosition[] = [];
+  const bySide = new Map<Exclude<IndicatorSide, "free">, Array<{ index: number; order: number }>>();
+  node.data.indicators.forEach((indicator, index) => {
+    const item = layout?.indicatorLayouts[node.id]?.[indicator];
+    if (item?.side === "free" && Number.isFinite(item.x) && Number.isFinite(item.y)) {
+      // Free indicators are persisted in absolute Canvas coordinates. They do
+      // not move with an arranged construct, so they cannot define its
+      // construct-relative envelope.
+      return;
+    }
+    const side = item?.side && item.side !== "free" ? item.side : fallbackSide;
+    bySide.set(side, [...(bySide.get(side) ?? []), { index, order: item?.order ?? index }]);
+  });
+  for (const [side, entries] of bySide) {
+    positions.push(...smartIndicatorPosition({ x: 0, y: 0 }, entries.length, side));
+  }
+  const rects: SemRect[] = [
+    { x: 0, y: 0, width: SEM_SIZES.smartplsLatent.width, height: SEM_SIZES.smartplsLatent.height },
+    ...positions.map((position) => ({ x: position.x, y: position.y, width: SEM_SIZES.smartplsIndicator.width, height: SEM_SIZES.smartplsIndicator.height })),
+  ];
+  const left = Math.min(...rects.map((rect) => rect.x));
+  const top = Math.min(...rects.map((rect) => rect.y));
+  const right = Math.max(...rects.map((rect) => rect.x + rect.width));
+  const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
+  return { x: left, y: top, width: right - left, height: bottom - top };
+}
+
+function horizontalEnvelopeLayout(columns: Map<number, Array<Node<ConstructData>>>, envelopes: Map<string, SemRect>): Map<string, XYPosition> {
+  const positions = new Map<string, XYPosition>();
+  const metrics = new Map([...columns].map(([level, items]) => {
+    const extents = items.map((node) => envelopes.get(node.id)!);
+    return [level, {
+      left: Math.min(...extents.map((extent) => extent.x)),
+      right: Math.max(...extents.map((extent) => extent.x + extent.width)),
+      height: extents.reduce((sum, extent) => sum + extent.height, 0) + Math.max(0, extents.length - 1) * 84,
+    }] as const;
+  }));
+  const totalHeight = Math.max(...[...metrics.values()].map((metric) => metric.height), 1);
+  let x = ORIGIN.x;
+  for (const [level, items] of [...columns].sort(([left], [right]) => left - right)) {
+    const metric = metrics.get(level)!;
+    const originX = x - metric.left;
+    let y = ORIGIN.y + (totalHeight - metric.height) / 2;
+    for (const node of items) {
+      const envelope = envelopes.get(node.id)!;
+      positions.set(node.id, { x: originX, y: y - envelope.y });
+      y += envelope.height + 84;
+    }
+    x += metric.right - metric.left + 130;
+  }
+  return positions;
+}
+
+function verticalEnvelopeLayout(rows: Map<number, Array<Node<ConstructData>>>, envelopes: Map<string, SemRect>): Map<string, XYPosition> {
+  const positions = new Map<string, XYPosition>();
+  const metrics = new Map([...rows].map(([level, items]) => {
+    const extents = items.map((node) => envelopes.get(node.id)!);
+    return [level, {
+      top: Math.min(...extents.map((extent) => extent.y)),
+      bottom: Math.max(...extents.map((extent) => extent.y + extent.height)),
+      width: extents.reduce((sum, extent) => sum + extent.width, 0) + Math.max(0, extents.length - 1) * 84,
+    }] as const;
+  }));
+  const totalWidth = Math.max(...[...metrics.values()].map((metric) => metric.width), 1);
+  let y = ORIGIN.y;
+  for (const [level, items] of [...rows].sort(([left], [right]) => left - right)) {
+    const metric = metrics.get(level)!;
+    const originY = y - metric.top;
+    let x = ORIGIN.x + (totalWidth - metric.width) / 2;
+    for (const node of items) {
+      const envelope = envelopes.get(node.id)!;
+      positions.set(node.id, { x: x - envelope.x, y: originY });
+      x += envelope.width + 84;
+    }
+    y += metric.bottom - metric.top + 130;
+  }
+  return positions;
 }
 
 function orderColumns(
