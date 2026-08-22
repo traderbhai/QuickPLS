@@ -15,7 +15,7 @@ const navigation: NativeResultNavigation = {
   runId: "model-fit-presentation",
   defaultItemId: "path_coefficients",
   groups: [{
-    id: "results",
+    id: "final_results",
     title: "Results",
     items: [{
       id: "path_coefficients",
@@ -31,6 +31,7 @@ const selectedTable: ResultTable = {
   id: "path_coefficients",
   title: "Path coefficients",
   status: "validated",
+  warning: null,
   columns: ["Path", "Estimate"],
   rows: [["X → Y", "0.5000"]],
 };
