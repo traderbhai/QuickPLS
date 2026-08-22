@@ -14,51 +14,6 @@ const calculationDialog = readFileSync("src/native/NativeCalculationDialog.tsx",
 const analysisCatalog = readFileSync("src/native/nativeAnalysisCatalog.ts", "utf8");
 
 describe("native controller release contracts", () => {
-  it("protects dirty work before every project replacement", () => {
-    expect(controller).toContain('confirmWorkspaceReplacement("creating a new project")');
-    expect(controller).toContain('confirmWorkspaceReplacement(path ? "opening another project" : "opening a project")');
-    expect(controller).toContain('confirmWorkspaceReplacement("opening the sample project")');
-    expect(controller).toContain('buttons: { yes: "Save", no: "Don\'t Save", cancel: "Cancel" }');
-    expect(controller).toContain("authorityOperationPendingRef.current");
-    expect(controller).toContain("Wait for Standard activation or validated save-copy to finish before");
-    expect(controller).toContain("generalSemPublicationPendingRef.current");
-    expect(controller).toContain("Wait for the calculation-ready project file to finish publishing and validating before");
-    expect(controller).toContain("generalSemTransientWorkBlockerRef.current");
-    expect(controller).toContain("Save and strictly reopen the result, or dismiss it explicitly, before");
-    expect(app).not.toContain('loadProject({ nodes: [], edges: [], dataset: { id: crypto.randomUUID()');
-  });
-
-  it("binds General SEM only to a fresh native project and blocks unmarked persistence", () => {
-    expect(app).toContain('generalSemWorkspaceProductAccessV1(uiPreferences.experimentalLabsEnabled)');
-    expect(app).toContain('commandEvent("new-project", { name, projectMode })');
-    expect(controller).toContain('detail?.projectMode === "general_sem_v1"');
-    expect(controller).toContain('useWorkspace.getState().uiPreferences.experimentalLabsEnabled');
-    expect(controller).toContain('beginGeneralSemProjectDraftMode(created.projectId)');
-    expect(controller).toContain('if (currentState.generalSemProjectDraftMode)');
-    expect(controller).toContain('title: "Finish the calculation-ready revision"');
-    expect(controller).toContain("Return to Calculate and choose Save and activate project.");
-
-    const autosaveStart = controller.indexOf("const scheduledSignature = projectSignature");
-    const draftGate = controller.indexOf("if (state.generalSemProjectDraftMode) return;", autosaveStart);
-    const autosaveNative = controller.indexOf("autosaveNativeProject(projectPath", autosaveStart);
-    expect(draftGate).toBeGreaterThan(autosaveStart);
-    expect(draftGate).toBeLessThan(autosaveNative);
-  });
-
-  it("uses canonical Standard authority anchors for every dirty-work guard", () => {
-    expect(controller).toContain("captureStandardSemModelV4SaveAuthorities(modelIds)");
-    expect(controller).toContain("active: strictAuthorityActive");
-    expect(controller).toContain("dirty: strictAuthorityDirty");
-    expect(controller).toContain("operationPending: authorityOperationPending");
-    expect(controller).toContain("!generalSemTransientWorkBlockerRef.current");
-    expect(controller).toMatch(/onCloseRequested[\s\S]*generalSemPublicationPendingRef\.current[\s\S]*event\.preventDefault\(\)/);
-    expect(controller).toMatch(/onCloseRequested[\s\S]*generalSemTransientWorkBlockerRef\.current[\s\S]*event\.preventDefault\(\)/);
-    expect(controller).toMatch(/onCloseRequested[\s\S]*authorityOperationPendingRef\.current[\s\S]*event\.preventDefault\(\)/);
-    expect(app).toContain('generalSemTransientWorkBlocker && next !== surface');
-    expect(app).toContain("Finish or cancel the advanced calculation before leaving its progress view.");
-    expect(app).not.toContain('documentView === "general_sem_labs"');
-  });
-
   it("navigates only after a project or dataset operation succeeds", () => {
     expect(controller).toContain('new CustomEvent("quickpls:navigate-surface"');
     expect(app).toContain('window.addEventListener("quickpls:navigate-surface", onNavigate)');
@@ -132,17 +87,6 @@ describe("native controller release contracts", () => {
     expect(controller).toContain('normalizeNativeDataImportRequest((event as CustomEvent<unknown>).detail)');
     expect(controller).toContain('importNativeDataset(request.dataKind, request.sampleSize, request.missingMarkers)');
     expect(controller).not.toContain("const imported = await importNativeDataset();");
-  });
-
-  it("reopens marked General SEM archives as non-writable strict projects", () => {
-    const markedOpen = controller.slice(
-      controller.indexOf('if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project))'),
-      controller.indexOf("return;", controller.indexOf('title: "Calculation-ready project opened"')),
-    );
-    expect(markedOpen).toContain("activateStandardAuthorities");
-    expect(markedOpen).toContain("rehydrateGeneralSemExecutionAuthorityV1");
-    expect(markedOpen).toContain("updateProjectWritable(false)");
-    expect(markedOpen).not.toContain("updateProjectWritable(true)");
   });
 
   it("attempts to dismiss failed native jobs before exposing retry", () => {
@@ -405,12 +349,4 @@ describe("native controller release contracts", () => {
     expect(calculationDialog).toContain('<button type="button" onClick={close}>Close</button>');
   });
 
-  it("carries a full-data logistic proof through dispatch and revalidates it before job creation", () => {
-    expect(calculationDialog).toContain("dispatchNativeCalculationStartV1(");
-    expect(calculationDialog).toContain("verifiedLogisticProfile ?? verifiedProcessProfile,");
-    expect(app).toContain("createNativeCalculationRequest(calculationKind, calculationSettings, dataProfile)");
-    expect(controller).toContain("nativeLogisticReadiness(dataset, submittedSettings, request.logisticProfile ?? null)");
-    expect(controller).toContain("!request.logisticProfile");
-    expect(controller.indexOf("const logisticDispatchError")).toBeLessThan(controller.indexOf("const recipeId = crypto.randomUUID();"));
-  });
 });

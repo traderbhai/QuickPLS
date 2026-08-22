@@ -11,7 +11,7 @@ function mutableRegistry(): Record<string, any> {
 }
 
 describe("Capability Registry V2 frontend adapter", () => {
-  it("loads the frozen 45-row / 43-active baseline and declared surfaces", () => {
+  it("loads the current frozen Registry baseline and promoted 2.53 cell identities", () => {
     expect(capabilityRegistryV2.summary).toEqual({
       row_count: 45,
       active_row_count: 43,
@@ -23,6 +23,23 @@ describe("Capability Registry V2 frontend adapter", () => {
     });
     expect(capabilityRegistryV2.visibleProductCapabilities(false)).toHaveLength(27);
     expect(capabilityRegistryV2.visibleProductCapabilities(true)).toHaveLength(29);
+    for (const [capabilityId, cellId, capabilityVersion] of [
+      ["smartpls.mediation", "qpls3.pls.general_sem_single_mediation_bootstrap", "general_sem_pls_single_mediation_full_model_case_bootstrap_v1"],
+      ["smartpls.moderation", "qpls3.pls.general_sem_three_way_moderation_point", "general_sem_pls_three_way_moderation_point_v1"],
+      ["smartpls.moderation", "qpls3.pls.general_sem_three_way_moderation_bootstrap", "general_sem_pls_three_way_moderation_full_model_case_bootstrap_v1"],
+    ] as const) {
+      expect(capabilityRegistryV2.requireOptionCell(capabilityId, cellId)).toMatchObject({
+        capability_version: capabilityVersion,
+        coverage_state: "partial",
+        evidence_state: "release_qualified",
+        surface: "standard",
+      });
+      expect(capabilityRegistryV2.availability(capabilityId, cellId, false)).toMatchObject({
+        visibility: "supported",
+        selectable: true,
+        reason: "standard_ready",
+      });
+    }
   });
 
   it("authorizes the exact two-way moderated-mediation cell as scoped Standard", () => {

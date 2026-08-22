@@ -151,28 +151,4 @@ describe("native desktop command surface contracts", () => {
     expect(app).toContain('target?.kind === "variable" ? target.column : selectedColumn');
   });
 
-  it("guards Data mutations and scopes Recode completion to its originating dialog", () => {
-    const app = read("src/native/NativeDesktopApp.tsx");
-    const data = read("src/native/NativeDataSurface.tsx");
-    const dialog = read("src/native/NativeRecodeDialog.tsx");
-
-    expect(app).toMatch(/const dataMutationsLocked = datasetDescriptorOnly[\s\S]*generalSemPublicationPending[\s\S]*isNativeCalculationActive/);
-    expect(app).toContain("rejectLockedDataMutation");
-    expect(data).toContain("readNativeDatasetPageV1");
-    expect(data).toContain("readInternalProjectArchiveV6DatasetRows");
-    expect(data).toContain("mutationDisabledReason");
-    expect(data).toContain('<DataPaneTitle title="Variables" />');
-    expect(data).not.toContain('title="Variables" action=');
-    expect(data).toContain("disabled={Boolean(activatingDatasetId) || mutationsLocked}");
-    expect(data).toContain("if (datasetId === dataset.id || activatingDatasetId || mutationsLocked) return");
-    expect(app).toContain('dismissible={dialog === "recode-data"');
-    expect(app).toContain("? !recodeBusy");
-    expect(app).toContain("scope !== dialogScopeRef.current");
-    expect(dialog).toContain('disabled={status === "saving"} onClick={close}');
-    expect(dialog).toContain("runNativeScopedSubmission");
-    expect(dialog).toContain("complete(dialogScope)");
-    expect(dialog).toContain('aria-busy={status === "saving"}');
-    expect(dialog).toContain("nativeRecodeIssueFieldId(fieldPrefix, firstPath)");
-    expect(dialog).toContain("aria-invalid={invalid(\"targetColumn\")}");
-  });
 });

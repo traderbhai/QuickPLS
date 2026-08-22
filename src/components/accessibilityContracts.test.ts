@@ -82,39 +82,6 @@ describe("desktop accessibility contracts", () => {
     expect(latent).not.toContain(mojibakeR2);
   });
 
-  it("routes global canvas shortcuts through the typed native command registry", () => {
-    const canvas = read("src/components/ModelCanvas.tsx");
-    const commands = read("src/native/nativeCommands.ts");
-
-    for (const shortcut of [
-      'id: "select-tool"',
-      'id: "pan-tool"',
-      'id: "add-construct"',
-      'id: "path-tool"',
-      'id: "edit-selection"',
-      'id: "delete-selection"',
-      'id: "fit-model"',
-    ]) {
-      expect(commands).toContain(shortcut);
-    }
-
-    for (const eventName of [
-      "quickpls:model-tool",
-      "quickpls:model-add-construct",
-      "quickpls:model-delete-selection",
-      "quickpls:model-undo",
-      "quickpls:model-redo",
-    ]) {
-      expect(canvas).toContain(eventName);
-    }
-
-    expect(canvas).toContain("deleteKeyCode={null}");
-    expect(canvas).not.toContain('window.addEventListener("keydown"');
-    expect(commands).toContain('shortcut: { key: "enter" }');
-    expect(canvas).toContain('selectedInteractionTermId && (event.key === "Enter" || event.key === "F2")');
-    expect(canvas).not.toContain("window.prompt(");
-  });
-
   it("keeps a persistent desktop readiness checklist in the status bar", () => {
     const statusBar = read("src/components/StatusBar.tsx");
     const styles = read("src/styles.css");

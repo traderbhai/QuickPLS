@@ -336,6 +336,50 @@ describe("native command registry", () => {
     expect(nativeCommandForShortcut({ key: "Enter" }, hoc)?.action).toEqual({ id: "model.edit-selection" });
   });
 
+  it("routes Enter, Model menu, and context-menu edits through the same model action", () => {
+    const selections = [
+      context({
+        surface: "model",
+        projectOpen: true,
+        hasDataset: true,
+        selection: { kind: "construct", count: 1 },
+      }),
+      context({
+        surface: "model",
+        projectOpen: true,
+        hasDataset: true,
+        selection: { kind: "path", count: 1 },
+      }),
+      context({
+        surface: "model",
+        projectOpen: true,
+        projectWritable: false,
+        hasDataset: true,
+        selectedHigherOrder: true,
+        moderationMutationAuthority: { kind: "general_sem_revision", available: true },
+        selection: { kind: "construct", count: 1 },
+      }),
+    ];
+
+    for (const selected of selections) {
+      const keyboard = nativeCommandForShortcut({ key: "Enter" }, selected);
+      const applicationMenu = nativeCommandsFor({
+        kind: "menu",
+        menu: selected.selectedHigherOrder ? "model" : "edit",
+      }, selected)
+        .find((command) => command.action.id === "model.edit-selection");
+      const contextMenu = nativeContextMenuCommands(selected)
+        .find((command) => command.action.id === "model.edit-selection");
+      expect(keyboard?.action).toEqual({ id: "model.edit-selection" });
+      expect(applicationMenu?.action).toEqual({ id: "model.edit-selection" });
+      expect(contextMenu?.action).toEqual({ id: "model.edit-selection" });
+
+      const dispatch = vi.fn();
+      expect(executeNativeCommand(keyboard!.id, selected, dispatch)).toBe(true);
+      expect(dispatch).toHaveBeenCalledWith({ id: "model.edit-selection" });
+    }
+  });
+
   it("fails closed across every moderation entry point when revision authority is busy", () => {
     const reason = "Wait for General SEM archive publication to finish.";
     const blockedRevision = context({

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "target_release": "2.55.0",
+  "status": "pending_product_fixtures",
+  "rule": "A pending fixture is a hard failed/pending interaction result. Replace it only with a controlled native project/archive and an executor whose visible action verifies the stated replacement contract.",
+  "cases": [
+    { "id": "REB-001", "status": "pending", "executor": "canvas_enter_edit", "reason": "Need a controlled project containing selected construct, path, HOC, and moderation-anchor targets." },
+    { "id": "REB-002", "status": "pending", "executor": "calculate_registry", "reason": "Need a controlled eligible CFA/recursive fixture and exact capability-identity assertions, not merely a CB-SEM method selection." },
+    { "id": "REB-003", "status": "pending", "executor": "archive_route", "reason": "Need schema-3 CFA and recursive-SEM archive fixtures with expected Calculate controls." },
+    { "id": "REB-004", "status": "pending", "executor": "dirty_guard", "reason": "Need a controlled dirty-work replacement fixture with cancel and versioned-confirm paths." },
+    { "id": "REB-005", "status": "pending", "executor": "archive_route", "reason": "Need a legacy authority archive and one calculation-ready revision fixture." },
+    { "id": "REB-006", "status": "pending", "executor": "dirty_guard", "reason": "Need strict-authority dirty-state fixtures on Canvas and Results." },
+    { "id": "REB-007", "status": "pending", "executor": "archive_route", "reason": "Need a marked strict archive fixture with immutable source identity." },
+    { "id": "REB-008", "status": "pending", "executor": "outcome_profile", "reason": "Need binary-logistic data fixtures covering valid, missing-class, and non-binary outcomes." },
+    { "id": "REB-009", "status": "pending", "executor": "calculate_registry", "reason": "Need controlled point and case-bootstrap topology fixtures and explicit inference-control assertions." },
+    { "id": "REB-010", "status": "pending", "executor": "interaction_scope", "reason": "Need qualified two-way, three-way, and unsupported mixed-interaction archives." },
+    { "id": "REB-011", "status": "pending", "executor": "archive_route", "reason": "Need a schema-3 compatibility archive and expected CB-SEM route fixture." },
+    { "id": "REB-012", "status": "pending", "executor": "named_dialog", "reason": "Need a strict authority project where Advanced Parameter Table is available." },
+    { "id": "REB-013", "status": "pending", "executor": "named_dialog", "reason": "Need Canvas and CB-SEM entry fixtures for parameter-row authority comparison." },
+    { "id": "REB-014", "status": "pending", "executor": "named_dialog", "reason": "Need Expert-properties and unqualified-covariance Labs fixtures." },
+    { "id": "REB-015", "status": "pending", "executor": "named_dialog", "reason": "Need a deterministic asynchronous Recode completion fixture." },
+    { "id": "REB-016", "status": "pending", "executor": "archive_route", "reason": "Need Standard moderated-mediation revision archive and native-command receipt fixture." },
+    { "id": "REB-017", "status": "pending", "executor": "calculate_registry", "reason": "Need a current frozen Registry receipt fixture that binds row counts and the new cell identities." }
+  ]
+}
