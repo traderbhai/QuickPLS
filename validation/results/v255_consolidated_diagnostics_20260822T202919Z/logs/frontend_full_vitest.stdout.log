@@ -1,0 +1,5 @@
+
+> quickpls@2.54.0 test
+> vitest run --reporter=json --outputFile D:\QuickPLS\validation\results\v255_consolidated_diagnostics_20260822T202919Z\v255_full_vitest.json
+
+JSON report written to D:/QuickPLS/validation/results/v255_consolidated_diagnostics_20260822T202919Z/v255_full_vitest.json
