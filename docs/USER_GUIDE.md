@@ -2,16 +2,13 @@
 
 This guide describes the Version 2.55 source workflow.
 QuickPLS runs analyses locally without an account, cloud service, R, or Python
-at runtime. Formal first diagnostic `20260822T125438Z` at source `4bb0810`
-executed all 14 steps and passed 12; only `v255_evidence_contract` and
-`v255_final_evidence_contract` failed because README and Installation still
-reported source 2.55.0 while the gate baseline intentionally remained 2.54.0.
-Correction commit `2bfcab0` changed only those two documentation version
-literals. Intermediate diagnostic `20260822T130434Z` passed 14/14 but became
-ineligible after the root `.gitattributes` checkout-stability source change. The
-same-script, same-suite formal final diagnostic `20260822T131349Z` at source
-`245e3e1` passed 14/14, including 453/453 Vitest suites, 1692/1692 tests, all 17
-rebaseline assertions, and zero captured console errors. Both formal records use runner
+at runtime. Formal first diagnostic `20260822T142953Z` at source `2e3a23f`
+executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`,
+where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
+`TS2339`. The same-script, same-suite formal final diagnostic
+`20260822T143620Z` at source `31476a7` passed 14/14, including 453/453 Vitest
+suites, 1695/1695 tests, 17/17 rebaseline assertions, and zero captured console
+errors. Both formal records use runner
 SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
 A fresh provenance-bound unsigned 2.55 candidate build, isolated install,
@@ -19,8 +16,8 @@ installed and portable packaged journeys, evidence collection and bundling,
 and publication remain pending. The verified `v2.54.0` release remains
 available; code signing is excluded.
 
-Candidate/install attempt `20260822T110601Z` and every earlier 2.55 candidate are
-historical and ineligible. The install wrapper accepts only Tauri's exact
+Candidate/install/smoke lineage `20260822T132318Z` and every earlier 2.55
+candidate, install, or smoke attempt are historical and ineligible. The install wrapper accepts only Tauri's exact
 three-byte `UNK` → `NSS` marker transition and rejects every other byte
 difference. Fresh candidate, install, and smoke evidence is still required.
 Exactly one case—the actual Windows 200% scaling case—may use the opt-in waiver;

@@ -11,23 +11,20 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 ## What is the current version?
 
 The coordinated source version is 2.55.0. Formal first diagnostic
-`20260822T125438Z` at source `4bb0810` executed all 14 steps and passed 12;
-only `v255_evidence_contract` and `v255_final_evidence_contract` failed because
-README and Installation still reported source 2.55.0 while the gate baseline
-intentionally remained 2.54.0. Correction commit `2bfcab0` changed only those
-two documentation version literals. Intermediate diagnostic
-`20260822T130434Z` passed 14/14 but became ineligible after the root
-`.gitattributes` checkout-stability source change. The same-script, same-suite
-formal final diagnostic `20260822T131349Z` at source `245e3e1` passed 14/14,
-including 453/453 Vitest suites, 1692/1692 tests, all 17 rebaseline assertions,
+`20260822T142953Z` at source `2e3a23f` executed all 14 steps and passed 13; the
+sole failure was `frontend_typecheck`, where
+`src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
+`TS2339`. The same-script, same-suite formal final diagnostic
+`20260822T143620Z` at source `31476a7` passed 14/14, including 453/453 Vitest
+suites, 1695/1695 tests, 17/17 rebaseline assertions,
 and zero captured console errors. Both formal records use runner
 SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
 Renderer console/page errors fail closed, attach-only phases use fresh
 wrapper-owned processes, and candidate/phase/trusted-driver identities and
-hashes are bound. Candidate/install attempt `20260822T110601Z` and every earlier
-2.55 candidate are historical and ineligible. A fresh unsigned candidate, isolated
-install, installed and portable packaged evidence, evidence collection and
+hashes are bound. Candidate/install/smoke lineage `20260822T132318Z` and every
+earlier 2.55 candidate, install, or smoke attempt are historical and ineligible.
+A fresh unsigned 2.55 candidate, isolated install, installed and portable packaged evidence, evidence collection and
 bundling, and publication remain pending. Exactly one case—the actual Windows
 200% scaling case—may be `waived`; its real DPI screenshot and receipt remain
 required and the other 54 named cases must pass. If an existing registered
@@ -132,14 +129,12 @@ presentation-only path bend and moderation-anchor editing, and reuses the full
 read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
 responsive behavior, prioritize scientific blockers, and disclose only controls
 and fixed policies that the engine actually implements. The exact 18-method
-catalogue is unchanged. Formal first diagnostic `20260822T125438Z` at source
-`4bb0810` passed 12 of 14 executed steps; only the evidence and final-evidence
-contracts failed on the two stale documentation version literals. Correction
-commit `2bfcab0` changed README and Installation. Intermediate diagnostic
-`20260822T130434Z` passed 14/14 but became ineligible after the root
-`.gitattributes` checkout-stability source change. The same-script, same-suite
-formal final diagnostic `20260822T131349Z` at source `245e3e1` passed 14/14,
-including 453/453 Vitest suites, 1692/1692 tests, all 17 rebaseline assertions,
+catalogue is unchanged. Formal first diagnostic `20260822T142953Z` at source
+`2e3a23f` passed 13 of 14 executed steps; the sole failure was
+`frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
+reported TypeScript error `TS2339`. The same-script, same-suite formal final
+diagnostic `20260822T143620Z` at source `31476a7` passed 14/14, including
+453/453 Vitest suites, 1695/1695 tests, 17/17 rebaseline assertions,
 and zero captured console errors; both formal records used runner SHA-256
 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
@@ -151,8 +146,8 @@ A fresh candidate, installed and portable evidence, the evidence bundle, and
 publication remain pending. See the
 [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
-Candidate/install attempt `20260822T110601Z` and every earlier 2.55 candidate are
-historical and ineligible.
+Candidate/install/smoke lineage `20260822T132318Z` and every earlier 2.55
+candidate, install, or smoke attempt are historical and ineligible.
 The focused 17/17 source test covers the exact typed identity correction, not a
 packaged executable. The install wrapper separately accepts only the exact
 Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte
