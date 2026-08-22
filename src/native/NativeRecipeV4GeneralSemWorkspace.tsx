@@ -50,7 +50,8 @@ import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import type { InternalProjectSchema6CanonicalResultEntryV1 } from "../domain/internalProjectSchema6ResultRead";
 import type { InternalProjectSchema6ResultAppendOutcomeV1 } from "../domain/internalProjectSchema6ResultAppend";
-import { scientificSemModelV4HashInput } from "../domain/semModelV4";
+import { scientificSemModelV4HashInput, type SemModelV4 } from "../domain/semModelV4";
+import type { StandardSemModelV4AuthorityRecordV1 } from "../domain/standardSemModelV4Authority";
 import {
   adaptAuthoredNativeWorkbenchToSemModelV4,
   type AuthoredNativeWorkbenchToSemModelV4Input,
@@ -407,6 +408,7 @@ export function closeGeneralSemProjectV1(bridge: GeneralSemProjectCloseBridgeV1)
 }
 
 export interface GeneralSemProjectActivationBridgeV1 {
+  prepareReplacement?: () => void | Promise<void>;
   openSnapshot: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => Promise<string>;
   adoptNativeRevisionSource: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => Promise<void>;
   activateStandardAuthorities: () => Promise<string>;
@@ -466,6 +468,7 @@ export async function activateGeneralSemProjectArchiveV1(
 ): Promise<void> {
   let openedHere = false;
   try {
+    await bridge.prepareReplacement?.();
     const opened = await bridge.openSnapshot(snapshot);
     if (opened !== "activated") throw new Error(`The saved General SEM archive could not enter the schema-6 session (${opened}).`);
     openedHere = true;
@@ -495,6 +498,54 @@ export async function activateGeneralSemProjectArchiveV1(
   }
 }
 
+export function restoreGeneralSemStrictRevisionSourceV1(input: {
+  revisionSource: ReturnType<typeof useWorkspace.getState>["generalSemRevisionDraftSource"];
+  restoreSource: () => void;
+  readSourceDirty: () => boolean;
+  reanchorSource: () => string;
+}): "not_required" | "reanchored" {
+  if (input.revisionSource?.kind !== "strict") return "not_required";
+  input.restoreSource();
+  if (input.readSourceDirty()) {
+    throw new Error("The strict source project did not return to its captured clean authority before replacement activation.");
+  }
+  const reanchored = input.reanchorSource();
+  if (reanchored !== "reanchored") {
+    throw new Error(`The restored strict source could not reanchor its validated archive before replacement activation (${reanchored}).`);
+  }
+  return "reanchored";
+}
+
+export function recoverGeneralSemPublishedSourceV1(input: {
+  revisionSource: ReturnType<typeof useWorkspace.getState>["generalSemRevisionDraftSource"];
+  restoreSource: () => void;
+  readSourceDirty: () => boolean;
+  reanchorSource: () => string;
+}): "cleared" | "reanchored" {
+  const restored = restoreGeneralSemStrictRevisionSourceV1(input);
+  if (restored === "reanchored") return restored;
+  input.restoreSource();
+  return "cleared";
+}
+
+export async function prepareGeneralSemReplacementActivationV1(input: {
+  revisionSource: ReturnType<typeof useWorkspace.getState>["generalSemRevisionDraftSource"];
+  restoreSource: () => void;
+  readSourceDirty: () => boolean;
+  reanchorSource: () => string;
+  closeSourceProject: () => string;
+}): Promise<"not_required" | "ready"> {
+  const restored = restoreGeneralSemStrictRevisionSourceV1(input);
+  if (restored === "not_required") return "not_required";
+  const closed = input.closeSourceProject();
+  if (closed !== "closed") {
+    throw new Error(`The strict source project could not close before replacement activation (${closed}).`);
+  }
+  // Keep the exact native source binding until target adoption atomically
+  // replaces it; an earlier frontend-open failure can then recover the source.
+  return "ready";
+}
+
 function generalSemAuthorityKeyV1(input: {
   estimatorId: GeneralSemEstimatorIdV1;
   sourceProjectId: string | null;
@@ -512,33 +563,79 @@ function safeFileStem(value: string): string {
   return stem || "QuickPLS-General-SEM";
 }
 
+export function resolveGeneralSemDraftPublicationModelV1(input: {
+  revisionSource: ReturnType<typeof useWorkspace.getState>["generalSemRevisionDraftSource"];
+  activeModelId: string | null;
+  standardAuthorities: Record<string, StandardSemModelV4AuthorityRecordV1>;
+  dataset: Parameters<typeof bindGeneralSemPlsModelToDatasetV1>[1];
+  adaptCanvasModel: () => SemModelV4;
+}): {
+  model: SemModelV4;
+  modelDocumentSha256: string | null;
+  source: "strict_authority" | "canvas_draft";
+} {
+  if (input.revisionSource?.kind === "strict") {
+    if (input.activeModelId !== input.revisionSource.modelId) {
+      throw new Error("The strict revision authority does not match the active model identity.");
+    }
+    const strictAuthority = input.standardAuthorities[input.revisionSource.modelId];
+    if (!strictAuthority || strictAuthority.model.id !== input.revisionSource.modelId) {
+      throw new Error("The strict revision model authority is unavailable; the projected Canvas cannot replace it.");
+    }
+    return {
+      model: bindGeneralSemPlsModelToDatasetV1(strictAuthority.model, input.dataset),
+      modelDocumentSha256: strictAuthority.model_document_sha256,
+      source: "strict_authority",
+    };
+  }
+  return {
+    model: bindGeneralSemPlsModelToDatasetV1(input.adaptCanvasModel(), input.dataset),
+    modelDocumentSha256: null,
+    source: "canvas_draft",
+  };
+}
+
 function currentGeneralSemDraftPublicationKeyV1(
   fallbackModelName: string,
   estimatorId: GeneralSemEstimatorIdV1,
+  expectedModel: SemModelV4,
 ): string {
   const state = useWorkspace.getState();
   const activeName = state.projectModels.find((candidate) => candidate.id === state.activeModelId)?.name
     ?? fallbackModelName;
-  const indicators = [...new Set(state.nodes.flatMap((node) => node.data.indicators))].sort();
-  const adapted = adaptAuthoredNativeWorkbenchToSemModelV4({
-    model_id: state.activeModelId ?? "",
-    model_name: activeName,
-    nodes: state.nodes,
-    edges: state.edges,
-    diagram_layout: state.diagramLayout,
-    data_binding: {
-      kind: "raw",
-      dataset_id: state.dataset.id,
-      missing_data: "listwise_deletion",
-      weight: null,
-      cluster_variable: null,
-      strata_variable: null,
+  const revisionSource = state.generalSemRevisionDraftSource;
+  const resolved = resolveGeneralSemDraftPublicationModelV1({
+    revisionSource,
+    activeModelId: state.activeModelId,
+    standardAuthorities: state.standardSemModelV4Authorities,
+    dataset: state.dataset,
+    adaptCanvasModel: () => {
+      const indicators = [...new Set(state.nodes.flatMap((node) => node.data.indicators))].sort();
+      const adapted = adaptAuthoredNativeWorkbenchToSemModelV4({
+        model_id: state.activeModelId ?? "",
+        model_name: activeName,
+        nodes: state.nodes,
+        edges: state.edges,
+        diagram_layout: state.diagramLayout,
+        data_binding: {
+          kind: "raw",
+          dataset_id: state.dataset.id,
+          missing_data: "listwise_deletion",
+          weight: null,
+          cluster_variable: null,
+          strata_variable: null,
+        },
+        group: { kind: "single_group" },
+        observed_semantics: observedSemanticsForParameterTable(state.dataset, indicators),
+      });
+      if (!adapted.ok) throw new Error("The current Canvas no longer has a valid scientific model authority.");
+      return adapted.model;
     },
-    group: { kind: "single_group" },
-    observed_semantics: observedSemanticsForParameterTable(state.dataset, indicators),
   });
-  if (!adapted.ok) throw new Error("The current Canvas no longer has a valid scientific model authority.");
-  const bound = bindGeneralSemPlsModelToDatasetV1(adapted.model, state.dataset);
+  const modelScientificInput = scientificSemModelV4HashInput(resolved.model);
+  if (modelScientificInput !== scientificSemModelV4HashInput(expectedModel)) {
+    throw new Error("The calculation-ready publication model differs from the preflighted scientific authority.");
+  }
   return JSON.stringify({
     estimatorId,
     projectId: state.projectId,
@@ -547,7 +644,9 @@ function currentGeneralSemDraftPublicationKeyV1(
     datasetId: state.dataset.id,
     datasetFingerprint: state.dataset.fingerprint,
     activeModelId: state.activeModelId,
-    modelScientificInput: scientificSemModelV4HashInput(bound),
+    publicationModelSource: resolved.source,
+    modelDocumentSha256: resolved.modelDocumentSha256,
+    modelScientificInput,
     diagramLayout: state.diagramLayout,
   });
 }
@@ -1057,23 +1156,24 @@ export function NativeRecipeV4GeneralSemWorkspace({
       document.getElementById("nd-general-sem-preflight")?.focus();
       return;
     }
-    const draftPublicationKey = currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId);
-    const assertDraftPublicationCurrent = () => {
-      const current = useWorkspace.getState();
-      if (!current.generalSemPublicationPending
-        || current.projectId !== sourceProjectId
-        || current.projectPath !== workspaceProjectPath
-        || current.generalSemProjectDraftMode?.sourceProjectId !== sourceProjectId
-         || currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId) !== draftPublicationKey) {
-        throw new Error("The calculation-ready project authority changed while its marked archive was being published.");
-      }
-    };
     let publishedReceipt: GeneralSemProjectBootstrapReceiptV1 | null = null;
+    let replacementPreparationFailure: unknown = null;
     setBusy(true);
     setGeneralSemPublicationPending(true);
     setFailure(null);
     clearResults();
     try {
+      const draftPublicationKey = currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId, model);
+      const assertDraftPublicationCurrent = () => {
+        const current = useWorkspace.getState();
+        if (!current.generalSemPublicationPending
+          || current.projectId !== sourceProjectId
+          || current.projectPath !== workspaceProjectPath
+          || current.generalSemProjectDraftMode?.sourceProjectId !== sourceProjectId
+          || currentGeneralSemDraftPublicationKeyV1(modelName, selectedEstimatorId, model) !== draftPublicationKey) {
+          throw new Error("The calculation-ready project authority changed while its marked archive was being published.");
+        }
+      };
       if (!globalThis.crypto?.randomUUID) throw new Error("Secure project and recipe identifiers are unavailable in this runtime.");
       const destination = await services.selectDestination(`${safeFileStem(projectName)}-Calculation.qpls`);
       if (!destination) return;
@@ -1146,6 +1246,26 @@ export function NativeRecipeV4GeneralSemWorkspace({
       }
       const createdReceipt = outcome.value.receipt;
       await activateGeneralSemProjectArchiveV1(inspected.value, createdReceipt, {
+        prepareReplacement: async () => {
+          const current = useWorkspace.getState();
+          try {
+            await prepareGeneralSemReplacementActivationV1({
+              revisionSource: current.generalSemRevisionDraftSource,
+              restoreSource: current.clearGeneralSemProjectDraftMode,
+              readSourceDirty: () => useInternalProjectArchiveV6Session.getState().dirty,
+              reanchorSource: () => {
+                const sourceSession = useInternalProjectArchiveV6Session.getState().session;
+                return sourceSession
+                  ? useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(sourceSession.snapshot)
+                  : "inactive";
+              },
+              closeSourceProject: () => useInternalProjectArchiveV6Session.getState().closeStandardProject(),
+            });
+          } catch (error) {
+            replacementPreparationFailure = error;
+            throw error;
+          }
+        },
         openSnapshot: (snapshot) => useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: snapshot })),
         adoptNativeRevisionSource: async (snapshot) => {
           const adopted = await services.adoptActiveProject(snapshot);
@@ -1193,18 +1313,45 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const failure = generalSemFailureV1(error);
       if (publishedReceipt) {
         const current = useWorkspace.getState();
-        if (current.projectId === sourceProjectId
+        let recoveryFailure: unknown = replacementPreparationFailure;
+        let recoveryOutcome: "cleared" | "reanchored" | null = null;
+        if (!recoveryFailure
+          && current.projectId === sourceProjectId
           && current.generalSemProjectDraftMode?.sourceProjectId === sourceProjectId) {
-          clearGeneralSemProjectDraftMode();
+          try {
+            recoveryOutcome = recoverGeneralSemPublishedSourceV1({
+              revisionSource: current.generalSemRevisionDraftSource,
+              restoreSource: current.clearGeneralSemProjectDraftMode,
+              readSourceDirty: () => useInternalProjectArchiveV6Session.getState().dirty,
+              reanchorSource: () => {
+                const sourceSession = useInternalProjectArchiveV6Session.getState().session;
+                return sourceSession
+                  ? useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(sourceSession.snapshot)
+                  : "inactive";
+              },
+            });
+          } catch (recoveryError) {
+            recoveryFailure = recoveryError;
+          }
         }
+        const surfacedFailure = recoveryFailure ? generalSemFailureV1(recoveryFailure) : failure;
+        const correctiveAction = recoveryFailure
+          ? `The validated target remains at ${publishedReceipt.destinationArchivePath}, but the source replacement handoff could not complete safely. Restart QuickPLS and open one exact archive; do not overwrite either file. Original failure: ${failure.message}`
+          : recoveryOutcome === "reanchored"
+            ? `A validated marked project was already published at ${publishedReceipt.destinationArchivePath}. Close the restored source project, then use File > Open to activate that exact file; do not publish this draft again.`
+            : `A validated marked project was already published at ${publishedReceipt.destinationArchivePath}. Use File > Open to activate that exact file; do not publish this draft again.`;
         setFailure({
-          ...failure,
-          correctiveAction: `A validated marked project was already published at ${publishedReceipt.destinationArchivePath}. Use File > Open to activate that exact file; do not publish this draft again.`,
+          ...surfacedFailure,
+          correctiveAction,
         });
         pushToast({
           tone: "warning",
           title: "Calculation-ready project saved but not activated",
-          detail: `Open ${publishedReceipt.destinationArchivePath} to continue from its validated authority.`,
+          detail: recoveryFailure
+            ? `Restart QuickPLS, then open either the source or ${publishedReceipt.destinationArchivePath}; do not overwrite either file.`
+            : recoveryOutcome === "reanchored"
+              ? `Close the restored source project, then open ${publishedReceipt.destinationArchivePath}.`
+              : `Open ${publishedReceipt.destinationArchivePath} to continue from its validated authority.`,
         });
       } else {
         setFailure(failure);
@@ -1865,7 +2012,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
           <button type="button" className="danger" disabled={!activeJobIdRef.current || snapshot?.state === "cancelling" || snapshot?.state === "completed"} onClick={() => void cancel()}><CircleStop size={15} aria-hidden="true" />Cancel</button>
           {markedGeneralSemProjectMode ? <button type="button" disabled={operationBusy || running || Boolean(generalSemTransientWorkBlocker) || unpersistedCompletedResult} title={unpersistedCompletedResult ? "Save and strictly reopen the completed result, or dismiss it explicitly, before closing." : undefined} onClick={() => void closeGeneralSemProject()}><FolderOpen size={15} aria-hidden="true" />Close project</button> : null}
         </div>
-        {generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
+        {markedGeneralSemProjectMode && generalSemSessionDirty ? <p className="nd-inline-warning" role="status">The canvas presentation differs from the saved archive. Undo those presentation changes before calculating or appending a result.</p> : null}
       </section>
     </div></> : null}
 

@@ -926,6 +926,89 @@ describe("Internal/Labs schema-6 in-memory session store", () => {
     expect(authorityIds).toEqual([semModel.id]);
   });
 
+  it("restores, reanchors, and closes a strict General SEM source before replacement activation", async () => {
+    const scientificSha256 = "d".repeat(64);
+    const recipe = {
+      schema_version: 4 as const,
+      id: "00000000-0000-4000-8000-000000000699",
+      created_at: "2026-08-22T00:00:00Z",
+      dataset_fingerprint: project.datasets[0].fingerprint,
+      model_binding: {
+        kind: "project_sem_model_v4_reference" as const,
+        model_id: semModel.id,
+        scientific_sha256: scientificSha256,
+      },
+      estimand_confirmation: "not_legacy" as const,
+      settings: {} as never,
+      general_sem_config: {} as never,
+      metadata: {},
+    };
+    const generalSemProject = {
+      ...project,
+      sem_generation: "general_sem_v1" as const,
+      models: [{
+        model_id: semModel.id,
+        payload: { kind: "sem_model_v4" as const, model: semModel, scientific_sha256: scientificSha256 },
+      }],
+      recipes: [recipe],
+    } as InternalProjectArchiveV6Wire;
+    const generalSemSnapshot = {
+      ...snapshot,
+      project: generalSemProject,
+      generalSemExecutionAuthority: {
+        schemaVersion: 1 as const,
+        projectId: generalSemProject.project_id,
+        datasetId: DATASET_ID,
+        datasetFingerprint: generalSemProject.datasets[0].fingerprint,
+        modelId: semModel.id,
+        modelScientificSha256: scientificSha256,
+        recipeId: recipe.id,
+        recipeDocumentSha256: "e".repeat(64),
+        recipe,
+      },
+    } as InternalProjectArchiveV6ReadSnapshotV1;
+
+    await useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: generalSemSnapshot }));
+    await expect(useInternalProjectArchiveV6Session.getState().activateStandardAuthorities(async () => ({
+      status: "ok",
+      value: {
+        schemaVersion: 1,
+        canonicalModel: semModel,
+        modelDocumentSha256: MODEL_DOCUMENT_SHA256,
+        scientificSha256,
+        readiness: "ready",
+        authoringIssues: [],
+        readinessIssues: [],
+      },
+    }), async () => {})).resolves.toBe("activated");
+    useWorkspace.getState().setProjectMeta(
+      generalSemProject.name,
+      generalSemSnapshot.archivePath,
+      generalSemProject.project_id,
+    );
+    expect(useWorkspace.getState().beginGeneralSemProjectRevisionDraftMode(generalSemProject.project_id)).toBe(true);
+
+    const sourceAuthority = useWorkspace.getState().standardSemModelV4Authorities[semModel.id];
+    useWorkspace.setState((state) => ({
+      standardSemModelV4Authorities: {
+        ...state.standardSemModelV4Authorities,
+        [semModel.id]: {
+          ...sourceAuthority,
+          model_document_sha256: "f".repeat(64),
+          model: { ...sourceAuthority.model, name: "Edited strict revision" },
+        },
+      },
+    }));
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({ dirty: true, persistence: "not_persisted" });
+
+    useWorkspace.getState().clearGeneralSemProjectDraftMode();
+    expect(useWorkspace.getState().standardSemModelV4Authorities[semModel.id]).toEqual(sourceAuthority);
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({ dirty: false, persistence: "not_persisted" });
+    expect(useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(generalSemSnapshot)).toBe("reanchored");
+    expect(useInternalProjectArchiveV6Session.getState()).toMatchObject({ dirty: false, persistence: "persisted_validated_archive" });
+    expect(useInternalProjectArchiveV6Session.getState().closeStandardProject()).toBe("closed");
+  });
+
   it("ignores a late Standard-activation response after explicit close", async () => {
     await useInternalProjectArchiveV6Session.getState().open(async () => ({
       status: "ok",

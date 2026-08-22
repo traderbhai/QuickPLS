@@ -31,6 +31,10 @@ import {
   generalSemCanonicalModerationInventoryV1,
   GeneralSemFailureNotice,
   NativeRecipeV4GeneralSemWorkspace,
+  prepareGeneralSemReplacementActivationV1,
+  recoverGeneralSemPublishedSourceV1,
+  resolveGeneralSemDraftPublicationModelV1,
+  restoreGeneralSemStrictRevisionSourceV1,
   selectCurrentGeneralSemNativePlsDecisionV1,
   selectGeneralSemDisplayedDocumentV1,
   selectLatestGeneralSemReopenedEntryV1,
@@ -956,6 +960,143 @@ describe("General SEM native workspace accessibility", () => {
     expect(html).toMatch(/<button(?=[^>]*class="primary")(?=[^>]*disabled="")[^>]*>[\s\S]*?Save and activate project…<\/button>/);
   });
 
+  it("uses the edited strict revision authority without adapting its read-only Canvas projection", () => {
+    setReadyWorkspace();
+    const resident = workspaceHarness.current.dataset as Dataset;
+    const standardAuthorities = workspaceHarness.current.standardSemModelV4Authorities as Parameters<typeof resolveGeneralSemDraftPublicationModelV1>[0]["standardAuthorities"];
+    const revisionSource = {
+      kind: "strict",
+      modelId: "model:general-sem-ui",
+    } as Parameters<typeof resolveGeneralSemDraftPublicationModelV1>[0]["revisionSource"];
+    const adaptCanvasModel = vi.fn(() => { throw new Error("projected Canvas is not an authoring source"); });
+
+    const resolved = resolveGeneralSemDraftPublicationModelV1({
+      revisionSource,
+      activeModelId: "model:general-sem-ui",
+      standardAuthorities,
+      dataset: resident,
+      adaptCanvasModel,
+    });
+
+    expect(resolved.source).toBe("strict_authority");
+    expect(resolved.modelDocumentSha256).toBe("c".repeat(64));
+    expect(resolved.model.id).toBe("model:general-sem-ui");
+    expect(resolved.model.data_binding).toMatchObject({ kind: "raw", dataset_id: resident.id });
+    expect(adaptCanvasModel).not.toHaveBeenCalled();
+    expect(() => resolveGeneralSemDraftPublicationModelV1({
+      revisionSource,
+      activeModelId: "model:other",
+      standardAuthorities,
+      dataset: resident,
+      adaptCanvasModel,
+    })).toThrow("does not match the active model identity");
+    expect(adaptCanvasModel).not.toHaveBeenCalled();
+
+    expect(() => resolveGeneralSemDraftPublicationModelV1({
+      revisionSource,
+      activeModelId: "model:general-sem-ui",
+      standardAuthorities: {},
+      dataset: resident,
+      adaptCanvasModel,
+    })).toThrow("strict revision model authority is unavailable");
+    expect(adaptCanvasModel).not.toHaveBeenCalled();
+  });
+
+  it("adapts the Canvas only when no strict revision authority exists", () => {
+    setReadyWorkspace();
+    const resident = workspaceHarness.current.dataset as Dataset;
+    const strictAuthority = (workspaceHarness.current.standardSemModelV4Authorities as Record<string, { model: SemModelV4 }>)["model:general-sem-ui"];
+    const adaptCanvasModel = vi.fn(() => strictAuthority.model);
+
+    const resolved = resolveGeneralSemDraftPublicationModelV1({
+      revisionSource: null,
+      activeModelId: "model:general-sem-ui",
+      standardAuthorities: {},
+      dataset: resident,
+      adaptCanvasModel,
+    });
+
+    expect(resolved.source).toBe("canvas_draft");
+    expect(resolved.modelDocumentSha256).toBeNull();
+    expect(adaptCanvasModel).toHaveBeenCalledOnce();
+  });
+
+  it("restores and closes a strict source before activating its replacement archive", async () => {
+    const order: string[] = [];
+    const outcome = await prepareGeneralSemReplacementActivationV1({
+      revisionSource: { kind: "strict" } as Parameters<typeof prepareGeneralSemReplacementActivationV1>[0]["revisionSource"],
+      restoreSource: () => { order.push("restore"); },
+      readSourceDirty: () => { order.push("verify-clean"); return false; },
+      reanchorSource: () => { order.push("reanchor"); return "reanchored"; },
+      closeSourceProject: () => { order.push("close"); return "closed"; },
+    });
+
+    expect(outcome).toBe("ready");
+    expect(order).toEqual(["restore", "verify-clean", "reanchor", "close"]);
+  });
+
+  it("restores and reanchors a strict source without closing it after target verification fails", () => {
+    const closeSourceProject = vi.fn();
+    const order: string[] = [];
+    const outcome = restoreGeneralSemStrictRevisionSourceV1({
+      revisionSource: { kind: "strict" } as Parameters<typeof restoreGeneralSemStrictRevisionSourceV1>[0]["revisionSource"],
+      restoreSource: () => { order.push("restore"); },
+      readSourceDirty: () => { order.push("verify-clean"); return false; },
+      reanchorSource: () => { order.push("reanchor"); return "reanchored"; },
+    });
+
+    expect(outcome).toBe("reanchored");
+    expect(order).toEqual(["restore", "verify-clean", "reanchor"]);
+    expect(closeSourceProject).not.toHaveBeenCalled();
+  });
+
+  it("clears a published non-strict draft after target verification fails", () => {
+    const restoreSource = vi.fn();
+    const outcome = recoverGeneralSemPublishedSourceV1({
+      revisionSource: null,
+      restoreSource,
+      readSourceDirty: vi.fn(() => false),
+      reanchorSource: vi.fn(() => "reanchored"),
+    });
+
+    expect(outcome).toBe("cleared");
+    expect(restoreSource).toHaveBeenCalledOnce();
+  });
+
+  it("never closes a strict source that cannot return clean", async () => {
+    const closeSourceProject = vi.fn(() => "closed");
+    await expect(prepareGeneralSemReplacementActivationV1({
+      revisionSource: { kind: "strict" } as Parameters<typeof prepareGeneralSemReplacementActivationV1>[0]["revisionSource"],
+      restoreSource: vi.fn(),
+      readSourceDirty: () => true,
+      reanchorSource: vi.fn(() => "reanchored"),
+      closeSourceProject,
+    })).rejects.toThrow("did not return to its captured clean authority");
+    expect(closeSourceProject).not.toHaveBeenCalled();
+  });
+
+  it("fails closed when a restored strict source cannot close", async () => {
+    await expect(prepareGeneralSemReplacementActivationV1({
+      revisionSource: { kind: "strict" } as Parameters<typeof prepareGeneralSemReplacementActivationV1>[0]["revisionSource"],
+      restoreSource: vi.fn(),
+      readSourceDirty: () => false,
+      reanchorSource: () => "reanchored",
+      closeSourceProject: () => "blocked",
+    })).rejects.toThrow("could not close before replacement activation (blocked)");
+  });
+
+  it("does not close a restored source whose validated archive cannot reanchor", async () => {
+    const closeSourceProject = vi.fn(() => "closed");
+    await expect(prepareGeneralSemReplacementActivationV1({
+      revisionSource: { kind: "strict" } as Parameters<typeof prepareGeneralSemReplacementActivationV1>[0]["revisionSource"],
+      restoreSource: vi.fn(),
+      readSourceDirty: () => false,
+      reanchorSource: () => "blocked",
+      closeSourceProject,
+    })).rejects.toThrow("could not reanchor its validated archive");
+    expect(closeSourceProject).not.toHaveBeenCalled();
+  });
+
   it("opens, verifies, and promotes the exact populated archive as the active same-app authority", async () => {
     const receipt = {
       schemaVersion: 1,
@@ -984,11 +1125,13 @@ describe("General SEM native workspace accessibility", () => {
     } as unknown as InternalProjectArchiveV6ReadSnapshotV1;
     const setProjectMeta = vi.fn();
     const clearGeneralSemProjectDraftMode = vi.fn();
+    const order: string[] = [];
 
     await activateGeneralSemProjectArchiveV1(snapshot, receipt, {
-      openSnapshot: vi.fn(async () => "activated"),
-      adoptNativeRevisionSource: vi.fn(async () => undefined),
-      activateStandardAuthorities: vi.fn(async () => "activated"),
+      prepareReplacement: vi.fn(async () => { order.push("release-source"); }),
+      openSnapshot: vi.fn(async () => { order.push("open-target"); return "activated"; }),
+      adoptNativeRevisionSource: vi.fn(async () => { order.push("adopt-target"); }),
+      activateStandardAuthorities: vi.fn(async () => { order.push("activate-target"); return "activated"; }),
       rollbackActivation: vi.fn(),
       readSession: () => ({
         snapshot,
@@ -1011,6 +1154,7 @@ describe("General SEM native workspace accessibility", () => {
 
     expect(setProjectMeta).toHaveBeenCalledWith(receipt.name, receipt.destinationArchivePath, receipt.projectId);
     expect(clearGeneralSemProjectDraftMode).toHaveBeenCalledOnce();
+    expect(order).toEqual(["release-source", "open-target", "adopt-target", "activate-target"]);
   });
 
   it("rolls back a partially opened schema-6 session when activation fails", async () => {
