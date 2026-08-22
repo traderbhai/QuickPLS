@@ -95,24 +95,47 @@ function Test-OwnedProcessIdentity($Row) {
     if (-not $current) { return $false }
     $currentCreation = if ($current.CreationDate) { ([DateTime]$current.CreationDate).ToUniversalTime().ToString("o") } else { $null }
     $currentExecutable = if ($current.ExecutablePath) { [IO.Path]::GetFullPath([string]$current.ExecutablePath) } else { $null }
-    if (-not $Row.creation_time -or $currentCreation -ne [string]$Row.creation_time -or
-        (($Row.executable -or $currentExecutable) -and -not [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase))) {
-        throw "PID $($Row.pid) no longer has the captured wrapper-owned creation/executable identity; refusing to terminate it."
-    }
-    return $true
+    return (
+        $Row.creation_time -and
+        $Row.executable -and
+        $currentCreation -eq [string]$Row.creation_time -and
+        [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase)
+    )
 }
 function Update-OwnedTreeSnapshot($Process) {
     $treeByPid = @{}
     $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
-    $savedRoot = @($saved | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
-    if ($Process.HasExited -and $savedRoot.Count -eq 1) {
-        $null = Test-OwnedProcessIdentity $savedRoot[0]
-    }
     foreach ($row in $saved) {
         if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
     }
-    foreach ($row in @(Get-ProcessTree -RootPid $Process.Id)) {
-        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    # A Process handle remains bound to the original process after its numeric
+    # PID is recycled. Never discover a new tree through that recycled PID.
+    if (-not $Process.HasExited) {
+        $currentTree = @()
+        $currentRoot = $null
+        for ($attempt = 0; $attempt -lt 10 -and -not $Process.HasExited; $attempt++) {
+            $currentTree = @(Get-ProcessTree -RootPid $Process.Id)
+            $currentRoot = @($currentTree | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+            if ($currentRoot.Count -eq 1 -and $currentRoot[0].creation_time -and $currentRoot[0].executable) { break }
+            Start-Sleep -Milliseconds 50
+        }
+        if (-not $Process.HasExited -and ($currentRoot.Count -ne 1 -or -not $currentRoot[0].creation_time -or -not $currentRoot[0].executable)) {
+            throw "The wrapper-owned candidate root did not expose a complete creation/executable identity."
+        }
+        if (-not $Process.HasExited) {
+            foreach ($row in $currentTree) {
+                if ($null -eq $row -or $null -eq $row.pid) { continue }
+                $key = [string]$row.pid
+                if (-not $treeByPid.ContainsKey($key)) {
+                    $treeByPid[$key] = $row
+                    continue
+                }
+                $savedRow = $treeByPid[$key]
+                $savedComplete = $savedRow.creation_time -and $savedRow.executable
+                $currentComplete = $row.creation_time -and $row.executable
+                if (-not $savedComplete -and $currentComplete) { $treeByPid[$key] = $row }
+            }
+        }
     }
     $snapshot = @($treeByPid.Values)
     $Process | Add-Member -NotePropertyName QuickPlsOwnedTree -NotePropertyValue $snapshot -Force
@@ -122,6 +145,10 @@ function Stop-OwnedTree($Process, [string]$Endpoint, [string]$Reason) {
     if (-not $Process) { throw "No wrapper-owned process supplied for $Reason." }
     $tree = @(Update-OwnedTreeSnapshot $Process)
     if (-not $Process.HasExited) {
+        $rootRow = @($tree | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+        if ($rootRow.Count -ne 1 -or -not (Test-OwnedProcessIdentity $rootRow[0])) {
+            throw "The wrapper-owned candidate root identity cannot be verified; refusing to terminate PID $($Process.Id)."
+        }
         & taskkill.exe /PID $Process.Id /T /F *> $null
         $null = $Process.WaitForExit(5000)
     }

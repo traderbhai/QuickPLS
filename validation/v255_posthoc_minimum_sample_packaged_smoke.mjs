@@ -490,6 +490,11 @@ async function selectRequiredControl(dialog, selector, value, label) {
 async function configurePosthocCalculation(page, args) {
   const dialog = await openCalculate(page, args.timeout);
   const options = dialog.locator("#nd-calculation-method-list [role='option']");
+  await page.waitForFunction(
+    () => document.querySelectorAll("#nd-calculation-method-list [role='option']").length === 18,
+    null,
+    { timeout: args.timeout },
+  );
   const methodCount = await options.count();
   assert(methodCount === 18, "Calculate exposes " + methodCount + " methods instead of exactly 18.");
   const methodLabels = (await options.locator("strong").allTextContents()).map(compact);

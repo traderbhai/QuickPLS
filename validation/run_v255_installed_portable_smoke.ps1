@@ -285,24 +285,47 @@ function Test-OwnedProcessIdentity($Row) {
     if (-not $current) { return $false }
     $currentCreation = if ($current.CreationDate) { ([DateTime]$current.CreationDate).ToUniversalTime().ToString("o") } else { $null }
     $currentExecutable = if ($current.ExecutablePath) { [IO.Path]::GetFullPath([string]$current.ExecutablePath) } else { $null }
-    if (-not $Row.creation_time -or $currentCreation -ne [string]$Row.creation_time -or
-        (($Row.executable -or $currentExecutable) -and -not [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase))) {
-        throw "PID $($Row.pid) no longer has the captured harness-owned creation/executable identity; refusing to terminate it."
-    }
-    return $true
+    return (
+        $Row.creation_time -and
+        $Row.executable -and
+        $currentCreation -eq [string]$Row.creation_time -and
+        [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase)
+    )
 }
 function Update-OwnedTreeSnapshot($Process) {
     $treeByPid = @{}
     $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
-    $savedRoot = @($saved | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
-    if ($Process.HasExited -and $savedRoot.Count -eq 1) {
-        $null = Test-OwnedProcessIdentity $savedRoot[0]
-    }
     foreach ($row in $saved) {
         if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
     }
-    foreach ($row in @(Get-ProcessTree -RootPid $Process.Id)) {
-        if ($null -ne $row -and $null -ne $row.pid -and -not $treeByPid.ContainsKey([string]$row.pid)) { $treeByPid[[string]$row.pid] = $row }
+    # A Process handle remains bound to the original process after its numeric
+    # PID is recycled. Never discover a new tree through that recycled PID.
+    if (-not $Process.HasExited) {
+        $currentTree = @()
+        $currentRoot = $null
+        for ($attempt = 0; $attempt -lt 10 -and -not $Process.HasExited; $attempt++) {
+            $currentTree = @(Get-ProcessTree -RootPid $Process.Id)
+            $currentRoot = @($currentTree | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+            if ($currentRoot.Count -eq 1 -and $currentRoot[0].creation_time -and $currentRoot[0].executable) { break }
+            Start-Sleep -Milliseconds 50
+        }
+        if (-not $Process.HasExited -and ($currentRoot.Count -ne 1 -or -not $currentRoot[0].creation_time -or -not $currentRoot[0].executable)) {
+            throw "The harness-owned candidate root did not expose a complete creation/executable identity."
+        }
+        if (-not $Process.HasExited) {
+            foreach ($row in $currentTree) {
+                if ($null -eq $row -or $null -eq $row.pid) { continue }
+                $key = [string]$row.pid
+                if (-not $treeByPid.ContainsKey($key)) {
+                    $treeByPid[$key] = $row
+                    continue
+                }
+                $savedRow = $treeByPid[$key]
+                $savedComplete = $savedRow.creation_time -and $savedRow.executable
+                $currentComplete = $row.creation_time -and $row.executable
+                if (-not $savedComplete -and $currentComplete) { $treeByPid[$key] = $row }
+            }
+        }
     }
     $snapshot = @($treeByPid.Values)
     $Process | Add-Member -NotePropertyName QuickPlsOwnedTree -NotePropertyValue $snapshot -Force
@@ -335,6 +358,10 @@ function Stop-IsolatedCandidate($Process, [string]$Endpoint) {
     if (-not $Process) { throw "No harness-owned candidate process was supplied for cleanup." }
     $tree = @(Update-OwnedTreeSnapshot $Process)
     if (-not $Process.HasExited) {
+        $rootRow = @($tree | Where-Object { [int]$_.pid -eq [int]$Process.Id } | Select-Object -First 1)
+        if ($rootRow.Count -ne 1 -or -not (Test-OwnedProcessIdentity $rootRow[0])) {
+            throw "The harness-owned candidate root identity cannot be verified; refusing to terminate PID $($Process.Id)."
+        }
         # The only tree eligible for termination is rooted at this harness PID.
         & taskkill.exe /PID $Process.Id /T /F *> $null
         $null = $Process.WaitForExit(5000)
@@ -384,6 +411,9 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
     $namedCaseStdout = Join-Path $candidateEvidence "named_case_driver.stdout.log"
     $namedCaseStderr = Join-Path $candidateEvidence "named_case_driver.stderr.log"
     $namedEvidenceDriverReports = @()
+    $candidateOutcome = $null
+    $operationFailure = $null
+    $cleanupFailure = $null
     try {
         $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$Port --force-device-scale-factor=1 --disable-background-networking --disable-component-update"
         $env:WEBVIEW2_USER_DATA_FOLDER = Join-Path $candidateEvidence "webview2-profile"
@@ -496,16 +526,24 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         $methodReportPath = Join-Path $crawlerEvidence "v255_method_evidence_crawler.json"
         $methodReport = Get-Content -LiteralPath $methodReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
         if ($methodReport.passed -ne $true -or @($methodReport.failures).Count -ne 0) { throw "$Name method evidence report is incomplete or false." }
-        [ordered]@{ name = $Name; candidate_kind = $(if ($Name -eq "installed") { "fresh_nsis_install" } else { "portable_release_artifact" }); executable = $candidateFull; executable_sha256 = $candidateHash; product_version = $productVersion; build_source_commit = $releasePayload.source.commit; source_tree = $releasePayload.source.tree; source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $(if ($Name -eq "installed") { $installReceipt } else { $null }); install_receipt_sha256 = $(if ($Name -eq "installed") { $installReceiptHash } else { $null }); launched_pids = @($launchedPids); status = "passed"; lifecycle = $lifecycleReportPath; lifecycle_sha256 = (Get-FileHash -LiteralPath $lifecycleReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); lifecycle_execute_stdout = $lifecycleExecuteStdout; lifecycle_execute_stderr = $lifecycleExecuteStderr; lifecycle_reopen_stdout = $lifecycleReopenStdout; lifecycle_reopen_stderr = $lifecycleReopenStderr; evidence = $methodReportPath; evidence_sha256 = (Get-FileHash -LiteralPath $methodReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); evidence_stdout = $crawlerStdout; evidence_stderr = $crawlerStderr; named_evidence_driver_reports = @($namedEvidenceDriverReports); named_evidence_driver_stdout = $(if ($namedCaseManifestReady) { $namedCaseStdout } else { $null }); named_evidence_driver_stderr = $(if ($namedCaseManifestReady) { $namedCaseStderr } else { $null }); posthoc_collection = $posthocCollection; frozen_archive_collection = $frozenArchiveCollection }
+        $candidateOutcome = [ordered]@{ name = $Name; candidate_kind = $(if ($Name -eq "installed") { "fresh_nsis_install" } else { "portable_release_artifact" }); executable = $candidateFull; executable_sha256 = $candidateHash; product_version = $productVersion; build_source_commit = $releasePayload.source.commit; source_tree = $releasePayload.source.tree; source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $(if ($Name -eq "installed") { $installReceipt } else { $null }); install_receipt_sha256 = $(if ($Name -eq "installed") { $installReceiptHash } else { $null }); launched_pids = @($launchedPids); status = "passed"; lifecycle = $lifecycleReportPath; lifecycle_sha256 = (Get-FileHash -LiteralPath $lifecycleReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); lifecycle_execute_stdout = $lifecycleExecuteStdout; lifecycle_execute_stderr = $lifecycleExecuteStderr; lifecycle_reopen_stdout = $lifecycleReopenStdout; lifecycle_reopen_stderr = $lifecycleReopenStderr; evidence = $methodReportPath; evidence_sha256 = (Get-FileHash -LiteralPath $methodReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); evidence_stdout = $crawlerStdout; evidence_stderr = $crawlerStderr; named_evidence_driver_reports = @($namedEvidenceDriverReports); named_evidence_driver_stdout = $(if ($namedCaseManifestReady) { $namedCaseStdout } else { $null }); named_evidence_driver_stderr = $(if ($namedCaseManifestReady) { $namedCaseStderr } else { $null }); posthoc_collection = $posthocCollection; frozen_archive_collection = $frozenArchiveCollection }
+    } catch {
+        $operationFailure = $_
     } finally {
         try {
             if ($process) { Stop-IsolatedCandidate $process $endpoint }
+        } catch {
+            $cleanupFailure = $_
         } finally {
             [Environment]::SetEnvironmentVariable("WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", $previousArgs, "Process")
             [Environment]::SetEnvironmentVariable("WEBVIEW2_USER_DATA_FOLDER", $previousProfile, "Process")
             [Environment]::SetEnvironmentVariable("QUICKPLS_CDP_ENDPOINT", $previousEndpoint, "Process")
         }
     }
+    if ($operationFailure -and $cleanupFailure) { throw "$Name candidate operation failed: $($operationFailure.Exception.Message); exact cleanup also failed: $($cleanupFailure.Exception.Message)" }
+    if ($operationFailure) { throw $operationFailure }
+    if ($cleanupFailure) { throw $cleanupFailure }
+    return $candidateOutcome
 }
 
 $snapshots = @()
