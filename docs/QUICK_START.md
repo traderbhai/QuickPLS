@@ -1,11 +1,17 @@
 # QuickPLS Quick Start
 
 This guide follows the Version 2.55 source workflow:
-`Launcher → Data → Canvas → Calculate → Results`. Formal diagnostic
-`20260822T104806Z` at source `5ac7d8e` executed all 14 steps and passed 13;
-only `frontend_typecheck` failed. One remediation batch corrected that typed
-fixture, and the same-script, same-suite final diagnostic `20260822T105458Z` at source
-`6289b44` passed 14/14. Both records use runner SHA-256
+`Launcher → Data → Canvas → Calculate → Results`. Formal first diagnostic
+`20260822T125438Z` at source `4bb0810` executed all 14 steps and passed 12;
+only `v255_evidence_contract` and `v255_final_evidence_contract` failed because
+README and Installation still reported source 2.55.0 while the gate baseline
+intentionally remained 2.54.0. Correction commit `2bfcab0` changed only those
+two documentation version literals. Intermediate diagnostic
+`20260822T130434Z` passed 14/14 but became ineligible after the root
+`.gitattributes` checkout-stability source change. The same-script, same-suite
+formal final diagnostic `20260822T131349Z` at source `245e3e1` passed 14/14,
+including 453/453 Vitest suites, 1692/1692 tests, all 17 rebaseline assertions,
+and zero captured console errors. Both formal records use runner SHA-256
 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
 A fresh provenance-bound unsigned 2.55 candidate build, isolated install,
@@ -13,7 +19,7 @@ installed and portable packaged journeys, evidence collection and bundling,
 and publication remain pending; the latest downloadable public pre-release
 remains `v2.54.0` and code signing is excluded.
 
-Candidate/install attempt `20260822T084527Z` and every earlier attempt are
+Candidate/install attempt `20260822T110601Z` and every earlier 2.55 candidate are
 historical and ineligible.
 The exact typed post-hoc authority correction passed its focused identity suite
 17/17 but has not yet been validated in a packaged executable. The install
