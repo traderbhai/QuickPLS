@@ -248,13 +248,13 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
       .resolves.toMatchObject({ status: "ok", entry: { documentId: "document-v4" } });
     expect(strictSuccess.strictInspect).toHaveBeenCalledOnce();
     expect(strictSuccess.adoptActiveProject).toHaveBeenCalledWith(strictSnapshot);
-    expect(strictSuccess.strictInspect.mock.invocationCallOrder[0])
-      .toBeLessThan(strictSuccess.adoptActiveProject.mock.invocationCallOrder[0]);
+    expect(vi.mocked(strictSuccess.strictInspect).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(strictSuccess.adoptActiveProject).mock.invocationCallOrder[0]);
     expect(strictSuccess.reanchorActiveProject).toHaveBeenCalledWith(strictSnapshot);
-    expect(strictSuccess.adoptActiveProject.mock.invocationCallOrder[0])
-      .toBeLessThan(strictSuccess.reanchorActiveProject.mock.invocationCallOrder[0]);
-    expect(strictSuccess.reanchorActiveProject.mock.invocationCallOrder[0])
-      .toBeLessThan(strictSuccess.read.mock.invocationCallOrder[0]);
+    expect(vi.mocked(strictSuccess.adoptActiveProject).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(strictSuccess.reanchorActiveProject).mock.invocationCallOrder[0]);
+    expect(vi.mocked(strictSuccess.reanchorActiveProject).mock.invocationCallOrder[0])
+      .toBeLessThan(vi.mocked(strictSuccess.read).mock.invocationCallOrder[0]);
 
     const staleAdoption = {
       inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
