@@ -1,0 +1,6 @@
+
+> quickpls@2.54.0 typecheck:full
+> tsc -b
+
+src/data/v255NamedSemEvidenceFixtures.test.ts(59,68): error TS2339: Property 'operands' does not exist on type 'InteractionData'.
+  Property 'operands' does not exist on type 'LegacyInteractionData'.
