@@ -6,19 +6,22 @@ This guide follows the Version 2.55 source workflow:
 sole failure was `frontend_typecheck`, where
 `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
 `TS2339`. The same-script, same-suite formal final diagnostic
-`20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest
-suites, 1697/1697 tests, 17/17 rebaseline assertions,
-and zero captured console errors. Both formal records use runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
-the reports are separate evidence records and are not byte-identical.
+`20260822T202919Z` at source `de439880067b2083d881d935f59369f602768499`
+passed 14/14, including 453/453 Vitest suites, 1707/1707 tests, 17/17
+rebaseline assertions, and zero captured console errors. Its authoritative
+report is
+`validation/results/v255_consolidated_diagnostics_20260822T202919Z/v255_consolidated_diagnostics.json`
+with SHA-256 `5edd87da8b45f4ce7ebdfaa51f60c535364d6a1eced3e20832a719b5c5ef0d07`;
+the retained first failure and final pass are separate evidence records and are
+not byte-identical.
 A new provenance-bound unsigned 2.55 candidate build, isolated install, and
 full installed-and-portable smoke remain pending, followed by evidence
 collection, bundling, and publication; the latest downloadable public pre-release
 remains `v2.54.0` and code signing is excluded.
 
-Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
-every earlier 2.55 candidate, install, or smoke attempt are historical and
-ineligible.
+The intermediate diagnostic attempt `20260822T202158Z`, the candidate build
+`20260822T190446Z`, its portable probe `20260822T192919Z`, and all earlier 2.55
+candidate, install, or smoke attempts are historical and ineligible.
 The exact typed post-hoc authority correction passed its focused identity suite
 17/17 but has not yet been validated in a packaged executable. The install
 wrapper separately accepts only Tauri's exact three-byte `UNK` → `NSS` marker
