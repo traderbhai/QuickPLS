@@ -1,8 +1,8 @@
 # QuickPLS 2.55 — Calculate and Method Evidence Gate
 
-Status: consolidated source gate complete; candidate and publication gates pending.
+Status: draft; release gate not yet run.
 
-The formal first consolidated pass recorded the finite correction batch and the byte-identical final pass succeeded 14/14. Version authorities are now **2.55.0** for the provenance-bound candidate phase. Portable and installed smoke, actual Windows 200% evidence, final evidence collection, and publication remain mandatory; this checkpoint does not claim a downloadable 2.55 release or promote a capability.
+Version authority remains **2.54.0** until this gate passes, one complete failure batch is corrected, the identical gate is rerun, and the unsigned candidate succeeds in both portable and installed smoke journeys. This document neither promotes a capability nor authorizes a version bump.
 
 ## Scope
 
@@ -46,7 +46,7 @@ The 2.55 gate covers the shared Calculate dialog, method-specific eligibility an
 ## Current Deliberate Gaps
 
 - The 64 setup routes and 18 Calculate captures are declared, but the frozen-result archive index, named-evidence index, and evidence ZIP manifest remain `pending_collection`. They may remain pending during the source gate; every pending Result family or unbound ZIP member blocks publication verification.
-- The 14-step consolidated source gate, including its source-level browser crawls, passed in the committed first/final evidence pair. Candidate build, installation, portable/native DPI routes, evidence-bundle collection, and publication have not yet run.
+- This draft has not run any tests, builds, browser automation, packaging, or installation smoke. It is executable gate source, not evidence of success.
 - The release remains unsigned; code signing is outside this program.
 
 ## Commands for the Later Gate
