@@ -957,6 +957,12 @@ async function executeStep(page, step, context) {
     assert(context.calculationRevision?.target && await exists(context.calculationRevision.target), "Advanced Parameter Table requires an activated source archive.");
     const sourceTarget = context.calculationRevision.target;
     const sourceSha256 = await fileSha256(sourceTarget);
+    await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
+    await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+    await page.waitForFunction(() => typeof window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot === "function", undefined, { timeout });
+    await page.evaluate((archive) => window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: archive } })), sourceTarget);
+    await waitForOpenedProjectPath(page, sourceTarget, timeout);
+    assert(await fileSha256(sourceTarget) === sourceSha256, "Freshly reopening the Advanced Parameter source changed its archive bytes.");
     const before = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
     assert(/^[a-f0-9]{64}$/u.test(before?.model?.model_document_sha256 ?? ""), "Advanced Parameter Table requires a strict authority digest.");
     await page.getByRole("menubar", { name: "Application menu", exact: true }).getByRole("menuitem", { name: "Model", exact: true }).click();
@@ -1187,7 +1193,10 @@ async function executeStep(page, step, context) {
     const deadline = Date.now() + Number(step.completion_timeout_ms ?? 300_000);
     while (Date.now() < deadline) {
       if (await page.locator(".nd-results-workspace").isVisible().catch(() => false)) return { action: step.action, ...context.lastCalculation, terminal: "results" };
-      if (await page.locator('#nd-cbsem-compatibility-calculation[data-smoke-canonical-document-id]').isVisible().catch(() => false)) return { action: step.action, ...context.lastCalculation, terminal: "exact_cfa_compatibility_result" };
+      const exactPublicationFailure = page.locator("#nd-cbsem-compatibility-calculation .nd-cbsem-v4-archive .nd-cbsem-v4-failure");
+      if (await exactPublicationFailure.isVisible().catch(() => false)) {
+        throw new Error(`Exact CFA result publication failed: ${compact(await exactPublicationFailure.textContent())}`);
+      }
       const state = compact(await page.locator(".nd-cbsem-v4-state").textContent().catch(() => "")).toLowerCase();
       if (["failed", "cancelled"].includes(state)) throw new Error(`Calculation ended ${state}: ${compact(await page.locator(".nd-cbsem-v4-monitor").textContent())}`);
       await page.waitForTimeout(250);

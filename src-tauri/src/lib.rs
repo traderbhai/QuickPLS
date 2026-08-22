@@ -8,6 +8,7 @@ mod project_archive_v6_general_sem_bootstrap;
 mod project_archive_v6_general_sem_preflight;
 mod project_archive_v6_general_sem_revision;
 mod project_archive_v6_model_mutation;
+mod project_archive_v6_native_adoption;
 mod project_archive_v6_new_general_sem;
 mod project_archive_v6_read;
 mod project_archive_v6_save_copy;
@@ -49,6 +50,11 @@ use project_archive_v6_general_sem_revision::{
     revise_internal_general_sem_execution_authority_v2,
 };
 use project_archive_v6_model_mutation::mutate_internal_project_archive_v6_model;
+use project_archive_v6_native_adoption::{
+    DesktopSchema6NativeAdoptionAuthorityV1,
+    adopt_internal_project_archive_v6_native_revision_source_v1,
+    clear_internal_project_archive_v6_native_revision_source_v1,
+};
 use project_archive_v6_new_general_sem::create_internal_general_sem_project_archive_v6;
 use project_archive_v6_read::{
     inspect_internal_project_archive_v6_zip, read_internal_project_archive_v6_dataset_rows,
@@ -2705,10 +2711,16 @@ fn new_project(
     project_mode: Option<GeneralSemNewProjectModeV1>,
     state: State<'_, DesktopProject>,
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+    native_adoption_authority: State<'_, DesktopSchema6NativeAdoptionAuthorityV1>,
 ) -> Result<ProjectSnapshot, String> {
     let project = Project::new(name);
     let response = snapshot(&project, None, None)?;
-    fresh_draft_authority.replace_from_new_project(&state.0, project, project_mode)?;
+    native_adoption_authority.replace_from_new_project(
+        &state.0,
+        fresh_draft_authority.inner(),
+        project,
+        project_mode,
+    )?;
     Ok(response)
 }
 
@@ -3067,10 +3079,15 @@ fn open_demo_project(
     sample_id: Option<String>,
     state: State<'_, DesktopProject>,
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+    native_adoption_authority: State<'_, DesktopSchema6NativeAdoptionAuthorityV1>,
 ) -> Result<ProjectSnapshot, String> {
     let project = build_sample_project(sample_id.as_deref().unwrap_or("corporate_reputation"))?;
     let response = snapshot(&project, None, None)?;
-    fresh_draft_authority.replace_and_clear(&state.0, project)?;
+    native_adoption_authority.replace_ordinary_project(
+        &state.0,
+        fresh_draft_authority.inner(),
+        project,
+    )?;
     Ok(response)
 }
 
@@ -3386,11 +3403,16 @@ fn open_project(
     path: String,
     state: State<'_, DesktopProject>,
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+    native_adoption_authority: State<'_, DesktopSchema6NativeAdoptionAuthorityV1>,
 ) -> Result<ProjectSnapshot, String> {
     let (project, recovery_source) =
         load_project_with_autosave(Path::new(&path)).map_err(|error| error.to_string())?;
     let response = snapshot(&project, Some(path), recovery_source)?;
-    fresh_draft_authority.replace_and_clear(&state.0, project)?;
+    native_adoption_authority.replace_ordinary_project(
+        &state.0,
+        fresh_draft_authority.inner(),
+        project,
+    )?;
     Ok(response)
 }
 
@@ -7312,6 +7334,7 @@ pub fn run() {
             "Untitled project",
         )))))
         .manage(DesktopGeneralSemFreshDraftAuthorityV1::default())
+        .manage(DesktopSchema6NativeAdoptionAuthorityV1::default())
         .manage(DesktopJobs(Arc::new(Mutex::new(HashMap::new()))))
         .manage(DesktopDiagnostics::new())
         .manage(DesktopProjectUpgradePlans::default())
@@ -7359,6 +7382,8 @@ pub fn run() {
             dismiss_internal_labs_general_sem_cbsem_job_v1,
             result_internal_labs_general_sem_cbsem_job_v1,
             mutate_internal_project_archive_v6_model,
+            adopt_internal_project_archive_v6_native_revision_source_v1,
+            clear_internal_project_archive_v6_native_revision_source_v1,
             inspect_internal_project_archive_v6_zip,
             read_internal_project_archive_v6_dataset_rows,
             save_internal_project_archive_v6_copy,

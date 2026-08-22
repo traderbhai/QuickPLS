@@ -49,6 +49,28 @@ describe("native controller release contracts", () => {
     expect(ordinaryOpen.indexOf("loadNativeSnapshot")).toBeLessThan(ordinaryOpen.indexOf("readStoredInternalLabsRecipeV4CbsemResultsV1"));
   });
 
+  it("synchronizes the native DesktopProject before exposing a strictly reopened General SEM authority", () => {
+    const strictOpen = controller.slice(
+      controller.indexOf('if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project))'),
+      controller.indexOf("const loaded = loadNativeSnapshot(await openNativeProjectAt(selectedPath));"),
+    );
+
+    expect(strictOpen).toContain("const adopted = await adoptNativeSchema6RevisionSourceV1(inspected.value);");
+    expect(strictOpen).toContain("adopted.archiveSha256 !== inspected.value.archiveSha256");
+    expect(strictOpen).toContain("adopted.autosaveRecoveryUsed");
+    expect(strictOpen).not.toContain("await openNativeProjectAt(selectedPath)");
+    expect(strictOpen.indexOf("const adopted = await adoptNativeSchema6RevisionSourceV1(inspected.value);"))
+      .toBeLessThan(strictOpen.indexOf("activateStandardAuthorities"));
+    expect(strictOpen.indexOf("activateStandardAuthorities"))
+      .toBeLessThan(strictOpen.indexOf("active.setProjectMeta"));
+    expect(strictOpen).toContain("let strictGeneralSemResultRestored = false;");
+    expect(strictOpen).toContain("if (!strictGeneralSemResultRestored)");
+    expect(strictOpen).toContain("readStoredInternalLabsRecipeV4CbsemResultsV1({");
+    expect(strictOpen).toContain("selectLatestStoredExactCaseBootstrapEntryV1(stored.entries)");
+    expect(strictOpen.indexOf("selectLatestGeneralSemReopenedEntryV1"))
+      .toBeLessThan(strictOpen.indexOf("readStoredInternalLabsRecipeV4CbsemResultsV1"));
+  });
+
   it("clears a prior canonical result before any accepted replacement can restore another", () => {
     expect(controller).toContain('detail: { document: null, navigate: false }');
     expect(app).toContain("if (detail?.document === null)");

@@ -159,6 +159,17 @@ fn is_general_sem_document(document: &CanonicalResultDocumentV2) -> bool {
         })
 }
 
+fn is_current_exact_cbsem_document(document: &CanonicalResultDocumentV2) -> bool {
+    let cell = &document.provenance.capability_cell;
+    cell.registry_schema_version == 2
+        && ((cell.capability_id == "smartpls.cbsem"
+            && cell.cell_id == "qpls3.cbsem.ml"
+            && cell.capability_version == "cbsem_ml_v1")
+            || (cell.capability_id == "smartpls.cbsem_bootstrapping"
+                && cell.cell_id == "qpls3.cbsem.bootstrap"
+                && cell.capability_version == "cbsem_exact_case_bootstrap_v1"))
+}
+
 fn selected_general_sem_document_cell(
     document: &CanonicalResultDocumentV2,
 ) -> Option<CapabilityCellReferenceV2> {
@@ -240,11 +251,20 @@ fn validate_exact_general_sem_archive_read_authority(
     document: &ProjectArchiveDocumentV6,
 ) -> Result<(), ProjectSchema6ResultReadOutcomeV1> {
     let Some(requested_cell) = request.capability_cell.as_ref() else {
-        if document
+        let exact_cbsem_standard =
+            request.surface == STANDARD_EXACT_CBSEM_SURFACE && !request.experimental_labs_enabled;
+        let has_general_sem_result = document
+            .canonical_result_documents
+            .iter()
+            .map(|attachment| attachment.canonical_document())
+            .any(|canonical| {
+                is_general_sem_document(canonical) && !is_current_exact_cbsem_document(canonical)
+            });
+        let has_general_sem_recipe = document
             .recipes
             .iter()
-            .any(|recipe| recipe.general_sem_config.is_some())
-        {
+            .any(|recipe| recipe.general_sem_config.is_some());
+        if has_general_sem_result || (!exact_cbsem_standard && has_general_sem_recipe) {
             return Err(blocked(
                 "schema6_result_read.capability_cell_required",
                 "General SEM result reopening requires the exact selected execution cell.",
@@ -558,21 +578,29 @@ pub(crate) fn read_internal_project_schema6_canonical_results_v2(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::project_archive_v6_general_sem_bootstrap::tests::general_sem_native_fixture_v1;
     use crate::recipe_v4_canonical_result::build_recipe_v4_pls_canonical_result;
     use crate::recipe_v4_cbsem_canonical_result::build_recipe_v4_cbsem_canonical_result;
     use crate::recipe_v4_cbsem_execution::{
         execute_internal_recipe_v4_cbsem, resolve_internal_recipe_v4_cbsem_dataset,
     };
+    use crate::recipe_v4_general_sem_canonical_result::build_recipe_v4_general_sem_pls_canonical_result_v1;
     use crate::{execute_internal_recipe_v4_pls, resolve_internal_recipe_v4_dataset};
     use chrono::{TimeZone, Utc};
+    use qpls_core::{
+        GeneralSemConfigV1, MethodConfig, SemDataBindingV4, compile_general_sem_pls_recipe_v1,
+    };
     use qpls_data::{Dataset, write_arrow};
     use qpls_project::{
         PROJECT_ARCHIVE_SCHEMA_V6_VERSION, ProjectArchiveDocumentV6,
         ProjectArchiveUpgradeRequestV6, ProjectManifest, ProjectModelPayloadV6,
-        ProjectModelRecordV6, attach_canonical_result_document_v2_v6,
-        canonical_result_document_v2_sha256, deserialize_project_document_v6,
-        plan_project_upgrade_to_v6, serialize_project_document_v6,
+        ProjectModelRecordV6, ProjectOriginV6, ProjectSemGenerationV6,
+        append_canonical_result_document_v2_file_v6, attach_canonical_result_document_v2_v6,
+        canonical_result_document_v2_sha256, create_populated_general_sem_project_archive_v6,
+        deserialize_project_document_v6, load_project_archive_v6, plan_project_upgrade_to_v6,
+        serialize_project_document_v6,
     };
+    use qpls_runner::run_compiled_general_sem_pls_recipe_v1;
     use std::{collections::BTreeMap, fs::File, io::Write};
     use zip::{ZipWriter, write::SimpleFileOptions};
 
@@ -582,6 +610,19 @@ mod tests {
         ProjectSchema6ResultReadRequestV1 {
             surface: INTERNAL_LABS_SURFACE.into(),
             experimental_labs_enabled: true,
+            capability_cell: None,
+            archive_path: path.to_string_lossy().into_owned(),
+            expected_source_sha256: digest,
+        }
+    }
+
+    fn standard_exact_cbsem_request(
+        path: &Path,
+        digest: String,
+    ) -> ProjectSchema6ResultReadRequestV1 {
+        ProjectSchema6ResultReadRequestV1 {
+            surface: STANDARD_EXACT_CBSEM_SURFACE.into(),
+            experimental_labs_enabled: false,
             capability_cell: None,
             archive_path: path.to_string_lossy().into_owned(),
             expected_source_sha256: digest,
@@ -949,6 +990,148 @@ mod tests {
         stale.provenance.method_version = "cbsem_ml_compiled_moment_input_v2".into();
         stale.ensure_valid().unwrap();
         let _error = attach_canonical_result_document_v2_v6(&current_document, stale).unwrap_err();
+    }
+
+    #[test]
+    fn standard_exact_cbsem_reopens_from_a_general_sem_authority_zip_without_a_cell() {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../validation/fixtures/v255/archives/cbsem-exact-bootstrap-result.qpls");
+        let loaded = load_project_archive_v6(&fixture).unwrap();
+        let mut document = loaded.document;
+        let exact_document = document.canonical_result_documents[0]
+            .canonical_document()
+            .clone();
+        document.canonical_result_documents.clear();
+        let mut general_sem_point_recipe = document.recipes[0].clone();
+        general_sem_point_recipe.id =
+            uuid::Uuid::parse_str("00000000-0000-0000-0000-00000000cb90").unwrap();
+        general_sem_point_recipe.settings.bootstrap_samples = 0;
+        let Some(MethodConfig::Cbsem {
+            bootstrap_samples,
+            bootstrap_v2,
+            ..
+        }) = general_sem_point_recipe.method_config.as_mut()
+        else {
+            panic!("exact CB-SEM fixture must carry a typed CB-SEM method configuration")
+        };
+        *bootstrap_samples = 0;
+        *bootstrap_v2 = None;
+        let resident_dataset_id = document.datasets[0].id.to_string();
+        let ProjectModelPayloadV6::SemModelV4 {
+            model,
+            scientific_sha256,
+        } = &mut document.models[0].payload
+        else {
+            panic!("exact CB-SEM fixture must carry a promoted SemModelV4")
+        };
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            panic!("exact CB-SEM fixture must carry a raw-data SemModelV4")
+        };
+        *dataset_id = resident_dataset_id;
+        *scientific_sha256 = model.scientific_sha256().unwrap();
+        general_sem_point_recipe.model_binding =
+            AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+                model_id: model.id.clone(),
+                scientific_sha256: scientific_sha256.clone(),
+            };
+        general_sem_point_recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        general_sem_point_recipe.metadata.insert(
+            "execution_surface".into(),
+            "native_general_sem_cbsem_standard_v1".into(),
+        );
+        general_sem_point_recipe
+            .metadata
+            .insert("general_sem_generation".into(), "general_sem_v1".into());
+        document.origin = ProjectOriginV6::NewProject;
+        document.sem_generation = Some(ProjectSemGenerationV6::GeneralSemV1);
+        document.recipes.push(general_sem_point_recipe);
+        document.ensure_valid().unwrap();
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive_path = directory.path().join("mixed-exact-cbsem-authority.qpls");
+        let source_bytes = write_schema6_zip(&archive_path, &document, &loaded.datasets);
+        let append = append_canonical_result_document_v2_file_v6(
+            &archive_path,
+            &sha256(&source_bytes),
+            exact_document,
+        )
+        .unwrap();
+        assert_eq!(append.canonical_result_document_count, 1);
+        let appended_bytes = std::fs::read(&archive_path).unwrap();
+        let outcome = read_schema6_results(&standard_exact_cbsem_request(
+            &archive_path,
+            sha256(&appended_bytes),
+        ));
+        let ProjectSchema6ResultReadOutcomeV1::Ok { value } = outcome else {
+            panic!("exact CB-SEM result did not reopen from mixed recipe authority: {outcome:?}")
+        };
+        assert_eq!(value.canonical_result_document_count, 1);
+        assert_eq!(
+            value.documents[0]
+                .canonical_document
+                .provenance
+                .capability_cell
+                .cell_id,
+            "qpls3.cbsem.bootstrap"
+        );
+    }
+
+    #[test]
+    fn standard_exact_cbsem_still_requires_a_cell_for_a_true_general_sem_result_zip() {
+        let fixture = general_sem_native_fixture_v1();
+        let project_id = fixture.project.manifest.project_id;
+        let artifact =
+            compile_general_sem_pls_recipe_v1(&fixture.recipe, Some(&fixture.model)).unwrap();
+        let analytical = run_compiled_general_sem_pls_recipe_v1(
+            &fixture.dataset,
+            &fixture.recipe,
+            &fixture.model,
+            &artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        let canonical = build_recipe_v4_general_sem_pls_canonical_result_v1(
+            uuid::Uuid::parse_str("00000000-0000-0000-0000-00000000cb91").unwrap(),
+            project_id,
+            fixture.dataset.id,
+            "2026-08-23T00:00:00.000Z",
+            "2026-08-23T00:00:01.000Z",
+            &fixture.recipe,
+            &fixture.model,
+            &analytical,
+        )
+        .unwrap();
+        let archived = serde_json::from_value::<CanonicalResultDocumentV2>(
+            serde_json::to_value(canonical).unwrap(),
+        )
+        .unwrap();
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive_path = directory.path().join("general-sem-result.qpls");
+        create_populated_general_sem_project_archive_v6(
+            &archive_path,
+            project_id,
+            "General SEM result read boundary",
+            Utc.timestamp_opt(1_787_443_200, 0).unwrap(),
+            &fixture.dataset,
+            fixture.model.clone(),
+            fixture.recipe.clone(),
+        )
+        .unwrap();
+        let loaded = load_project_archive_v6(&archive_path).unwrap();
+        let document = attach_canonical_result_document_v2_v6(&loaded.document, archived).unwrap();
+        let bytes = write_schema6_zip(
+            &archive_path,
+            &document,
+            std::slice::from_ref(&fixture.dataset),
+        );
+
+        assert!(matches!(
+            read_schema6_results(&standard_exact_cbsem_request(&archive_path, sha256(&bytes))),
+            ProjectSchema6ResultReadOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code == "schema6_result_read.capability_cell_required"
+        ));
     }
 
     #[test]

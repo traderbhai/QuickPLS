@@ -249,9 +249,16 @@ fn general_sem_execution_authority(
                 .into(),
         );
     };
-    let [recipe] = document.recipes.as_slice() else {
-        return Err("the bounded general_sem_v1 execution archive must contain exactly one resident RecipeV4".into());
+    let mut authority_recipes = document
+        .recipes
+        .iter()
+        .filter(|recipe| recipe.general_sem_config.is_some());
+    let Some(recipe) = authority_recipes.next() else {
+        return Err("the bounded general_sem_v1 execution archive must contain exactly one resident GeneralSemConfigV1 RecipeV4 authority".into());
     };
+    if authority_recipes.next().is_some() {
+        return Err("the bounded general_sem_v1 execution archive must contain exactly one resident GeneralSemConfigV1 RecipeV4 authority".into());
+    }
     let AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
         model_id,
         scientific_sha256: recipe_model_sha256,
@@ -611,8 +618,11 @@ pub(crate) fn read_internal_project_archive_v6_dataset_rows(
 mod tests {
     use super::*;
     use chrono::{TimeZone, Utc};
+    use qpls_core::{GeneralSemConfigV1, MethodConfig, SemDataBindingV4};
+    use qpls_data::{Dataset, write_arrow};
     use qpls_project::{
         PROJECT_ARCHIVE_SCHEMA_V6_VERSION, Project, ProjectArchiveUpgradeRequestV6,
+        append_recipe_v4_and_canonical_result_document_v2_file_v6,
         create_populated_general_sem_project_archive_v6, serialize_project_document_v6,
     };
     use std::{collections::BTreeMap, io::Write};
@@ -708,6 +718,114 @@ mod tests {
         writer.finish().unwrap();
     }
 
+    fn write_schema6_zip(path: &Path, document: &ProjectArchiveDocumentV6, datasets: &[Dataset]) {
+        let mut entries = vec![(
+            "project.json".to_owned(),
+            serialize_project_document_v6(document).unwrap(),
+        )];
+        for dataset in datasets {
+            entries.push((
+                format!("data/{}.arrow", dataset.id),
+                write_arrow(&dataset.batch).unwrap(),
+            ));
+        }
+        let checksums = entries
+            .iter()
+            .map(|(name, bytes)| {
+                (
+                    name.clone(),
+                    format!("{:x}", Sha256::digest(bytes.as_slice())),
+                )
+            })
+            .collect();
+        let manifest = ProjectManifest {
+            schema_version: PROJECT_ARCHIVE_SCHEMA_V6_VERSION,
+            project_id: document.project_id,
+            name: document.name.clone(),
+            created_at: document.created_at,
+            modified_at: document.modified_at,
+            engine_version: qpls_core::ENGINE_VERSION.into(),
+            checksum_algorithm: "sha256".into(),
+            checksums,
+        };
+        entries.push((
+            "manifest.json".to_owned(),
+            serde_json::to_vec_pretty(&manifest).unwrap(),
+        ));
+
+        let mut writer = ZipWriter::new(File::create(path).unwrap());
+        for (name, bytes) in entries {
+            writer
+                .start_file(name, SimpleFileOptions::default())
+                .unwrap();
+            writer.write_all(&bytes).unwrap();
+        }
+        writer.finish().unwrap();
+    }
+
+    fn create_general_sem_authority_for_exact_cbsem(
+        archive_path: &Path,
+    ) -> (AnalysisRecipeV4, qpls_project::CanonicalResultDocumentV2) {
+        let fixture = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../validation/fixtures/v255/archives/cbsem-exact-bootstrap-result.qpls");
+        let loaded = load_project_archive_v6(&fixture).unwrap();
+        let project_id = loaded.document.project_id;
+        let exact_recipe = loaded.document.recipes[0].clone();
+        assert!(exact_recipe.general_sem_config.is_none());
+        let exact_document = loaded.document.canonical_result_documents[0]
+            .canonical_document()
+            .clone();
+        let ProjectModelPayloadV6::SemModelV4 { model, .. } = &loaded.document.models[0].payload
+        else {
+            panic!("exact CB-SEM fixture must carry a promoted SemModelV4")
+        };
+        let mut authority_model = model.clone();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut authority_model.data_binding else {
+            panic!("exact CB-SEM fixture must carry a raw-data SemModelV4")
+        };
+        *dataset_id = loaded.datasets[0].id.to_string();
+        let authority_model_sha256 = authority_model.scientific_sha256().unwrap();
+
+        let mut authority_recipe = exact_recipe.clone();
+        authority_recipe.id =
+            uuid::Uuid::parse_str("00000000-0000-0000-0000-00000000cba0").unwrap();
+        authority_recipe.settings.bootstrap_samples = 0;
+        let Some(MethodConfig::Cbsem {
+            bootstrap_samples,
+            bootstrap_v2,
+            ..
+        }) = authority_recipe.method_config.as_mut()
+        else {
+            panic!("exact CB-SEM fixture must carry typed CB-SEM settings")
+        };
+        *bootstrap_samples = 0;
+        *bootstrap_v2 = None;
+        authority_recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: authority_model.id.clone(),
+            scientific_sha256: authority_model_sha256,
+        };
+        authority_recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        authority_recipe.metadata.insert(
+            "execution_surface".into(),
+            "native_general_sem_cbsem_standard_v1".into(),
+        );
+        authority_recipe
+            .metadata
+            .insert("general_sem_generation".into(), "general_sem_v1".into());
+
+        create_populated_general_sem_project_archive_v6(
+            archive_path,
+            project_id,
+            "General SEM exact CB-SEM append fixture",
+            Utc.with_ymd_and_hms(2026, 8, 23, 12, 0, 0).unwrap(),
+            &loaded.datasets[0],
+            authority_model,
+            authority_recipe,
+        )
+        .unwrap();
+        (exact_recipe, exact_document)
+    }
+
     fn populated_rows_request(
         directory: &tempfile::TempDir,
     ) -> ProjectArchiveV6DatasetRowsRequestV1 {
@@ -774,6 +892,62 @@ mod tests {
         };
         assert!(value.project.supports_general_sem_v1());
         assert!(value.general_sem_execution_authority.is_none());
+    }
+
+    #[test]
+    fn strict_inspection_selects_general_sem_authority_after_exact_cbsem_recipe_append() {
+        let directory = tempfile::tempdir().unwrap();
+        let archive_path = directory
+            .path()
+            .join("general-sem-with-exact-cbsem-result.qpls");
+        let (exact_recipe, exact_document) =
+            create_general_sem_authority_for_exact_cbsem(&archive_path);
+        let source_sha256 = sha256_file(&archive_path).unwrap().1;
+        let append = append_recipe_v4_and_canonical_result_document_v2_file_v6(
+            &archive_path,
+            &source_sha256,
+            exact_recipe,
+            exact_document,
+        )
+        .unwrap();
+        assert_eq!(append.canonical_result_document_count, 1);
+
+        let outcome = inspect_archive_v6(&request(&archive_path));
+        let ProjectArchiveV6ReadOutcomeV1::Ok { value } = outcome else {
+            panic!("strict inspection rejected the exact-CB-SEM result recipe")
+        };
+        assert_eq!(value.counts.recipes, 2);
+        assert_eq!(value.counts.canonical_result_documents, 1);
+        let authority = value
+            .general_sem_execution_authority
+            .as_ref()
+            .expect("General SEM authority must remain selected");
+        assert!(authority.recipe.general_sem_config.is_some());
+        assert_eq!(authority.recipe_id, "00000000-0000-0000-0000-00000000cba0");
+    }
+
+    #[test]
+    fn strict_inspection_rejects_duplicate_general_sem_recipe_authorities() {
+        let directory = tempfile::tempdir().unwrap();
+        let source_path = directory.path().join("single-general-sem-authority.qpls");
+        create_general_sem_authority_for_exact_cbsem(&source_path);
+        let loaded = load_project_archive_v6(&source_path).unwrap();
+        let mut document = loaded.document;
+        let mut duplicate = document.recipes[0].clone();
+        duplicate.id = uuid::Uuid::parse_str("00000000-0000-0000-0000-00000000cba1").unwrap();
+        document.recipes.push(duplicate);
+        document.ensure_valid().unwrap();
+
+        let duplicate_path = directory
+            .path()
+            .join("duplicate-general-sem-authority.qpls");
+        write_schema6_zip(&duplicate_path, &document, &loaded.datasets);
+        assert!(matches!(
+            inspect_archive_v6(&request(&duplicate_path)),
+            ProjectArchiveV6ReadOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code == "schema6_archive_read.general_sem_authority_invalid"
+                    && diagnostic.message.contains("exactly one resident GeneralSemConfigV1")
+        ));
     }
 
     #[test]

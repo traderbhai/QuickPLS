@@ -5,7 +5,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { defaultDiagramLayout } from "../domain/diagramGraph";
 import {
   autosaveNativeProject,
+  adoptNativeSchema6RevisionSourceV1,
   cancelNativePlsJob,
+  clearNativeSchema6RevisionSourceV1,
   createNativeProject,
   dismissNativePlsJob,
   getNativePlsJob,
@@ -559,9 +561,29 @@ export function NativeDesktopController() {
         const opened = await sessionStore.open(async () => ({ status: "ok", value: inspected.value }));
         if (opened !== "activated") throw new Error(`The General SEM archive could not enter the strict schema-6 session (${opened}).`);
         openedHere = true;
+        const execution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
+        const nativeAuthority = inspected.value.generalSemExecutionAuthority;
+        if (!nativeAuthority) {
+          throw new Error("The strictly reopened General SEM archive has no exact native execution authority.");
+        }
+        const adopted = await adoptNativeSchema6RevisionSourceV1(inspected.value);
+        if (adopted.archivePath !== inspected.value.archivePath
+          || adopted.archiveSha256 !== inspected.value.archiveSha256
+          || adopted.archiveBytes !== inspected.value.archiveBytes
+          || adopted.projectId !== nativeAuthority.projectId
+          || adopted.datasetId !== nativeAuthority.datasetId
+          || adopted.datasetFingerprint !== nativeAuthority.datasetFingerprint
+          || adopted.modelId !== nativeAuthority.modelId
+          || adopted.modelScientificSha256 !== nativeAuthority.modelScientificSha256
+          || adopted.recipeId !== nativeAuthority.recipeId
+          || adopted.recipeDocumentSha256 !== nativeAuthority.recipeDocumentSha256
+          || !adopted.readOnly
+          || adopted.autosaveRecoveryUsed
+          || !adopted.sourceRecheckedUnchanged) {
+          throw new Error("The native revision source differs from the strictly reopened General SEM authority.");
+        }
         const activated = await useInternalProjectArchiveV6Session.getState().activateStandardAuthorities();
         if (activated !== "activated") throw new Error(`The General SEM archive could not activate its Standard canvas authority (${activated}).`);
-        const execution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
         const active = useWorkspace.getState();
         if (active.activeModelId !== execution.receipt.residentModelId
           || active.standardSemModelV4Persistence[execution.receipt.residentModelId]?.scientificSha256
@@ -573,6 +595,7 @@ export function NativeDesktopController() {
         clearPresentedCanonicalResult();
         updateProjectWritable(false);
         markCurrentWorkspaceClean();
+        let strictGeneralSemResultRestored = false;
         try {
           const resultReadback = await readInternalProjectSchema6CanonicalResultsV2({
             ...execution.readAccess,
@@ -589,6 +612,7 @@ export function NativeDesktopController() {
               execution.receipt,
             );
             if (latest) {
+              strictGeneralSemResultRestored = true;
               window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
                 detail: { document: latest.canonicalDocument, navigate: false },
               }));
@@ -597,6 +621,25 @@ export function NativeDesktopController() {
         } catch {
           // Result restoration is fail-closed: the verified model remains open,
           // but no unverified or stale canonical document is exposed in Results.
+        }
+        if (!strictGeneralSemResultRestored) {
+          try {
+            const stored = await readStoredInternalLabsRecipeV4CbsemResultsV1({
+              archivePath: inspected.value.archivePath,
+              sourceSha256: inspected.value.archiveSha256,
+              projectId: inspected.value.project.project_id,
+            }, readInternalProjectSchema6CanonicalResultsV2);
+            if (stored.outcome.status === "ok") {
+              const latest = selectLatestStoredExactCaseBootstrapEntryV1(stored.entries);
+              if (latest) {
+                window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+                  detail: { document: latest.canonicalDocument, navigate: false },
+                }));
+              }
+            }
+          } catch {
+            // A mixed-owner or stale exact-CBSEM read remains undisplayed.
+          }
         }
         pushToast({
           tone: "success",
@@ -611,6 +654,7 @@ export function NativeDesktopController() {
           if (currentSession.session?.standardActivation) currentSession.closeStandardProject();
           else currentSession.deactivate();
         }
+        await clearNativeSchema6RevisionSourceV1().catch(() => undefined);
         throw error;
       }
     }

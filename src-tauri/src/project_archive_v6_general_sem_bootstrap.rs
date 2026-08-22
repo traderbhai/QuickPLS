@@ -17,6 +17,7 @@ use crate::{
         is_rank3_general_sem_cbsem_execution_cell_v1, selected_general_sem_cbsem_execution_cell_v1,
         selected_general_sem_execution_cell_v1,
     },
+    project_archive_v6_native_adoption::DesktopSchema6NativeAdoptionAuthorityV1,
 };
 use chrono::{DateTime, Utc};
 use qpls_core::{
@@ -25,11 +26,12 @@ use qpls_core::{
 };
 use qpls_project::{
     GeneralSemPopulatedProjectArchiveCreationReceiptV1, GeneralSemProjectArchiveCreationErrorV1,
-    Project, ProjectArchiveV6SaveCopyError, ProjectDatasetVersionOperationV1,
-    create_populated_general_sem_project_archive_v6, read_project_data_lineage_v1,
+    Project, ProjectArchiveV6SaveCopyError, ProjectDataLineageV1, ProjectDatasetVersionOperationV1,
+    create_populated_general_sem_project_archive_v6, validate_project_data_lineage_resident_v1,
 };
 use serde::{Deserialize, Serialize};
 use std::{
+    collections::BTreeSet,
     path::Path,
     sync::{Arc, Mutex, MutexGuard, TryLockError},
 };
@@ -127,7 +129,7 @@ impl DesktopGeneralSemFreshDraftAuthorityV1 {
     /// exact active project. The source project is never rewritten: the
     /// existing bootstrap command still requires a new project UUID and a new
     /// destination path before publishing the marked schema-6 authority.
-    fn authorize_existing_project_revision(
+    pub(crate) fn authorize_existing_project_revision(
         &self,
         active_project: &Arc<Mutex<Project>>,
     ) -> Result<Uuid, String> {
@@ -193,9 +195,10 @@ pub(crate) fn invalidate_general_sem_fresh_draft_authority_v1(
 pub(crate) fn authorize_general_sem_revision_draft_v1(
     project: State<'_, DesktopProject>,
     fresh_draft_authority: State<'_, DesktopGeneralSemFreshDraftAuthorityV1>,
+    native_adoption_authority: State<'_, DesktopSchema6NativeAdoptionAuthorityV1>,
 ) -> Result<String, String> {
-    fresh_draft_authority
-        .authorize_existing_project_revision(&project.0)
+    native_adoption_authority
+        .authorize_exact_revision(&project.0, fresh_draft_authority.inner())
         .map(|project_id| project_id.to_string())
 }
 
@@ -596,6 +599,81 @@ fn bootstrap_with_fresh_draft_authority(
     outcome
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SourceDatasetLineageAdmissionV1 {
+    Supported,
+    UnsupportedDerived,
+    Invalid,
+}
+
+/// Admits a metadata-only dataset revision because metadata is fingerprinted
+/// analysis input, not a row transformation. Every recorded metadata edge must
+/// retain the exact parent Arrow batch; a recode or transform anywhere in the
+/// selected dataset's ancestry remains fail-closed.
+fn classify_source_dataset_lineage_v1(
+    project: &Project,
+    lineage: Option<&ProjectDataLineageV1>,
+    source_dataset_id: Uuid,
+) -> SourceDatasetLineageAdmissionV1 {
+    let Some(lineage) = lineage else {
+        return SourceDatasetLineageAdmissionV1::Supported;
+    };
+    let mut current_id = source_dataset_id;
+    let mut visited = BTreeSet::new();
+    loop {
+        if !visited.insert(current_id) {
+            return SourceDatasetLineageAdmissionV1::Invalid;
+        }
+        let current_id_text = current_id.to_string();
+        let Some(record) = lineage
+            .records
+            .iter()
+            .find(|record| record.dataset_id == current_id_text)
+        else {
+            // Older resident datasets may predate lineage records. Preserve the
+            // existing raw-dataset compatibility boundary once every recorded
+            // metadata edge leading to that dataset has proved row-immutable.
+            return SourceDatasetLineageAdmissionV1::Supported;
+        };
+        match record.operation {
+            ProjectDatasetVersionOperationV1::Import => {
+                return SourceDatasetLineageAdmissionV1::Supported;
+            }
+            ProjectDatasetVersionOperationV1::Recode
+            | ProjectDatasetVersionOperationV1::Transform => {
+                return SourceDatasetLineageAdmissionV1::UnsupportedDerived;
+            }
+            ProjectDatasetVersionOperationV1::Metadata => {
+                let Some(parent_id) = record
+                    .parent_dataset_id
+                    .as_deref()
+                    .and_then(|value| Uuid::parse_str(value).ok())
+                else {
+                    return SourceDatasetLineageAdmissionV1::Invalid;
+                };
+                let Some(current) = project
+                    .datasets
+                    .iter()
+                    .find(|dataset| dataset.id == current_id)
+                else {
+                    return SourceDatasetLineageAdmissionV1::Invalid;
+                };
+                let Some(parent) = project
+                    .datasets
+                    .iter()
+                    .find(|dataset| dataset.id == parent_id)
+                else {
+                    return SourceDatasetLineageAdmissionV1::Invalid;
+                };
+                if current.batch != parent.batch {
+                    return SourceDatasetLineageAdmissionV1::Invalid;
+                }
+                current_id = parent_id;
+            }
+        }
+    }
+}
+
 fn bootstrap_general_sem_project_archive(
     request: GeneralSemProjectArchiveBootstrapRequestV1,
     active_project: Arc<Mutex<Project>>,
@@ -704,29 +782,33 @@ fn bootstrap_general_sem_project_archive(
                 "Refresh the dataset binding and rebuild the RecipeV4 request.",
             );
         }
-        let lineage = match read_project_data_lineage_v1(&project.layouts) {
-            Ok(lineage) => lineage,
-            Err(_) => {
+        let lineage =
+            match validate_project_data_lineage_resident_v1(&project.datasets, &project.layouts) {
+                Ok(lineage) => lineage,
+                Err(_) => {
+                    return blocked(
+                        "source_dataset_lineage_invalid",
+                        "The active dataset lineage authority is invalid.",
+                        "Repair or reimport the dataset before creating a General SEM project.",
+                    );
+                }
+            };
+        match classify_source_dataset_lineage_v1(&project, lineage.as_ref(), source_dataset_id) {
+            SourceDatasetLineageAdmissionV1::Supported => {}
+            SourceDatasetLineageAdmissionV1::UnsupportedDerived => {
+                return blocked(
+                    "source_dataset_transformation_lineage_unsupported",
+                    "This exact General SEM execution cell does not accept a derived or transformed dataset authority.",
+                    "Import the original raw dataset as a new resident dataset and rebuild the General SEM project.",
+                );
+            }
+            SourceDatasetLineageAdmissionV1::Invalid => {
                 return blocked(
                     "source_dataset_lineage_invalid",
                     "The active dataset lineage authority is invalid.",
                     "Repair or reimport the dataset before creating a General SEM project.",
                 );
             }
-        };
-        if lineage.as_ref().is_some_and(|lineage| {
-            lineage.records.iter().any(|record| {
-                record.dataset_id == source_dataset_id.to_string()
-                    && (record.operation != ProjectDatasetVersionOperationV1::Import
-                        || record.parent_dataset_id.is_some()
-                        || record.transformation.is_some())
-            })
-        }) {
-            return blocked(
-                "source_dataset_transformation_lineage_unsupported",
-                "This exact General SEM execution cell does not accept a derived or transformed dataset authority.",
-                "Import the original raw dataset as a new resident dataset and rebuild the General SEM project.",
-            );
         }
         dataset.clone()
     };
@@ -1042,6 +1124,19 @@ pub(crate) mod tests {
             model: fixture.model.clone(),
             recipe: fixture.recipe.clone(),
         }
+    }
+
+    fn rebind_fixture_to_dataset(fixture: &mut GeneralSemNativeFixtureV1, dataset: Dataset) {
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut fixture.model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        fixture.recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        fixture.recipe.model_binding = AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+            model_id: fixture.model.id.clone(),
+            scientific_sha256: fixture.model.scientific_sha256().unwrap(),
+        };
+        fixture.dataset = dataset;
     }
 
     #[test]
@@ -1524,6 +1619,304 @@ pub(crate) mod tests {
         ));
 
         assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn bootstrap_boundary_publishes_an_exact_metadata_only_dataset_version() {
+        let directory = tempfile::tempdir().unwrap();
+        let destination = directory.path().join("metadata-only.qpls");
+        let mut fixture = general_sem_native_fixture_v1();
+        let source = fixture.dataset.clone();
+        fixture.project.datasets.clear();
+        crate::append_dataset(&mut fixture.project, source.clone()).unwrap();
+        let mut metadata = source.schema.columns[0].clone();
+        metadata.label = Some("Updated native label".into());
+        let revised = crate::version_column_metadata(
+            &mut fixture.project,
+            &source.id.to_string(),
+            &source.schema.columns[0].name,
+            metadata,
+        )
+        .unwrap();
+        let revised_dataset = fixture
+            .project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id.to_string() == revised.id)
+            .unwrap()
+            .clone();
+        assert_eq!(revised_dataset.batch, source.batch);
+        rebind_fixture_to_dataset(&mut fixture, revised_dataset);
+
+        let outcome = bootstrap_general_sem_project_archive(
+            request(&destination, &fixture),
+            Arc::new(Mutex::new(fixture.project)),
+        );
+        let GeneralSemProjectArchiveBootstrapOutcomeV1::Ok { value } = outcome else {
+            panic!("row-immutable metadata-only authority was blocked: {outcome:?}")
+        };
+        assert!(value.receipt.strict_reopen_validated);
+        assert!(destination.is_file());
+    }
+
+    #[test]
+    fn bootstrap_boundary_keeps_recode_and_transform_lineage_blocked() {
+        let directory = tempfile::tempdir().unwrap();
+
+        let mut recoded_fixture = general_sem_native_fixture_v1();
+        let recode_source = recoded_fixture.dataset.clone();
+        recoded_fixture.project.datasets.clear();
+        crate::append_dataset(&mut recoded_fixture.project, recode_source.clone()).unwrap();
+        let recoded = crate::version_recode_column(
+            &mut recoded_fixture.project,
+            &recode_source.id.to_string(),
+            qpls_data::RecodeColumnSpec {
+                source_column: "x1".into(),
+                target_column: "x1_code".into(),
+                target_label: None,
+                target_type: qpls_data::ColumnType::Numeric,
+                target_scale: qpls_data::ScaleType::Ordinal,
+                mappings: vec![qpls_data::RecodeValueMapping {
+                    source: "1".into(),
+                    target: Some("10".into()),
+                }],
+                unmapped: qpls_data::RecodeUnmappedPolicy::KeepOriginal,
+            },
+        )
+        .unwrap();
+        let recoded_dataset = recoded_fixture
+            .project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id.to_string() == recoded.dataset.id)
+            .unwrap()
+            .clone();
+        rebind_fixture_to_dataset(&mut recoded_fixture, recoded_dataset);
+        let recode_destination = directory.path().join("recode-must-not-publish.qpls");
+        assert!(matches!(
+            bootstrap_general_sem_project_archive(
+                request(&recode_destination, &recoded_fixture),
+                Arc::new(Mutex::new(recoded_fixture.project)),
+            ),
+            GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.source_dataset_transformation_lineage_unsupported"
+        ));
+        assert!(!recode_destination.exists());
+
+        let mut transformed_fixture = general_sem_native_fixture_v1();
+        let transform_source = transformed_fixture.dataset.clone();
+        transformed_fixture.project.datasets.clear();
+        crate::append_dataset(&mut transformed_fixture.project, transform_source.clone()).unwrap();
+        let transformed = crate::version_dataset_transformation(
+            &mut transformed_fixture.project,
+            &transform_source.id.to_string(),
+            qpls_core::DatasetTransformationSpecV2::ReverseScale {
+                source_column: "x1".into(),
+                target_column: "x1_reversed".into(),
+                scale_min: 1.0,
+                scale_max: 12.0,
+                target_label: None,
+            },
+            "transformed-source.csv".into(),
+        )
+        .unwrap();
+        let transformed_dataset = transformed_fixture
+            .project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id.to_string() == transformed.dataset.id)
+            .unwrap()
+            .clone();
+        rebind_fixture_to_dataset(&mut transformed_fixture, transformed_dataset);
+        let transform_destination = directory.path().join("transform-must-not-publish.qpls");
+        assert!(matches!(
+            bootstrap_general_sem_project_archive(
+                request(&transform_destination, &transformed_fixture),
+                Arc::new(Mutex::new(transformed_fixture.project)),
+            ),
+            GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic }
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.source_dataset_transformation_lineage_unsupported"
+        ));
+        assert!(!transform_destination.exists());
+    }
+
+    #[test]
+    fn source_dataset_lineage_admits_only_row_immutable_metadata_versions() {
+        let source = import_delimited_bytes(
+            b"x,y\n0,4\n1,5\n0,6\n",
+            "metadata-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id;
+        let mut project = Project::new("Metadata-only General SEM source");
+        crate::append_dataset(&mut project, source).unwrap();
+        let mut metadata = project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id == source_id)
+            .unwrap()
+            .schema
+            .columns[0]
+            .clone();
+        metadata.label = Some("Binary moderator".into());
+        metadata.scale_type = qpls_data::ScaleType::Binary;
+        metadata.theoretical_min = Some(0.0);
+        metadata.theoretical_max = Some(1.0);
+        let revised =
+            crate::version_column_metadata(&mut project, &source_id.to_string(), "x", metadata)
+                .unwrap();
+        let revised_id = Uuid::parse_str(&revised.id).unwrap();
+        let lineage =
+            validate_project_data_lineage_resident_v1(&project.datasets, &project.layouts).unwrap();
+
+        assert_eq!(
+            classify_source_dataset_lineage_v1(&project, lineage.as_ref(), revised_id),
+            SourceDatasetLineageAdmissionV1::Supported
+        );
+        assert_eq!(
+            project
+                .datasets
+                .iter()
+                .find(|dataset| dataset.id == revised_id)
+                .unwrap()
+                .batch,
+            project
+                .datasets
+                .iter()
+                .find(|dataset| dataset.id == source_id)
+                .unwrap()
+                .batch
+        );
+
+        let changed_rows = import_delimited_bytes(
+            b"x,y\n1,4\n1,5\n0,6\n",
+            "changed-rows.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        project
+            .datasets
+            .iter_mut()
+            .find(|dataset| dataset.id == revised_id)
+            .unwrap()
+            .batch = changed_rows.batch;
+        assert_eq!(
+            classify_source_dataset_lineage_v1(&project, lineage.as_ref(), revised_id),
+            SourceDatasetLineageAdmissionV1::Invalid
+        );
+    }
+
+    #[test]
+    fn source_dataset_lineage_rejects_recode_or_transform_anywhere_in_ancestry() {
+        let source = import_delimited_bytes(
+            b"x,y\n1,4\n2,5\n3,6\n",
+            "derived-source.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_id = source.id.to_string();
+        let mut recoded_project = Project::new("Recoded General SEM source");
+        crate::append_dataset(&mut recoded_project, source.clone()).unwrap();
+        let recoded = crate::version_recode_column(
+            &mut recoded_project,
+            &source_id,
+            qpls_data::RecodeColumnSpec {
+                source_column: "x".into(),
+                target_column: "x_code".into(),
+                target_label: None,
+                target_type: qpls_data::ColumnType::Numeric,
+                target_scale: qpls_data::ScaleType::Ordinal,
+                mappings: vec![qpls_data::RecodeValueMapping {
+                    source: "1".into(),
+                    target: Some("10".into()),
+                }],
+                unmapped: qpls_data::RecodeUnmappedPolicy::KeepOriginal,
+            },
+        )
+        .unwrap();
+        let mut recoded_metadata = recoded_project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id.to_string() == recoded.dataset.id)
+            .unwrap()
+            .schema
+            .columns[0]
+            .clone();
+        recoded_metadata.label = Some("Metadata after recode".into());
+        let recoded_metadata = crate::version_column_metadata(
+            &mut recoded_project,
+            &recoded.dataset.id,
+            "x",
+            recoded_metadata,
+        )
+        .unwrap();
+        let recoded_metadata_id = Uuid::parse_str(&recoded_metadata.id).unwrap();
+        let recoded_lineage = validate_project_data_lineage_resident_v1(
+            &recoded_project.datasets,
+            &recoded_project.layouts,
+        )
+        .unwrap();
+        assert_eq!(
+            classify_source_dataset_lineage_v1(
+                &recoded_project,
+                recoded_lineage.as_ref(),
+                recoded_metadata_id,
+            ),
+            SourceDatasetLineageAdmissionV1::UnsupportedDerived
+        );
+
+        let mut transformed_project = Project::new("Transformed General SEM source");
+        crate::append_dataset(&mut transformed_project, source).unwrap();
+        let transformed = crate::version_dataset_transformation(
+            &mut transformed_project,
+            &source_id,
+            qpls_core::DatasetTransformationSpecV2::ReverseScale {
+                source_column: "x".into(),
+                target_column: "x_reversed".into(),
+                scale_min: 1.0,
+                scale_max: 3.0,
+                target_label: None,
+            },
+            "transformed-source.csv".into(),
+        )
+        .unwrap();
+        let mut transformed_metadata = transformed_project
+            .datasets
+            .iter()
+            .find(|dataset| dataset.id.to_string() == transformed.dataset.id)
+            .unwrap()
+            .schema
+            .columns[0]
+            .clone();
+        transformed_metadata.label = Some("Metadata after transform".into());
+        let transformed_metadata = crate::version_column_metadata(
+            &mut transformed_project,
+            &transformed.dataset.id,
+            "x",
+            transformed_metadata,
+        )
+        .unwrap();
+        let transformed_metadata_id = Uuid::parse_str(&transformed_metadata.id).unwrap();
+        let transformed_lineage = validate_project_data_lineage_resident_v1(
+            &transformed_project.datasets,
+            &transformed_project.layouts,
+        )
+        .unwrap();
+        assert_eq!(
+            classify_source_dataset_lineage_v1(
+                &transformed_project,
+                transformed_lineage.as_ref(),
+                transformed_metadata_id,
+            ),
+            SourceDatasetLineageAdmissionV1::UnsupportedDerived
+        );
     }
 
     #[cfg(windows)]

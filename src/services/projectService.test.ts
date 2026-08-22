@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   activateNativeDataset,
+  adoptNativeSchema6RevisionSourceV1,
   appendInternalProjectSchema6CanonicalResultV2,
   autosaveNativeProject,
   cancelInternalProjectUpgradeV6,
@@ -9,6 +10,7 @@ import {
   cancelNativeAnalysisJob,
   cancelNativeDiagnosticBundlePreview,
   cancelNativePlsJob,
+  clearNativeSchema6RevisionSourceV1,
   createNativeProject,
   dismissNativeAnalysisJob,
   dismissNativePlsJob,
@@ -856,6 +858,68 @@ describe("native canonical project services", () => {
 
     expect(mocks.invoke).toHaveBeenCalledWith(
       "invalidate_general_sem_fresh_draft_authority_v1",
+    );
+  });
+
+  it("separates one-shot draft revocation from an explicit native schema-6 release", async () => {
+    mocks.invoke.mockResolvedValue(undefined);
+
+    await clearNativeSchema6RevisionSourceV1();
+
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "clear_internal_project_archive_v6_native_revision_source_v1",
+    );
+  });
+
+  it("binds native schema-6 revision adoption to the complete strict inspection identity", async () => {
+    const request = {
+      archivePath: "D:\\QuickPLS\\validation\\exact-general-sem.qpls",
+      expectedArchiveSha256: "a".repeat(64),
+      expectedArchiveBytes: 42_000,
+      expectedProjectId: "60000002-0000-4000-8000-000000000123",
+      expectedDatasetId: "60000002-0000-4000-8000-000000000124",
+      expectedDatasetFingerprint: `v2:${"b".repeat(64)}`,
+      expectedModelId: "model:general-sem:exact",
+      expectedModelScientificSha256: "c".repeat(64),
+      expectedRecipeId: "60000002-0000-4000-8000-000000000125",
+      expectedRecipeDocumentSha256: "d".repeat(64),
+    };
+    const snapshot = {
+      archivePath: request.archivePath,
+      archiveSha256: request.expectedArchiveSha256,
+      archiveBytes: request.expectedArchiveBytes,
+      generalSemExecutionAuthority: {
+        projectId: request.expectedProjectId,
+        datasetId: request.expectedDatasetId,
+        datasetFingerprint: request.expectedDatasetFingerprint,
+        modelId: request.expectedModelId,
+        modelScientificSha256: request.expectedModelScientificSha256,
+        recipeId: request.expectedRecipeId,
+        recipeDocumentSha256: request.expectedRecipeDocumentSha256,
+      },
+    };
+    mocks.invoke.mockResolvedValue({
+      schemaVersion: 1,
+      ...request,
+      archiveSha256: request.expectedArchiveSha256,
+      archiveBytes: request.expectedArchiveBytes,
+      projectId: request.expectedProjectId,
+      datasetId: request.expectedDatasetId,
+      datasetFingerprint: request.expectedDatasetFingerprint,
+      modelId: request.expectedModelId,
+      modelScientificSha256: request.expectedModelScientificSha256,
+      recipeId: request.expectedRecipeId,
+      recipeDocumentSha256: request.expectedRecipeDocumentSha256,
+      readOnly: true,
+      autosaveRecoveryUsed: false,
+      sourceRecheckedUnchanged: true,
+    });
+
+    await adoptNativeSchema6RevisionSourceV1(snapshot as never);
+
+    expect(mocks.invoke).toHaveBeenCalledWith(
+      "adopt_internal_project_archive_v6_native_revision_source_v1",
+      { request },
     );
   });
 

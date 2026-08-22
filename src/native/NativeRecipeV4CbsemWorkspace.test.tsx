@@ -61,6 +61,10 @@ const services = {
   read: vi.fn(),
   exportXlsx: vi.fn(),
   inspect: vi.fn(),
+  strictInspect: vi.fn(),
+  adoptActiveProject: vi.fn(),
+  reanchorActiveProject: vi.fn(),
+  clearAdoptedProject: vi.fn(),
   selectArchive: vi.fn(),
 } as unknown as NativeRecipeV4CbsemWorkspaceServices;
 
@@ -90,6 +94,37 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
       sourceArchivePath: "D:\\Study.qpls",
       sourceArchiveSha256: "a".repeat(64),
     };
+    const strictSnapshot = {
+      archivePath: "D:\\Study.qpls",
+      archiveSha256: "b".repeat(64),
+      archiveBytes: 8192,
+      project: { project_id: "project-v4" },
+      generalSemExecutionAuthority: {
+        projectId: "project-v4",
+        datasetId: "dataset-v4",
+        datasetFingerprint: "dataset-fingerprint-v4",
+        modelId: "model-v4",
+        modelScientificSha256: "d".repeat(64),
+        recipeId: "recipe-authority-v4",
+        recipeDocumentSha256: "e".repeat(64),
+      },
+    };
+    const adoptedReceipt = {
+      schemaVersion: 1,
+      archivePath: strictSnapshot.archivePath,
+      archiveSha256: strictSnapshot.archiveSha256,
+      archiveBytes: strictSnapshot.archiveBytes,
+      projectId: strictSnapshot.generalSemExecutionAuthority.projectId,
+      datasetId: strictSnapshot.generalSemExecutionAuthority.datasetId,
+      datasetFingerprint: strictSnapshot.generalSemExecutionAuthority.datasetFingerprint,
+      modelId: strictSnapshot.generalSemExecutionAuthority.modelId,
+      modelScientificSha256: strictSnapshot.generalSemExecutionAuthority.modelScientificSha256,
+      recipeId: strictSnapshot.generalSemExecutionAuthority.recipeId,
+      recipeDocumentSha256: strictSnapshot.generalSemExecutionAuthority.recipeDocumentSha256,
+      readOnly: true,
+      autosaveRecoveryUsed: false,
+      sourceRecheckedUnchanged: true,
+    };
     const blockedAppend = {
       inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
       append: vi.fn().mockResolvedValue({
@@ -101,6 +136,56 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", blockedAppend))
       .resolves.toMatchObject({ status: "blocked", diagnostic: { code: "append.blocked" } });
     expect(blockedAppend.read).not.toHaveBeenCalled();
+
+    const strictInspectionBlocked = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: vi.fn().mockResolvedValue({
+        status: "ok",
+        value: {
+          schema_version: 6,
+          project_id: "project-v4",
+          archive_path: "D:\\Study.qpls",
+          source_document_sha256: "a".repeat(64),
+          updated_document_sha256: "b".repeat(64),
+          canonical_document_id: "document-v4",
+          run_id: "run-v4",
+          canonical_result_document_count: 1,
+          source_verified_at_commit: true,
+          post_write_validated: true,
+          rollback_copy_removed: true,
+        },
+      }),
+      strictInspect: vi.fn().mockResolvedValue({
+        status: "blocked",
+        diagnostic: { code: "strict.blocked", message: "Strict inspect blocked.", correctiveAction: "Reopen." },
+      }),
+      adoptActiveProject: vi.fn(),
+      reanchorActiveProject: vi.fn(),
+      clearAdoptedProject: vi.fn().mockResolvedValue(undefined),
+      read: vi.fn(),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", strictInspectionBlocked))
+      .resolves.toMatchObject({ status: "blocked", diagnostic: { code: "strict.blocked" } });
+    expect(strictInspectionBlocked.clearAdoptedProject).toHaveBeenCalledOnce();
+    expect(strictInspectionBlocked.adoptActiveProject).not.toHaveBeenCalled();
+    expect(strictInspectionBlocked.read).not.toHaveBeenCalled();
+
+    const strictIdentityMismatch = {
+      ...strictInspectionBlocked,
+      strictInspect: vi.fn().mockResolvedValue({
+        status: "ok",
+        value: { ...strictSnapshot, archiveSha256: "c".repeat(64) },
+      }),
+      clearAdoptedProject: vi.fn().mockResolvedValue(undefined),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", strictIdentityMismatch))
+      .resolves.toMatchObject({
+        status: "blocked",
+        diagnostic: { code: "schema6.cbsem.post_append_identity_mismatch" },
+      });
+    expect(strictIdentityMismatch.clearAdoptedProject).toHaveBeenCalledOnce();
+    expect(strictIdentityMismatch.adoptActiveProject).not.toHaveBeenCalled();
+    expect(strictIdentityMismatch.read).not.toHaveBeenCalled();
 
     const blockedRead = {
       inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
@@ -120,6 +205,10 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
           rollback_copy_removed: true,
         },
       }),
+      strictInspect: vi.fn().mockResolvedValue({ status: "ok", value: strictSnapshot }),
+      adoptActiveProject: vi.fn().mockResolvedValue(adoptedReceipt),
+      reanchorActiveProject: vi.fn().mockReturnValue("reanchored"),
+      clearAdoptedProject: vi.fn(),
       read: vi.fn().mockResolvedValue({
         status: "blocked",
         diagnostic: { code: "readback.blocked", message: "Readback blocked.", correctiveAction: "Inspect again." },
@@ -132,6 +221,10 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     const strictSuccess = {
       inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
       append: blockedRead.append,
+      strictInspect: vi.fn().mockResolvedValue({ status: "ok", value: strictSnapshot }),
+      adoptActiveProject: vi.fn().mockResolvedValue(adoptedReceipt),
+      reanchorActiveProject: vi.fn().mockReturnValue("reanchored"),
+      clearAdoptedProject: vi.fn(),
       read: vi.fn().mockResolvedValue({
         status: "ok",
         value: {
@@ -153,6 +246,49 @@ describe("Exact CB-SEM Recipe-v4 workspace accessibility", () => {
     } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
     await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", strictSuccess))
       .resolves.toMatchObject({ status: "ok", entry: { documentId: "document-v4" } });
+    expect(strictSuccess.strictInspect).toHaveBeenCalledOnce();
+    expect(strictSuccess.adoptActiveProject).toHaveBeenCalledWith(strictSnapshot);
+    expect(strictSuccess.strictInspect.mock.invocationCallOrder[0])
+      .toBeLessThan(strictSuccess.adoptActiveProject.mock.invocationCallOrder[0]);
+    expect(strictSuccess.reanchorActiveProject).toHaveBeenCalledWith(strictSnapshot);
+    expect(strictSuccess.adoptActiveProject.mock.invocationCallOrder[0])
+      .toBeLessThan(strictSuccess.reanchorActiveProject.mock.invocationCallOrder[0]);
+    expect(strictSuccess.reanchorActiveProject.mock.invocationCallOrder[0])
+      .toBeLessThan(strictSuccess.read.mock.invocationCallOrder[0]);
+
+    const staleAdoption = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: blockedRead.append,
+      strictInspect: vi.fn().mockResolvedValue({ status: "ok", value: strictSnapshot }),
+      adoptActiveProject: vi.fn().mockResolvedValue({ ...adoptedReceipt, archiveSha256: "f".repeat(64) }),
+      reanchorActiveProject: vi.fn(),
+      clearAdoptedProject: vi.fn(),
+      read: vi.fn(),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", staleAdoption))
+      .resolves.toMatchObject({
+        status: "blocked",
+        diagnostic: { code: "schema6.cbsem.post_append_native_adoption_failed" },
+      });
+    expect(staleAdoption.read).not.toHaveBeenCalled();
+    expect(staleAdoption.clearAdoptedProject).toHaveBeenCalledOnce();
+
+    const blockedReanchor = {
+      inspect: vi.fn().mockResolvedValue({ status: "ok", value: inspection }),
+      append: blockedRead.append,
+      strictInspect: vi.fn().mockResolvedValue({ status: "ok", value: strictSnapshot }),
+      adoptActiveProject: vi.fn().mockResolvedValue(adoptedReceipt),
+      reanchorActiveProject: vi.fn().mockReturnValue("blocked"),
+      clearAdoptedProject: vi.fn().mockResolvedValue(undefined),
+      read: vi.fn(),
+    } as unknown as Parameters<typeof strictlyPublishCbsemCalculationResultV1>[3];
+    await expect(strictlyPublishCbsemCalculationResultV1(completed, recipe, "D:\\Study.qpls", blockedReanchor))
+      .resolves.toMatchObject({
+        status: "blocked",
+        diagnostic: { code: "schema6.cbsem.post_append_reanchor_failed" },
+      });
+    expect(blockedReanchor.clearAdoptedProject).toHaveBeenCalledOnce();
+    expect(blockedReanchor.read).not.toHaveBeenCalled();
   });
 
   it("renders the Standard exact workspace, labelled inputs, bootstrap control, layered preflight, and native job action", () => {

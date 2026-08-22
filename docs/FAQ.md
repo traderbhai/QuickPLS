@@ -15,17 +15,16 @@ The coordinated source version is 2.55.0. Formal first diagnostic
 sole failure was `frontend_typecheck`, where
 `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
 `TS2339`. The same-script, same-suite formal final diagnostic
-`20260822T183205Z` at source `0fa74eb` passed 14/14, including 453/453 Vitest
-suites, 1702/1702 tests, 17/17 rebaseline assertions,
+`20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest
+suites, 1697/1697 tests, 17/17 rebaseline assertions,
 and zero captured console errors. Both formal records use runner
 SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
 Renderer console/page errors fail closed, attach-only phases use fresh
 wrapper-owned processes, and candidate/phase/trusted-driver identities and
-hashes are bound. Candidate/install/smoke/probe attempts `20260822T163918Z`,
-`20260822T170818Z`, `20260822T173336Z`, `20260822T174301Z`,
-`20260822T175510Z`, and every earlier 2.55 candidate, install, smoke, or probe
-attempt are historical and ineligible. One new unsigned 2.55 candidate, isolated
+hashes are bound. Candidate/install/smoke attempts `20260822T145055Z`,
+`20260822T151222Z`, and every earlier 2.55 candidate, install, or smoke attempt
+are historical and ineligible. One new unsigned 2.55 candidate, isolated
 install, and full installed-and-portable smoke remain pending, followed by
 evidence collection, bundling, and publication. Exactly one case—the actual Windows
 200% scaling case—may be `waived`; its real DPI screenshot and receipt remain
@@ -135,8 +134,8 @@ catalogue is unchanged. Formal first diagnostic `20260822T142953Z` at source
 `2e3a23f` passed 13 of 14 executed steps; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
 reported TypeScript error `TS2339`. The same-script, same-suite formal final
-diagnostic `20260822T183205Z` at source `0fa74eb` passed 14/14, including
-453/453 Vitest suites, 1702/1702 tests, 17/17 rebaseline assertions,
+diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14, including
+453/453 Vitest suites, 1697/1697 tests, 17/17 rebaseline assertions,
 and zero captured console errors; both formal records used runner SHA-256
 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
@@ -148,9 +147,9 @@ A new candidate, isolated install, full installed-and-portable smoke, the
 evidence bundle, and publication remain pending. See the
 [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
-Candidate/install/smoke/probe attempts `20260822T163918Z`, `20260822T170818Z`,
-`20260822T173336Z`, `20260822T174301Z`, `20260822T175510Z`, and every earlier
-2.55 candidate, install, smoke, or probe attempt are historical and ineligible.
+Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
+every earlier 2.55 candidate, install, or smoke attempt are historical and
+ineligible.
 The focused 17/17 source test covers the exact typed identity correction, not a
 packaged executable. The install wrapper separately accepts only the exact
 Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte

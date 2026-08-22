@@ -47,6 +47,7 @@ import type { ResultTable } from "../domain/resultTables";
 import { canonicalResultTablePresentation } from "../domain/resultTablePresentation";
 import type { UnifiedSemCalculationPlanV1 } from "../domain/unifiedSemCalculationV1";
 import type { ProjectUpgradeInspectionV1, ProjectUpgradeOutcomeV1 } from "../domain/internalProjectUpgradeV6";
+import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import { scientificSemModelV4HashInput } from "../domain/semModelV4";
 import {
   adaptAuthoredNativeWorkbenchToSemModelV4,
@@ -54,7 +55,9 @@ import {
 } from "../domain/nativeWorkbenchSemModelV4Adapter";
 import {
   appendInternalProjectSchema6CanonicalResultV2,
+  adoptNativeSchema6RevisionSourceV1,
   cancelInternalLabsRecipeV4CbsemJob,
+  clearNativeSchema6RevisionSourceV1,
   dismissInternalLabsRecipeV4CbsemJob,
   getInternalLabsRecipeV4CbsemJob,
   getInternalLabsRecipeV4CbsemJobResult,
@@ -64,6 +67,8 @@ import {
   exportNativeXlsxTables,
   startInternalLabsRecipeV4CbsemJob,
 } from "../services/projectService";
+import { inspectInternalProjectArchiveV6At } from "../services/internalProjectArchiveV6ReadService";
+import { useInternalProjectArchiveV6Session } from "../internalProjectArchiveV6SessionStore";
 import { useWorkspace } from "../store";
 import type { Dataset } from "../types";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
@@ -79,6 +84,10 @@ export interface NativeRecipeV4CbsemWorkspaceServices {
   read: typeof readInternalProjectSchema6CanonicalResultsV2;
   exportXlsx: typeof exportNativeXlsxTables;
   inspect: typeof inspectInternalProjectUpgradeV6;
+  strictInspect: typeof inspectInternalProjectArchiveV6At;
+  adoptActiveProject: typeof adoptNativeSchema6RevisionSourceV1;
+  reanchorActiveProject: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => "reanchored" | "blocked" | "inactive";
+  clearAdoptedProject: typeof clearNativeSchema6RevisionSourceV1;
   selectArchive: () => Promise<string | null>;
 }
 
@@ -93,6 +102,11 @@ const defaultServices: NativeRecipeV4CbsemWorkspaceServices = {
   read: readInternalProjectSchema6CanonicalResultsV2,
   exportXlsx: exportNativeXlsxTables,
   inspect: inspectInternalProjectUpgradeV6,
+  strictInspect: inspectInternalProjectArchiveV6At,
+  adoptActiveProject: adoptNativeSchema6RevisionSourceV1,
+  reanchorActiveProject: (snapshot) => useInternalProjectArchiveV6Session.getState()
+    .reanchorGeneralSemSnapshot(snapshot),
+  clearAdoptedProject: clearNativeSchema6RevisionSourceV1,
   selectArchive: async () => {
     const selection = await open({ multiple: false, filters: [{ name: "QuickPLS schema-6 project", extensions: ["qpls", "json"] }] });
     return typeof selection === "string" ? selection : null;
@@ -132,11 +146,33 @@ export type StrictCbsemCalculationPublicationV1 =
     appendOutcome: InternalProjectSchema6ResultAppendOutcomeV1 | null;
   };
 
+function exactSchema6AdoptionMatchesSnapshotV1(
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+  adopted: Awaited<ReturnType<typeof adoptNativeSchema6RevisionSourceV1>>,
+): boolean {
+  const authority = snapshot.generalSemExecutionAuthority;
+  return Boolean(authority
+    && adopted.archivePath === snapshot.archivePath
+    && adopted.archiveSha256 === snapshot.archiveSha256
+    && adopted.archiveBytes === snapshot.archiveBytes
+    && adopted.projectId === authority.projectId
+    && adopted.datasetId === authority.datasetId
+    && adopted.datasetFingerprint === authority.datasetFingerprint
+    && adopted.modelId === authority.modelId
+    && adopted.modelScientificSha256 === authority.modelScientificSha256
+    && adopted.recipeId === authority.recipeId
+    && adopted.recipeDocumentSha256 === authority.recipeDocumentSha256
+    && adopted.readOnly
+    && !adopted.autosaveRecoveryUsed
+    && adopted.sourceRecheckedUnchanged);
+}
+
 export async function strictlyPublishCbsemCalculationResultV1(
   completed: InternalRecipeV4CbsemCompletedResultV1,
   recipe: InternalLabsRecipeV4CbsemExecutionRequestV1["recipe"],
   projectPath: string,
-  services: Pick<NativeRecipeV4CbsemWorkspaceServices, "inspect" | "append" | "read">,
+  services: Pick<NativeRecipeV4CbsemWorkspaceServices,
+    "inspect" | "strictInspect" | "adoptActiveProject" | "reanchorActiveProject" | "clearAdoptedProject" | "append" | "read">,
 ): Promise<StrictCbsemCalculationPublicationV1> {
   const inspected = await services.inspect(projectPath);
   if (inspected.status === "blocked") return {
@@ -159,6 +195,52 @@ export async function strictlyPublishCbsemCalculationResultV1(
     appendOutcome: appended,
   };
   identity = { ...identity, sourceSha256: appended.value.updated_document_sha256 };
+  const blockAfterAppend = async (
+    diagnostic: Extract<StrictCbsemCalculationPublicationV1, { status: "blocked" }>["diagnostic"],
+  ): Promise<StrictCbsemCalculationPublicationV1> => {
+    try { await services.clearAdoptedProject(); } catch { /* The operation remains blocked and requires a strict reopen. */ }
+    return { status: "blocked", diagnostic, identity, appendOutcome: appended };
+  };
+  let strict: Awaited<ReturnType<NativeRecipeV4CbsemWorkspaceServices["strictInspect"]>>;
+  try {
+    strict = await services.strictInspect(projectPath);
+  } catch {
+    return blockAfterAppend({
+      code: "schema6.cbsem.post_append_strict_inspection_failed",
+      message: "The appended exact CB-SEM archive could not be strictly inspected.",
+      correctiveAction: "Reopen the exact strictly validated archive before displaying results or creating another revision.",
+    });
+  }
+  if (strict.status === "blocked") return blockAfterAppend(strict.diagnostic);
+  if (strict.value.archiveSha256 !== identity.sourceSha256
+    || strict.value.project.project_id !== identity.projectId) return blockAfterAppend({
+      code: "schema6.cbsem.post_append_identity_mismatch",
+      message: "The appended schema-6 project differs from its strict post-write identity.",
+      correctiveAction: "Preserve the archive unchanged and reopen it before displaying or revising the result.",
+    });
+  try {
+    const adopted = await services.adoptActiveProject(strict.value);
+    if (!exactSchema6AdoptionMatchesSnapshotV1(strict.value, adopted)) throw new Error("native adoption receipt mismatch");
+  } catch {
+    return blockAfterAppend({
+        code: "schema6.cbsem.post_append_native_adoption_failed",
+        message: "The appended exact CB-SEM archive could not replace the native schema-6 revision binding.",
+        correctiveAction: "Reopen the exact strictly validated archive before displaying results or creating another revision.",
+    });
+  }
+  let reanchored: ReturnType<NativeRecipeV4CbsemWorkspaceServices["reanchorActiveProject"]>;
+  try {
+    reanchored = services.reanchorActiveProject(strict.value);
+  } catch {
+    reanchored = "blocked";
+  }
+  if (reanchored !== "reanchored") {
+    return blockAfterAppend({
+        code: "schema6.cbsem.post_append_reanchor_failed",
+        message: "The appended exact CB-SEM archive could not replace the active strict-session source binding.",
+        correctiveAction: "Reopen the exact strictly validated archive before displaying results or creating another revision.",
+    });
+  }
   const reopened = await reopenInternalLabsRecipeV4CbsemResultV1(
     completed,
     identity,

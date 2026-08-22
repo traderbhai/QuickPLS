@@ -24,6 +24,8 @@ import {
   generalSemStartedJobRetentionV1,
   generalSemTemporaryResultBlocksCloseV1,
   activateGeneralSemProjectArchiveV1,
+  adoptAndReanchorGeneralSemSnapshotV1,
+  assertNativeSchema6AdoptionMatchesSnapshotV1,
   closeGeneralSemProjectV1,
   generalSemCalculationActionLabelV1,
   generalSemCanonicalModerationInventoryV1,
@@ -583,8 +585,81 @@ describe("General SEM native workspace accessibility", () => {
       source.indexOf("const defaultServices"),
       source.indexOf("export function", source.indexOf("const defaultServices")),
     );
-    expect(defaultServices).toContain("adoptActiveProject: openNativeProjectAt");
-    expect(source).toContain("await services.adoptActiveProject(createdReceipt.destinationArchivePath)");
+    expect(defaultServices).toContain("adoptActiveProject: adoptNativeSchema6RevisionSourceV1");
+    expect(source).toContain("const adopted = await services.adoptActiveProject(snapshot)");
+    expect(source).not.toContain("adoptActiveProject: openNativeProjectAt");
+    expect(source).not.toContain("Revision activated; reopen before another revision");
+    const reanchor = source.slice(
+      source.indexOf("const verifyAndReanchorPersistedArchive"),
+      source.indexOf("const appendResult"),
+    );
+    expect(reanchor).toContain("adoptAndReanchorGeneralSemSnapshotV1(");
+    expect(reanchor).toContain("services.clearAdoptedProject().catch");
+    const adoptionBridge = source.slice(
+      source.indexOf("export async function adoptAndReanchorGeneralSemSnapshotV1"),
+      source.indexOf("/** Opens and activates", source.indexOf("export async function adoptAndReanchorGeneralSemSnapshotV1")),
+    );
+    expect(adoptionBridge.indexOf("await adopt(snapshot)"))
+      .toBeLessThan(adoptionBridge.indexOf("reanchor(snapshot)"));
+    expect(adoptionBridge).toContain("await clearAdoption().catch");
+  });
+
+  it("rejects and clears stale or split native adoption before frontend authority can remain active", async () => {
+    const snapshot = {
+      archivePath: "D:\\updated.qpls",
+      archiveSha256: "a".repeat(64),
+      archiveBytes: 8192,
+      generalSemExecutionAuthority: {
+        projectId: "70000001-0000-4000-8000-000000000001",
+        datasetId: "00000000-0000-4000-8000-000000000010",
+        datasetFingerprint: "b".repeat(64),
+        modelId: "model:general-sem-ui",
+        modelScientificSha256: "c".repeat(64),
+        recipeId: "00000000-0000-4000-8000-000000000020",
+        recipeDocumentSha256: "d".repeat(64),
+      },
+    } as unknown as InternalProjectArchiveV6ReadSnapshotV1;
+    const adopted = {
+      schemaVersion: 1,
+      archivePath: snapshot.archivePath,
+      archiveSha256: "e".repeat(64),
+      archiveBytes: snapshot.archiveBytes,
+      projectId: snapshot.generalSemExecutionAuthority!.projectId,
+      datasetId: snapshot.generalSemExecutionAuthority!.datasetId,
+      datasetFingerprint: snapshot.generalSemExecutionAuthority!.datasetFingerprint,
+      modelId: snapshot.generalSemExecutionAuthority!.modelId,
+      modelScientificSha256: snapshot.generalSemExecutionAuthority!.modelScientificSha256,
+      recipeId: snapshot.generalSemExecutionAuthority!.recipeId,
+      recipeDocumentSha256: snapshot.generalSemExecutionAuthority!.recipeDocumentSha256,
+      readOnly: true,
+      autosaveRecoveryUsed: false,
+      sourceRecheckedUnchanged: true,
+    } as const;
+
+    expect(() => assertNativeSchema6AdoptionMatchesSnapshotV1(snapshot, adopted))
+      .toThrow("native revision source differs");
+
+    const staleClear = vi.fn().mockResolvedValue(undefined);
+    const staleReanchor = vi.fn().mockReturnValue("reanchored");
+    await expect(adoptAndReanchorGeneralSemSnapshotV1(
+      snapshot,
+      async () => adopted,
+      staleReanchor,
+      staleClear,
+    )).rejects.toThrow("native revision source differs");
+    expect(staleReanchor).not.toHaveBeenCalled();
+    expect(staleClear).toHaveBeenCalledOnce();
+
+    const blockedClear = vi.fn().mockResolvedValue(undefined);
+    const blockedReanchor = vi.fn().mockReturnValue("blocked" as const);
+    await expect(adoptAndReanchorGeneralSemSnapshotV1(
+      snapshot,
+      async () => ({ ...adopted, archiveSha256: snapshot.archiveSha256 }),
+      blockedReanchor,
+      blockedClear,
+    )).resolves.toBe("blocked");
+    expect(blockedReanchor).toHaveBeenCalledWith(snapshot);
+    expect(blockedClear).toHaveBeenCalledOnce();
   });
 
   it("suppresses every result fallback after persistence integrity fails", () => {
@@ -912,6 +987,7 @@ describe("General SEM native workspace accessibility", () => {
 
     await activateGeneralSemProjectArchiveV1(snapshot, receipt, {
       openSnapshot: vi.fn(async () => "activated"),
+      adoptNativeRevisionSource: vi.fn(async () => undefined),
       activateStandardAuthorities: vi.fn(async () => "activated"),
       rollbackActivation: vi.fn(),
       readSession: () => ({
@@ -963,6 +1039,7 @@ describe("General SEM native workspace accessibility", () => {
 
     await expect(activateGeneralSemProjectArchiveV1(snapshot, receipt, {
       openSnapshot: vi.fn(async () => "activated"),
+      adoptNativeRevisionSource: vi.fn(async () => undefined),
       activateStandardAuthorities: vi.fn(async () => "blocked"),
       rollbackActivation,
       readSession: () => null,
@@ -974,6 +1051,49 @@ describe("General SEM native workspace accessibility", () => {
         clearGeneralSemProjectDraftMode: vi.fn(),
       }),
     })).rejects.toThrow("could not become the active QuickPLS canvas authority");
+    expect(rollbackActivation).toHaveBeenCalledOnce();
+  });
+
+  it("rolls back before frontend activation when exact native adoption fails", async () => {
+    const receipt = {
+      schemaVersion: 1,
+      archiveSchemaVersion: 6,
+      projectId: "70000001-0000-4000-8000-000000000001",
+      name: "Failed native adoption",
+      createdAt: "2026-08-19T00:00:00Z",
+      destinationArchivePath: "D:\\Failed-Native-Adoption.qpls",
+      destinationArchiveSha256: "a".repeat(64),
+      destinationArchiveBytes: 4096,
+      strictReopenValidated: true,
+      residentDatasetId: "00000000-0000-4000-8000-000000000010",
+      residentDatasetFingerprint: "b".repeat(64),
+      residentModelId: "model:general-sem-ui",
+      residentModelScientificSha256: "c".repeat(64),
+      residentRecipeId: "00000000-0000-4000-8000-000000000020",
+      residentRecipeDocumentSha256: "d".repeat(64),
+    } satisfies GeneralSemProjectBootstrapReceiptV1;
+    const snapshot = {
+      archiveSha256: receipt.destinationArchiveSha256,
+      project: { project_id: receipt.projectId, origin: { kind: "new_project" }, sem_generation: "general_sem_v1" },
+    } as unknown as InternalProjectArchiveV6ReadSnapshotV1;
+    const activateStandardAuthorities = vi.fn(async () => "activated");
+    const rollbackActivation = vi.fn();
+
+    await expect(activateGeneralSemProjectArchiveV1(snapshot, receipt, {
+      openSnapshot: vi.fn(async () => "activated"),
+      adoptNativeRevisionSource: vi.fn(async () => { throw new Error("exact adoption rejected"); }),
+      activateStandardAuthorities,
+      rollbackActivation,
+      readSession: () => null,
+      readWorkspace: () => ({
+        activeModelId: null,
+        standardSemModelV4Authorities: {},
+        standardSemModelV4Persistence: {},
+        setProjectMeta: vi.fn(),
+        clearGeneralSemProjectDraftMode: vi.fn(),
+      }),
+    })).rejects.toThrow("exact adoption rejected");
+    expect(activateStandardAuthorities).not.toHaveBeenCalled();
     expect(rollbackActivation).toHaveBeenCalledOnce();
   });
 });

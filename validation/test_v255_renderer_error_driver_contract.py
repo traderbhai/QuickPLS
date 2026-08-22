@@ -258,6 +258,14 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('if (step.action === "exercise_advanced_parameter_revision")'):
             named.index('if (step.action === "save_and_reopen_case_revision")')
         ]
+        self.assertIn('page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`', advanced_parameter_revision)
+        self.assertIn('new CustomEvent("quickpls:open-project-path"', advanced_parameter_revision)
+        self.assertIn('waitForOpenedProjectPath(page, sourceTarget, timeout)', advanced_parameter_revision)
+        self.assertIn('Freshly reopening the Advanced Parameter source changed its archive bytes.', advanced_parameter_revision)
+        self.assertLess(
+            advanced_parameter_revision.index('waitForOpenedProjectPath(page, sourceTarget, timeout)'),
+            advanced_parameter_revision.index('namedSemEvidenceSnapshot?.()'),
+        )
         self.assertIn('name: "Continue to Calculate", exact: true', advanced_parameter_revision)
         self.assertIn('estimator.selectOption("qpls.cbsem.v3")', advanced_parameter_revision)
         self.assertIn('bootstrap.setChecked(false)', advanced_parameter_revision)
@@ -283,7 +291,15 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('model digest differs from the activated revision', reopen_parameter_revision)
 
         general_workspace = (ROOT / "src" / "native" / "NativeRecipeV4GeneralSemWorkspace.tsx").read_text(encoding="utf-8")
-        self.assertIn("adoptActiveProject: openNativeProjectAt", general_workspace)
+        self.assertIn("adoptActiveProject: adoptNativeSchema6RevisionSourceV1", general_workspace)
+        self.assertNotIn("adoptActiveProject: openNativeProjectAt", general_workspace)
+
+        native_lib = (ROOT / "src-tauri" / "src" / "lib.rs").read_text(encoding="utf-8")
+        self.assertIn("mod project_archive_v6_native_adoption;", native_lib)
+        self.assertIn(".manage(DesktopSchema6NativeAdoptionAuthorityV1::default())", native_lib)
+        native_handlers = native_lib[native_lib.index(".invoke_handler(tauri::generate_handler![") :]
+        self.assertIn("adopt_internal_project_archive_v6_native_revision_source_v1", native_handlers)
+        self.assertIn("clear_internal_project_archive_v6_native_revision_source_v1", native_handlers)
 
         cbsem_workspace = (ROOT / "src" / "native" / "NativeRecipeV4CbsemWorkspace.tsx").read_text(encoding="utf-8")
         self.assertIn("strictlyPublishCbsemCalculationResultV1", cbsem_workspace)
@@ -339,6 +355,8 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('requestedRevisionReady = await advanced.getByText("Activated calculation authority", { exact: true }).isVisible()', run_calculation)
         self.assertIn('|| await calculationProgress.isVisible()', run_calculation)
         self.assertIn('!calculationProgressVisible', run_calculation)
+        self.assertIn('#nd-cbsem-compatibility-calculation .nd-cbsem-v4-archive .nd-cbsem-v4-failure', run_calculation)
+        self.assertNotIn('terminal: "exact_cfa_compatibility_result"', run_calculation)
         self.assertEqual(run_calculation.count('await configureAndStart();'), 1)
         self.assertIn(
             '${context.lastCalculation?.routeText ?? ""}', run_calculation
@@ -712,7 +730,7 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             exact_cfa["header_contains"],
         )
         self.assertEqual(
-            ["Factor variance", "Measurement parameter", "Residual variance"],
+            ["factor_variance_", "measurement_parameter_", "residual_variance_"],
             exact_cfa["row_contains"],
         )
 

@@ -34,6 +34,7 @@ import {
 import type { CapabilityCellReferenceV2 } from "../domain/canonicalResultDocumentV2";
 import type { GeneralSemConfigV1 } from "../domain/generalSemConfigV1";
 import type { InternalProjectArchiveV6Wire } from "../domain/internalProjectArchiveV6Wire";
+import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import type {
   InternalProjectSchema6ResultAppendOutcomeV1,
   InternalProjectSchema6ResultAppendRequestV1,
@@ -203,6 +204,36 @@ export const isNativeDesktop = () => typeof window !== "undefined" && "__TAURI_I
 
 export type NativeNewProjectModeV1 = "standard" | "general_sem_v1";
 
+export interface NativeSchema6RevisionSourceAdoptionRequestV1 {
+  archivePath: string;
+  expectedArchiveSha256: string;
+  expectedArchiveBytes: number;
+  expectedProjectId: string;
+  expectedDatasetId: string;
+  expectedDatasetFingerprint: string;
+  expectedModelId: string;
+  expectedModelScientificSha256: string;
+  expectedRecipeId: string;
+  expectedRecipeDocumentSha256: string;
+}
+
+export interface NativeSchema6RevisionSourceAdoptionReceiptV1 {
+  schemaVersion: 1;
+  archivePath: string;
+  archiveSha256: string;
+  archiveBytes: number;
+  projectId: string;
+  datasetId: string;
+  datasetFingerprint: string;
+  modelId: string;
+  modelScientificSha256: string;
+  recipeId: string;
+  recipeDocumentSha256: string;
+  readOnly: true;
+  autosaveRecoveryUsed: false;
+  sourceRecheckedUnchanged: true;
+}
+
 export async function getNativeCapabilityRegistryV2(): Promise<NativeCapabilityRegistryV2Snapshot> {
   return parseNativeCapabilityRegistryV2(await invoke<unknown>("capability_registry_v2"));
 }
@@ -264,6 +295,41 @@ export async function authorizeNativeGeneralSemRevisionDraftV1() {
 export async function openNativeProjectAt(path: string) {
   const project = await invoke<NativeProjectSnapshot>("open_project", { path });
   return normalizeProjectSnapshot(project);
+}
+
+/**
+ * Installs the exact strictly inspected schema-6 General SEM archive as the
+ * native read-only source for a later source-preserving scientific revision.
+ * This command never invokes the legacy schema-5 loader or autosave recovery.
+ */
+export async function adoptNativeSchema6RevisionSourceV1(
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+) {
+  const authority = snapshot.generalSemExecutionAuthority;
+  if (!authority) {
+    throw new Error("The strictly inspected General SEM archive has no exact native execution authority.");
+  }
+  const request: NativeSchema6RevisionSourceAdoptionRequestV1 = {
+    archivePath: snapshot.archivePath,
+    expectedArchiveSha256: snapshot.archiveSha256,
+    expectedArchiveBytes: snapshot.archiveBytes,
+    expectedProjectId: authority.projectId,
+    expectedDatasetId: authority.datasetId,
+    expectedDatasetFingerprint: authority.datasetFingerprint,
+    expectedModelId: authority.modelId,
+    expectedModelScientificSha256: authority.modelScientificSha256,
+    expectedRecipeId: authority.recipeId,
+    expectedRecipeDocumentSha256: authority.recipeDocumentSha256,
+  };
+  return invoke<NativeSchema6RevisionSourceAdoptionReceiptV1>(
+    "adopt_internal_project_archive_v6_native_revision_source_v1",
+    { request },
+  );
+}
+
+/** Releases a schema-6 native adoption only for project close/rollback. */
+export async function clearNativeSchema6RevisionSourceV1() {
+  return invoke<void>("clear_internal_project_archive_v6_native_revision_source_v1");
 }
 
 export async function openNativeProject() {

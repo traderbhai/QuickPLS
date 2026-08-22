@@ -63,9 +63,11 @@ import {
 } from "../services/internalGeneralSemModeratedMediationRevisionV2Service";
 import {
   appendInternalProjectSchema6CanonicalResultV2,
+  adoptNativeSchema6RevisionSourceV1,
   bootstrapInternalGeneralSemProjectArchiveV6,
   cancelInternalLabsGeneralSemCbsemJobV1,
   cancelInternalLabsGeneralSemPlsJobV1,
+  clearNativeSchema6RevisionSourceV1,
   dismissInternalLabsGeneralSemCbsemJobV1,
   dismissInternalLabsGeneralSemPlsJobV1,
   getInternalLabsGeneralSemCbsemJobResultV1,
@@ -74,11 +76,11 @@ import {
   getInternalLabsGeneralSemPlsJobV1,
   getInternalSemModelV4ScientificSha256,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
-  openNativeProjectAt,
   preflightInternalGeneralSemEstimatorsV1,
   readInternalProjectSchema6CanonicalResultsV2,
   startInternalLabsGeneralSemCbsemJobV1,
   startInternalLabsGeneralSemPlsJobV1,
+  type NativeSchema6RevisionSourceAdoptionReceiptV1,
 } from "../services/projectService";
 import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
@@ -107,8 +109,9 @@ export interface NativeRecipeV4GeneralSemWorkspaceServices {
   append: typeof appendInternalProjectSchema6CanonicalResultV2;
   read: typeof readInternalProjectSchema6CanonicalResultsV2;
   invalidateDraft: typeof invalidateNativeGeneralSemFreshDraftAuthorityV1;
-  /** Keeps the native DesktopProject synchronized after a new schema-6 file is activated. */
-  adoptActiveProject?: typeof openNativeProjectAt;
+  clearAdoptedProject: typeof clearNativeSchema6RevisionSourceV1;
+  /** Adopts only the exact strict schema-6 source before frontend authority activation. */
+  adoptActiveProject: typeof adoptNativeSchema6RevisionSourceV1;
   selectDestination: (suggestedName: string) => Promise<string | null>;
 }
 
@@ -130,7 +133,8 @@ const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
   append: appendInternalProjectSchema6CanonicalResultV2,
   read: readInternalProjectSchema6CanonicalResultsV2,
   invalidateDraft: invalidateNativeGeneralSemFreshDraftAuthorityV1,
-  adoptActiveProject: openNativeProjectAt,
+  clearAdoptedProject: clearNativeSchema6RevisionSourceV1,
+  adoptActiveProject: adoptNativeSchema6RevisionSourceV1,
   selectDestination: async (suggestedName) => {
     const selected = await save({
       defaultPath: suggestedName,
@@ -404,12 +408,54 @@ export function closeGeneralSemProjectV1(bridge: GeneralSemProjectCloseBridgeV1)
 
 export interface GeneralSemProjectActivationBridgeV1 {
   openSnapshot: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => Promise<string>;
+  adoptNativeRevisionSource: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => Promise<void>;
   activateStandardAuthorities: () => Promise<string>;
-  rollbackActivation: () => void;
+  rollbackActivation: () => void | Promise<void>;
   readSession: () => ReturnType<typeof useInternalProjectArchiveV6Session.getState>["session"];
   readWorkspace: () => Pick<ReturnType<typeof useWorkspace.getState>,
     "activeModelId" | "standardSemModelV4Authorities" | "standardSemModelV4Persistence"
     | "setProjectMeta" | "clearGeneralSemProjectDraftMode">;
+}
+
+export function assertNativeSchema6AdoptionMatchesSnapshotV1(
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+  adopted: NativeSchema6RevisionSourceAdoptionReceiptV1,
+): void {
+  const authority = snapshot.generalSemExecutionAuthority;
+  if (!authority) throw new Error("The strictly reopened calculation-ready project has no exact native execution authority.");
+  if (adopted.archivePath !== snapshot.archivePath
+    || adopted.archiveSha256 !== snapshot.archiveSha256
+    || adopted.archiveBytes !== snapshot.archiveBytes
+    || adopted.projectId !== authority.projectId
+    || adopted.datasetId !== authority.datasetId
+    || adopted.datasetFingerprint !== authority.datasetFingerprint
+    || adopted.modelId !== authority.modelId
+    || adopted.modelScientificSha256 !== authority.modelScientificSha256
+    || adopted.recipeId !== authority.recipeId
+    || adopted.recipeDocumentSha256 !== authority.recipeDocumentSha256
+    || !adopted.readOnly
+    || adopted.autosaveRecoveryUsed
+    || !adopted.sourceRecheckedUnchanged) {
+    throw new Error("The native revision source differs from the strictly reopened calculation-ready authority.");
+  }
+}
+
+export async function adoptAndReanchorGeneralSemSnapshotV1(
+  snapshot: InternalProjectArchiveV6ReadSnapshotV1,
+  adopt: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => Promise<NativeSchema6RevisionSourceAdoptionReceiptV1>,
+  reanchor: (snapshot: InternalProjectArchiveV6ReadSnapshotV1) => "reanchored" | "blocked" | "inactive",
+  clearAdoption: () => Promise<void>,
+): Promise<"reanchored" | "blocked" | "inactive"> {
+  try {
+    const adopted = await adopt(snapshot);
+    assertNativeSchema6AdoptionMatchesSnapshotV1(snapshot, adopted);
+    const outcome = reanchor(snapshot);
+    if (outcome !== "reanchored") await clearAdoption().catch(() => undefined);
+    return outcome;
+  } catch (error) {
+    await clearAdoption().catch(() => undefined);
+    throw error;
+  }
 }
 
 /** Opens and activates only the exact marked archive created by bootstrap. */
@@ -423,6 +469,7 @@ export async function activateGeneralSemProjectArchiveV1(
     const opened = await bridge.openSnapshot(snapshot);
     if (opened !== "activated") throw new Error(`The saved General SEM archive could not enter the schema-6 session (${opened}).`);
     openedHere = true;
+    await bridge.adoptNativeRevisionSource(snapshot);
     const activated = await bridge.activateStandardAuthorities();
     if (activated !== "activated") throw new Error(`The saved General SEM authority could not become the active QuickPLS canvas authority (${activated}).`);
 
@@ -443,7 +490,7 @@ export async function activateGeneralSemProjectArchiveV1(
     workspace.setProjectMeta(receipt.name, receipt.destinationArchivePath, receipt.projectId);
     workspace.clearGeneralSemProjectDraftMode();
   } catch (error) {
-    if (openedHere) bridge.rollbackActivation();
+    if (openedHere) await bridge.rollbackActivation();
     throw error;
   }
 }
@@ -1100,31 +1147,20 @@ export function NativeRecipeV4GeneralSemWorkspace({
       const createdReceipt = outcome.value.receipt;
       await activateGeneralSemProjectArchiveV1(inspected.value, createdReceipt, {
         openSnapshot: (snapshot) => useInternalProjectArchiveV6Session.getState().open(async () => ({ status: "ok", value: snapshot })),
+        adoptNativeRevisionSource: async (snapshot) => {
+          const adopted = await services.adoptActiveProject(snapshot);
+          assertNativeSchema6AdoptionMatchesSnapshotV1(snapshot, adopted);
+        },
         activateStandardAuthorities: () => useInternalProjectArchiveV6Session.getState().activateStandardAuthorities(),
-        rollbackActivation: () => {
+        rollbackActivation: async () => {
           const current = useInternalProjectArchiveV6Session.getState();
           if (current.session?.standardActivation) current.closeStandardProject();
           else current.deactivate();
+          await services.clearAdoptedProject();
         },
         readSession: () => useInternalProjectArchiveV6Session.getState().session,
         readWorkspace: () => useWorkspace.getState(),
       });
-      if (services.adoptActiveProject) {
-        try {
-          const adopted = await services.adoptActiveProject(createdReceipt.destinationArchivePath);
-          if (adopted.projectId !== createdReceipt.projectId) {
-            throw new Error("The native project identity differs from the activated calculation-ready revision.");
-          }
-        } catch (error) {
-          // The verified schema-6 session remains usable. Reopening the saved
-          // file repairs native-project synchronization before a later revision.
-          pushToast({
-            tone: "warning",
-            title: "Revision activated; reopen before another revision",
-            detail: error instanceof Error ? error.message : String(error),
-          });
-        }
-      }
       const activatedExecution = rehydrateGeneralSemExecutionAuthorityV1(inspected.value);
       const activatedModelAuthority = useWorkspace.getState()
         .standardSemModelV4Authorities[createdReceipt.residentModelId];
@@ -1411,21 +1447,32 @@ export function NativeRecipeV4GeneralSemWorkspace({
     if (useInternalProjectArchiveV6Session.getState().dirty) {
       throw new Error("The active Canvas presentation changed after calculation. Restore its saved layout before verifying or appending results.");
     }
-    const inspected = await services.inspectArchive(completed.archiveIdentity.archivePath);
-    if (inspected.status === "blocked") {
-      throw {
-        schemaVersion: 1,
-        stage: "archive_authority",
-        subject: "archive",
-        ...inspected.diagnostic,
-        issues: [],
-      } satisfies GeneralSemPlsJobFailureV1;
+    let inspectedSnapshot: InternalProjectArchiveV6ReadSnapshotV1;
+    try {
+      const inspected = await services.inspectArchive(completed.archiveIdentity.archivePath);
+      if (inspected.status === "blocked") {
+        throw {
+          schemaVersion: 1,
+          stage: "archive_authority",
+          subject: "archive",
+          ...inspected.diagnostic,
+          issues: [],
+        } satisfies GeneralSemPlsJobFailureV1;
+      }
+      if (inspected.value.archiveSha256 !== updatedArchiveSha256) {
+        throw new Error("The appended project digest differs from its strict reopen identity.");
+      }
+      inspectedSnapshot = inspected.value;
+    } catch (error) {
+      await services.clearAdoptedProject().catch(() => undefined);
+      throw error;
     }
-    if (inspected.value.archiveSha256 !== updatedArchiveSha256) {
-      throw new Error("The appended project digest differs from its strict reopen identity.");
-    }
-    const reanchored = useInternalProjectArchiveV6Session.getState()
-      .reanchorGeneralSemSnapshot(inspected.value);
+    const reanchored = await adoptAndReanchorGeneralSemSnapshotV1(
+      inspectedSnapshot,
+      services.adoptActiveProject,
+      (snapshot) => useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(snapshot),
+      services.clearAdoptedProject,
+    );
     if (reanchored !== "reanchored") {
       const diagnostic = useInternalProjectArchiveV6Session.getState().standardActivationFailure;
       throw {
@@ -1438,7 +1485,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         issues: [],
       } satisfies GeneralSemPlsJobFailureV1;
     }
-    setArchiveSnapshot(inspected.value);
+    setArchiveSnapshot(inspectedSnapshot);
     setCurrentArchiveSha256(updatedArchiveSha256);
     setPersistedArchiveSha256(updatedArchiveSha256);
     setResultIntegrityInvalid(false);
@@ -1686,6 +1733,7 @@ export function NativeRecipeV4GeneralSemWorkspace({
         setFailure(outcome.failure);
         return;
       }
+      await services.clearAdoptedProject();
       monitorAbortRef.current?.abort();
       activeJobIdRef.current = null;
       setReceipt(null);

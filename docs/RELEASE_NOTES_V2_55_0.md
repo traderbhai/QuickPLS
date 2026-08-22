@@ -1,6 +1,6 @@
 # QuickPLS 2.55.0 Release Notes
 
-Status: final consolidated source gate complete; fresh provenance-bound unsigned candidate build, isolated install, installed and portable smoke, evidence collection and bundle, final audit, merge/tag, and publication pending.
+Status: one-batch-remediated final source gate complete; fresh provenance-bound unsigned candidate build, isolated install, installed and portable smoke, evidence collection and bundle, final audit, merge/tag, and publication pending.
 
 QuickPLS 2.55 focuses on professional Calculate setup, model-aware diagram layout, and a fail-closed current-method evidence architecture and collection workflow. It preserves the existing 18 public Calculate methods and does not relabel or replace historical scientific identities.
 
@@ -55,7 +55,7 @@ The consolidated source gate executes these 14 steps:
 13. `method_setup_crawler` — the exact 18-method setup crawler; and
 14. `v255_final_evidence_contract` — final evidence contract.
 
-The formal first report is stored under `validation/results/v255_consolidated_diagnostics_20260822T142953Z/` and is bound to source `2e3a23f`. It executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error `TS2339`. The formal final diagnostic, using the identical script and invocation contract, is stored under `validation/results/v255_consolidated_diagnostics_20260822T183205Z/`, is bound to source `0fa74eb`, and passed 14/14, including 453/453 Vitest suites, 1702/1702 tests, 17/17 rebaseline assertions, and zero captured console errors. Both formal records use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`. The retained failure and final pass are separate timestamped evidence records and are not byte-identical.
+The formal first report is stored under `validation/results/v255_consolidated_diagnostics_20260822T142953Z/` and is bound to source `2e3a23f`. It executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error `TS2339`. The formal final diagnostic, using the identical script and invocation contract, is stored under `validation/results/v255_consolidated_diagnostics_20260822T155928Z/`, is bound to source `6aa92b7`, and passed 14/14, including 453/453 Vitest suites, 1697/1697 tests, 17/17 rebaseline assertions, and zero captured console errors. Both formal records use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`. The retained failure and final pass are separate timestamped evidence records and are not byte-identical.
 
 ## Product-owner DPI waiver
 
@@ -65,7 +65,7 @@ The waived route must still launch normally without forced scaling, capture the 
 
 ## Fresh candidate checkpoint
 
-Candidate/install/smoke/probe attempts `20260822T163918Z`, `20260822T170818Z`, `20260822T173336Z`, `20260822T174301Z`, `20260822T175510Z`, and every earlier 2.55 candidate, install, smoke, or probe attempt are historical and ineligible. The install comparison permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new clean-source, provenance-bound unsigned setup, portable, CLI, and checksum package must be built from the current 2.55 authorities, followed by an isolated installation and full installed-and-portable smoke. No eligible candidate build, install, full smoke, evidence collection or bundle, final audit, merge, tag, or publication success is claimed yet.
+Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and every earlier 2.55 candidate, install, or smoke attempt are historical and ineligible. The install comparison permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new clean-source, provenance-bound unsigned setup, portable, CLI, and checksum package must be built from the current 2.55 authorities, followed by an isolated installation and full installed-and-portable smoke. No eligible candidate build, install, full smoke, evidence collection or bundle, final audit, merge, tag, or publication success is claimed yet.
 
 An existing registered QuickPLS installation may be removed only through its exact registered uninstaller before the isolated 2.55 install. That operation must leave project files, recovery data, and QuickPLS application user data untouched and verified unchanged. Installed and portable candidate journeys are both mandatory; neither substitutes for the other.
 
