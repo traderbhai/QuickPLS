@@ -1,13 +1,34 @@
 # QuickPLS User Guide
 
-This guide describes the Version 2.54 workflow.
+This guide describes the Version 2.55 source workflow.
 QuickPLS runs analyses locally without an account, cloud service, R, or Python
-at runtime. The consolidated source diagnostic recorded 8/9 passing steps and
-the focused remediation pass then passed 69/69 targeted tests. The final
-unsigned 2.54 Windows candidate passed the isolated 10/10 create → calculate →
-Results → save → fresh-reopen packaged journey with zero application-page
-external requests and zero console errors. Release-artifact packaging and
-SHA-256 checksum verification passed; code signing is excluded.
+at runtime. The renderer/process-trust-chain-remediated formal source reports
+`20260822T082854Z` at source `b4a73f7` and `20260822T083409Z` at source
+`1f0fa28` each passed 14/14 using the identical diagnostic script and
+suite/invocation contract. They are separate evidence records and are not
+claimed to be byte-identical reports. Renderer console/page errors now fail
+closed, attach-only phases use fresh wrapper-owned processes, and candidate,
+phase, and trusted-driver process roles and hashes are bound. A fresh
+provenance-bound unsigned 2.55 candidate build, isolated install, installed and
+portable packaged journeys, evidence collection and bundling, and publication
+remain pending. The verified `v2.54.0` release remains available; code signing is
+excluded.
+
+Candidate `20260822T070205Z` and every earlier candidate or install attempt are
+historical and ineligible because the trust-chain remediation and current formal
+validation postdate them. Exact typed post-hoc PLS authority now takes
+precedence over the generic bootstrap fallback, and its focused identity suite
+passed 17/17; this has not
+yet been validated in a packaged executable. The install wrapper separately
+accepts only Tauri's exact three-byte `UNK` → `NSS` marker transition and
+rejects every other byte difference. Fresh candidate, install, and smoke
+evidence is still required. Only the actual Windows 200% scaling case may use
+the product-owner-approved opt-in waiver; its real DPI screenshot and receipt
+remain required and the other 54 named cases must pass. If the exact registered
+old installation must be removed for the isolated install, only its registered
+uninstaller may be used and project files, recovery data, and QuickPLS
+application user data must remain untouched. Portable evidence does not replace
+the installed journey.
 
 ## Projects and scientific authority
 
@@ -103,6 +124,7 @@ Always review Method Details and the exact supported predicate before reporting 
 - [Quick Start](QUICK_START.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
 - [Known Differences](KNOWN_DIFFERENCES.md)
+- [Version 2.55 Release Notes](RELEASE_NOTES_V2_55_0.md)
 - [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md)
