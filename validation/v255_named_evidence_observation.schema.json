@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/v255-named-evidence-observations-v1.json",
+  "title": "QuickPLS 2.55 case-specific named evidence observations",
+  "description": "Exact additive field schema for a trusted candidate driver report's named_evidence_observations array. The collector additionally requires each case_id to belong to the frozen 55-case matrix, derives the exact operation/assertion ID from the source index, requires expected and observed to be equal, and rejects artifact or source-pointer reuse.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/observation" },
+  "$defs": {
+    "jsonValue": {
+      "type": ["boolean", "number", "string", "array", "object"]
+    },
+    "observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema_version", "case_id", "operation", "assertion", "screenshot"],
+      "properties": {
+        "schema_version": { "const": 1 },
+        "case_id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(cross_method|specialized_result):"
+        },
+        "operation": {
+          "enum": [
+            "import_dataset",
+            "export_result",
+            "exercise_persistence",
+            "exercise_accessibility",
+            "capture_observability_state",
+            "verify_packaged_candidate",
+            "calculate_and_open_specialized_result"
+          ]
+        },
+        "assertion": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "passed", "expected", "observed"],
+          "properties": {
+            "id": { "type": "string", "minLength": 1 },
+            "passed": { "const": true },
+            "expected": { "$ref": "#/$defs/jsonValue" },
+            "observed": { "$ref": "#/$defs/jsonValue" }
+          }
+        },
+        "screenshot": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256"],
+          "properties": {
+            "path": { "type": "string", "minLength": 1 },
+            "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+          }
+        }
+      }
+    }
+  },
+  "x-quickpls-runtime-constraints": [
+    "case_id must be one exact ID from validation/v255_named_evidence_index.json",
+    "operation must equal collector_contract.operation_by_group for that case",
+    "assertion.id must equal <operation>:<case_id>",
+    "assertion.expected and assertion.observed must be non-null and deeply equal",
+    "screenshot must be a CRC-valid PNG below the current candidate evidence root",
+    "one source report pointer and one screenshot SHA-256 may support only one named case"
+  ]
+}

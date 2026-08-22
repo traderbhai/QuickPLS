@@ -49,6 +49,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target", required=True)
     parser.add_argument("--allowed-root", required=True)
     parser.add_argument("--window-title", required=True)
+    parser.add_argument("--owner-pid", type=int)
+    parser.add_argument("--owner-executable")
     parser.add_argument(
         "--extension", action="append", dest="extensions", required=True
     )
@@ -269,8 +271,27 @@ def main() -> int:
 
         phase = "main_window_binding"
         main_window, main_info = visible_quickpls_window(
-            args.window_title, Desktop, win32api, win32con, win32process
+            args.window_title,
+            Desktop,
+            win32api,
+            win32con,
+            win32process,
+            args.owner_pid,
+            args.owner_executable,
         )
+        if args.owner_pid is not None and int(main_info["pid"]) != args.owner_pid:
+            raise GateFailure(
+                f"The owned dialog main-window PID {main_info['pid']} does not equal "
+                f"the wrapper-launched PID {args.owner_pid}."
+            )
+        if args.owner_executable:
+            expected_executable = Path(args.owner_executable).resolve(strict=True)
+            observed_executable = Path(str(main_info["executable"])).resolve(strict=True)
+            if observed_executable != expected_executable:
+                raise GateFailure(
+                    "The owned dialog main-window executable does not equal the exact "
+                    f"wrapper candidate: {observed_executable} != {expected_executable}"
+                )
         emit(
             {
                 "event": "ready",

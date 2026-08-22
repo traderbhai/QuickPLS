@@ -1,0 +1,328 @@
+{
+  "schema_version": 2,
+  "target_release": "2.55.0",
+  "catalogue_contract": {
+    "source": "src/native/nativeAnalysisCatalog.ts",
+    "expected_public_methods": 18,
+    "expected_setup_cases": 64,
+    "setup_case_contract_sha256": "4a506f59e5d7afc56b4d975ae567b547b276a8fc841b5a8c9a51836048534fe3",
+    "expected_specialized_result_cases": 26,
+    "specialized_result_contract_sha256": "dfe09e79a231bffe5b88381dd3ee436d6ef7292571bfbdad3662607bb28062ba",
+    "expected_cross_method_cases": 29,
+    "cross_method_contract_sha256": "e894da0b67cca47224c16fddf8b6e13172c38027967b6ff8906c6cc278ee8ed1",
+    "no_additional_public_method": true
+  },
+  "execution_policy": {
+    "serial_packaged_crawler": true,
+    "maximum_concurrent_calculations": 1,
+    "reuse_verified_archives_for_presentation_only_evidence": true,
+    "rerun_when_configuration_transfer_or_lifecycle_is_under_test": true,
+    "installed_and_portable_required": true,
+    "minimum_free_gib_per_drive": 20,
+    "setup_evidence": "Every declared setup case has one ready browser fixture/capture or one exact named passing behavior assertion; selecting one method once never covers its other setup cases.",
+    "setup_evidence_contract": "Each method's setup_evidence[] has exactly one entry per setup_cases value. Browser entries require an executed controlled fixture and screenshot; component/domain/service/governance entries require one exact passing Vitest assertion identity.",
+    "result_evidence": "reuse a verified completed archive only for presentation evidence; rerun when configuration transfer, lifecycle, or native calculation routing is under test",
+    "unexplained_skips_allowed": false,
+    "evidence_index": "validation/v255_frozen_result_archive_index.json"
+  },
+  "methods": [
+    {
+      "kind": "pls_algorithm",
+      "setup_cases": ["ordinary reflective model", "formative measurement inversion", "eligible HOC point", "simultaneous two-way moderation point", "bounded three-way moderation point"],
+      "setup_evidence": [
+        { "setup_case": "ordinary reflective model", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/nativeAnalysisRecipe.test.ts", "replacement_test": "builds the exact mutually exclusive algorithm, bootstrap, and permutation settings" },
+        { "setup_case": "formative measurement inversion", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/modelEditCommandGatewayV1.test.ts", "replacement_test": "plans construct, measurement, path, HOC, and moderation edits through resident strict intents" },
+        { "setup_case": "eligible HOC point", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata" },
+        { "setup_case": "simultaneous two-way moderation point", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells" },
+        { "setup_case": "bounded three-way moderation point", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "detects a three-way term and routes point/bootstrap through distinct bounded cells" }
+      ],
+      "result_families": ["measurement model", "structural model", "direct and total effects", "HOC", "two-way moderation", "three-way moderation"]
+    },
+    {
+      "kind": "plsc",
+      "setup_cases": ["eligible reflective model", "ineligible formative model"],
+      "setup_evidence": [
+        { "setup_case": "eligible reflective model", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate" },
+        { "setup_case": "ineligible formative model", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "blocks PLSc and CB-SEM for formative constructs" }
+      ],
+      "result_families": ["consistent coefficients", "corrected reliability", "model assessment"]
+    },
+    {
+      "kind": "wpls",
+      "setup_cases": ["positive case-weight column", "missing weight", "zero or negative weight"],
+      "setup_evidence": [
+        { "setup_case": "positive case-weight column", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "requires positive numeric WPLS weights" },
+        { "setup_case": "missing weight", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "requires positive numeric WPLS weights" },
+        { "setup_case": "zero or negative weight", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "requires positive numeric WPLS weights" }
+      ],
+      "result_families": ["weighted measurement model", "weighted structural model", "run details"]
+    },
+    {
+      "kind": "gsca",
+      "setup_cases": ["fixed execution summary", "mixed reflective and formative blocks"],
+      "setup_evidence": [
+        { "setup_case": "fixed execution summary", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders GSCA as a fixed ALS component-model workflow without PLS or inference controls" },
+        { "setup_case": "mixed reflective and formative blocks", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "accepts the bounded mixed-block GSCA ALS scope and blocks unsupported model/settings shapes" }
+      ],
+      "result_families": ["component weights", "loadings", "paths", "FIT and diagnostics"]
+    },
+    {
+      "kind": "cca",
+      "setup_cases": ["eligible composite model", "unsupported model scope"],
+      "setup_evidence": [
+        { "setup_case": "eligible composite model", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeAnalysisRecipe.test.ts", "replacement_test": "maps only the bounded standardized CCA composite residual scope" },
+        { "setup_case": "unsupported model scope", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeAnalysisRecipe.test.ts", "replacement_test": "maps only the bounded standardized CCA composite residual scope" }
+      ],
+      "result_families": ["composite residuals", "diagnostics"]
+    },
+    {
+      "kind": "cta_pls",
+      "setup_cases": ["eligible four-indicator block", "ineligible small block"],
+      "setup_evidence": [
+        { "setup_case": "eligible four-indicator block", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeCtaPls.test.ts", "replacement_test": "accepts reflective or formative ordinary blocks and reports complete cases" },
+        { "setup_case": "ineligible small block", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeCtaPls.test.ts", "replacement_test": "fails closed for ineligible blocks, special constructs, PCA weighting, resampling, and case weights" }
+      ],
+      "result_families": ["tetrads", "descriptive diagnostics"]
+    },
+    {
+      "kind": "ipma",
+      "setup_cases": ["explicit target", "fixed all-predecessor scope disclosure", "observed-range disclosure"],
+      "setup_evidence": [
+        { "setup_case": "explicit target", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeAnalysisRecipe.test.ts", "replacement_test": "maps one ID-backed endogenous IPMA target into the fixed native recipe scope" },
+        { "setup_case": "fixed all-predecessor scope disclosure", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders one ID-backed endogenous IPMA target with fixed truthful settings" },
+        { "setup_case": "observed-range disclosure", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders one ID-backed endogenous IPMA target with fixed truthful settings" }
+      ],
+      "result_families": ["construct importance-performance", "indicator performance", "map"]
+    },
+    {
+      "kind": "cbsem",
+      "setup_cases": ["CFA point", "CFA case bootstrap", "recursive SEM point", "recursive SEM case bootstrap", "Advanced parameters", "invalid identification"],
+      "setup_evidence": [
+        { "setup_case": "CFA point", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap" },
+        { "setup_case": "CFA case bootstrap", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "keeps CFA case bootstrap on its existing exact compatibility cell" },
+        { "setup_case": "recursive SEM point", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap" },
+        { "setup_case": "recursive SEM case bootstrap", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes common-factor models to CB-SEM point or recursive case bootstrap" },
+        { "setup_case": "Advanced parameters", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeSemParameterTable.test.ts", "replacement_test": "renders Advanced Parameter Table as a labelled, focusable modal region" },
+        { "setup_case": "invalid identification", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/generalSemCapabilityPreflightV1.test.ts", "replacement_test": "authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery" }
+      ],
+      "result_families": ["parameters", "model fit", "identification", "bootstrap inference", "all five exact-fit presentation states"]
+    },
+    {
+      "kind": "pls_bootstrap",
+      "setup_cases": ["ordinary PLS", "single mediation", "parallel mediation", "serial mediation", "simultaneous two-way moderation", "three-way moderation", "first-stage moderated mediation", "second-stage moderated mediation", "HOC"],
+      "setup_evidence": [
+        { "setup_case": "ordinary PLS", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/generalSemCapabilityPreflightV1.test.ts", "replacement_test": "admits percentile two-sided bootstrap only with both exact capability cells" },
+        { "setup_case": "single mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes a single-path mediation bootstrap through its distinct exact cell" },
+        { "setup_case": "parallel mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes mediation point and multiple-mediation bootstrap through their unchanged cells" },
+        { "setup_case": "serial mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes mediation point and multiple-mediation bootstrap through their unchanged cells" },
+        { "setup_case": "simultaneous two-way moderation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells" },
+        { "setup_case": "three-way moderation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "detects a three-way term and routes point/bootstrap through distinct bounded cells" },
+        { "setup_case": "first-stage moderated mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "offers fixed five-target moderated mediation only from PLS bootstrapping" },
+        { "setup_case": "second-stage moderated mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "offers fixed five-target moderated mediation only from PLS bootstrapping" },
+        { "setup_case": "HOC", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata" }
+      ],
+      "result_families": ["bootstrap inference", "specific indirect effects", "total indirect effects", "conditional effects", "simple slopes", "moderated mediation", "HOC bootstrap"]
+    },
+    {
+      "kind": "plsc_bootstrap",
+      "setup_cases": ["eligible reflective PLSc model", "unsupported non-reflective model"],
+      "setup_evidence": [
+        { "setup_case": "eligible reflective PLSc model", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "admits bounded Standard PLSc bootstrapping while keeping point PLSc and permutation separate" },
+        { "setup_case": "unsupported non-reflective model", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "blocks PLSc bootstrap settings outside the frozen bounded contract" }
+      ],
+      "result_families": ["corrected point estimates", "percentile inference", "conditional BCa inference", "failure ledger"]
+    },
+    {
+      "kind": "pls_permutation",
+      "setup_cases": ["eligible fixed-score structural paths", "unsupported weighting or topology"],
+      "setup_evidence": [
+        { "setup_case": "eligible fixed-score structural paths", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "accepts bounded permutation inference and keeps it separate from bootstrapping" },
+        { "setup_case": "unsupported weighting or topology", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "accepts bounded permutation inference and keeps it separate from bootstrapping" }
+      ],
+      "result_families": ["path randomization", "unadjusted pathwise p values", "run details"]
+    },
+    {
+      "kind": "pls_posthoc_technical_minimum_sample_size",
+      "setup_cases": ["linked completed PLS bootstrap", "missing qualifying bootstrap"],
+      "setup_evidence": [
+        { "setup_case": "linked completed PLS bootstrap", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsPosthocSampleSize.test.ts", "replacement_test": "selects the smallest significant path from complete linked bootstrap inference" },
+        { "setup_case": "missing qualifying bootstrap", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/nativePlsPosthocSampleSize.test.ts", "replacement_test": "shows a corrective unavailable result when bootstrap inference was not run" }
+      ],
+      "result_families": ["weakest significant path", "technical minimum sample size", "source-run identity"]
+    },
+    {
+      "kind": "pls_sample_size_power",
+      "setup_cases": ["eligible two-construct path", "invalid topology", "sample-size grid"],
+      "setup_evidence": [
+        { "setup_case": "eligible two-construct path", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "exposes the bounded, calibrated prospective PLS sample-size and power workflow" },
+        { "setup_case": "invalid topology", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodApplicability.test.ts", "replacement_test": "fails closed when the power model or explicit grid leaves the bounded scope" },
+        { "setup_case": "sample-size grid", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders the bounded prospective power v2 workflow as scoped Standard" }
+      ],
+      "result_families": ["power curve", "sample-size grid", "Wilson intervals", "simulation receipt"]
+    },
+    {
+      "kind": "mga",
+      "setup_cases": ["two valid groups", "missing group", "undersized group", "configural confirmation"],
+      "setup_evidence": [
+        { "setup_case": "two valid groups", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "requires an explicit, non-indicator A-versus-B plan for combined MICOM and permutation MGA" },
+        { "setup_case": "missing group", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeMga.test.ts", "replacement_test": "discloses missing and unselected rows and enforces a bounded permutation plan" },
+        { "setup_case": "undersized group", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeMga.test.ts", "replacement_test": "discloses missing and unselected rows and enforces a bounded permutation plan" },
+        { "setup_case": "configural confirmation", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "shows MICOM and permutation MGA as Supported while enforcing the bounded v4 group setup" }
+      ],
+      "result_families": ["MICOM steps", "group-specific estimates", "permutation MGA", "excluded-row ledger"]
+    },
+    {
+      "kind": "predict",
+      "setup_cases": ["fixed 10 folds by 10 repetitions disclosure", "reflective endogenous targets", "unsupported target"],
+      "setup_evidence": [
+        { "setup_case": "fixed 10 folds by 10 repetitions disclosure", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls" },
+        { "setup_case": "reflective endogenous targets", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders the fixed indicator-level PLSpredict / CVPAT contract without irrelevant controls" },
+        { "setup_case": "unsupported target", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "accepts indicator PLSpredict / CVPAT and blocks unsupported or underpowered shapes" }
+      ],
+      "result_families": ["indicator prediction", "IA benchmark", "LM benchmark", "CVPAT"]
+    },
+    {
+      "kind": "nca",
+      "setup_cases": ["condition and outcome", "CE-FDH", "CR-FDH", "fixed steps alpha workers and seed disclosure", "invalid constant variable"],
+      "setup_evidence": [
+        { "setup_case": "condition and outcome", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "allows standalone NCA without constructing a SEM model" },
+        { "setup_case": "CE-FDH", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims" },
+        { "setup_case": "CR-FDH", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims" },
+        { "setup_case": "fixed steps alpha workers and seed disclosure", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders a bounded observed-variable NCA setup without SEM controls or claims" },
+        { "setup_case": "invalid constant variable", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "blocks invalid NCA variables and permutation bounds before dispatch" }
+      ],
+      "result_families": ["effect sizes", "ceiling lines", "bottleneck table", "permutation inference"]
+    },
+    {
+      "kind": "pca",
+      "setup_cases": ["fixed component count", "variance-retention threshold", "constant variable"],
+      "setup_evidence": [
+        { "setup_case": "fixed component count", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "allows standalone PCA without a SEM model and validates retention before dispatch" },
+        { "setup_case": "variance-retention threshold", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders model-free PCA variable and retention controls with fixed scientific scope" },
+        { "setup_case": "constant variable", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativePlsReadiness.test.ts", "replacement_test": "allows standalone PCA without a SEM model and validates retention before dispatch" }
+      ],
+      "result_families": ["eigenvalues", "loadings", "scores", "explained variance"]
+    },
+    {
+      "kind": "regression",
+      "setup_cases": ["OLS", "binary logistic with valid 0 and 1", "binary logistic missing a class", "regression case bootstrap", "graph-defined PROCESS mediation", "graph-defined PROCESS moderation"],
+      "setup_evidence": [
+        { "setup_case": "OLS", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/methodCapabilityRegistryV2.test.ts", "replacement_test": "selects OLS, logistic, bootstrap, and PROCESS cells from regression settings" },
+        { "setup_case": "binary logistic with valid 0 and 1", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "renders strict model-free binary logistic setup with a complete 0/1 profile" },
+        { "setup_case": "binary logistic missing a class", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "produces a targeted 0/1 correction from the complete-dataset logistic profile" },
+        { "setup_case": "regression case bootstrap", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeCalculationDialog.test.ts", "replacement_test": "stops regression-bootstrap setup at 50 selected predictors and controls" },
+        { "setup_case": "graph-defined PROCESS mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeProcess.test.ts", "replacement_test": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation" },
+        { "setup_case": "graph-defined PROCESS moderation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/native/nativeProcess.test.ts", "replacement_test": "accepts one graph covering serial, parallel, first-stage, second-stage, and mixed three-way moderation" }
+      ],
+      "result_families": ["fit", "coefficients", "odds ratios", "bootstrap inference", "PROCESS effects", "simple slopes", "Johnson-Neyman where eligible"]
+    }
+  ],
+  "calculate_capture_evidence": [
+    { "kind": "pls_algorithm", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "plsc", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "wpls", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "gsca", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "cca", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "cta_pls", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "ipma", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "cbsem", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "pls_bootstrap", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "plsc_bootstrap", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "pls_permutation", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "pls_posthoc_technical_minimum_sample_size", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "pls_sample_size_power", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "mga", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "predict", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "nca", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "pca", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } },
+    { "kind": "regression", "status": "ready", "evidence_type": "browser", "controlled_fixture": { "smoke_fixture": "large", "required_selectors": ["h3"] } }
+  ],
+  "cross_method_journeys": {
+    "imports": ["CSV", "XLSX", "SPSS SAV", "ODS"],
+    "exports": ["CSV", "XLSX", "HTML", "PDF", "SVG", "PNG"],
+    "persistence": ["save and fresh reopen", "autosave recovery", "legacy migration", "future read-only archive", "unsaved-close guard"],
+    "accessibility": ["keyboard-only Calculate", "focus restoration", "1024x700", "actual Windows 200 percent scaling"],
+    "observability": ["setup screenshot", "running or progress screenshot", "completed Results screenshot", "machine-readable observation", "zero unexplained skip"],
+    "packaged": ["portable candidate", "installed candidate", "isolated local CDP", "PID-scoped cleanup only", "offline request observation"]
+  },
+  "cross_method_evidence": {
+    "imports": { "required": ["CSV", "XLSX", "SPSS SAV", "ODS"], "evidence": [
+      { "case": "CSV", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged import receipt and screenshot" },
+      { "case": "XLSX", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged import receipt and screenshot" },
+      { "case": "SPSS SAV", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged import receipt and screenshot" },
+      { "case": "ODS", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged import receipt and screenshot" }
+    ] },
+    "exports": { "required": ["CSV", "XLSX", "HTML", "PDF", "SVG", "PNG"], "evidence": [
+      { "case": "CSV", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" },
+      { "case": "XLSX", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" },
+      { "case": "HTML", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" },
+      { "case": "PDF", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" },
+      { "case": "SVG", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" },
+      { "case": "PNG", "status": "ready", "evidence_type": "service", "replacement_file": "src/services/canonicalResultExportPublicationV2Service.test.ts", "replacement_test": "publishes all six validated formats through one command with exact provenance and payload bindings" }
+    ] },
+    "persistence": { "required": ["save and fresh reopen", "autosave recovery", "legacy migration", "future read-only archive", "unsaved-close guard"], "evidence": [
+      { "case": "save and fresh reopen", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "portable and installed live lifecycle receipts" },
+      { "case": "autosave recovery", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged recovery receipt and screenshot" },
+      { "case": "legacy migration", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged legacy reopen receipt and screenshot" },
+      { "case": "future read-only archive", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current packaged future archive receipt and screenshot" },
+      { "case": "unsaved-close guard", "status": "ready", "evidence_type": "service", "replacement_file": "src/native/nativeProjectLifecycle.test.ts", "replacement_test": "preserves dirty work on Cancel and replaces it only after discard or a completed save" }
+    ] },
+    "accessibility": { "required": ["keyboard-only Calculate", "focus restoration", "1024x700", "actual Windows 200 percent scaling"], "evidence": [
+      { "case": "keyboard-only Calculate", "status": "post_candidate", "evidence_type": "browser", "publication_requirement": "current 1024x700 keyboard journey screenshot" },
+      { "case": "focus restoration", "status": "post_candidate", "evidence_type": "browser", "publication_requirement": "current packaged dialog focus receipt" },
+      { "case": "1024x700", "status": "post_candidate", "evidence_type": "browser", "publication_requirement": "current 1024x700 screenshots" },
+      { "case": "actual Windows 200 percent scaling", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current Windows 200 percent scaling observation" }
+    ] },
+    "observability": { "required": ["setup screenshot", "running or progress screenshot", "completed Results screenshot", "machine-readable observation", "zero unexplained skip"], "evidence": [
+      { "case": "setup screenshot", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current candidate evidence bundle member" },
+      { "case": "running or progress screenshot", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current candidate evidence bundle member" },
+      { "case": "completed Results screenshot", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current candidate evidence bundle member" },
+      { "case": "machine-readable observation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current crawler and smoke JSON reports" },
+      { "case": "zero unexplained skip", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "final crawler report has no skipped case" }
+    ] },
+    "packaged": { "required": ["portable candidate", "installed candidate", "isolated local CDP", "PID-scoped cleanup only", "offline request observation"], "evidence": [
+      { "case": "portable candidate", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "portable smoke outcome" },
+      { "case": "installed candidate", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "installed smoke outcome" },
+      { "case": "isolated local CDP", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "smoke process receipt" },
+      { "case": "PID-scoped cleanup only", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "smoke process receipt" },
+      { "case": "offline request observation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "packaged crawler offline report" }
+    ] }
+  },
+  "specialized_result_evidence": {
+    "required": [
+      "single mediation", "parallel mediation", "serial mediation", "single-mediation bootstrap", "multiple-mediation bootstrap",
+      "simultaneous two-way moderation", "three-way moderation", "first-stage moderated mediation", "second-stage moderated mediation",
+      "binary moderator probes", "continuous moderator probes", "RR HOC", "RF HOC", "FR HOC", "FF HOC", "HOC bootstrap",
+      "Advanced Parameter Table revision", "CFA point", "CFA case bootstrap", "recursive SEM point", "recursive SEM case bootstrap",
+      "regression OLS", "regression logistic", "regression case bootstrap", "PROCESS mediation", "PROCESS moderation"
+    ],
+    "evidence": [
+      { "case": "single mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current PLS bootstrap Results/reopen pair" },
+      { "case": "parallel mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current PLS bootstrap Results/reopen pair" },
+      { "case": "serial mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current PLS bootstrap Results/reopen pair" },
+      { "case": "single-mediation bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current exact single-mediation bootstrap receipt" },
+      { "case": "multiple-mediation bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current exact multiple-mediation bootstrap receipt" },
+      { "case": "simultaneous two-way moderation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current interaction_v2 Results/reopen pair" },
+      { "case": "three-way moderation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current three-way point/bootstrap Results/reopen pair" },
+      { "case": "first-stage moderated mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current selected five-target receipt" },
+      { "case": "second-stage moderated mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current selected five-target receipt" },
+      { "case": "binary moderator probes", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current 0/1 probe Results table" },
+      { "case": "continuous moderator probes", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current minus/mean/plus probe Results table" },
+      { "case": "RR HOC", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current HOC Results/reopen pair" },
+      { "case": "RF HOC", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current HOC Results/reopen pair" },
+      { "case": "FR HOC", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current HOC Results/reopen pair" },
+      { "case": "FF HOC", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current HOC Results/reopen pair" },
+      { "case": "HOC bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current HOC bootstrap Results/reopen pair" },
+      { "case": "Advanced Parameter Table revision", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current revision save/reopen receipt" },
+      { "case": "CFA point", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current unified CB-SEM Results/reopen pair" },
+      { "case": "CFA case bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current unified CB-SEM Results/reopen pair" },
+      { "case": "recursive SEM point", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current unified CB-SEM Results/reopen pair" },
+      { "case": "recursive SEM case bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current unified CB-SEM Results/reopen pair" },
+      { "case": "regression OLS", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current OLS Results/reopen pair" },
+      { "case": "regression logistic", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current logistic Results/reopen pair" },
+      { "case": "regression case bootstrap", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current regression bootstrap Results/reopen pair" },
+      { "case": "PROCESS mediation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current PROCESS mediation Results/reopen pair" },
+      { "case": "PROCESS moderation", "status": "post_candidate", "evidence_type": "receipt", "publication_requirement": "current PROCESS moderation Results/reopen pair" }
+    ]
+  }
+}

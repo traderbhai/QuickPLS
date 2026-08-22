@@ -128,6 +128,8 @@ def visible_quickpls_window(
     win32api: Any,
     win32con: Any,
     win32process: Any,
+    expected_pid: int | None = None,
+    expected_executable: str | None = None,
 ) -> tuple[Any, dict[str, Any]]:
     candidates: list[tuple[Any, dict[str, Any]]] = []
     inspected: list[dict[str, Any]] = []
@@ -152,7 +154,15 @@ def visible_quickpls_window(
             "executable": executable,
         }
         inspected.append(info)
-        if title == expected_title:
+        if (
+            title == expected_title
+            and (expected_pid is None or pid == expected_pid)
+            and (
+                expected_executable is None
+                or Path(executable).resolve(strict=True)
+                == Path(expected_executable).resolve(strict=True)
+            )
+        ):
             candidates.append((window, info))
 
     if len(candidates) != 1:

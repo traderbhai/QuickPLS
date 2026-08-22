@@ -11,6 +11,7 @@ __pycache__/
 *.tsbuildinfo
 *.log
 *.qpls
+!validation/fixtures/v255/archives/*.qpls
 *.qpls.bak
 *.qpls.autosave
 *.qpls.autosave.bak

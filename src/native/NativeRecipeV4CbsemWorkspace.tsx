@@ -531,7 +531,23 @@ export function NativeRecipeV4CbsemWorkspace({
   const progressValue = Math.min(snapshot?.completedUnits ?? 0, progressMaximum);
   const archiveReady = Boolean(archiveIdentity && SHA256.test(archiveIdentity.sourceSha256));
 
-  return <section id={calculationPresentation ? "nd-cbsem-compatibility-calculation" : "nd-model-cbsem-labs-panel"} className="nd-cbsem-v4-workspace" role={calculationPresentation ? "region" : "tabpanel"} aria-label={calculationPresentation ? "CB-SEM compatibility calculation" : undefined} aria-labelledby={calculationPresentation ? undefined : "nd-model-cbsem-labs-tab"}>
+  return <section
+    id={calculationPresentation ? "nd-cbsem-compatibility-calculation" : "nd-model-cbsem-labs-panel"}
+    className="nd-cbsem-v4-workspace"
+    role={calculationPresentation ? "region" : "tabpanel"}
+    aria-label={calculationPresentation ? "CB-SEM compatibility calculation" : undefined}
+    aria-labelledby={calculationPresentation ? undefined : "nd-model-cbsem-labs-tab"}
+    data-smoke-canonical-document-id={calculationPresentation ? completed?.canonicalDocument.document_id : undefined}
+    data-smoke-canonical-method-version={calculationPresentation ? completed?.canonicalDocument.provenance.method_version : undefined}
+    data-smoke-canonical-primary-cell={calculationPresentation ? completed?.canonicalDocument.provenance.capability_cell.cell_id : undefined}
+    data-smoke-canonical-execution-cell={calculationPresentation
+      ? completed?.canonicalDocument.general_sem_results?.cbsem_bootstrap_receipt?.capability_cell.cell_id
+        ?? completed?.canonicalDocument.provenance.capability_cell.cell_id
+      : undefined}
+    data-smoke-canonical-capability-cells={calculationPresentation && completed
+      ? (completed.canonicalDocument.capability_cells ?? [completed.canonicalDocument.provenance.capability_cell]).map((cell) => cell.cell_id).sort().join("|")
+      : undefined}
+  >
     <header className="nd-cbsem-v4-header">
       <div><h2>{calculationPresentation ? "CB-SEM compatibility calculation" : "Exact CB-SEM workspace"}</h2></div>
       <FlaskConical size={24} aria-hidden="true" />

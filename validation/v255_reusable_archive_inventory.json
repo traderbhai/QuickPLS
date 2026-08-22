@@ -1,0 +1,573 @@
+{
+  "schema": "quickpls.v255.reusable_archive_inventory.v1",
+  "inventory_status": "curated_reuse_candidates_pending_v255_capture_and_hashing",
+  "catalogue_size": 18,
+  "paths_are_repo_relative": true,
+  "hashes_computed": false,
+  "notes": [
+    "This inventory identifies prior completed archives that can be reopened for QuickPLS 2.55 presentation evidence without rerunning their scientific engines.",
+    "Schema-5 archives expose a result/run ID rather than a schema-6 canonical result-document ID.",
+    "Prior screenshots establish historical completion but are not accepted as current QuickPLS 2.55 UI evidence; every reusable entry therefore requires a new current-UI capture.",
+    "The strict frozen-evidence index remains pending until archive, receipt, and screenshot hashes plus exact public-kind bindings are recorded."
+  ],
+  "public_methods": [
+    {
+      "public_kind": "pls_algorithm",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/quickpls-v254-canvas-results.qpls",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_559e8d8a-2902-4a94-b72b-efac9918ee6b"
+      },
+      "scientific_identity": {
+        "registry_cell": "qpls3.pls.general_sem_three_way_moderation_point",
+        "capability": "general_sem_pls_three_way_moderation_point_v1",
+        "method_version": "qpls.general-sem-pls.three-way.point.v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/v254_canvas_results_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/screens/09-results.png",
+        "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/screens/10-reopen.png"
+      ],
+      "source_release": "2.54.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "plsc",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-methods-1787059313497-62520.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "41df5d79-fcfa-4096-9d59-acc90dca7a7a"
+      },
+      "scientific_identity": {
+        "stored_method": "plsc",
+        "method_version_token": "plsc_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/plscResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/24-tauri-native-plsc-results-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "wpls",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-methods-1787059313497-62520.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "41908c14-5c2a-4ed1-8f27-e601afc2fc03"
+      },
+      "scientific_identity": {
+        "stored_method": "wpls",
+        "method_version_token": "wpls_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/wplsResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/37-tauri-native-final-wpls-results-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "gsca",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/gsca_als_v2/gsca_als_v2_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "29bbab18-1caf-42fe-a9a9-0099e5659163"
+      },
+      "scientific_identity": {
+        "stored_method": "gsca",
+        "method_version": "gsca_als_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_gsca.json",
+        "json_pointer": "/checks/gscaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/144-tauri-native-gsca-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/146-tauri-native-gsca-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "cca",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/cca_residuals_v1/cca_residuals_v1_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "0f8356d8-04d0-4428-bb56-166d201ddd96"
+      },
+      "scientific_identity": {
+        "stored_method": "cca",
+        "method_version_token": "cca_composite_residual_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/ccaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/74-tauri-native-cca-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/76-tauri-native-cca-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "cta_pls",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "34a420a7-5d20-4e6c-a11d-209e3dc1938e"
+      },
+      "scientific_identity": {
+        "stored_method": "cta_pls",
+        "method_version": "cta_pls_tetrad_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_cta_pls.json",
+        "json_pointer": "/checks/ctaPlsResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/205-tauri-native-cta-pls-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/207-tauri-native-cta-pls-reopened-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "ipma",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/ipma_v1/ipma_v1_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e30342bf-a2ae-4586-98b9-ba349c4d1c20"
+      },
+      "scientific_identity": {
+        "stored_method": "ipma",
+        "method_version": "ipma_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/ipmaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/81-tauri-native-ipma-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/83-tauri-native-ipma-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "cbsem",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a"
+      },
+      "scientific_identity": {
+        "method_version": "cbsem_exact_case_bootstrap_v1",
+        "estimator_method_version": "cbsem_ml_exact_parameter_table_v3"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_cbsem_exact_bootstrap.json",
+        "json_pointer": "/checks/cbsemExactBootstrapResultIdentity/documentId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/185-tauri-native-cbsem-exact-fresh-process-reopen.png",
+        "validation/results/screens/v247-native-desktop-acceptance/185v-tauri-native-cbsem-exact-packaged-viewport-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "pls_bootstrap",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-moderation-1787059313497-62520.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "fa5ac33f-4b8a-458b-a889-7b005d95b403"
+      },
+      "scientific_identity": {
+        "stored_method": "pls_pm",
+        "method_version_tokens": [
+          "pls_two_stage_moderation_v1",
+          "indexed_resampling_v4"
+        ]
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/moderationBootstrapResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/56-tauri-native-moderation-bootstrap-interaction-inference-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/57-tauri-native-moderation-bootstrap-conditional-effect-plot-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "plsc_bootstrap",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/consistent_bootstrap_v1/consistent_bootstrap_v1_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "3803e75d-0a4c-4630-af62-1d97d114ac0c"
+      },
+      "scientific_identity": {
+        "stored_method": "plsc",
+        "method_version": "plsc_bootstrap_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_plsc_bootstrap.json",
+        "json_pointer": "/checks/plscBootstrapResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/179v-tauri-native-plsc-bootstrap-packaged-viewport-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "pls_permutation",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "503bd74e-4114-4357-acc8-52c0aa7bf741"
+      },
+      "scientific_identity": {
+        "stored_method": "pls_pm",
+        "method_version_token": "freedman_lane_permutation_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json",
+        "json_pointer": "/checks/structuralPathRandomizationResults/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/196-tauri-native-structural-path-randomization-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/198-tauri-native-structural-path-randomization-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "pls_posthoc_technical_minimum_sample_size",
+      "reuse_state": "no_packaged_completed_result_found",
+      "archive_path": null,
+      "result_identity": null,
+      "scientific_identity": {
+        "method_version": "pls_posthoc_technical_minimum_sample_size_v2",
+        "qualification_path": "validation/qualification_v2/pls_posthoc_technical_minimum_sample_size_v2.qualification.json"
+      },
+      "prior_receipt": null,
+      "prior_screenshots": [],
+      "source_release": null,
+      "prior_verification_status": "scientific_qualification_only_no_packaged_result",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": true
+    },
+    {
+      "public_kind": "pls_sample_size_power",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/pls_sample_size_power_v2/pls_sample_size_power_v2_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e05ec227-f395-455e-b709-c622e294b05e"
+      },
+      "scientific_identity": {
+        "stored_method": "pls_sample_size_power",
+        "method_version": "pls_sample_size_power_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_pls_sample_size_power.json",
+        "json_pointer": "/checks/plsSampleSizePowerResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/209v-tauri-native-pls-sample-size-power-packaged-viewport-1440x900.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "mga",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-mga-1787061319200-42928.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e"
+      },
+      "scientific_identity": {
+        "stored_method": "mga",
+        "method_version_tokens": [
+          "pls_mga_two_group_v4",
+          "pls_mga_permutation_v4",
+          "micom_v4"
+        ]
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_mga.json",
+        "json_pointer": "/checks/mgaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/66-tauri-native-mga-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/69-tauri-native-mga-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "predict",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/plspredict_cvpat_v2/plspredict_cvpat_v2_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d2af2120-69e3-4160-a2ee-d401abe6fef6"
+      },
+      "scientific_identity": {
+        "stored_method": "predict",
+        "method_version": "plspredict_indicator_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_prediction.json",
+        "json_pointer": "/checks/predictionV2Result/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/95-tauri-native-prediction-cvpat-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/97-tauri-native-prediction-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "nca",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/nca_v2/nca_v2_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "1dd33053-824b-4bca-8f10-06b5ede94074"
+      },
+      "scientific_identity": {
+        "stored_method": "nca",
+        "method_version": "nca_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_nca.json",
+        "json_pointer": "/checks/ncaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/87-tauri-native-nca-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/89-tauri-native-nca-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "pca",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/method_factory/pca_v1/pca_v1_packaged.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "842fff18-ee0a-40ec-8ea6-960c2d6d583f"
+      },
+      "scientific_identity": {
+        "stored_method": "pca",
+        "method_version": "pca_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_pca.json",
+        "json_pointer": "/checks/pcaResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/113-tauri-native-pca-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/115-tauri-native-pca-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "public_kind": "regression",
+      "reuse_state": "reusable_verified_prior_release",
+      "archive_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version_tokens": [
+          "regression_process_v2",
+          "regression_process_bootstrap_v1"
+        ]
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_process_v2.json",
+        "json_pointer": "/checks/processV2Results",
+        "verification_status": "passed",
+        "identity_recovered_from_archive_not_pointer": true
+      },
+      "prior_screenshots": [
+        "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
+        "validation/results/screens/v247-native-desktop-acceptance/188-tauri-native-process-v2-reopened-1536x794.png"
+      ],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    }
+  ],
+  "specialized_feature_archives": [
+    {
+      "feature": "two_way_moderation_point",
+      "public_kind": "pls_algorithm",
+      "archive_path": "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/quickpls-v253-moderation.qpls",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_61d1a1e0-b522-46eb-a94a-35d78a624c60"
+      },
+      "scientific_identity": {
+        "method_version": "qpls.general-sem-pls.multiple-two-way.point.v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/v253_mediation_moderation_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/05-results.png",
+        "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/screens/06-reopen.png"
+      ],
+      "source_release": "2.53.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "feature": "higher_order_construct_point",
+      "public_kind": "pls_algorithm",
+      "archive_path": "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/quickpls-v252-hoc.qpls",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc"
+      },
+      "scientific_identity": {
+        "method_version": "general_sem_pls_higher_order_point_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/v252_hoc_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [
+        "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/05-results.png",
+        "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/screens/06-reopen.png"
+      ],
+      "source_release": "2.52.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    }
+  ],
+  "known_current_evidence_gaps": [
+    {
+      "id": "v255_current_ui_captures",
+      "status": "pending",
+      "description": "No listed screenshot is a final QuickPLS 2.55 capture. Reopen reusable archives in the settled 2.55 packaged UI and capture Results plus fresh-reopen states."
+    },
+    {
+      "id": "posthoc_packaged_result",
+      "status": "requires_new_scientific_run",
+      "public_kinds": [
+        "pls_posthoc_technical_minimum_sample_size"
+      ],
+      "description": "Scientific qualification exists, but no completed packaged archive, result identity, receipt, or screenshot was found."
+    },
+    {
+      "id": "specialized_pls_bootstrap_packaged_pairs",
+      "status": "pending",
+      "public_kinds": [
+        "pls_bootstrap"
+      ],
+      "capabilities": [
+        "general_sem_pls_single_mediation_bootstrap_v1",
+        "general_sem_pls_higher_order_bootstrap_v1",
+        "general_sem_pls_three_way_moderation_bootstrap_v1",
+        "moderated_mediation_v1"
+      ],
+      "description": "Promotion or scientific receipts exist, but this inventory did not locate a current packaged archive plus Results screenshot pair for each specialized route."
+    },
+    {
+      "id": "unified_cbsem_topology_pairs",
+      "status": "pending",
+      "public_kinds": [
+        "cbsem"
+      ],
+      "capabilities": [
+        "cbsem_general_sem_ml_v1",
+        "cbsem_recursive_sem_case_bootstrap_v1"
+      ],
+      "description": "The exact-CFA bootstrap archive is reusable, but unified Calculate evidence for both CFA/recursive point and bootstrap topology families still needs current packaged journeys."
+    },
+    {
+      "id": "regression_submode_current_captures",
+      "status": "pending",
+      "public_kinds": [
+        "regression"
+      ],
+      "description": "The curated representative is PROCESS v2. Existing OLS, logistic, and regression-bootstrap archives can be reopened for supplemental current captures if the complete family matrix requires each submode."
+    },
+    {
+      "id": "schema5_public_kind_binding",
+      "status": "pending",
+      "description": "Schema-5 archives frequently store an engine method such as pls_pm rather than the public Calculate kind. The 2.55 evidence receipt must bind the exact public kind to the selected archived result without relabelling scientific identity."
+    },
+    {
+      "id": "artifact_hashes",
+      "status": "pending",
+      "description": "No SHA-256 values were computed during this read-only inventory pass. Hashing belongs to the frozen-evidence population step."
+    }
+  ]
+}

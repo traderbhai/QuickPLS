@@ -1,0 +1,40 @@
+{
+  "schema_version": 3,
+  "target_release": "2.55.0",
+  "status": "pending_collection",
+  "purpose": "Index completed Result evidence reused from already verified archives. Pending rows or uncovered declared result families are release blockers. Every evidence entry is independently hash-bound and receipt-bound to its canonical result.",
+  "schema_change": "v3 is intentionally incompatible with earlier drafts: each method owns evidence[] and evidence bytes live in one SHA-256-bound, release-attachable ZIP rather than ignored local result directories.",
+  "evidence_bundle_manifest": "validation/v255_evidence_bundle_manifest.json",
+  "reusable_source_inventory": "validation/v255_reusable_archive_inventory.json",
+  "reuse_rule": "Do not rerun a scientific engine solely to recreate an unchanged Result screen. Rerun when calculation configuration transfer, lifecycle, routing, persistence, or a changed presentation is being tested.",
+  "verified_evidence_contract": {
+    "covers": "Non-empty array of declared representative_results. The union across one method's evidence[] must exactly equal its representative_results, with no undeclared family.",
+    "cover_assertions": "Exactly one assertion per covers entry. Each assertion names the family, one observed_results_labels source (navigation, visible_headings, or visible_result_table_ids), exact or contains matching, and a non-empty value actually observed by the current frozen-archive crawler.",
+    "archive": { "required": ["member", "sha256"] },
+    "screenshot": { "required": ["member", "sha256"] },
+    "receipt": { "required": ["member", "sha256", "method_kind_json_pointer", "canonical_result_id_json_pointer"] },
+    "identity": { "required": ["canonical_result_id", "method_kind"] },
+    "hash_algorithm": "sha256",
+    "binding_rule": "The parsed receipt must be a verified-current-UI-capture receipt from quickpls_v255_frozen_archive_reopen_crawler_v1. Its selected method/result identity, archive and screenshot hashes, and every covers family must be bound to labels or table IDs observed from the current Results DOM."
+  },
+  "methods": [
+    { "kind": "pls_algorithm", "status": "pending", "representative_results": ["measurement model", "structural model", "direct and total effects", "HOC", "two-way moderation", "three-way moderation"], "evidence": [] },
+    { "kind": "plsc", "status": "pending", "representative_results": ["consistent coefficients", "corrected reliability", "model assessment"], "evidence": [] },
+    { "kind": "wpls", "status": "pending", "representative_results": ["weighted measurement model", "weighted structural model", "run details"], "evidence": [] },
+    { "kind": "gsca", "status": "pending", "representative_results": ["component weights", "loadings", "paths", "FIT and diagnostics"], "evidence": [] },
+    { "kind": "cca", "status": "pending", "representative_results": ["composite residuals", "diagnostics"], "evidence": [] },
+    { "kind": "cta_pls", "status": "pending", "representative_results": ["tetrads", "descriptive diagnostics"], "evidence": [] },
+    { "kind": "ipma", "status": "pending", "representative_results": ["construct importance-performance", "indicator performance", "map"], "evidence": [] },
+    { "kind": "cbsem", "status": "pending", "representative_results": ["parameters", "model fit", "identification", "bootstrap inference", "all five exact-fit presentation states"], "evidence": [] },
+    { "kind": "pls_bootstrap", "status": "pending", "representative_results": ["bootstrap inference", "specific indirect effects", "total indirect effects", "conditional effects", "simple slopes", "moderated mediation", "HOC bootstrap"], "evidence": [] },
+    { "kind": "plsc_bootstrap", "status": "pending", "representative_results": ["corrected point estimates", "percentile inference", "conditional BCa inference", "failure ledger"], "evidence": [] },
+    { "kind": "pls_permutation", "status": "pending", "representative_results": ["path randomization", "unadjusted pathwise p values", "run details"], "evidence": [] },
+    { "kind": "pls_posthoc_technical_minimum_sample_size", "status": "pending", "representative_results": ["weakest significant path", "technical minimum sample size", "source-run identity"], "evidence": [] },
+    { "kind": "pls_sample_size_power", "status": "pending", "representative_results": ["power curve", "sample-size grid", "Wilson intervals", "simulation receipt"], "evidence": [] },
+    { "kind": "mga", "status": "pending", "representative_results": ["MICOM steps", "group-specific estimates", "permutation MGA", "excluded-row ledger"], "evidence": [] },
+    { "kind": "predict", "status": "pending", "representative_results": ["indicator prediction", "IA benchmark", "LM benchmark", "CVPAT"], "evidence": [] },
+    { "kind": "nca", "status": "pending", "representative_results": ["effect sizes", "ceiling lines", "bottleneck table", "permutation inference"], "evidence": [] },
+    { "kind": "pca", "status": "pending", "representative_results": ["eigenvalues", "loadings", "scores", "explained variance"], "evidence": [] },
+    { "kind": "regression", "status": "pending", "representative_results": ["fit", "coefficients", "odds ratios", "bootstrap inference", "PROCESS effects", "simple slopes", "Johnson-Neyman where eligible"], "evidence": [] }
+  ]
+}

@@ -321,6 +321,9 @@ declare global {
       loadProcessV2Fixture: () => { variables: number; models: number };
       loadHocFixture: () => { variables: number; models: number };
       loadDiagramFixture: (fixture: string) => unknown | Promise<unknown>;
+      loadNamedSemEvidenceFixture: (fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture) => unknown | Promise<unknown>;
+      namedSemEvidenceSnapshot: () => unknown;
+      exerciseNamedAdvancedParameterRevision: () => Promise<unknown>;
       modelCounts: () => { constructs: number; indicators: number };
       modelPreflight: () => { canRun: boolean; ready: number; blockers: number; warnings: number };
       setView: (nextView: string) => void;
@@ -1296,6 +1299,146 @@ export function NativeDesktopApp() {
         navigate("model");
         return { constructs: project.nodes.length, indicators: project.dataset.columns.length };
       },
+      loadNamedSemEvidenceFixture: async (fixture) => {
+        const { v255NamedSemEvidenceFixture } = await import("../data/v255NamedSemEvidenceFixtures");
+        const project = v255NamedSemEvidenceFixture(fixture);
+        const current = useWorkspace.getState();
+        const retainedProjectId = current.projectId;
+        const retainedDraft = current.generalSemProjectDraftMode;
+        loadProject({
+          nodes: project.nodes,
+          edges: project.edges,
+          dataset: project.dataset,
+          projectModels: project.projectModels,
+          activeModelId: project.activeModelId,
+          runs: [],
+          diagramMode: "sem",
+          ...(retainedDraft ? { preserveGeneralSemProjectDraftMode: retainedDraft } : {}),
+        });
+        setProjectMeta(`QuickPLS 2.55 named evidence: ${fixture}`, null, retainedProjectId);
+        navigate("model");
+        return {
+          fixture,
+          modelId: project.modelId,
+          constructs: project.nodes.filter((node) => !node.data.semantic).length,
+          derivedTerms: project.nodes.filter((node) => Boolean(node.data.semantic)).length,
+          paths: project.edges.filter((edge) => !edge.data?.technicalGenerated).length,
+        };
+      },
+      namedSemEvidenceSnapshot: () => {
+        const state = useWorkspace.getState();
+        const authority = state.activeModelId ? state.standardSemModelV4Authorities[state.activeModelId] ?? null : null;
+        const derived = authority?.model.derived_terms ?? [];
+        const canonical = generalSemCanonicalResult;
+        const selectedLegacy = state.runs.find((run) => run.id === state.selectedResultRunId) ?? null;
+        const cells = canonical?.capability_cells ?? (canonical ? [canonical.provenance.capability_cell] : []);
+        const executionCell = canonical?.general_sem_results?.cbsem_bootstrap_receipt?.capability_cell
+          ?? canonical?.general_sem_results?.inference_receipt?.capability_cell
+          ?? canonical?.general_sem_results?.higher_order_inference_receipt?.capability_cell
+          ?? canonical?.provenance.capability_cell
+          ?? null;
+        return {
+          model: {
+            model_id: authority?.model.id ?? state.activeModelId,
+            model_document_sha256: authority?.model_document_sha256 ?? null,
+            ordinary_construct_count: authority
+              ? authority.model.variables.filter((variable) => variable.kind === "composite" || variable.kind === "common_factor").length
+              : state.nodes.filter((node) => !node.data.semantic).length,
+            common_factor_count: authority?.model.variables.filter((variable) => variable.kind === "common_factor").length ?? 0,
+            structural_relation_count: authority?.model.relations.filter((relation) => relation.kind === "structural").length
+              ?? state.edges.filter((edge) => edge.data?.role !== "covariance" && !edge.data?.technicalGenerated).length,
+            interaction_orders: derived
+              .flatMap((term) => term.kind === "interaction_v2" ? [term.operands.length] : term.kind === "interaction" ? [2] : [])
+              .sort((left, right) => left - right),
+            higher_order_measurement_types: derived
+              .flatMap((term) => term.kind === "higher_order" ? [term.measurement_type] : [])
+              .sort(),
+            advanced_equality_labels: authority?.model.parameters
+              .flatMap((parameter) => parameter.kind === "free" && parameter.equality_label ? [parameter.equality_label] : [])
+              .sort() ?? [],
+            advanced_equalities: authority?.model.parameters
+              .flatMap((parameter) => parameter.kind === "free" && parameter.equality_label
+                ? [{ parameter_id: parameter.id, equality_label: parameter.equality_label }]
+                : [])
+              .sort((left, right) => left.parameter_id.localeCompare(right.parameter_id)) ?? [],
+          },
+          canonical_result: canonical ? {
+            document_id: canonical.document_id,
+            run_id: canonical.provenance.run_id,
+            model_id: canonical.provenance.model_id,
+            method_version: canonical.provenance.method_version,
+            primary_cell_id: canonical.provenance.capability_cell.cell_id,
+            execution_cell_id: executionCell?.cell_id ?? null,
+            capability_cell_ids: cells.map((cell) => cell.cell_id).sort(),
+            tables: canonical.tables.map((table) => ({
+              id: table.id,
+              rows: table.rows.length,
+              columns: table.columns.length,
+            })).sort((left, right) => left.id.localeCompare(right.id)),
+            specific_indirect_count: canonical.general_sem_results?.specific_indirect_effects?.length ?? 0,
+            interaction_effect_count: canonical.general_sem_results?.interaction_effects?.length ?? 0,
+            conditional_slope_count: canonical.general_sem_results?.conditional_effects?.length ?? 0,
+            conditional_probe_contracts: canonical.general_sem_results?.conditional_effect_probes?.map((probe) => ({
+              moderator_id: probe.moderator_id,
+              kind: probe.values.kind,
+              values: probe.values.kind === "explicit"
+                ? [...probe.values.values]
+                : ["-1 SD", "Mean", "+1 SD"],
+            })).sort((left, right) => left.moderator_id.localeCompare(right.moderator_id)) ?? [],
+            three_way_effect_count: canonical.general_sem_results?.three_way_interaction_effects?.length ?? 0,
+            three_way_conditional_effect_count: canonical.general_sem_results?.three_way_conditional_interaction_effects?.length ?? 0,
+            three_way_simple_slope_count: canonical.general_sem_results?.three_way_simple_slopes?.length ?? 0,
+            conditional_indirect_count: canonical.general_sem_results?.conditional_indirect_effects?.length ?? 0,
+            moderated_mediation_index_count: canonical.general_sem_results?.moderated_mediation_indices?.length ?? 0,
+            higher_order_stage_count: canonical.general_sem_results?.higher_order_stages?.length ?? 0,
+          } : null,
+          legacy_result: selectedLegacy ? {
+            result_id: selectedLegacy.id,
+            method: selectedLegacy.method,
+            method_version: selectedLegacy.result?.method_version ?? null,
+            status: selectedLegacy.status,
+            mediation_specific_count: selectedLegacy.result?.mediation?.estimates.length ?? 0,
+            moderation_effect_count: selectedLegacy.result?.moderation?.estimates.length ?? 0,
+            regression_type: selectedLegacy.result?.regression?.regression_type ?? null,
+            process_model: selectedLegacy.result?.regression?.process?.model ?? null,
+          } : null,
+        };
+      },
+      exerciseNamedAdvancedParameterRevision: async () => {
+        const before = useWorkspace.getState();
+        const modelId = before.activeModelId;
+        const authority = modelId ? before.standardSemModelV4Authorities[modelId] ?? null : null;
+        if (!modelId || !authority) throw new Error("A strict Standard SemModelV4 authority is required.");
+        const parameter = authority.model.parameters.find((candidate) => candidate.kind === "free");
+        if (!parameter || parameter.kind !== "free") throw new Error("No free parameter is available for the Advanced Parameter Table revision.");
+        const result = await before.commitStandardSemModelV4Intent({
+          kind: "set_parameter_specification",
+          parameter_id: parameter.id,
+          specification: {
+            kind: "free",
+            start: parameter.start ?? 0.125,
+            lower: parameter.lower,
+            upper: parameter.upper,
+            equality_label: "V255Evidence",
+          },
+          label: parameter.label,
+        });
+        if (result.status !== "applied") throw new Error(`Advanced Parameter Table revision was blocked: ${result.diagnostic.message}`);
+        const after = useWorkspace.getState().standardSemModelV4Authorities[modelId];
+        const revised = after?.model.parameters.find((candidate) => candidate.id === parameter.id);
+        if (!after || revised?.kind !== "free" || revised.equality_label !== "V255Evidence") {
+          throw new Error("The Advanced Parameter Table revision did not persist in the active authority.");
+        }
+        return {
+          model_id: modelId,
+          parameter_id: parameter.id,
+          before_model_document_sha256: authority.model_document_sha256,
+          after_model_document_sha256: after.model_document_sha256,
+          equality_label: revised.equality_label,
+          stable_parameter_id: revised.id === parameter.id,
+          changed_authority: after.model_document_sha256 !== authority.model_document_sha256,
+        };
+      },
       modelCounts: () => {
         const state = useWorkspace.getState();
         return {
@@ -1323,7 +1466,7 @@ export function NativeDesktopApp() {
     };
     window.__QUICKPLS_SMOKE__ = smoke;
     return () => { delete window.__QUICKPLS_SMOKE__; };
-  }, [addRun, completedRuns.length, loadProject, navigate, setProjectMeta]);
+  }, [addRun, completedRuns.length, generalSemCanonicalResult, loadProject, navigate, setProjectMeta]);
 
   const startCalculation = (dataProfile?: NativeLogisticProfile | NativeProcessProfile) => {
     if (!calculationReadiness.canRun || ["queued", "validating", "running", "cancelling"].includes(runMonitor.status)) return;

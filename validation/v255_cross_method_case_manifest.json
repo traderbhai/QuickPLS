@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v255_cross_method_case_manifest_v1",
+  "target_release": "2.55.0",
+  "candidate": "portable",
+  "status": "ready_for_collection",
+  "purpose": "Fail-closed executable routes for the 17 cross-method cases that require native file dialogs, multi-process persistence phases, actual Windows DPI, or wrapper-owned process cleanup.",
+  "fixture_sources": {
+    "csv": "validation/fixtures/v255_cross_method_numeric.csv",
+    "legacy_schema4": "validation/fixtures/v255/archives/legacy-schema4.qpls",
+    "schema5": "validation/fixtures/v255/archives/schema5-project.qpls",
+    "schema6": "validation/fixtures/v255/archives/schema6-results.qpls"
+  },
+  "fixture_sha256": {
+    "legacy_schema4": "46f4f5198e215b5fa62a0cf7ee85b662ae4e0af657e7d3f35dc0d62631e76f92",
+    "schema5": "4f7eb56dfc0b7f07576d2979008d6a098e00f563aee81542be98a0d521e2ead9",
+    "schema6": "c291a3d65ef4f2f5622221d8720bcf4acbf655033475675aad48ffd421048281"
+  },
+  "fixture_builder": "validation/v255_cross_method_fixture_builder.py",
+  "driver": "validation/v255_cross_method_candidate_driver.mjs",
+  "native_dialog_helper": "validation/windows_native_owned_file_dialog.py",
+  "unsaved_close_helper": "validation/v255_windows_unsaved_close_guard.py",
+  "wrapper": "validation/run_v255_cross_method_candidate_smoke.ps1",
+  "cases": [
+    {
+      "id": "cross_method:imports:CSV",
+      "operation": "import_dataset",
+      "phase": "imports",
+      "format": "CSV",
+      "fixture_role": "import_csv",
+      "expected": { "format": "CSV", "dataset_name": "quickpls-v255-import.csv", "columns": ["x", "y", "z"], "rows": 4, "missing": 0, "first_row": ["1", "2", "3"], "last_row": ["4", "8", "12"] }
+    },
+    {
+      "id": "cross_method:imports:XLSX",
+      "operation": "import_dataset",
+      "phase": "imports",
+      "format": "XLSX",
+      "fixture_role": "import_xlsx",
+      "expected": { "format": "XLSX", "dataset_name": "quickpls-v255-import.xlsx", "columns": ["x", "y", "z"], "rows": 4, "missing": 0, "first_row": ["1", "2", "3"], "last_row": ["4", "8", "12"] }
+    },
+    {
+      "id": "cross_method:imports:SPSS SAV",
+      "operation": "import_dataset",
+      "phase": "imports",
+      "format": "SPSS SAV",
+      "fixture_role": "import_spss_sav",
+      "expected": { "format": "SPSS SAV", "dataset_name": "quickpls-v255-import.sav", "columns": ["X", "Y", "Z"], "rows": 4, "missing": 0, "first_row": ["1", "2", "3"], "last_row": ["4", "8", "12"] }
+    },
+    {
+      "id": "cross_method:imports:ODS",
+      "operation": "import_dataset",
+      "phase": "imports",
+      "format": "ODS",
+      "fixture_role": "import_ods",
+      "expected": { "format": "ODS", "dataset_name": "quickpls-v255-import.ods", "columns": ["x", "y", "z"], "rows": 4, "missing": 0, "first_row": ["1", "2", "3"], "last_row": ["4", "8", "12"] }
+    },
+    {
+      "id": "cross_method:exports:CSV",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "CSV",
+      "expected": { "format": "CSV", "extension": ".csv", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:exports:XLSX",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "XLSX",
+      "expected": { "format": "XLSX", "extension": ".xlsx", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:exports:HTML",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "HTML",
+      "expected": { "format": "HTML", "extension": ".html", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:exports:PDF",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "PDF",
+      "expected": { "format": "PDF", "extension": ".pdf", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:exports:SVG",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "SVG",
+      "expected": { "format": "SVG", "extension": ".svg", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:exports:PNG",
+      "operation": "export_result",
+      "phase": "exports",
+      "format": "PNG",
+      "expected": { "format": "PNG", "extension": ".png", "published": true, "semantic_readback": true }
+    },
+    {
+      "id": "cross_method:persistence:autosave recovery",
+      "operation": "exercise_persistence",
+      "phase": "autosave_recover",
+      "expected": { "autosave_created": true, "unclean_exit_was_pid_scoped": true, "fresh_process": true, "recovered_toast": "Project recovered", "recovered_dataset": "quickpls-v255-import.csv" }
+    },
+    {
+      "id": "cross_method:persistence:legacy migration",
+      "operation": "exercise_persistence",
+      "phase": "legacy_reopen",
+      "fixture_role": "legacy_schema4",
+      "expected": { "source_schema": 4, "upgraded_schema": 5, "original_preserved_in_backup": true, "supported_mutation": "create_model", "model_name": "Legacy migration model", "fresh_reopen": true, "stable_project_identity": true, "writable_after_reopen": true }
+    },
+    {
+      "id": "cross_method:persistence:future read-only archive",
+      "operation": "exercise_persistence",
+      "phase": "archives",
+      "fixture_role": "future_schema7",
+      "expected": { "toast": "Project opened read-only", "source_schema": 7, "read_only": true, "save_mutation_blocked": true }
+    },
+    {
+      "id": "cross_method:persistence:unsaved-close guard",
+      "operation": "exercise_persistence",
+      "phase": "unsaved_close",
+      "expected": { "prompt_title": "QuickPLS", "prompt_contains": "before closing?", "buttons": ["Save", "Don't Save", "Cancel"], "cancel_kept_exact_pid_alive": true }
+    },
+    {
+      "id": "cross_method:accessibility:actual Windows 200 percent scaling",
+      "operation": "exercise_accessibility",
+      "phase": "dpi_200",
+      "expected": { "effective_dpi": 192, "device_pixel_ratio": 2, "clean_profile": true, "forced_scale_argument_present": false }
+    },
+    {
+      "id": "cross_method:packaged:isolated local CDP",
+      "operation": "verify_packaged_candidate",
+      "phase": "process_safety",
+      "expected": { "endpoint_host": "127.0.0.1", "endpoint_preexisting": false, "quickpls_page_count": 1, "origin": "http://tauri.localhost", "functional_network_requests": 0 }
+    },
+    {
+      "id": "cross_method:packaged:PID-scoped cleanup only",
+      "operation": "verify_packaged_candidate",
+      "phase": "process_safety",
+      "expected": { "candidate_tree_terminated": true, "sentinel_survived": true, "only_wrapper_owned_trees_terminated": true }
+    }
+  ]
+}

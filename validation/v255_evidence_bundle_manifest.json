@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "target_release": "2.55.0",
+  "status": "pending_collection",
+  "purpose": "Release-attachable archive of binary screenshots, projects, and receipts referenced by the v3 frozen-result index. It is intentionally not committed as an ignored validation/results directory.",
+  "bundle": {
+    "release_asset_name": "QuickPLS-2.55-evidence.zip",
+    "sha256": null,
+    "member_hash_algorithm": "sha256",
+    "member_count": null,
+    "ordered_member_names_sha256": null,
+    "compressed_bytes": null,
+    "uncompressed_bytes": null
+  },
+  "named_evidence": {
+    "collector_suite_id": "quickpls_v255_named_evidence_collector_v1",
+    "case_receipt_suite_id": "quickpls_v255_named_evidence_case_receipt_v1",
+    "collector_report": { "member": null, "sha256": null },
+    "candidate_report": { "member": null, "sha256": null },
+    "observation_schema": { "member": null, "sha256": null },
+    "named_case_manifest": { "member": null, "sha256": null },
+    "source_commit": null,
+    "candidate_executables": { "portable": null, "installed": null },
+    "source_reports_are_bundle_members": true,
+    "unique_case_receipt_and_screenshot_bytes": true,
+    "unique_source_report_pointer_per_case": true
+  },
+  "collection_rule": "When status becomes verified, provide the local ZIP and a clean extraction directory to the gate. The gate verifies bundle SHA-256 then every index member SHA-256 before accepting its receipt binding.",
+  "publication_rule": "Attach this exact ZIP to the unsigned 2.55 GitHub release; source history contains only this manifest and the curated member index."
+}
