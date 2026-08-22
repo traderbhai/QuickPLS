@@ -56,7 +56,10 @@ describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
     expect(v255NamedSemEvidenceFixture("moderated_mediation_second").nodes.find((node) => node.data.semantic === "interaction")?.data.interaction?.focalRelationId).toBe("path:m1-y");
     const binary = v255NamedSemEvidenceFixture("binary_moderation");
     const binaryInteractions = binary.nodes.filter((node) => node.data.semantic === "interaction");
-    expect(binaryInteractions.map((node) => node.data.interaction?.operands.length).sort()).toEqual([2, 2, 2, 3]);
+    expect(binaryInteractions.flatMap((node) => {
+      const interaction = node.data.interaction;
+      return interaction?.kind === "interaction_v2" ? [interaction.operands.length] : [];
+    }).sort()).toEqual([2, 2, 2, 3]);
     expect(binaryInteractions.find((node) => node.id === "w-b-y")?.data.interaction?.focalRelationId).toBe("path:w-y");
     expect(binary.edges.filter((edge) => !edge.data?.technicalGenerated).map((edge) => edge.id)).toEqual([
       "path:x-y", "path:w-y", "path:b-y",
