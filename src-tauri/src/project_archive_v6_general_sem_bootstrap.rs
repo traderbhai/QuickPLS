@@ -13,12 +13,15 @@ use crate::{
         GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
         GENERAL_SEM_STANDARD_SURFACE as STANDARD_SURFACE, GeneralSemRegistryAccessErrorV1,
         authorize_general_sem_registry_access_v1, decision_declares_general_sem_execution_cell_v1,
-        general_sem_recipe_execution_surface_v1, selected_general_sem_execution_cell_v1,
+        general_sem_cbsem_recipe_execution_surface_v1, general_sem_recipe_execution_surface_v1,
+        is_rank3_general_sem_cbsem_execution_cell_v1, selected_general_sem_cbsem_execution_cell_v1,
+        selected_general_sem_execution_cell_v1,
     },
 };
 use chrono::{DateTime, Utc};
 use qpls_core::{
-    AnalysisRecipeV4, CapabilityCellReferenceV2, SemModelV4, preflight_general_sem_pls_v1,
+    AnalysisMethod, AnalysisRecipeV4, CapabilityCellReferenceV2, MethodConfig, SemModelV4,
+    preflight_general_sem_cbsem_v1, preflight_general_sem_pls_v1,
 };
 use qpls_project::{
     GeneralSemPopulatedProjectArchiveCreationReceiptV1, GeneralSemProjectArchiveCreationErrorV1,
@@ -407,8 +410,33 @@ fn registry_access_block(
             ),
         });
     }
-    let expected_recipe_surface = general_sem_recipe_execution_surface_v1(&request.surface)
-        .expect("Registry authorization accepted one of the two General SEM surfaces");
+    let rank3_cbsem = is_rank3_general_sem_cbsem_execution_cell_v1(&request.capability_cell);
+    let method_matches = if rank3_cbsem {
+        request.recipe.settings.method == AnalysisMethod::Cbsem
+            && matches!(
+                &request.recipe.method_config,
+                Some(MethodConfig::Cbsem { .. })
+            )
+    } else {
+        request.recipe.settings.method == AnalysisMethod::PlsPm
+            && matches!(
+                &request.recipe.method_config,
+                Some(MethodConfig::PlsAlgorithm)
+            )
+    };
+    if !method_matches {
+        return Some(blocked(
+            "recipe_method_mismatch",
+            "The requested General SEM cell differs from the bound RecipeV4 estimator method.",
+            "Rebuild the recipe with the exact estimator method configuration before publication.",
+        ));
+    }
+    let expected_recipe_surface = if rank3_cbsem {
+        general_sem_cbsem_recipe_execution_surface_v1(&request.surface)
+    } else {
+        general_sem_recipe_execution_surface_v1(&request.surface)
+    }
+    .expect("Registry authorization accepted one of the two General SEM surfaces");
     if request
         .recipe
         .metadata
@@ -435,19 +463,36 @@ fn registry_access_block(
             "Rebuild the recipe from the current marked General SEM draft.",
         ));
     };
-    let decision = match preflight_general_sem_pls_v1(&request.model, config) {
-        Ok(decision) => decision,
-        Err(error) => {
-            return Some(blocked(
-                "capability_decision_invalid",
-                format!("The exact PLS capability decision is invalid: {error}"),
-                "Keep the draft unchanged and report this capability-contract error.",
-            ));
+    let decision = if rank3_cbsem {
+        match preflight_general_sem_cbsem_v1(&request.model, config) {
+            Ok(decision) => decision,
+            Err(error) => {
+                return Some(blocked(
+                    "capability_decision_invalid",
+                    format!("The exact CB-SEM capability decision is invalid: {error}"),
+                    "Keep the draft unchanged and report this capability-contract error.",
+                ));
+            }
+        }
+    } else {
+        match preflight_general_sem_pls_v1(&request.model, config) {
+            Ok(decision) => decision,
+            Err(error) => {
+                return Some(blocked(
+                    "capability_decision_invalid",
+                    format!("The exact PLS capability decision is invalid: {error}"),
+                    "Keep the draft unchanged and report this capability-contract error.",
+                ));
+            }
         }
     };
     // Point provenance and supplemental bootstrap ownership are independent of
     // the capability decision's canonical cell ordering.
-    let selected = selected_general_sem_execution_cell_v1(&request.model, config);
+    let selected = if rank3_cbsem {
+        selected_general_sem_cbsem_execution_cell_v1(config)
+    } else {
+        selected_general_sem_execution_cell_v1(&request.model, config)
+    };
     if !decision_declares_general_sem_execution_cell_v1(&decision, &selected)
         || selected != request.capability_cell
     {
@@ -736,14 +781,17 @@ pub(crate) async fn bootstrap_internal_general_sem_project_archive_v6(
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
+    use crate::general_sem_registry_access_v1::GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1;
     use chrono::TimeZone;
     use qpls_core::{
-        ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
-        AnalysisRecipeModelBindingV4, AnalysisSettings, Construct, GeneralSemBootstrapIntervalV1,
-        GeneralSemConfigV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
-        LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
-        SemDataBindingV4, StructuralPath, confirm_legacy_recipe_estimand_v4,
-        migrate_analysis_recipe_to_v4_pending,
+        ANALYSIS_RECIPE_SCHEMA_VERSION, ANALYSIS_RECIPE_V4_SCHEMA_VERSION, AnalysisMethod,
+        AnalysisRecipe, AnalysisRecipeModelBindingV4, AnalysisSettings, CbsemBootstrapAlgorithm,
+        CbsemBootstrapConfigV2, CbsemBootstrapInterval, CbsemBootstrapTestTail, CbsemEstimator,
+        CbsemInput, CbsemModelType, Construct, GeneralSemBootstrapIntervalV1, GeneralSemConfigV1,
+        GeneralSemInferenceTailV1, GeneralSemInferenceV1, LegacyBasicModelInterpretationV4,
+        LegacyEstimandConfirmationV4, MeasurementMode, MethodConfig, MissingDataPolicy, ModelSpec,
+        Preprocessing, SemDataBindingV4, StructuralPath, confirm_legacy_recipe_estimand_v4,
+        convert_legacy_basic_model_v4, migrate_analysis_recipe_to_v4_pending,
     };
     use qpls_data::{Dataset, ImportOptions, import_delimited_bytes};
     use std::{collections::BTreeMap, fs};
@@ -834,6 +882,139 @@ pub(crate) mod tests {
             .insert("general_sem_generation".into(), "general_sem_v1".into());
 
         let mut project = Project::new("Native General SEM source");
+        project.datasets.push(dataset.clone());
+        GeneralSemNativeFixtureV1 {
+            project,
+            dataset,
+            model,
+            recipe,
+        }
+    }
+
+    fn general_sem_cbsem_fixture_v1(bootstrap: bool) -> GeneralSemNativeFixtureV1 {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../validation/results/lavaan_latent_regression_sem.csv"),
+            "native-general-sem-cbsem.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let source_model = ModelSpec {
+            id: Uuid::from_u128(if bootstrap { 0xcb53_6002 } else { 0xcb53_6001 }),
+            name: if bootstrap {
+                "Native recursive CB-SEM bootstrap fixture".into()
+            } else {
+                "Native CB-SEM CFA point fixture".into()
+            },
+            constructs: [
+                ("x", ["x1", "x2", "x3"]),
+                ("m", ["m1", "m2", "m3"]),
+                ("y", ["y1", "y2", "y3"]),
+            ]
+            .into_iter()
+            .map(|(id, indicators)| Construct {
+                id: id.into(),
+                name: id.to_uppercase(),
+                short_name: id.to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: indicators.into_iter().map(str::to_owned).collect(),
+            })
+            .collect(),
+            paths: if bootstrap {
+                [("x", "m"), ("m", "y")]
+                    .into_iter()
+                    .map(|(source, target)| StructuralPath {
+                        source: source.into(),
+                        target: target.into(),
+                    })
+                    .collect()
+            } else {
+                Vec::new()
+            },
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let mut model = convert_legacy_basic_model_v4(
+            &source_model,
+            LegacyBasicModelInterpretationV4::CbsemCommonFactor,
+            &[],
+        )
+        .unwrap();
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        model.ensure_valid().unwrap();
+
+        let mut settings = AnalysisSettings::default();
+        settings.method = AnalysisMethod::Cbsem;
+        settings.preprocessing = Preprocessing::Unstandardized;
+        settings.missing_data = MissingDataPolicy::ListwiseDeletion;
+        settings.workers = 1;
+        settings.bootstrap_samples = if bootstrap { 500 } else { 0 };
+        settings.seed = 777;
+        settings.confidence_level = 0.95;
+        let bootstrap_v2 = bootstrap.then_some(CbsemBootstrapConfigV2 {
+            algorithm: CbsemBootstrapAlgorithm::CaseResamplingFullMl,
+            interval: CbsemBootstrapInterval::PercentileType7,
+            test_tail: CbsemBootstrapTestTail::TwoSided,
+        });
+        let general_sem_config = if bootstrap {
+            GeneralSemConfigV1 {
+                inference: GeneralSemInferenceV1::CaseBootstrap {
+                    resamples: 500,
+                    seed: 777,
+                    confidence_level: 0.95,
+                    interval: GeneralSemBootstrapIntervalV1::Percentile,
+                    tail: GeneralSemInferenceTailV1::TwoSided,
+                },
+                ..GeneralSemConfigV1::default()
+            }
+        } else {
+            GeneralSemConfigV1::default()
+        };
+        let recipe = AnalysisRecipeV4 {
+            schema_version: ANALYSIS_RECIPE_V4_SCHEMA_VERSION,
+            id: Uuid::from_u128(if bootstrap { 0xcb53_6004 } else { 0xcb53_6003 }),
+            created_at: Utc.timestamp_opt(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model_binding: AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+                model_id: model.id.clone(),
+                scientific_sha256: model.scientific_sha256().unwrap(),
+            },
+            estimand_confirmation: LegacyEstimandConfirmationV4::ConfirmedCommonFactor,
+            settings,
+            method_config: Some(MethodConfig::Cbsem {
+                model_type: if bootstrap {
+                    CbsemModelType::Sem
+                } else {
+                    CbsemModelType::Cfa
+                },
+                estimator: CbsemEstimator::Ml,
+                input: CbsemInput::Raw,
+                mean_structure: false,
+                bootstrap_samples: if bootstrap { 500 } else { 0 },
+                bootstrap_v2,
+                group_column: None,
+                invariance_steps: Vec::new(),
+            }),
+            general_sem_config: Some(general_sem_config),
+            metadata: BTreeMap::from([
+                (
+                    "execution_surface".into(),
+                    GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+                ),
+                ("general_sem_generation".into(), "general_sem_v1".into()),
+            ]),
+            legacy_source: None,
+        };
+        recipe.ensure_valid().unwrap();
+        let mut project = Project::new(if bootstrap {
+            "Native recursive CB-SEM bootstrap source"
+        } else {
+            "Native CB-SEM CFA point source"
+        });
         project.datasets.push(dataset.clone());
         GeneralSemNativeFixtureV1 {
             project,
@@ -977,6 +1158,109 @@ pub(crate) mod tests {
             registry_access_block(&exact).is_none(),
             "the supplemental mediation bootstrap cell owns the operation regardless of canonical decision order"
         );
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_accepts_exact_rank3_cbsem_point_recipe_surface_and_cell() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixture = general_sem_cbsem_fixture_v1(false);
+        let mut exact = request(&directory.path().join("cbsem-point.qpls"), &fixture);
+        exact.capability_cell = qpls_core::cbsem_general_sem_ml_capability_cell_v1();
+
+        assert!(registry_access_block(&exact).is_none());
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_accepts_exact_rank3_cbsem_recursive_case_bootstrap_recipe_surface_and_cell() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixture = general_sem_cbsem_fixture_v1(true);
+        let mut exact = request(
+            &directory.path().join("cbsem-recursive-bootstrap.qpls"),
+            &fixture,
+        );
+        exact.capability_cell = qpls_core::cbsem_recursive_sem_bootstrap_capability_cell_v1();
+
+        assert!(registry_access_block(&exact).is_none());
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_rejects_rank3_cbsem_recipe_method_or_config_mismatch() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixture = general_sem_cbsem_fixture_v1(false);
+        let mut exact = request(&directory.path().join("cbsem-point.qpls"), &fixture);
+        exact.capability_cell = qpls_core::cbsem_general_sem_ml_capability_cell_v1();
+
+        let mut wrong_method = exact.clone();
+        wrong_method.recipe.settings.method = AnalysisMethod::PlsPm;
+        assert!(matches!(
+            registry_access_block(&wrong_method),
+            Some(GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.recipe_method_mismatch"
+        ));
+
+        let mut wrong_config = exact;
+        wrong_config.recipe.method_config = Some(MethodConfig::PlsAlgorithm);
+        assert!(matches!(
+            registry_access_block(&wrong_config),
+            Some(GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.recipe_method_mismatch"
+        ));
+
+        let mut relabelled_cbsem =
+            request(&directory.path().join("relabelled-cbsem.qpls"), &fixture);
+        relabelled_cbsem.capability_cell =
+            qpls_core::pls_general_recursive_effects_capability_cell_v1();
+        relabelled_cbsem.recipe.metadata.insert(
+            "execution_surface".into(),
+            GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+        );
+        assert!(matches!(
+            registry_access_block(&relabelled_cbsem),
+            Some(GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.recipe_method_mismatch"
+        ));
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_rejects_rank3_cbsem_recipe_surface_mismatch() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixture = general_sem_cbsem_fixture_v1(false);
+        let mut mismatched = request(&directory.path().join("cbsem-point.qpls"), &fixture);
+        mismatched.capability_cell = qpls_core::cbsem_general_sem_ml_capability_cell_v1();
+        mismatched.recipe.metadata.insert(
+            "execution_surface".into(),
+            GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+        );
+
+        assert!(matches!(
+            registry_access_block(&mismatched),
+            Some(GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.recipe_execution_surface_mismatch"
+        ));
+        assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[test]
+    fn bootstrap_rejects_rank3_cbsem_selected_cell_mismatch() {
+        let directory = tempfile::tempdir().unwrap();
+        let fixture = general_sem_cbsem_fixture_v1(false);
+        let mut mismatched = request(&directory.path().join("cbsem-point.qpls"), &fixture);
+        mismatched.capability_cell = qpls_core::cbsem_recursive_sem_bootstrap_capability_cell_v1();
+
+        assert!(matches!(
+            registry_access_block(&mismatched),
+            Some(GeneralSemProjectArchiveBootstrapOutcomeV1::Blocked { diagnostic })
+                if diagnostic.code
+                    == "schema6_general_sem_bootstrap.capability_cell_mismatch"
+        ));
         assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
     }
 
@@ -1240,6 +1524,74 @@ pub(crate) mod tests {
         ));
 
         assert_eq!(fs::read_dir(directory.path()).unwrap().count(), 0);
+    }
+
+    #[cfg(windows)]
+    fn assert_exact_rank3_cbsem_publication(bootstrap: bool) {
+        use qpls_project::load_project_archive_v6;
+
+        let directory = tempfile::tempdir().unwrap();
+        let destination = directory.path().join(if bootstrap {
+            "recursive-cbsem-bootstrap.qpls"
+        } else {
+            "cbsem-cfa-point.qpls"
+        });
+        let fixture = general_sem_cbsem_fixture_v1(bootstrap);
+        let mut exact = request(&destination, &fixture);
+        exact.capability_cell = if bootstrap {
+            qpls_core::cbsem_recursive_sem_bootstrap_capability_cell_v1()
+        } else {
+            qpls_core::cbsem_general_sem_ml_capability_cell_v1()
+        };
+        assert!(registry_access_block(&exact).is_none());
+
+        let active_project = Arc::new(Mutex::new(fixture.project.clone()));
+        let authority = DesktopGeneralSemFreshDraftAuthorityV1::default();
+        authority.issue_for_test(fixture.project.manifest.project_id);
+        let GeneralSemProjectArchiveBootstrapOutcomeV1::Ok { value } =
+            bootstrap_with_fresh_draft_authority(exact, active_project, &authority)
+        else {
+            panic!("exact Rank-3 CB-SEM authority was blocked during publication")
+        };
+        assert!(value.receipt.strict_reopen_validated);
+        assert!(destination.is_file());
+
+        let reopened = load_project_archive_v6(&destination).unwrap();
+        let [recipe] = reopened.document.recipes.as_slice() else {
+            panic!("published CB-SEM authority must contain exactly one recipe")
+        };
+        assert_eq!(recipe.settings.method, AnalysisMethod::Cbsem);
+        assert!(matches!(
+            &recipe.method_config,
+            Some(MethodConfig::Cbsem { .. })
+        ));
+        assert_eq!(
+            recipe.metadata.get("execution_surface").map(String::as_str),
+            Some(GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
+        );
+        assert_eq!(
+            matches!(
+                recipe
+                    .general_sem_config
+                    .as_ref()
+                    .expect("published CB-SEM recipe has GeneralSemConfigV1")
+                    .inference,
+                GeneralSemInferenceV1::CaseBootstrap { .. }
+            ),
+            bootstrap
+        );
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn exact_rank3_cbsem_point_cfa_passes_registry_and_publication() {
+        assert_exact_rank3_cbsem_publication(false);
+    }
+
+    #[cfg(windows)]
+    #[test]
+    fn exact_rank3_cbsem_recursive_bootstrap_passes_registry_and_publication() {
+        assert_exact_rank3_cbsem_publication(true);
     }
 
     #[cfg(windows)]

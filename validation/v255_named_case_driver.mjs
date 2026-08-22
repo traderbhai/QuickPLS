@@ -321,7 +321,7 @@ function materializeManifestCase(entry) {
         { action: "goto_packaged" },
         { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
         { action: "load_named_sem_fixture", fixture: route.fixture },
-        { action: "prepare_calculation_revision" },
+        { action: "prepare_calculation_revision", method: "cbsem", inference: "point" },
         { action: "run_calculation", method: route.method, inference: route.inference, bootstrap_samples: route.bootstrap_samples ?? 500, route_contains: route.route_contains, requires_requested_revision: false, completion_timeout_ms: route.completion_timeout_ms ?? 300_000 },
         { action: "select_result_table", table_id: route.table_id },
       ],
@@ -356,11 +356,14 @@ function materializeManifestCase(entry) {
     assert(ARCHIVE_SUPPLEMENT_PUBLIC_KINDS.has(route.archive_supplement_public_kind), `${entry.id} archive supplement public method kind is unsupported.`);
     assert(route.archive_supplement_public_kind === route.method, `${entry.id} archive supplement public method kind must equal its executed method.`);
   }
+  const prepareCalculationRevision = route.method === "cbsem"
+    ? { action: "prepare_calculation_revision", method: route.method, inference: route.inference, bootstrap_samples: route.bootstrap_samples }
+    : { action: "prepare_calculation_revision" };
   const steps = [
     { action: "goto_packaged" },
     { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
     { action: "load_named_sem_fixture", fixture: route.fixture },
-    { action: "prepare_calculation_revision" },
+    prepareCalculationRevision,
   ];
   if (route.advanced_parameter_revision === true) {
     steps.push({ action: "exercise_advanced_parameter_revision" }, { action: "save_and_reopen_case_revision" });
@@ -372,7 +375,7 @@ function materializeManifestCase(entry) {
     bootstrap_samples: route.bootstrap_samples,
     moderated_stage: route.moderated_stage,
     route_contains: route.route_contains,
-    requires_requested_revision: route.method !== "pls_algorithm",
+    requires_requested_revision: route.method === "pls_bootstrap",
     completion_timeout_ms: route.completion_timeout_ms ?? 300_000,
   }, { action: "select_result_table", table_id: route.table_id });
   if (route.archive_supplement_public_kind !== undefined) {
@@ -861,8 +864,29 @@ async function executeStep(page, step, context) {
     }
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
     await advanced.waitFor({ state: "visible", timeout });
+    if (step.method === "cbsem") {
+      assert(step.inference === "point" || step.inference === "case_bootstrap", `CB-SEM calculation-ready revision has invalid inference: ${step.inference}`);
+      const estimator = advanced.locator("#nd-general-sem-estimator-recipe");
+      await estimator.waitFor({ state: "visible", timeout });
+      assert(await estimator.isEnabled(), "The fresh calculation-ready draft cannot select its requested CB-SEM estimator.");
+      await estimator.selectOption("qpls.cbsem.v3");
+      const bootstrap = advanced.locator("#nd-general-sem-bootstrap");
+      await bootstrap.waitFor({ state: "visible", timeout });
+      assert(await bootstrap.isEnabled(), "The fresh CB-SEM calculation-ready draft cannot select its requested inference.");
+      const caseBootstrap = step.inference === "case_bootstrap";
+      await bootstrap.setChecked(caseBootstrap);
+      if (caseBootstrap) {
+        const samples = advanced.locator("#nd-general-sem-bootstrap-samples");
+        await samples.waitFor({ state: "visible", timeout });
+        await samples.fill(String(step.bootstrap_samples ?? 500));
+      }
+      assert(await estimator.inputValue() === "qpls.cbsem.v3", "The calculation-ready draft did not retain the requested CB-SEM estimator before activation.");
+      assert(await bootstrap.isChecked() === caseBootstrap, "The calculation-ready draft did not retain the requested CB-SEM inference before activation.");
+    }
     const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
     await activate.waitFor({ state: "visible", timeout });
+    const activationDeadline = Date.now() + timeout;
+    while (Date.now() < activationDeadline && !await activate.isEnabled().catch(() => false)) await page.waitForTimeout(100);
     assert(await activate.isEnabled(), `Calculation-ready revision is blocked: ${compact(await advanced.textContent())}`);
     const helper = createDialogHelper({ python: context.python, mode: "save", target, allowedRoot: context.evidenceDir, extension: "qpls", candidatePid: context.candidatePid, candidatePath: context.candidatePath });
     try {
@@ -874,6 +898,17 @@ async function executeStep(page, step, context) {
     } finally { helper.stop(); }
     const activatedAuthority = advanced.getByText("Activated calculation authority", { exact: true });
     await activatedAuthority.waitFor({ state: "visible", timeout });
+    if (step.method === "cbsem") {
+      const activatedEstimator = advanced.locator("#nd-general-sem-estimator-recipe");
+      const activatedBootstrap = advanced.locator("#nd-general-sem-bootstrap");
+      const caseBootstrap = step.inference === "case_bootstrap";
+      assert(await activatedEstimator.inputValue() === "qpls.cbsem.v3", "The activated calculation authority changed the requested CB-SEM estimator.");
+      assert(await activatedBootstrap.isChecked() === caseBootstrap, "The activated calculation authority changed the requested CB-SEM inference.");
+      if (caseBootstrap) {
+        const activatedSamples = advanced.locator("#nd-general-sem-bootstrap-samples");
+        assert(await activatedSamples.inputValue() === String(step.bootstrap_samples ?? 500), "The activated calculation authority changed the requested CB-SEM bootstrap sample count.");
+      }
+    }
     const calculateFromAuthority = advanced.locator(".nd-cbsem-v4-actions button.primary:not([disabled])").filter({ hasText: /^Calculate/u }).first();
     await calculateFromAuthority.waitFor({ state: "visible", timeout });
     assert(await calculateFromAuthority.isEnabled(), "The saved calculation authority did not become ready to calculate.");
@@ -881,9 +916,18 @@ async function executeStep(page, step, context) {
     if (await close.isVisible().catch(() => false)) await close.click();
     await advanced.waitFor({ state: "hidden", timeout });
     context.calculationRevision = { target, initialSha256: await fileSha256(target) };
-    return { action: step.action, required: true, target: slash(path.relative(ROOT, target)), sha256: context.calculationRevision.initialSha256 };
+    return {
+      action: step.action,
+      required: true,
+      ...(step.method === "cbsem" ? { selected_method: step.method, selected_inference: step.inference } : {}),
+      target: slash(path.relative(ROOT, target)),
+      sha256: context.calculationRevision.initialSha256,
+    };
   }
   if (step.action === "exercise_advanced_parameter_revision") {
+    assert(context.calculationRevision?.target && await exists(context.calculationRevision.target), "Advanced Parameter Table requires an activated source archive.");
+    const sourceTarget = context.calculationRevision.target;
+    const sourceSha256 = await fileSha256(sourceTarget);
     const before = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
     assert(/^[a-f0-9]{64}$/u.test(before?.model?.model_document_sha256 ?? ""), "Advanced Parameter Table requires a strict authority digest.");
     await page.getByRole("menubar", { name: "Application menu", exact: true }).getByRole("menuitem", { name: "Model", exact: true }).click();
@@ -911,33 +955,80 @@ async function executeStep(page, step, context) {
     }
     assert(after?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence"), "The visible Advanced Parameter Table did not preserve the edited parameter identity/equality label.");
     assert(after.model.model_document_sha256 !== before.model.model_document_sha256, "The visible Advanced Parameter Table did not change authority.");
-    await page.keyboard.press("Escape");
+    const continueToCalculate = dialog.getByRole("button", { name: "Continue to Calculate", exact: true });
+    await continueToCalculate.waitFor({ state: "visible", timeout });
+    assert(await continueToCalculate.isEnabled(), "The edited Advanced Parameter Table cannot continue to its new calculation authority.");
+    await continueToCalculate.click({ timeout });
     await dialog.waitFor({ state: "hidden", timeout });
+    const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
+    await advanced.waitFor({ state: "visible", timeout });
+    const estimator = advanced.locator("#nd-general-sem-estimator-recipe");
+    await estimator.waitFor({ state: "visible", timeout });
+    assert(await estimator.isEnabled(), "The Advanced Parameter revision cannot select CB-SEM.");
+    await estimator.selectOption("qpls.cbsem.v3");
+    const bootstrap = advanced.locator("#nd-general-sem-bootstrap");
+    await bootstrap.waitFor({ state: "visible", timeout });
+    await bootstrap.setChecked(false);
+    assert(await estimator.inputValue() === "qpls.cbsem.v3", "The Advanced Parameter revision did not retain CB-SEM before activation.");
+    assert(!await bootstrap.isChecked(), "The Advanced Parameter revision did not retain point inference before activation.");
+    const target = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId)}-parameter-revision.qpls`);
+    assert(target !== sourceTarget, "The Advanced Parameter revision must use a new archive path.");
+    assert(!await exists(target), `Advanced Parameter revision target already exists: ${target}`);
+    const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
+    await activate.waitFor({ state: "visible", timeout });
+    const activationDeadline = Date.now() + timeout;
+    while (Date.now() < activationDeadline && !await activate.isEnabled().catch(() => false)) await page.waitForTimeout(100);
+    assert(await activate.isEnabled(), `Advanced Parameter revision activation is blocked: ${compact(await advanced.textContent())}`);
+    const helper = createDialogHelper({ python: context.python, mode: "save", target, allowedRoot: context.evidenceDir, extension: "qpls", candidatePid: context.candidatePid, candidatePath: context.candidatePath });
+    try {
+      const ready = await helper.ready;
+      assert(ready?.passed === true && ready?.event === "ready", `Advanced Parameter revision Save helper was not ready: ${JSON.stringify(ready)}`);
+      await activate.click({ timeout });
+      const completed = await helper.completed;
+      assert(completed?.passed === true, `Advanced Parameter revision Save failed: ${JSON.stringify(completed)}`);
+    } finally { helper.stop(); }
+    await advanced.getByText("Activated calculation authority", { exact: true }).waitFor({ state: "visible", timeout });
+    assert(await estimator.inputValue() === "qpls.cbsem.v3" && !await bootstrap.isChecked(), "The activated Advanced Parameter authority changed its exact CB-SEM point selection.");
+    const activated = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
+    assert(activated?.model?.advanced_equalities?.some((item) => item.parameter_id === parameterId && item.equality_label === "V255Evidence"), "The activated Advanced Parameter authority lost the edited equality identity.");
+    assert(activated?.model?.model_id !== before.model.model_id, "The Advanced Parameter revision reused the source model identity.");
+    assert(activated?.model?.model_document_sha256 === after.model.model_document_sha256, "The activated Advanced Parameter authority changed the edited model digest.");
+    assert(await fileSha256(sourceTarget) === sourceSha256, "Creating the Advanced Parameter revision changed the source archive bytes.");
+    const targetSha256 = await fileSha256(target);
+    const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
+    if (await close.isVisible().catch(() => false)) await close.click();
+    await advanced.waitFor({ state: "hidden", timeout });
     const observed = {
       parameter_id: parameterId,
       before_model_document_sha256: before.model.model_document_sha256,
-      after_model_document_sha256: after.model.model_document_sha256,
+      after_model_document_sha256: activated.model.model_document_sha256,
+      before_model_id: before.model.model_id,
+      after_model_id: activated.model.model_id,
       equality_label: "V255Evidence",
       stable_parameter_id: true,
       changed_authority: true,
       visible_dialog_workflow: true,
     };
+    context.calculationRevision = { target, initialSha256: targetSha256, sourceTarget, sourceSha256 };
     context.advancedParameterRevision = observed;
-    return { action: step.action, observed };
+    return {
+      action: step.action,
+      observed,
+      source_target: slash(path.relative(ROOT, sourceTarget)),
+      source_sha256: sourceSha256,
+      target: slash(path.relative(ROOT, target)),
+      target_sha256: targetSha256,
+    };
   }
   if (step.action === "save_and_reopen_case_revision") {
     assert(context.calculationRevision?.target && await exists(context.calculationRevision.target), "No case calculation-ready revision is available to save and reopen.");
     const target = context.calculationRevision.target;
-    const before = await fileSha256(target);
-    await page.keyboard.press("Control+s");
-    const deadline = Date.now() + timeout;
-    let after = before;
-    while (Date.now() < deadline) {
-      await page.waitForTimeout(100);
-      after = await fileSha256(target);
-      if (after !== before) break;
+    const targetSha256 = await fileSha256(target);
+    assert(targetSha256 === context.calculationRevision.initialSha256, "The activated Advanced Parameter revision changed before reopen.");
+    if (context.calculationRevision.sourceTarget) {
+      assert(context.calculationRevision.sourceTarget !== target, "The Advanced Parameter source and revision targets must differ.");
+      assert(await fileSha256(context.calculationRevision.sourceTarget) === context.calculationRevision.sourceSha256, "The Advanced Parameter source archive changed before reopen.");
     }
-    assert(after !== before, "Saving the Advanced Parameter Table revision did not change the archive bytes.");
     await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
     await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
     await page.evaluate((archive) => window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: archive } })), target);
@@ -945,10 +1036,14 @@ async function executeStep(page, step, context) {
     await waitForOpenedProjectPath(page, target, timeout);
     const snapshot = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
     assert(snapshot?.model?.advanced_equality_labels?.includes("V255Evidence"), "The saved Advanced Parameter Table equality label did not survive reopen.");
+    assert(snapshot?.model?.advanced_equalities?.some((item) => item.parameter_id === context.advancedParameterRevision?.parameter_id && item.equality_label === "V255Evidence"), "The stable Advanced Parameter identity did not survive reopen.");
+    assert(snapshot?.model?.model_id === context.advancedParameterRevision?.after_model_id, "The reopened Advanced Parameter model identity differs from the activated revision.");
+    assert(snapshot?.model?.model_document_sha256 === context.advancedParameterRevision?.after_model_document_sha256, "The reopened Advanced Parameter model digest differs from the activated revision.");
+    assert(await fileSha256(target) === targetSha256, "Reopening the Advanced Parameter revision changed its archive bytes.");
     context.activeFixture = null;
     context.lastCalculation = null;
     context.archiveIdentity = null;
-    return { action: step.action, target: slash(path.relative(ROOT, target)), before_sha256: before, after_sha256: after, equality_label_reopened: true };
+    return { action: step.action, target: slash(path.relative(ROOT, target)), sha256: targetSha256, equality_label_reopened: true, stable_parameter_id_reopened: true };
   }
   if (step.action === "run_calculation") {
     const labels = { pls_algorithm: "PLS-SEM Algorithm", pls_bootstrap: "PLS-SEM Bootstrapping", cbsem: "CB-SEM / CFA" };
@@ -1040,7 +1135,7 @@ async function executeStep(page, step, context) {
       if (["failed", "cancelled"].includes(state)) throw new Error(`Calculation ended ${state}: ${compact(await page.locator(".nd-cbsem-v4-monitor").textContent())}`);
       await page.waitForTimeout(250);
     }
-    throw new Error(`Calculation did not open Results within the bounded timeout: ${routeText}`);
+    throw new Error(`Calculation did not open Results within the bounded timeout: ${context.lastCalculation?.routeText ?? ""}`);
   }
   if (step.action === "save_result_archive_supplement") {
     assert(context.candidateName === "portable", "Fresh result archive supplements may only be captured from the portable candidate.");

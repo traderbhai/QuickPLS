@@ -1077,9 +1077,13 @@ fn ensure_cbsem_general_sem_v1_scope(
             "compiled capability-cell set does not match the exact inference request".into(),
         ));
     }
-    if plan.base_plan().regressions().is_empty() {
+    if matches!(
+        general_sem.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) && plan.base_plan().regressions().is_empty()
+    {
         return Err(RecipeV4CompilationError::CbsemGeneralSemScope(
-            "the General SEM CB-SEM V3 point and bootstrap cells require at least one structural regression; CFA keeps its existing qualified cells"
+            "General SEM CB-SEM recursive bootstrap requires at least one structural regression; point CFA remains supported by the point cell"
                 .into(),
         ));
     }
@@ -3558,27 +3562,31 @@ mod tests {
         let (mut cfa_recipe, cfa_model) = cbsem_cfa_recipe_and_model();
         cfa_recipe.settings.preprocessing = crate::Preprocessing::Unstandardized;
         cfa_recipe.general_sem_config = Some(crate::GeneralSemConfigV1::default());
-        assert!(matches!(
-            compile_analysis_recipe_v4(
-                &cfa_recipe,
-                Some(&cfa_model),
-                target,
-                cbsem_general_sem_ml_capability_cell_v1(),
-            ),
-            Err(RecipeV4CompilationError::CbsemGeneralSemScope(_))
-        ));
+        let cfa_point = compile_analysis_recipe_v4(
+            &cfa_recipe,
+            Some(&cfa_model),
+            target,
+            cbsem_general_sem_ml_capability_cell_v1(),
+        )
+        .unwrap();
+        assert_eq!(
+            cfa_point.receipt().capability_cell(),
+            &cbsem_general_sem_ml_capability_cell_v1()
+        );
         enable_cbsem_v3_recursive_bootstrap(&mut cfa_recipe, 500);
-        assert!(matches!(
+        assert_eq!(
             compile_analysis_recipe_v4(
                 &cfa_recipe,
                 Some(&cfa_model),
                 target,
                 target.capability_cell_for_recipe(&cfa_recipe),
             ),
-            Err(RecipeV4CompilationError::CbsemConfigurationMismatch)
-                | Err(RecipeV4CompilationError::MethodCompilerMismatch { .. })
-                | Err(RecipeV4CompilationError::CbsemGeneralSemScope(_))
-        ));
+            Err(RecipeV4CompilationError::MethodCompilerMismatch {
+                target,
+                method: AnalysisMethod::Cbsem,
+                config_kind: "cbsem".into(),
+            })
+        );
     }
 
     #[test]

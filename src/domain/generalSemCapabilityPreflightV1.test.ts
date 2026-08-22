@@ -36,6 +36,21 @@ function model(
   }, interpretation);
 }
 
+function cfaModel(): SemModelV4 {
+  return convertLegacyBasicModelV4({
+    id: "model:cfa-preflight",
+    name: "CFA preflight",
+    constructs: ["x", "y"].map((id) => ({
+      id,
+      name: id.toUpperCase(),
+      short_name: id.toUpperCase(),
+      mode: "reflective",
+      indicators: [`${id}1`, `${id}2`],
+    })),
+    paths: [],
+  }, "cbsem_common_factor");
+}
+
 function multipleMediationModel(): SemModelV4 {
   return model([
     ["x", "m1"],
@@ -749,6 +764,10 @@ describe("General SEM capability preflight v1", () => {
   });
 
   it("authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery", () => {
+    const cfaPoint = preflightGeneralSemCbsemV1(cfaModel(), defaultGeneralSemConfigV1());
+    expect(cfaPoint.status).toBe("supported");
+    expect(codes(cfaPoint)).not.toContain("sem.capability.cbsem.recursive_sem_requires_regression");
+
     const recursive = model(undefined, "cbsem_common_factor");
     const runtimeDecision = preflightGeneralSemCbsemV1(recursive, defaultGeneralSemConfigV1());
     expect(runtimeDecision).toMatchObject({
@@ -777,6 +796,10 @@ describe("General SEM capability preflight v1", () => {
       interval: "percentile",
       tail: "two_sided",
     };
+    const cfaBootstrap = preflightGeneralSemCbsemV1(cfaModel(), bootstrapConfig);
+    expect(cfaBootstrap.status).toBe("blocked");
+    expect(codes(cfaBootstrap)).toContain("sem.capability.cbsem.recursive_sem_requires_regression");
+
     const bootstrapDecision = preflightGeneralSemCbsemV1(recursive, bootstrapConfig);
     expect(bootstrapDecision.status).toBe("supported");
     expect(bootstrapDecision.capability_cells).toEqual([

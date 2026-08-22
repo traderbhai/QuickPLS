@@ -1358,6 +1358,10 @@ export function NativeDesktopApp() {
           });
           const afterMetadata = useWorkspace.getState();
           const binaryMetadata = residentDataset.columnMetadata?.find((column) => column.name === "b");
+          const binaryRowsAreExactZeroOne = residentDataset.rows.length === 0 || residentDataset.rows.every((row) => {
+            const value = row.b;
+            return typeof value === "number" && Number.isFinite(value) && (Object.is(value, 0) || Object.is(value, 1));
+          });
           if (afterMetadata.projectId !== retainedProjectId
             || afterMetadata.projectPath !== null
             || afterMetadata.generalSemProjectDraftMode?.sourceProjectId !== retainedDraft.sourceProjectId
@@ -1372,6 +1376,7 @@ export function NativeDesktopApp() {
             || binaryMetadata.scale_type !== "binary"
             || binaryMetadata.theoretical_min !== 0
             || binaryMetadata.theoretical_max !== 1
+            || !binaryRowsAreExactZeroOne
             || JSON.stringify(binaryMetadata.value_labels) !== JSON.stringify({ "0": "Group 0", "1": "Group 1" })) {
             throw new Error("The binary named SEM dataset version is not the exact native 0/1 authority.");
           }
@@ -3629,7 +3634,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.54.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({

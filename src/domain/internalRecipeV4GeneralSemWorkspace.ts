@@ -639,11 +639,12 @@ export function preflightGeneralSemWorkspaceV1(input: {
       "CB-SEM General v3 requires unweighted raw data with listwise deletion and no cluster or strata binding.",
       "Use the exact raw, unweighted listwise model scope or choose another estimator.",
     ));
-    if (!input.model.relations.some((relation) => relation.kind === "structural")) issues.push(issue(
+    if (input.engine.inference === "percentile_case_bootstrap"
+      && !input.model.relations.some((relation) => relation.kind === "structural")) issues.push(issue(
       "general_sem.cbsem.structural_relation_required",
       input.model.id,
-      "CB-SEM General v3 is the recursive SEM operation and requires at least one structural regression.",
-      "Add a scientifically justified structural relation or use a future qualified CFA operation.",
+      "CB-SEM General v3 recursive bootstrap requires at least one structural regression.",
+      "Add a scientifically justified structural relation, use point CB-SEM for CFA, or use the exact CFA-bootstrap compatibility cell.",
     ));
     if (input.model.group.kind !== "single_group"
       || input.model.variables.some((variable) => variable.kind === "composite" || variable.kind === "derived")
@@ -806,6 +807,7 @@ export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input
     registry: input.capabilityRegistry,
   });
   const bootstrapInference = config.inference.kind === "case_bootstrap" ? config.inference : null;
+  const hasStructuralRelation = input.model.relations.some((relation) => relation.kind === "structural");
   if (bootstrapInference && (
     bootstrapInference.resamples < 500
     || bootstrapInference.interval !== "percentile"
@@ -816,6 +818,12 @@ export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input
     input.recipeId,
     "CB-SEM V3 bootstrap requires 500 through 10,000 full-ML case resamples with a fixed two-sided 95% percentile interval.",
     "Keep the recipe unchanged and choose the exact CB-SEM recursive bootstrap settings.",
+  );
+  if (bootstrapInference && !hasStructuralRelation) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.cbsem.structural_relation_required",
+    input.model.id,
+    "CB-SEM General v3 recursive bootstrap requires at least one structural regression.",
+    "Use point CB-SEM for CFA or route CFA bootstrap through the exact compatibility cell.",
   );
   const settings: AnalysisRecipeV4Settings<"listwise_deletion"> = {
     method: "cbsem",
@@ -846,7 +854,7 @@ export function buildGeneralSemCbsemRecipeV3(input: BuildGeneralSemRecipeV1Input
     settings,
     method_config: {
       kind: "cbsem",
-      model_type: "sem",
+      model_type: hasStructuralRelation ? "sem" : "cfa",
       estimator: "ml",
       input: "raw",
       mean_structure: false,
@@ -954,7 +962,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       || recipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
     && recipe.metadata.general_sem_generation === "general_sem_v1",
   );
-  const cbsemRecipe = Boolean(
+  const cbsemRecipeShape = Boolean(
     config
     && recipe.settings.method === "cbsem"
     && recipe.settings.weighting_scheme === "path"
@@ -966,7 +974,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
     // compact recipe wire. Any present value is a one-sided PLS-only tail.
     && recipe.settings.bootstrap_test_tail === undefined
     && methodConfig?.kind === "cbsem"
-    && methodConfig.model_type === "sem"
+    && (methodConfig.model_type === "sem" || methodConfig.model_type === "cfa")
     && methodConfig.estimator === "ml"
     && methodConfig.input === "raw"
     && methodConfig.mean_structure === false
@@ -977,7 +985,7 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       || recipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1)
     && recipe.metadata.general_sem_generation === "general_sem_v1",
   );
-  if (!config || (!plsRecipe && !cbsemRecipe)) {
+  if (!config || (!plsRecipe && !cbsemRecipeShape)) {
     throw new GeneralSemWorkspaceErrorV1(
       "general_sem.rehydrate.recipe_scope_mismatch",
       authority.recipeId,
@@ -985,13 +993,6 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       "Keep the archive unchanged and use an estimator cell that explicitly supports its recipe.",
     );
   }
-  const residentRecipeExecutionSurface: GeneralSemRecipeExecutionSurfaceV1 = cbsemRecipe
-    ? recipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
-      ? GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
-      : GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
-    : recipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
-      ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
-      : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
   const modelRecord = snapshot.project.models.find((record) => record.model_id === authority.modelId);
   if (!modelRecord || modelRecord.payload.kind !== "sem_model_v4") {
     throw new GeneralSemWorkspaceErrorV1(
@@ -1001,6 +1002,25 @@ export function rehydrateGeneralSemExecutionAuthorityV1(
       "Keep the archive unchanged and reopen it with the matching QuickPLS version.",
     );
   }
+  const residentModelHasStructuralRelation = modelRecord.payload.model.relations
+    .some((relation) => relation.kind === "structural");
+  const expectedCbsemModelType = residentModelHasStructuralRelation ? "sem" : "cfa";
+  const cbsemRecipe = cbsemRecipeShape
+    && methodConfig?.model_type === expectedCbsemModelType
+    && (config.inference.kind !== "case_bootstrap" || residentModelHasStructuralRelation);
+  if (cbsemRecipeShape && !cbsemRecipe) throw new GeneralSemWorkspaceErrorV1(
+    "general_sem.rehydrate.recipe_scope_mismatch",
+    authority.recipeId,
+    "The resident CB-SEM RecipeV4 model type or recursive-bootstrap scope disagrees with its resident model topology.",
+    "Preserve the archive unchanged and rebuild the authority from the exact resident model and qualified inference cell.",
+  );
+  const residentRecipeExecutionSurface: GeneralSemRecipeExecutionSurfaceV1 = cbsemRecipe
+    ? recipeExecutionSurface === GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      ? GENERAL_SEM_CBSEM_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      : GENERAL_SEM_CBSEM_LABS_RECIPE_EXECUTION_SURFACE_V1
+    : recipeExecutionSurface === GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      ? GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1
+      : GENERAL_SEM_PLS_LABS_RECIPE_EXECUTION_SURFACE_V1;
   const estimatorId = cbsemRecipe
     ? GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1
     : GENERAL_SEM_PLS_ESTIMATOR_ID_V1;

@@ -11,13 +11,15 @@ use crate::general_sem_registry_access_v1::{
     selected_general_sem_cbsem_execution_cell_v1, selected_general_sem_execution_cell_v1,
 };
 use qpls_core::{
-    CapabilityCellReferenceV2, GeneralSemConfigV1, SemCapabilityDecisionV1, SemDataBindingV4,
-    SemModelV4, SemParameterV4, SemVariableV4, preflight_general_sem_cbsem_v1,
-    preflight_general_sem_pls_v1, sha256_serialized,
+    CapabilityCellReferenceV2, CompiledPlsThreeWayModeratorScaleV1, GeneralSemConfigV1,
+    ObservedScaleV4, SemCapabilityDecisionV1, SemDataBindingV4, SemModelV4, SemParameterV4,
+    SemRelationV4, SemVariableV4, compile_pls_three_way_interaction_v1,
+    preflight_general_sem_cbsem_v1, preflight_general_sem_pls_v1, sha256_serialized,
 };
-use qpls_data::{ColumnType, DataKind, ScaleType};
+use qpls_data::{ColumnMetadata, ColumnType, DataKind, ScaleType};
 use qpls_project::{ProjectArchiveDocumentV6, ProjectModelPayloadV6, ProjectModelRecordV6};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeSet;
 use uuid::Uuid;
 
 const GENERAL_SEM_PREFLIGHT_RESULT_SCHEMA_VERSION: u32 = 2;
@@ -145,6 +147,98 @@ fn parameter_table_authority(
         bounded_parameter_count,
         explicit_constraint_count: model.constraints.len(),
     }
+}
+
+fn exact_zero_one_categories(categories: &[String]) -> bool {
+    if categories.len() != 2 {
+        return false;
+    }
+    let Some(mut values) = categories
+        .iter()
+        .map(|value| value.trim().parse::<f64>().ok())
+        .collect::<Option<Vec<_>>>()
+    else {
+        return false;
+    };
+    values.sort_by(f64::total_cmp);
+    values[0].to_bits() == 0.0_f64.to_bits() && values[1].to_bits() == 1.0_f64.to_bits()
+}
+
+fn observed_variable_for_three_way_moderator(
+    model: &SemModelV4,
+    moderator_id: &str,
+) -> Option<String> {
+    let indicator_ids = model
+        .relations
+        .iter()
+        .filter_map(|relation| match relation {
+            SemRelationV4::MeasurementEffect {
+                construct,
+                indicator,
+                ..
+            } if construct == moderator_id => Some(indicator.as_str()),
+            SemRelationV4::MeasurementCausal {
+                indicator,
+                composite,
+                ..
+            } if composite == moderator_id => Some(indicator.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    let observed_id = if indicator_ids.len() == 1 {
+        indicator_ids[0]
+    } else {
+        moderator_id
+    };
+    model
+        .variables
+        .iter()
+        .find(|variable| variable.id() == observed_id)
+        .and_then(|variable| match variable {
+            SemVariableV4::Observed {
+                id,
+                scale: ObservedScaleV4::Binary,
+                categories,
+                ..
+            } if exact_zero_one_categories(categories) => Some(id.clone()),
+            _ => None,
+        })
+}
+
+fn binary_three_way_moderator_observed_ids(model: &SemModelV4) -> BTreeSet<String> {
+    let Some(three_way) = compile_pls_three_way_interaction_v1(model).ok().flatten() else {
+        return BTreeSet::new();
+    };
+    [
+        (
+            three_way.first_moderator_id(),
+            three_way.first_moderator_scale(),
+        ),
+        (
+            three_way.second_moderator_id(),
+            three_way.second_moderator_scale(),
+        ),
+    ]
+    .into_iter()
+    .filter_map(|(moderator_id, scale)| {
+        (scale == CompiledPlsThreeWayModeratorScaleV1::BinaryZeroOne)
+            .then(|| observed_variable_for_three_way_moderator(model, moderator_id))
+            .flatten()
+    })
+    .collect()
+}
+
+fn exact_binary_zero_one_metadata(column: &ColumnMetadata) -> bool {
+    let label_keys = column.value_labels.keys().cloned().collect::<Vec<_>>();
+    column.column_type == ColumnType::Numeric
+        && column.scale_type == ScaleType::Binary
+        && column
+            .theoretical_min
+            .is_none_or(|value| value.to_bits() == 0.0_f64.to_bits())
+        && column
+            .theoretical_max
+            .is_none_or(|value| value.to_bits() == 1.0_f64.to_bits())
+        && (label_keys.is_empty() || exact_zero_one_categories(&label_keys))
 }
 
 fn preflight_general_sem_estimators(
@@ -275,8 +369,18 @@ fn preflight_general_sem_estimators(
                 "Choose a raw dataset; retain matrix input for a qualified CB-SEM cell.",
             );
         }
+        let binary_moderator_observed_ids =
+            binary_three_way_moderator_observed_ids(authoritative_model);
         for variable in &authoritative_model.variables {
-            let SemVariableV4::Observed { source_column, .. } = variable else {
+            let SemVariableV4::Observed {
+                id,
+                source_column,
+                scale,
+                missing_markers,
+                transformation_lineage,
+                ..
+            } = variable
+            else {
                 continue;
             };
             let Some(column) = dataset
@@ -293,15 +397,22 @@ fn preflight_general_sem_estimators(
                     "Restore the exact resident source column or correct the observed-variable binding.",
                 );
             };
-            if column.column_type != ColumnType::Numeric
-                || column.scale_type != ScaleType::Continuous
+            let continuous = *scale == ObservedScaleV4::Continuous
+                && column.column_type == ColumnType::Numeric
+                && column.scale_type == ScaleType::Continuous;
+            let binary_zero_one_moderator = binary_moderator_observed_ids.contains(id)
+                && *scale == ObservedScaleV4::Binary
+                && exact_binary_zero_one_metadata(column);
+            if (!continuous && !binary_zero_one_moderator)
+                || !missing_markers.is_empty()
+                || !transformation_lineage.is_empty()
             {
                 return blocked(
                     "continuous_numeric_columns_required",
                     format!(
-                        "Observed source column {source_column} is not continuous numeric data."
+                        "Observed source column {source_column} is not continuous numeric data or an exact qualified three-way binary 0/1 moderator."
                     ),
-                    "Use continuous numeric indicators for this exact PLS cell, or retain the authored semantics for a future qualified cell.",
+                    "Use continuous numeric indicators, or exact numeric binary 0/1 model and dataset metadata only for a single-indicator moderator in the bounded three-way cell.",
                 );
             }
         }
@@ -392,16 +503,20 @@ mod tests {
     use chrono::{TimeZone, Utc};
     use qpls_core::{
         Construct, GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
-        LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
-        SemCapabilityDecisionStatusV1, SemDataBindingV4, StructuralPath,
-        convert_legacy_basic_model_v4,
+        InteractionHierarchyPolicyV2, InteractionMethodV4, LegacyBasicModelInterpretationV4,
+        MeasurementMode, ModelSpec, ObservedScaleV4, SemCapabilityDecisionStatusV1,
+        SemDataBindingV4, SemDerivedTermV4, SemParameterTargetV4, SemRelationV4, StructuralPath,
+        StructuralRelationRoleV4, convert_legacy_basic_model_v4,
     };
-    use qpls_data::{DatasetDescriptor, ImportOptions, import_delimited_bytes};
+    use qpls_data::{
+        DatasetDescriptor, ImportOptions, import_delimited_bytes, update_column_metadata,
+    };
     use qpls_project::{
         ProjectArchiveDocumentV6, ProjectOriginV6, ProjectUpgradeLineageV6,
         SourcePreservationPolicyV6, UpgradeWritePolicyV6, insert_sem_model_v4_draft_v6,
         promote_sem_model_v4_draft_v6,
     };
+    use std::collections::BTreeMap;
     use uuid::Uuid;
 
     fn model() -> SemModelV4 {
@@ -484,6 +599,294 @@ mod tests {
             project,
             model_id: model.id,
             config: GeneralSemConfigV1::default(),
+        }
+    }
+
+    fn add_two_way_interaction(
+        model: &mut SemModelV4,
+        id: &str,
+        focal_predictor: &str,
+        moderator: &str,
+    ) {
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == focal_predictor && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let output = format!("derived:{id}");
+        let relation_id = format!("relation:{id}:effect");
+        let parameter_id = format!("parameter:{id}:effect");
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: id.into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: relation_id,
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: parameter_id.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter_id,
+            label: format!("{id} -> Y"),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: id.into(),
+            output,
+            operands: vec![focal_predictor.into(), moderator.into()],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+    }
+
+    fn add_three_way_interaction(model: &mut SemModelV4) {
+        let focal_relation = model
+            .relations
+            .iter()
+            .find_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    id, source, target, ..
+                } if source == "construct:x" && target == "construct:y" => Some(id.clone()),
+                _ => None,
+            })
+            .unwrap();
+        let output = "derived:interaction:x_by_w_by_b".to_string();
+        let parameter_id = "parameter:interaction:x_by_w_by_b:effect".to_string();
+        model.variables.push(SemVariableV4::Derived {
+            id: output.clone(),
+            label: "X by W by B".into(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: "relation:interaction:x_by_w_by_b:effect".into(),
+            source: output.clone(),
+            target: "construct:y".into(),
+            parameter: parameter_id.clone(),
+            role: StructuralRelationRoleV4::Structural,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: parameter_id,
+            label: "X by W by B -> Y".into(),
+            target: SemParameterTargetV4::Regression {
+                source: output.clone(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
+            id: "interaction:x_by_w_by_b".into(),
+            output,
+            operands: vec![
+                "construct:x".into(),
+                "construct:w".into(),
+                "construct:b".into(),
+            ],
+            focal_relation,
+            method: InteractionMethodV4::TwoStage,
+            hierarchy_policy: InteractionHierarchyPolicyV2::Strong,
+            product_indicator: None,
+        });
+    }
+
+    fn binary_three_way_request_with_indicators(
+        binary_indicators: &[&str],
+    ) -> GeneralSemEstimatorPreflightRequestV1 {
+        let mut dataset = import_delimited_bytes(
+            b"x1,x2,w1,w2,b,b2,y1,y2\n1,2,1,2,0,1,3,2\n2,1,2,1,1,0,4,3\n3,4,3,4,0,1,5,4\n4,3,4,3,1,0,6,5\n",
+            "general-sem-binary-three-way.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        for indicator in binary_indicators {
+            update_column_metadata(
+                &mut dataset,
+                indicator,
+                ColumnMetadata {
+                    name: (*indicator).into(),
+                    label: None,
+                    column_type: ColumnType::Numeric,
+                    scale_type: ScaleType::Binary,
+                    missing_markers: Vec::new(),
+                    theoretical_min: Some(0.0),
+                    theoretical_max: Some(1.0),
+                    value_labels: BTreeMap::from([
+                        ("0".into(), "Group 0".into()),
+                        ("1".into(), "Group 1".into()),
+                    ]),
+                },
+            )
+            .unwrap();
+        }
+        let mut model = convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x6003),
+                name: "Binary three-way moderation".into(),
+                constructs: vec![
+                    ("x", vec!["x1", "x2"]),
+                    ("w", vec!["w1", "w2"]),
+                    ("b", binary_indicators.to_vec()),
+                    ("y", vec!["y1", "y2"]),
+                ]
+                .into_iter()
+                .map(|(id, indicators)| Construct {
+                    id: id.into(),
+                    name: id.to_uppercase(),
+                    short_name: id.to_uppercase(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: indicators.into_iter().map(str::to_string).collect(),
+                })
+                .collect(),
+                paths: [("x", "y"), ("w", "y"), ("b", "y")]
+                    .into_iter()
+                    .map(|(source, target)| StructuralPath {
+                        source: source.into(),
+                        target: target.into(),
+                    })
+                    .collect(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        for indicator in binary_indicators {
+            let SemVariableV4::Observed {
+                scale,
+                categories,
+                value_labels,
+                ..
+            } = model
+                .variables
+                .iter_mut()
+                .find(|variable| variable.id() == format!("observed:{indicator}"))
+                .unwrap()
+            else {
+                unreachable!()
+            };
+            *scale = ObservedScaleV4::Binary;
+            *categories = vec!["0".into(), "1".into()];
+            *value_labels = BTreeMap::from([
+                ("0".into(), "Group 0".into()),
+                ("1".into(), "Group 1".into()),
+            ]);
+        }
+        add_two_way_interaction(
+            &mut model,
+            "interaction:x_by_w",
+            "construct:x",
+            "construct:w",
+        );
+        add_two_way_interaction(
+            &mut model,
+            "interaction:x_by_b",
+            "construct:x",
+            "construct:b",
+        );
+        add_two_way_interaction(
+            &mut model,
+            "interaction:w_by_b",
+            "construct:w",
+            "construct:b",
+        );
+        add_three_way_interaction(&mut model);
+        let SemDataBindingV4::Raw { dataset_id, .. } = &mut model.data_binding else {
+            unreachable!()
+        };
+        *dataset_id = dataset.id.to_string();
+        model.ensure_valid().unwrap();
+
+        let mut project = ProjectArchiveDocumentV6::new_general_sem_v1(
+            Uuid::from_u128(0x6004),
+            "Binary General SEM preflight",
+            Utc.with_ymd_and_hms(2026, 8, 22, 12, 0, 0).unwrap(),
+        );
+        project.datasets.push(DatasetDescriptor::from(&dataset));
+        let model_document_sha256 = model.model_document_sha256().unwrap();
+        let project = insert_sem_model_v4_draft_v6(&project, model.clone()).unwrap();
+        let project =
+            promote_sem_model_v4_draft_v6(&project, &model.id, &model_document_sha256).unwrap();
+        GeneralSemEstimatorPreflightRequestV1 {
+            surface: STANDARD_SURFACE.into(),
+            experimental_labs_enabled: false,
+            capability_cell: qpls_core::pls_general_three_way_moderation_point_capability_cell_v1(),
+            project,
+            model_id: model.id,
+            config: GeneralSemConfigV1::default(),
+        }
+    }
+
+    fn binary_three_way_request() -> GeneralSemEstimatorPreflightRequestV1 {
+        binary_three_way_request_with_indicators(&["b"])
+    }
+
+    fn mutate_promoted_model(
+        request: &mut GeneralSemEstimatorPreflightRequestV1,
+        mutate: impl FnOnce(&mut SemModelV4),
+    ) {
+        let record = request
+            .project
+            .models
+            .iter_mut()
+            .find(|record| record.model_id == request.model_id)
+            .unwrap();
+        let ProjectModelPayloadV6::SemModelV4 {
+            model,
+            scientific_sha256,
+        } = &mut record.payload
+        else {
+            unreachable!()
+        };
+        mutate(model);
+        model.ensure_valid().unwrap();
+        *scientific_sha256 = model.scientific_sha256().unwrap();
+    }
+
+    fn binary_column(request: &mut GeneralSemEstimatorPreflightRequestV1) -> &mut ColumnMetadata {
+        request.project.datasets[0]
+            .schema
+            .columns
+            .iter_mut()
+            .find(|column| column.name == "b")
+            .unwrap()
+    }
+
+    fn assert_continuous_or_qualified_binary_block(request: GeneralSemEstimatorPreflightRequestV1) {
+        match preflight_general_sem_estimators(request) {
+            GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic } => {
+                assert!(
+                    diagnostic
+                        .code
+                        .ends_with("continuous_numeric_columns_required"),
+                    "unexpected block: {diagnostic:?}"
+                );
+                assert!(diagnostic.message.contains("binary 0/1 moderator"));
+            }
+            outcome => panic!("malformed binary authority was admitted: {outcome:?}"),
         }
     }
 
@@ -586,6 +989,176 @@ mod tests {
             GeneralSemEstimatorPreflightOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code.ends_with("capability_cell_mismatch")
         ));
+    }
+
+    #[test]
+    fn exact_single_indicator_binary_three_way_moderator_is_admitted() {
+        let request = binary_three_way_request();
+        let model = promoted_model_from_record(&request.project.models[0])
+            .unwrap()
+            .0;
+        assert_eq!(
+            observed_variable_for_three_way_moderator(model, "observed:b"),
+            Some("observed:b".into())
+        );
+        let GeneralSemEstimatorPreflightOutcomeV1::Ok { value } =
+            preflight_general_sem_estimators(request)
+        else {
+            panic!("exact binary 0/1 moderator was blocked")
+        };
+        assert_eq!(value.pls.status(), SemCapabilityDecisionStatusV1::Supported);
+
+        let mut optional_metadata = binary_three_way_request();
+        let optional_column = binary_column(&mut optional_metadata);
+        optional_column.theoretical_min = None;
+        optional_column.theoretical_max = None;
+        optional_column.value_labels.clear();
+        assert!(matches!(
+            preflight_general_sem_estimators(optional_metadata),
+            GeneralSemEstimatorPreflightOutcomeV1::Ok { .. }
+        ));
+        assert_eq!(
+            selected_general_sem_execution_cell_v1(
+                promoted_model_from_record(&binary_three_way_request().project.models[0])
+                    .unwrap()
+                    .0,
+                &GeneralSemConfigV1::default(),
+            ),
+            qpls_core::pls_general_three_way_moderation_point_capability_cell_v1()
+        );
+    }
+
+    #[test]
+    fn binary_observed_column_is_rejected_without_exact_single_indicator_three_way_ownership() {
+        let mut ordinary = request();
+        mutate_promoted_model(&mut ordinary, |model| {
+            let SemVariableV4::Observed {
+                scale,
+                categories,
+                value_labels,
+                ..
+            } = model
+                .variables
+                .iter_mut()
+                .find(|variable| variable.id() == "observed:x1")
+                .unwrap()
+            else {
+                unreachable!()
+            };
+            *scale = ObservedScaleV4::Binary;
+            *categories = vec!["0".into(), "1".into()];
+            *value_labels = BTreeMap::from([
+                ("0".into(), "Group 0".into()),
+                ("1".into(), "Group 1".into()),
+            ]);
+        });
+        let column = ordinary.project.datasets[0]
+            .schema
+            .columns
+            .iter_mut()
+            .find(|column| column.name == "x1")
+            .unwrap();
+        column.scale_type = ScaleType::Binary;
+        column.missing_markers.clear();
+        column.theoretical_min = Some(0.0);
+        column.theoretical_max = Some(1.0);
+        column.value_labels = BTreeMap::from([
+            ("0".into(), "Group 0".into()),
+            ("1".into(), "Group 1".into()),
+        ]);
+        assert_continuous_or_qualified_binary_block(ordinary);
+
+        let mut no_three_way = binary_three_way_request();
+        mutate_promoted_model(&mut no_three_way, |model| {
+            model
+                .derived_terms
+                .retain(|term| term.id() != "interaction:x_by_w_by_b");
+            model
+                .variables
+                .retain(|variable| variable.id() != "derived:interaction:x_by_w_by_b");
+            model
+                .relations
+                .retain(|relation| relation.id() != "relation:interaction:x_by_w_by_b:effect");
+            model
+                .parameters
+                .retain(|parameter| parameter.id() != "parameter:interaction:x_by_w_by_b:effect");
+        });
+        assert_continuous_or_qualified_binary_block(no_three_way);
+
+        assert_continuous_or_qualified_binary_block(binary_three_way_request_with_indicators(&[
+            "b", "b2",
+        ]));
+    }
+
+    #[test]
+    fn malformed_binary_model_or_resident_metadata_fail_closed() {
+        let mut bad_categories = binary_three_way_request();
+        mutate_promoted_model(&mut bad_categories, |model| {
+            let SemVariableV4::Observed {
+                categories,
+                value_labels,
+                ..
+            } = model
+                .variables
+                .iter_mut()
+                .find(|variable| variable.id() == "observed:b")
+                .unwrap()
+            else {
+                unreachable!()
+            };
+            *categories = vec!["0".into(), "2".into()];
+            *value_labels = BTreeMap::from([
+                ("0".into(), "Group 0".into()),
+                ("2".into(), "Group 2".into()),
+            ]);
+        });
+        assert_continuous_or_qualified_binary_block(bad_categories);
+
+        let mut bad_type = binary_three_way_request();
+        binary_column(&mut bad_type).column_type = ColumnType::Boolean;
+        assert_continuous_or_qualified_binary_block(bad_type);
+
+        let mut bad_scale = binary_three_way_request();
+        binary_column(&mut bad_scale).scale_type = ScaleType::Ordinal;
+        assert_continuous_or_qualified_binary_block(bad_scale);
+
+        let mut bad_minimum = binary_three_way_request();
+        binary_column(&mut bad_minimum).theoretical_min = Some(-1.0);
+        assert_continuous_or_qualified_binary_block(bad_minimum);
+
+        let mut bad_maximum = binary_three_way_request();
+        binary_column(&mut bad_maximum).theoretical_max = Some(2.0);
+        assert_continuous_or_qualified_binary_block(bad_maximum);
+
+        let mut bad_labels = binary_three_way_request();
+        binary_column(&mut bad_labels).value_labels = BTreeMap::from([
+            ("0".into(), "Group 0".into()),
+            ("2".into(), "Group 2".into()),
+        ]);
+        assert_continuous_or_qualified_binary_block(bad_labels);
+
+        let mut duplicate_zero_labels = binary_three_way_request();
+        binary_column(&mut duplicate_zero_labels).value_labels = BTreeMap::from([
+            ("0".into(), "Group 0".into()),
+            ("00".into(), "Group zero alias".into()),
+        ]);
+        assert_continuous_or_qualified_binary_block(duplicate_zero_labels);
+
+        let mut model_missing_markers = binary_three_way_request();
+        mutate_promoted_model(&mut model_missing_markers, |model| {
+            let SemVariableV4::Observed {
+                missing_markers, ..
+            } = model
+                .variables
+                .iter_mut()
+                .find(|variable| variable.id() == "observed:b")
+                .unwrap()
+            else {
+                unreachable!()
+            };
+            *missing_markers = vec!["-99".into()];
+        });
+        assert_continuous_or_qualified_binary_block(model_missing_markers);
     }
 
     #[test]

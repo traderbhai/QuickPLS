@@ -607,13 +607,17 @@ fn cbsem_candidate_scope_diagnostics(
             vec!["Clear derived-effect requests for this cell; the authored structural regressions remain unchanged.".into()],
         )?);
     }
-    if plan.base_plan().regressions().is_empty() {
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) && plan.base_plan().regressions().is_empty()
+    {
         diagnostics.push(SemCapabilityDiagnosticV1::new(
             "sem.capability.cbsem.recursive_sem_requires_regression",
             SemCapabilityDiagnosticSeverityV1::Error,
             None,
-            "The General SEM CB-SEM V3 point and bootstrap cells require at least one structural regression; CFA retains its existing qualified identities.",
-            vec!["Use the existing exact CFA cell, or add the scientifically intended recursive structural relation.".into()],
+            "General SEM CB-SEM recursive bootstrap requires at least one structural regression; point CFA remains supported by the point cell.",
+            vec!["Use point CB-SEM for CFA, route CFA bootstrap through the exact compatibility cell, or add the scientifically intended recursive structural relation.".into()],
         )?);
     }
     if let GeneralSemInferenceV1::CaseBootstrap {
@@ -1298,6 +1302,45 @@ mod tests {
         .unwrap()
     }
 
+    fn cbsem_model(recursive: bool) -> SemModelV4 {
+        let constructs = ["x", "y"]
+            .into_iter()
+            .map(|id| Construct {
+                id: id.into(),
+                name: id.to_uppercase(),
+                short_name: id.to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}1"), format!("{id}2")],
+            })
+            .collect();
+        let paths = if recursive {
+            vec![StructuralPath {
+                source: "x".into(),
+                target: "y".into(),
+            }]
+        } else {
+            Vec::new()
+        };
+        convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(if recursive { 0xcb53_0002 } else { 0xcb53_0001 }),
+                name: if recursive {
+                    "Recursive CB-SEM preflight".into()
+                } else {
+                    "CFA CB-SEM preflight".into()
+                },
+                constructs,
+                paths,
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::CbsemCommonFactor,
+            &[],
+        )
+        .unwrap()
+    }
+
     fn multiple_mediation_model() -> SemModelV4 {
         let constructs = ["x", "m1", "m2", "y"]
             .into_iter()
@@ -1571,6 +1614,47 @@ mod tests {
         });
         model.ensure_valid().unwrap();
         model
+    }
+
+    #[test]
+    fn cbsem_requires_recursive_structure_only_for_general_sem_bootstrap() {
+        let cfa = cbsem_model(false);
+        let recursive = cbsem_model(true);
+        let point_config = GeneralSemConfigV1::default();
+
+        let cfa_point = preflight_general_sem_cbsem_v1(&cfa, &point_config).unwrap();
+        assert_eq!(cfa_point.status(), SemCapabilityDecisionStatusV1::Supported);
+        assert!(cfa_point.diagnostics().iter().all(|diagnostic| {
+            diagnostic.code() != "sem.capability.cbsem.recursive_sem_requires_regression"
+        }));
+        let recursive_point = preflight_general_sem_cbsem_v1(&recursive, &point_config).unwrap();
+        assert_eq!(
+            recursive_point.status(),
+            SemCapabilityDecisionStatusV1::Supported
+        );
+
+        let mut bootstrap_config = GeneralSemConfigV1::default();
+        bootstrap_config.inference = GeneralSemInferenceV1::CaseBootstrap {
+            resamples: 500,
+            seed: 53,
+            confidence_level: 0.95,
+            interval: GeneralSemBootstrapIntervalV1::Percentile,
+            tail: GeneralSemInferenceTailV1::TwoSided,
+        };
+        let cfa_bootstrap = preflight_general_sem_cbsem_v1(&cfa, &bootstrap_config).unwrap();
+        assert_eq!(
+            cfa_bootstrap.status(),
+            SemCapabilityDecisionStatusV1::Blocked
+        );
+        assert!(cfa_bootstrap.diagnostics().iter().any(|diagnostic| {
+            diagnostic.code() == "sem.capability.cbsem.recursive_sem_requires_regression"
+        }));
+        let recursive_bootstrap =
+            preflight_general_sem_cbsem_v1(&recursive, &bootstrap_config).unwrap();
+        assert_eq!(
+            recursive_bootstrap.status(),
+            SemCapabilityDecisionStatusV1::Supported
+        );
     }
 
     #[test]

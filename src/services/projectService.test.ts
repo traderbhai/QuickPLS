@@ -881,7 +881,7 @@ describe("native canonical project services", () => {
       path: "D:\\QuickPLS\\validation\\fixtures\\v255\\named-sem-evidence.csv",
       dataKind: "raw",
       sampleSize: undefined,
-      missingMarkers: undefined,
+      missingMarkers: [],
     });
   });
 

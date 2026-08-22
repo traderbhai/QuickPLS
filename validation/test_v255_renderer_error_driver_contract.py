@@ -204,13 +204,73 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('if (step.action === "prepare_calculation_revision")'):
             named.index('if (step.action === "exercise_advanced_parameter_revision")')
         ]
+        generic_plan = named[
+            named.index('assert(route.kind === "fresh_sem_result"'):
+            named.index('const query = {', named.index('assert(route.kind === "fresh_sem_result"'))
+        ]
+        self.assertIn('const prepareCalculationRevision = route.method === "cbsem"', generic_plan)
+        self.assertIn('{ action: "prepare_calculation_revision", method: route.method, inference: route.inference', generic_plan)
+        self.assertIn(': { action: "prepare_calculation_revision" };', generic_plan)
+        self.assertIn('prepareCalculationRevision,', generic_plan)
+        exact_cfa_plan = named[
+            named.index('if (route.kind === "fresh_cfa_bootstrap_result")'):
+            named.index('assert(route.kind === "fresh_sem_result"')
+        ]
+        exact_cfa_prepare = '{ action: "prepare_calculation_revision", method: "cbsem", inference: "point" }'
+        exact_cfa_run = '{ action: "run_calculation", method: route.method, inference: route.inference'
+        self.assertEqual(1, exact_cfa_plan.count(exact_cfa_prepare))
+        self.assertEqual(1, exact_cfa_plan.count(exact_cfa_run))
+        self.assertLess(exact_cfa_plan.index(exact_cfa_prepare), exact_cfa_plan.index(exact_cfa_run))
+        self.assertIn('requires_requested_revision: false', exact_cfa_plan)
         self.assertIn('name: "Advanced Parameter Table…", exact: true', calculation_revision)
         self.assertIn('name: "Continue to Calculate", exact: true', calculation_revision)
         self.assertLess(
             calculation_revision.index('name: "Advanced Parameter Table…", exact: true'),
             calculation_revision.index('name: "Continue to Calculate", exact: true'),
         )
+        self.assertIn('if (step.method === "cbsem")', calculation_revision)
+        self.assertIn('estimator.selectOption("qpls.cbsem.v3")', calculation_revision)
+        self.assertIn('bootstrap.setChecked(caseBootstrap)', calculation_revision)
+        self.assertIn('samples.fill(String(step.bootstrap_samples ?? 500))', calculation_revision)
+        self.assertLess(
+            calculation_revision.index('estimator.selectOption("qpls.cbsem.v3")'),
+            calculation_revision.index('await activate.click({ timeout });'),
+        )
+        self.assertLess(
+            calculation_revision.index('bootstrap.setChecked(caseBootstrap)'),
+            calculation_revision.index('await activate.click({ timeout });'),
+        )
+        self.assertLess(
+            calculation_revision.index('await activatedAuthority.waitFor({ state: "visible", timeout });'),
+            calculation_revision.index('"The activated calculation authority changed the requested CB-SEM estimator."'),
+        )
+        self.assertIn('"The activated calculation authority changed the requested CB-SEM inference."', calculation_revision)
+        self.assertIn('"The activated calculation authority changed the requested CB-SEM bootstrap sample count."', calculation_revision)
+        self.assertIn('...(step.method === "cbsem" ? { selected_method: step.method, selected_inference: step.inference } : {})', calculation_revision)
+        self.assertNotIn('required: true, selected_method: step.method', calculation_revision)
         self.assertNotIn('return { action: step.action, required: false }', calculation_revision)
+
+        advanced_parameter_revision = named[
+            named.index('if (step.action === "exercise_advanced_parameter_revision")'):
+            named.index('if (step.action === "save_and_reopen_case_revision")')
+        ]
+        self.assertIn('name: "Continue to Calculate", exact: true', advanced_parameter_revision)
+        self.assertIn('estimator.selectOption("qpls.cbsem.v3")', advanced_parameter_revision)
+        self.assertIn('bootstrap.setChecked(false)', advanced_parameter_revision)
+        self.assertIn('-parameter-revision.qpls', advanced_parameter_revision)
+        self.assertIn('target !== sourceTarget', advanced_parameter_revision)
+        self.assertIn('await fileSha256(sourceTarget) === sourceSha256', advanced_parameter_revision)
+        self.assertIn('context.calculationRevision = { target, initialSha256: targetSha256, sourceTarget, sourceSha256 }', advanced_parameter_revision)
+        self.assertNotIn('page.keyboard.press("Control+s")', advanced_parameter_revision)
+
+        reopen_parameter_revision = named[
+            named.index('if (step.action === "save_and_reopen_case_revision")'):
+            named.index('if (step.action === "run_calculation")')
+        ]
+        self.assertNotIn('page.keyboard.press("Control+s")', reopen_parameter_revision)
+        self.assertIn('waitForOpenedProjectPath(page, target, timeout)', reopen_parameter_revision)
+        self.assertIn('stable Advanced Parameter identity did not survive reopen', reopen_parameter_revision)
+        self.assertIn('model digest differs from the activated revision', reopen_parameter_revision)
 
         dialog_helper = named[
             named.index("function createDialogHelper"):
@@ -224,7 +284,8 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('if (step.action === "save_result_archive_supplement")')
         ]
         self.assertIn('requires_requested_revision: false', named)
-        self.assertIn('requires_requested_revision: route.method !== "pls_algorithm"', named)
+        self.assertIn('requires_requested_revision: route.method === "pls_bootstrap"', named)
+        self.assertNotIn('requires_requested_revision: route.method !== "pls_algorithm"', named)
         self.assertIn('typeof step.requires_requested_revision === "boolean"', run_calculation)
         self.assertIn('requestedRevisionHelper = createDialogHelper', run_calculation)
         self.assertLess(
@@ -244,6 +305,12 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('|| await calculationProgress.isVisible()', run_calculation)
         self.assertIn('!calculationProgressVisible', run_calculation)
         self.assertEqual(run_calculation.count('await configureAndStart();'), 1)
+        self.assertIn(
+            '${context.lastCalculation?.routeText ?? ""}', run_calculation
+        )
+        self.assertNotIn(
+            'bounded timeout: ${routeText}', run_calculation
+        )
         self.assertNotIn('name: "Save and activate project…"', run_calculation)
         self.assertNotIn('advancedState.includes("New calculation-ready draft")', run_calculation)
 
@@ -274,6 +341,20 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             for value in row:
                 self.assertTrue(float(value) == float(value))
 
+        service = (ROOT / "src" / "services" / "projectService.ts").read_text(encoding="utf-8")
+        user_import = service[
+            service.index("export async function importNativeDataset("):
+            service.index("export async function importNativeDatasetAtPathForValidation(")
+        ]
+        validation_import_start = service.index("export async function importNativeDatasetAtPathForValidation(")
+        validation_import = service[
+            validation_import_start:
+            service.index("export async function importNativeValidationFixture(", validation_import_start)
+        ]
+        self.assertIn("{ path, dataKind, sampleSize, missingMarkers }", user_import)
+        self.assertNotIn("missingMarkers: []", user_import)
+        self.assertIn("missingMarkers: []", validation_import)
+
         named = source("v255_named_case_driver.mjs")
         fixture_step = named[
             named.index('if (step.action === "load_named_sem_fixture")'):
@@ -300,6 +381,10 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('scale_type: "binary"', fixture_hook)
         self.assertIn("theoretical_min: 0", fixture_hook)
         self.assertIn("theoretical_max: 1", fixture_hook)
+        self.assertIn("const binaryRowsAreExactZeroOne = residentDataset.rows.length === 0", fixture_hook)
+        self.assertIn('typeof value === "number" && Number.isFinite(value)', fixture_hook)
+        self.assertIn("Object.is(value, 0) || Object.is(value, 1)", fixture_hook)
+        self.assertIn("!binaryRowsAreExactZeroOne", fixture_hook)
         self.assertIn('value_labels: { "0": "Group 0", "1": "Group 1" }', fixture_hook)
         self.assertIn("residentDataset.id === importedDataset.id", fixture_hook)
         self.assertIn("residentDataset.fingerprint === importedDataset.fingerprint", fixture_hook)
@@ -406,6 +491,19 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertEqual("cbsem_exact_recursive_sem_case_bootstrap_v1", recursive["method_version"])
         self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["primary_cell_id"])
         self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["execution_cell_id"])
+
+        fresh_cbsem = [
+            route
+            for route in routes.values()
+            if route.get("kind") == "fresh_sem_result" and route.get("method") == "cbsem"
+        ]
+        self.assertEqual(4, len(fresh_cbsem))
+        self.assertEqual(3, sum(route["inference"] == "point" for route in fresh_cbsem))
+        self.assertEqual(1, sum(route["inference"] == "case_bootstrap" for route in fresh_cbsem))
+        exact_cfa = routes["specialized_result:CFA case bootstrap"]
+        self.assertEqual("fresh_cfa_bootstrap_result", exact_cfa["kind"])
+        self.assertEqual("cbsem", exact_cfa["method"])
+        self.assertEqual("case_bootstrap", exact_cfa["inference"])
 
     def test_frozen_archive_loop_resets_controller_before_every_exact_path_wait(self) -> None:
         frozen = source("v255_frozen_archive_reopen_crawler.mjs")

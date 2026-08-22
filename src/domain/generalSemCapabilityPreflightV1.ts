@@ -1329,6 +1329,13 @@ export function preflightGeneralSemCbsemV1(
   }
 
   if (cbsemPlanCompiles) {
+    if (bootstrapRequested && !model.relations.some((relation) => relation.kind === "structural")) {
+      diagnostics.push(errorDiagnostic(
+        "sem.capability.cbsem.recursive_sem_requires_regression",
+        "General SEM CB-SEM recursive bootstrap requires at least one structural regression; point CFA remains supported by the point cell.",
+        "Use point CB-SEM for CFA, route CFA bootstrap through the exact compatibility cell, or add the scientifically intended recursive structural relation.",
+      ));
+    }
     if (structuralSccs(model).some((component) => component.hasFeedback)) {
       diagnostics.push(errorDiagnostic(
         "sem.capability.cbsem.feedback_execution_blocked",

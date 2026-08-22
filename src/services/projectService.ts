@@ -331,7 +331,7 @@ export async function importNativeDatasetAtPathForValidation(path: string) {
     path: exactPath,
     dataKind: "raw",
     sampleSize: undefined,
-    missingMarkers: undefined,
+    missingMarkers: [],
   }));
 }
 

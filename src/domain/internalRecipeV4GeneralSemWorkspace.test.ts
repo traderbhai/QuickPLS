@@ -100,6 +100,30 @@ function rawDataset(): Dataset {
   };
 }
 
+function cbsemCommonFactorModel(dataset: Dataset, recursive: boolean): SemModelV4 {
+  const model = convertLegacyBasicModelV4({
+    id: recursive ? "model:recursive-cbsem" : "model:cfa-cbsem",
+    name: recursive ? "Recursive common-factor SEM" : "Common-factor CFA",
+    constructs: ["x", "y"].map((id) => ({
+      id,
+      name: id.toUpperCase(),
+      short_name: id.toUpperCase(),
+      mode: "reflective" as const,
+      indicators: [`${id}1`, `${id}2`],
+    })),
+    paths: recursive ? [{ source: "x", target: "y" }] : [],
+  }, "cbsem_common_factor");
+  model.data_binding = {
+    kind: "raw",
+    dataset_id: dataset.id,
+    missing_data: "listwise_deletion",
+    weight: null,
+    cluster_variable: null,
+    strata_variable: null,
+  };
+  return model;
+}
+
 function multipleMediationModel(): SemModelV4 {
   return convertLegacyBasicModelV4({
     id: "model:general-sem",
@@ -966,6 +990,24 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     });
     expect(pointRecipe.metadata.execution_surface).toBe("native_general_sem_cbsem_standard_v1");
 
+    const cfaModel = cbsemCommonFactorModel(dataset, false);
+    const cfaPointRecipe = buildGeneralSemCbsemRecipeV3({
+      recipeId: RECIPE_ID,
+      createdAt: "2026-08-21T00:00:00Z",
+      dataset,
+      model: cfaModel,
+      nativeScientificSha256: DIGEST_C,
+      config: pointConfig,
+      engine: defaultGeneralSemPlsEngineOptionsV1(),
+      capabilityCell: GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
+      experimentalLabsEnabled: false,
+    });
+    expect(cfaPointRecipe.method_config).toMatchObject({
+      kind: "cbsem",
+      model_type: "cfa",
+      bootstrap_samples: 0,
+    });
+
     const bootstrapEngine = {
       ...defaultGeneralSemPlsEngineOptionsV1(),
       inference: "percentile_case_bootstrap" as const,
@@ -993,6 +1035,17 @@ describe("General SEM Recipe-v4 workspace contract", () => {
         interval: "percentile_type7",
       },
     });
+    expect(() => buildGeneralSemCbsemRecipeV3({
+      recipeId: RECIPE_ID,
+      createdAt: "2026-08-21T00:00:00Z",
+      dataset,
+      model: cfaModel,
+      nativeScientificSha256: DIGEST_C,
+      config: bootstrapConfig,
+      engine: bootstrapEngine,
+      capabilityCell: GENERAL_SEM_CBSEM_BOOTSTRAP_CAPABILITY_CELL_V1,
+      experimentalLabsEnabled: false,
+    })).toThrowError(expect.objectContaining({ code: "general_sem.cbsem.structural_relation_required" }));
 
     const decision = {
       schema_version: 1 as const,
@@ -1673,6 +1726,63 @@ describe("General SEM Recipe-v4 workspace contract", () => {
     expect(promoted.legacyLabsRecipeOnStandardCell).toBe(false);
   });
 
+  it("rehydrates point CFA only when the CB-SEM model type matches resident topology", () => {
+    const dataset = rawDataset();
+    const model = cbsemCommonFactorModel(dataset, false);
+    const engine = defaultGeneralSemPlsEngineOptionsV1();
+    const config = generalSemConfigFromEngineV1(engine);
+    const recipe = buildGeneralSemCbsemRecipeV3({
+      recipeId: RECIPE_ID,
+      createdAt: "2026-08-21T00:00:00Z",
+      dataset,
+      model,
+      nativeScientificSha256: DIGEST_C,
+      config,
+      engine,
+      capabilityCell: GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1,
+      experimentalLabsEnabled: false,
+    });
+    const snapshot = {
+      archivePath: "D:\\General-Sem-CFA.qpls",
+      archiveSha256: DIGEST_A,
+      archiveBytes: 4096,
+      project: {
+        project_id: PROJECT_ID,
+        name: "General SEM CFA calculation",
+        created_at: "2026-08-21T00:00:00Z",
+        models: [{
+          model_id: model.id,
+          payload: { kind: "sem_model_v4", model, scientific_sha256: DIGEST_C },
+        }],
+      },
+      generalSemExecutionAuthority: {
+        schemaVersion: 1,
+        projectId: PROJECT_ID,
+        datasetId: dataset.id,
+        datasetFingerprint: dataset.fingerprint!,
+        modelId: model.id,
+        modelScientificSha256: DIGEST_C,
+        recipeId: RECIPE_ID,
+        recipeDocumentSha256: "d".repeat(64),
+        recipe,
+      },
+    } as InternalProjectArchiveV6ReadSnapshotV1;
+
+    const restored = rehydrateGeneralSemExecutionAuthorityV1(snapshot);
+    expect(restored.estimatorId).toBe(GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1);
+    expect(restored.capabilityCell).toStrictEqual(GENERAL_SEM_CBSEM_POINT_CAPABILITY_CELL_V1);
+
+    const tampered = structuredClone(snapshot);
+    const tamperedMethod = tampered.generalSemExecutionAuthority?.recipe.method_config as {
+      kind: string;
+      model_type?: "sem" | "cfa";
+    } | null | undefined;
+    if (!tamperedMethod || tamperedMethod.kind !== "cbsem") throw new Error("Missing CB-SEM method config");
+    tamperedMethod.model_type = "sem";
+    expect(() => rehydrateGeneralSemExecutionAuthorityV1(tampered))
+      .toThrowError(expect.objectContaining({ code: "general_sem.rehydrate.recipe_scope_mismatch" }));
+  });
+
   it("builds a new Standard recipe from the exact Registry cell and never relabels a historical Labs recipe", () => {
     const dataset = rawDataset();
     const model = bindGeneralSemPlsModelToDatasetV1(multipleMediationModel(), dataset);
@@ -1747,6 +1857,39 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       expect(decision.ready).toBe(false);
       expect(decision.issues.map((item) => item.code)).toContain(expectedCode);
     }
+  });
+
+  it("admits CB-SEM point CFA while requiring recursive structure only for General SEM bootstrap", () => {
+    const dataset = rawDataset();
+    const pointEngine = defaultGeneralSemPlsEngineOptionsV1();
+    const bootstrapEngine = {
+      ...pointEngine,
+      inference: "percentile_case_bootstrap" as const,
+      bootstrapSamples: 500,
+      confidenceLevel: 0.95,
+    };
+    const run = (model: SemModelV4, engine: typeof pointEngine) => preflightGeneralSemWorkspaceV1({
+      experimentalLabsEnabled: false,
+      sourceProjectId: PROJECT_ID,
+      dataset,
+      model,
+      config: generalSemConfigFromEngineV1(engine),
+      engine,
+      estimatorId: GENERAL_SEM_CBSEM_ESTIMATOR_ID_V1,
+    });
+
+    const cfaPoint = run(cbsemCommonFactorModel(dataset, false), pointEngine);
+    expect(cfaPoint.ready).toBe(true);
+    expect(cfaPoint.issues.map((item) => item.code))
+      .not.toContain("general_sem.cbsem.structural_relation_required");
+
+    const cfaBootstrap = run(cbsemCommonFactorModel(dataset, false), bootstrapEngine);
+    expect(cfaBootstrap.ready).toBe(false);
+    expect(cfaBootstrap.issues.map((item) => item.code))
+      .toContain("general_sem.cbsem.structural_relation_required");
+
+    expect(run(cbsemCommonFactorModel(dataset, true), pointEngine).ready).toBe(true);
+    expect(run(cbsemCommonFactorModel(dataset, true), bootstrapEngine).ready).toBe(true);
   });
 
   it("admits exact binary zero-one metadata only for a qualified three-way moderator", () => {
