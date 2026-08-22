@@ -122,6 +122,52 @@ class V255NamedArchiveSupplementContractTests(unittest.TestCase):
             source,
         )
 
+    def test_named_archive_expectations_bind_current_researcher_facing_tables(self) -> None:
+        manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+        routes = {case["id"]: case.get("route") for case in manifest["cases"]}
+        bootstrap = routes["specialized_result:regression case bootstrap"]
+        self.assertEqual("regression_bootstrap_coefficients", bootstrap["table_id"])
+        self.assertEqual(
+            ["Original", "Bootstrap mean", "Bootstrap SE"],
+            bootstrap["header_contains"],
+        )
+        self.assertEqual(["Intercept", "x", "z", "w"], bootstrap["row_contains"])
+
+        logistic = routes["specialized_result:regression logistic"]
+        self.assertEqual(["Intercept", "x", "z", "w"], logistic["row_contains"])
+
+        process_reference = routes["specialized_result:PROCESS mediation"]
+        self.assertEqual(
+            ["Effect", "Reference condition"],
+            process_reference["header_contains"],
+        )
+        self.assertEqual(
+            ["Conditional indirect effect", "X → M1 → M2 → Y"],
+            process_reference["row_contains"],
+        )
+        process_slopes = routes["specialized_result:PROCESS moderation"]
+        self.assertEqual(
+            ["Effect", "Moderator probe(s)", "Estimate"],
+            process_slopes["header_contains"],
+        )
+        self.assertEqual(
+            ["Conditional effect", "X × W → M3"],
+            process_slopes["row_contains"],
+        )
+
+        identity_helper = (VALIDATION / "v255_named_archive_identity.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('"regression_bootstrap_coefficients": (', identity_helper)
+        self.assertNotIn('"regression_bootstrap_summary": (', identity_helper)
+        readiness = (VALIDATION / "v255_named_route_readiness.py").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn(
+            '"regression case bootstrap": ("regression", "regression_bootstrap_coefficients", 4)',
+            readiness,
+        )
+
     def test_owned_text_files_are_utf8_without_bom(self) -> None:
         for path in (DRIVER, MANIFEST, WRAPPER, AUDIT):
             with self.subTest(path=path.name):

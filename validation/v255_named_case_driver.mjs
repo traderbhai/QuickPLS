@@ -43,6 +43,12 @@ function inside(parent, candidate) {
   return relative === "" || (!relative.startsWith(`..${path.sep}`) && relative !== ".." && !path.isAbsolute(relative));
 }
 function slash(value) { return String(value).split(path.sep).join("/"); }
+function surfaceForView(view) {
+  if (view === "welcome" || view === "home") return "launcher";
+  if (view === "models" || view === "model") return "model";
+  if (view === "runs" || view === "results") return "results";
+  return "data";
+}
 function safeFileName(value) {
   const result = String(value).toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return result.slice(0, 100) || "case";
@@ -314,7 +320,7 @@ function materializeManifestCase(entry) {
         { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
         { action: "load_named_sem_fixture", fixture: route.fixture },
         { action: "prepare_calculation_revision" },
-        { action: "run_calculation", method: route.method, inference: route.inference, bootstrap_samples: route.bootstrap_samples ?? 500, route_contains: route.route_contains, completion_timeout_ms: route.completion_timeout_ms ?? 300_000 },
+        { action: "run_calculation", method: route.method, inference: route.inference, bootstrap_samples: route.bootstrap_samples ?? 500, route_contains: route.route_contains, requires_requested_revision: false, completion_timeout_ms: route.completion_timeout_ms ?? 300_000 },
         { action: "select_result_table", table_id: route.table_id },
       ],
       assertion: {
@@ -364,6 +370,7 @@ function materializeManifestCase(entry) {
     bootstrap_samples: route.bootstrap_samples,
     moderated_stage: route.moderated_stage,
     route_contains: route.route_contains,
+    requires_requested_revision: route.method !== "pls_algorithm",
     completion_timeout_ms: route.completion_timeout_ms ?? 300_000,
   }, { action: "select_result_table", table_id: route.table_id });
   if (route.archive_supplement_public_kind !== undefined) {
@@ -737,11 +744,20 @@ async function executeStep(page, step, context) {
     const suffix = typeof step.path === "string" ? step.path : "/?quickpls_smoke=1";
     assert(suffix.startsWith("/") && !suffix.startsWith("//"), "goto_packaged path must be origin-relative.");
     await page.goto(`${PACKAGED_TAURI_ORIGIN}${suffix}`, { waitUntil: "domcontentloaded", timeout });
+    await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+    await page.waitForFunction(() => (
+      typeof window.__QUICKPLS_SMOKE__?.setView === "function"
+      && typeof window.__QUICKPLS_SMOKE__?.loadDiagramFixture === "function"
+      && typeof window.__QUICKPLS_SMOKE__?.loadNamedSemEvidenceFixture === "function"
+    ), undefined, { timeout });
     return { action: step.action, url: page.url() };
   }
   if (step.action === "create_project") {
     assert(typeof step.name === "string" && step.name.trim(), "create_project requires a non-empty name.");
-    await page.keyboard.press("Control+n");
+    const newProject = page.getByRole("button", { name: "New Project…", exact: true }).first();
+    await newProject.waitFor({ state: "visible", timeout });
+    assert(await newProject.isEnabled(), "The visible New Project command is disabled.");
+    await newProject.click({ timeout });
     const dialog = page.getByRole("dialog", { name: "New Project", exact: true });
     await dialog.waitFor({ state: "visible", timeout });
     await dialog.getByLabel("Project name", { exact: true }).fill(step.name);
@@ -762,6 +778,8 @@ async function executeStep(page, step, context) {
       return true;
     }, step.view);
     assert(available, "QuickPLS smoke view API is unavailable.");
+    const surface = surfaceForView(step.view);
+    await page.locator(`.nd-app[data-surface="${surface}"]`).waitFor({ state: "visible", timeout });
     return { action: step.action, requested_view: step.view };
   }
   if (step.action === "load_fixture") {
@@ -772,6 +790,8 @@ async function executeStep(page, step, context) {
       return true;
     }, step.fixture);
     assert(available, "QuickPLS smoke fixture API is unavailable.");
+    await page.locator('.nd-app[data-surface="model"]').waitFor({ state: "visible", timeout });
+    await page.waitForTimeout(RENDERER_ERROR_SETTLE_MS);
     return { action: step.action, fixture: step.fixture };
   }
   if (step.action === "load_named_sem_fixture") {
@@ -806,11 +826,20 @@ async function executeStep(page, step, context) {
     assert(!await exists(target), `Calculation-ready revision target already exists: ${target}`);
     await page.getByRole("menubar", { name: "Application menu", exact: true }).getByRole("menuitem", { name: "Model", exact: true }).click();
     const command = page.getByRole("menuitem", { name: "Create Calculation-Ready Revision…", exact: true });
-    if (!await command.isVisible().catch(() => false) || !await command.isEnabled().catch(() => false)) {
-      await page.keyboard.press("Escape");
-      return { action: step.action, required: false };
+    if (await command.isVisible().catch(() => false) && await command.isEnabled().catch(() => false)) {
+      await command.click();
+    } else {
+      const parameters = page.getByRole("menuitem", { name: "Advanced Parameter Table…", exact: true });
+      await parameters.waitFor({ state: "visible", timeout });
+      assert(await parameters.isEnabled(), "Advanced Parameter Table is unavailable for the calculation-ready revision fallback.");
+      await parameters.click({ timeout });
+      const parameterDialog = page.getByRole("dialog", { name: "Advanced Parameter Table", exact: true });
+      await parameterDialog.waitFor({ state: "visible", timeout });
+      const continueToCalculate = parameterDialog.getByRole("button", { name: "Continue to Calculate", exact: true });
+      await continueToCalculate.waitFor({ state: "visible", timeout });
+      assert(await continueToCalculate.isEnabled(), "Advanced Parameter Table cannot continue to the calculation-ready revision.");
+      await continueToCalculate.click({ timeout });
     }
-    await command.click();
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
     await advanced.waitFor({ state: "visible", timeout });
     const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
@@ -824,6 +853,11 @@ async function executeStep(page, step, context) {
       const completed = await helper.completed;
       assert(completed?.passed === true, `Calculation-ready revision Save failed: ${JSON.stringify(completed)}`);
     } finally { helper.stop(); }
+    const activatedAuthority = advanced.getByText("Activated calculation authority", { exact: true });
+    await activatedAuthority.waitFor({ state: "visible", timeout });
+    const calculateFromAuthority = advanced.locator(".nd-cbsem-v4-actions button.primary:not([disabled])").filter({ hasText: /^Calculate/u }).first();
+    await calculateFromAuthority.waitFor({ state: "visible", timeout });
+    assert(await calculateFromAuthority.isEnabled(), "The saved calculation authority did not become ready to calculate.");
     const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
     if (await close.isVisible().catch(() => false)) await close.click();
     await advanced.waitFor({ state: "hidden", timeout });
@@ -900,6 +934,7 @@ async function executeStep(page, step, context) {
   if (step.action === "run_calculation") {
     const labels = { pls_algorithm: "PLS-SEM Algorithm", pls_bootstrap: "PLS-SEM Bootstrapping", cbsem: "CB-SEM / CFA" };
     assert(Object.hasOwn(labels, step.method), `Unsupported run_calculation method: ${step.method}`);
+    assert(typeof step.requires_requested_revision === "boolean", "run_calculation requires an explicit requested-revision contract.");
     const configureAndStart = async () => {
       await page.locator('[aria-label="Calculate…"]').first().click({ timeout });
       const dialog = page.getByRole("dialog", { name: "Calculate", exact: true });
@@ -935,34 +970,48 @@ async function executeStep(page, step, context) {
       await start.click({ timeout });
       await dialog.waitFor({ state: "hidden", timeout }).catch(() => undefined);
     };
-    await configureAndStart();
+    let requestedRevisionHelper = null;
+    let requestedRevisionTarget = null;
+    if (step.requires_requested_revision) {
+      requestedRevisionTarget = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId)}-requested-calculation.qpls`);
+      assert(!await exists(requestedRevisionTarget), `Requested-calculation revision target already exists: ${requestedRevisionTarget}`);
+      requestedRevisionHelper = createDialogHelper({ python: context.python, mode: "save", target: requestedRevisionTarget, allowedRoot: context.evidenceDir, extension: "qpls", candidatePid: context.candidatePid, candidatePath: context.candidatePath });
+      const ready = await requestedRevisionHelper.ready;
+      assert(ready?.passed === true && ready?.event === "ready", `Requested-calculation Save helper was not ready: ${JSON.stringify(ready)}`);
+    }
+    try {
+      await configureAndStart();
+      if (requestedRevisionHelper) {
+        const completed = await requestedRevisionHelper.completed;
+        assert(completed?.passed === true, `Requested-calculation revision Save failed: ${JSON.stringify(completed)}`);
+        context.calculationRevision = { target: requestedRevisionTarget, initialSha256: await fileSha256(requestedRevisionTarget) };
+      }
+    } finally {
+      requestedRevisionHelper?.stop();
+    }
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
+    const calculationProgress = page.locator(".nd-cbsem-v4-monitor, .nd-results-workspace").first();
+    if (step.requires_requested_revision) {
+      const requestedRevisionDeadline = Date.now() + timeout;
+      let requestedRevisionReady = false;
+      while (Date.now() < requestedRevisionDeadline) {
+        requestedRevisionReady = await advanced.getByText("Activated calculation authority", { exact: true }).isVisible().catch(() => false)
+          || await calculationProgress.isVisible().catch(() => false);
+        if (requestedRevisionReady) break;
+        await page.waitForTimeout(100);
+      }
+      assert(requestedRevisionReady, "The requested calculation authority neither activated nor continued into calculation progress.");
+    }
     const revisionDeadline = Date.now() + Math.min(timeout, 30_000);
     while (Date.now() < revisionDeadline
       && !await advanced.isVisible().catch(() => false)
-      && !await page.locator(".nd-cbsem-v4-monitor, .nd-results-workspace").first().isVisible().catch(() => false)) await page.waitForTimeout(100);
+      && !await calculationProgress.isVisible().catch(() => false)) await page.waitForTimeout(100);
     const exactCompatibility = await advanced.locator("#nd-cbsem-compatibility-calculation").isVisible().catch(() => false);
-    if (await advanced.isVisible().catch(() => false) && !exactCompatibility) {
-      const target = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId)}-requested-calculation.qpls`);
-      assert(!await exists(target), `Requested-calculation revision target already exists: ${target}`);
-      const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
-      await activate.waitFor({ state: "visible", timeout });
-      assert(await activate.isEnabled(), `Requested calculation-ready revision is blocked: ${compact(await advanced.textContent())}`);
-      const helper = createDialogHelper({ python: context.python, mode: "save", target, allowedRoot: context.evidenceDir, extension: "qpls", candidatePid: context.candidatePid, candidatePath: context.candidatePath });
-      try {
-        const ready = await helper.ready;
-        assert(ready?.passed === true && ready?.event === "ready", `Requested-calculation Save helper was not ready: ${JSON.stringify(ready)}`);
-        await activate.click({ timeout });
-        const completed = await helper.completed;
-        assert(completed?.passed === true, `Requested-calculation revision Save failed: ${JSON.stringify(completed)}`);
-      } finally { helper.stop(); }
-      context.calculationRevision = { target, initialSha256: await fileSha256(target) };
-      const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
-      await close.waitFor({ state: "visible", timeout });
-      await close.click();
-      await advanced.waitFor({ state: "hidden", timeout });
-      await configureAndStart();
-      assert(!await advanced.isVisible().catch(() => false), "Requested calculation still asks for another authority revision after one exact reconfiguration.");
+    const advancedVisible = await advanced.isVisible().catch(() => false);
+    const calculationProgressVisible = await calculationProgress.isVisible().catch(() => false);
+    const advancedState = advancedVisible ? compact(await advanced.textContent()) : "";
+    if (advancedVisible && !exactCompatibility && !calculationProgressVisible) {
+      assert(advancedState.includes("Activated calculation authority"), `Unexpected advanced calculation authority state: ${advancedState}`);
     }
     const deadline = Date.now() + Number(step.completion_timeout_ms ?? 300_000);
     while (Date.now() < deadline) {
@@ -1097,6 +1146,11 @@ async function executeStep(page, step, context) {
   }
   if (["click", "double_click", "fill", "select_option", "press"].includes(step.action)) {
     assert(typeof step.selector === "string" && step.selector, `${step.action} requires selector.`);
+    if (step.action === "press" && step.selector === "body") {
+      assert(typeof step.key === "string" && step.key, "press requires key.");
+      await page.keyboard.press(step.key);
+      return { action: step.action, selector: step.selector };
+    }
     const locator = page.locator(step.selector).first();
     await locator.waitFor({ state: "visible", timeout });
     if (step.action === "click") await locator.click({ timeout });
@@ -1105,7 +1159,16 @@ async function executeStep(page, step, context) {
     else if (step.action === "select_option") {
       assert(typeof step.value === "string" || typeof step.label === "string", "select_option requires value or label.");
       await locator.selectOption(typeof step.value === "string" ? { value: step.value } : { label: step.label }, { timeout });
-    } else { assert(typeof step.key === "string" && step.key, "press requires key."); await locator.press(step.key, { timeout }); }
+    } else {
+      assert(typeof step.key === "string" && step.key, "press requires key.");
+      const enabledDeadline = Date.now() + timeout;
+      while (Date.now() < enabledDeadline && !await locator.isEnabled().catch(() => false)) await page.waitForTimeout(50);
+      assert(await locator.isEnabled().catch(() => false), `Keyboard target did not become enabled: ${step.selector}`);
+      await locator.focus({ timeout });
+      const focusVerified = await locator.evaluate((element) => document.activeElement === element).catch(() => false);
+      assert(focusVerified, `Keyboard target did not retain focus: ${step.selector}`);
+      await locator.press(step.key, { timeout });
+    }
     return { action: step.action, selector: step.selector };
   }
   if (step.action === "native_file_dialog") {
@@ -1250,6 +1313,21 @@ async function main() {
       manifestSha256,
     };
     for (let ordinal = 1; ordinal <= selectedCases.length; ordinal += 1) {
+      if (page.isClosed()) {
+        for (const remaining of selectedCases.slice(ordinal - 1)) {
+          report.cases.push({
+            id: remaining.id,
+            status: "failed",
+            candidate: remaining.candidate,
+            operation: remaining.operation,
+            steps: [],
+            assertion: null,
+            screenshot: null,
+            failure: "The candidate renderer page closed before this serial named case started.",
+          });
+        }
+        break;
+      }
       report.cases.push(await runCase(page, selectedCases[ordinal - 1], ordinal, context));
     }
     report.offline = offline.summary();

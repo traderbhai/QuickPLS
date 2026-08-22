@@ -159,6 +159,101 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             "await waitForOpenedProjectPath(page, archive, timeout);", open_archive
         )
 
+    def test_named_driver_waits_for_controller_surfaces_and_keyboard_readiness(self) -> None:
+        named = source("v255_named_case_driver.mjs")
+        goto_packaged = named[
+            named.index('if (step.action === "goto_packaged")'):
+            named.index('if (step.action === "create_project")')
+        ]
+        self.assertLess(
+            goto_packaged.index("await page.goto("),
+            goto_packaged.index("loadNamedSemEvidenceFixture"),
+        )
+        self.assertIn('.nd-app[data-native-desktop-shell="true"]', goto_packaged)
+        self.assertIn('typeof window.__QUICKPLS_SMOKE__?.setView === "function"', goto_packaged)
+
+        create_project = named[
+            named.index('if (step.action === "create_project")'):
+            named.index('if (step.action === "set_viewport")')
+        ]
+        self.assertIn('getByRole("button", { name: "New Project…", exact: true })', create_project)
+        self.assertNotIn('page.keyboard.press("Control+n")', create_project)
+
+        set_view = named[
+            named.index('if (step.action === "set_view")'):
+            named.index('if (step.action === "load_fixture")')
+        ]
+        self.assertIn("surfaceForView(step.view)", set_view)
+        self.assertIn('data-surface="${surface}"', set_view)
+
+        generic_actions = named[
+            named.index('if (["click", "double_click", "fill", "select_option", "press"]'):
+            named.index('if (step.action === "native_file_dialog")')
+        ]
+        self.assertIn('step.action === "press" && step.selector === "body"', generic_actions)
+        self.assertIn("await page.keyboard.press(step.key);", generic_actions)
+        self.assertIn("await locator.isEnabled().catch", generic_actions)
+        self.assertIn("await locator.focus({ timeout });", generic_actions)
+        self.assertIn("document.activeElement === element", generic_actions)
+        self.assertIn("assert(focusVerified", generic_actions)
+        self.assertIn("await locator.press(step.key, { timeout });", generic_actions)
+        self.assertNotIn("focusDeadline", generic_actions)
+
+        calculation_revision = named[
+            named.index('if (step.action === "prepare_calculation_revision")'):
+            named.index('if (step.action === "exercise_advanced_parameter_revision")')
+        ]
+        self.assertIn('name: "Advanced Parameter Table…", exact: true', calculation_revision)
+        self.assertIn('name: "Continue to Calculate", exact: true', calculation_revision)
+        self.assertLess(
+            calculation_revision.index('name: "Advanced Parameter Table…", exact: true'),
+            calculation_revision.index('name: "Continue to Calculate", exact: true'),
+        )
+        self.assertNotIn('return { action: step.action, required: false }', calculation_revision)
+
+        dialog_helper = named[
+            named.index("function createDialogHelper"):
+            named.index("async function observe")
+        ]
+        self.assertIn('"--window-title", "QuickPLS"', dialog_helper)
+        self.assertNotIn("windowTitle: await page.title()", named)
+
+        run_calculation = named[
+            named.index('if (step.action === "run_calculation")'):
+            named.index('if (step.action === "save_result_archive_supplement")')
+        ]
+        self.assertIn('requires_requested_revision: false', named)
+        self.assertIn('requires_requested_revision: route.method !== "pls_algorithm"', named)
+        self.assertIn('typeof step.requires_requested_revision === "boolean"', run_calculation)
+        self.assertIn('requestedRevisionHelper = createDialogHelper', run_calculation)
+        self.assertLess(
+            run_calculation.index('requestedRevisionHelper = createDialogHelper'),
+            run_calculation.index('await configureAndStart();'),
+        )
+        self.assertLess(
+            run_calculation.index('const ready = await requestedRevisionHelper.ready'),
+            run_calculation.index('await configureAndStart();'),
+        )
+        self.assertLess(
+            run_calculation.index('const completed = await requestedRevisionHelper.completed'),
+            run_calculation.index('const calculationProgress = page.locator'),
+        )
+        self.assertIn('.nd-cbsem-v4-monitor, .nd-results-workspace', run_calculation)
+        self.assertIn('requestedRevisionReady = await advanced.getByText("Activated calculation authority", { exact: true }).isVisible()', run_calculation)
+        self.assertIn('|| await calculationProgress.isVisible()', run_calculation)
+        self.assertIn('!calculationProgressVisible', run_calculation)
+        self.assertEqual(run_calculation.count('await configureAndStart();'), 1)
+        self.assertNotIn('name: "Save and activate project…"', run_calculation)
+        self.assertNotIn('advancedState.includes("New calculation-ready draft")', run_calculation)
+
+        run_loop = named[
+            named.index("for (let ordinal = 1; ordinal <= selectedCases.length"):
+            named.index("report.offline = offline.summary()")
+        ]
+        self.assertIn("if (page.isClosed())", run_loop)
+        self.assertIn("selectedCases.slice(ordinal - 1)", run_loop)
+        self.assertIn("candidate renderer page closed", run_loop)
+
     def test_frozen_archive_loop_resets_controller_before_every_exact_path_wait(self) -> None:
         frozen = source("v255_frozen_archive_reopen_crawler.mjs")
         open_archive = frozen[

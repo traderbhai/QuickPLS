@@ -58,7 +58,7 @@ def legacy_table_backing(estimation: dict[str, Any], table_id: str) -> tuple[str
         "moderation_simple_slopes": (moderation, "estimates"),
         "ols_coefficients": (regression, "coefficients"),
         "logistic_coefficients": (regression, "coefficients"),
-        "regression_bootstrap_summary": (
+        "regression_bootstrap_coefficients": (
             regression.get("bootstrap") if isinstance(regression, dict) else None,
             "coefficients",
         ),

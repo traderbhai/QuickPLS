@@ -25,7 +25,7 @@ $tokens = $null
 $parseErrors = $null
 $ast = [Management.Automation.Language.Parser]::ParseFile($wrapper, [ref]$tokens, [ref]$parseErrors)
 if ($parseErrors.Count -ne 0) { throw "Wrapper parse failed: $($parseErrors.Message -join '; ')" }
-foreach ($functionName in @("Test-OwnedProcessIdentity", "Update-OwnedTreeSnapshot")) {
+foreach ($functionName in @("Test-OwnedProcessIdentity", "Invoke-ExactOwnedTaskkill", "Update-OwnedTreeSnapshot")) {
     $definition = @($ast.FindAll({
         param($node)
         $node -is [Management.Automation.Language.FunctionDefinitionAst] -and $node.Name -eq $functionName
@@ -53,6 +53,22 @@ foreach ($mode in @("reused", "other_executable", "absent")) {
 $script:cimMode = "exact"
 $incomplete = [pscustomobject]@{ pid = 380; parent_pid = 1; creation_time = $script:ownedCreation; executable = $null }
 if (Test-OwnedProcessIdentity $incomplete) { throw "An incomplete captured identity was classified as wrapper-owned." }
+
+# Reproduce the observed TOCTOU boundary: taskkill sees a PID that exited after
+# the exact identity check, returns nonzero, and writes native stderr. Cleanup
+# must preserve Stop semantics for callers while accepting the absent process.
+$script:taskkillCalls = 0
+function taskkill.exe {
+    $script:taskkillCalls += 1
+    $script:cimMode = "absent"
+    $global:LASTEXITCODE = 128
+    Write-Error 'ERROR: The process "380" not found.'
+}
+$script:cimMode = "exact"
+Invoke-ExactOwnedTaskkill $owned
+if ($script:taskkillCalls -ne 1) { throw "The exact owned PID was not offered to taskkill once." }
+if (Test-OwnedProcessIdentity $owned) { throw "The taskkill-not-found race left an exact owned identity live." }
+if ($ErrorActionPreference -ne "Stop") { throw "The cleanup helper did not restore ErrorActionPreference." }
 
 $script:treeCalls = 0
 $script:treeMode = "retry"
@@ -202,6 +218,18 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
             with self.subTest(wrapper=wrapper.name):
                 source = wrapper.read_text(encoding="utf-8")
                 self.assertIn("if (Test-OwnedProcessIdentity $row)", source)
+                self.assertIn("Invoke-ExactOwnedTaskkill $row", source)
+                self.assertIn(
+                    '$previousErrorActionPreference = $ErrorActionPreference', source
+                )
+                self.assertIn('$ErrorActionPreference = "Continue"', source)
+                self.assertIn(
+                    '$ErrorActionPreference = $previousErrorActionPreference', source
+                )
+                self.assertIn(
+                    '$remaining = @($tree | Where-Object { Test-OwnedProcessIdentity $_ })',
+                    source,
+                )
                 self.assertIn(
                     "if ($rootRow.Count -ne 1 -or -not (Test-OwnedProcessIdentity $rootRow[0]))",
                     source,

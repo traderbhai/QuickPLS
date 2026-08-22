@@ -37,6 +37,7 @@ describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
     const second = v255NamedSemEvidenceFixture(fixture);
     expect(first).toEqual(second);
     expect(first.dataset.rowCount).toBe(360);
+    expect(first.dataset.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u);
     expect(first.projectModels).toHaveLength(1);
     expect(first.activeModelId).toBe(first.modelId);
   });

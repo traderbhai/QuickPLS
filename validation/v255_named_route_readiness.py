@@ -11,10 +11,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import pathlib
 import subprocess
-import sys
 import zipfile
 from typing import Any
 
@@ -124,7 +122,6 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
                 "topology": topology, "counts": counts}
 
     mediation = "qpls3.pls.mediation"
-    base = "qpls3.pls.algorithm"
     moderation = "qpls3.pls.general_sem_multiple_two_way_moderation_point"
     hoc = "qpls3.pls.general_sem_higher_order_point"
     cb = "qpls3.cbsem.general_sem_ml"
@@ -153,7 +150,7 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
         "RR HOC": ("smartpls.higher_order_models", "general_sem_higher_order_targets", 1),
         "regression OLS": ("regression", "ols_coefficients", 4),
         "regression logistic": ("regression", "logistic_coefficients", 4),
-        "regression case bootstrap": ("regression", "regression_bootstrap_summary", 4),
+        "regression case bootstrap": ("regression", "regression_bootstrap_coefficients", 4),
         "PROCESS mediation": ("regression", "process_reference_effects", 6),
         "PROCESS moderation": ("regression", "process_simple_slopes", 11),
     }

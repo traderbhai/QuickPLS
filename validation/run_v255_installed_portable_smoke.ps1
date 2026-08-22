@@ -368,6 +368,19 @@ function Test-OwnedProcessIdentity($Row) {
         [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase)
     )
 }
+function Invoke-ExactOwnedTaskkill($Row) {
+    if (-not (Test-OwnedProcessIdentity $Row)) { return }
+    # A captured WebView descendant can exit after the exact-identity check but
+    # before taskkill opens the PID. Native stderr/nonzero is not itself a
+    # cleanup failure; the bounded exact-identity poll below is authoritative.
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & taskkill.exe /PID ([int]$Row.pid) /T /F 1>$null 2>$null
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
 function Update-OwnedTreeSnapshot($Process) {
     $treeByPid = @{}
     $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
@@ -439,12 +452,12 @@ function Stop-IsolatedCandidate($Process, [string]$Endpoint) {
             throw "The harness-owned candidate root identity cannot be verified; refusing to terminate PID $($Process.Id)."
         }
         # The only tree eligible for termination is rooted at this harness PID.
-        & taskkill.exe /PID $Process.Id /T /F *> $null
+        Invoke-ExactOwnedTaskkill $rootRow[0]
         $null = $Process.WaitForExit(5000)
     }
     foreach ($row in @($tree | Where-Object { [int]$_.pid -ne [int]$Process.Id })) {
         if (Test-OwnedProcessIdentity $row) {
-            & taskkill.exe /PID ([int]$row.pid) /T /F *> $null
+            Invoke-ExactOwnedTaskkill $row
         }
     }
     $cleanupDeadline = [DateTime]::UtcNow.AddSeconds(5)
@@ -454,6 +467,7 @@ function Stop-IsolatedCandidate($Process, [string]$Endpoint) {
         Start-Sleep -Milliseconds 100
     } while ([DateTime]::UtcNow -lt $cleanupDeadline)
     Wait-Cdp $Endpoint $false
+    $remaining = @($tree | Where-Object { Test-OwnedProcessIdentity $_ })
     if ($remaining.Count -ne 0) { throw "Harness-owned candidate PIDs remained after exact-tree cleanup: $($remaining.pid -join ', ')." }
 }
 function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string]$BundleExtractDirectory) {

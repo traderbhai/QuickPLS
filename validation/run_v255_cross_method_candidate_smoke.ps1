@@ -115,6 +115,19 @@ function Test-OwnedProcessIdentity($Row) {
         [string]::Equals([string]$Row.executable, [string]$currentExecutable, [StringComparison]::OrdinalIgnoreCase)
     )
 }
+function Invoke-ExactOwnedTaskkill($Row) {
+    if (-not (Test-OwnedProcessIdentity $Row)) { return }
+    # A captured WebView descendant can exit after the exact-identity check but
+    # before taskkill opens the PID. Native stderr/nonzero is not itself a
+    # cleanup failure; the bounded exact-identity poll below is authoritative.
+    $previousErrorActionPreference = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = "Continue"
+        & taskkill.exe /PID ([int]$Row.pid) /T /F 1>$null 2>$null
+    } finally {
+        $ErrorActionPreference = $previousErrorActionPreference
+    }
+}
 function Update-OwnedTreeSnapshot($Process) {
     $treeByPid = @{}
     $saved = if ($Process.PSObject.Properties.Name -contains "QuickPlsOwnedTree") { @($Process.QuickPlsOwnedTree) } else { @() }
@@ -162,7 +175,7 @@ function Stop-OwnedTree($Process, [string]$Endpoint, [string]$Reason) {
         if ($rootRow.Count -ne 1 -or -not (Test-OwnedProcessIdentity $rootRow[0])) {
             throw "The wrapper-owned candidate root identity cannot be verified; refusing to terminate PID $($Process.Id)."
         }
-        & taskkill.exe /PID $Process.Id /T /F *> $null
+        Invoke-ExactOwnedTaskkill $rootRow[0]
         $null = $Process.WaitForExit(5000)
     }
     # If the native root exited first, Windows can leave an owned WebView/CDP
@@ -170,7 +183,7 @@ function Stop-OwnedTree($Process, [string]$Endpoint, [string]$Reason) {
     # are eligible for the fallback cleanup.
     foreach ($row in @($tree | Where-Object { [int]$_.pid -ne [int]$Process.Id })) {
         if (Test-OwnedProcessIdentity $row) {
-            & taskkill.exe /PID ([int]$row.pid) /T /F *> $null
+            Invoke-ExactOwnedTaskkill $row
         }
     }
     $cleanupDeadline = [DateTime]::UtcNow.AddSeconds(5)

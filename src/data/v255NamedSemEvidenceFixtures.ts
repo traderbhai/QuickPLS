@@ -106,7 +106,10 @@ const dataset = (): Dataset & { columnMetadata: ColumnMetadata[] } => {
     };
   });
   return {
-    id: "v255-named-sem-evidence",
+    // Schema-6 calculation projects require resident dataset identities to be
+    // non-nil UUIDs. Keep one deterministic identity across every named route
+    // so fixture and reopened-project provenance remain byte-stable.
+    id: "25500000-0000-4550-8550-000000000001",
     name: "QuickPLS 2.55 named SEM evidence fixture",
     columns,
     rows,
