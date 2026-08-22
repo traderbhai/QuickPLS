@@ -2,16 +2,6 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
-## [2.55.0] - Unreleased
-
-- Added model-aware Canvas layout and routing that reserves construct/indicator envelopes, avoids eligible obstacles, preserves pinned manual routes, and exposes presentation-only bend and moderation-anchor editing.
-- Replaced the compact PROCESS sketch with the shared read-only diagram renderer and independent Fit/zoom controls.
-- Consolidated the shared Calculate setup surface for 1024×700 use, stable action labels, footer-aware scrolling, scientific-first eligibility, and method-specific fixed-setting disclosure.
-- Rebaselined the interaction harness around current Model/context/keyboard entry and preserved the exact 18-method public catalogue.
-- Added fail-closed setup, cross-method, specialized-result, archive, export, persistence, accessibility, provenance, build, install, and packaged-evidence contracts.
-
-The corrected waiver-qualified consolidated source gate succeeded 14/14 in both the formal first and final passes (`20260822T051258Z` and `20260822T051715Z`) using the same diagnostic script and suite contract: full Vitest, focused Rust authority/archive/routing/lifecycle tests, full TypeScript checking, production frontend build, six-format semantic export readback, all 17 rebaseline assertions, the exact 18-method setup crawl, and the final evidence contract. The product owner authorized an opt-in waiver only for the actual Windows 200% scaling case; the real observed DPI screenshot and receipt remain required and the other 54 named evidence cases remain mandatory. The earlier candidate/install attempt is historical: its build was valid, but the install receipt failed because the wrapper wrongly required byte identity. The wrapper now accepts only Tauri's exact three-byte `UNK` → `NSS` marker transition and rejects all other byte differences; focused tests pass. A fresh provenance-bound unsigned candidate, installed and portable packaged journeys, the evidence bundle, and publication remain pending. No 2.55 download is claimed yet; the latest published public pre-release remains [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing remains excluded.
-
 ## [2.54.0] - 2026-08-22
 
 - Unified visible Canvas edits behind an authority-aware applied/blocked command path while preserving strict revisions, stable IDs, undo behavior, and presentation metadata.

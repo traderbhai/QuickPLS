@@ -1,11 +1,10 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. Its waiver-qualified two-pass consolidated
-source gate passed 14/14 in both runs. A fresh provenance-bound unsigned setup,
-portable, CLI, and checksum package, its installed/portable packaged journeys,
-the evidence bundle, and publication remain pending. Code signing is excluded.
+Current source version: **2.54.0**. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. Code signing is excluded.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. The earlier local 2.55 candidate/install attempt is historical: the candidate build was valid, but its install receipt failed because the wrapper incorrectly required byte identity. The wrapper now permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects all other byte differences; focused tests pass. A fresh candidate, install, and smoke run remain pending and no 2.55 download or installed-app success is claimed.
+Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned.
 
 ## Choose An Install Type
 
@@ -56,5 +55,3 @@ QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activ
 ## Uninstall
 
 If you used the installer, uninstall QuickPLS from Windows Apps/Programs. If you used the portable executable, delete the executable when no longer needed.
-
-For the controlled 2.55 release qualification, the existing registered QuickPLS 2.53 installation may be removed through its exact registered uninstaller before the isolated candidate install. Project files, recovery data, and QuickPLS application user data must remain untouched and should be verified unchanged across that operation. The portable executable may be used for its separate portable journey, but it does not substitute for installed-candidate evidence.
