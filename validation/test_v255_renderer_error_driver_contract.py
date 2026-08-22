@@ -158,6 +158,49 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             "await waitForOpenedProjectPath(page, archive, timeout);", open_archive
         )
 
+    def test_frozen_archive_loop_resets_controller_before_every_exact_path_wait(self) -> None:
+        frozen = source("v255_frozen_archive_reopen_crawler.mjs")
+        open_archive = frozen[
+            frozen.index("async function openArchive"):
+            frozen.index("function expectedResultOption")
+        ]
+        reset = 'await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`'
+        ready_shell = "page.locator('.nd-app[data-native-desktop-shell=\"true\"]')"
+        ready_controller = 'typeof window.__QUICKPLS_SMOKE__?.setView === "function"'
+        dispatch = 'window.dispatchEvent(new CustomEvent("quickpls:open-project-path"'
+        exact_path = "await waitForOpenedProjectPath(page, archive, timeout);"
+        self.assertRegex(
+            open_archive,
+            r"async function openArchive\(page, archive, timeout\) \{\s+await page\.goto",
+        )
+        self.assertLess(open_archive.index(reset), open_archive.index(ready_shell))
+        self.assertLess(open_archive.index(ready_shell), open_archive.index(ready_controller))
+        self.assertLess(open_archive.index(ready_controller), open_archive.index(dispatch))
+        self.assertLess(open_archive.index(dispatch), open_archive.index(exact_path))
+
+        exact_wait = frozen[
+            frozen.index("async function waitForOpenedProjectPath"):
+            frozen.index("async function openArchive")
+        ]
+        self.assertIn('document.querySelector(".nd-document-context span")', exact_wait)
+        self.assertIn("normalize(displayed) === normalize(target)", exact_wait)
+        self.assertIn("}, archive, { timeout });", exact_wait)
+
+        crawl_method = frozen[
+            frozen.index("async function crawlMethod"):
+            frozen.index("async function run()")
+        ]
+        self.assertLess(
+            crawl_method.index("await openArchive(page, archiveAbsolute, timeout);"),
+            crawl_method.index("await navigateToDeclaredResult(page, row, timeout);"),
+        )
+        crawl_loop = frozen[
+            frozen.index("for (let index = 0; index < rows.length; index += 1)"):
+            frozen.index("try {\n    await rendererErrors.settle();")
+        ]
+        self.assertTrue(crawl_loop.startswith("for (let index = 0;"))
+        self.assertEqual(1, crawl_loop.count("receipt = await crawlMethod({"))
+
 
 if __name__ == "__main__":
     unittest.main()

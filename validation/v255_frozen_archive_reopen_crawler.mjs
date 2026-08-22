@@ -298,17 +298,26 @@ async function connectToIsolatedPackagedPage(endpoint, timeout) {
 
 async function waitForOpenedProjectPath(page, archive, timeout) {
   await page.waitForFunction((target) => {
-    const normalize = (value) => String(value ?? "").replace(/\//g, "\\").replace(/\\+/g, "\\").toLowerCase();
+    const normalize = (value) => String(value ?? "")
+      .trim()
+      .replace(/\//g, "\\")
+      .replace(/\\+/g, "\\")
+      .toLocaleLowerCase("en-US");
     const displayed = document.querySelector(".nd-document-context span")?.textContent ?? "";
     return normalize(displayed) === normalize(target);
   }, archive, { timeout });
 }
 
 async function openArchive(page, archive, timeout) {
+  await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
+  await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+  await page.waitForFunction(() => (
+    Boolean(window.__TAURI_INTERNALS__)
+    && typeof window.__QUICKPLS_SMOKE__?.setView === "function"
+  ), null, { timeout });
   await page.evaluate((target) => {
     window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: target } }));
   }, archive);
-  await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
   await waitForOpenedProjectPath(page, archive, timeout);
   await page.waitForTimeout(250);
 }
