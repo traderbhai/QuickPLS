@@ -193,6 +193,13 @@ function Invoke-BuildCommand([string]$Id, [string]$Executable, [string[]]$Argume
     $stderr = Join-Path $target "$Id.stderr.log"
     $process = Start-Process -FilePath $Executable -ArgumentList $Arguments -WorkingDirectory $root -WindowStyle Hidden -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
     try {
+        # Windows PowerShell 5.1 can otherwise return a null ExitCode for a
+        # redirected Start-Process child. Retain its live process handle before
+        # the watcher waits for termination.
+        $retainedProcessHandle = $process.Handle
+        if ($retainedProcessHandle -eq [IntPtr]::Zero) {
+            throw "Unable to retain the process handle for build command '$Id' (PID $($process.Id))."
+        }
         while (-not $process.HasExited) {
             $sample = Add-BuildWatcherSample $Id $process.Id "running"
             if ($sample.floor_breached -eq $true) {
@@ -205,11 +212,16 @@ function Invoke-BuildCommand([string]$Id, [string]$Executable, [string[]]$Argume
         if ($finalSample.floor_breached -eq $true) {
             throw "Build command '$Id' completed at or below the 20 GiB C/D floor."
         }
+        $process.WaitForExit()
+        $observedExitCode = $process.ExitCode
+        if ($null -eq $observedExitCode) {
+            throw "Unable to capture the exit code for build command '$Id' (PID $($process.Id))."
+        }
+        $exitCode = [int]$observedExitCode
     } catch {
         Stop-ExactBuildTree $process
         throw
     }
-    $exitCode = $process.ExitCode
     $record = [ordered]@{
         id = $Id
         executable = [IO.Path]::GetFullPath($Executable)

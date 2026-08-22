@@ -167,6 +167,14 @@ function Invoke-Step($Step) {
                 samples = 0
                 minimum_free_gib = [ordered]@{ C = $null; D = $null }
             }
+            # Windows PowerShell 5.1 can lose access to ExitCode for a
+            # redirected Start-Process child when its lazy process handle is
+            # first requested only after exit. Retain the live handle before
+            # monitoring so the terminal code remains authoritative.
+            $retainedProcessHandle = $process.Handle
+            if ($retainedProcessHandle -eq [IntPtr]::Zero) {
+                throw "Unable to retain the process handle for launched PID $($process.Id)."
+            }
             while (-not $process.HasExited) {
                 $free = Get-FreeDriveGiB
                 $watcher.samples += 1
@@ -185,7 +193,15 @@ function Invoke-Step($Step) {
                 $process.Refresh()
             }
             $process.WaitForExit()
-            $exit = if ($watcher.stopped_for_low_disk) { -1 } else { $process.ExitCode }
+            if ($watcher.stopped_for_low_disk) {
+                $exit = -1
+            } else {
+                $observedExitCode = $process.ExitCode
+                if ($null -eq $observedExitCode) {
+                    throw "Unable to capture the exit code for launched PID $($process.Id)."
+                }
+                $exit = [int]$observedExitCode
+            }
         }
     } catch {
         $caughtError = $_.Exception.Message
