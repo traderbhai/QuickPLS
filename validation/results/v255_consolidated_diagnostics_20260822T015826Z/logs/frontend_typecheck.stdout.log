@@ -1,0 +1,20 @@
+
+> quickpls@2.54.0 typecheck:full
+> tsc -b
+
+src/data/v255NamedSemEvidenceFixtures.test.ts(56,12): error TS2532: Object is possibly 'undefined'.
+src/data/v255NamedSemEvidenceFixtures.ts(117,5): error TS2322: Type '{ name: string; label: null; column_type: "numeric"; scale_type: "continuous" | "binary"; missing_markers: never[]; theoretical_min: null; theoretical_max: null; value_labels: { "0": string; "1": string; } | { ...; }; }[]' is not assignable to type 'ColumnMetadata[]'.
+  Type '{ name: string; label: null; column_type: "numeric"; scale_type: "continuous" | "binary"; missing_markers: never[]; theoretical_min: null; theoretical_max: null; value_labels: { "0": string; "1": string; } | { ...; }; }' is not assignable to type 'ColumnMetadata'.
+    Types of property 'value_labels' are incompatible.
+      Type '{ "0": string; "1": string; } | { "0"?: undefined; "1"?: undefined; }' is not assignable to type 'Record<string, string>'.
+        Type '{ "0"?: undefined; "1"?: undefined; }' is not assignable to type 'Record<string, string>'.
+          Property '"0"' is incompatible with index signature.
+            Type 'undefined' is not assignable to type 'string'.
+src/native/NativeDesktopApp.tsx(1302,43): error TS7006: Parameter 'fixture' implicitly has an 'any' type.
+src/native/NativeDesktopApp.tsx(1420,13): error TS2322: Type 'number | null | undefined' is not assignable to type 'number | null'.
+  Type 'undefined' is not assignable to type 'number | null'.
+src/native/NativeDesktopApp.tsx(1421,13): error TS2322: Type 'number | null | undefined' is not assignable to type 'number | null'.
+  Type 'undefined' is not assignable to type 'number | null'.
+src/native/NativeDesktopApp.tsx(1426,13): error TS2367: This comparison appears to be unintentional because the types '"blocked" | "stale" | "committed" | "rejected"' and '"applied"' have no overlap.
+src/native/NativeDesktopApp.tsx(1426,115): error TS2339: Property 'diagnostic' does not exist on type 'StandardSemModelV4AuthorityCommitResult'.
+  Property 'diagnostic' does not exist on type '{ status: "committed"; authority: StandardSemModelV4AuthorityRecordV1; }'.

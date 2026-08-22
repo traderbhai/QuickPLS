@@ -1,0 +1,9 @@
+file:///D:/QuickPLS/validation/v255_rebased_interaction_contracts.mjs:326
+  if (!result.passed) throw new Error(result.failures[0] ?? "Interaction contract harness failed.");
+                            ^
+
+Error: REB-008: failed: The named replacement assertion reported 'failed'.
+    at browserContracts (file:///D:/QuickPLS/validation/v255_rebased_interaction_contracts.mjs:326:29)
+    at async file:///D:/QuickPLS/validation/v255_rebased_interaction_contracts.mjs:343:30
+
+Node.js v22.14.0

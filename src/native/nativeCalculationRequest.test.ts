@@ -182,7 +182,7 @@ describe("native calculation request", () => {
       { ...parsed.logisticProfile!, zeroCases: 8, oneCases: 0 },
     )).toMatchObject({
       canRun: false,
-      blockers: [expect.stringMatching(/both 0 and 1|dispatch proof is invalid/i)],
+      blockers: [expect.stringContaining("both class 0 and class 1")],
     });
   });
 

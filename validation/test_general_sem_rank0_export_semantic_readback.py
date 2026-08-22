@@ -11,10 +11,16 @@ import unittest
 import zipfile
 from pathlib import Path
 
-from validation.general_sem_rank0_export_semantic_readback import (
-    METADATA_ID,
-    semantic_readback,
-)
+if __package__:
+    from .general_sem_rank0_export_semantic_readback import (
+        METADATA_ID,
+        semantic_readback,
+    )
+else:
+    from general_sem_rank0_export_semantic_readback import (
+        METADATA_ID,
+        semantic_readback,
+    )
 
 
 RESULTS_ROOT = Path(__file__).resolve().parent / "results"

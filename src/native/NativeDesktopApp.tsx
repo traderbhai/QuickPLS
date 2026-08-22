@@ -1299,7 +1299,9 @@ export function NativeDesktopApp() {
         navigate("model");
         return { constructs: project.nodes.length, indicators: project.dataset.columns.length };
       },
-      loadNamedSemEvidenceFixture: async (fixture) => {
+      loadNamedSemEvidenceFixture: async (
+        fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture,
+      ) => {
         const { v255NamedSemEvidenceFixture } = await import("../data/v255NamedSemEvidenceFixtures");
         const project = v255NamedSemEvidenceFixture(fixture);
         const current = useWorkspace.getState();
@@ -1417,13 +1419,22 @@ export function NativeDesktopApp() {
           specification: {
             kind: "free",
             start: parameter.start ?? 0.125,
-            lower: parameter.lower,
-            upper: parameter.upper,
+            lower: parameter.lower ?? null,
+            upper: parameter.upper ?? null,
             equality_label: "V255Evidence",
           },
           label: parameter.label,
         });
-        if (result.status !== "applied") throw new Error(`Advanced Parameter Table revision was blocked: ${result.diagnostic.message}`);
+        if (result.status !== "committed") {
+          const detail = result.status === "blocked"
+            ? result.diagnostic.message
+            : result.status === "stale"
+              ? "the active model authority changed before the revision committed"
+              : result.error instanceof Error
+                ? result.error.message
+                : String(result.error);
+          throw new Error(`Advanced Parameter Table revision was not committed: ${detail}`);
+        }
         const after = useWorkspace.getState().standardSemModelV4Authorities[modelId];
         const revised = after?.model.parameters.find((candidate) => candidate.id === parameter.id);
         if (!after || revised?.kind !== "free" || revised.equality_label !== "V255Evidence") {

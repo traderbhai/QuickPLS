@@ -1,5 +1,5 @@
 import type { Edge, Node } from "@xyflow/react";
-import type { ConstructData, Dataset, NativeCanonicalModelSpec } from "../types";
+import type { ColumnMetadata, ConstructData, Dataset, NativeCanonicalModelSpec } from "../types";
 import { sha256HexUtf8V1 } from "../domain/sha256V1";
 
 export type V255NamedSemFixture =
@@ -89,7 +89,7 @@ const indicatorResidual = (index: number, harmonic: number) =>
 
 const columns = ["x1", "x2", "x3", "m11", "m12", "m13", "m21", "m22", "w1", "w2", "z1", "z2", "b", "c11", "c12", "c21", "c22", "y1", "y2", "y3"];
 
-const dataset = (): Dataset => {
+const dataset = (): Dataset & { columnMetadata: ColumnMetadata[] } => {
   const rows = Array.from({ length: 360 }, (_, offset) => {
     const index = offset + 1;
     const row = values(index);
@@ -114,7 +114,7 @@ const dataset = (): Dataset => {
     missing: 0,
     fingerprint: `v2:${sha256HexUtf8V1(JSON.stringify({ columns, rows }))}`,
     kind: "raw",
-    columnMetadata: columns.map((name) => ({
+    columnMetadata: columns.map<ColumnMetadata>((name) => ({
       name, label: null, column_type: "numeric" as const,
       scale_type: name === "b" ? "binary" as const : "continuous" as const,
       missing_markers: [], theoretical_min: null, theoretical_max: null,

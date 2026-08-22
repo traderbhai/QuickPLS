@@ -488,6 +488,11 @@ async function openCalculateForFixture(page, fixtureName) {
   const dialog = page.getByRole("dialog", { name: "Calculate", exact: true });
   await dialog.waitFor({ state: "visible", timeout: 20_000 });
   const options = dialog.locator('#nd-calculation-method-list [role="option"]');
+  await page.waitForFunction(
+    () => document.querySelectorAll('#nd-calculation-method-list [role="option"]').length === 18,
+    null,
+    { timeout: 20_000 },
+  );
   const visibleCount = await options.count();
   assert(visibleCount === 18, `Calculate exposed ${visibleCount} methods instead of 18.`);
   return dialog;
