@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v255_named_case_driver_v1",
+  "target_release": "2.55.0",
+  "status": "passed",
+  "passed": true,
+  "candidate": "installed",
+  "candidate_process": {
+    "pid": 7640,
+    "executable": "C:\\Users\\mohd.naved\\AppData\\Local\\QuickPLSValidation\\v255-install-20260822T132318Z\\quickpls-desktop.exe",
+    "executable_sha256": "0dd1cb8e8eaed86afa541e5647a12a06ddd8159b68c128447427292dec95b47f"
+  },
+  "sources": {
+    "manifest": "validation/v255_named_case_manifest.json",
+    "manifest_sha256": "e1a73b73fab271f6e204cb67661c0eaafd8a4d3e0e9ea6ed6093add041d03a42",
+    "index": "validation/v255_named_evidence_index.json",
+    "index_sha256": "4d49df3413afe324de217bc89b7a949f436e787a05fa2977dbc9aab0e60965a9"
+  },
+  "serial": true,
+  "maximum_concurrent_cases": 1,
+  "console_errors": [],
+  "named_evidence_observations": [
+    {
+      "schema_version": 1,
+      "case_id": "cross_method:packaged:installed candidate",
+      "operation": "verify_packaged_candidate",
+      "assertion": {
+        "id": "verify_packaged_candidate:cross_method:packaged:installed candidate",
+        "passed": true,
+        "expected": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1183,
+            "height": 741
+          }
+        },
+        "observed": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1183,
+            "height": 741
+          }
+        }
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T134657Z\\installed\\named_case_driver\\screens\\01-cross-method-packaged-installed-candidate.png",
+        "sha256": "31432cc8ac7790641df6745b0c6a6dabed16eed0fcbc8554c370a0b2c845d9c8"
+      }
+    }
+  ],
+  "result_archive_supplements": [],
+  "cases": [
+    {
+      "id": "cross_method:packaged:installed candidate",
+      "status": "passed",
+      "candidate": "installed",
+      "operation": "verify_packaged_candidate",
+      "steps": [
+        {
+          "action": "goto_packaged",
+          "url": "http://tauri.localhost/?quickpls_smoke=1"
+        },
+        {
+          "action": "set_viewport",
+          "observed": {
+            "width": 1183,
+            "height": 741,
+            "device_pixel_ratio": 1
+          }
+        },
+        {
+          "action": "wait_for",
+          "selector": ".nd-app[data-native-desktop-shell=\"true\"]",
+          "state": "visible"
+        }
+      ],
+      "assertion": {
+        "id": "verify_packaged_candidate:cross_method:packaged:installed candidate",
+        "expected": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1183,
+            "height": 741
+          }
+        },
+        "observed": {
+          "origin": "http://tauri.localhost",
+          "native_shell_visible": true,
+          "viewport": {
+            "width": 1183,
+            "height": 741
+          }
+        },
+        "passed": true
+      },
+      "screenshot": {
+        "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T134657Z\\installed\\named_case_driver\\screens\\01-cross-method-packaged-installed-candidate.png",
+        "sha256": "31432cc8ac7790641df6745b0c6a6dabed16eed0fcbc8554c370a0b2c845d9c8"
+      },
+      "observation": {
+        "schema_version": 1,
+        "case_id": "cross_method:packaged:installed candidate",
+        "operation": "verify_packaged_candidate",
+        "assertion": {
+          "id": "verify_packaged_candidate:cross_method:packaged:installed candidate",
+          "passed": true,
+          "expected": {
+            "origin": "http://tauri.localhost",
+            "native_shell_visible": true,
+            "viewport": {
+              "width": 1183,
+              "height": 741
+            }
+          },
+          "observed": {
+            "origin": "http://tauri.localhost",
+            "native_shell_visible": true,
+            "viewport": {
+              "width": 1183,
+              "height": 741
+            }
+          }
+        },
+        "screenshot": {
+          "path": "D:\\QuickPLS\\validation\\results\\v255_installed_portable_smoke_20260822T134657Z\\installed\\named_case_driver\\screens\\01-cross-method-packaged-installed-candidate.png",
+          "sha256": "31432cc8ac7790641df6745b0c6a6dabed16eed0fcbc8554c370a0b2c845d9c8"
+        }
+      }
+    }
+  ],
+  "offline": {
+    "passed": true,
+    "observedRequestCount": 10,
+    "externalRequestCount": 0,
+    "origins": [
+      "http://ipc.localhost",
+      "http://tauri.localhost"
+    ],
+    "externalRequests": []
+  },
+  "failures": [],
+  "process_safety": {
+    "wrapper_owns_candidate_process": true,
+    "candidate_pid_bound": true,
+    "candidate_executable_bound": true,
+    "driver_launches_candidate_processes": false,
+    "driver_terminates_candidate_processes": false,
+    "driver_closes_browser_page_or_context": false
+  },
+  "completed_at": "2026-08-22T13:48:56.003Z"
+}

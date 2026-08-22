@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "suite_id": "quickpls_v255_named_evidence_verifier_v1",
+  "target_release": "2.55.0",
+  "stage": "source",
+  "passed": true,
+  "sources": {
+    "matrix": "D:\\QuickPLS\\validation\\v255_method_evidence_matrix.json",
+    "matrix_sha256": "300ba4b5d243b58ddf34efda89a9b1bbd52493950e19d71325cb1811ee2a9017",
+    "index": "D:\\QuickPLS\\validation\\v255_named_evidence_index.json",
+    "index_sha256": "4d49df3413afe324de217bc89b7a949f436e787a05fa2977dbc9aab0e60965a9",
+    "bundle_manifest": "D:\\QuickPLS\\validation\\v255_evidence_bundle_manifest.json",
+    "bundle_manifest_sha256": "7abdf22b048af3bf3a4b46ad21ef738f695161ddeec7c12703eeed7ad5c372db",
+    "observation_schema": "D:\\QuickPLS\\validation\\v255_named_evidence_observation.schema.json",
+    "observation_schema_sha256": "4a2eb23f680d5c86b2e5b18ed7807cead10548089e0ec26abc3d14ff57e7639b",
+    "named_case_manifest": "D:\\QuickPLS\\validation\\v255_named_case_manifest.json",
+    "named_case_manifest_sha256": "e1a73b73fab271f6e204cb67661c0eaafd8a4d3e0e9ea6ed6093add041d03a42",
+    "evidence_bundle": null,
+    "evidence_bundle_sha256": null,
+    "publication_provenance": null
+  },
+  "summary": {
+    "required": 55,
+    "cross_method_required": 29,
+    "specialized_result_required": 26,
+    "verified": 0,
+    "waived": 0,
+    "pending": 55,
+    "failed": 0
+  },
+  "checks": {
+    "index_schema_and_release_are_exact": true,
+    "matrix_declares_exactly_29_cross_and_26_specialized_cases": true,
+    "ordered_case_identity_set_matches_frozen_2_55_contract": true,
+    "index_has_55_unique_entries": true,
+    "index_exactly_covers_matrix_named_cases": true,
+    "entry_scope_group_and_case_match_matrix": true,
+    "entry_statuses_are_pending_verified_or_exactly_waived": true,
+    "binding_expected_values_equal_entry_ids": true,
+    "collector_contract_has_exact_fail_closed_identity": true,
+    "publication_contract_requires_collector_candidate_source_and_unique_artifacts": true,
+    "pending_and_verified_rows_have_no_partial_artifact_state": true,
+    "index_collection_status_matches_rows": true,
+    "publication_index_is_fully_verified": true,
+    "named_case_manifest_is_exact_complete_partition": true,
+    "named_case_manifest_has_zero_unimplemented_source_routes": true,
+    "source_stage_allows_pending_collection": true
+  },
+  "cases": [],
+  "failures": []
+}
