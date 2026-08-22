@@ -473,7 +473,9 @@ def _parse_utc_timestamp(value: object, label: str) -> datetime:
     return parsed
 
 
-def _validate_log_binding(item: object, label: str) -> dict[str, object]:
+def _validate_log_binding(
+    item: object, label: str, *, allow_empty: bool = False
+) -> dict[str, object]:
     if not isinstance(item, dict):
         raise SystemExit(f"{label} must be an object")
     if set(item) != {"path", "bytes", "sha256"}:
@@ -484,7 +486,14 @@ def _validate_log_binding(item: object, label: str) -> dict[str, object]:
     path = Path(path_value)
     if not path.is_absolute() or not path.is_file():
         raise SystemExit(f"{label}.path is not an existing absolute file: {path}")
-    size, digest = _file_identity(path)
+    # A successful exact Cargo invocation can legitimately leave redirected
+    # stdout empty because normal build progress is written to stderr.  The
+    # command exit code and invocation are validated separately; log integrity
+    # is the exact byte count and SHA-256, including the empty-file digest.
+    size = path.stat().st_size
+    if size == 0 and not allow_empty:
+        raise SystemExit(f"{label} is unexpectedly empty")
+    digest = sha256(path)
     if item.get("bytes") != size or str(item.get("sha256", "")).upper() != digest:
         raise SystemExit(f"{label} does not match the current log bytes")
     return {"path": str(path.resolve()), "bytes": size, "sha256": digest}
@@ -722,7 +731,11 @@ def validate_build_session(
                 "executable": str(executable.resolve()),
                 "arguments": expected_arguments,
                 "exit_code": 0,
-                "stdout": _validate_log_binding(command.get("stdout"), f"{expected_id}.stdout"),
+                "stdout": _validate_log_binding(
+                    command.get("stdout"),
+                    f"{expected_id}.stdout",
+                    allow_empty=expected_id == "locked_release_cli",
+                ),
                 "stderr": _validate_log_binding(command.get("stderr"), f"{expected_id}.stderr"),
             }
         )

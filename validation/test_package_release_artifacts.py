@@ -510,6 +510,76 @@ class ArtifactPackagingTests(unittest.TestCase):
                 )
             self.assertFalse((release_dir / "artifacts").exists())
 
+    def test_packaging_accepts_an_exact_hash_bound_empty_build_stream(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            write_release_contract(root)
+            release_dir = write_release_inputs(root)
+            build_session = write_build_session(root, release_dir)
+            session = json.loads(build_session.read_text(encoding="utf-8"))
+            binding = session["commands"][1]["stdout"]
+            empty_log = Path(binding["path"])
+            empty_log.write_bytes(b"")
+            binding.update({"bytes": 0, "sha256": sha256(empty_log)})
+            build_session.write_text(json.dumps(session), encoding="utf-8")
+
+            report = release.package_release_artifacts(
+                root=root,
+                release_dir=release_dir,
+                artifact_dir=release_dir / "artifacts",
+                report_path=root / "validation" / "results" / "release_artifacts.json",
+                build_session_path=build_session,
+                channel="unsigned-preview",
+                label="empty stream is valid",
+                timestamp="20260813-120106",
+            )
+
+            self.assertEqual(report["build"]["commands"][1]["stdout"]["bytes"], 0)
+            self.assertEqual(
+                report["build"]["commands"][1]["stdout"]["sha256"],
+                hashlib.sha256(b"").hexdigest().upper(),
+            )
+
+            report_path = root / "validation" / "results" / "release_artifacts.json"
+            report_path.unlink()
+            session["commands"][1]["stdout"]["sha256"] = "0" * 64
+            build_session.write_text(json.dumps(session), encoding="utf-8")
+            with self.assertRaises(SystemExit):
+                release.validate_build_session(
+                    build_session,
+                    root=root,
+                    release_dir=release_dir,
+                    version=VERSION,
+                    source=session["source"],
+                )
+
+    def test_packaging_rejects_other_empty_build_streams(self) -> None:
+        mutations = {
+            "tauri stdout": (0, "stdout"),
+            "cargo stderr": (1, "stderr"),
+        }
+        for name, (command_index, stream) in mutations.items():
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as temp:
+                root = Path(temp)
+                write_release_contract(root)
+                release_dir = write_release_inputs(root)
+                build_session = write_build_session(root, release_dir)
+                session = json.loads(build_session.read_text(encoding="utf-8"))
+                binding = session["commands"][command_index][stream]
+                empty_log = Path(binding["path"])
+                empty_log.write_bytes(b"")
+                binding.update({"bytes": 0, "sha256": sha256(empty_log)})
+                build_session.write_text(json.dumps(session), encoding="utf-8")
+
+                with self.assertRaises(SystemExit):
+                    release.validate_build_session(
+                        build_session,
+                        root=root,
+                        release_dir=release_dir,
+                        version=VERSION,
+                        source=session["source"],
+                    )
+
     def test_packaging_rejects_weakened_or_breached_build_disk_watcher(self) -> None:
         mutations = {
             "reduced C preflight reserve": lambda session: session["disk_watcher"]["policy"].update(
