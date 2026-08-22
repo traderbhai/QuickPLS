@@ -1,11 +1,11 @@
 # QuickPLS Installation
 
-Current source version: **2.54.0**. Formal first diagnostic `20260822T142953Z`
+Current source version: **2.55.0**. Formal first diagnostic `20260822T142953Z`
 at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
 reported TypeScript error `TS2339`. The same-script, same-suite formal final
-diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14,
-including 453/453 Vitest suites, 1697/1697 tests, all 17 rebaseline assertions,
+diagnostic `20260822T183205Z` at source `0fa74eb` passed 14/14,
+including 453/453 Vitest suites, 1702/1702 tests, 17/17 rebaseline assertions,
 and zero captured console errors. Both formal records use runner SHA-256
 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
@@ -16,7 +16,7 @@ excluded. Exactly one case—the actual Windows 200% scaling case—may use the
 opt-in waiver; its real observed DPI screenshot and receipt remain required,
 its status remains `waived`, and the other 54 named cases must pass.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and every earlier local 2.55 candidate, install, or smoke attempt are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new candidate build, isolated install, and full installed-and-portable smoke remain pending, followed by evidence collection, bundling, and publication; no 2.55 download or installed-app success is claimed.
+Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Candidate/install/smoke/probe attempts `20260822T163918Z`, `20260822T170818Z`, `20260822T173336Z`, `20260822T174301Z`, `20260822T175510Z`, and every earlier local 2.55 candidate, install, smoke, or probe attempt are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new candidate build, isolated install, and full installed-and-portable smoke remain pending, followed by evidence collection, bundling, and publication; no 2.55 download or installed-app success is claimed.
 
 ## Choose An Install Type
 
