@@ -6,20 +6,21 @@ at runtime. Formal first diagnostic `20260822T142953Z` at source `2e3a23f`
 executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`,
 where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
 `TS2339`. The same-script, same-suite formal final diagnostic
-`20260822T143620Z` at source `31476a7` passed 14/14, including 453/453 Vitest
-suites, 1695/1695 tests, 17/17 rebaseline assertions, and zero captured console
+`20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest
+suites, 1697/1697 tests, 17/17 rebaseline assertions, and zero captured console
 errors. Both formal records use runner
 SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
 the reports are separate evidence records and are not byte-identical.
-A fresh provenance-bound unsigned 2.55 candidate build, isolated install,
-installed and portable packaged journeys, evidence collection and bundling,
-and publication remain pending. The verified `v2.54.0` release remains
+A new provenance-bound unsigned 2.55 candidate build, isolated install, and
+full installed-and-portable smoke remain pending, followed by evidence
+collection, bundling, and publication. The verified `v2.54.0` release remains
 available; code signing is excluded.
 
-Candidate/install/smoke lineage `20260822T132318Z` and every earlier 2.55
-candidate, install, or smoke attempt are historical and ineligible. The install wrapper accepts only Tauri's exact
+Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
+every earlier 2.55 candidate, install, or smoke attempt are historical and
+ineligible. The install wrapper accepts only Tauri's exact
 three-byte `UNK` → `NSS` marker transition and rejects every other byte
-difference. Fresh candidate, install, and smoke evidence is still required.
+difference. One new candidate, isolated install, and full smoke are still required.
 Exactly one case—the actual Windows 200% scaling case—may use the opt-in waiver;
 its real DPI screenshot and receipt remain required, its status remains
 `waived`, and the other 54 named cases must pass. If an existing registered
