@@ -2,6 +2,16 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [2.55.0] - Unreleased
+
+- Added model-aware Canvas layout and routing that reserves construct/indicator envelopes, avoids eligible obstacles, preserves pinned manual routes, and exposes presentation-only bend and moderation-anchor editing.
+- Replaced the compact PROCESS sketch with the shared read-only diagram renderer and independent Fit/zoom controls.
+- Consolidated the shared Calculate setup surface for 1024×700 use, stable action labels, footer-aware scrolling, scientific-first eligibility, and method-specific fixed-setting disclosure.
+- Rebaselined the interaction harness around current Model/context/keyboard entry and preserved the exact 18-method public catalogue.
+- Added fail-closed setup, cross-method, specialized-result, archive, export, persistence, accessibility, provenance, build, install, and packaged-evidence contracts.
+
+The renderer/process-trust-chain-remediated consolidated source gate succeeded 14/14 in both formal passes: `20260822T082854Z` at source `b4a73f7` and `20260822T083409Z` at source `1f0fa28`. Both used the identical diagnostic script and suite/invocation contract, but the separate evidence records are not claimed to be byte-identical reports. The suite covers full Vitest, focused Rust authority/archive/routing/lifecycle tests, full TypeScript checking, production frontend build, six-format semantic export readback, all 17 rebaseline assertions, the exact 18-method setup crawl, and the final evidence contract. The remediation makes renderer console/page-error evidence fail closed, separates attach-only phases into fresh wrapper-owned processes, and closes candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings. Exact typed post-hoc PLS results also take precedence over the generic bootstrap fallback during reopen; the focused identity suite passed 17/17, but these corrections have not yet been validated in a packaged candidate. The product owner authorized an opt-in waiver only for the actual Windows 200% scaling case; the real observed DPI screenshot and receipt remain required and the other 54 named evidence cases remain mandatory. Candidate `20260822T070205Z` and every earlier candidate or install attempt are historical and ineligible because the remediation and current formal validation postdate them. The separate install-comparison fix accepts only Tauri's exact three-byte `UNK` → `NSS` marker transition and rejects all other byte differences. A fresh provenance-bound unsigned candidate build, isolated install, installed and portable packaged journeys, evidence collection and bundling, and publication remain pending. If the exact registered old installation must be removed first, only its registered uninstaller may be used and project files, recovery data, and QuickPLS application user data must remain untouched. No 2.55 download is claimed yet; the latest published public pre-release remains [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing remains excluded.
+
 ## [2.54.0] - 2026-08-22
 
 - Unified visible Canvas edits behind an authority-aware applied/blocked command path while preserving strict revisions, stable IDs, undo behavior, and presentation metadata.
