@@ -105,7 +105,7 @@
         { "setup_case": "Advanced parameters", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeSemParameterTable.test.ts", "replacement_test": "renders Advanced Parameter Table as a labelled, focusable modal region" },
         { "setup_case": "invalid identification", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/generalSemCapabilityPreflightV1.test.ts", "replacement_test": "authorizes the connected CB-SEM General v3 cells and gives feedback-specific recovery" }
       ],
-      "result_families": ["parameters", "model fit", "identification", "bootstrap inference", "all five exact-fit presentation states"]
+      "result_families": ["parameters", "model fit", "identification", "bootstrap inference"]
     },
     {
       "kind": "pls_bootstrap",
@@ -121,7 +121,21 @@
         { "setup_case": "second-stage moderated mediation", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "offers fixed five-target moderated mediation only from PLS bootstrapping" },
         { "setup_case": "HOC", "status": "ready", "evidence_type": "domain", "replacement_file": "src/domain/unifiedSemCalculationV1.test.ts", "replacement_test": "preserves the exact HOC point/bootstrap cells and exposes compact edit metadata" }
       ],
-      "result_families": ["bootstrap inference", "specific indirect effects", "total indirect effects", "conditional effects", "simple slopes", "moderated mediation", "HOC bootstrap"]
+      "result_families": ["bootstrap inference", "specific indirect effects", "total indirect effects", "conditional effects", "simple slopes", "moderated mediation", "HOC bootstrap"],
+      "presentation_cases": [
+        "exact-fit presentation: Not run",
+        "exact-fit presentation: Available",
+        "exact-fit presentation: Partial",
+        "exact-fit presentation: Unavailable",
+        "exact-fit presentation: Failed"
+      ],
+      "presentation_evidence": [
+        { "presentation_case": "exact-fit presentation: Not run", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx", "replacement_test": "renders exact-fit presentation state Not run from validated run authority" },
+        { "presentation_case": "exact-fit presentation: Available", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx", "replacement_test": "renders exact-fit presentation state Available from validated run authority" },
+        { "presentation_case": "exact-fit presentation: Partial", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx", "replacement_test": "renders exact-fit presentation state Partial from validated run authority" },
+        { "presentation_case": "exact-fit presentation: Unavailable", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx", "replacement_test": "renders exact-fit presentation state Unavailable from validated run authority" },
+        { "presentation_case": "exact-fit presentation: Failed", "status": "ready", "evidence_type": "component", "replacement_file": "src/native/NativeResultsModelFitPresentation.test.tsx", "replacement_test": "renders exact-fit presentation state Failed from validated run authority" }
+      ]
     },
     {
       "kind": "plsc_bootstrap",

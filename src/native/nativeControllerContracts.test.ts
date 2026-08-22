@@ -31,6 +31,37 @@ describe("native controller release contracts", () => {
     expect(controller).not.toContain('runs: workspace?.runs');
   });
 
+  it("restores exact schema-6 CB-SEM results after an ordinary project open", () => {
+    const ordinaryOpen = controller.slice(
+      controller.indexOf("const loaded = loadNativeSnapshot(await openNativeProjectAt(selectedPath));"),
+      controller.indexOf("const openDemoProject = async"),
+    );
+
+    expect(ordinaryOpen).toContain("if (!loaded) return;");
+    expect(ordinaryOpen).toContain("clearPresentedCanonicalResult();");
+    expect(ordinaryOpen).toContain('if (inspected.status !== "ok") return;');
+    expect(ordinaryOpen).toContain("readStoredInternalLabsRecipeV4CbsemResultsV1({");
+    expect(ordinaryOpen).toContain("archivePath: inspected.value.archivePath");
+    expect(ordinaryOpen).toContain("sourceSha256: inspected.value.archiveSha256");
+    expect(ordinaryOpen).toContain("projectId: inspected.value.project.project_id");
+    expect(ordinaryOpen).toContain("selectLatestStoredExactCaseBootstrapEntryV1(stored.entries)");
+    expect(ordinaryOpen).toContain('new CustomEvent("quickpls:general-sem-canonical-result"');
+    expect(ordinaryOpen.indexOf("loadNativeSnapshot")).toBeLessThan(ordinaryOpen.indexOf("readStoredInternalLabsRecipeV4CbsemResultsV1"));
+  });
+
+  it("clears a prior canonical result before any accepted replacement can restore another", () => {
+    expect(controller).toContain('detail: { document: null, navigate: false }');
+    expect(app).toContain("if (detail?.document === null)");
+    expect(app).toMatch(/document === null[\s\S]*setGeneralSemCanonicalResult\(null\);[\s\S]*setGeneralSemResultSelected\(false\);/);
+
+    const ordinaryOpen = controller.slice(
+      controller.indexOf("const loaded = loadNativeSnapshot(await openNativeProjectAt(selectedPath));"),
+      controller.indexOf("const openDemoProject = async"),
+    );
+    expect(ordinaryOpen.indexOf("clearPresentedCanonicalResult();"))
+      .toBeLessThan(ordinaryOpen.indexOf("readStoredInternalLabsRecipeV4CbsemResultsV1"));
+  });
+
   it("blocks strict Standard authority before every legacy persistence or calculation boundary", () => {
     const saveStart = controller.indexOf("const saveProject = async");
     const saveGate = controller.indexOf('nativeLegacyProjectOperationBlocker(currentState, "schema5_save")', saveStart);

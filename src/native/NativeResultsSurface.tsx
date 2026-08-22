@@ -47,6 +47,7 @@ import {
   nativeNcaCeilingLabel,
   nativeNcaPlot,
   nativeNcaResultProjection,
+  nativePlsSampleSizePowerPlot,
   nativePlsSampleSizePowerResultProjection,
   nativeProcessResultProjection,
   nativeResultConfidenceLevel,
@@ -55,6 +56,7 @@ import {
   type NativeIpmaPlot,
   type NativeModerationPlot,
   type NativeNcaPlot,
+  type NativePlsSampleSizePowerPlot,
 } from "./nativeResults";
 import { nativeRunSettingApplicability } from "./nativeExportTables";
 import { resolveAnalysisModel } from "./nativeRunModelSnapshot";
@@ -722,6 +724,7 @@ function ResultTableView({
   const moderationPlot = table.id === "moderation_simple_slopes" ? nativeModerationPlot(run) : null;
   const ipmaPlot = table.id === "ipma_constructs" ? nativeIpmaPlot(run) : null;
   const ncaPlot = table.id === "nca_ceiling_effects" ? nativeNcaPlot(run) : null;
+  const powerPlot = table.id === "pls_power_by_sample_size" ? nativePlsSampleSizePowerPlot(run) : null;
   const process = nativeProcessResultProjection(run);
   const processConditionalPlots = table.id === "process_simple_slopes" ? process?.graph.plots ?? [] : [];
   const processJohnsonNeyman = table.id === "process_johnson_neyman"
@@ -733,19 +736,24 @@ function ResultTableView({
       <div className="nd-result-heading"><h1 id={headingId}>{table.title}</h1>{table.advisory ? <ResultTableAdvisoryView advisory={table.advisory} /> : null}</div>
       <span>{table.rows.length} row{table.rows.length === 1 ? "" : "s"}</span>
     </header>
-    {!table.advisory && table.warning ? <div className="nd-inline-warning" role="status">{table.warning}</div> : null}
+    {!table.advisory && table.warning && table.rows.length ? <div className="nd-inline-warning" role="status">{table.warning}</div> : null}
     {moderationPlot ? <ModerationSlopePlot plot={moderationPlot} /> : null}
     {ipmaPlot ? <IpmaScatterPlot plot={ipmaPlot} /> : null}
     {ncaPlot ? <NcaCeilingPlot plot={ncaPlot} /> : null}
+    {powerPlot ? <PlsSampleSizePowerPlot plot={powerPlot} /> : null}
     {processConditionalPlots.map((plot) => <ProcessConditionalPlotView key={plot.plot_id} plot={plot} outcome={process?.outcome ?? "Outcome"} identity={identity} />)}
     {processJohnsonNeyman.map((plot) => <ProcessJohnsonNeymanPlot key={`${plot.moderation_id}:${plot.solved_moderator}:${plot.conditioning_values.map((value) => value.raw_value).join(":")}`} plot={plot} identity={identity} />)}
-    <NativeResultTable
+    {table.rows.length ? <NativeResultTable
       table={table}
       gridKey={`${run.id}:${table.id}`}
       headingId={headingId}
       confidenceLevel={nativeResultConfidenceLevel(run, table.id)}
       onActiveRowChange={onActiveRowChange}
-    />
+    /> : <div
+      className="nd-empty nd-result-table-empty"
+      data-result-empty-table={table.id}
+      role="status"
+    ><FileSpreadsheet size={28} aria-hidden="true" /><strong>{table.id === "mga_excluded_row_ledger" ? "No ledger rows" : "No result rows"}</strong><span>{table.warning ?? "This completed result contains no rows for the selected output."}</span></div>}
   </section>;
 }
 
@@ -916,6 +924,50 @@ export function ProcessJohnsonNeymanPlot({
       <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Conditional effect</text>
     </svg>
     <p>All 101 curve points, intervals, roots, and regions were persisted by the engine; the UI only scales them for display.</p>
+  </figure>;
+}
+
+export function PlsSampleSizePowerPlot({ plot }: { plot: NativePlsSampleSizePowerPlot }) {
+  const instanceId = useId();
+  if (!plot.points.length) return null;
+  const width = 680;
+  const height = 290;
+  const left = 66;
+  const right = 24;
+  const top = 28;
+  const bottom = 50;
+  const plotWidth = width - left - right;
+  const plotHeight = height - top - bottom;
+  const minimumSampleSize = Math.min(...plot.points.map((point) => point.sampleSize));
+  const maximumSampleSize = Math.max(...plot.points.map((point) => point.sampleSize));
+  const sampleSizeSpan = Math.max(1, maximumSampleSize - minimumSampleSize);
+  const x = (value: number) => left + ((value - minimumSampleSize) / sampleSizeSpan) * plotWidth;
+  const y = (value: number) => top + (1 - value) * plotHeight;
+  const titleId = `nd-power-plot-title-${instanceId}`;
+  const descriptionId = `nd-power-plot-description-${instanceId}`;
+  const estimatePoints = plot.points.map((point) => `${x(point.sampleSize)},${y(point.achievedPower)}`).join(" ");
+  const description = `Prospective PLS-SEM power at ${plot.points.length} persisted sample-size grid points. ${plot.points.map((point) => `n ${point.sampleSize}: power ${formatPlotNumber(point.achievedPower)}, confidence interval ${formatPlotNumber(point.confidenceLower)} to ${formatPlotNumber(point.confidenceUpper)}.`).join(" ")} Target power ${formatPlotNumber(plot.targetPower)}. Exact persisted values are available in the adjacent table.`;
+  return <figure className="nd-power-plot" data-power-grid-points={plot.points.length}>
+    <figcaption><strong>Prospective power by sample size</strong><span>Evaluated grid points only</span></figcaption>
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-labelledby={`${titleId} ${descriptionId}`}>
+      <title id={titleId}>Prospective PLS-SEM power by sample size</title>
+      <desc id={descriptionId}>{description}</desc>
+      <line className="axis" x1={left} y1={height - bottom} x2={width - right} y2={height - bottom} />
+      <line className="axis" x1={left} y1={top} x2={left} y2={height - bottom} />
+      {[0, 0.25, 0.5, 0.75, 1].map((tick) => <g key={`y-${tick}`}><line className="tick" x1={left - 5} y1={y(tick)} x2={left} y2={y(tick)} /><text x={left - 9} y={y(tick) + 4} textAnchor="end">{tick.toFixed(2)}</text></g>)}
+      <line className="power-target" x1={left} y1={y(plot.targetPower)} x2={width - right} y2={y(plot.targetPower)}><title>{`Target power ${formatPlotNumber(plot.targetPower)}`}</title></line>
+      <polyline className="power-estimate" points={estimatePoints} />
+      {plot.points.map((point) => <g key={point.sampleSize} data-power-grid-sample={point.sampleSize}>
+        <line className="power-interval" x1={x(point.sampleSize)} y1={y(point.confidenceLower)} x2={x(point.sampleSize)} y2={y(point.confidenceUpper)} />
+        <circle className={point.qualifies ? "qualifies" : "does-not-qualify"} cx={x(point.sampleSize)} cy={y(point.achievedPower)} r={4}><title>{`n ${point.sampleSize}; achieved power ${formatPlotNumber(point.achievedPower)}; ${Math.round(plot.confidenceLevel * 100)}% interval ${formatPlotNumber(point.confidenceLower)} to ${formatPlotNumber(point.confidenceUpper)}; ${point.qualifies ? "qualifies" : "does not qualify"}`}</title></circle>
+        <line className="tick" x1={x(point.sampleSize)} y1={height - bottom} x2={x(point.sampleSize)} y2={height - bottom + 5} />
+        <text x={x(point.sampleSize)} y={height - bottom + 18} textAnchor="middle">{point.sampleSize}</text>
+      </g>)}
+      <text className="target-label" x={width - right - 3} y={y(plot.targetPower) - 5} textAnchor="end">Target {formatPlotNumber(plot.targetPower)}</text>
+      <text className="axis-label" x={left + plotWidth / 2} y={height - 7} textAnchor="middle">Sample size (evaluated grid)</text>
+      <text className="axis-label" transform={`translate(14 ${top + plotHeight / 2}) rotate(-90)`} textAnchor="middle">Achieved power</text>
+    </svg>
+    <p>Points and confidence intervals reproduce persisted power-by-sample-size rows; connecting segments are visual guides and do not estimate intervening sample sizes.</p>
   </figure>;
 }
 

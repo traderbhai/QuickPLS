@@ -181,8 +181,38 @@ export interface NativePcaResultProjection {
   variables: string[];
   components: PcaAnalysis["components"];
   loadings: PcaAnalysis["loadings"];
+  scores: PcaAnalysis["scores"];
   scoresStored: number;
   warnings: string[];
+}
+
+export interface NativePlsSampleSizePowerPlot {
+  targetPower: number;
+  confidenceLevel: number;
+  points: Array<{
+    sampleSize: number;
+    achievedPower: number;
+    confidenceLower: number;
+    confidenceUpper: number;
+    qualifies: boolean;
+  }>;
+}
+
+export interface NativePlsPosthocSourceRunProjection {
+  runId: string;
+  runFingerprint: string;
+  bootstrapLinkage: "same_completed_run";
+  recipeId: string;
+  datasetFingerprint: string;
+  method: string;
+  methodVersion: string;
+  completedAt: string;
+}
+
+export interface NativeMgaExcludedRowLedgerProjection {
+  excludedObservations: number;
+  state: "empty" | "unavailable";
+  message: string;
 }
 
 export interface NativeCtaPlsResultProjection {
@@ -341,6 +371,7 @@ const QUALITY_CRITERIA_IDS = [
 const INFERENCE_IDS = [
   "model_fit_exact",
   "posthoc_minimum_sample_size",
+  "posthoc_source_run_identity",
   "plsc_permutation_groups",
   "plsc_permutation_paths",
   "plsc_permutation_outer_loadings",
@@ -378,6 +409,7 @@ const PREDICTION_IDS = [...PREDICTION_V2_IDS, ...PREDICTION_V1_IDS] as const;
 
 const MGA_GROUP_IDS = [
   "mga_group_summary",
+  "mga_excluded_row_ledger",
   "micom_summary",
   "micom_configural",
   "micom_composition",
@@ -427,6 +459,7 @@ const NCA_RESULT_IDS = [
 const PCA_RESULT_IDS = [
   "pca_component_summary",
   "pca_loadings",
+  "pca_scores",
   "pca_scope",
 ] as const;
 
@@ -711,6 +744,45 @@ export function nativePlsPosthocMinimumSampleSizeProjection(
   return posthocDriverMatches(stored, driver, driverProbability, significant.length) ? stored : null;
 }
 
+/**
+ * Projects the persisted completed-run identity that owns both a current
+ * post-hoc value and its linked full-model bootstrap inference. A historical
+ * archive used to qualify the packaged journey is not a numerical source and
+ * is deliberately not relabelled as one here.
+ */
+export function nativePlsPosthocSourceRunProjection(
+  run: AnalysisRun | null | undefined,
+): NativePlsPosthocSourceRunProjection | null {
+  const posthoc = nativePlsPosthocMinimumSampleSizeProjection(run);
+  const bootstrap = run?.bootstrap;
+  const provenance = run?.provenance;
+  if (!run
+    || posthoc?.method_version !== "inverse_square_root_posthoc_v2"
+    || !bootstrap
+    || bootstrap.plan.replicates <= 0
+    || bootstrap.usable_replicates <= 0
+    || bootstrap.percentile.parameters.length === 0
+    || !provenance
+    || !hasText(run.id)
+    || !hasText(run.fingerprint)
+    || !hasText(provenance.recipe_id)
+    || !hasText(provenance.dataset_fingerprint)
+    || !hasText(provenance.method)
+    || !hasText(provenance.method_version)
+    || !hasText(provenance.completed_at)
+    || provenance.seed !== run.seed) return null;
+  return {
+    runId: run.id,
+    runFingerprint: run.fingerprint,
+    bootstrapLinkage: "same_completed_run",
+    recipeId: provenance.recipe_id,
+    datasetFingerprint: provenance.dataset_fingerprint,
+    method: provenance.method,
+    methodVersion: provenance.method_version,
+    completedAt: provenance.completed_at,
+  };
+}
+
 function nativeLegacyPlsPosthocMinimumSampleSizeProjection(
   run: AnalysisRun,
   stored: NativePlsPosthocMinimumSampleSizeProjection,
@@ -839,6 +911,28 @@ export function nativePlsSampleSizePowerResultProjection(
   } catch {
     return null;
   }
+}
+
+/**
+ * Builds chart points only from the validated persisted power-by-sample-size
+ * rows. No intermediate sample sizes or smoothed power values are generated.
+ */
+export function nativePlsSampleSizePowerPlot(
+  run: AnalysisRun | null | undefined,
+): NativePlsSampleSizePowerPlot | null {
+  const projection = nativePlsSampleSizePowerResultProjection(run);
+  if (!projection) return null;
+  return {
+    targetPower: projection.recipe.target_power,
+    confidenceLevel: projection.recipe.confidence_level,
+    points: projection.result.rows.map((row) => ({
+      sampleSize: row.sample_size,
+      achievedPower: row.achieved_power,
+      confidenceLower: row.confidence_lower,
+      confidenceUpper: row.confidence_upper,
+      qualifies: row.qualifies,
+    })),
+  };
 }
 
 function nativePlsSampleSizePowerResultTables(
@@ -1500,8 +1594,40 @@ export function nativePcaResultProjection(run: AnalysisRun | null | undefined): 
     variables,
     components: pca.components,
     loadings: pca.loadings,
+    scores: pca.scores,
     scoresStored: pca.scores.length,
     warnings,
+  };
+}
+
+/** Builds the researcher-facing score table from the validated stored matrix. */
+export function nativePcaScoreResultTable(run: AnalysisRun): ResultTable | null {
+  const projection = nativePcaResultProjection(run);
+  if (!projection) return null;
+  const byComponent = new Map(projection.components.map((component) => [
+    component.component,
+    Array.from({ length: projection.observations }, () => Number.NaN),
+  ]));
+  for (const row of projection.scores) {
+    const values = byComponent.get(row.component);
+    if (!values
+      || row.observation < 0
+      || row.observation >= projection.observations
+      || !Number.isFinite(row.score)
+      || Number.isFinite(values[row.observation])) return null;
+    values[row.observation] = row.score;
+  }
+  if ([...byComponent.values()].some((values) => values.some((value) => !Number.isFinite(value)))) return null;
+  return {
+    id: "pca_scores",
+    title: "Component scores",
+    status: "validated",
+    warning: null,
+    columns: ["Complete-case observation", ...projection.components.map((component) => component.component)],
+    rows: Array.from({ length: projection.observations }, (_, observation) => [
+      String(observation + 1),
+      ...projection.components.map((component) => formatNumber(byComponent.get(component.component)![observation])),
+    ]),
   };
 }
 
@@ -2692,6 +2818,10 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
   const modelFitPresentation = nativeModelFitPresentationStateV2(run);
   const posthocMinimumSampleSize = nativePlsPosthocMinimumSampleSizeProjection(run);
   if (result.posthoc_minimum_sample_size && !posthocMinimumSampleSize) return [];
+  const posthocSourceRun = nativePlsPosthocSourceRunProjection(run);
+  if (posthocMinimumSampleSize?.method_version === "inverse_square_root_posthoc_v2"
+    && posthocMinimumSampleSize.significance_source === "pls_bootstrap_normal_reference_two_sided"
+    && !posthocSourceRun) return [];
   const structuralPathRandomization = nativeStructuralPathRandomizationProjection(run);
   const inferenceRun = run.permutation && !structuralPathRandomization
     ? { ...run, permutation: undefined }
@@ -2865,6 +2995,25 @@ export function nativeResultTables(run: AnalysisRun | null | undefined): ResultT
       columns: ["Result", "Value"],
       rows: resultRows,
     });
+    if (posthocSourceRun) {
+      addTable(tables, {
+        id: "posthoc_source_run_identity",
+        title: "Post-hoc source-run identity",
+        status: "validated",
+        warning: null,
+        columns: ["Identity field", "Persisted value"],
+        rows: [
+          ["Completed run ID", posthocSourceRun.runId],
+          ["Run fingerprint", posthocSourceRun.runFingerprint],
+          ["Bootstrap linkage", "Same completed run (linked full-model bootstrap inference)"],
+          ["Recipe ID", posthocSourceRun.recipeId],
+          ["Dataset fingerprint", posthocSourceRun.datasetFingerprint],
+          ["Method", posthocSourceRun.method],
+          ["Method version", posthocSourceRun.methodVersion],
+          ["Completed at", posthocSourceRun.completedAt],
+        ],
+      });
+    }
   }
 
   addTable(tables, {
@@ -6496,6 +6645,10 @@ function addPcaResultTables(
     ]),
   });
 
+  const scoreTable = nativePcaScoreResultTable(run);
+  if (!scoreTable) return;
+  tables.push(scoreTable);
+
   addTable(tables, {
     id: "pca_scope",
     title: "Run details",
@@ -6888,6 +7041,33 @@ function addLegacyLogisticResultTables(
   });
 }
 
+/**
+ * Projects only the persisted excluded-observation count. Current MGA payloads
+ * do not retain source-row identities, so a nonzero count cannot be expanded
+ * into synthetic ledger rows.
+ */
+export function nativeMgaExcludedRowLedgerProjection(
+  run: AnalysisRun | null | undefined,
+): NativeMgaExcludedRowLedgerProjection | null {
+  if (!isCompletedResultRun(run)
+    || run.result.mga?.method_version !== CURRENT_MGA_METHOD_VERSION
+    || run.provenance?.method !== "mga"
+    || !run.provenance.method_version.split("+").includes(CURRENT_MGA_METHOD_VERSION)
+    || !isNonNegativeInteger(run.result.omitted_observations)) return null;
+  const excludedObservations = run.result.omitted_observations;
+  return excludedObservations === 0
+    ? {
+        excludedObservations,
+        state: "empty",
+        message: "Zero excluded observations were persisted for this completed MGA run; the excluded-row ledger is empty.",
+      }
+    : {
+        excludedObservations,
+        state: "unavailable",
+        message: `This completed MGA result records ${excludedObservations} excluded observation${excludedObservations === 1 ? "" : "s"}, but source-row identities and exclusion reasons were not persisted; a row-level ledger is unavailable.`,
+      };
+}
+
 function addMgaResultTables(
   tables: ResultTable[],
   run: AnalysisRun & { result: NonNullable<AnalysisRun["result"]> },
@@ -6927,8 +7107,10 @@ function addMgaResultTables(
   const micom = hasCompleteMeasurementContract
     ? currentMicomProjection(run.result.micom, mga, groupA, groupB, groupAOuter, groupBOuter, expectedMicomVersion)
     : null;
+  const excludedRowLedger = isCurrentMga ? nativeMgaExcludedRowLedgerProjection(run) : null;
   if (isCurrentMga && (!permutation
     || !micom
+    || !excludedRowLedger
     || permutation.permutation_plan_sha256 !== micom.analysis.permutation_plan_sha256
     || JSON.stringify(permutation.permutation_ledger) !== JSON.stringify(micom.analysis.permutation_ledger))) return;
   const engineWarnings = [
@@ -6954,6 +7136,17 @@ function addMgaResultTables(
       String(group.observations),
     ]),
   });
+
+  if (excludedRowLedger) {
+    tables.push({
+      id: "mga_excluded_row_ledger",
+      title: "MGA excluded-row ledger",
+      status: "validated",
+      warning: excludedRowLedger.message,
+      columns: ["Source row", "Exclusion reason"],
+      rows: [],
+    });
+  }
 
   if (micom) {
     addMicomResultTables(tables, micom, groupA.group, groupB.group, constructLabel);

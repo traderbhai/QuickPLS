@@ -79,6 +79,33 @@ CROSS_RENDERER_PHASES = (
     "dpi_process",
 )
 CROSS_PHASES = (*CROSS_RENDERER_PHASES[:-1], "unsaved_close_guard", "dpi_process")
+FROZEN_OBSERVATION_SOURCES = frozenset(
+    {
+        "navigation",
+        "visible_headings",
+        "visible_result_table_ids",
+        "table_titles",
+        "table_headers",
+        "table_rows",
+        "chart_titles",
+    }
+)
+FROZEN_TABLE_OBSERVATION_SOURCES = frozenset(
+    {"visible_result_table_ids", "table_titles", "table_headers", "table_rows"}
+)
+FROZEN_OBSERVATION_MATCHERS = frozenset({"exact", "contains"})
+REUSABLE_ARCHIVE_INVENTORY_SCHEMA = (
+    "quickpls.v255.reusable_archive_inventory.v2"
+)
+POSTHOC_PUBLIC_KIND = "pls_posthoc_technical_minimum_sample_size"
+INVENTORY_DOM_ID = re.compile(r"[A-Za-z0-9:._-]+")
+EXACT_FIT_PRESENTATION_STATES = ("Not run", "Available", "Partial", "Unavailable", "Failed")
+EXACT_FIT_PRESENTATION_CASES = tuple(
+    f"exact-fit presentation: {state}" for state in EXACT_FIT_PRESENTATION_STATES
+)
+EXACT_FIT_PRESENTATION_TEST_FILE = (
+    "src/native/NativeResultsModelFitPresentation.test.tsx"
+)
 EXPECTED_PREEXISTING_FIXED_CASE_IDS = {
     "cross_method:observability:setup screenshot",
     "cross_method:observability:completed Results screenshot",
@@ -742,6 +769,611 @@ def release_version_authority_checks(expected_version: str) -> dict[str, bool]:
         and f"## [{expected_version}]" in changelog
     )
     return checks
+
+
+_MISSING_JSON_POINTER = object()
+
+
+def json_pointer_value(payload: object, pointer: object) -> object:
+    if not isinstance(pointer, str) or not pointer.startswith("/"):
+        return _MISSING_JSON_POINTER
+    current = payload
+    for raw_token in pointer.split("/")[1:]:
+        token = raw_token.replace("~1", "/").replace("~0", "~")
+        if isinstance(current, dict):
+            if token not in current:
+                return _MISSING_JSON_POINTER
+            current = current[token]
+        elif isinstance(current, list):
+            if not re.fullmatch(r"0|[1-9][0-9]*", token):
+                return _MISSING_JSON_POINTER
+            index = int(token)
+            if index >= len(current):
+                return _MISSING_JSON_POINTER
+            current = current[index]
+        else:
+            return _MISSING_JSON_POINTER
+    return current
+
+
+def reusable_archive_inventory_v2_source_checks(
+    matrix: dict[str, object],
+    inventory: dict[str, object],
+    named_manifest: dict[str, object],
+) -> dict[str, bool]:
+    """Validate every source-stage trust boundary of the reusable inventory.
+
+    These checks deliberately do not inspect candidate or publication output.
+    Static routes must be reproducible from a clean checkout, while dynamic
+    named/posthoc routes remain exact declarations for later packaged evidence.
+    """
+
+    check_names = (
+        "reusable_archive_inventory_uses_exact_v2_schema",
+        "reusable_archive_inventory_has_exact_18_method_family_union",
+        "reusable_archive_inventory_route_and_capture_ids_are_unique",
+        "reusable_archive_inventory_route_capture_observation_schema_is_exact",
+        "reusable_archive_inventory_static_routes_equal_source_rows",
+        "reusable_archive_inventory_static_paths_exist",
+        "reusable_archive_inventory_static_archives_match_size_and_sha256",
+        "reusable_archive_inventory_prior_receipts_bind_declared_identity",
+        "reusable_archive_inventory_static_artifacts_are_git_tracked",
+        "reusable_archive_inventory_has_exact_7_named_manifest_routes",
+        "reusable_archive_inventory_has_exact_one_posthoc_route",
+        "reusable_archive_inventory_posthoc_public_row_is_exact_dynamic_exception",
+    )
+    checks = {name: False for name in check_names}
+    checks["reusable_archive_inventory_uses_exact_v2_schema"] = (
+        inventory.get("schema") == REUSABLE_ARCHIVE_INVENTORY_SCHEMA
+    )
+
+    raw_matrix_methods = matrix.get("methods")
+    matrix_methods = (
+        raw_matrix_methods if isinstance(raw_matrix_methods, list) else []
+    )
+    raw_public_methods = inventory.get("public_methods")
+    public_methods = (
+        raw_public_methods if isinstance(raw_public_methods, list) else []
+    )
+    raw_specialized_rows = inventory.get("specialized_feature_archives")
+    specialized_rows = (
+        raw_specialized_rows if isinstance(raw_specialized_rows, list) else []
+    )
+    raw_routes = inventory.get("coverage_routes")
+    routes = raw_routes if isinstance(raw_routes, list) else []
+    posthoc_public_rows = [
+        row
+        for row in public_methods
+        if isinstance(row, dict) and row.get("public_kind") == POSTHOC_PUBLIC_KIND
+    ]
+    declared_static_rows = [
+        row
+        for row in public_methods
+        if isinstance(row, dict) and row.get("public_kind") != POSTHOC_PUBLIC_KIND
+    ] + [row for row in specialized_rows if isinstance(row, dict)]
+
+    matrix_by_kind: dict[str, list[str]] = {}
+    matrix_contract_valid = len(matrix_methods) == 18
+    for method in matrix_methods:
+        if not isinstance(method, dict):
+            matrix_contract_valid = False
+            continue
+        kind = method.get("kind")
+        families = method.get("result_families")
+        if (
+            not isinstance(kind, str)
+            or not kind
+            or kind in matrix_by_kind
+            or not isinstance(families, list)
+            or not families
+            or not all(isinstance(family, str) and family for family in families)
+            or len(families) != len(set(families))
+        ):
+            matrix_contract_valid = False
+            continue
+        matrix_by_kind[kind] = list(families)
+    matrix_contract_valid = matrix_contract_valid and len(matrix_by_kind) == 18
+
+    public_kinds = [
+        row.get("public_kind") if isinstance(row, dict) else None
+        for row in public_methods
+    ]
+    public_contract_valid = (
+        len(public_methods) == 18
+        and all(isinstance(kind, str) and kind for kind in public_kinds)
+        and len(set(public_kinds)) == 18
+        and set(public_kinds) == set(matrix_by_kind)
+    )
+
+    route_ids: list[str] = []
+    capture_ids: list[str] = []
+    strict_schema = bool(routes)
+    family_covers: dict[str, list[str]] = {
+        kind: [] for kind in matrix_by_kind
+    }
+    family_observations: dict[str, list[str]] = {
+        kind: [] for kind in matrix_by_kind
+    }
+    static_routes: list[dict[str, object]] = []
+    named_routes: list[dict[str, object]] = []
+    posthoc_routes: list[dict[str, object]] = []
+
+    static_route_fields = {
+        "route_id",
+        "public_kind",
+        "source",
+        "archive_path",
+        "archive_sha256",
+        "result_identity",
+        "scientific_identity",
+        "prior_receipt",
+        "captures",
+    }
+    dynamic_route_fields = {
+        "route_id",
+        "public_kind",
+        "source",
+        "captures",
+    }
+    capture_fields = {"capture_id", "covers", "activate", "observations"}
+    observation_fields = {"family", "source", "matcher", "value"}
+    table_sources = FROZEN_TABLE_OBSERVATION_SOURCES
+
+    for route in routes:
+        if not isinstance(route, dict):
+            strict_schema = False
+            continue
+        route_id = route.get("route_id")
+        public_kind = route.get("public_kind")
+        source = route.get("source")
+        captures = route.get("captures")
+        if not isinstance(route_id, str) or not route_id:
+            strict_schema = False
+        else:
+            route_ids.append(route_id)
+        if not isinstance(public_kind, str) or public_kind not in matrix_by_kind:
+            strict_schema = False
+        if not isinstance(source, dict) or not isinstance(captures, list) or not captures:
+            strict_schema = False
+            continue
+
+        source_kind = source.get("kind")
+        if source_kind == "inventory":
+            static_routes.append(route)
+            if (
+                set(route) != static_route_fields
+                or set(source)
+                != {"kind", "inventory_section", "inventory_key"}
+                or source.get("inventory_section")
+                not in {"public_methods", "specialized_feature_archives"}
+                or not isinstance(source.get("inventory_key"), str)
+                or not source.get("inventory_key")
+            ):
+                strict_schema = False
+            identity = route.get("result_identity")
+            prior_receipt = route.get("prior_receipt")
+            if (
+                not isinstance(route.get("archive_path"), str)
+                or not is_sha256(route.get("archive_sha256"))
+                or not isinstance(identity, dict)
+                or set(identity) != {"type", "value"}
+                or identity.get("type")
+                not in {"canonical_result_document_id", "schema5_result_run_id"}
+                or not isinstance(identity.get("value"), str)
+                or not identity.get("value")
+                or not isinstance(route.get("scientific_identity"), dict)
+                or not route.get("scientific_identity")
+                or not isinstance(prior_receipt, dict)
+                or set(prior_receipt)
+                != {"path", "json_pointer", "verification_status"}
+                or not isinstance(prior_receipt.get("path"), str)
+                or not isinstance(prior_receipt.get("json_pointer"), str)
+                or prior_receipt.get("verification_status") != "passed"
+            ):
+                strict_schema = False
+        elif source_kind == "named_supplement":
+            named_routes.append(route)
+            if (
+                set(route) != dynamic_route_fields
+                or set(source) != {"kind", "case_id"}
+                or not isinstance(source.get("case_id"), str)
+                or not source.get("case_id")
+            ):
+                strict_schema = False
+        elif source_kind == "posthoc_supplement":
+            posthoc_routes.append(route)
+            if set(route) != dynamic_route_fields or set(source) != {"kind"}:
+                strict_schema = False
+        else:
+            strict_schema = False
+
+        for capture in captures:
+            if not isinstance(capture, dict) or set(capture) != capture_fields:
+                strict_schema = False
+                continue
+            capture_id = capture.get("capture_id")
+            covers = capture.get("covers")
+            activation = capture.get("activate")
+            observations = capture.get("observations")
+            if not isinstance(capture_id, str) or not capture_id:
+                strict_schema = False
+            else:
+                capture_ids.append(capture_id)
+            if (
+                not isinstance(covers, list)
+                or not covers
+                or not all(isinstance(family, str) and family for family in covers)
+                or len(covers) != len(set(covers))
+                or not isinstance(activation, dict)
+                or not isinstance(observations, list)
+                or len(observations) != len(covers)
+            ):
+                strict_schema = False
+                continue
+            activation_keys = set(activation)
+            if (
+                "result_tree_item_id" not in activation_keys
+                or not activation_keys.issubset(
+                    {"result_tree_item_id", "table_id", "chart_id"}
+                )
+                or not all(
+                    isinstance(value, str)
+                    and INVENTORY_DOM_ID.fullmatch(value) is not None
+                    for value in activation.values()
+                )
+            ):
+                strict_schema = False
+            observed_families: list[str] = []
+            uses_table = False
+            uses_chart = False
+            for observation in observations:
+                if not isinstance(observation, dict) or set(observation) != observation_fields:
+                    strict_schema = False
+                    continue
+                family = observation.get("family")
+                observation_source = observation.get("source")
+                matcher = observation.get("matcher")
+                value = observation.get("value")
+                if (
+                    not isinstance(family, str)
+                    or family not in covers
+                    or observation_source not in FROZEN_OBSERVATION_SOURCES
+                    or matcher not in FROZEN_OBSERVATION_MATCHERS
+                    or not isinstance(value, str)
+                    or not value.strip()
+                    or (matcher == "contains" and len(value.strip()) < 4)
+                ):
+                    strict_schema = False
+                    continue
+                observed_families.append(family)
+                uses_table = uses_table or observation_source in table_sources
+                uses_chart = uses_chart or observation_source == "chart_titles"
+            if observed_families != covers or len(observed_families) != len(
+                set(observed_families)
+            ):
+                strict_schema = False
+            if uses_table and "table_id" not in activation:
+                strict_schema = False
+            if uses_chart and not ({"table_id", "chart_id"} & activation_keys):
+                strict_schema = False
+            if isinstance(public_kind, str) and public_kind in family_covers:
+                family_covers[public_kind].extend(covers)
+                family_observations[public_kind].extend(observed_families)
+
+    checks["reusable_archive_inventory_route_and_capture_ids_are_unique"] = (
+        bool(route_ids)
+        and len(route_ids) == len(routes)
+        and len(route_ids) == len(set(route_ids))
+        and bool(capture_ids)
+        and len(capture_ids) == len(set(capture_ids))
+    )
+    checks[
+        "reusable_archive_inventory_route_capture_observation_schema_is_exact"
+    ] = strict_schema
+
+    exact_family_union = matrix_contract_valid and public_contract_valid
+    if exact_family_union:
+        for kind, expected_families in matrix_by_kind.items():
+            covered = family_covers.get(kind, [])
+            observed = family_observations.get(kind, [])
+            if (
+                len(covered) != len(set(covered))
+                or len(observed) != len(set(observed))
+                or set(covered) != set(expected_families)
+                or set(observed) != set(expected_families)
+            ):
+                exact_family_union = False
+                break
+    checks[
+        "reusable_archive_inventory_has_exact_18_method_family_union"
+    ] = exact_family_union
+
+    def referenced_inventory_row(route: dict[str, object]) -> dict[str, object] | None:
+        source = route.get("source")
+        if not isinstance(source, dict):
+            return None
+        section = source.get("inventory_section")
+        inventory_key = source.get("inventory_key")
+        if section == "public_methods":
+            rows = public_methods
+            key = "public_kind"
+        elif section == "specialized_feature_archives":
+            rows = specialized_rows
+            key = "feature"
+        else:
+            return None
+        matches = [
+            row
+            for row in rows
+            if isinstance(row, dict) and row.get(key) == inventory_key
+        ]
+        return matches[0] if len(matches) == 1 else None
+
+    static_sources_equal = bool(static_routes)
+    for route in static_routes:
+        source_row = referenced_inventory_row(route)
+        if (
+            source_row is None
+            or source_row.get("public_kind") != route.get("public_kind")
+            or any(
+                route.get(field) != source_row.get(field)
+                for field in (
+                    "archive_path",
+                    "archive_sha256",
+                    "result_identity",
+                    "scientific_identity",
+                    "prior_receipt",
+                )
+            )
+            or not isinstance(source_row.get("archive_size_bytes"), int)
+            or isinstance(source_row.get("archive_size_bytes"), bool)
+            or source_row.get("archive_size_bytes", 0) <= 0
+        ):
+            static_sources_equal = False
+
+    static_paths_exist = bool(declared_static_rows)
+    static_archives_bound = bool(declared_static_rows)
+    static_receipts_bound = bool(declared_static_rows)
+    static_paths: list[object] = []
+    for source_row in declared_static_rows:
+        archive_path_value = source_row.get("archive_path")
+        archive_hash = source_row.get("archive_sha256")
+        archive_size = source_row.get("archive_size_bytes")
+        identity = source_row.get("result_identity")
+        scientific_identity = source_row.get("scientific_identity")
+        receipt_contract = source_row.get("prior_receipt")
+        receipt_path_value = (
+            receipt_contract.get("path")
+            if isinstance(receipt_contract, dict)
+            else None
+        )
+        static_paths.extend((archive_path_value, receipt_path_value))
+        source_contract_valid = (
+            isinstance(archive_path_value, str)
+            and is_sha256(archive_hash)
+            and isinstance(archive_size, int)
+            and not isinstance(archive_size, bool)
+            and archive_size > 0
+            and isinstance(identity, dict)
+            and set(identity) == {"type", "value"}
+            and identity.get("type")
+            in {"canonical_result_document_id", "schema5_result_run_id"}
+            and isinstance(identity.get("value"), str)
+            and bool(identity.get("value"))
+            and isinstance(scientific_identity, dict)
+            and bool(scientific_identity)
+            and isinstance(receipt_contract, dict)
+            and set(receipt_contract)
+            == {"path", "json_pointer", "verification_status"}
+            and isinstance(receipt_contract.get("path"), str)
+            and isinstance(receipt_contract.get("json_pointer"), str)
+            and receipt_contract.get("verification_status") == "passed"
+        )
+        if not source_contract_valid:
+            static_paths_exist = False
+            static_archives_bound = False
+            static_receipts_bound = False
+        if not (
+            existing_repo_source_file(archive_path_value)
+            and existing_repo_source_file(receipt_path_value)
+        ):
+            static_paths_exist = False
+            static_archives_bound = False
+            static_receipts_bound = False
+            continue
+        assert isinstance(archive_path_value, str)
+        assert isinstance(receipt_path_value, str)
+        archive_path = (ROOT / archive_path_value).resolve()
+        receipt_path = (ROOT / receipt_path_value).resolve()
+        if (
+            not source_contract_valid
+            or archive_path.suffix.lower() != ".qpls"
+            or archive_path.stat().st_size != archive_size
+            or sha256_path(archive_path) != archive_hash
+        ):
+            static_archives_bound = False
+        try:
+            receipt_payload = json.loads(receipt_path.read_text(encoding="utf-8"))
+        except (OSError, UnicodeError, json.JSONDecodeError):
+            static_receipts_bound = False
+            continue
+        pointer = (
+            receipt_contract.get("json_pointer")
+            if isinstance(receipt_contract, dict)
+            else None
+        )
+        if (
+            not isinstance(identity, dict)
+            or json_pointer_value(receipt_payload, pointer)
+            != identity.get("value")
+        ):
+            static_receipts_bound = False
+
+    checks[
+        "reusable_archive_inventory_static_routes_equal_source_rows"
+    ] = static_sources_equal
+    checks["reusable_archive_inventory_static_paths_exist"] = static_paths_exist
+    checks[
+        "reusable_archive_inventory_static_archives_match_size_and_sha256"
+    ] = static_archives_bound
+    checks[
+        "reusable_archive_inventory_prior_receipts_bind_declared_identity"
+    ] = static_receipts_bound
+    checks[
+        "reusable_archive_inventory_static_artifacts_are_git_tracked"
+    ] = (
+        bool(static_paths)
+        and all(isinstance(value, str) and value for value in static_paths)
+        and git_tracked_repo_source_files(static_paths)
+    )
+
+    raw_manifest_cases = named_manifest.get("cases")
+    manifest_cases = raw_manifest_cases if isinstance(raw_manifest_cases, list) else []
+    expected_named_routes: list[tuple[str, str]] = []
+    for case in manifest_cases:
+        if not isinstance(case, dict):
+            continue
+        route = case.get("route")
+        if not isinstance(route, dict):
+            continue
+        public_kind = route.get("archive_supplement_public_kind")
+        case_id = case.get("id")
+        if isinstance(public_kind, str) and public_kind:
+            if isinstance(case_id, str) and case_id:
+                expected_named_routes.append((case_id, public_kind))
+            else:
+                expected_named_routes.append(("", public_kind))
+    actual_named_routes = [
+        (
+            str(route.get("source", {}).get("case_id", "")),
+            str(route.get("public_kind", "")),
+        )
+        for route in named_routes
+        if isinstance(route.get("source"), dict)
+    ]
+    checks[
+        "reusable_archive_inventory_has_exact_7_named_manifest_routes"
+    ] = (
+        len(expected_named_routes) == 7
+        and len(set(expected_named_routes)) == 7
+        and len(actual_named_routes) == 7
+        and len(set(actual_named_routes)) == 7
+        and set(actual_named_routes) == set(expected_named_routes)
+    )
+    checks["reusable_archive_inventory_has_exact_one_posthoc_route"] = (
+        len(posthoc_routes) == 1
+        and posthoc_routes[0].get("public_kind") == POSTHOC_PUBLIC_KIND
+        and posthoc_routes[0].get("source") == {"kind": "posthoc_supplement"}
+    )
+    checks[
+        "reusable_archive_inventory_posthoc_public_row_is_exact_dynamic_exception"
+    ] = posthoc_public_rows == [
+        {
+            "public_kind": POSTHOC_PUBLIC_KIND,
+            "reuse_state": "no_packaged_completed_result_found",
+            "archive_path": None,
+            "result_identity": None,
+            "scientific_identity": {
+                "method_version": "pls_posthoc_technical_minimum_sample_size_v2",
+                "qualification_path": (
+                    "validation/qualification_v2/"
+                    "pls_posthoc_technical_minimum_sample_size_v2.qualification.json"
+                ),
+            },
+            "prior_receipt": None,
+            "prior_screenshots": [],
+            "source_release": None,
+            "prior_verification_status": (
+                "scientific_qualification_only_no_packaged_result"
+            ),
+            "current_ui_capture_required": True,
+            "new_scientific_run_required": True,
+        }
+    ]
+    return checks
+
+
+def compact_frozen_observation(value: object) -> str:
+    return " ".join(str(value if value is not None else "").split())
+
+
+def exact_frozen_capture_coverage(
+    receipt: object, capture: object, capture_index: int
+) -> bool:
+    if not isinstance(receipt, dict) or not isinstance(capture, dict):
+        return False
+    covers = capture.get("covers")
+    assertions = capture.get("cover_assertions")
+    labels = capture.get("observed_results_labels")
+    if (
+        not isinstance(covers, list)
+        or not covers
+        or not all(isinstance(family, str) and family for family in covers)
+        or len(covers) != len(set(covers))
+        or not isinstance(assertions, list)
+        or len(assertions) != len(covers)
+        or not isinstance(labels, dict)
+        or not compact_frozen_observation(labels.get("selected_result"))
+        or not compact_frozen_observation(labels.get("document_tab"))
+        or not all(
+            isinstance(labels.get(source), list)
+            for source in FROZEN_OBSERVATION_SOURCES
+        )
+    ):
+        return False
+    families: list[str] = []
+    pointers: list[str] = []
+    table_evidence_used = False
+    for assertion in assertions:
+        if not isinstance(assertion, dict):
+            return False
+        family = assertion.get("family")
+        source = assertion.get("source")
+        matcher = assertion.get("matcher")
+        expected = compact_frozen_observation(assertion.get("value"))
+        pointer = assertion.get("observed_json_pointer")
+        if (
+            not isinstance(family, str)
+            or family not in covers
+            or source not in FROZEN_OBSERVATION_SOURCES
+            or matcher not in FROZEN_OBSERVATION_MATCHERS
+            or not expected
+            or not isinstance(pointer, str)
+            or not pointer.startswith(
+                f"/evidence/{capture_index}/observed_results_labels/{source}/"
+            )
+        ):
+            return False
+        observed_raw = json_pointer_value(receipt, pointer)
+        if observed_raw is _MISSING_JSON_POINTER or isinstance(
+            observed_raw, (dict, list)
+        ):
+            return False
+        observed = compact_frozen_observation(observed_raw)
+        if (
+            not observed
+            or compact_frozen_observation(assertion.get("observed_value"))
+            != observed
+            or assertion.get("passed") is not True
+        ):
+            return False
+        expected_folded = expected.casefold()
+        observed_folded = observed.casefold()
+        if matcher == "exact":
+            matches = expected_folded == observed_folded
+        else:
+            matches = len(expected) >= 4 and expected_folded in observed_folded
+        if not matches:
+            return False
+        families.append(family)
+        pointers.append(pointer)
+        table_evidence_used = table_evidence_used or source in FROZEN_TABLE_OBSERVATION_SOURCES
+    if families != covers or len(pointers) != len(set(pointers)):
+        return False
+    return not table_evidence_used or (
+        any(compact_frozen_observation(value) for value in labels["table_headers"])
+        and any(compact_frozen_observation(value) for value in labels["table_rows"])
+    )
 
 
 def parse_json_path(path: Path) -> dict[str, object] | None:
@@ -2227,6 +2859,63 @@ def publication_report_checks(
             for entry in captures
         )
     )
+    presentation_contract = method_report.get("presentation_evidence_contract", {})
+    presentation_rows = (
+        presentation_contract.get("rows", [])
+        if isinstance(presentation_contract, dict)
+        else []
+    )
+    presentation_rows_exact = isinstance(presentation_rows, list) and len(
+        presentation_rows
+    ) == len(EXACT_FIT_PRESENTATION_CASES)
+    if presentation_rows_exact:
+        for state, presentation_case, row in zip(
+            EXACT_FIT_PRESENTATION_STATES,
+            EXACT_FIT_PRESENTATION_CASES,
+            presentation_rows,
+            strict=True,
+        ):
+            assertion_identity = (
+                row.get("assertion_identity", {}) if isinstance(row, dict) else {}
+            )
+            if not (
+                isinstance(row, dict)
+                and row.get("presentation_case") == presentation_case
+                and row.get("evidence_type") == "component"
+                and str(row.get("replacement_file", ""))
+                .replace("\\", "/")
+                .lstrip("./")
+                == EXACT_FIT_PRESENTATION_TEST_FILE
+                and row.get("replacement_test")
+                == f"renders exact-fit presentation state {state} from validated run authority"
+                and isinstance(assertion_identity, dict)
+                and str(assertion_identity.get("file", ""))
+                .replace("\\", "/")
+                .endswith(EXACT_FIT_PRESENTATION_TEST_FILE)
+                and assertion_identity.get("title") == row.get("replacement_test")
+                and assertion_identity.get("status") == "passed"
+                and row.get("passed") is True
+            ):
+                presentation_rows_exact = False
+                break
+    checks["publication_exact_fit_presentation_lane_binds_five_exact_passing_render_tests"] = (
+        isinstance(presentation_contract, dict)
+        and presentation_contract.get("owner_kind") == "pls_bootstrap"
+        and presentation_contract.get("expected_cases")
+        == list(EXACT_FIT_PRESENTATION_CASES)
+        and presentation_contract.get("declared_cases")
+        == list(EXACT_FIT_PRESENTATION_CASES)
+        and presentation_contract.get("exactly_one_pls_bootstrap_owner") is True
+        and presentation_contract.get("cases_are_exact") is True
+        and presentation_contract.get("exactly_one_evidence_entry_per_case") is True
+        and presentation_contract.get(
+            "cases_are_excluded_from_archive_result_families"
+        )
+        is True
+        and presentation_contract.get("structure_passed") is True
+        and presentation_contract.get("passed") is True
+        and presentation_rows_exact
+    )
     archive_inventory = method_report.get("archive_inventory", [])
     checks["publication_method_report_has_18_verified_result_archives"] = (
         isinstance(archive_inventory, list)
@@ -3431,8 +4120,14 @@ def publication_report_checks(
     )
     frozen_members_verified = True
     frozen_payloads_verified = True
+    frozen_capture_count = 0
     if isinstance(frozen_receipts, list):
         staging = frozen_reopen_report_path.parent.parent
+        frozen_index_by_kind = {
+            method.get("kind"): method
+            for method in frozen_archive_index.get("methods", [])
+            if isinstance(method, dict) and isinstance(method.get("kind"), str)
+        }
 
         def staged_artifact(payload: object, require_png: bool = False) -> bool:
             if not isinstance(payload, dict):
@@ -3487,55 +4182,142 @@ def publication_report_checks(
                 frozen_members_verified = False
                 continue
             payload = parse_json_path(candidate)
-            identity = (
-                payload.get("declared_identity", {})
-                if isinstance(payload, dict)
-                else {}
-            )
-            identity_check = (
-                payload.get("identity_verification", {})
-                if isinstance(payload, dict)
-                else {}
-            )
-            source_receipt = (
-                payload.get("source_receipt", {}) if isinstance(payload, dict) else {}
-            )
-            labels = (
-                payload.get("observed_results_labels", {})
-                if isinstance(payload, dict)
-                else {}
+            captures = payload.get("evidence", []) if isinstance(payload, dict) else []
+            expected_method = frozen_index_by_kind.get(entry.get("method_kind"))
+            expected_evidence = (
+                expected_method.get("evidence", [])
+                if isinstance(expected_method, dict)
+                else []
             )
             if (
                 payload is None
-                or payload.get("schema_version") != 1
+                or payload.get("schema_version") != 2
                 or payload.get("suite_id")
                 != "quickpls_v255_frozen_archive_reopen_crawler_v1"
                 or payload.get("target_release") != "2.55.0"
                 or payload.get("status") != "verified_current_ui_capture"
                 or payload.get("method_kind") != entry.get("method_kind")
-                or not isinstance(identity, dict)
-                or identity.get("type")
-                not in {"canonical_result_document_id", "schema5_result_run_id"}
-                or not isinstance(identity.get("value"), str)
-                or not identity.get("value")
-                or not isinstance(identity_check, dict)
-                or identity_check.get("passed") is not True
-                or not isinstance(source_receipt, dict)
-                or not (
-                    source_receipt.get("declared_identity_directly_bound") is True
-                    or source_receipt.get("identity_recovered_from_archive") is True
+                or entry.get("status") != payload.get("status")
+                or not isinstance(captures, list)
+                or not captures
+                or not isinstance(expected_evidence, list)
+                or len(expected_evidence) != len(captures)
+            ):
+                frozen_payloads_verified = False
+                continue
+
+            declared_families = expected_method.get("representative_results", [])
+            covered_families: list[str] = []
+            observed_pointer_keys: list[str] = []
+            for capture_index, (capture, indexed) in enumerate(
+                zip(captures, expected_evidence, strict=True)
+            ):
+                frozen_capture_count += 1
+                identity = (
+                    capture.get("declared_identity", {})
+                    if isinstance(capture, dict)
+                    else {}
                 )
-                or (
-                    entry.get("method_kind")
-                    == "pls_posthoc_technical_minimum_sample_size"
-                    and source_receipt.get("declared_identity_directly_bound")
-                    is not True
+                identity_check = (
+                    capture.get("identity_verification", {})
+                    if isinstance(capture, dict)
+                    else {}
                 )
-                or not isinstance(labels, dict)
-                or not labels.get("selected_result")
-                or not staged_artifact(payload.get("archive"))
-                or not staged_artifact(payload.get("source_receipt"))
-                or not staged_artifact(payload.get("screenshot"), require_png=True)
+                source_receipt = (
+                    capture.get("source_receipt", {})
+                    if isinstance(capture, dict)
+                    else {}
+                )
+                covers = capture.get("covers", []) if isinstance(capture, dict) else []
+                assertions = (
+                    capture.get("cover_assertions", [])
+                    if isinstance(capture, dict)
+                    else []
+                )
+                evidence_pointer = f"/evidence/{capture_index}"
+                expected_receipt = (
+                    indexed.get("receipt", {}) if isinstance(indexed, dict) else {}
+                )
+                capture_verified = (
+                    isinstance(capture, dict)
+                    and capture.get("status") == "verified_current_ui_capture"
+                    and isinstance(indexed, dict)
+                    and indexed.get("method_kind") == entry.get("method_kind")
+                    and isinstance(identity, dict)
+                    and identity.get("type")
+                    in {"canonical_result_document_id", "schema5_result_run_id"}
+                    and isinstance(identity.get("value"), str)
+                    and bool(identity.get("value"))
+                    and indexed.get("canonical_result_id") == identity.get("value")
+                    and indexed.get("covers") == covers
+                    and indexed.get("cover_assertions") == assertions
+                    and isinstance(expected_receipt, dict)
+                    and expected_receipt.get("member") == entry.get("member")
+                    and expected_receipt.get("sha256") == entry.get("sha256")
+                    and expected_receipt.get("method_kind_json_pointer")
+                    == "/method_kind"
+                    and expected_receipt.get("canonical_result_id_json_pointer")
+                    == f"{evidence_pointer}/declared_identity/value"
+                    and expected_receipt.get("evidence_json_pointer")
+                    == evidence_pointer
+                    and json_pointer_value(payload, evidence_pointer) is capture
+                    and json_pointer_value(
+                        payload,
+                        expected_receipt.get("canonical_result_id_json_pointer"),
+                    )
+                    == identity.get("value")
+                    and isinstance(capture.get("archive"), dict)
+                    and isinstance(indexed.get("archive"), dict)
+                    and all(
+                        capture["archive"].get(key)
+                        == indexed["archive"].get(key)
+                        for key in ("member", "sha256")
+                    )
+                    and isinstance(capture.get("screenshot"), dict)
+                    and isinstance(indexed.get("screenshot"), dict)
+                    and all(
+                        capture["screenshot"].get(key)
+                        == indexed["screenshot"].get(key)
+                        for key in ("member", "sha256")
+                    )
+                    and isinstance(identity_check, dict)
+                    and identity_check.get("passed") is True
+                    and isinstance(source_receipt, dict)
+                    and (
+                        source_receipt.get("declared_identity_directly_bound")
+                        is True
+                        or source_receipt.get("identity_recovered_from_archive")
+                        is True
+                    )
+                    and (
+                        entry.get("method_kind")
+                        != "pls_posthoc_technical_minimum_sample_size"
+                        or source_receipt.get("declared_identity_directly_bound")
+                        is True
+                    )
+                    and staged_artifact(capture.get("archive"))
+                    and staged_artifact(capture.get("source_receipt"))
+                    and staged_artifact(
+                        capture.get("screenshot"), require_png=True
+                    )
+                    and exact_frozen_capture_coverage(
+                        payload, capture, capture_index
+                    )
+                )
+                if not capture_verified:
+                    frozen_payloads_verified = False
+                    continue
+                covered_families.extend(covers)
+                observed_pointer_keys.extend(
+                    f"{entry.get('member')}\0{assertion.get('observed_json_pointer')}"
+                    for assertion in assertions
+                    if isinstance(assertion, dict)
+                )
+            if (
+                not isinstance(declared_families, list)
+                or set(covered_families) != set(declared_families)
+                or len(covered_families) != len(set(covered_families))
+                or len(observed_pointer_keys) != len(set(observed_pointer_keys))
             ):
                 frozen_payloads_verified = False
     else:
@@ -3559,6 +4341,7 @@ def publication_report_checks(
         )
         and frozen_members_verified
         and frozen_payloads_verified
+        and frozen_capture_count >= 18
         and not frozen_report.get("failures")
         and frozen_report.get("process_safety", {}).get(
             "wrapper_owns_exact_pid_lifecycle"
@@ -3575,6 +4358,8 @@ def publication_report_checks(
         )
         is False
     )
+    evidence["frozen_outer_method_receipt_count"] = len(frozen_receipts)
+    evidence["frozen_evidence_capture_count"] = frozen_capture_count
     portable_frozen = outcome_by_name.get("portable", {}).get(
         "frozen_archive_collection", {}
     )
@@ -3646,6 +4431,54 @@ def publication_report_checks(
     return checks, evidence
 
 
+def exact_presentation_evidence_declarations(matrix: dict[str, object]) -> bool:
+    methods = matrix.get("methods", [])
+    if not isinstance(methods, list):
+        return False
+    owners = [
+        method
+        for method in methods
+        if isinstance(method, dict) and method.get("presentation_cases")
+    ]
+    if len(owners) != 1 or owners[0].get("kind") != "pls_bootstrap":
+        return False
+    owner = owners[0]
+    cases = owner.get("presentation_cases")
+    evidence = owner.get("presentation_evidence")
+    if (
+        cases != list(EXACT_FIT_PRESENTATION_CASES)
+        or not isinstance(evidence, list)
+        or len(evidence) != len(EXACT_FIT_PRESENTATION_CASES)
+    ):
+        return False
+    for state, presentation_case, item in zip(
+        EXACT_FIT_PRESENTATION_STATES,
+        EXACT_FIT_PRESENTATION_CASES,
+        evidence,
+        strict=True,
+    ):
+        if (
+            not isinstance(item, dict)
+            or item.get("presentation_case") != presentation_case
+            or item.get("status") != "ready"
+            or item.get("evidence_type") != "component"
+            or str(item.get("replacement_file", "")).replace("\\", "/").lstrip("./")
+            != EXACT_FIT_PRESENTATION_TEST_FILE
+            or item.get("replacement_test")
+            != f"renders exact-fit presentation state {state} from validated run authority"
+        ):
+            return False
+    return all(
+        isinstance(method, dict)
+        and all(
+            family != "all five exact-fit presentation states"
+            and family not in EXACT_FIT_PRESENTATION_CASES
+            for family in method.get("result_families", [])
+        )
+        for method in methods
+    )
+
+
 def declared_named_evidence_checks(matrix: dict[str, object]) -> dict[str, bool]:
     def exact_declarations(group: object) -> bool:
         if not isinstance(group, dict):
@@ -3664,6 +4497,9 @@ def declared_named_evidence_checks(matrix: dict[str, object]) -> dict[str, bool]
 
     cross = matrix.get("cross_method_evidence", {})
     return {
+        "exact_fit_presentation_has_five_test_backed_non_archive_cases": exact_presentation_evidence_declarations(
+            matrix
+        ),
         "every_setup_case_has_one_declared_evidence_route": all(
             len(method.get("setup_evidence", [])) == len(method.get("setup_cases", []))
             and {
@@ -4332,7 +5168,11 @@ def declared_named_route_manifest_checks(
                     "bootstrap_samples",
                     "moderated_stage",
                     "advanced_parameter_revision",
+                    "archive_supplement_public_kind",
                 }
+                supplement_public_kind = route.get(
+                    "archive_supplement_public_kind"
+                )
                 route_valid = (
                     required_route_keys.issubset(set(route))
                     and set(route).issubset(allowed_route_keys)
@@ -4348,6 +5188,15 @@ def declared_named_route_manifest_checks(
                         route.get("method") == "cbsem"
                         and route.get("fixture") == "cfa"
                         and route.get("inference") == "case_bootstrap"
+                    )
+                    and (
+                        supplement_public_kind is None
+                        or (
+                            case.get("candidate") == "portable"
+                            and supplement_public_kind
+                            in {"pls_algorithm", "pls_bootstrap", "cbsem"}
+                            and supplement_public_kind == route.get("method")
+                        )
                     )
                     and (
                         route.get("advanced_parameter_revision") is True
@@ -4848,11 +5697,19 @@ def main() -> int:
         and "method_kind_json_pointer"
         in frozen_archive_index.get("verified_evidence_contract", {})
         .get("receipt", {})
-        .get("required", []),
+        .get("required", [])
+        and frozen_archive_index.get("verified_evidence_contract", {})
+        .get("evidence_identity", {})
+        .get("required_top_level")
+        == ["method_kind", "canonical_result_id"],
         "frozen_result_archive_index_uses_release_attachable_bundle_schema": frozen_archive_index.get(
             "schema_version"
         )
-        == 3
+        == 4
+        and "evidence_json_pointer"
+        in frozen_archive_index.get("verified_evidence_contract", {})
+        .get("receipt", {})
+        .get("required", [])
         and frozen_archive_index.get("evidence_bundle_manifest")
         == "validation/v255_evidence_bundle_manifest.json"
         and frozen_archive_index.get("reusable_source_inventory")
@@ -4878,6 +5735,13 @@ def main() -> int:
             for item in reusable_archive_inventory.get("public_methods", [])
         ),
     }
+    checks.update(
+        reusable_archive_inventory_v2_source_checks(
+            matrix,
+            reusable_archive_inventory,
+            named_route_manifest,
+        )
+    )
     checks.update(release_version_authority_checks(expected_product_version))
     checks.update(declared_named_evidence_checks(matrix))
     checks.update(immutable_matrix_contract_checks(matrix))

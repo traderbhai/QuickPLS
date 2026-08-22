@@ -955,9 +955,14 @@ export function NativeDesktopApp() {
   useEffect(() => {
     const onCanonicalResult = (event: Event) => {
       const detail = (event as CustomEvent<{
-        document?: CanonicalResultDocumentV2;
+        document?: CanonicalResultDocumentV2 | null;
         navigate?: boolean;
       }>).detail;
+      if (detail?.document === null) {
+        setGeneralSemCanonicalResult(null);
+        setGeneralSemResultSelected(false);
+        return;
+      }
       if (!detail?.document) return;
       setGeneralSemCanonicalResult(detail.document);
       setGeneralSemResultSelected(true);

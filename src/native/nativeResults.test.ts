@@ -29,7 +29,9 @@ import {
   nativeNcaCeFdhPeerTable,
   nativeNcaPlot,
   nativeNcaResultProjection,
+  nativeMgaExcludedRowLedgerProjection,
   nativePcaResultProjection,
+  nativePcaScoreResultTable,
   nativeOlsResultProjection,
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
@@ -677,6 +679,7 @@ function completedMgaRun(): AnalysisRun {
       mga: {
         ...archived.result!.mga!,
         method_version: "pls_mga_two_group_v4",
+        warnings: [],
       },
       mga_permutation: {
         ...archived.result!.mga_permutation!,
@@ -1443,6 +1446,7 @@ describe("native result navigation", () => {
     expect(navigation.groups[0].items.map((item) => item.id)).toEqual([
       "pca_component_summary",
       "pca_loadings",
+      "pca_scores",
       "pca_scope",
     ]);
     expect(table("pca_component_summary")).toMatchObject({
@@ -1453,6 +1457,15 @@ describe("native result navigation", () => {
       ],
     });
     expect(table("pca_loadings")?.rows).toHaveLength(4);
+    expect(table("pca_scores")?.rows).toEqual([
+      ["1", "-1.200000", "-0.300000"],
+      ["2", "0.100000", "0.600000"],
+      ["3", "1.100000", "-0.300000"],
+    ]);
+    expect(nativePcaScoreResultTable(run)).toEqual(table("pca_scores"));
+    const incompleteScores = structuredClone(run);
+    incompleteScores.result!.pca!.scores.pop();
+    expect(nativePcaScoreResultTable(incompleteScores)).toBeNull();
     expect(table("pca_scope")?.rows).toEqual(expect.arrayContaining([
       ["Selected variables", "a, b"],
       ["Retention rule", "Cumulative variance threshold"],
@@ -1877,6 +1890,18 @@ describe("native result navigation", () => {
     expect(navigation.defaultItemId).toBe("micom_summary");
     expect(navigation.groups.find((group) => group.id === "groups")?.items.map((item) => item.id))
       .toContain("mga_permutation_accounting");
+    expect(navigation.groups.find((group) => group.id === "groups")?.items.map((item) => item.id))
+      .toContain("mga_excluded_row_ledger");
+    expect(nativeMgaExcludedRowLedgerProjection(run)).toEqual({
+      excludedObservations: 0,
+      state: "empty",
+      message: "Zero excluded observations were persisted for this completed MGA run; the excluded-row ledger is empty.",
+    });
+    expect(navigation.tables.find((table) => table.id === "mga_excluded_row_ledger")).toMatchObject({
+      title: "MGA excluded-row ledger",
+      columns: ["Source row", "Exclusion reason"],
+      rows: [],
+    });
     expect(accounting?.rows).toEqual([
       ["MGA method version", "pls_mga_two_group_v4"],
       ["Permutation method version", "pls_mga_permutation_v4"],
@@ -1891,6 +1916,21 @@ describe("native result navigation", () => {
     ]);
     expect(run.result!.mga_permutation!.permutation_ledger)
       .toBe(run.result!.micom!.permutation_ledger);
+  });
+
+  it("does not invent MGA ledger rows when excluded observations lack persisted identities", () => {
+    const run = completedMgaRun();
+    run.result!.omitted_observations = 2;
+
+    expect(nativeMgaExcludedRowLedgerProjection(run)).toEqual({
+      excludedObservations: 2,
+      state: "unavailable",
+      message: "This completed MGA result records 2 excluded observations, but source-row identities and exclusion reasons were not persisted; a row-level ledger is unavailable.",
+    });
+    expect(nativeResultTables(run).find((table) => table.id === "mga_excluded_row_ledger")).toMatchObject({
+      warning: expect.stringContaining("source-row identities and exclusion reasons were not persisted"),
+      rows: [],
+    });
   });
 
   it("projects standalone MICOM v3.1 with no-retry Step 2 and Step 3 accounting", () => {

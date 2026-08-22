@@ -617,6 +617,18 @@ export function storedExactCaseBootstrapEntriesV1(
   });
 }
 
+export function selectLatestStoredExactCaseBootstrapEntryV1(
+  documents: readonly InternalProjectSchema6CanonicalResultEntryV1[],
+): InternalProjectSchema6CanonicalResultEntryV1 | null {
+  return storedExactCaseBootstrapEntriesV1(documents).reduce<InternalProjectSchema6CanonicalResultEntryV1 | null>((latest, candidate) => {
+    if (!latest) return candidate;
+    const candidateCompletedAt = Date.parse(candidate.canonicalDocument.provenance.completed_at);
+    const latestCompletedAt = Date.parse(latest.canonicalDocument.provenance.completed_at);
+    if (candidateCompletedAt !== latestCompletedAt) return candidateCompletedAt > latestCompletedAt ? candidate : latest;
+    return candidate.documentId.localeCompare(latest.documentId) > 0 ? candidate : latest;
+  }, null);
+}
+
 export async function readStoredInternalLabsRecipeV4CbsemResultsV1(
   archive: InternalSchema6ArchiveIdentityV1,
   read: (request: InternalProjectSchema6ResultReadRequestV1) => Promise<InternalProjectSchema6ResultReadOutcomeV1>,

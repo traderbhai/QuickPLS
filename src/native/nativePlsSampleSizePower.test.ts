@@ -18,6 +18,7 @@ import {
 import {
   buildNativeResultNavigation,
   completedResultRuns,
+  nativePlsSampleSizePowerPlot,
   nativePlsSampleSizePowerResultProjection,
   nativeResultTables,
 } from "./nativeResults";
@@ -260,6 +261,17 @@ describe("native PLS sample-size and power v2", () => {
     const recipe = buildNativePlsSampleSizePowerRecipe(draft).recipe;
     const run = completedRun(recipe);
     expect(nativePlsSampleSizePowerResultProjection(run)?.presentation.decisionLabel).toContain("n = 120");
+    expect(nativePlsSampleSizePowerPlot(run)).toEqual({
+      targetPower: recipe.target_power,
+      confidenceLevel: recipe.confidence_level,
+      points: run.plsSampleSizePower!.rows.map((row) => ({
+        sampleSize: row.sample_size,
+        achievedPower: row.achieved_power,
+        confidenceLower: row.confidence_lower,
+        confidenceUpper: row.confidence_upper,
+        qualifies: row.qualifies,
+      })),
+    });
     expect(completedResultRuns([run])).toEqual([run]);
     expect(nativeResultTables(run).map((table) => table.id)).toEqual([
       "pls_power_by_sample_size",
@@ -283,6 +295,7 @@ describe("native PLS sample-size and power v2", () => {
     const run = completedRun(recipe);
     run.plsSampleSizePower!.rows[0].rejections = 1;
     expect(nativePlsSampleSizePowerResultProjection(run)).toBeNull();
+    expect(nativePlsSampleSizePowerPlot(run)).toBeNull();
     expect(completedResultRuns([run])).toEqual([]);
     expect(nativeResultTables(run)).toEqual([]);
   });

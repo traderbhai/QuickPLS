@@ -224,7 +224,7 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
         self.assertIn("if ($operationFailure) { throw $operationFailure }", source)
         self.assertIn("return $candidateOutcome", source)
 
-    def test_installed_wrapper_uses_fresh_exact_pids_for_serial_attach_phases(self) -> None:
+    def test_installed_wrapper_runs_named_supplements_before_frozen_on_fresh_exact_pids(self) -> None:
         source = INSTALLED_WRAPPER.read_text(encoding="utf-8")
         method_call = source.index("& $node $driver @crawlerArguments")
         method_console_guard = source.index(
@@ -234,7 +234,21 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
             "Stop-IsolatedCandidate $process $endpoint", method_console_guard
         )
         method_null = source.index("$process = $null", method_stop)
-        portable_guard = source.index('if ($Name -eq "portable") {', method_null)
+        named_guard = source.index("if ($namedCaseManifestReady) {", method_null)
+        named_start = source.index(
+            "$process = Start-IsolatedCandidate $candidateFull $endpoint", named_guard
+        )
+        named_pid = source.index("$launchedPids.Add($process.Id)", named_start)
+        named_call = source.index("& $node $namedCaseDriver", named_pid)
+        named_console_guard = source.index(
+            'Test-ExactEmptyArrayProperty $namedCaseReport "console_errors"',
+            named_call,
+        )
+        named_stop = source.index(
+            "Stop-IsolatedCandidate $process $endpoint", named_console_guard
+        )
+        named_null = source.index("$process = $null", named_stop)
+        portable_guard = source.index('if ($Name -eq "portable") {', named_null)
         frozen_start = source.index(
             "$process = Start-IsolatedCandidate $candidateFull $endpoint",
             portable_guard,
@@ -248,15 +262,8 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
             "Stop-IsolatedCandidate $process $endpoint", frozen_console_guard
         )
         frozen_null = source.index("$process = $null", frozen_stop)
-        named_guard = source.index("if ($namedCaseManifestReady) {", frozen_null)
-        named_start = source.index(
-            "$process = Start-IsolatedCandidate $candidateFull $endpoint", named_guard
-        )
-        named_pid = source.index("$launchedPids.Add($process.Id)", named_start)
-        named_call = source.index("& $node $namedCaseDriver", named_pid)
-        named_console_guard = source.index(
-            'Test-ExactEmptyArrayProperty $namedCaseReport "console_errors"',
-            named_call,
+        self.assertIn(
+            '"--named-supplement-report", $namedSupplementReportRelative', source
         )
         self.assertEqual(
             sorted(
@@ -265,6 +272,13 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
                     method_console_guard,
                     method_stop,
                     method_null,
+                    named_guard,
+                    named_start,
+                    named_pid,
+                    named_call,
+                    named_console_guard,
+                    named_stop,
+                    named_null,
                     portable_guard,
                     frozen_start,
                     frozen_pid,
@@ -272,11 +286,6 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
                     frozen_console_guard,
                     frozen_stop,
                     frozen_null,
-                    named_guard,
-                    named_start,
-                    named_pid,
-                    named_call,
-                    named_console_guard,
                 ]
             ),
             [
@@ -284,6 +293,13 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
                 method_console_guard,
                 method_stop,
                 method_null,
+                named_guard,
+                named_start,
+                named_pid,
+                named_call,
+                named_console_guard,
+                named_stop,
+                named_null,
                 portable_guard,
                 frozen_start,
                 frozen_pid,
@@ -291,11 +307,6 @@ class V255PackagedProcessCleanupContractTests(unittest.TestCase):
                 frozen_console_guard,
                 frozen_stop,
                 frozen_null,
-                named_guard,
-                named_start,
-                named_pid,
-                named_call,
-                named_console_guard,
             ],
         )
 

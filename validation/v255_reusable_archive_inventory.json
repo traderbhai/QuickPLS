@@ -1,20 +1,1059 @@
 {
-  "schema": "quickpls.v255.reusable_archive_inventory.v1",
-  "inventory_status": "curated_reuse_candidates_pending_v255_capture_and_hashing",
+  "schema": "quickpls.v255.reusable_archive_inventory.v2",
+  "inventory_status": "source_ready_static_routes_pending_dynamic_supplements_and_current_candidate_capture",
   "catalogue_size": 18,
   "paths_are_repo_relative": true,
-  "hashes_computed": false,
+  "hashes_computed": true,
   "notes": [
     "This inventory identifies prior completed archives that can be reopened for QuickPLS 2.55 presentation evidence without rerunning their scientific engines.",
     "Schema-5 archives expose a result/run ID rather than a schema-6 canonical result-document ID.",
     "Prior screenshots establish historical completion but are not accepted as current QuickPLS 2.55 UI evidence; every reusable entry therefore requires a new current-UI capture.",
-    "The strict frozen-evidence index remains pending until archive, receipt, and screenshot hashes plus exact public-kind bindings are recorded."
+    "Every static archive source is bound to its exact lowercase SHA-256 digest; current-candidate screenshots and receipts remain runtime evidence rather than inventory declarations.",
+    "coverage_routes is the exact presentation-evidence plan. Each declared result family appears once for its public method and is bound to one truthful current Results observation.",
+    "The MGA source records zero omitted observations, so its excluded-row ledger is intentionally empty and must be presented as an empty ledger rather than invented row identities.",
+    "The five exact-fit presentation states are render-contract evidence for PLS bootstrap and are not frozen archive result families.",
+    "Every static inventory and coverage-route archive is curated under validation/fixtures/v255/archives so a committed clean checkout contains the exact declared bytes."
+  ],
+  "coverage_routes": [
+    {
+      "route_id": "pls_algorithm_three_way_point",
+      "public_kind": "pls_algorithm",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "pls_algorithm"
+      },
+      "archive_path": "validation/fixtures/v255/archives/schema6-results.qpls",
+      "archive_sha256": "c291a3d65ef4f2f5622221d8720bcf4acbf655033475675aad48ffd421048281",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_559e8d8a-2902-4a94-b72b-efac9918ee6b"
+      },
+      "scientific_identity": {
+        "registry_cell": "qpls3.pls.general_sem_three_way_moderation_point",
+        "capability": "general_sem_pls_three_way_moderation_point_v1",
+        "method_version": "qpls.general-sem-pls.three-way.point.v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/v254_canvas_results_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_algorithm_three_way_core",
+          "covers": ["measurement model", "structural model", "three-way moderation"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_three_way_simple_slopes",
+            "table_id": "general_sem_three_way_simple_slopes"
+          },
+          "observations": [
+            { "family": "measurement model", "source": "navigation", "matcher": "exact", "value": "Measurement Model" },
+            { "family": "structural model", "source": "navigation", "matcher": "exact", "value": "Structural Model" },
+            { "family": "three-way moderation", "source": "navigation", "matcher": "exact", "value": "Three-Way Moderation" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_algorithm_parallel_mediation_effects",
+      "public_kind": "pls_algorithm",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:parallel mediation"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_algorithm_direct_total_effects",
+          "covers": ["direct and total effects"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_aggregate_effects",
+            "table_id": "general_sem_aggregate_effects"
+          },
+          "observations": [
+            { "family": "direct and total effects", "source": "navigation", "matcher": "exact", "value": "Direct, Indirect and Total Effects" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_algorithm_higher_order_point",
+      "public_kind": "pls_algorithm",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "specialized_feature_archives",
+        "inventory_key": "higher_order_construct_point"
+      },
+      "archive_path": "validation/fixtures/v255/archives/rr-hoc-canonical-result.qpls",
+      "archive_sha256": "7489f1fa1dc567922b1ae0c5feb45bada68b40823a9500e381931efcaf31f79e",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc"
+      },
+      "scientific_identity": {
+        "method_version": "general_sem_pls_higher_order_point_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/v252_hoc_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_algorithm_hoc",
+          "covers": ["HOC"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_higher_order_targets",
+            "table_id": "general_sem_higher_order_targets"
+          },
+          "observations": [
+            { "family": "HOC", "source": "navigation", "matcher": "exact", "value": "Higher-Order Constructs" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_algorithm_two_way_point",
+      "public_kind": "pls_algorithm",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "specialized_feature_archives",
+        "inventory_key": "two_way_moderation_point"
+      },
+      "archive_path": "validation/fixtures/v255/archives/two-way-moderation-result.qpls",
+      "archive_sha256": "2bfe23ee41177dac1fdb692ac93407de742057e33c023c38d40dbf7a94421719",
+      "result_identity": {
+        "type": "canonical_result_document_id",
+        "value": "result_61d1a1e0-b522-46eb-a94a-35d78a624c60"
+      },
+      "scientific_identity": {
+        "method_version": "qpls.general-sem-pls.multiple-two-way.point.v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/v253_mediation_moderation_packaged_smoke.json",
+        "json_pointer": "/phases/execute/checks/results/identity/documentId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_algorithm_two_way_moderation",
+          "covers": ["two-way moderation"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_interaction_effects",
+            "table_id": "general_sem_interaction_effects"
+          },
+          "observations": [
+            { "family": "two-way moderation", "source": "navigation", "matcher": "exact", "value": "Moderation and Conditional Effects" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "plsc_consistent_point",
+      "public_kind": "plsc",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "plsc"
+      },
+      "archive_path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+      "archive_sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "41df5d79-fcfa-4096-9d59-acc90dca7a7a"
+      },
+      "scientific_identity": {
+        "stored_method": "plsc",
+        "method_version_token": "plsc_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/plscResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "plsc_result_families",
+          "covers": ["consistent coefficients", "corrected reliability", "model assessment"],
+          "activate": { "result_tree_item_id": "model_estimates" },
+          "observations": [
+            { "family": "consistent coefficients", "source": "navigation", "matcher": "exact", "value": "Path coefficients" },
+            { "family": "corrected reliability", "source": "navigation", "matcher": "exact", "value": "PLSc correction reliability" },
+            { "family": "model assessment", "source": "navigation", "matcher": "exact", "value": "Model fit — descriptive" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "wpls_weighted_point",
+      "public_kind": "wpls",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "wpls"
+      },
+      "archive_path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+      "archive_sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "41908c14-5c2a-4ed1-8f27-e601afc2fc03"
+      },
+      "scientific_identity": {
+        "stored_method": "wpls",
+        "method_version_token": "wpls_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/wplsResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "wpls_result_families",
+          "covers": ["weighted measurement model", "weighted structural model", "run details"],
+          "activate": { "result_tree_item_id": "model_estimates" },
+          "observations": [
+            { "family": "weighted measurement model", "source": "navigation", "matcher": "exact", "value": "Outer loadings" },
+            { "family": "weighted structural model", "source": "navigation", "matcher": "exact", "value": "Path coefficients" },
+            { "family": "run details", "source": "navigation", "matcher": "exact", "value": "WPLS case-weight diagnostics" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "gsca_als_point",
+      "public_kind": "gsca",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "gsca"
+      },
+      "archive_path": "validation/fixtures/v255/archives/gsca-result.qpls",
+      "archive_sha256": "f518ae82440fe813570af80214e60cb5936e80e651686fcb7c7ff51021c617b5",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "29bbab18-1caf-42fe-a9a9-0099e5659163"
+      },
+      "scientific_identity": {
+        "stored_method": "gsca",
+        "method_version": "gsca_als_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_gsca.json",
+        "json_pointer": "/checks/gscaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "gsca_result_families",
+          "covers": ["component weights", "loadings", "paths", "FIT and diagnostics"],
+          "activate": { "result_tree_item_id": "gsca_fit", "table_id": "gsca_fit" },
+          "observations": [
+            { "family": "component weights", "source": "navigation", "matcher": "exact", "value": "Component weights" },
+            { "family": "loadings", "source": "navigation", "matcher": "exact", "value": "Measurement loadings" },
+            { "family": "paths", "source": "navigation", "matcher": "exact", "value": "Structural path coefficients" },
+            { "family": "FIT and diagnostics", "source": "navigation", "matcher": "exact", "value": "Model fit and convergence" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "cca_residual_diagnostics",
+      "public_kind": "cca",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "cca"
+      },
+      "archive_path": "validation/fixtures/v255/archives/cca-result.qpls",
+      "archive_sha256": "315bbde1b5450bb1bb098638ccd102a3770fd506abc846da669e1e07b4316107",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "0f8356d8-04d0-4428-bb56-166d201ddd96"
+      },
+      "scientific_identity": {
+        "stored_method": "cca",
+        "method_version_token": "cca_composite_residual_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/ccaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "cca_result_families",
+          "covers": ["composite residuals", "diagnostics"],
+          "activate": { "result_tree_item_id": "cca_residual_summary", "table_id": "cca_residual_summary" },
+          "observations": [
+            { "family": "composite residuals", "source": "navigation", "matcher": "exact", "value": "Composite residuals" },
+            { "family": "diagnostics", "source": "navigation", "matcher": "exact", "value": "Residual summary" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "cta_pls_tetrad_diagnostics",
+      "public_kind": "cta_pls",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "cta_pls"
+      },
+      "archive_path": "validation/fixtures/v255/archives/cta-pls-result.qpls",
+      "archive_sha256": "289c7e76ed0a60a58f81a4282cbfad772c27e728c751121c4356c4e175bf8d21",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "34a420a7-5d20-4e6c-a11d-209e3dc1938e"
+      },
+      "scientific_identity": {
+        "stored_method": "cta_pls",
+        "method_version": "cta_pls_tetrad_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_cta_pls.json",
+        "json_pointer": "/checks/ctaPlsResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "cta_pls_result_families",
+          "covers": ["tetrads", "descriptive diagnostics"],
+          "activate": { "result_tree_item_id": "cta_pls_summary", "table_id": "cta_pls_summary" },
+          "observations": [
+            { "family": "tetrads", "source": "navigation", "matcher": "exact", "value": "CTA-PLS tetrads" },
+            { "family": "descriptive diagnostics", "source": "navigation", "matcher": "exact", "value": "CTA-PLS tetrad summary" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "ipma_construct_indicator_map",
+      "public_kind": "ipma",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "ipma"
+      },
+      "archive_path": "validation/fixtures/v255/archives/ipma-result.qpls",
+      "archive_sha256": "bf9ae95f051b3211b1ded2416006ae15f4c589bfb94e7777b5423e6b8b138529",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e30342bf-a2ae-4586-98b9-ba349c4d1c20"
+      },
+      "scientific_identity": {
+        "stored_method": "ipma",
+        "method_version": "ipma_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance.json",
+        "json_pointer": "/checks/ipmaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "ipma_result_families",
+          "covers": ["construct importance-performance", "indicator performance", "map"],
+          "activate": { "result_tree_item_id": "ipma_constructs", "table_id": "ipma_constructs" },
+          "observations": [
+            { "family": "construct importance-performance", "source": "navigation", "matcher": "exact", "value": "Construct importance and performance" },
+            { "family": "indicator performance", "source": "navigation", "matcher": "exact", "value": "Indicator performance" },
+            { "family": "map", "source": "chart_titles", "matcher": "contains", "value": "Importance-performance map for" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "cbsem_recursive_point",
+      "public_kind": "cbsem",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:recursive SEM point"
+      },
+      "captures": [
+        {
+          "capture_id": "cbsem_parameters",
+          "covers": ["parameters"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:cbsem_general_sem_parameters",
+            "table_id": "cbsem_general_sem_parameters"
+          },
+          "observations": [
+            { "family": "parameters", "source": "table_titles", "matcher": "exact", "value": "CB-SEM parameter table" }
+          ]
+        },
+        {
+          "capture_id": "cbsem_model_fit",
+          "covers": ["model fit"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:cbsem_general_sem_fit",
+            "table_id": "cbsem_general_sem_fit"
+          },
+          "observations": [
+            { "family": "model fit", "source": "table_titles", "matcher": "exact", "value": "CB-SEM model fit" }
+          ]
+        },
+        {
+          "capture_id": "cbsem_identification",
+          "covers": ["identification"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:cbsem_general_sem_identification",
+            "table_id": "cbsem_general_sem_identification"
+          },
+          "observations": [
+            { "family": "identification", "source": "table_titles", "matcher": "exact", "value": "CB-SEM identification evidence" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "cbsem_recursive_case_bootstrap",
+      "public_kind": "cbsem",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:recursive SEM case bootstrap"
+      },
+      "captures": [
+        {
+          "capture_id": "cbsem_bootstrap_inference",
+          "covers": ["bootstrap inference"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:cbsem_recursive_sem_bootstrap_inference",
+            "table_id": "cbsem_recursive_sem_bootstrap_inference"
+          },
+          "observations": [
+            { "family": "bootstrap inference", "source": "navigation", "matcher": "exact", "value": "Recursive-SEM bootstrap inference" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_bootstrap_multiple_mediation",
+      "public_kind": "pls_bootstrap",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:multiple-mediation bootstrap"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_bootstrap_specific_and_inference",
+          "covers": ["bootstrap inference", "specific indirect effects"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_specific_indirect_effects",
+            "table_id": "general_sem_specific_indirect_effects"
+          },
+          "observations": [
+            { "family": "bootstrap inference", "source": "table_headers", "matcher": "contains", "value": "Lower" },
+            { "family": "specific indirect effects", "source": "table_titles", "matcher": "exact", "value": "Specific indirect effects" }
+          ]
+        },
+        {
+          "capture_id": "pls_bootstrap_total_indirect",
+          "covers": ["total indirect effects"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_aggregate_effects",
+            "table_id": "general_sem_aggregate_effects"
+          },
+          "observations": [
+            { "family": "total indirect effects", "source": "table_titles", "matcher": "exact", "value": "Aggregate effects" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_bootstrap_three_way",
+      "public_kind": "pls_bootstrap",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:three-way moderation"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_bootstrap_conditional_effects",
+          "covers": ["conditional effects"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_three_way_conditional_effects",
+            "table_id": "general_sem_three_way_conditional_effects"
+          },
+          "observations": [
+            { "family": "conditional effects", "source": "table_titles", "matcher": "exact", "value": "Conditional two-way interaction effects" }
+          ]
+        },
+        {
+          "capture_id": "pls_bootstrap_simple_slopes",
+          "covers": ["simple slopes"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_three_way_simple_slopes",
+            "table_id": "general_sem_three_way_simple_slopes"
+          },
+          "observations": [
+            { "family": "simple slopes", "source": "table_titles", "matcher": "exact", "value": "Simple slopes across moderator probes" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_bootstrap_first_stage_moderated_mediation",
+      "public_kind": "pls_bootstrap",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:first-stage moderated mediation"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_bootstrap_moderated_mediation",
+          "covers": ["moderated mediation"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_conditional_indirect_effects",
+            "table_id": "general_sem_conditional_indirect_effects"
+          },
+          "observations": [
+            { "family": "moderated mediation", "source": "table_titles", "matcher": "exact", "value": "Conditional indirect effects" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_bootstrap_higher_order",
+      "public_kind": "pls_bootstrap",
+      "source": {
+        "kind": "named_supplement",
+        "case_id": "specialized_result:HOC bootstrap"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_bootstrap_hoc_bootstrap",
+          "covers": ["HOC bootstrap"],
+          "activate": {
+            "result_tree_item_id": "canonical:table:general_sem_higher_order_bootstrap_receipt",
+            "table_id": "general_sem_higher_order_bootstrap_receipt"
+          },
+          "observations": [
+            { "family": "HOC bootstrap", "source": "table_titles", "matcher": "exact", "value": "Higher-order bootstrap receipt" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "plsc_consistent_bootstrap",
+      "public_kind": "plsc_bootstrap",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "plsc_bootstrap"
+      },
+      "archive_path": "validation/fixtures/v255/archives/plsc-bootstrap-result.qpls",
+      "archive_sha256": "95b097b3c971bfdca5b75f6a22f727df5a3fd6c522145a9835af64fc8ca82692",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "3803e75d-0a4c-4630-af62-1d97d114ac0c"
+      },
+      "scientific_identity": {
+        "stored_method": "plsc",
+        "method_version": "plsc_bootstrap_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_plsc_bootstrap.json",
+        "json_pointer": "/checks/plscBootstrapResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "plsc_bootstrap_corrected_point",
+          "covers": ["corrected point estimates"],
+          "activate": { "result_tree_item_id": "path_coefficients", "table_id": "path_coefficients" },
+          "observations": [
+            { "family": "corrected point estimates", "source": "table_titles", "matcher": "exact", "value": "Path coefficients" }
+          ]
+        },
+        {
+          "capture_id": "plsc_bootstrap_percentile",
+          "covers": ["percentile inference"],
+          "activate": { "result_tree_item_id": "bootstrap_percentile", "table_id": "bootstrap_percentile" },
+          "observations": [
+            { "family": "percentile inference", "source": "table_titles", "matcher": "exact", "value": "PLSc consistent bootstrapping" }
+          ]
+        },
+        {
+          "capture_id": "plsc_bootstrap_bca",
+          "covers": ["conditional BCa inference"],
+          "activate": { "result_tree_item_id": "bootstrap_bca", "table_id": "bootstrap_bca" },
+          "observations": [
+            { "family": "conditional BCa inference", "source": "table_titles", "matcher": "exact", "value": "Bias-corrected and accelerated intervals" }
+          ]
+        },
+        {
+          "capture_id": "plsc_bootstrap_failure_ledger",
+          "covers": ["failure ledger"],
+          "activate": { "result_tree_item_id": "plsc_bootstrap_accounting", "table_id": "plsc_bootstrap_accounting" },
+          "observations": [
+            { "family": "failure ledger", "source": "table_rows", "matcher": "exact", "value": "Failed full-PLSc refits" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_structural_path_randomization",
+      "public_kind": "pls_permutation",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "pls_permutation"
+      },
+      "archive_path": "validation/fixtures/v255/archives/pls-permutation-result.qpls",
+      "archive_sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "503bd74e-4114-4357-acc8-52c0aa7bf741"
+      },
+      "scientific_identity": {
+        "stored_method": "pls_pm",
+        "method_version_token": "freedman_lane_permutation_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_structural_path_randomization.json",
+        "json_pointer": "/checks/structuralPathRandomizationResults/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_permutation_result_families",
+          "covers": ["path randomization", "unadjusted pathwise p values", "run details"],
+          "activate": { "result_tree_item_id": "permutation", "table_id": "permutation" },
+          "observations": [
+            { "family": "path randomization", "source": "table_titles", "matcher": "exact", "value": "Structural path randomization" },
+            { "family": "unadjusted pathwise p values", "source": "table_headers", "matcher": "exact", "value": "Raw two-sided p" },
+            { "family": "run details", "source": "table_headers", "matcher": "exact", "value": "Permutations" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_posthoc_fresh_supplement",
+      "public_kind": "pls_posthoc_technical_minimum_sample_size",
+      "source": { "kind": "posthoc_supplement" },
+      "captures": [
+        {
+          "capture_id": "pls_posthoc_minimum_sample",
+          "covers": ["weakest significant path", "technical minimum sample size"],
+          "activate": { "result_tree_item_id": "posthoc_minimum_sample_size", "table_id": "posthoc_minimum_sample_size" },
+          "observations": [
+            { "family": "weakest significant path", "source": "table_rows", "matcher": "exact", "value": "Driver selection" },
+            { "family": "technical minimum sample size", "source": "table_rows", "matcher": "exact", "value": "Technically required sample size" }
+          ]
+        },
+        {
+          "capture_id": "pls_posthoc_source_identity",
+          "covers": ["source-run identity"],
+          "activate": { "result_tree_item_id": "posthoc_source_run_identity", "table_id": "posthoc_source_run_identity" },
+          "observations": [
+            { "family": "source-run identity", "source": "table_titles", "matcher": "exact", "value": "Post-hoc source-run identity" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pls_sample_size_power_simulation",
+      "public_kind": "pls_sample_size_power",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "pls_sample_size_power"
+      },
+      "archive_path": "validation/fixtures/v255/archives/pls-sample-size-power-result.qpls",
+      "archive_sha256": "cca7a8a5857fdaf22fec6318a56b82326033249422ad6de26569a15e7e3b21f4",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e05ec227-f395-455e-b709-c622e294b05e"
+      },
+      "scientific_identity": {
+        "stored_method": "pls_sample_size_power",
+        "method_version": "pls_sample_size_power_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_pls_sample_size_power.json",
+        "json_pointer": "/checks/plsSampleSizePowerResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pls_power_curve_grid_intervals",
+          "covers": ["power curve", "sample-size grid", "Wilson intervals"],
+          "activate": { "result_tree_item_id": "pls_power_by_sample_size", "table_id": "pls_power_by_sample_size" },
+          "observations": [
+            { "family": "power curve", "source": "chart_titles", "matcher": "exact", "value": "Prospective PLS-SEM power by sample size" },
+            { "family": "sample-size grid", "source": "table_headers", "matcher": "exact", "value": "sample_size" },
+            { "family": "Wilson intervals", "source": "table_headers", "matcher": "exact", "value": "confidence_lower" }
+          ]
+        },
+        {
+          "capture_id": "pls_power_simulation_receipt",
+          "covers": ["simulation receipt"],
+          "activate": { "result_tree_item_id": "pls_power_run_provenance", "table_id": "pls_power_run_provenance" },
+          "observations": [
+            { "family": "simulation receipt", "source": "table_rows", "matcher": "exact", "value": "outcome_digest" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "mga_micom_two_group",
+      "public_kind": "mga",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "mga"
+      },
+      "archive_path": "validation/fixtures/v255/archives/mga-result.qpls",
+      "archive_sha256": "6e5dab3ef12454523bc6bae721d2ab7f34e69458ddabfb695bd64cf7b4c7ef72",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e"
+      },
+      "scientific_identity": {
+        "stored_method": "mga",
+        "method_version_tokens": [
+          "pls_mga_two_group_v4",
+          "pls_mga_permutation_v4",
+          "micom_v4"
+        ]
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_mga.json",
+        "json_pointer": "/checks/mgaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "mga_core_results",
+          "covers": ["MICOM steps", "group-specific estimates", "permutation MGA"],
+          "activate": { "result_tree_item_id": "micom_summary", "table_id": "micom_summary" },
+          "observations": [
+            { "family": "MICOM steps", "source": "navigation", "matcher": "exact", "value": "MICOM Step 1 - configural invariance" },
+            { "family": "group-specific estimates", "source": "navigation", "matcher": "exact", "value": "Group path coefficients" },
+            { "family": "permutation MGA", "source": "navigation", "matcher": "exact", "value": "Two-tailed permutation path differences" }
+          ]
+        },
+        {
+          "capture_id": "mga_zero_excluded_row_ledger",
+          "covers": ["excluded-row ledger"],
+          "activate": { "result_tree_item_id": "mga_excluded_row_ledger", "table_id": "mga_excluded_row_ledger" },
+          "observations": [
+            { "family": "excluded-row ledger", "source": "navigation", "matcher": "exact", "value": "MGA excluded-row ledger" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "predict_plspredict_cvpat",
+      "public_kind": "predict",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "predict"
+      },
+      "archive_path": "validation/fixtures/v255/archives/predict-result.qpls",
+      "archive_sha256": "62ebd013787bdba09ee496427bb28c4d560c32cc36a3c1db373151da9d784455",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d2af2120-69e3-4160-a2ee-d401abe6fef6"
+      },
+      "scientific_identity": {
+        "stored_method": "predict",
+        "method_version": "plspredict_indicator_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_prediction.json",
+        "json_pointer": "/checks/predictionV2Result/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "predict_indicator_benchmarks",
+          "covers": ["indicator prediction", "IA benchmark", "LM benchmark"],
+          "activate": { "result_tree_item_id": "plspredict_indicator_summary", "table_id": "plspredict_indicator_summary" },
+          "observations": [
+            { "family": "indicator prediction", "source": "table_titles", "matcher": "exact", "value": "Indicator prediction summary (10-fold × 10-repeat)" },
+            { "family": "IA benchmark", "source": "table_headers", "matcher": "exact", "value": "IA RMSE" },
+            { "family": "LM benchmark", "source": "table_headers", "matcher": "exact", "value": "LM benchmark" }
+          ]
+        },
+        {
+          "capture_id": "predict_cvpat",
+          "covers": ["CVPAT"],
+          "activate": { "result_tree_item_id": "cvpat_benchmark_assessment", "table_id": "cvpat_benchmark_assessment" },
+          "observations": [
+            { "family": "CVPAT", "source": "table_titles", "matcher": "exact", "value": "CVPAT benchmark assessment (single model)" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "nca_ceiling_analysis",
+      "public_kind": "nca",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "nca"
+      },
+      "archive_path": "validation/fixtures/v255/archives/nca-result.qpls",
+      "archive_sha256": "3a90877799a3907880fb3cd08f2260bddc8150c3372d8251000f2c2fad5f4879",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "1dd33053-824b-4bca-8f10-06b5ede94074"
+      },
+      "scientific_identity": {
+        "stored_method": "nca",
+        "method_version": "nca_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_nca.json",
+        "json_pointer": "/checks/ncaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "nca_effects_lines_inference",
+          "covers": ["effect sizes", "ceiling lines", "permutation inference"],
+          "activate": { "result_tree_item_id": "nca_ceiling_effects", "table_id": "nca_ceiling_effects" },
+          "observations": [
+            { "family": "effect sizes", "source": "table_titles", "matcher": "exact", "value": "Ceiling effect sizes and permutation inference" },
+            { "family": "ceiling lines", "source": "chart_titles", "matcher": "contains", "value": "Necessary condition ceiling plot for" },
+            { "family": "permutation inference", "source": "table_headers", "matcher": "exact", "value": "Permutation p" }
+          ]
+        },
+        {
+          "capture_id": "nca_bottleneck_table",
+          "covers": ["bottleneck table"],
+          "activate": { "result_tree_item_id": "nca_bottlenecks", "table_id": "nca_bottlenecks" },
+          "observations": [
+            { "family": "bottleneck table", "source": "table_titles", "matcher": "exact", "value": "Observed-range bottlenecks" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "pca_components_scores",
+      "public_kind": "pca",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "pca"
+      },
+      "archive_path": "validation/fixtures/v255/archives/pca-result.qpls",
+      "archive_sha256": "453e360252cd10a8e5212fe0c5d50be2d37bd67d2b9249dc60d3a30618af396e",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "842fff18-ee0a-40ec-8ea6-960c2d6d583f"
+      },
+      "scientific_identity": {
+        "stored_method": "pca",
+        "method_version": "pca_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_pca.json",
+        "json_pointer": "/checks/pcaResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "pca_summary",
+          "covers": ["eigenvalues", "explained variance"],
+          "activate": { "result_tree_item_id": "pca_component_summary", "table_id": "pca_component_summary" },
+          "observations": [
+            { "family": "eigenvalues", "source": "table_headers", "matcher": "exact", "value": "Eigenvalue" },
+            { "family": "explained variance", "source": "table_headers", "matcher": "exact", "value": "Explained variance" }
+          ]
+        },
+        {
+          "capture_id": "pca_loadings",
+          "covers": ["loadings"],
+          "activate": { "result_tree_item_id": "pca_loadings", "table_id": "pca_loadings" },
+          "observations": [
+            { "family": "loadings", "source": "table_titles", "matcher": "exact", "value": "Component loadings and weights" }
+          ]
+        },
+        {
+          "capture_id": "pca_scores",
+          "covers": ["scores"],
+          "activate": { "result_tree_item_id": "pca_scores", "table_id": "pca_scores" },
+          "observations": [
+            { "family": "scores", "source": "table_titles", "matcher": "exact", "value": "Component scores" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "regression_ols_point",
+      "public_kind": "regression",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "specialized_feature_archives",
+        "inventory_key": "regression_ols_point"
+      },
+      "archive_path": "validation/fixtures/v255/archives/regression-ols-result.qpls",
+      "archive_sha256": "ec38a3bc77e270f6fcad95107d26a6a357ba072dbbb1b012c02a6f3bb3931871",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d85851e8-c5bb-4d62-b2cc-1c4a50b443ae"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_ols_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_ols.json",
+        "json_pointer": "/checks/olsResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "regression_ols_fit",
+          "covers": ["fit"],
+          "activate": { "result_tree_item_id": "ols_model_fit", "table_id": "ols_model_fit" },
+          "observations": [
+            { "family": "fit", "source": "table_titles", "matcher": "exact", "value": "Model fit" }
+          ]
+        },
+        {
+          "capture_id": "regression_ols_coefficients",
+          "covers": ["coefficients"],
+          "activate": { "result_tree_item_id": "ols_coefficients", "table_id": "ols_coefficients" },
+          "observations": [
+            { "family": "coefficients", "source": "table_titles", "matcher": "exact", "value": "Coefficients" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "regression_logistic_point",
+      "public_kind": "regression",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "specialized_feature_archives",
+        "inventory_key": "regression_logistic_point"
+      },
+      "archive_path": "validation/fixtures/v255/archives/regression-logistic-result.qpls",
+      "archive_sha256": "11fe9618e2912568e8cc90d305910a965063859852c4e5c57c8b503247bc2bc0",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d786cb3b-228f-49db-abc2-0b1256f71723"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_logistic_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "json_pointer": "/checks/logisticResult/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "regression_logistic_odds_ratios",
+          "covers": ["odds ratios"],
+          "activate": { "result_tree_item_id": "logistic_coefficients", "table_id": "logistic_coefficients" },
+          "observations": [
+            { "family": "odds ratios", "source": "table_headers", "matcher": "exact", "value": "Odds ratio" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "regression_case_bootstrap",
+      "public_kind": "regression",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "specialized_feature_archives",
+        "inventory_key": "regression_case_bootstrap"
+      },
+      "archive_path": "validation/fixtures/v255/archives/regression-bootstrap-result.qpls",
+      "archive_sha256": "7fea15b74ce197f0c34ff309c9cfd71f1df2b463be38ddfdce345faede6c38e1",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e3f7afca-4919-4891-a2c3-f72238656e7a"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_ols_v1+regression_bootstrap_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "json_pointer": "/checks/regressionBootstrapResults/ols/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "regression_bootstrap_inference",
+          "covers": ["bootstrap inference"],
+          "activate": { "result_tree_item_id": "regression_bootstrap_coefficients", "table_id": "regression_bootstrap_coefficients" },
+          "observations": [
+            { "family": "bootstrap inference", "source": "table_titles", "matcher": "exact", "value": "Bootstrap coefficient inference" }
+          ]
+        }
+      ]
+    },
+    {
+      "route_id": "regression_process_graph",
+      "public_kind": "regression",
+      "source": {
+        "kind": "inventory",
+        "inventory_section": "public_methods",
+        "inventory_key": "regression"
+      },
+      "archive_path": "validation/fixtures/v255/archives/process-graph-result.qpls",
+      "archive_sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e",
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version_tokens": [
+          "regression_process_v2",
+          "regression_process_bootstrap_v1"
+        ]
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_process_v2.json",
+        "json_pointer": "/checks/processV2SaveReopen/archive/identity/runId",
+        "verification_status": "passed"
+      },
+      "captures": [
+        {
+          "capture_id": "regression_process_effects",
+          "covers": ["PROCESS effects"],
+          "activate": { "result_tree_item_id": "process_reference_effects", "table_id": "process_reference_effects" },
+          "observations": [
+            { "family": "PROCESS effects", "source": "table_titles", "matcher": "exact", "value": "Reference effects" }
+          ]
+        },
+        {
+          "capture_id": "regression_process_simple_slopes",
+          "covers": ["simple slopes"],
+          "activate": { "result_tree_item_id": "process_simple_slopes", "table_id": "process_simple_slopes" },
+          "observations": [
+            { "family": "simple slopes", "source": "table_titles", "matcher": "exact", "value": "Simple slopes and conditional plots" }
+          ]
+        },
+        {
+          "capture_id": "regression_process_johnson_neyman",
+          "covers": ["Johnson-Neyman where eligible"],
+          "activate": { "result_tree_item_id": "process_johnson_neyman", "table_id": "process_johnson_neyman" },
+          "observations": [
+            { "family": "Johnson-Neyman where eligible", "source": "table_titles", "matcher": "exact", "value": "Johnson-Neyman regions" }
+          ]
+        }
+      ]
+    }
   ],
   "public_methods": [
     {
       "public_kind": "pls_algorithm",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v254_canvas_results_packaged_smoke_20260822_final_success_r4/quickpls-v254-canvas-results.qpls",
+      "archive_path": "validation/fixtures/v255/archives/schema6-results.qpls",
+      "archive_sha256": "c291a3d65ef4f2f5622221d8720bcf4acbf655033475675aad48ffd421048281",
+      "archive_size_bytes": 87926,
       "result_identity": {
         "type": "canonical_result_document_id",
         "value": "result_559e8d8a-2902-4a94-b72b-efac9918ee6b"
@@ -40,7 +1079,9 @@
     {
       "public_kind": "plsc",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-methods-1787059313497-62520.qpls",
+      "archive_path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+      "archive_sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801",
+      "archive_size_bytes": 26936,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "41df5d79-fcfa-4096-9d59-acc90dca7a7a"
@@ -64,7 +1105,9 @@
     {
       "public_kind": "wpls",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-methods-1787059313497-62520.qpls",
+      "archive_path": "validation/fixtures/v255/archives/plsc-wpls-results.qpls",
+      "archive_sha256": "60116f3affcb97810cea22e560b2fb0b97af38554a15c1560c46bff7063f5801",
+      "archive_size_bytes": 26936,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "41908c14-5c2a-4ed1-8f27-e601afc2fc03"
@@ -88,7 +1131,9 @@
     {
       "public_kind": "gsca",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/gsca_als_v2/gsca_als_v2_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/gsca-result.qpls",
+      "archive_sha256": "f518ae82440fe813570af80214e60cb5936e80e651686fcb7c7ff51021c617b5",
+      "archive_size_bytes": 19846,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "29bbab18-1caf-42fe-a9a9-0099e5659163"
@@ -113,7 +1158,9 @@
     {
       "public_kind": "cca",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/cca_residuals_v1/cca_residuals_v1_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/cca-result.qpls",
+      "archive_sha256": "315bbde1b5450bb1bb098638ccd102a3770fd506abc846da669e1e07b4316107",
+      "archive_size_bytes": 19537,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "0f8356d8-04d0-4428-bb56-166d201ddd96"
@@ -138,7 +1185,9 @@
     {
       "public_kind": "cta_pls",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/cta_pls_v1/cta_pls_v1_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/cta-pls-result.qpls",
+      "archive_sha256": "289c7e76ed0a60a58f81a4282cbfad772c27e728c751121c4356c4e175bf8d21",
+      "archive_size_bytes": 16126,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "34a420a7-5d20-4e6c-a11d-209e3dc1938e"
@@ -163,7 +1212,9 @@
     {
       "public_kind": "ipma",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/ipma_v1/ipma_v1_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/ipma-result.qpls",
+      "archive_sha256": "bf9ae95f051b3211b1ded2416006ae15f4c589bfb94e7777b5423e6b8b138529",
+      "archive_size_bytes": 16992,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "e30342bf-a2ae-4586-98b9-ba349c4d1c20"
@@ -188,7 +1239,9 @@
     {
       "public_kind": "cbsem",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/cbsem-exact-bootstrap-20260818-182955874-v6.qpls",
+      "archive_path": "validation/fixtures/v255/archives/cbsem-exact-bootstrap-result.qpls",
+      "archive_sha256": "aea81288ab5e9f9114d950bb7b02fb5be9b2ac62111179a08b2752bf3b3a8616",
+      "archive_size_bytes": 208652,
       "result_identity": {
         "type": "canonical_result_document_id",
         "value": "result_0bcca6d9-750a-4fc4-83ff-03d16c6d5f2a"
@@ -213,7 +1266,9 @@
     {
       "public_kind": "pls_bootstrap",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-moderation-1787059313497-62520.qpls",
+      "archive_path": "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls",
+      "archive_sha256": "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d",
+      "archive_size_bytes": 28542,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "fa5ac33f-4b8a-458b-a889-7b005d95b403"
@@ -241,7 +1296,9 @@
     {
       "public_kind": "plsc_bootstrap",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/consistent_bootstrap_v1/consistent_bootstrap_v1_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/plsc-bootstrap-result.qpls",
+      "archive_sha256": "95b097b3c971bfdca5b75f6a22f727df5a3fd6c522145a9835af64fc8ca82692",
+      "archive_size_bytes": 2141344,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "3803e75d-0a4c-4630-af62-1d97d114ac0c"
@@ -265,7 +1322,9 @@
     {
       "public_kind": "pls_permutation",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-structural-path-randomization-1787061240991-64676.qpls",
+      "archive_path": "validation/fixtures/v255/archives/pls-permutation-result.qpls",
+      "archive_sha256": "4792366490fab6b607919af2a75d8d6ffb86f8fb395f21cc5d2aec3f10d23f26",
+      "archive_size_bytes": 23710,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "503bd74e-4114-4357-acc8-52c0aa7bf741"
@@ -306,7 +1365,9 @@
     {
       "public_kind": "pls_sample_size_power",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/pls_sample_size_power_v2/pls_sample_size_power_v2_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/pls-sample-size-power-result.qpls",
+      "archive_sha256": "cca7a8a5857fdaf22fec6318a56b82326033249422ad6de26569a15e7e3b21f4",
+      "archive_size_bytes": 35945,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "e05ec227-f395-455e-b709-c622e294b05e"
@@ -330,7 +1391,9 @@
     {
       "public_kind": "mga",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-mga-1787061319200-42928.qpls",
+      "archive_path": "validation/fixtures/v255/archives/mga-result.qpls",
+      "archive_sha256": "6e5dab3ef12454523bc6bae721d2ab7f34e69458ddabfb695bd64cf7b4c7ef72",
+      "archive_size_bytes": 436202,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "0c0af0bc-f069-4ffc-abc8-64aff6531d5e"
@@ -359,7 +1422,9 @@
     {
       "public_kind": "predict",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/plspredict_cvpat_v2/plspredict_cvpat_v2_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/predict-result.qpls",
+      "archive_sha256": "62ebd013787bdba09ee496427bb28c4d560c32cc36a3c1db373151da9d784455",
+      "archive_size_bytes": 33160,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "d2af2120-69e3-4160-a2ee-d401abe6fef6"
@@ -384,7 +1449,9 @@
     {
       "public_kind": "nca",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/nca_v2/nca_v2_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/nca-result.qpls",
+      "archive_sha256": "3a90877799a3907880fb3cd08f2260bddc8150c3372d8251000f2c2fad5f4879",
+      "archive_size_bytes": 4401,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "1dd33053-824b-4bca-8f10-06b5ede94074"
@@ -409,7 +1476,9 @@
     {
       "public_kind": "pca",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/method_factory/pca_v1/pca_v1_packaged.qpls",
+      "archive_path": "validation/fixtures/v255/archives/pca-result.qpls",
+      "archive_sha256": "453e360252cd10a8e5212fe0c5d50be2d37bd67d2b9249dc60d3a30618af396e",
+      "archive_size_bytes": 24457,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "842fff18-ee0a-40ec-8ea6-960c2d6d583f"
@@ -434,7 +1503,9 @@
     {
       "public_kind": "regression",
       "reuse_state": "reusable_verified_prior_release",
-      "archive_path": "validation/results/v247-native-process-v2-1787061855019-24928.qpls",
+      "archive_path": "validation/fixtures/v255/archives/process-graph-result.qpls",
+      "archive_sha256": "4cf6912fb204423c24ea60bfd09e85ff78b69881fe98d11b885b2b0f7883c68e",
+      "archive_size_bytes": 2317966,
       "result_identity": {
         "type": "schema5_result_run_id",
         "value": "edd1fd08-6b44-4fc1-8299-3a94b086369e"
@@ -448,9 +1519,8 @@
       },
       "prior_receipt": {
         "path": "validation/results/v247_tauri_native_acceptance_process_v2.json",
-        "json_pointer": "/checks/processV2Results",
-        "verification_status": "passed",
-        "identity_recovered_from_archive_not_pointer": true
+        "json_pointer": "/checks/processV2SaveReopen/archive/identity/runId",
+        "verification_status": "passed"
       },
       "prior_screenshots": [
         "validation/results/screens/v247-native-desktop-acceptance/186-tauri-native-process-v2-results-1536x794.png",
@@ -465,7 +1535,9 @@
     {
       "feature": "two_way_moderation_point",
       "public_kind": "pls_algorithm",
-      "archive_path": "validation/results/v253_mediation_moderation_packaged_smoke_20260821_final_r6/quickpls-v253-moderation.qpls",
+      "archive_path": "validation/fixtures/v255/archives/two-way-moderation-result.qpls",
+      "archive_sha256": "2bfe23ee41177dac1fdb692ac93407de742057e33c023c38d40dbf7a94421719",
+      "archive_size_bytes": 36708,
       "result_identity": {
         "type": "canonical_result_document_id",
         "value": "result_61d1a1e0-b522-46eb-a94a-35d78a624c60"
@@ -489,7 +1561,9 @@
     {
       "feature": "higher_order_construct_point",
       "public_kind": "pls_algorithm",
-      "archive_path": "validation/results/v252_hoc_packaged_smoke_20260821_120805_r2/quickpls-v252-hoc.qpls",
+      "archive_path": "validation/fixtures/v255/archives/rr-hoc-canonical-result.qpls",
+      "archive_sha256": "7489f1fa1dc567922b1ae0c5feb45bada68b40823a9500e381931efcaf31f79e",
+      "archive_size_bytes": 76978,
       "result_identity": {
         "type": "canonical_result_document_id",
         "value": "result_f8764ca8-2a97-4e82-9d0d-649e9c3970cc"
@@ -509,65 +1583,117 @@
       "source_release": "2.52.0",
       "current_ui_capture_required": true,
       "new_scientific_run_required": false
+    },
+    {
+      "feature": "regression_ols_point",
+      "public_kind": "regression",
+      "archive_path": "validation/fixtures/v255/archives/regression-ols-result.qpls",
+      "archive_sha256": "ec38a3bc77e270f6fcad95107d26a6a357ba072dbbb1b012c02a6f3bb3931871",
+      "archive_size_bytes": 19420,
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d85851e8-c5bb-4d62-b2cc-1c4a50b443ae"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_ols_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_ols.json",
+        "json_pointer": "/checks/olsResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "feature": "regression_logistic_point",
+      "public_kind": "regression",
+      "archive_path": "validation/fixtures/v255/archives/regression-logistic-result.qpls",
+      "archive_sha256": "11fe9618e2912568e8cc90d305910a965063859852c4e5c57c8b503247bc2bc0",
+      "archive_size_bytes": 20270,
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "d786cb3b-228f-49db-abc2-0b1256f71723"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_logistic_v2"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_logistic.json",
+        "json_pointer": "/checks/logisticResult/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
+    },
+    {
+      "feature": "regression_case_bootstrap",
+      "public_kind": "regression",
+      "archive_path": "validation/fixtures/v255/archives/regression-bootstrap-result.qpls",
+      "archive_sha256": "7fea15b74ce197f0c34ff309c9cfd71f1df2b463be38ddfdce345faede6c38e1",
+      "archive_size_bytes": 944491,
+      "result_identity": {
+        "type": "schema5_result_run_id",
+        "value": "e3f7afca-4919-4891-a2c3-f72238656e7a"
+      },
+      "scientific_identity": {
+        "stored_method": "regression",
+        "method_version": "regression_ols_v1+regression_bootstrap_v1"
+      },
+      "prior_receipt": {
+        "path": "validation/results/v247_tauri_native_acceptance_regression_bootstrap.json",
+        "json_pointer": "/checks/regressionBootstrapResults/ols/runId",
+        "verification_status": "passed"
+      },
+      "prior_screenshots": [],
+      "source_release": "2.47.0",
+      "current_ui_capture_required": true,
+      "new_scientific_run_required": false
     }
   ],
   "known_current_evidence_gaps": [
     {
       "id": "v255_current_ui_captures",
       "status": "pending",
-      "description": "No listed screenshot is a final QuickPLS 2.55 capture. Reopen reusable archives in the settled 2.55 packaged UI and capture Results plus fresh-reopen states."
+      "description": "The inventory declares exact capture contracts, but no historical screenshot is accepted as a final QuickPLS 2.55 observation. Each route still requires a passed current-candidate Results capture and fresh-reopen receipt."
     },
     {
-      "id": "posthoc_packaged_result",
+      "id": "posthoc_dynamic_supplement",
       "status": "requires_new_scientific_run",
       "public_kinds": [
         "pls_posthoc_technical_minimum_sample_size"
       ],
-      "description": "Scientific qualification exists, but no completed packaged archive, result identity, receipt, or screenshot was found."
+      "description": "The posthoc method has no reusable completed archive. Its posthoc_supplement route must bind a newly completed packaged result, exact archive SHA-256, direct result identity, fresh-process reopen receipt, and current UI observations."
     },
     {
-      "id": "specialized_pls_bootstrap_packaged_pairs",
-      "status": "pending",
+      "id": "named_sem_supplements",
+      "status": "requires_current_named_case_report",
       "public_kinds": [
-        "pls_bootstrap"
-      ],
-      "capabilities": [
-        "general_sem_pls_single_mediation_bootstrap_v1",
-        "general_sem_pls_higher_order_bootstrap_v1",
-        "general_sem_pls_three_way_moderation_bootstrap_v1",
-        "moderated_mediation_v1"
-      ],
-      "description": "Promotion or scientific receipts exist, but this inventory did not locate a current packaged archive plus Results screenshot pair for each specialized route."
-    },
-    {
-      "id": "unified_cbsem_topology_pairs",
-      "status": "pending",
-      "public_kinds": [
+        "pls_algorithm",
+        "pls_bootstrap",
         "cbsem"
       ],
-      "capabilities": [
-        "cbsem_general_sem_ml_v1",
-        "cbsem_recursive_sem_case_bootstrap_v1"
+      "case_ids": [
+        "specialized_result:parallel mediation",
+        "specialized_result:multiple-mediation bootstrap",
+        "specialized_result:three-way moderation",
+        "specialized_result:first-stage moderated mediation",
+        "specialized_result:HOC bootstrap",
+        "specialized_result:recursive SEM point",
+        "specialized_result:recursive SEM case bootstrap"
       ],
-      "description": "The exact-CFA bootstrap archive is reusable, but unified Calculate evidence for both CFA/recursive point and bootstrap topology families still needs current packaged journeys."
-    },
-    {
-      "id": "regression_submode_current_captures",
-      "status": "pending",
-      "public_kinds": [
-        "regression"
-      ],
-      "description": "The curated representative is PROCESS v2. Existing OLS, logistic, and regression-bootstrap archives can be reopened for supplemental current captures if the complete family matrix requires each submode."
+      "description": "These dynamic named_supplement routes intentionally omit static identity fields. The crawler must bind each route to the corresponding passed current named-case report entry, its generated archive and SHA-256, scientific identity, and current UI observations."
     },
     {
       "id": "schema5_public_kind_binding",
       "status": "pending",
       "description": "Schema-5 archives frequently store an engine method such as pls_pm rather than the public Calculate kind. The 2.55 evidence receipt must bind the exact public kind to the selected archived result without relabelling scientific identity."
-    },
-    {
-      "id": "artifact_hashes",
-      "status": "pending",
-      "description": "No SHA-256 values were computed during this read-only inventory pass. Hashing belongs to the frozen-evidence population step."
     }
   ]
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 import unittest
 from pathlib import Path
@@ -164,15 +165,20 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             frozen.index("async function openArchive"):
             frozen.index("function expectedResultOption")
         ]
-        reset = 'await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`'
+        reset = 'page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`'
         ready_shell = "page.locator('.nd-app[data-native-desktop-shell=\"true\"]')"
         ready_controller = 'typeof window.__QUICKPLS_SMOKE__?.setView === "function"'
         dispatch = 'window.dispatchEvent(new CustomEvent("quickpls:open-project-path"'
-        exact_path = "await waitForOpenedProjectPath(page, archive, timeout);"
+        exact_path = "waitForOpenedProjectPath(page, archive, timeout)"
         self.assertRegex(
             open_archive,
-            r"async function openArchive\(page, archive, timeout\) \{\s+await page\.goto",
+            r"async function openArchive\(page, archive, timeout, methodKind\)",
         )
+        self.assertIn('"open.packaged_root_reset"', open_archive)
+        self.assertIn('"open.native_shell_ready"', open_archive)
+        self.assertIn('"open.controller_ready"', open_archive)
+        self.assertIn('"open.path_dispatch"', open_archive)
+        self.assertIn('"open.exact_path_wait"', open_archive)
         self.assertLess(open_archive.index(reset), open_archive.index(ready_shell))
         self.assertLess(open_archive.index(ready_shell), open_archive.index(ready_controller))
         self.assertLess(open_archive.index(ready_controller), open_archive.index(dispatch))
@@ -191,15 +197,138 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             frozen.index("async function run()")
         ]
         self.assertLess(
-            crawl_method.index("await openArchive(page, archiveAbsolute, timeout);"),
+            crawl_method.index("await openArchive(page, stagedArchiveAbsolute, timeout, row.public_kind);"),
             crawl_method.index("await navigateToDeclaredResult(page, row, timeout);"),
         )
+        self.assertNotIn("openArchive(page, archiveAbsolute", crawl_method)
+        self.assertIn("assert(row.archive_sha256 === sha256", crawl_method)
+        self.assertIn('"archive.integrity_postflight"', crawl_method)
+        self.assertIn("source_sha256_unchanged", frozen)
+        self.assertIn("source_autosave_siblings_after", frozen)
+        self.assertIn('"results.selector_wait"', frozen)
+        self.assertIn('"results.workspace_wait"', frozen)
         crawl_loop = frozen[
             frozen.index("for (let index = 0; index < rows.length; index += 1)"):
             frozen.index("try {\n    await rendererErrors.settle();")
         ]
         self.assertTrue(crawl_loop.startswith("for (let index = 0;"))
-        self.assertEqual(1, crawl_loop.count("receipt = await crawlMethod({"))
+        self.assertIn("for (const route of methodRoutes)", crawl_loop)
+        self.assertEqual(1, crawl_loop.count("const routeEvidence = await crawlMethod({"))
+        self.assertIn("startEvidenceIndex: evidence.length", crawl_loop)
+
+    def test_frozen_archive_crawler_emits_strict_multi_capture_receipts(self) -> None:
+        frozen = source("v255_frozen_archive_reopen_crawler.mjs")
+        self.assertIn(
+            'const INVENTORY_SCHEMA = "quickpls.v255.reusable_archive_inventory.v2";',
+            frozen,
+        )
+        self.assertIn('"named-supplement-report"', frozen)
+        self.assertIn("function materializeCoverageRoute", frozen)
+        self.assertIn('route.source.kind === "posthoc_supplement"', frozen)
+        self.assertIn('route.source.kind === "named_supplement"', frozen)
+        self.assertIn("json_pointer: supplement.source_report_json_pointer", frozen)
+        self.assertIn(
+            'const resolvedPointer = declaredPointer.startsWith("#/") ? declaredPointer.slice(1) : declaredPointer;',
+            frozen,
+        )
+        self.assertIn("deepEqual(observed?.candidate, row.named_supplement_candidate)", frozen)
+        self.assertIn("deepEqual(observed?.manifest, row.named_supplement_manifest)", frozen)
+        self.assertIn("async function activateCaptureTarget", frozen)
+        self.assertLess(
+            frozen.index("await activateCaptureTarget(page, row, capture, timeout);"),
+            frozen.index("const labels = await runStage(row.public_kind, `capture.${capture.capture_id}.observed_results_labels`"),
+        )
+        for observation_source in (
+            "navigation",
+            "visible_headings",
+            "visible_result_table_ids",
+            "table_titles",
+            "table_headers",
+            "table_rows",
+            "chart_titles",
+        ):
+            self.assertIn(f'"{observation_source}"', frozen)
+        self.assertIn(
+            "const pointer = `/evidence/${evidenceIndex}/observed_results_labels/${declaration.source}/${matchedIndex}`;",
+            frozen,
+        )
+        self.assertIn("schema_version: 2", frozen)
+        self.assertIn("evidence,", frozen)
+        self.assertIn(
+            "assert(methodReceipts.length === 18",
+            frozen,
+        )
+        aggregate = frozen[frozen.index("const manifest = {") : frozen.index("const manifestPath =")]
+        self.assertIn("schema_version: 1", aggregate)
+        self.assertIn("suite_id: SUITE_ID", aggregate)
+
+    def test_frozen_inventory_v2_exactly_binds_static_and_dynamic_routes(self) -> None:
+        inventory_path = VALIDATION / "v255_reusable_archive_inventory.json"
+        encoded = inventory_path.read_bytes()
+        self.assertFalse(encoded.startswith(b"\xef\xbb\xbf"))
+        inventory = json.loads(encoded.decode("utf-8"))
+        self.assertEqual(
+            "quickpls.v255.reusable_archive_inventory.v2", inventory["schema"]
+        )
+        methods = inventory["public_methods"]
+        routes = inventory["coverage_routes"]
+        method_kinds = {method["public_kind"] for method in methods}
+        self.assertEqual(18, len(methods))
+        self.assertEqual(18, len(method_kinds))
+        self.assertEqual(method_kinds, {route["public_kind"] for route in routes})
+        self.assertEqual(len(routes), len({route["route_id"] for route in routes}))
+
+        capture_ids: list[str] = []
+        named_case_ids: list[str] = []
+        posthoc_routes = 0
+        for route in routes:
+            source_contract = route["source"]
+            if source_contract["kind"] == "inventory":
+                section = source_contract["inventory_section"]
+                key = "public_kind" if section == "public_methods" else "feature"
+                source_rows = [
+                    row
+                    for row in inventory[section]
+                    if row[key] == source_contract["inventory_key"]
+                ]
+                self.assertEqual(1, len(source_rows), route["route_id"])
+                for field in (
+                    "archive_path",
+                    "archive_sha256",
+                    "result_identity",
+                    "scientific_identity",
+                    "prior_receipt",
+                ):
+                    self.assertEqual(source_rows[0][field], route[field])
+            else:
+                for field in (
+                    "archive_path",
+                    "result_identity",
+                    "scientific_identity",
+                    "prior_receipt",
+                ):
+                    self.assertNotIn(field, route)
+                if source_contract["kind"] == "named_supplement":
+                    named_case_ids.append(source_contract["case_id"])
+                else:
+                    self.assertEqual("posthoc_supplement", source_contract["kind"])
+                    posthoc_routes += 1
+
+            for capture_contract in route["captures"]:
+                capture_ids.append(capture_contract["capture_id"])
+                self.assertEqual(
+                    capture_contract["covers"],
+                    [item["family"] for item in capture_contract["observations"]],
+                )
+
+        self.assertEqual(len(capture_ids), len(set(capture_ids)))
+        self.assertEqual(7, len(named_case_ids))
+        self.assertEqual(7, len(set(named_case_ids)))
+        self.assertEqual(1, posthoc_routes)
+
+        frozen = source("v255_frozen_archive_reopen_crawler.mjs")
+        self.assertIn('encoding: "utf8", flag: "wx"', frozen)
+        self.assertIn("assert(methodReceipts.length === 18", frozen)
 
 
 if __name__ == "__main__":

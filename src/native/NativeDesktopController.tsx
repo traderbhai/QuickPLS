@@ -29,6 +29,10 @@ import {
   generalSemWorkspaceProductAccessV1,
   rehydrateGeneralSemExecutionAuthorityV1,
 } from "../domain/internalRecipeV4GeneralSemWorkspace";
+import {
+  readStoredInternalLabsRecipeV4CbsemResultsV1,
+  selectLatestStoredExactCaseBootstrapEntryV1,
+} from "../domain/internalRecipeV4CbsemWorkspace";
 import { selectLatestGeneralSemReopenedEntryV1 } from "./NativeRecipeV4GeneralSemWorkspace";
 import {
   hasUnsavedNativeProjectChanges,
@@ -422,6 +426,12 @@ export function NativeDesktopController() {
     }
   };
 
+  const clearPresentedCanonicalResult = () => {
+    window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+      detail: { document: null, navigate: false },
+    }));
+  };
+
 
   const loadNativeSnapshot = (
     project: NativeProjectSnapshot | null,
@@ -507,6 +517,7 @@ export function NativeDesktopController() {
       const created = await createNativeProject(name, mode === "general_sem_v1" ? "general_sem_v1" : undefined);
       if (!created) return;
       if (!loadNativeSnapshot(created, mode === "general_sem_v1" ? "Calculation-ready project started" : "Project created")) return;
+      clearPresentedCanonicalResult();
       if (mode === "general_sem_v1") {
         if (!beginGeneralSemProjectDraftMode(created.projectId)) {
           throw new Error("The fresh native project did not satisfy the empty General SEM draft authority contract.");
@@ -520,6 +531,7 @@ export function NativeDesktopController() {
     } else {
       if (mode === "general_sem_v1") throw new Error("Calculation-ready project creation requires the installed QuickPLS desktop app.");
       closeProject();
+      clearPresentedCanonicalResult();
       setProjectMeta(name, null);
       updateProjectWritable(true);
       markCurrentWorkspaceClean();
@@ -558,6 +570,7 @@ export function NativeDesktopController() {
         }
         active.setProjectMeta(inspected.value.project.name, inspected.value.archivePath, inspected.value.project.project_id);
         active.clearGeneralSemProjectDraftMode();
+        clearPresentedCanonicalResult();
         updateProjectWritable(false);
         markCurrentWorkspaceClean();
         try {
@@ -601,13 +614,34 @@ export function NativeDesktopController() {
         throw error;
       }
     }
-    loadNativeSnapshot(await openNativeProjectAt(selectedPath));
+    const loaded = loadNativeSnapshot(await openNativeProjectAt(selectedPath));
+    if (!loaded) return;
+    clearPresentedCanonicalResult();
+    if (inspected.status !== "ok") return;
+    try {
+      const stored = await readStoredInternalLabsRecipeV4CbsemResultsV1({
+        archivePath: inspected.value.archivePath,
+        sourceSha256: inspected.value.archiveSha256,
+        projectId: inspected.value.project.project_id,
+      }, readInternalProjectSchema6CanonicalResultsV2);
+      if (stored.outcome.status === "ok") {
+        const latest = selectLatestStoredExactCaseBootstrapEntryV1(stored.entries);
+        if (latest) {
+          window.dispatchEvent(new CustomEvent("quickpls:general-sem-canonical-result", {
+            detail: { document: latest.canonicalDocument, navigate: false },
+          }));
+        }
+      }
+    } catch {
+      // Legacy workspace hydration remains available, but an unreadable or
+      // identity-mismatched schema-6 canonical result is never exposed.
+    }
   };
 
   const openDemoProject = async (sampleId: NativeSampleProjectId = "corporate_reputation") => {
     if (!isNativeDesktop()) return;
     if (!await confirmWorkspaceReplacement("opening the sample project")) return;
-    loadNativeSnapshot(await openNativeDemoProject(sampleId));
+    if (loadNativeSnapshot(await openNativeDemoProject(sampleId))) clearPresentedCanonicalResult();
   };
 
   const saveProject = async (saveAs: boolean): Promise<boolean> => {

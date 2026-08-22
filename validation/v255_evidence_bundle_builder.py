@@ -68,6 +68,21 @@ CROSS_RENDERER_PHASES = (
     "dpi_process",
 )
 CROSS_PHASES = (*CROSS_RENDERER_PHASES[:-1], "unsaved_close_guard", "dpi_process")
+FROZEN_OBSERVATION_SOURCES = frozenset(
+    {
+        "navigation",
+        "visible_headings",
+        "visible_result_table_ids",
+        "table_titles",
+        "table_headers",
+        "table_rows",
+        "chart_titles",
+    }
+)
+FROZEN_TABLE_OBSERVATION_SOURCES = frozenset(
+    {"visible_result_table_ids", "table_titles", "table_headers", "table_rows"}
+)
+FROZEN_OBSERVATION_MATCHERS = frozenset({"exact", "contains"})
 
 
 def fail(message: str) -> None:
@@ -466,6 +481,111 @@ def pointer_value(value: Any, pointer: object) -> Any:
     return current
 
 
+def compact_observation(value: object) -> str:
+    return " ".join(str(value if value is not None else "").split())
+
+
+def exact_frozen_capture_coverage(
+    receipt: dict[str, Any],
+    capture: object,
+    *,
+    capture_index: int,
+) -> tuple[list[str], list[dict[str, Any]]]:
+    """Validate one current-UI capture and recompute every declared assertion.
+
+    Assertion pointers are absolute from the outer method receipt.  Keeping the
+    pointer in the signed receipt makes each family independently reviewable and
+    prevents an index entry from silently borrowing a label from another capture.
+    """
+
+    if not isinstance(capture, dict):
+        fail(f"frozen evidence capture {capture_index} is not an object")
+    covers = capture.get("covers")
+    assertions = capture.get("cover_assertions")
+    labels = capture.get("observed_results_labels")
+    if (
+        not isinstance(covers, list)
+        or not covers
+        or not all(isinstance(family, str) and family for family in covers)
+        or len(covers) != len(set(covers))
+    ):
+        fail(f"frozen evidence capture {capture_index} has invalid or duplicate covers")
+    if not isinstance(assertions, list) or len(assertions) != len(covers):
+        fail(f"frozen evidence capture {capture_index} must have one assertion per cover")
+    if not isinstance(labels, dict):
+        fail(f"frozen evidence capture {capture_index} lacks observed result labels")
+
+    required_label_arrays = (
+        "navigation",
+        "visible_headings",
+        "visible_result_table_ids",
+        "table_titles",
+        "table_headers",
+        "table_rows",
+        "chart_titles",
+    )
+    if not all(isinstance(labels.get(source), list) for source in required_label_arrays):
+        fail(f"frozen evidence capture {capture_index} has an incomplete observation surface")
+    if not compact_observation(labels.get("selected_result")) or not compact_observation(
+        labels.get("document_tab")
+    ):
+        fail(f"frozen evidence capture {capture_index} lacks selected result identity")
+
+    assertion_families: list[str] = []
+    observation_pointers: list[str] = []
+    normalized_assertions: list[dict[str, Any]] = []
+    prefix = f"/evidence/{capture_index}/observed_results_labels/"
+    table_evidence_used = False
+    for assertion in assertions:
+        if not isinstance(assertion, dict):
+            fail(f"frozen evidence capture {capture_index} has a non-object assertion")
+        family = assertion.get("family")
+        source = assertion.get("source")
+        matcher = assertion.get("matcher")
+        expected = compact_observation(assertion.get("value"))
+        pointer = assertion.get("observed_json_pointer")
+        if (
+            not isinstance(family, str)
+            or family not in covers
+            or source not in FROZEN_OBSERVATION_SOURCES
+            or matcher not in FROZEN_OBSERVATION_MATCHERS
+            or not expected
+            or not isinstance(pointer, str)
+            or not pointer.startswith(f"{prefix}{source}/")
+        ):
+            fail(f"frozen evidence capture {capture_index} has an invalid assertion contract")
+        observed_raw = pointer_value(receipt, pointer)
+        if isinstance(observed_raw, (dict, list)):
+            fail(f"frozen assertion pointer must resolve to a scalar observation: {pointer}")
+        observed = compact_observation(observed_raw)
+        if not observed or compact_observation(assertion.get("observed_value")) != observed:
+            fail(f"frozen assertion observed value is empty or does not match {pointer}")
+        expected_folded = expected.casefold()
+        observed_folded = observed.casefold()
+        matched = (
+            observed_folded == expected_folded
+            if matcher == "exact"
+            else len(expected) >= 4 and expected_folded in observed_folded
+        )
+        if not matched or assertion.get("passed") is not True:
+            fail(f"frozen assertion did not recompute as passing: {family}")
+        assertion_families.append(family)
+        observation_pointers.append(pointer)
+        table_evidence_used = table_evidence_used or source in FROZEN_TABLE_OBSERVATION_SOURCES
+        normalized_assertions.append(copy.deepcopy(assertion))
+
+    if assertion_families != covers or len(assertion_families) != len(set(assertion_families)):
+        fail(f"frozen evidence capture {capture_index} assertion families do not exactly match covers")
+    if len(observation_pointers) != len(set(observation_pointers)):
+        fail(f"frozen evidence capture {capture_index} reuses an observed JSON pointer")
+    if table_evidence_used and (
+        not any(compact_observation(value) for value in labels["table_headers"])
+        or not any(compact_observation(value) for value in labels["table_rows"])
+    ):
+        fail(f"frozen table evidence capture {capture_index} has empty headers or rows")
+    return list(covers), normalized_assertions
+
+
 def safe(name: object) -> bool:
     if not isinstance(name, str) or not name or "\\" in name or "\x00" in name or ":" in name:
         return False
@@ -659,8 +779,11 @@ def derive_frozen(template: dict[str, Any], staging: Path, aggregate: dict[str, 
     by_kind = {row.get("kind"): row for row in methods if isinstance(row, dict)}
     if len(by_kind) != 18:
         fail("frozen template method kinds are not unique")
+    if template.get("schema_version") != 4:
+        fail("frozen index template must use the incompatible multi-capture v4 schema")
     proposal = copy.deepcopy(template)
     proposed_by_kind = {row["kind"]: row for row in proposal["methods"]}
+    receipt_kinds: list[str] = []
     for artifact in artifacts:
         if not isinstance(artifact, dict):
             fail("frozen receipt artifact is not an object")
@@ -668,30 +791,110 @@ def derive_frozen(template: dict[str, Any], staging: Path, aggregate: dict[str, 
         receipt = load(member_path(staging, receipt_member))
         kind = receipt.get("method_kind")
         declared = by_kind.get(kind)
-        covers = receipt.get("covers")
-        assertions = receipt.get("cover_assertions")
-        if not (receipt.get("schema_version") == 1 and receipt.get("suite_id") == FROZEN_SUITE and receipt.get("target_release") == TARGET and receipt.get("status") == "verified_current_ui_capture" and isinstance(declared, dict)):
+        captures = receipt.get("evidence")
+        if not (
+            receipt.get("schema_version") == 2
+            and receipt.get("suite_id") == FROZEN_SUITE
+            and receipt.get("target_release") == TARGET
+            and receipt.get("status") == "verified_current_ui_capture"
+            and isinstance(declared, dict)
+            and artifact.get("method_kind") == kind
+            and artifact.get("status") == receipt.get("status")
+            and isinstance(captures, list)
+            and captures
+        ):
             fail(f"invalid frozen method receipt: {kind!r}")
+        receipt_kinds.append(kind)
         required = declared.get("representative_results")
-        if not isinstance(covers, list) or set(covers) != set(required or []) or len(covers) != len(required or []):
+        if (
+            not isinstance(required, list)
+            or not required
+            or not all(isinstance(family, str) and family for family in required)
+            or len(required) != len(set(required))
+        ):
+            fail(f"frozen template has invalid representative results: {kind}")
+        covered: list[str] = []
+        proposed_evidence: list[dict[str, Any]] = []
+        receipt_observation_pointers: list[str] = []
+        for capture_index, capture in enumerate(captures):
+            covers, assertions = exact_frozen_capture_coverage(
+                receipt, capture, capture_index=capture_index
+            )
+            assert isinstance(capture, dict)
+            identity_verification = capture.get("identity_verification")
+            source_receipt = capture.get("source_receipt")
+            if (
+                capture.get("status") != "verified_current_ui_capture"
+                or not isinstance(identity_verification, dict)
+                or identity_verification.get("passed") is not True
+                or not isinstance(source_receipt, dict)
+                or not (
+                    source_receipt.get("declared_identity_directly_bound") is True
+                    or source_receipt.get("identity_recovered_from_archive") is True
+                )
+                or (
+                    kind == "pls_posthoc_technical_minimum_sample_size"
+                    and source_receipt.get("declared_identity_directly_bound") is not True
+                )
+            ):
+                fail(f"frozen capture is not identity/provenance verified: {kind} #{capture_index}")
+            covered.extend(covers)
+            receipt_observation_pointers.extend(
+                assertion["observed_json_pointer"] for assertion in assertions
+            )
+            archive_member = assert_sha(
+                staging, capture.get("archive") or {}, f"{kind} capture {capture_index} archive"
+            )
+            screenshot_member = assert_sha(
+                staging,
+                capture.get("screenshot") or {},
+                f"{kind} capture {capture_index} screenshot",
+            )
+            assert_sha(
+                staging,
+                source_receipt,
+                f"{kind} capture {capture_index} source receipt",
+            )
+            identity = capture.get("declared_identity")
+            if (
+                not isinstance(identity, dict)
+                or identity.get("type")
+                not in {"canonical_result_document_id", "schema5_result_run_id"}
+                or not isinstance(identity.get("value"), str)
+                or not identity["value"]
+            ):
+                fail(f"frozen capture lacks declared result identity: {kind} #{capture_index}")
+            evidence_pointer = f"/evidence/{capture_index}"
+            proposed_evidence.append(
+                {
+                    "method_kind": kind,
+                    "canonical_result_id": identity["value"],
+                    "covers": covers,
+                    "cover_assertions": assertions,
+                    "archive": {
+                        "member": archive_member,
+                        "sha256": capture["archive"]["sha256"],
+                    },
+                    "screenshot": {
+                        "member": screenshot_member,
+                        "sha256": capture["screenshot"]["sha256"],
+                    },
+                    "receipt": {
+                        "member": receipt_member,
+                        "sha256": artifact["sha256"],
+                        "method_kind_json_pointer": "/method_kind",
+                        "canonical_result_id_json_pointer": f"{evidence_pointer}/declared_identity/value",
+                        "evidence_json_pointer": evidence_pointer,
+                    },
+                }
+            )
+        if len(receipt_observation_pointers) != len(set(receipt_observation_pointers)):
+            fail(f"frozen receipt reuses an observed JSON pointer: {kind}")
+        if set(covered) != set(required) or len(covered) != len(set(covered)):
             fail(f"frozen receipt does not exactly cover declared result families: {kind}")
-        if not isinstance(assertions, list) or {row.get("family") for row in assertions if isinstance(row, dict)} != set(covers) or not all(isinstance(row, dict) and row.get("passed") is True and row.get("observed_value") for row in assertions):
-            fail(f"frozen receipt lacks observed cover assertions: {kind}")
-        archive_member = assert_sha(staging, receipt.get("archive") or {}, f"{kind} archive")
-        screenshot_member = assert_sha(staging, receipt.get("screenshot") or {}, f"{kind} screenshot")
-        identity = receipt.get("declared_identity")
-        if not isinstance(identity, dict) or not isinstance(identity.get("value"), str) or not identity["value"]:
-            fail(f"frozen receipt lacks declared result identity: {kind}")
         proposed_by_kind[kind]["status"] = "verified"
-        proposed_by_kind[kind]["evidence"] = [{
-            "covers": covers,
-            "cover_assertions": assertions,
-            "archive": {"member": archive_member, "sha256": receipt["archive"]["sha256"]},
-            "screenshot": {"member": screenshot_member, "sha256": receipt["screenshot"]["sha256"]},
-            "receipt": {"member": receipt_member, "sha256": artifact["sha256"], "method_kind_json_pointer": "/method_kind", "canonical_result_id_json_pointer": "/declared_identity/value"},
-            "identity": {"canonical_result_id": identity["value"], "method_kind": kind},
-        }]
-    if set(proposed_by_kind) != {row.get("method_kind") for row in (load(member_path(staging, item["member"])) for item in artifacts)}:
+        proposed_by_kind[kind]["evidence"] = proposed_evidence
+    if len(receipt_kinds) != len(set(receipt_kinds)) or set(proposed_by_kind) != set(receipt_kinds):
         fail("frozen receipts do not cover each public method exactly once")
     proposal["status"] = "verified"
     return proposal

@@ -64,6 +64,8 @@ if (
     $namedCaseManifestPayload.status -notin @("pending_collection", "ready")
 ) { throw "Named-case manifest has an unsupported identity or status." }
 $namedCaseManifestReady = $namedCaseManifestPayload.status -eq "ready"
+$namedCaseManifestHash = (Get-FileHash -LiteralPath $namedCaseManifest -Algorithm SHA256).Hash.ToLowerInvariant()
+$namedCaseManifestRelative = ([IO.Path]::GetFullPath($namedCaseManifest)).Substring($rootPrefix.Length).Replace('\', '/')
 if ($namedCaseManifestReady) {
     $readyNamedCases = @($namedCaseManifestPayload.cases)
     if ($readyNamedCases.Count -eq 0 -or @($readyNamedCases | Where-Object { $_.candidate -eq "installed" }).Count -eq 0 -or @($readyNamedCases | Where-Object { $_.candidate -eq "portable" }).Count -eq 0) {
@@ -269,6 +271,70 @@ function Test-ExactEmptyArrayProperty($Payload, [string]$PropertyName) {
         @($value).Count -eq 0
     )
 }
+function Assert-NamedArchiveSupplements($Report, [object[]]$ExpectedCases, [string]$Name, [int]$CandidatePid, [string]$CandidatePath, [string]$CandidateSha256, [string]$ManifestRelative, [string]$ManifestSha256, [string]$NamedEvidenceRoot) {
+    $property = @($Report.PSObject.Properties | Where-Object { $_.Name -ceq "result_archive_supplements" })
+    if ($property.Count -ne 1 -or -not ($property[0].Value -is [array])) {
+        throw "$Name named-case report must contain one exact result_archive_supplements array."
+    }
+    $supplements = @($property[0].Value)
+    if ($supplements.Count -ne $ExpectedCases.Count) {
+        throw "$Name named-case report contains $($supplements.Count) result archive supplements; expected $($ExpectedCases.Count)."
+    }
+    $observedCaseIds = @($supplements | ForEach-Object { [string]$_.case_id } | Sort-Object)
+    $expectedCaseIds = @($ExpectedCases | ForEach-Object { [string]$_.id } | Sort-Object)
+    if (@(Compare-Object -ReferenceObject $expectedCaseIds -DifferenceObject $observedCaseIds -SyncWindow 0).Count -ne 0) {
+        throw "$Name result archive supplements do not exactly cover the manifest opt-in cases."
+    }
+    $caseRows = @($Report.cases)
+    $namedEvidencePrefix = [IO.Path]::GetFullPath($NamedEvidenceRoot).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    $seenArchives = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($supplement in $supplements) {
+        $expected = @($ExpectedCases | Where-Object { $_.id -ceq [string]$supplement.case_id })
+        if ($expected.Count -ne 1 -or $supplement.status -cne "passed" -or $supplement.public_kind -cne $expected[0].route.archive_supplement_public_kind) {
+            throw "$Name result archive supplement has an unbound case/public-method identity."
+        }
+        if (
+            $supplement.candidate.name -cne $Name -or
+            [int]$supplement.candidate.pid -ne $CandidatePid -or
+            -not ([IO.Path]::GetFullPath([string]$supplement.candidate.path).Equals($CandidatePath, [StringComparison]::OrdinalIgnoreCase)) -or
+            ([string]$supplement.candidate.sha256).ToLowerInvariant() -cne $CandidateSha256.ToLowerInvariant() -or
+            $supplement.manifest.path -cne $ManifestRelative -or
+            $supplement.manifest.sha256 -cne $ManifestSha256
+        ) { throw "$Name result archive supplement is not bound to the exact candidate PID/path/SHA and manifest SHA." }
+        $identityType = [string]$supplement.result_identity.type
+        $identityValue = [string]$supplement.result_identity.value
+        if ($identityType -notin @("canonical_result_document_id", "schema5_result_run_id") -or $identityValue -notmatch '^[A-Za-z0-9_.:-]+$') {
+            throw "$Name result archive supplement has an unsupported result identity."
+        }
+        $expectedCells = @($expected[0].route.result.capability_cell_ids | ForEach-Object { [string]$_ } | Sort-Object)
+        $observedCells = @($supplement.scientific_identity.capability_cell_ids | ForEach-Object { [string]$_ } | Sort-Object)
+        if (
+            $supplement.scientific_identity.method_version -cne $expected[0].route.result.method_version -or
+            @(Compare-Object -ReferenceObject $expectedCells -DifferenceObject $observedCells -SyncWindow 0).Count -ne 0
+        ) { throw "$Name result archive supplement scientific identity differs from its manifest route." }
+        $archiveRelative = [string]$supplement.archive.path
+        if ([string]::IsNullOrWhiteSpace($archiveRelative) -or [IO.Path]::IsPathRooted($archiveRelative)) {
+            throw "$Name result archive supplement path must be repository-relative."
+        }
+        $archiveFull = [IO.Path]::GetFullPath((Join-Path $root $archiveRelative))
+        if (
+            -not $archiveFull.StartsWith($namedEvidencePrefix, [StringComparison]::OrdinalIgnoreCase) -or
+            -not (Test-Path -LiteralPath $archiveFull -PathType Leaf) -or
+            -not $seenArchives.Add($archiveFull) -or
+            (Get-FileHash -LiteralPath $archiveFull -Algorithm SHA256).Hash.ToLowerInvariant() -cne ([string]$supplement.archive.sha256).ToLowerInvariant() -or
+            (Get-Item -LiteralPath $archiveFull).Length -ne [long]$supplement.archive.size_bytes
+        ) { throw "$Name result archive supplement is missing, duplicated, outside named evidence, or hash/size mismatched." }
+        $pointerMatch = [regex]::Match([string]$supplement.source_report_json_pointer, '^#/cases/([0-9]+)/result_archive_supplement$')
+        if (-not $pointerMatch.Success) { throw "$Name result archive supplement has an invalid source report JSON pointer." }
+        $caseIndex = [int]$pointerMatch.Groups[1].Value
+        if (
+            $caseIndex -lt 0 -or $caseIndex -ge $caseRows.Count -or
+            $caseRows[$caseIndex].id -cne $supplement.case_id -or
+            $caseRows[$caseIndex].result_archive_supplement.case_id -cne $supplement.case_id -or
+            $caseRows[$caseIndex].result_archive_supplement.archive.sha256 -cne $supplement.archive.sha256
+        ) { throw "$Name result archive supplement source report JSON pointer is not an exact case receipt binding." }
+    }
+}
 function Test-Cdp([string]$Endpoint) { try { $null = Invoke-RestMethod -Uri "$Endpoint/json/version" -TimeoutSec 1; return $true } catch { return $false } }
 function Wait-Cdp([string]$Endpoint, [bool]$Open) {
     $deadline = [DateTime]::UtcNow.AddSeconds(45)
@@ -421,6 +487,7 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
     $namedCaseStdout = Join-Path $candidateEvidence "named_case_driver.stdout.log"
     $namedCaseStderr = Join-Path $candidateEvidence "named_case_driver.stderr.log"
     $namedEvidenceDriverReports = @()
+    $namedSupplementReportRelative = $null
     $candidateOutcome = $null
     $operationFailure = $null
     $cleanupFailure = $null
@@ -519,30 +586,6 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
         Stop-IsolatedCandidate $process $endpoint
         $process = $null
 
-        $frozenArchiveCollection = $null
-        if ($Name -eq "portable") {
-            $process = Start-IsolatedCandidate $candidateFull $endpoint
-            $launchedPids.Add($process.Id)
-            $frozenStaging = Join-Path $candidateEvidence "frozen_archive_reopen"
-            $frozenStdout = Join-Path $candidateEvidence "frozen_archive_reopen.stdout.log"
-            $frozenStderr = Join-Path $candidateEvidence "frozen_archive_reopen.stderr.log"
-            $frozenArguments = @($frozenArchiveCrawler, "--endpoint", $endpoint, "--staging-dir", $frozenStaging)
-            if ($effectivePosthocSupplementRelative) { $frozenArguments += @("--posthoc-supplement", $effectivePosthocSupplementRelative) }
-            & $node @frozenArguments 1> $frozenStdout 2> $frozenStderr
-            $frozenExit = $LASTEXITCODE
-            $aggregateReceipt = Join-Path $frozenStaging "receipts\v255-frozen-archive-reopen-crawler.json"
-            if (-not (Test-Path -LiteralPath $aggregateReceipt -PathType Leaf)) { throw "Portable frozen-archive crawler produced no aggregate receipt." }
-            $aggregate = Get-Content -LiteralPath $aggregateReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
-            if (
-                $frozenExit -ne 0 -or
-                $aggregate.status -ne "passed" -or
-                -not (Test-ExactEmptyArrayProperty $aggregate "failures") -or
-                -not (Test-ExactEmptyArrayProperty $aggregate "console_errors")
-            ) { throw "Portable frozen-archive crawler failed with its freshly generated posthoc run or lacks exact zero renderer errors." }
-            $frozenArchiveCollection = [ordered]@{ status = $aggregate.status; exit_code = $frozenExit; aggregate_receipt = $aggregateReceipt; aggregate_receipt_sha256 = (Get-FileHash -LiteralPath $aggregateReceipt -Algorithm SHA256).Hash.ToLowerInvariant(); staging = $frozenStaging; stdout = $frozenStdout; stderr = $frozenStderr; posthoc_supplement = $effectivePosthocSupplementRelative }
-            Stop-IsolatedCandidate $process $endpoint
-            $process = $null
-        }
         if ($namedCaseManifestReady) {
             $process = Start-IsolatedCandidate $candidateFull $endpoint
             $launchedPids.Add($process.Id)
@@ -553,6 +596,7 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
             $namedCaseReportPath = Join-Path $namedCaseEvidence "v255_named_case_driver.json"
             if (-not (Test-Path -LiteralPath $namedCaseReportPath -PathType Leaf)) { throw "$Name named-case evidence driver produced no report." }
             $namedCaseReport = Get-Content -LiteralPath $namedCaseReportPath -Raw -Encoding UTF8 | ConvertFrom-Json
+            if ((Get-FileHash -LiteralPath $namedCaseManifest -Algorithm SHA256).Hash.ToLowerInvariant() -cne $namedCaseManifestHash) { throw "Named-case manifest changed during $Name collection." }
             $expectedNamedCaseCount = @($readyNamedCases | Where-Object { $_.candidate -eq $Name }).Count
             if (
                 $namedCaseReport.schema_version -ne 1 -or
@@ -573,7 +617,44 @@ function Invoke-Candidate([string]$Name, [string]$Candidate, [int]$Port, [string
                 @($namedCaseReport.cases | Where-Object { $_.status -ne "passed" }).Count -ne 0 -or
                 @($namedCaseReport.named_evidence_observations).Count -ne $expectedNamedCaseCount
             ) { throw "$Name named-case evidence report is incomplete or false." }
+            $expectedArchiveSupplementCases = @($readyNamedCases | Where-Object { $_.candidate -ceq $Name -and $_.route.archive_supplement_public_kind })
+            Assert-NamedArchiveSupplements $namedCaseReport $expectedArchiveSupplementCases $Name $namedCaseCandidatePid $candidateFull $candidateHash $namedCaseManifestRelative $namedCaseManifestHash $namedCaseEvidence
             $namedEvidenceDriverReports = @([ordered]@{ path = $namedCaseReportPath; sha256 = (Get-FileHash -LiteralPath $namedCaseReportPath -Algorithm SHA256).Hash.ToLowerInvariant() })
+            if ($Name -eq "portable") {
+                $namedCaseReportFull = [IO.Path]::GetFullPath($namedCaseReportPath)
+                if (-not $namedCaseReportFull.StartsWith($rootPrefix, [StringComparison]::OrdinalIgnoreCase)) { throw "Portable named-case supplement report must remain beneath the repository root." }
+                $namedSupplementReportRelative = $namedCaseReportFull.Substring($rootPrefix.Length).Replace('\', '/')
+            }
+        }
+        if ($process) {
+            Stop-IsolatedCandidate $process $endpoint
+            $process = $null
+        }
+
+        $frozenArchiveCollection = $null
+        if ($Name -eq "portable") {
+            if ([string]::IsNullOrWhiteSpace($namedSupplementReportRelative)) { throw "Portable frozen-archive collection requires the exact preceding named-case supplement report." }
+            $process = Start-IsolatedCandidate $candidateFull $endpoint
+            $launchedPids.Add($process.Id)
+            $frozenStaging = Join-Path $candidateEvidence "frozen_archive_reopen"
+            $frozenStdout = Join-Path $candidateEvidence "frozen_archive_reopen.stdout.log"
+            $frozenStderr = Join-Path $candidateEvidence "frozen_archive_reopen.stderr.log"
+            $frozenArguments = @($frozenArchiveCrawler, "--endpoint", $endpoint, "--staging-dir", $frozenStaging, "--named-supplement-report", $namedSupplementReportRelative)
+            if ($effectivePosthocSupplementRelative) { $frozenArguments += @("--posthoc-supplement", $effectivePosthocSupplementRelative) }
+            & $node @frozenArguments 1> $frozenStdout 2> $frozenStderr
+            $frozenExit = $LASTEXITCODE
+            $aggregateReceipt = Join-Path $frozenStaging "receipts\v255-frozen-archive-reopen-crawler.json"
+            if (-not (Test-Path -LiteralPath $aggregateReceipt -PathType Leaf)) { throw "Portable frozen-archive crawler produced no aggregate receipt." }
+            $aggregate = Get-Content -LiteralPath $aggregateReceipt -Raw -Encoding UTF8 | ConvertFrom-Json
+            if (
+                $frozenExit -ne 0 -or
+                $aggregate.status -ne "passed" -or
+                -not (Test-ExactEmptyArrayProperty $aggregate "failures") -or
+                -not (Test-ExactEmptyArrayProperty $aggregate "console_errors")
+            ) { throw "Portable frozen-archive crawler failed with its freshly generated named/posthoc supplements or lacks exact zero renderer errors." }
+            $frozenArchiveCollection = [ordered]@{ status = $aggregate.status; exit_code = $frozenExit; aggregate_receipt = $aggregateReceipt; aggregate_receipt_sha256 = (Get-FileHash -LiteralPath $aggregateReceipt -Algorithm SHA256).Hash.ToLowerInvariant(); staging = $frozenStaging; stdout = $frozenStdout; stderr = $frozenStderr; posthoc_supplement = $effectivePosthocSupplementRelative; named_supplement_report = $namedSupplementReportRelative; named_supplement_report_sha256 = $namedEvidenceDriverReports[0].sha256 }
+            Stop-IsolatedCandidate $process $endpoint
+            $process = $null
         }
         $lifecycleReportPath = Join-Path $lifecycleEvidence "v255_live_calculation_lifecycle_smoke.json"
         $candidateOutcome = [ordered]@{ name = $Name; candidate_kind = $(if ($Name -eq "installed") { "fresh_nsis_install" } else { "portable_release_artifact" }); executable = $candidateFull; executable_sha256 = $candidateHash; product_version = $productVersion; build_source_commit = $releasePayload.source.commit; source_tree = $releasePayload.source.tree; source_manifest_sha256 = $releasePayload.source.tracked_manifest_sha256; release_artifact_report = $releaseArtifactReport; release_artifact_report_sha256 = $releaseArtifactReportHash; install_receipt = $(if ($Name -eq "installed") { $installReceipt } else { $null }); install_receipt_sha256 = $(if ($Name -eq "installed") { $installReceiptHash } else { $null }); launched_pids = @($launchedPids); status = "passed"; lifecycle = $lifecycleReportPath; lifecycle_sha256 = (Get-FileHash -LiteralPath $lifecycleReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); lifecycle_execute_stdout = $lifecycleExecuteStdout; lifecycle_execute_stderr = $lifecycleExecuteStderr; lifecycle_reopen_stdout = $lifecycleReopenStdout; lifecycle_reopen_stderr = $lifecycleReopenStderr; evidence = $methodReportPath; evidence_sha256 = (Get-FileHash -LiteralPath $methodReportPath -Algorithm SHA256).Hash.ToLowerInvariant(); evidence_stdout = $crawlerStdout; evidence_stderr = $crawlerStderr; named_evidence_driver_reports = @($namedEvidenceDriverReports); named_evidence_driver_stdout = $(if ($namedCaseManifestReady) { $namedCaseStdout } else { $null }); named_evidence_driver_stderr = $(if ($namedCaseManifestReady) { $namedCaseStderr } else { $null }); posthoc_collection = $posthocCollection; frozen_archive_collection = $frozenArchiveCollection }

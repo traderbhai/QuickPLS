@@ -33,6 +33,7 @@ const MANIFEST_SUITE_ID = "quickpls_v255_named_case_manifest_v1";
 const RENDERER_ERROR_SETTLE_MS = 250;
 const ALLOWED_VIEWS = new Set(["welcome", "home", "data", "models", "model", "runs", "results"]);
 const ALLOWED_STATES = new Set(["attached", "detached", "visible", "hidden"]);
+const ARCHIVE_SUPPLEMENT_PUBLIC_KINDS = new Set(["pls_algorithm", "pls_bootstrap", "cbsem"]);
 const SAFE_RESULT_ID = /^[A-Za-z0-9_.:-]+$/u;
 
 function assert(condition, message) { if (!condition) throw new Error(message); }
@@ -342,6 +343,11 @@ function materializeManifestCase(entry) {
   assert(route.kind === "fresh_sem_result", `${entry.id} uses unsupported route kind ${route.kind}.`);
   assert(typeof route.fixture === "string" && typeof route.method === "string" && typeof route.table_id === "string", `${entry.id} fresh SEM route is incomplete.`);
   assert(route.fixture_receipt && route.model && route.result, `${entry.id} fresh SEM route lacks exact fixture/model/result identity.`);
+  if (route.archive_supplement_public_kind !== undefined) {
+    assert(entry.candidate === "portable", `${entry.id} archive supplement must be collected from the portable candidate.`);
+    assert(ARCHIVE_SUPPLEMENT_PUBLIC_KINDS.has(route.archive_supplement_public_kind), `${entry.id} archive supplement public method kind is unsupported.`);
+    assert(route.archive_supplement_public_kind === route.method, `${entry.id} archive supplement public method kind must equal its executed method.`);
+  }
   const steps = [
     { action: "goto_packaged" },
     { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
@@ -360,6 +366,15 @@ function materializeManifestCase(entry) {
     route_contains: route.route_contains,
     completion_timeout_ms: route.completion_timeout_ms ?? 300_000,
   }, { action: "select_result_table", table_id: route.table_id });
+  if (route.archive_supplement_public_kind !== undefined) {
+    steps.push({
+      action: "save_result_archive_supplement",
+      public_kind: route.archive_supplement_public_kind,
+      table_id: route.table_id,
+      method_version: route.result.method_version,
+      capability_cell_ids: [...route.result.capability_cell_ids].sort(),
+    });
+  }
   const query = {
     kind: "specialized_result",
     table_id: route.table_id,
@@ -661,6 +676,59 @@ async function observe(page, query, evidenceDir, context = {}) {
   throw new Error(`Unsupported observation query kind: ${kind}`);
 }
 
+async function observeCompletedResultIdentity(page) {
+  const snapshot = await page.evaluate(() => window.__QUICKPLS_SMOKE__?.namedSemEvidenceSnapshot?.() ?? null);
+  const selectedValue = await page.locator(".nd-results-nav .nd-run-select select").inputValue();
+  if (snapshot?.canonical_result) {
+    const result = snapshot.canonical_result;
+    assert(typeof result.document_id === "string" && SAFE_RESULT_ID.test(result.document_id), "Completed canonical result has no safe document identity.");
+    assert(typeof result.run_id === "string" && result.run_id.trim(), "Completed canonical result has no run identity.");
+    assert([result.document_id, `canonical:${result.document_id}`].includes(selectedValue), "Selected Results identity does not match the completed canonical document.");
+    assert(typeof result.method_version === "string" && result.method_version.trim(), "Completed canonical result has no method version.");
+    assert(Array.isArray(result.capability_cell_ids) && result.capability_cell_ids.length > 0
+      && result.capability_cell_ids.every((cellId) => typeof cellId === "string" && cellId.trim()),
+    "Completed canonical result has no exact capability-cell identity.");
+    return {
+      selected_value: selectedValue,
+      result_identity: { type: "canonical_result_document_id", value: result.document_id },
+      scientific_identity: {
+        method_version: result.method_version,
+        capability_cell_ids: [...result.capability_cell_ids].sort(),
+      },
+    };
+  }
+  const result = snapshot?.legacy_result;
+  assert(result?.status === "completed" && typeof result.result_id === "string" && SAFE_RESULT_ID.test(result.result_id), "Completed result has neither a canonical document nor a safe schema-5 run identity.");
+  assert(selectedValue === result.result_id, "Selected Results identity does not match the completed schema-5 run.");
+  assert(typeof result.method_version === "string" && result.method_version.trim(), "Completed schema-5 result has no method version.");
+  return {
+    selected_value: selectedValue,
+    result_identity: { type: "schema5_result_run_id", value: result.result_id },
+    scientific_identity: { method_version: result.method_version, capability_cell_ids: [] },
+  };
+}
+
+async function inspectSavedSupplementArchive(context, target, tableId, identity, timeout) {
+  const receipt = await runJsonProcess(context.python, [
+    ARCHIVE_IDENTITY_HELPER,
+    "--archive", target,
+    "--result-id", identity.result_identity.value,
+    "--table-id", tableId,
+  ], timeout);
+  const expectedSchema = identity.result_identity.type === "canonical_result_document_id" ? 6 : 5;
+  assert(receipt?.passed === true && receipt?.suite_id === "quickpls_v255_named_archive_identity_v1", "Saved result archive identity helper returned an invalid receipt.");
+  assert(receipt.identity?.archive_schema === expectedSchema
+    && receipt.identity?.result_id === identity.result_identity.value
+    && receipt.identity?.status === "completed"
+    && receipt.identity?.method_version === identity.scientific_identity.method_version
+    && receipt.identity?.table_id === tableId,
+  "Saved result archive does not contain the exact completed result/table identity.");
+  if (expectedSchema === 6) {
+    assert(deepEqual([...receipt.identity.capability_cell_ids].sort(), identity.scientific_identity.capability_cell_ids), "Saved canonical result capability cells differ from the live completed result.");
+  }
+  return receipt.identity;
+}
+
 async function executeStep(page, step, context) {
   assert(step && typeof step === "object" && typeof step.action === "string", "Every step requires an action.");
   const timeout = Number(step.timeout_ms ?? context.timeout);
@@ -888,6 +956,7 @@ async function executeStep(page, step, context) {
         const completed = await helper.completed;
         assert(completed?.passed === true, `Requested-calculation revision Save failed: ${JSON.stringify(completed)}`);
       } finally { helper.stop(); }
+      context.calculationRevision = { target, initialSha256: await fileSha256(target) };
       const close = advanced.getByRole("button", { name: "Close dialog", exact: true });
       await close.waitFor({ state: "visible", timeout });
       await close.click();
@@ -904,6 +973,83 @@ async function executeStep(page, step, context) {
       await page.waitForTimeout(250);
     }
     throw new Error(`Calculation did not open Results within the bounded timeout: ${routeText}`);
+  }
+  if (step.action === "save_result_archive_supplement") {
+    assert(context.candidateName === "portable", "Fresh result archive supplements may only be captured from the portable candidate.");
+    assert(ARCHIVE_SUPPLEMENT_PUBLIC_KINDS.has(step.public_kind), "Result archive supplement public method kind is unsupported.");
+    assert(typeof step.table_id === "string" && SAFE_RESULT_ID.test(step.table_id), "Result archive supplement requires a safe table ID.");
+    assert(typeof step.method_version === "string" && step.method_version.trim(), "Result archive supplement requires an exact method version.");
+    assert(Array.isArray(step.capability_cell_ids), "Result archive supplement requires exact capability-cell identities.");
+    assert(context.calculationRevision?.target && await exists(context.calculationRevision.target), "No existing calculation-ready archive is available for the completed result supplement.");
+    assert(!context.resultArchiveSupplement, "A named case may emit at most one result archive supplement.");
+    const target = context.calculationRevision.target;
+    assert(inside(context.evidenceDir, target), "Result archive supplement target escapes this named-case evidence directory.");
+    await waitForOpenedProjectPath(page, target, timeout);
+    const liveIdentity = await observeCompletedResultIdentity(page);
+    assert(liveIdentity.scientific_identity.method_version === step.method_version, "Completed result method version differs from the manifest route.");
+    assert(deepEqual(liveIdentity.scientific_identity.capability_cell_ids, [...step.capability_cell_ids].sort()), "Completed result capability cells differ from the manifest route.");
+    const beforeSha256 = await fileSha256(target);
+    await page.keyboard.press("Control+s");
+    const saveDeadline = Date.now() + timeout;
+    let afterSha256 = beforeSha256;
+    while (Date.now() < saveDeadline) {
+      await page.waitForTimeout(100);
+      try { afterSha256 = await fileSha256(target); } catch { continue; }
+      if (afterSha256 !== beforeSha256) break;
+    }
+    assert(afterSha256 !== beforeSha256, "Saving the completed result did not change the existing calculation-ready archive bytes.");
+    const archiveIdentity = await inspectSavedSupplementArchive(context, target, step.table_id, liveIdentity, timeout);
+
+    await page.goto(`${PACKAGED_TAURI_ORIGIN}/?quickpls_smoke=1`, { waitUntil: "domcontentloaded", timeout });
+    await page.locator('.nd-app[data-native-desktop-shell="true"]').waitFor({ state: "visible", timeout });
+    await page.waitForFunction(() => typeof window.__QUICKPLS_SMOKE__?.setView === "function", undefined, { timeout });
+    await page.evaluate((archive) => window.dispatchEvent(new CustomEvent("quickpls:open-project-path", { detail: { path: archive } })), target);
+    await waitForOpenedProjectPath(page, target, timeout);
+    await page.evaluate(() => window.__QUICKPLS_SMOKE__?.setView("results"));
+    const resultSelect = page.locator(".nd-results-nav .nd-run-select select");
+    await resultSelect.waitFor({ state: "visible", timeout });
+    await resultSelect.locator(`option[value="${liveIdentity.selected_value}"]`).waitFor({ state: "attached", timeout });
+    await resultSelect.selectOption(liveIdentity.selected_value);
+    const visibleTable = page.locator(resultTableSelector(step.table_id)).first();
+    if (!await visibleTable.isVisible().catch(() => false)) {
+      const canonicalItem = page.locator(`[data-result-tree-item-id="canonical:table:${step.table_id}"]`);
+      const legacyItem = page.locator(`[data-result-tree-item-id="${step.table_id}"]`);
+      const targetItem = await canonicalItem.count() ? canonicalItem.first() : legacyItem.first();
+      await targetItem.waitFor({ state: "visible", timeout });
+      await targetItem.click({ timeout });
+    }
+    await visibleTable.waitFor({ state: "visible", timeout });
+    const reopenedIdentity = await observeCompletedResultIdentity(page);
+    assert(deepEqual(reopenedIdentity.result_identity, liveIdentity.result_identity)
+      && deepEqual(reopenedIdentity.scientific_identity, liveIdentity.scientific_identity),
+    "Fresh reopen did not preserve the exact completed result scientific identity.");
+    assert(await fileSha256(target) === afterSha256, "Fresh reopen changed the saved result archive bytes.");
+    const archiveStat = await fs.stat(target);
+    context.resultArchiveSupplement = {
+      case_id: context.currentCaseId,
+      public_kind: step.public_kind,
+      status: "passed",
+      archive: { path: slash(path.relative(ROOT, target)), sha256: afterSha256, size_bytes: archiveStat.size },
+      result_identity: liveIdentity.result_identity,
+      scientific_identity: liveIdentity.scientific_identity,
+      candidate: {
+        name: context.candidateName,
+        pid: context.candidatePid,
+        path: context.candidatePath,
+        sha256: context.candidateSha256,
+      },
+      manifest: { path: context.manifestPath, sha256: context.manifestSha256 },
+    };
+    return {
+      action: step.action,
+      public_kind: step.public_kind,
+      archive: context.resultArchiveSupplement.archive,
+      result_identity: liveIdentity.result_identity,
+      archive_identity: archiveIdentity,
+      before_sha256: beforeSha256,
+      saved_sha256: afterSha256,
+      fresh_reopen_verified: true,
+    };
   }
   if (step.action === "open_archive") {
     const archive = resolveRepoPath(step.path, "open_archive");
@@ -997,6 +1143,7 @@ async function runCase(page, entry, ordinal, context) {
     context.archiveIdentity = null;
     context.advancedParameterRevision = null;
     context.calculationRevision = null;
+    context.resultArchiveSupplement = null;
     for (const step of entry.steps) record.steps.push(await executeStep(page, step, context));
     const observed = await observe(page, entry.assertion.query, context.evidenceDir, context);
     assert(deepEqual(observed, entry.assertion.expected), `${entry.id} final assertion failed: ${JSON.stringify({ expected: entry.assertion.expected, observed })}`);
@@ -1009,6 +1156,7 @@ async function runCase(page, entry, ordinal, context) {
     const screenshotHash = await fileSha256(screenshotFile);
     record.assertion = { id: entry.assertion.id, expected: entry.assertion.expected, observed, passed: true };
     record.screenshot = { path: screenshotFile, sha256: screenshotHash };
+    if (context.resultArchiveSupplement) record.result_archive_supplement = context.resultArchiveSupplement;
     record.status = "passed";
     record.observation = {
       schema_version: 1,
@@ -1044,6 +1192,8 @@ async function main() {
   const reportPath = path.join(args.evidenceDir, "v255_named_case_driver.json");
   const manifest = await readJson(args.manifest);
   const index = await readJson(args.index);
+  const manifestPath = slash(path.relative(ROOT, args.manifest));
+  const manifestSha256 = await fileSha256(args.manifest);
   const report = {
     schema_version: 1,
     suite_id: SUITE_ID,
@@ -1057,8 +1207,8 @@ async function main() {
       executable_sha256: candidateSha256,
     },
     sources: {
-      manifest: slash(path.relative(ROOT, args.manifest)),
-      manifest_sha256: await fileSha256(args.manifest),
+      manifest: manifestPath,
+      manifest_sha256: manifestSha256,
       index: slash(path.relative(ROOT, args.index)),
       index_sha256: await fileSha256(args.index),
     },
@@ -1066,6 +1216,7 @@ async function main() {
     maximum_concurrent_cases: 1,
     console_errors: [],
     named_evidence_observations: [],
+    result_archive_supplements: [],
     cases: [],
     offline: null,
     failures: [],
@@ -1086,7 +1237,18 @@ async function main() {
     const page = connection.page;
     rendererErrors = observeRendererErrors(page);
     offline = observeFunctionalOfflineRequests(page);
-    const context = { timeout: args.timeout, evidenceDir: args.evidenceDir, screens, python: args.python, candidatePid: args.candidatePid, candidatePath: args.candidatePath };
+    const context = {
+      timeout: args.timeout,
+      evidenceDir: args.evidenceDir,
+      screens,
+      python: args.python,
+      candidateName: args.candidateName,
+      candidatePid: args.candidatePid,
+      candidatePath: args.candidatePath,
+      candidateSha256,
+      manifestPath,
+      manifestSha256,
+    };
     for (let ordinal = 1; ordinal <= selectedCases.length; ordinal += 1) {
       report.cases.push(await runCase(page, selectedCases[ordinal - 1], ordinal, context));
     }
@@ -1096,6 +1258,23 @@ async function main() {
     assert(new Set(screenshotHashes).size === screenshotHashes.length, "Two named cases produced identical screenshot bytes; case-specific screenshots must be unique.");
     assert(report.offline.passed, `Named-case driver observed an external request: ${JSON.stringify(report.offline)}`);
     report.named_evidence_observations = report.cases.map((entry) => entry.observation);
+    report.result_archive_supplements = report.cases.flatMap((entry, index) => entry.result_archive_supplement ? [{
+      ...entry.result_archive_supplement,
+      source_report_json_pointer: `#/cases/${index}/result_archive_supplement`,
+    }] : []);
+    const expectedSupplementCases = selectedCases.filter((entry) => entry.route?.archive_supplement_public_kind !== undefined);
+    assert(report.result_archive_supplements.length === expectedSupplementCases.length,
+      `Expected ${expectedSupplementCases.length} result archive supplements, observed ${report.result_archive_supplements.length}.`);
+    assert(deepEqual(report.result_archive_supplements.map((entry) => entry.case_id).sort(), expectedSupplementCases.map((entry) => entry.id).sort()),
+      "Result archive supplements do not exactly cover the manifest opt-in cases.");
+    for (const supplement of report.result_archive_supplements) {
+      const archive = resolveRepoPath(supplement.archive.path, "result archive supplement");
+      const stat = await fs.stat(archive);
+      assert(stat.isFile() && stat.size === supplement.archive.size_bytes && await fileSha256(archive) === supplement.archive.sha256,
+        `Result archive supplement changed before report finalization: ${supplement.case_id}`);
+    }
+    assert(await fileSha256(args.manifest) === manifestSha256, "Named-case manifest changed during collection.");
+    assert(await fileSha256(args.candidatePath) === candidateSha256, "Packaged candidate bytes changed during named-case collection.");
     report.status = "passed";
     report.passed = true;
   } catch (error) {

@@ -15,6 +15,7 @@ import {
   nativeGscaResultProjection,
   nativePcaComponentRuleLabel,
   nativePcaResultProjection,
+  nativePcaScoreResultTable,
   nativeOlsResultProjection,
   nativeLogisticResultProjection,
   nativeLegacyLogisticResultProjection,
@@ -644,30 +645,7 @@ function currentHtmtBootstrapInference(run: AnalysisRun) {
 }
 
 export function nativePcaScoreExportTable(run: AnalysisRun): ResultTable | null {
-  const projection = nativePcaResultProjection(run);
-  const scores = run.result?.pca?.scores;
-  if (!projection || !scores) return null;
-  const byComponent = new Map(projection.components.map((component) => [component.component, Array<number>(projection.observations)]));
-  for (const row of scores) {
-    const values = byComponent.get(row.component);
-    if (!values || row.observation < 0 || row.observation >= projection.observations || !Number.isFinite(row.score)) return null;
-    values[row.observation] = row.score;
-  }
-  if ([...byComponent.values()].some((values) => values.some((value) => !Number.isFinite(value)))) return null;
-  return {
-    id: "pca_scores",
-    title: "Component scores",
-    status: "validated",
-    warning: null,
-    columns: ["Complete-case observation", ...projection.components.map((component) => component.component)],
-    rows: Array.from({ length: projection.observations }, (_, observation) => [
-      String(observation + 1),
-      ...projection.components.map((component) => {
-        const value = byComponent.get(component.component)?.[observation];
-        return Number.isFinite(value) ? (value as number).toFixed(6).replace(/^-0\.000000$/, "0.000000") : "";
-      }),
-    ]),
-  };
+  return nativePcaScoreResultTable(run);
 }
 
 export function nativeOlsPredictionExportTable(run: AnalysisRun): ResultTable | null {

@@ -1,21 +1,21 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "target_release": "2.55.0",
   "status": "pending_collection",
-  "purpose": "Index completed Result evidence reused from already verified archives. Pending rows or uncovered declared result families are release blockers. Every evidence entry is independently hash-bound and receipt-bound to its canonical result.",
-  "schema_change": "v3 is intentionally incompatible with earlier drafts: each method owns evidence[] and evidence bytes live in one SHA-256-bound, release-attachable ZIP rather than ignored local result directories.",
+  "purpose": "Index completed Result evidence reused from already verified archives. Pending rows or uncovered declared result families are release blockers. Exactly 18 method rows are retained while each row may bind multiple independently captured Results routes.",
+  "schema_change": "v4 is intentionally incompatible with v3: every proposed evidence entry has top-level method_kind and canonical_result_id, binds one capture inside an outer per-method receipt through evidence_json_pointer, and proves each family through a distinct observed JSON pointer.",
   "evidence_bundle_manifest": "validation/v255_evidence_bundle_manifest.json",
   "reusable_source_inventory": "validation/v255_reusable_archive_inventory.json",
   "reuse_rule": "Do not rerun a scientific engine solely to recreate an unchanged Result screen. Rerun when calculation configuration transfer, lifecycle, routing, persistence, or a changed presentation is being tested.",
   "verified_evidence_contract": {
-    "covers": "Non-empty array of declared representative_results. The union across one method's evidence[] must exactly equal its representative_results, with no undeclared family.",
-    "cover_assertions": "Exactly one assertion per covers entry. Each assertion names the family, one observed_results_labels source (navigation, visible_headings, or visible_result_table_ids), exact or contains matching, and a non-empty value actually observed by the current frozen-archive crawler.",
+    "covers": "Non-empty array of declared representative_results. Across one method's evidence[] every representative_results family appears exactly once, with no missing, duplicate, or undeclared family.",
+    "cover_assertions": "Exactly one assertion per covers entry. Each assertion names the family, one observed_results_labels source (navigation, visible_headings, visible_result_table_ids, table_titles, table_headers, table_rows, or chart_titles), exact or contains matching, and an absolute observed_json_pointer whose non-empty scalar is recomputed from the current outer receipt. Table evidence requires non-empty captured headers and rows.",
     "archive": { "required": ["member", "sha256"] },
     "screenshot": { "required": ["member", "sha256"] },
-    "receipt": { "required": ["member", "sha256", "method_kind_json_pointer", "canonical_result_id_json_pointer"] },
-    "identity": { "required": ["canonical_result_id", "method_kind"] },
+    "receipt": { "required": ["member", "sha256", "method_kind_json_pointer", "canonical_result_id_json_pointer", "evidence_json_pointer"] },
+    "evidence_identity": { "required_top_level": ["method_kind", "canonical_result_id"] },
     "hash_algorithm": "sha256",
-    "binding_rule": "The parsed receipt must be a verified-current-UI-capture receipt from quickpls_v255_frozen_archive_reopen_crawler_v1. Its selected method/result identity, archive and screenshot hashes, and every covers family must be bound to labels or table IDs observed from the current Results DOM."
+    "binding_rule": "The parsed schema-v2 receipt must be a verified-current-UI-capture outer method receipt from quickpls_v255_frozen_archive_reopen_crawler_v1. The evidence_json_pointer must resolve the exact capture whose selected method/result identity, archive and screenshot hashes, and every covers family are bound to distinct current Results DOM observations."
   },
   "methods": [
     { "kind": "pls_algorithm", "status": "pending", "representative_results": ["measurement model", "structural model", "direct and total effects", "HOC", "two-way moderation", "three-way moderation"], "evidence": [] },
@@ -25,7 +25,7 @@
     { "kind": "cca", "status": "pending", "representative_results": ["composite residuals", "diagnostics"], "evidence": [] },
     { "kind": "cta_pls", "status": "pending", "representative_results": ["tetrads", "descriptive diagnostics"], "evidence": [] },
     { "kind": "ipma", "status": "pending", "representative_results": ["construct importance-performance", "indicator performance", "map"], "evidence": [] },
-    { "kind": "cbsem", "status": "pending", "representative_results": ["parameters", "model fit", "identification", "bootstrap inference", "all five exact-fit presentation states"], "evidence": [] },
+    { "kind": "cbsem", "status": "pending", "representative_results": ["parameters", "model fit", "identification", "bootstrap inference"], "evidence": [] },
     { "kind": "pls_bootstrap", "status": "pending", "representative_results": ["bootstrap inference", "specific indirect effects", "total indirect effects", "conditional effects", "simple slopes", "moderated mediation", "HOC bootstrap"], "evidence": [] },
     { "kind": "plsc_bootstrap", "status": "pending", "representative_results": ["corrected point estimates", "percentile inference", "conditional BCa inference", "failure ledger"], "evidence": [] },
     { "kind": "pls_permutation", "status": "pending", "representative_results": ["path randomization", "unadjusted pathwise p values", "run details"], "evidence": [] },

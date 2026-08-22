@@ -222,7 +222,7 @@ async function loadSourceBootstrap(inventoryAbsolute) {
   assert(await exists(inventoryAbsolute), "Reusable archive inventory is missing: " + inventoryAbsolute);
   const inventory = await readJson(inventoryAbsolute);
   assert(
-    inventory?.schema === "quickpls.v255.reusable_archive_inventory.v1",
+    inventory?.schema === "quickpls.v255.reusable_archive_inventory.v2",
     "Unexpected reusable inventory schema: " + (inventory?.schema ?? "missing"),
   );
   const rows = inventory.public_methods ?? [];

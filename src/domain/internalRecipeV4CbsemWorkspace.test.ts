@@ -17,6 +17,7 @@ import {
   readStoredInternalLabsRecipeV4CbsemResultsV1,
   reopenInternalLabsRecipeV4CbsemResultV1,
   schema6ArchiveIdentityFromInspectionV1,
+  selectLatestStoredExactCaseBootstrapEntryV1,
   storedExactCaseBootstrapEntriesV1,
 } from "./internalRecipeV4CbsemWorkspace";
 import { convertLegacyBasicModelV4, type SemModelV4 } from "./semModelV4";
@@ -817,6 +818,17 @@ describe("Exact CB-SEM Recipe-v4 workspace contract", () => {
     const pointEntry = entry(pointDocument);
     const exactEntry = entry(exactDocument);
     expect(storedExactCaseBootstrapEntriesV1([pointEntry, exactEntry])).toEqual([exactEntry]);
+
+    const olderExactDocument = structuredClone(exactDocument);
+    olderExactDocument.document_id = "document-exact-bootstrap-older";
+    olderExactDocument.provenance.run_id = "run-exact-bootstrap-older";
+    olderExactDocument.provenance.completed_at = "2026-08-15T00:00:01Z";
+    const olderExactEntry = entry(olderExactDocument);
+    expect(selectLatestStoredExactCaseBootstrapEntryV1([
+      exactEntry,
+      pointEntry,
+      olderExactEntry,
+    ])).toBe(exactEntry);
 
     const archive = {
       archivePath: "D:\\Study-v6.qpls",

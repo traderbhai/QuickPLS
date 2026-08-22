@@ -7,6 +7,7 @@ import type { AnalysisRun } from "../types";
 import type { NativeResultNavigation } from "./nativeResults";
 import NativeResultsSurface, {
   NcaCeilingPlot,
+  PlsSampleSizePowerPlot,
   nativeResultTreeKeyboardAction,
   nativeVisibleResultTreeEntries,
 } from "./NativeResultsSurface";
@@ -273,6 +274,65 @@ describe("native Results tree accessibility", () => {
     expect(markup).toContain('class="ceiling cr-fdh"');
     expect(markup).toContain("Condition condition (observed values)");
     expect(markup).toContain("Outcome outcome (observed values)");
+  });
+
+  it("renders an accessible prospective power chart from only persisted grid points", () => {
+    const markup = renderToStaticMarkup(<PlsSampleSizePowerPlot plot={{
+      targetPower: 0.8,
+      confidenceLevel: 0.95,
+      points: [
+        { sampleSize: 60, achievedPower: 0.62, confidenceLower: 0.52, confidenceUpper: 0.71, qualifies: false },
+        { sampleSize: 120, achievedPower: 0.91, confidenceLower: 0.84, confidenceUpper: 0.95, qualifies: true },
+      ],
+    }} />);
+
+    expect(markup).toContain('class="nd-power-plot"');
+    expect(markup).toContain('data-power-grid-points="2"');
+    expect(markup).toContain('data-power-grid-sample="60"');
+    expect(markup).toContain('data-power-grid-sample="120"');
+    expect(markup).toContain('role="img"');
+    expect(markup).toContain("n 60: power 0.62, confidence interval 0.52 to 0.71");
+    expect(markup).toContain("Points and confidence intervals reproduce persisted power-by-sample-size rows");
+    expect(markup).toContain("do not estimate intervening sample sizes");
+  });
+
+  it("renders a truthful accessible empty state for a zero-row MGA ledger", () => {
+    const run = completedSamplePlsRun();
+    const table: ResultTable = {
+      id: "mga_excluded_row_ledger",
+      title: "MGA excluded-row ledger",
+      status: "validated",
+      warning: "Zero excluded observations were persisted for this completed MGA run; the excluded-row ledger is empty.",
+      columns: ["Source row", "Exclusion reason"],
+      rows: [],
+    };
+    const ledgerNavigation: NativeResultNavigation = {
+      runId: run.id,
+      defaultItemId: table.id,
+      groups: [{
+        id: "groups",
+        title: "Groups",
+        items: [{ id: table.id, kind: "table", title: table.title, tableId: table.id }],
+      }],
+      tables: [table],
+    };
+    const markup = renderToStaticMarkup(<NativeResultsSurface
+      runs={[run]}
+      selectedRun={run}
+      selectedRunId={run.id}
+      setSelectedRunId={vi.fn()}
+      navigation={ledgerNavigation}
+      selectedItem={ledgerNavigation.groups[0].items[0]}
+      selectedTable={table}
+      setSelectedTableId={vi.fn()}
+      propertiesOpen={false}
+    />);
+
+    expect(markup).toContain('data-result-empty-table="mga_excluded_row_ledger"');
+    expect(markup).toContain('role="status"');
+    expect(markup).toContain("No ledger rows");
+    expect(markup).toContain("Zero excluded observations were persisted");
+    expect(markup).not.toContain('class="nd-result-table nd-scientific-grid"');
   });
 
   it("renders one roving tab stop with hierarchical and current-item semantics", () => {

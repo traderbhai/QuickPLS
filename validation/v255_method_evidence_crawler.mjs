@@ -38,6 +38,9 @@ const TEST_EVIDENCE_TYPES = new Set([
   "component_render_contract", "public_projection_contract", "component_registry_integration",
   "public_async_service_interaction", "native_service_boundary", "static_registry_governance",
 ]);
+const EXACT_FIT_PRESENTATION_STATES = ["Not run", "Available", "Partial", "Unavailable", "Failed"];
+const EXACT_FIT_PRESENTATION_CASES = EXACT_FIT_PRESENTATION_STATES.map((state) => `exact-fit presentation: ${state}`);
+const EXACT_FIT_PRESENTATION_TEST_FILE = "src/native/NativeResultsModelFitPresentation.test.tsx";
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -112,17 +115,32 @@ function jsonPointer(payload, pointer) {
   assert(typeof pointer === "string" && pointer.startsWith("/"), `Receipt JSON pointer is invalid: ${pointer}`);
   return pointer.slice(1).split("/").reduce((value, segment) => {
     if (value === null || typeof value !== "object") return undefined;
-    return value[segment.replace(/~1/g, "/").replace(/~0/g, "~")];
+    const token = segment.replace(/~1/g, "/").replace(/~0/g, "~");
+    if (Array.isArray(value)) {
+      if (!/^(0|[1-9][0-9]*)$/.test(token)) return undefined;
+      const index = Number(token);
+      return index < value.length ? value[index] : undefined;
+    }
+    return Object.prototype.hasOwnProperty.call(value, token) ? value[token] : undefined;
   }, payload);
 }
 
-const RESULT_OBSERVATION_SOURCES = new Set(["navigation", "visible_headings", "visible_result_table_ids"]);
+const RESULT_OBSERVATION_SOURCES = new Set([
+  "navigation",
+  "visible_headings",
+  "visible_result_table_ids",
+  "table_titles",
+  "table_headers",
+  "table_rows",
+  "chart_titles",
+]);
+const TABLE_OBSERVATION_SOURCES = new Set(["visible_result_table_ids", "table_titles", "table_headers", "table_rows"]);
 const RESULT_OBSERVATION_MATCHERS = new Set(["exact", "contains"]);
 
-function validateObservedResultCoverage(evidence, receiptPayload) {
+function validateObservedResultCoverage(evidence, receiptPayload, receiptCapture) {
   const covers = Array.isArray(evidence?.covers) ? evidence.covers : [];
   const assertions = Array.isArray(evidence?.cover_assertions) ? evidence.cover_assertions : [];
-  const labels = receiptPayload?.observed_results_labels;
+  const labels = receiptCapture?.observed_results_labels;
   const result = {
     passed: false,
     covers,
@@ -130,11 +148,18 @@ function validateObservedResultCoverage(evidence, receiptPayload) {
     exact_one_assertion_per_family: false,
     assertions_use_unique_observations: false,
     current_results_observations_present: false,
+    index_matches_receipt_capture: false,
+    table_evidence_has_headers_and_rows: false,
   };
   if (!labels || typeof labels !== "object") return result;
+  const evidencePointer = evidence?.receipt?.evidence_json_pointer;
+  if (typeof evidencePointer !== "string" || jsonPointer(receiptPayload, evidencePointer) !== receiptCapture) return result;
+  result.index_matches_receipt_capture = JSON.stringify(covers) === JSON.stringify(receiptCapture?.covers)
+    && JSON.stringify(assertions) === JSON.stringify(receiptCapture?.cover_assertions);
+  const requiredArrays = [...RESULT_OBSERVATION_SOURCES];
   result.current_results_observations_present = compact(labels.selected_result).length > 0
     && compact(labels.document_tab).length > 0
-    && ["navigation", "visible_headings", "visible_result_table_ids"].every((source) => Array.isArray(labels[source]));
+    && requiredArrays.every((source) => Array.isArray(labels[source]));
   const assertionFamilies = assertions.map((assertion) => assertion?.family);
   result.exact_one_assertion_per_family = assertions.length === covers.length
     && new Set(assertionFamilies).size === assertions.length
@@ -146,37 +171,51 @@ function validateObservedResultCoverage(evidence, receiptPayload) {
     const source = assertion?.source;
     const matcher = assertion?.matcher;
     const expected = compact(assertion?.value);
-    const observed = RESULT_OBSERVATION_SOURCES.has(source) && Array.isArray(labels[source])
-      ? labels[source].map(compact).filter(Boolean)
-      : [];
+    const pointer = assertion?.observed_json_pointer;
+    const expectedPointerPrefix = `${evidencePointer}/observed_results_labels/${source}/`;
+    const observedRaw = typeof pointer === "string" && pointer.startsWith(expectedPointerPrefix)
+      ? jsonPointer(receiptPayload, pointer)
+      : undefined;
+    const observed = observedRaw === null || typeof observedRaw === "object" ? "" : compact(observedRaw);
     const normalizedExpected = expected.toLocaleLowerCase("en-US");
-    const matched = observed.find((value) => {
-      const normalizedValue = value.toLocaleLowerCase("en-US");
-      return matcher === "exact"
-        ? normalizedValue === normalizedExpected
-        : matcher === "contains" && expected.length >= 4 && normalizedValue.includes(normalizedExpected);
-    }) ?? null;
-    const key = `${source}\0${matcher}\0${normalizedExpected}`;
+    const normalizedObserved = observed.toLocaleLowerCase("en-US");
+    const matched = matcher === "exact"
+      ? normalizedObserved === normalizedExpected
+      : matcher === "contains" && expected.length >= 4 && normalizedObserved.includes(normalizedExpected);
+    const key = pointer;
     const row = {
       family,
       source,
       matcher,
       expected,
-      matched_observation: matched,
+      observed_json_pointer: pointer ?? null,
+      observed_value: observed || null,
+      matched_observation: matched ? observed : null,
       passed: covers.includes(family)
         && RESULT_OBSERVATION_SOURCES.has(source)
         && RESULT_OBSERVATION_MATCHERS.has(matcher)
         && expected.length > 0
-        && matched !== null
+        && matched
+        && compact(assertion?.observed_value) === observed
+        && assertion?.passed === true
+        && typeof pointer === "string"
         && !observationKeys.has(key),
     };
     observationKeys.add(key);
     result.assertions.push(row);
   }
   result.assertions_use_unique_observations = observationKeys.size === assertions.length;
+  const usesTableEvidence = assertions.some((assertion) => TABLE_OBSERVATION_SOURCES.has(assertion?.source));
+  result.table_evidence_has_headers_and_rows = !usesTableEvidence
+    || (Array.isArray(labels.table_headers)
+      && Array.isArray(labels.table_rows)
+      && labels.table_headers.some((value) => compact(value).length > 0)
+      && labels.table_rows.some((value) => compact(value).length > 0));
   result.passed = result.current_results_observations_present
+    && result.index_matches_receipt_capture
     && result.exact_one_assertion_per_family
     && result.assertions_use_unique_observations
+    && result.table_evidence_has_headers_and_rows
     && result.assertions.every((assertion) => assertion.passed);
   return result;
 }
@@ -352,7 +391,7 @@ function validateMatrix(matrix, archiveIndex) {
     archive_reuse_is_explicit: matrix.execution_policy?.reuse_verified_archives_for_presentation_only_evidence === true,
     unverified_archive_evidence_cannot_be_silently_accepted: matrix.execution_policy?.unexplained_skips_allowed === false,
     setup_evidence_schema_is_v2: matrix.schema_version === 2 && (matrix.methods ?? []).every((item) => Array.isArray(item.setup_evidence)),
-    result_archive_schema_is_v3: archiveIndex.schema_version === 3 && (archiveIndex.methods ?? []).every((item) => Array.isArray(item.evidence)),
+    result_archive_schema_is_v4: archiveIndex.schema_version === 4 && (archiveIndex.methods ?? []).every((item) => Array.isArray(item.evidence)),
     calculate_capture_has_exactly_18_methods: (matrix.calculate_capture_evidence ?? []).length === 18
       && new Set((matrix.calculate_capture_evidence ?? []).map((item) => item.kind)).size === 18
       && (matrix.calculate_capture_evidence ?? []).map((item) => item.kind).join("|") === kinds.join("|"),
@@ -386,6 +425,72 @@ function setupEvidenceContract(matrix) {
   return rows;
 }
 
+function presentationEvidenceContract(matrix, assertions) {
+  const methods = matrix.methods ?? [];
+  const owners = methods.filter((method) => (method.presentation_cases ?? []).length > 0);
+  const owner = owners.length === 1 ? owners[0] : null;
+  const cases = owner?.presentation_cases ?? [];
+  const entries = owner?.presentation_evidence ?? [];
+  const rows = [];
+  for (const [index, presentationCase] of cases.entries()) {
+    const evidence = entries[index];
+    const state = EXACT_FIT_PRESENTATION_STATES[index];
+    const expectedTest = `renders exact-fit presentation state ${state} from validated run authority`;
+    const assertion = evidence ? exactVitestAssertion(assertions, evidence) : null;
+    rows.push({
+      presentation_case: presentationCase,
+      evidence_type: evidence?.evidence_type ?? null,
+      replacement_file: evidence?.replacement_file ?? null,
+      replacement_test: evidence?.replacement_test ?? null,
+      assertion_identity: assertion,
+      passed: evidence?.presentation_case === presentationCase
+        && evidence?.status === "ready"
+        && evidence?.evidence_type === "component"
+        && normalPath(evidence?.replacement_file).replace(/^\.\//, "") === EXACT_FIT_PRESENTATION_TEST_FILE
+        && evidence?.replacement_test === expectedTest
+        && assertion?.status === "passed",
+    });
+  }
+  return {
+    owner_kind: owner?.kind ?? null,
+    expected_cases: EXACT_FIT_PRESENTATION_CASES,
+    declared_cases: cases,
+    exactly_one_pls_bootstrap_owner: owners.length === 1 && owner?.kind === "pls_bootstrap",
+    cases_are_exact: JSON.stringify(cases) === JSON.stringify(EXACT_FIT_PRESENTATION_CASES),
+    exactly_one_evidence_entry_per_case: Array.isArray(entries)
+      && entries.length === cases.length
+      && new Set(entries.map((entry) => entry?.presentation_case)).size === entries.length
+      && cases.every((presentationCase) => entries.filter((entry) => entry?.presentation_case === presentationCase).length === 1),
+    cases_are_excluded_from_archive_result_families: methods.every((method) => (
+      (method.result_families ?? []).every((family) => !EXACT_FIT_PRESENTATION_CASES.includes(family)
+        && family !== "all five exact-fit presentation states")
+    )),
+    rows,
+    structure_passed: owners.length === 1
+      && owner?.kind === "pls_bootstrap"
+      && JSON.stringify(cases) === JSON.stringify(EXACT_FIT_PRESENTATION_CASES)
+      && Array.isArray(entries)
+      && entries.length === cases.length
+      && new Set(entries.map((entry) => entry?.presentation_case)).size === entries.length
+      && cases.every((presentationCase) => entries.filter((entry) => entry?.presentation_case === presentationCase).length === 1)
+      && methods.every((method) => (
+        (method.result_families ?? []).every((family) => !EXACT_FIT_PRESENTATION_CASES.includes(family)
+          && family !== "all five exact-fit presentation states")
+      )),
+    passed: owners.length === 1
+      && owner?.kind === "pls_bootstrap"
+      && JSON.stringify(cases) === JSON.stringify(EXACT_FIT_PRESENTATION_CASES)
+      && Array.isArray(entries)
+      && entries.length === cases.length
+      && rows.length === cases.length
+      && rows.every((row) => row.passed)
+      && methods.every((method) => (
+        (method.result_families ?? []).every((family) => !EXACT_FIT_PRESENTATION_CASES.includes(family)
+          && family !== "all five exact-fit presentation states")
+      )),
+  };
+}
+
 async function validateArchiveInventory(archiveIndex, bundleResolver) {
   const rows = [];
   for (const item of archiveIndex.methods ?? []) {
@@ -397,12 +502,16 @@ async function validateArchiveInventory(archiveIndex, bundleResolver) {
       continue;
     }
     const declaredFamilies = new Set(item.representative_results ?? []);
-    const coveredFamilies = new Set();
+    const coveredFamilyCounts = new Map([...declaredFamilies].map((family) => [family, 0]));
+    const observedPointerKeys = new Set();
     for (const [index, evidence] of (item.evidence ?? []).entries()) {
       const entry = { index, covers: evidence.covers ?? [] };
       entry.method_kind_matches_row = typeof evidence.method_kind === "string" && evidence.method_kind === item.kind;
       entry.canonical_result_id_present = typeof evidence.canonical_result_id === "string" && evidence.canonical_result_id.trim().length > 0;
-      entry.covers_declared_families_only = Array.isArray(evidence.covers) && evidence.covers.length > 0 && evidence.covers.every((family) => declaredFamilies.has(family));
+      entry.covers_declared_families_only = Array.isArray(evidence.covers)
+        && evidence.covers.length > 0
+        && evidence.covers.length === new Set(evidence.covers).size
+        && evidence.covers.every((family) => declaredFamilies.has(family));
       entry.archive = await verifyHashedEvidence(evidence.archive, "archive", bundleResolver);
       entry.screenshot = await verifyHashedEvidence(evidence.screenshot, "screenshot", bundleResolver);
       entry.receipt = await verifyHashedEvidence(evidence.receipt, "receipt", bundleResolver);
@@ -410,31 +519,58 @@ async function validateArchiveInventory(archiveIndex, bundleResolver) {
       entry.receipt_binding = { passed: false };
       entry.receipt_current_ui_observation = { passed: false };
       entry.coverage_observations = { passed: false };
-      if (entry.receipt.passed && typeof evidence.receipt?.method_kind_json_pointer === "string" && typeof evidence.receipt?.canonical_result_id_json_pointer === "string") {
+      if (entry.receipt.passed
+        && typeof evidence.receipt?.method_kind_json_pointer === "string"
+        && typeof evidence.receipt?.canonical_result_id_json_pointer === "string"
+        && typeof evidence.receipt?.evidence_json_pointer === "string") {
         try {
           const receiptPayload = JSON.parse(await fs.readFile(path.resolve(bundleResolver.extract_dir, evidence.receipt.member), "utf8"));
           entry.receipt_parseable = true;
+          const receiptCapture = jsonPointer(receiptPayload, evidence.receipt.evidence_json_pointer);
           const receiptMethodKind = jsonPointer(receiptPayload, evidence.receipt.method_kind_json_pointer);
           const receiptCanonicalResultId = jsonPointer(receiptPayload, evidence.receipt.canonical_result_id_json_pointer);
-          entry.receipt_binding = { method_kind: receiptMethodKind, canonical_result_id: receiptCanonicalResultId, passed: receiptMethodKind === evidence.method_kind && receiptCanonicalResultId === evidence.canonical_result_id };
+          const canonicalPointerBelongsToCapture = evidence.receipt.canonical_result_id_json_pointer
+            === `${evidence.receipt.evidence_json_pointer}/declared_identity/value`;
+          const evidencePointerHasExactShape = /^\/evidence\/(0|[1-9][0-9]*)$/.test(evidence.receipt.evidence_json_pointer);
+          entry.receipt_binding = {
+            method_kind: receiptMethodKind,
+            canonical_result_id: receiptCanonicalResultId,
+            evidence_json_pointer: evidence.receipt.evidence_json_pointer,
+            passed: receiptMethodKind === evidence.method_kind
+              && receiptCanonicalResultId === evidence.canonical_result_id
+              && evidence.receipt.method_kind_json_pointer === "/method_kind"
+              && evidencePointerHasExactShape
+              && canonicalPointerBelongsToCapture
+              && receiptCapture !== null
+              && typeof receiptCapture === "object"
+              && !Array.isArray(receiptCapture),
+          };
           entry.receipt_current_ui_observation = {
             schema_version: receiptPayload?.schema_version ?? null,
             suite_id: receiptPayload?.suite_id ?? null,
             target_release: receiptPayload?.target_release ?? null,
             status: receiptPayload?.status ?? null,
-            passed: receiptPayload?.schema_version === 1
+            passed: receiptPayload?.schema_version === 2
               && receiptPayload?.suite_id === "quickpls_v255_frozen_archive_reopen_crawler_v1"
               && receiptPayload?.target_release === "2.55.0"
               && receiptPayload?.status === "verified_current_ui_capture"
               && receiptPayload?.method_kind === evidence.method_kind
-              && receiptPayload?.archive?.member === evidence.archive?.member
-              && receiptPayload?.archive?.sha256 === evidence.archive?.sha256
-              && receiptPayload?.screenshot?.member === evidence.screenshot?.member
-              && receiptPayload?.screenshot?.sha256 === evidence.screenshot?.sha256,
+              && receiptCapture?.status === "verified_current_ui_capture"
+              && receiptCapture?.archive?.member === evidence.archive?.member
+              && receiptCapture?.archive?.sha256 === evidence.archive?.sha256
+              && receiptCapture?.screenshot?.member === evidence.screenshot?.member
+              && receiptCapture?.screenshot?.sha256 === evidence.screenshot?.sha256,
           };
-          entry.coverage_observations = validateObservedResultCoverage(evidence, receiptPayload);
+          entry.coverage_observations = validateObservedResultCoverage(evidence, receiptPayload, receiptCapture);
           if (entry.coverage_observations.passed) {
-            for (const family of evidence.covers ?? []) coveredFamilies.add(family);
+            for (const family of evidence.covers ?? []) {
+              coveredFamilyCounts.set(family, (coveredFamilyCounts.get(family) ?? 0) + 1);
+            }
+            for (const assertion of evidence.cover_assertions ?? []) {
+              const key = `${evidence.receipt.member}\0${assertion.observed_json_pointer}`;
+              if (observedPointerKeys.has(key)) entry.coverage_observations.passed = false;
+              observedPointerKeys.add(key);
+            }
           }
         } catch (error) { entry.receipt_parse_error = error instanceof Error ? error.message : String(error); }
       }
@@ -450,10 +586,15 @@ async function validateArchiveInventory(archiveIndex, bundleResolver) {
         && entry.coverage_observations.passed;
       row.evidence.push(entry);
     }
+    const coveredFamilies = [...coveredFamilyCounts.entries()]
+      .filter(([, count]) => count > 0)
+      .map(([family]) => family);
     row.coverage = {
       declared: [...declaredFamilies],
-      covered: [...coveredFamilies],
-      exact: declaredFamilies.size === coveredFamilies.size && [...declaredFamilies].every((family) => coveredFamilies.has(family)),
+      covered: coveredFamilies,
+      family_counts: Object.fromEntries(coveredFamilyCounts),
+      exact: declaredFamilies.size === coveredFamilies.length
+        && [...declaredFamilies].every((family) => coveredFamilyCounts.get(family) === 1),
     };
     row.passed = row.coverage.exact && row.evidence.length > 0 && row.evidence.every((entry) => entry.passed);
     if (!row.passed) row.reason = "verified archive evidence is incomplete, tampered, unparseable, unbound, or does not exactly cover every declared result family";
@@ -716,6 +857,7 @@ const vitestReport = vitestReportPath ? await readJson(vitestReportPath) : null;
 const assertions = vitestAssertions(vitestReport);
 const matrixChecks = validateMatrix(matrix, archiveIndex);
 const setupContracts = setupEvidenceContract(matrix);
+const presentationContract = presentationEvidenceContract(matrix, assertions);
 const bundleResolver = await prepareBundleResolver(bundleManifest, args);
 const reusableArchiveCheck = await validateReusableArchiveInventory(reusableArchiveInventory, archiveIndex);
 const report = {
@@ -734,6 +876,7 @@ const report = {
   console_errors: [],
   matrix_checks: matrixChecks,
   setup_evidence_contract: setupContracts,
+  presentation_evidence_contract: presentationContract,
   sources: {
     matrix_sha256: sha256(await fs.readFile(MATRIX_PATH)),
     frozen_archive_index_sha256: sha256(await fs.readFile(ARCHIVE_INDEX_PATH)),
@@ -763,10 +906,14 @@ try {
   const setupPassed = args.mode === "inventory" || (report.setups.length === expectedSetupCount && report.setups.every((entry) => entry.status === "passed"));
   const calculateCapturesPassed = args.mode === "inventory" || (report.calculate_captures.length === 18 && report.calculate_captures.every((entry) => entry.status === "passed" && typeof entry.screenshot === "string"));
   const setupContractPassed = setupContracts.every((entry) => entry.exactly_one_entry_per_case && entry.entries_use_recognized_evidence_types && entry.entries_are_explicitly_ready_pending_or_verified);
+  const presentationContractPassed = args.mode === "inventory"
+    ? presentationContract.structure_passed
+    : presentationContract.passed;
   report.passed = Object.values(matrixChecks).every(Boolean)
     && setupPassed
     && calculateCapturesPassed
     && setupContractPassed
+    && presentationContractPassed
     && (args["result-evidence-phase"] === "publication" ? publicationEvidencePassed : sourceInventoryPassed);
   if (report.passed && args.mode !== "inventory") {
     report.named_evidence_observations = await buildNamedEvidenceObservations(report);

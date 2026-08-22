@@ -4,6 +4,7 @@ import type { AnalysisRun } from "../types";
 import {
   buildNativeResultNavigation,
   nativePlsPosthocMinimumSampleSizeProjection,
+  nativePlsPosthocSourceRunProjection,
   nativeResultTables,
 } from "./nativeResults";
 import { canonicalResultDocumentFromAnalysisRunV2 } from "./nativeCanonicalResultDocumentV2";
@@ -150,6 +151,34 @@ describe("PLS posthoc minimum sample size", () => {
         ["Bootstrap p value (two-sided)", "0.010000"],
         ["Driver selection", "Smallest absolute path with two-sided normal-reference bootstrap p ≤ 0.05"],
       ]));
+    expect(nativePlsPosthocSourceRunProjection(run)).toEqual({
+      runId: run.id,
+      runFingerprint: run.fingerprint,
+      bootstrapLinkage: "same_completed_run",
+      recipeId: "recipe-posthoc-v2",
+      datasetFingerprint: `sha256:${"a".repeat(64)}`,
+      method: "pls_pm",
+      methodVersion: run.result!.method_version,
+      completedAt: "2026-08-14T00:00:01.000Z",
+    });
+    expect(nativeResultTables(run).find((table) => table.id === "posthoc_source_run_identity")).toMatchObject({
+      title: "Post-hoc source-run identity",
+      rows: expect.arrayContaining([
+        ["Completed run ID", run.id],
+        ["Run fingerprint", run.fingerprint],
+        ["Bootstrap linkage", "Same completed run (linked full-model bootstrap inference)"],
+        ["Recipe ID", "recipe-posthoc-v2"],
+        ["Dataset fingerprint", `sha256:${"a".repeat(64)}`],
+      ]),
+    });
+  });
+
+  it("fails current post-hoc Results closed when persisted source-run identity is incomplete", () => {
+    const run = completedInferenceAwarePosthocRun();
+    run.provenance!.recipe_id = "";
+
+    expect(nativePlsPosthocSourceRunProjection(run)).toBeNull();
+    expect(nativeResultTables(run)).toEqual([]);
   });
 
   it("keeps formula direction separate from the two-sided driver-selection boundary", () => {
@@ -313,7 +342,7 @@ describe("PLS posthoc minimum sample size", () => {
   });
 
   it("shows a corrective unavailable result when bootstrap inference was not run", () => {
-    const run = completedSamplePlsRun();
+    const run = completedInferenceAwarePosthocRun();
     delete run.bootstrap;
     run.result!.posthoc_minimum_sample_size = {
       method_version: "inverse_square_root_posthoc_v2",
@@ -338,9 +367,12 @@ describe("PLS posthoc minimum sample size", () => {
     };
 
     expect(nativePlsPosthocMinimumSampleSizeProjection(run)?.status).toBe("inference_unavailable");
+    expect(nativePlsPosthocSourceRunProjection(run)).toBeNull();
     expect(nativeResultTables(run).find((table) => table.id === "posthoc_minimum_sample_size")?.rows)
       .toEqual(expect.arrayContaining([
         ["Result status", "Unavailable: run PLS bootstrapping to identify statistically significant paths"],
       ]));
+    expect(nativeResultTables(run).some((table) => table.id === "posthoc_source_run_identity"))
+      .toBe(false);
   });
 });
