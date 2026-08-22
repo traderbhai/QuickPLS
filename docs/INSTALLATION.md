@@ -1,6 +1,6 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. Formal first diagnostic `20260822T125438Z`
+Current source version: **2.54.0**. Formal first diagnostic `20260822T125438Z`
 at source `4bb0810` executed all 14 steps and passed 12; only
 `v255_evidence_contract` and `v255_final_evidence_contract` failed because
 README and this Installation guide still reported source 2.55.0 while the gate

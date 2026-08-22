@@ -120,7 +120,7 @@ const dataset = (): Dataset & { columnMetadata: ColumnMetadata[] } => {
     columnMetadata: columns.map<ColumnMetadata>((name) => ({
       name, label: null, column_type: "numeric" as const,
       scale_type: name === "b" ? "binary" as const : "continuous" as const,
-      missing_markers: [], theoretical_min: null, theoretical_max: null,
+      missing_markers: [], theoretical_min: name === "b" ? 0 : null, theoretical_max: name === "b" ? 1 : null,
       value_labels: (name === "b" ? { "0": "Group 0", "1": "Group 1" } : {}) as Record<string, string>,
     })),
   };
@@ -175,12 +175,19 @@ export function v255NamedSemEvidenceFixture(fixture: V255NamedSemFixture) {
     nodes = [n.x, n.m1, n.m2, n.y]; edges = [edge("path:x-m1", "x", "m1"), edge("path:x-m2", "x", "m2"), edge("path:m1-y", "m1", "y"), edge("path:m2-y", "m2", "y"), edge("path:x-y", "x", "y")];
   } else if (fixture === "serial_mediation") {
     nodes = [n.x, n.m1, n.m2, n.y]; edges = [edge("path:x-m1", "x", "m1"), edge("path:m1-m2", "m1", "m2"), edge("path:m2-y", "m2", "y"), edge("path:x-y", "x", "y")];
-  } else if (["simultaneous_two_way", "binary_moderation"].includes(fixture)) {
-    const moderators = fixture === "binary_moderation" ? [n.b] : [n.w, n.z];
-    const ids = fixture === "binary_moderation" ? ["b"] : ["w", "z"];
+  } else if (fixture === "simultaneous_two_way") {
+    const moderators = [n.w, n.z];
+    const ids = ["w", "z"];
     const terms = ids.map((id, index) => interaction(`x-${id}-y`, ["x", id], "path:x-y", "y", 80 + index * 150));
     nodes = [n.x, ...moderators, n.y, ...terms];
     edges = [edge("path:x-y", "x", "y"), ...ids.map((id) => edge(`path:${id}-y`, id, "y")), ...terms.map((term) => edge(`path:${term.id}-y`, term.id, "y", true))];
+  } else if (fixture === "binary_moderation") {
+    const terms = [
+      interaction("x-w-y", ["x", "w"], "path:x-y", "y", 40), interaction("x-b-y", ["x", "b"], "path:x-y", "y", 150),
+      interaction("w-b-y", ["w", "b"], "path:w-y", "y", 260), interaction("x-w-b-y", ["x", "w", "b"], "path:x-y", "y", 370),
+    ];
+    nodes = [n.x, n.w, n.b, n.y, ...terms];
+    edges = [edge("path:x-y", "x", "y"), edge("path:w-y", "w", "y"), edge("path:b-y", "b", "y"), ...terms.map((term) => edge(`path:${term.id}-y`, term.id, "y", true))];
   } else if (fixture === "three_way") {
     const terms = [
       interaction("x-w-y", ["x", "w"], "path:x-y", "y", 40), interaction("x-z-y", ["x", "z"], "path:x-y", "y", 150),

@@ -25,6 +25,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const RESULTS = path.join(ROOT, "validation", "results");
 const DEFAULT_INDEX = path.join(ROOT, "validation", "v255_named_evidence_index.json");
 const DEFAULT_MANIFEST = path.join(ROOT, "validation", "v255_named_case_manifest.json");
+const NAMED_SEM_DATASET = path.join(ROOT, "validation", "fixtures", "v255", "named-sem-evidence.csv");
 const FILE_DIALOG_HELPER = path.join(ROOT, "validation", "windows_native_owned_file_dialog.py");
 const ARCHIVE_IDENTITY_HELPER = path.join(ROOT, "validation", "v255_named_archive_identity.py");
 const TARGET_RELEASE = "2.55.0";
@@ -189,6 +190,7 @@ function freshSpecializedExpected(entry, route) {
     three_way_effect_count: 0,
     three_way_conditional_effect_count: 0,
     three_way_simple_slope_count: 0,
+    three_way_probe_contracts: [],
     conditional_indirect_count: 0,
     moderated_mediation_index_count: 0,
     higher_order_stage_count: 0,
@@ -604,6 +606,7 @@ async function observe(page, query, evidenceDir, context = {}) {
           three_way_effect_count: smokeSnapshot.canonical_result.three_way_effect_count,
           three_way_conditional_effect_count: smokeSnapshot.canonical_result.three_way_conditional_effect_count,
           three_way_simple_slope_count: smokeSnapshot.canonical_result.three_way_simple_slope_count,
+          three_way_probe_contracts: smokeSnapshot.canonical_result.three_way_probe_contracts,
           conditional_indirect_count: smokeSnapshot.canonical_result.conditional_indirect_count,
           moderated_mediation_index_count: smokeSnapshot.canonical_result.moderated_mediation_index_count,
           higher_order_stage_count: smokeSnapshot.canonical_result.higher_order_stage_count,
@@ -796,14 +799,30 @@ async function executeStep(page, step, context) {
   }
   if (step.action === "load_named_sem_fixture") {
     assert(typeof step.fixture === "string" && step.fixture, "load_named_sem_fixture requires fixture.");
-    const observed = await page.evaluate(async (fixture) => {
+    const observed = await page.evaluate(async ({ fixture, datasetPath }) => {
       if (typeof window.__QUICKPLS_SMOKE__?.loadNamedSemEvidenceFixture !== "function") return null;
-      return window.__QUICKPLS_SMOKE__.loadNamedSemEvidenceFixture(fixture);
-    }, step.fixture);
-    assert(observed && observed.fixture === step.fixture && typeof observed.modelId === "string", "Named SEM fixture API is unavailable or returned an invalid receipt.");
+      return window.__QUICKPLS_SMOKE__.loadNamedSemEvidenceFixture({ fixture, datasetPath });
+    }, { fixture: step.fixture, datasetPath: context.namedSemDatasetPath });
+    assert(observed
+      && observed.fixture === step.fixture
+      && typeof observed.modelId === "string"
+      && observed.datasetResident === true
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(observed.datasetId ?? "")
+      && typeof observed.datasetFingerprint === "string"
+      && observed.datasetFingerprint.trim()
+      && observed.datasetRows === 360
+      && observed.datasetColumns === 20,
+    "Named SEM fixture API is unavailable or did not return an exact native-resident dataset receipt.");
     context.activeFixture = observed;
     await page.locator('.nd-app[data-surface="model"]').waitFor({ state: "visible", timeout });
-    return { action: step.action, observed };
+    return {
+      action: step.action,
+      source: {
+        path: slash(path.relative(ROOT, context.namedSemDatasetPath)),
+        sha256: context.namedSemDatasetSha256,
+      },
+      observed,
+    };
   }
   if (step.action === "inspect_archive_identity") {
     const archive = resolveRepoPath(step.path, "inspect_archive_identity archive");
@@ -1243,7 +1262,7 @@ async function main() {
   assert(inside(RESULTS, args.evidenceDir) && args.evidenceDir !== RESULTS, "--evidence-dir must be a new child of validation/results.");
   assert(!await exists(args.evidenceDir), `Refusing to reuse evidence directory: ${args.evidenceDir}`);
   assert(inside(ROOT, args.manifest) && inside(ROOT, args.index), "Manifest and index must remain in the repository.");
-  assert(await exists(args.manifest) && await exists(args.index) && await exists(args.python)
+  assert(await exists(args.manifest) && await exists(args.index) && await exists(NAMED_SEM_DATASET) && await exists(args.python)
     && await exists(FILE_DIALOG_HELPER) && await exists(ARCHIVE_IDENTITY_HELPER) && await exists(args.candidatePath),
   "Driver input, Python, archive identity helper, or native dialog helper is missing.");
   const candidateStat = await fs.stat(args.candidatePath);
@@ -1257,6 +1276,8 @@ async function main() {
   const index = await readJson(args.index);
   const manifestPath = slash(path.relative(ROOT, args.manifest));
   const manifestSha256 = await fileSha256(args.manifest);
+  const namedSemDatasetPath = path.resolve(NAMED_SEM_DATASET);
+  const namedSemDatasetSha256 = await fileSha256(namedSemDatasetPath);
   const report = {
     schema_version: 1,
     suite_id: SUITE_ID,
@@ -1274,6 +1295,8 @@ async function main() {
       manifest_sha256: manifestSha256,
       index: slash(path.relative(ROOT, args.index)),
       index_sha256: await fileSha256(args.index),
+      named_sem_dataset: slash(path.relative(ROOT, namedSemDatasetPath)),
+      named_sem_dataset_sha256: namedSemDatasetSha256,
     },
     serial: true,
     maximum_concurrent_cases: 1,
@@ -1311,6 +1334,8 @@ async function main() {
       candidateSha256,
       manifestPath,
       manifestSha256,
+      namedSemDatasetPath,
+      namedSemDatasetSha256,
     };
     for (let ordinal = 1; ordinal <= selectedCases.length; ordinal += 1) {
       if (page.isClosed()) {
@@ -1352,6 +1377,7 @@ async function main() {
         `Result archive supplement changed before report finalization: ${supplement.case_id}`);
     }
     assert(await fileSha256(args.manifest) === manifestSha256, "Named-case manifest changed during collection.");
+    assert(await fileSha256(namedSemDatasetPath) === namedSemDatasetSha256, "Named SEM dataset changed during collection.");
     assert(await fileSha256(args.candidatePath) === candidateSha256, "Packaged candidate bytes changed during named-case collection.");
     report.status = "passed";
     report.passed = true;

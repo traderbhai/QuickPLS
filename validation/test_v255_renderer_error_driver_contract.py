@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import json
 import re
 import unittest
@@ -253,6 +254,158 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn("if (page.isClosed())", run_loop)
         self.assertIn("selectedCases.slice(ordinal - 1)", run_loop)
         self.assertIn("candidate renderer page closed", run_loop)
+
+    def test_named_sem_routes_import_one_curated_native_resident_csv(self) -> None:
+        dataset_path = VALIDATION / "fixtures" / "v255" / "named-sem-evidence.csv"
+        with dataset_path.open("r", encoding="utf-8", newline="") as stream:
+            rows = list(csv.reader(stream))
+        self.assertEqual(
+            rows[0],
+            [
+                "x1", "x2", "x3", "m11", "m12", "m13", "m21", "m22",
+                "w1", "w2", "z1", "z2", "b", "c11", "c12", "c21",
+                "c22", "y1", "y2", "y3",
+            ],
+        )
+        self.assertEqual(len(rows), 361)
+        self.assertTrue(all(len(row) == 20 for row in rows[1:]))
+        self.assertTrue(all(row[12] in {"0", "1"} for row in rows[1:]))
+        for row in rows[1:]:
+            for value in row:
+                self.assertTrue(float(value) == float(value))
+
+        named = source("v255_named_case_driver.mjs")
+        fixture_step = named[
+            named.index('if (step.action === "load_named_sem_fixture")'):
+            named.index('if (step.action === "inspect_archive_identity")')
+        ]
+        self.assertIn("loadNamedSemEvidenceFixture({ fixture, datasetPath })", fixture_step)
+        self.assertIn("observed.datasetResident === true", fixture_step)
+        self.assertIn("observed.datasetRows === 360", fixture_step)
+        self.assertIn("observed.datasetColumns === 20", fixture_step)
+
+        app = (ROOT / "src" / "native" / "NativeDesktopApp.tsx").read_text(encoding="utf-8")
+        fixture_hook_start = app.index("loadNamedSemEvidenceFixture: async")
+        fixture_hook = app[
+            fixture_hook_start:
+            app.index("namedSemEvidenceSnapshot:", fixture_hook_start)
+        ]
+        self.assertIn("importNativeDatasetAtPathForValidation(datasetPath)", fixture_hook)
+        self.assertIn("const afterImport = useWorkspace.getState();", fixture_hook)
+        self.assertIn("afterImport.projectId !== retainedProjectId", fixture_hook)
+        self.assertIn("afterImport.projectPath !== null", fixture_hook)
+        self.assertIn("afterImport.generalSemProjectDraftMode?.sourceProjectId !== retainedDraft.sourceProjectId", fixture_hook)
+        self.assertIn("afterImport.generalSemPublicationPending", fixture_hook)
+        self.assertIn('updateNativeColumnMetadata(importedDataset.id, "b", {', fixture_hook)
+        self.assertIn('scale_type: "binary"', fixture_hook)
+        self.assertIn("theoretical_min: 0", fixture_hook)
+        self.assertIn("theoretical_max: 1", fixture_hook)
+        self.assertIn('value_labels: { "0": "Group 0", "1": "Group 1" }', fixture_hook)
+        self.assertIn("residentDataset.id === importedDataset.id", fixture_hook)
+        self.assertIn("residentDataset.fingerprint === importedDataset.fingerprint", fixture_hook)
+        self.assertIn("dataset: residentDataset", fixture_hook)
+        self.assertIn("retainedDraft ? { preserveGeneralSemProjectDraftMode: retainedDraft } : {}", fixture_hook)
+        self.assertLess(
+            fixture_hook.index("importNativeDatasetAtPathForValidation(datasetPath)"),
+            fixture_hook.index("const afterImport = useWorkspace.getState();"),
+        )
+        self.assertLess(
+            fixture_hook.index("const afterImport = useWorkspace.getState();"),
+            fixture_hook.index('updateNativeColumnMetadata(importedDataset.id, "b", {'),
+        )
+        self.assertLess(
+            fixture_hook.index('updateNativeColumnMetadata(importedDataset.id, "b", {'),
+            fixture_hook.index("loadProject({"),
+        )
+
+        snapshot_start = app.index("namedSemEvidenceSnapshot:", fixture_hook_start)
+        snapshot = app[
+            snapshot_start:
+            app.index("exerciseNamedAdvancedParameterRevision:", snapshot_start)
+        ]
+        self.assertIn("three_way_moderation_bootstrap_receipt?.capability_cell", snapshot)
+        self.assertIn("three_way_simple_slopes", snapshot)
+        self.assertIn("three_way_probe_contracts: threeWayProbeContracts", snapshot)
+        self.assertLess(
+            snapshot.index("three_way_moderation_bootstrap_receipt?.capability_cell"),
+            snapshot.index("inference_receipt?.capability_cell"),
+        )
+
+        readiness = (VALIDATION / "v255_named_route_readiness.py").read_text(encoding="utf-8")
+        audit = (VALIDATION / "v255_product_completion_audit.py").read_text(encoding="utf-8")
+        self.assertIn('repo / "validation" / "fixtures" / "v255" / "named-sem-evidence.csv"', readiness)
+        self.assertIn('"validation/fixtures/v255/named-sem-evidence.csv"', audit)
+
+    def test_named_sem_manifest_pins_qualified_probe_and_bootstrap_identities(self) -> None:
+        manifest = json.loads(source("v255_named_case_manifest.json"))
+        routes = {case["id"]: case["route"] for case in manifest["cases"] if "route" in case}
+        explicit_w = {
+            "moderator_id": "construct:w",
+            "kind": "explicit",
+            "values": [-1, 0, 1],
+        }
+        simultaneous = routes["specialized_result:simultaneous two-way moderation"]
+        self.assertEqual(
+            [explicit_w, {**explicit_w, "moderator_id": "construct:z"}],
+            simultaneous["result_counts"]["conditional_probe_contracts"],
+        )
+        for case_id in (
+            "specialized_result:first-stage moderated mediation",
+            "specialized_result:second-stage moderated mediation",
+        ):
+            self.assertEqual(
+                [explicit_w],
+                routes[case_id]["result_counts"]["conditional_probe_contracts"],
+            )
+        self.assertEqual(
+            [
+                {"moderator_id": "construct:w", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+                {"moderator_id": "construct:z", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+            ],
+            routes["specialized_result:three-way moderation"]["result_counts"]["three_way_probe_contracts"],
+        )
+
+        binary = routes["specialized_result:binary moderator probes"]
+        self.assertEqual("general_sem_three_way_simple_slopes", binary["table_id"])
+        self.assertEqual(
+            ["Moderator 1", "Moderator 1 value", "Moderator 2", "Moderator 2 value", "Estimate"],
+            binary["header_contains"],
+        )
+        self.assertEqual(["Moderator W", "Binary moderator", "0", "1"], binary["row_contains"])
+        self.assertEqual(
+            {
+                "ordinary_construct_count": 4,
+                "common_factor_count": 0,
+                "structural_relation_count": 7,
+                "interaction_orders": [2, 2, 2, 3],
+                "higher_order_measurement_types": [],
+            },
+            binary["model"],
+        )
+        self.assertEqual(
+            {
+                "method_version": "qpls.general-sem-pls.three-way.point.v1",
+                "primary_cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+                "execution_cell_id": "qpls3.pls.general_sem_three_way_moderation_point",
+                "capability_cell_ids": [
+                    "qpls3.pls.algorithm",
+                    "qpls3.pls.general_sem_three_way_moderation_point",
+                ],
+            },
+            binary["result"],
+        )
+        self.assertEqual(
+            [
+                {"moderator_id": "construct:b", "kind": "binary_zero_one", "values": [0, 1]},
+                {"moderator_id": "construct:w", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+            ],
+            binary["result_counts"]["three_way_probe_contracts"],
+        )
+
+        recursive = routes["specialized_result:recursive SEM case bootstrap"]["result"]
+        self.assertEqual("cbsem_exact_recursive_sem_case_bootstrap_v1", recursive["method_version"])
+        self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["primary_cell_id"])
+        self.assertEqual("qpls3.cbsem.bootstrap.recursive_sem", recursive["execution_cell_id"])
 
     def test_frozen_archive_loop_resets_controller_before_every_exact_path_wait(self) -> None:
         frozen = source("v255_frozen_archive_reopen_crawler.mjs")

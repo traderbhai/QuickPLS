@@ -17,6 +17,7 @@
 *.ps1 text eol=crlf
 *.R text eol=crlf
 Cargo.lock text eol=lf
+validation/fixtures/v255/named-sem-evidence.csv text eol=lf
 
 # Independent-reference inputs were originally qualified from canonical LF.
 validation/Resolve-Rscript.ps1 text eol=lf
@@ -58,6 +59,11 @@ validation/results/v255_consolidated_diagnostics_*/v255_source_contract_audit.js
 validation/results/v255_consolidated_diagnostics_*/v255_final_contract_audit.json text eol=crlf
 validation/results/v255_consolidated_diagnostics_*/logs/*.log text eol=lf
 validation/results/v255_consolidated_diagnostics_*/logs/python_export_semantic_readback.stderr.log text eol=crlf
+
+# Packaged-smoke aggregates are emitted by Windows PowerShell and their exact
+# materialized bytes are referenced by downstream provenance receipts.
+validation/results/v255_installed_portable_smoke_*/v255_installed_portable_smoke.json text eol=crlf
+validation/results/v255_installed_portable_smoke_*/v255_named_evidence_verifier.json text eol=crlf
 
 *.png binary
 *.jpg binary

@@ -2943,6 +2943,7 @@ function generalSemResultPublicationCapabilityCellV1(
 ): CapabilityCellReferenceV2 {
   const results = completed.canonicalDocument.general_sem_results;
   return results?.cbsem_bootstrap_receipt?.capability_cell
+    ?? results?.three_way_moderation_bootstrap_receipt?.capability_cell
     ?? results?.inference_receipt?.capability_cell
     ?? results?.higher_order_inference_receipt?.capability_cell
     ?? completed.canonicalDocument.provenance.capability_cell;

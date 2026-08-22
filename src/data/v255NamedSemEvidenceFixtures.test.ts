@@ -54,7 +54,23 @@ describe("QuickPLS 2.55 query-gated named SEM evidence fixtures", () => {
     expect(threeWayInteractions.find((node) => node.id === "w-z-y")?.data.interaction?.focalRelationId).toBe("path:w-y");
     expect(v255NamedSemEvidenceFixture("moderated_mediation_first").nodes.find((node) => node.data.semantic === "interaction")?.data.interaction?.focalRelationId).toBe("path:x-m1");
     expect(v255NamedSemEvidenceFixture("moderated_mediation_second").nodes.find((node) => node.data.semantic === "interaction")?.data.interaction?.focalRelationId).toBe("path:m1-y");
-    expect(v255NamedSemEvidenceFixture("binary_moderation").dataset.columnMetadata.find((column) => column.name === "b")?.scale_type).toBe("binary");
+    const binary = v255NamedSemEvidenceFixture("binary_moderation");
+    const binaryInteractions = binary.nodes.filter((node) => node.data.semantic === "interaction");
+    expect(binaryInteractions.map((node) => node.data.interaction?.operands.length).sort()).toEqual([2, 2, 2, 3]);
+    expect(binaryInteractions.find((node) => node.id === "w-b-y")?.data.interaction?.focalRelationId).toBe("path:w-y");
+    expect(binary.edges.filter((edge) => !edge.data?.technicalGenerated).map((edge) => edge.id)).toEqual([
+      "path:x-y", "path:w-y", "path:b-y",
+    ]);
+    expect(binary.dataset.columnMetadata.find((column) => column.name === "b")).toEqual({
+      name: "b",
+      label: null,
+      column_type: "numeric",
+      scale_type: "binary",
+      missing_markers: [],
+      theoretical_min: 0,
+      theoretical_max: 1,
+      value_labels: { "0": "Group 0", "1": "Group 1" },
+    });
     expect(["hoc_rr", "hoc_rf", "hoc_fr", "hoc_ff"].map((fixture) => v255NamedSemEvidenceFixture(fixture as V255NamedSemFixture).nodes.find((node) => node.data.semantic === "higher_order")?.data.higherOrder?.measurementType)).toEqual([
       "reflective_reflective", "reflective_formative", "formative_reflective", "formative_formative",
     ]);

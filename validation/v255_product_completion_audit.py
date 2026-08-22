@@ -201,6 +201,7 @@ NAMED_ROUTE_SUPPORT_FILES = {
     "validation/v255_named_archive_identity.py",
     "validation/v255_release_waiver.py",
     "validation/windows_native_owned_file_dialog.py",
+    "validation/fixtures/v255/named-sem-evidence.csv",
     "src/data/v255NamedSemEvidenceFixtures.ts",
     "validation/run_v255_installed_portable_smoke.ps1",
 }

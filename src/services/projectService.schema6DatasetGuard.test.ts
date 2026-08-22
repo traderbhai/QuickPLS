@@ -6,6 +6,7 @@ import {
   applyNativeDatasetTransformation,
   getNativeDatasetRows,
   importNativeDataset,
+  importNativeDatasetAtPathForValidation,
   importNativeValidationFixture,
   previewNativeDatasetTransformation,
   profileNativeDatasetGroups,
@@ -45,6 +46,7 @@ describe("legacy dataset service boundary during General SEM authority", () => {
   it("blocks import, metadata, activation, recode, transform, and legacy reads before any native call", async () => {
     const calls = [
       () => importNativeDataset(),
+      () => importNativeDatasetAtPathForValidation("D:\\QuickPLS\\validation\\fixtures\\v255\\named-sem-evidence.csv"),
       () => importNativeValidationFixture(),
       () => updateNativeColumnMetadata("dataset", "x", {} as never),
       () => activateNativeDataset("dataset"),

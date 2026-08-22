@@ -156,10 +156,12 @@ import {
   applyNativeDatasetTransformation,
   authorizeNativeGeneralSemRevisionDraftV1,
   getNativeCapabilityRegistryV2,
+  importNativeDatasetAtPathForValidation,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
   isNativeDesktop,
   previewNativeDatasetTransformation,
   recodeNativeDatasetColumn,
+  updateNativeColumnMetadata,
 } from "../services/projectService";
 import type { DatasetTransformationSpecV2 } from "../domain/datasetTransformationsV2";
 import {
@@ -321,7 +323,10 @@ declare global {
       loadProcessV2Fixture: () => { variables: number; models: number };
       loadHocFixture: () => { variables: number; models: number };
       loadDiagramFixture: (fixture: string) => unknown | Promise<unknown>;
-      loadNamedSemEvidenceFixture: (fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture) => unknown | Promise<unknown>;
+      loadNamedSemEvidenceFixture: (request: {
+        fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture;
+        datasetPath: string;
+      }) => unknown | Promise<unknown>;
       namedSemEvidenceSnapshot: () => unknown;
       exerciseNamedAdvancedParameterRevision: () => Promise<unknown>;
       modelCounts: () => { constructs: number; indicators: number };
@@ -1304,18 +1309,77 @@ export function NativeDesktopApp() {
         navigate("model");
         return { constructs: project.nodes.length, indicators: project.dataset.columns.length };
       },
-      loadNamedSemEvidenceFixture: async (
-        fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture,
-      ) => {
+      loadNamedSemEvidenceFixture: async ({
+        fixture,
+        datasetPath,
+      }: {
+        fixture: import("../data/v255NamedSemEvidenceFixtures").V255NamedSemFixture;
+        datasetPath: string;
+      }) => {
         const { v255NamedSemEvidenceFixture } = await import("../data/v255NamedSemEvidenceFixtures");
         const project = v255NamedSemEvidenceFixture(fixture);
         const current = useWorkspace.getState();
         const retainedProjectId = current.projectId;
         const retainedDraft = current.generalSemProjectDraftMode;
+        if (!retainedProjectId
+          || current.projectPath !== null
+          || !retainedDraft
+          || retainedDraft.sourceProjectId !== retainedProjectId
+          || current.generalSemPublicationPending) {
+          throw new Error("Named SEM evidence requires the exact active native General SEM draft.");
+        }
+        const importedDataset = await importNativeDatasetAtPathForValidation(datasetPath);
+        const afterImport = useWorkspace.getState();
+        if (afterImport.projectId !== retainedProjectId
+          || afterImport.projectPath !== null
+          || afterImport.generalSemProjectDraftMode?.sourceProjectId !== retainedDraft.sourceProjectId
+          || afterImport.generalSemPublicationPending
+          || useInternalProjectArchiveV6Session.getState().session?.standardActivation) {
+          throw new Error("The active project changed while the named SEM dataset was imported.");
+        }
+        const expectedColumns = project.dataset.columns;
+        if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(importedDataset.id)
+          || !importedDataset.fingerprint
+          || importedDataset.rowCount !== project.dataset.rowCount
+          || JSON.stringify(importedDataset.columns) !== JSON.stringify(expectedColumns)) {
+          throw new Error("The native named SEM dataset receipt differs from the curated CSV contract.");
+        }
+        let residentDataset = importedDataset;
+        if (fixture === "binary_moderation") {
+          residentDataset = await updateNativeColumnMetadata(importedDataset.id, "b", {
+            name: "b",
+            label: null,
+            column_type: "numeric",
+            scale_type: "binary",
+            missing_markers: [],
+            theoretical_min: 0,
+            theoretical_max: 1,
+            value_labels: { "0": "Group 0", "1": "Group 1" },
+          });
+          const afterMetadata = useWorkspace.getState();
+          const binaryMetadata = residentDataset.columnMetadata?.find((column) => column.name === "b");
+          if (afterMetadata.projectId !== retainedProjectId
+            || afterMetadata.projectPath !== null
+            || afterMetadata.generalSemProjectDraftMode?.sourceProjectId !== retainedDraft.sourceProjectId
+            || afterMetadata.generalSemPublicationPending
+            || useInternalProjectArchiveV6Session.getState().session?.standardActivation
+            || residentDataset.id === importedDataset.id
+            || residentDataset.fingerprint === importedDataset.fingerprint
+            || residentDataset.rowCount !== importedDataset.rowCount
+            || JSON.stringify(residentDataset.columns) !== JSON.stringify(expectedColumns)
+            || !binaryMetadata
+            || binaryMetadata.column_type !== "numeric"
+            || binaryMetadata.scale_type !== "binary"
+            || binaryMetadata.theoretical_min !== 0
+            || binaryMetadata.theoretical_max !== 1
+            || JSON.stringify(binaryMetadata.value_labels) !== JSON.stringify({ "0": "Group 0", "1": "Group 1" })) {
+            throw new Error("The binary named SEM dataset version is not the exact native 0/1 authority.");
+          }
+        }
         loadProject({
           nodes: project.nodes,
           edges: project.edges,
-          dataset: project.dataset,
+          dataset: residentDataset,
           projectModels: project.projectModels,
           activeModelId: project.activeModelId,
           runs: [],
@@ -1327,6 +1391,11 @@ export function NativeDesktopApp() {
         return {
           fixture,
           modelId: project.modelId,
+          datasetId: residentDataset.id,
+          datasetFingerprint: residentDataset.fingerprint,
+          datasetRows: residentDataset.rowCount,
+          datasetColumns: residentDataset.columns.length,
+          datasetResident: true,
           constructs: project.nodes.filter((node) => !node.data.semantic).length,
           derivedTerms: project.nodes.filter((node) => Boolean(node.data.semantic)).length,
           paths: project.edges.filter((edge) => !edge.data?.technicalGenerated).length,
@@ -1340,10 +1409,40 @@ export function NativeDesktopApp() {
         const selectedLegacy = state.runs.find((run) => run.id === state.selectedResultRunId) ?? null;
         const cells = canonical?.capability_cells ?? (canonical ? [canonical.provenance.capability_cell] : []);
         const executionCell = canonical?.general_sem_results?.cbsem_bootstrap_receipt?.capability_cell
+          ?? canonical?.general_sem_results?.three_way_moderation_bootstrap_receipt?.capability_cell
           ?? canonical?.general_sem_results?.inference_receipt?.capability_cell
           ?? canonical?.general_sem_results?.higher_order_inference_receipt?.capability_cell
           ?? canonical?.provenance.capability_cell
           ?? null;
+        const threeWayProbeContracts = (() => {
+          const contracts = new Map<string, {
+            moderator_id: string;
+            kind: "continuous_standardized" | "binary_zero_one";
+            probes: Map<number, number>;
+          }>();
+          const record = (
+            moderatorId: string,
+            kind: "continuous_standardized" | "binary_zero_one",
+            index: number,
+            value: number,
+          ) => {
+            const key = `${moderatorId}\u0000${kind}`;
+            const contract = contracts.get(key) ?? { moderator_id: moderatorId, kind, probes: new Map<number, number>() };
+            contract.probes.set(index, value);
+            contracts.set(key, contract);
+          };
+          for (const slope of canonical?.general_sem_results?.three_way_simple_slopes ?? []) {
+            record(slope.first_moderator_id, slope.first_moderator_probe_kind, slope.first_probe_index, slope.first_moderator_value);
+            record(slope.second_moderator_id, slope.second_moderator_probe_kind, slope.second_probe_index, slope.second_moderator_value);
+          }
+          return [...contracts.values()].map((contract) => ({
+            moderator_id: contract.moderator_id,
+            kind: contract.kind,
+            values: [...contract.probes.entries()]
+              .sort(([left], [right]) => left - right)
+              .map(([, value]) => value),
+          })).sort((left, right) => left.moderator_id.localeCompare(right.moderator_id));
+        })();
         return {
           model: {
             model_id: authority?.model.id ?? state.activeModelId,
@@ -1395,6 +1494,7 @@ export function NativeDesktopApp() {
             three_way_effect_count: canonical.general_sem_results?.three_way_interaction_effects?.length ?? 0,
             three_way_conditional_effect_count: canonical.general_sem_results?.three_way_conditional_interaction_effects?.length ?? 0,
             three_way_simple_slope_count: canonical.general_sem_results?.three_way_simple_slopes?.length ?? 0,
+            three_way_probe_contracts: threeWayProbeContracts,
             conditional_indirect_count: canonical.general_sem_results?.conditional_indirect_effects?.length ?? 0,
             moderated_mediation_index_count: canonical.general_sem_results?.moderated_mediation_indices?.length ?? 0,
             higher_order_stage_count: canonical.general_sem_results?.higher_order_stages?.length ?? 0,
@@ -3529,7 +3629,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.54.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({

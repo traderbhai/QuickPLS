@@ -314,6 +314,27 @@ export async function importNativeDataset(dataKind: "raw" | "covariance" | "corr
   return normalizeDataset(await invoke<Dataset>("import_dataset", { path, dataKind, sampleSize, missingMarkers }));
 }
 
+/**
+ * Imports one exact CSV path for the packaged named-evidence harness. The
+ * backend remains the dataset authority: it parses the file, assigns the
+ * resident UUID, computes the fingerprint, and appends import lineage to the
+ * active native project. This seam deliberately does not accept dataset bytes
+ * or an identity supplied by the renderer.
+ */
+export async function importNativeDatasetAtPathForValidation(path: string) {
+  const exactPath = path.trim();
+  if (!/^(?:[A-Za-z]:[\\/]|\\\\)[\s\S]+\.csv$/iu.test(exactPath)) {
+    throw new Error("Named SEM validation data requires an absolute Windows CSV path.");
+  }
+  await assertNativeLegacyDatasetMutationAllowed("Import named SEM validation data");
+  return normalizeDataset(await invoke<Dataset>("import_dataset", {
+    path: exactPath,
+    dataKind: "raw",
+    sampleSize: undefined,
+    missingMarkers: undefined,
+  }));
+}
+
 export async function importNativeValidationFixture() {
   await assertNativeLegacyDatasetMutationAllowed("Import validation data");
   return normalizeDataset(await invoke<Dataset>("import_validation_fixture"));

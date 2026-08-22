@@ -123,6 +123,7 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
 
     mediation = "qpls3.pls.mediation"
     moderation = "qpls3.pls.general_sem_multiple_two_way_moderation_point"
+    three_way_point = "qpls3.pls.general_sem_three_way_moderation_point"
     hoc = "qpls3.pls.general_sem_higher_order_point"
     cb = "qpls3.cbsem.general_sem_ml"
     contracts: dict[str, dict[str, Any]] = {
@@ -131,10 +132,10 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
         "single-mediation bootstrap": fresh("single_mediation", "pls_bootstrap", "general_sem_specific_indirect_effects", "general_sem_pls_single_mediation_full_model_case_bootstrap_v1", mediation, "qpls3.pls.general_sem_single_mediation_bootstrap", (3, 0, 3, (), ()), specific_indirect_count=1),
         "multiple-mediation bootstrap": fresh("parallel_mediation", "pls_bootstrap", "general_sem_specific_indirect_effects", "general_sem_pls_full_model_case_bootstrap_v1", mediation, "qpls3.pls.general_sem_multiple_mediation_bootstrap", (4, 0, 5, (), ()), specific_indirect_count=2),
         "simultaneous two-way moderation": fresh("simultaneous_two_way", "pls_algorithm", "general_sem_interaction_effects", "qpls.general-sem-pls.multiple-two-way.point.v1", moderation, moderation, (4, 0, 5, (2, 2), ()), interaction_effect_count=2, conditional_slope_count=6),
-        "three-way moderation": fresh("three_way", "pls_bootstrap", "general_sem_three_way_effect", "qpls.general-sem-pls.three-way.full-model-case-bootstrap.v1", "qpls3.pls.general_sem_three_way_moderation_point", "qpls3.pls.general_sem_three_way_moderation_bootstrap", (4, 0, 7, (2, 2, 2, 3), ()), interaction_effect_count=3, three_way_effect_count=1, three_way_conditional_effect_count=3, three_way_simple_slope_count=9),
+        "three-way moderation": fresh("three_way", "pls_bootstrap", "general_sem_three_way_effect", "qpls.general-sem-pls.three-way.full-model-case-bootstrap.v1", three_way_point, "qpls3.pls.general_sem_three_way_moderation_bootstrap", (4, 0, 7, (2, 2, 2, 3), ()), interaction_effect_count=3, three_way_effect_count=1, three_way_conditional_effect_count=3, three_way_simple_slope_count=9),
         "first-stage moderated mediation": fresh("moderated_mediation_first", "pls_bootstrap", "general_sem_conditional_indirect_effects", "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1", moderation, "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap", (4, 0, 5, (2,), ()), interaction_effect_count=1, conditional_indirect_count=3, moderated_mediation_index_count=1),
         "second-stage moderated mediation": fresh("moderated_mediation_second", "pls_bootstrap", "general_sem_conditional_indirect_effects", "general_sem_pls_two_way_moderated_mediation_full_model_case_bootstrap_v1", moderation, "qpls3.pls.general_sem_two_way_moderated_mediation_bootstrap", (4, 0, 5, (2,), ()), interaction_effect_count=1, conditional_indirect_count=3, moderated_mediation_index_count=1),
-        "binary moderator probes": fresh("binary_moderation", "pls_algorithm", "general_sem_conditional_slopes", "qpls.general-sem-pls.multiple-two-way.point.v1", moderation, moderation, (3, 0, 3, (2,), ()), interaction_effect_count=1, conditional_slope_count=2),
+        "binary moderator probes": fresh("binary_moderation", "pls_algorithm", "general_sem_three_way_simple_slopes", "qpls.general-sem-pls.three-way.point.v1", three_way_point, three_way_point, (4, 0, 7, (2, 2, 2, 3), ()), interaction_effect_count=3, conditional_slope_count=0, three_way_effect_count=1, three_way_conditional_effect_count=2, three_way_simple_slope_count=6),
         "RF HOC": fresh("hoc_rf", "pls_algorithm", "general_sem_higher_order_targets", "general_sem_pls_higher_order_point_v1", hoc, hoc, (3, 0, 1, (), ("reflective_formative",)), higher_order_stage_count=2),
         "FR HOC": fresh("hoc_fr", "pls_algorithm", "general_sem_higher_order_targets", "general_sem_pls_higher_order_point_v1", hoc, hoc, (3, 0, 1, (), ("formative_reflective",)), higher_order_stage_count=2),
         "FF HOC": fresh("hoc_ff", "pls_algorithm", "general_sem_higher_order_targets", "general_sem_pls_higher_order_point_v1", hoc, hoc, (3, 0, 1, (), ("formative_formative",)), higher_order_stage_count=2),
@@ -142,7 +143,7 @@ def exact_special_contracts() -> dict[str, dict[str, Any]]:
         "Advanced Parameter Table revision": fresh("cfa", "cbsem", "cbsem_general_sem_parameters", "cbsem_general_sem_ml_v1", cb, cb, (3, 3, 0, (), ())),
         "CFA point": fresh("cfa", "cbsem", "cbsem_general_sem_parameters", "cbsem_general_sem_ml_v1", cb, cb, (3, 3, 0, (), ())),
         "recursive SEM point": fresh("recursive_sem", "cbsem", "cbsem_general_sem_parameters", "cbsem_general_sem_ml_v1", cb, cb, (3, 3, 2, (), ())),
-        "recursive SEM case bootstrap": fresh("recursive_sem", "cbsem", "cbsem_recursive_sem_bootstrap_inference", "cbsem_general_sem_ml_v1", cb, "qpls3.cbsem.bootstrap.recursive_sem", (3, 3, 2, (), ())),
+        "recursive SEM case bootstrap": fresh("recursive_sem", "cbsem", "cbsem_recursive_sem_bootstrap_inference", "cbsem_exact_recursive_sem_case_bootstrap_v1", "qpls3.cbsem.bootstrap.recursive_sem", "qpls3.cbsem.bootstrap.recursive_sem", (3, 3, 2, (), ())),
     }
     archive = {
         "single mediation": ("pls_pm", "specific_indirect_effects", 1),
@@ -222,12 +223,30 @@ def verify_special_route(repo: pathlib.Path, entry: dict[str, Any], contract: di
         require(isinstance(route.get("route_contains"), list) and route["route_contains"], f"{case_id} lacks observed Calculate routing text")
     if case_id.endswith("Advanced Parameter Table revision"):
         require(route.get("advanced_parameter_revision") is True, "Advanced Parameter Table route must use the visible edit/save/reopen workflow")
+    continuous_probe = {"moderator_id": "construct:w", "kind": "explicit", "values": [-1, 0, 1]}
+    if case_id.endswith("simultaneous two-way moderation"):
+        require(route.get("result_counts", {}).get("conditional_probe_contracts") == [
+            continuous_probe,
+            {"moderator_id": "construct:z", "kind": "explicit", "values": [-1, 0, 1]},
+        ], "Simultaneous two-way moderation must assert exact standardized -1/0/+1 probes")
+    if case_id.endswith("three-way moderation"):
+        require(route.get("result_counts", {}).get("three_way_probe_contracts") == [
+            {"moderator_id": "construct:w", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+            {"moderator_id": "construct:z", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+        ], "Three-way moderation must assert both exact standardized probe grids")
     if case_id.endswith("binary moderator probes"):
-        probes = route.get("result_counts", {}).get("conditional_probe_contracts")
-        require(probes == [{"moderator_id": "construct:b", "kind": "explicit", "values": [0, 1]}], "Binary moderation must assert the exact 0/1 probe contract")
+        probes = route.get("result_counts", {}).get("three_way_probe_contracts")
+        require(probes == [
+            {"moderator_id": "construct:b", "kind": "binary_zero_one", "values": [0, 1]},
+            {"moderator_id": "construct:w", "kind": "continuous_standardized", "values": [-1, 0, 1]},
+        ], "Binary moderation must assert exact typed W and B three-way probe contracts")
+        require(result.get("capability_cell_ids") == [
+            "qpls3.pls.algorithm", "qpls3.pls.general_sem_three_way_moderation_point",
+        ], "Binary moderation must use only the qualified algorithm and three-way point cells")
     if "moderated mediation" in case_id:
         expected_stage = "first_stage" if "first-stage" in case_id else "second_stage"
         require(route.get("moderated_stage") == expected_stage, f"{case_id} must bind the exact researcher-selected stage")
+        require(route.get("result_counts", {}).get("conditional_probe_contracts") == [continuous_probe], f"{case_id} must assert exact standardized -1/0/+1 probes")
 
 
 def parse_args() -> argparse.Namespace:
@@ -291,6 +310,7 @@ def main() -> int:
         repo / "validation" / "v255_named_archive_identity.py",
         repo / "validation" / "windows_native_owned_file_dialog.py",
         repo / "validation" / "run_v255_installed_portable_smoke.ps1",
+        repo / "validation" / "fixtures" / "v255" / "named-sem-evidence.csv",
         repo / "src" / "data" / "v255NamedSemEvidenceFixtures.ts",
     ]
     for source in required_sources:

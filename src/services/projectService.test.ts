@@ -28,6 +28,7 @@ import {
   getNativePlsJob,
   getNativePlsJobResult,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
+  importNativeDatasetAtPathForValidation,
   mutateNativeProjectExplorer,
   inspectInternalProjectUpgradeV6,
   openNativeDemoProject,
@@ -856,6 +857,38 @@ describe("native canonical project services", () => {
     expect(mocks.invoke).toHaveBeenCalledWith(
       "invalidate_general_sem_fresh_draft_authority_v1",
     );
+  });
+
+  it("imports an exact named-evidence CSV through the backend dataset authority", async () => {
+    mocks.invoke.mockResolvedValue({
+      id: "25500000-0000-4550-8550-000000000001",
+      name: "named-sem-evidence.csv",
+      columns: ["x1", "x2"],
+      rows: null,
+      rowCount: 360,
+      missing: 0,
+      fingerprint: `v2:${"a".repeat(64)}`,
+      kind: "raw",
+    });
+
+    await expect(importNativeDatasetAtPathForValidation("D:\\QuickPLS\\validation\\fixtures\\v255\\named-sem-evidence.csv"))
+      .resolves.toMatchObject({
+        id: "25500000-0000-4550-8550-000000000001",
+        rows: [],
+        rowCount: 360,
+      });
+    expect(mocks.invoke).toHaveBeenCalledWith("import_dataset", {
+      path: "D:\\QuickPLS\\validation\\fixtures\\v255\\named-sem-evidence.csv",
+      dataKind: "raw",
+      sampleSize: undefined,
+      missingMarkers: undefined,
+    });
+  });
+
+  it("rejects a non-absolute or non-CSV named-evidence source before native import", async () => {
+    await expect(importNativeDatasetAtPathForValidation("validation/fixture.txt"))
+      .rejects.toThrow(/absolute Windows CSV path/);
+    expect(mocks.invoke).not.toHaveBeenCalled();
   });
 
   it("rejects malformed lineage returned across the untrusted project snapshot boundary", async () => {

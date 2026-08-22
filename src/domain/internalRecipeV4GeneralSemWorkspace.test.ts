@@ -24,6 +24,7 @@ import {
   GENERAL_SEM_PLS_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_MODERATION_POINT_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_POINT_CAPABILITY_CELL_V1,
+  GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
   GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
   generalSemConfigFromEngineV1,
   generalSemCbsemJobRequestFromReceiptV1,
@@ -2039,6 +2040,57 @@ describe("General SEM Recipe-v4 workspace contract", () => {
       .scientific_rescaled_gamma)
       .toStrictEqual(completed.canonicalDocument.general_sem_results?.interaction_effects?.[0]
         .scientific_rescaled_gamma);
+  });
+
+  it("uses the typed three-way bootstrap receipt as the append and strict-reopen owner", async () => {
+    const completed = completedResult();
+    const typedResults = {
+      schema_version: 1 as const,
+      three_way_moderation_bootstrap_receipt: {
+        capability_cell: GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+      },
+    };
+    (completed.canonicalDocument as unknown as { general_sem_results: typeof typedResults })
+      .general_sem_results = typedResults;
+    const execution: GeneralSemPlsExecutionCapabilityV1 = {
+      kind: "three_way_moderation_bootstrap",
+      capabilityCell: GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+      interactionIds: ["interaction:x:w:b"],
+      focalRelationIds: ["relation:x:y"],
+    };
+    const append = vi.fn().mockResolvedValue({ status: "ok" });
+
+    await appendGeneralSemResultV1(completed, execution, false, append);
+    expect(append).toHaveBeenCalledWith(expect.objectContaining({
+      surface: "standard",
+      experimentalLabsEnabled: false,
+      capabilityCell: GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    }));
+
+    const read = vi.fn().mockResolvedValue({
+      status: "ok" as const,
+      value: {
+        schemaVersion: 1 as const,
+        projectId: PROJECT_ID,
+        archivePath: completed.archiveIdentity.archivePath,
+        sourceDocumentSha256: "8".repeat(64),
+        canonicalResultDocumentCount: 0,
+        documents: [],
+        sourceRecheckedUnchanged: true as const,
+      },
+    });
+    const reopened = await reopenGeneralSemResultV1(
+      completed,
+      execution,
+      "8".repeat(64),
+      read,
+    );
+    expect(reopened.entry).toBeNull();
+    expect(read).toHaveBeenCalledWith(expect.objectContaining({
+      surface: "standard",
+      experimentalLabsEnabled: false,
+      capabilityCell: GENERAL_SEM_PLS_THREE_WAY_MODERATION_BOOTSTRAP_CAPABILITY_CELL_V1,
+    }));
   });
 
   it("stops immediately when monitoring is cancelled and never requests a result", async () => {
