@@ -1,0 +1,30 @@
+
+> quickpls@2.54.0 build:bundle
+> vite build
+
+vite v6.4.3 building for production...
+transforming...
+✓ 1919 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                           0.82 kB │ gzip:   0.37 kB
+dist/assets/flow-BnuhLJ6X.css                            15.87 kB │ gzip:   2.67 kB
+dist/assets/index-sBynxIPG.css                          126.37 kB │ gzip:  19.71 kB
+dist/assets/largeModelSmoke-ChuXLqDH.js                   0.98 kB │ gzip:   0.58 kB
+dist/assets/nativeMga-ZcBPkvtp.js                         3.79 kB │ gzip:   1.63 kB
+dist/assets/NativeExportDialog-CVIAzX3X.js                5.33 kB │ gzip:   2.23 kB
+dist/assets/NativeModerationDialog-_bT-hWgZ.js            5.88 kB │ gzip:   2.23 kB
+dist/assets/NativeGroupSetupDialog-DxwBxu7f.js            6.24 kB │ gzip:   2.30 kB
+dist/assets/v255NamedSemEvidenceFixtures-DF_O22nQ.js      6.60 kB │ gzip:   2.67 kB
+dist/assets/smokeRun-DsBvJjQf.js                          7.15 kB │ gzip:   2.02 kB
+dist/assets/NativeHigherOrderDialog-ConaKOVQ.js           9.22 kB │ gzip:   3.05 kB
+dist/assets/publicationDiagram-BSOp-Dtp.js                9.75 kB │ gzip:   3.47 kB
+dist/assets/tauri-CZBL8huA.js                            15.82 kB │ gzip:   4.06 kB
+dist/assets/icons-DC6fhREU.js                            23.55 kB │ gzip:   4.61 kB
+dist/assets/NativeUtilityDialog-D_Nc1F0M.js              32.43 kB │ gzip:   9.99 kB
+dist/assets/NativeResultsSurface-2TPCY1fk.js             69.39 kB │ gzip:  18.34 kB
+dist/assets/NativeCalculationDialog-BSzMU1hQ.js          83.50 kB │ gzip:  22.04 kB
+dist/assets/flow-DG_yhx79.js                             84.11 kB │ gzip:  25.79 kB
+dist/assets/vendor-DAfPu0rL.js                          317.22 kB │ gzip: 104.00 kB
+dist/assets/index-B5yJCcLw.js                         2,271.96 kB │ gzip: 540.05 kB
+✓ built in 8.55s
