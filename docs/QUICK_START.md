@@ -1,33 +1,10 @@
 # QuickPLS Quick Start
 
-This guide follows the Version 2.55 source workflow:
-`Launcher → Data → Canvas → Calculate → Results`. After renderer/process
-trust-chain remediation, the formal source reports `20260822T082854Z` at source
-`b4a73f7`
-and `20260822T083409Z` at source `1f0fa28` each passed 14/14 using the identical
-diagnostic script and suite/invocation contract. They are separate evidence
-records and are not claimed to be byte-identical reports. Renderer console/page
-errors now fail closed, attach-only phases use fresh wrapper-owned processes,
-and candidate/phase/trusted-driver process roles and hashes are bound. A fresh
-provenance-bound unsigned 2.55 candidate build, isolated install, installed and
-portable packaged journeys, evidence collection and bundling, and publication
-remain pending; the latest downloadable public pre-release remains `v2.54.0` and
-code signing is excluded.
-
-Candidate `20260822T070205Z` and every earlier candidate or install attempt are
-historical and ineligible because the trust-chain remediation and current formal
-validation postdate them.
-The exact typed post-hoc authority correction passed its focused identity suite
-17/17 but has not yet been validated in a packaged executable. The install
-wrapper separately accepts only Tauri's exact three-byte `UNK` → `NSS` marker
-transition and rejects every other byte difference. Fresh candidate, install,
-and smoke evidence is still required. Only the actual Windows 200% scaling case
-may use the product-owner-approved opt-in waiver; its real DPI screenshot and
-receipt remain required and the other 54 named cases must pass. If the exact
-registered old installation must be removed for the isolated install, only its
-registered uninstaller may be used and project files, recovery data, and
-QuickPLS application user data must remain untouched. Portable evidence does
-not replace the installed journey.
+This guide follows the Version 2.54 source workflow:
+`Launcher → Data → Canvas → Calculate → Results`. The consolidated source
+diagnostic recorded 8/9 passing steps and the focused remediation pass then
+passed 69/69 targeted tests. The unsigned 2.54 Windows candidate and packaged
+save/fresh-reopen journey are still pending.
 
 ## 1. Start or open a project
 
@@ -108,4 +85,4 @@ Use `Export` from Results. Canonical General SEM results support:
 
 Other result families display only their compatible formats. Save the project, close it, and reopen it to restore the same verified model, recipe, result, tables, and provenance.
 
-For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md), and the [Version 2.55 Release Notes](RELEASE_NOTES_V2_55_0.md).
+For the exact supported boundaries and current release status, see [Method Compatibility](METHOD_COMPATIBILITY.md), the [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md), and the [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md).

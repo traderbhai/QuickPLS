@@ -10,27 +10,9 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 
 ## What is the current version?
 
-The coordinated source version is 2.55.0. Its formal reports after
-renderer/process trust-chain remediation, `20260822T082854Z` at source
-`b4a73f7` and
-`20260822T083409Z` at source `1f0fa28`, each passed 14/14 using the identical
-diagnostic script and suite/invocation contract. They are separate evidence
-records and are not claimed to be byte-identical reports. Renderer console/page
-errors now fail closed, attach-only phases use fresh wrapper-owned processes,
-and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are
-closed. Exact typed post-hoc PLS authority also takes precedence over the
-generic bootstrap fallback during reopen, and its focused identity suite passed
-17/17; these corrections have not yet been validated in a packaged candidate.
-Candidate `20260822T070205Z` and every earlier candidate or install attempt are
-historical and ineligible because the remediation and current formal validation
-postdate them. The separate install
-comparison now accepts only Tauri's exact three-byte `UNK` → `NSS` marker
-transition and rejects every other byte difference. A fresh unsigned candidate,
-isolated install, installed and portable packaged evidence, evidence collection
-and bundling, and publication are still pending. The latest published public
-pre-release remains
-[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0); the
-2.55 candidate remains unsigned and code signing is excluded.
+The coordinated source version is 2.54.0. Its final unsigned Windows candidate,
+release-artifact package and checksums, and isolated packaged lifecycle smoke
+passed. See the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -118,33 +100,6 @@ final unsigned candidate then passed the isolated 10/10 create → calculate →
 Results → save → fresh-reopen packaged journey with zero application-page
 external requests and zero console errors. Release packaging and checksums also
 passed; code signing is excluded. See the [2.54 release notes](RELEASE_NOTES_V2_54_0.md).
-
-## What changes in Version 2.55?
-
-Version 2.55 makes automatic diagram layout and routing model-aware, adds
-presentation-only path bend and moderation-anchor editing, and reuses the full
-read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
-responsive behavior, prioritize scientific blockers, and disclose only controls
-and fixed policies that the engine actually implements. The exact 18-method
-catalogue is unchanged. The renderer/process-trust-chain-remediated formal
-source-gate passes `20260822T082854Z` and `20260822T083409Z` succeeded 14/14
-using the identical diagnostic script and suite/invocation contract; their
-reports are separate evidence records, not byte-identical files. Renderer
-console/page errors now fail closed and every candidate/phase/trusted-driver
-process role and hash is bound.
-The product owner authorized one opt-in waiver only for the actual Windows 200%
-scaling case; its actual observed DPI screenshot and receipt remain required,
-and all other 54 named cases remain mandatory. A fresh candidate, installed and
-portable evidence, the evidence bundle, and publication remain pending. See the
-[2.55 release notes](RELEASE_NOTES_V2_55_0.md).
-
-Candidate `20260822T070205Z` and every earlier candidate or install attempt are
-historical and ineligible because the trust-chain remediation and current formal
-validation postdate them.
-The focused 17/17 source test covers the exact typed identity correction, not a
-packaged executable. The install wrapper separately accepts only the exact
-Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte
-difference; a fresh candidate, install, and smoke run is still required.
 
 ## How do I create or edit a higher-order construct?
 
