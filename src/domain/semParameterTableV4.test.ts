@@ -75,6 +75,20 @@ describe("SemModelV4 parameter-table projection", () => {
     expect(Object.isFrozen(projection.rows)).toBe(true);
   });
 
+  it("derives parameter rows directly from a resident SemModelV4 authority and its source trace", () => {
+    const adapted = adaptAuthoredNativeWorkbenchToSemModelV4(input());
+    expect(adapted.ok).toBe(true);
+    if (!adapted.ok) throw new Error(adapted.diagnostics[0]?.message);
+
+    const projection = projectSemModelV4ParameterTable(adapted.model, adapted.trace);
+    expect(projection.status).toBe("ready");
+    expect(projection.rows).toEqual(expect.arrayContaining([
+      expect.objectContaining({ section: "variable", sem_id: "construct:x", source: { kind: "construct", id: "x" } }),
+      expect.objectContaining({ section: "relation", sem_id: expect.any(String), source: { kind: "edge", id: "path-x-y" } }),
+      expect.objectContaining({ section: "parameter", parameter_id: expect.any(String), classification: "scientific" }),
+    ]));
+  });
+
   it("is invariant to live node and edge declaration order", () => {
     const first = input();
     const reordered = input();

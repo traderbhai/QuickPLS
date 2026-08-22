@@ -340,6 +340,7 @@ const QUALITY_CRITERIA_IDS = [
 
 const INFERENCE_IDS = [
   "model_fit_exact",
+  "posthoc_minimum_sample_size",
   "plsc_permutation_groups",
   "plsc_permutation_paths",
   "plsc_permutation_outer_loadings",

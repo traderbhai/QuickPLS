@@ -76,6 +76,25 @@ export function nativeSchema6BoundWorkspaceReplacementBlocker(
     : "Close the calculation-ready project to release the schema-6 source binding";
 }
 
+export type NativeWorkspaceReplacementChoiceV1 = "Cancel" | "Yes" | "Save" | "No" | "Don't Save" | string;
+
+/**
+ * Resolves the native dirty-project prompt without coupling the decision to a
+ * particular File-menu entry. Every replacement route uses this same boundary.
+ */
+export async function resolveNativeWorkspaceReplacementChoiceV1(
+  choice: NativeWorkspaceReplacementChoiceV1,
+  saveCurrentProject: () => Promise<boolean>,
+  currentProjectIsDirty: () => boolean,
+): Promise<boolean> {
+  if (choice === "Cancel") return false;
+  if (choice === "Yes" || choice === "Save") {
+    const saved = await saveCurrentProject();
+    return saved && !currentProjectIsDirty();
+  }
+  return choice === "No" || choice === "Don't Save";
+}
+
 function persistedDatasetSignature(dataset: Dataset) {
   return {
     id: dataset.id,

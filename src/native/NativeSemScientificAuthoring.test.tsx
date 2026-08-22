@@ -1,5 +1,4 @@
 import type { Edge, Node } from "@xyflow/react";
-import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import type { ConstructData } from "../types";
@@ -97,26 +96,41 @@ describe("SemModelV4 scientific authoring UI", () => {
     expect(html).toContain("disabled=\"\"");
   });
 
-  it("routes Standard scientific authoring through the unified Calculate and Advanced Parameters workflow", () => {
-    const app = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
-    const modelInspector = readFileSync("src/native/NativeModelInspector.tsx", "utf8");
-    const legacyInspector = readFileSync("src/components/Inspector.tsx", "utf8");
-    const standardInspector = renderToStaticMarkup(<NativeModelInspector initialMode="expert" initialTab="parameter" />);
-    expect(app).toContain('dialog === "calculation" ? <Suspense');
-    expect(app).toContain("unifiedSem={unifiedSemCalculation}");
-    expect(app).toContain('dialog === "advanced-parameters" ? <NativeSemParameterTable');
-    expect(app).toContain('presentation="dialog"');
-    expect(app).toContain('advancedCalculationPlan?.route === "exact_cbsem_compatibility"');
-    expect(app).toContain("<NativeRecipeV4GeneralSemWorkspace");
-    expect(app).toContain("<NativeRecipeV4CbsemWorkspace");
-    expect(modelInspector).toContain("experimentalSemAuthoringEnabled");
-    expect(modelInspector).toContain("|| standardCbsemConstructAuthoringAvailable");
-    expect(modelInspector).toContain('mode === "expert" && constructRepresentationAuthoringEnabled ? <NativeSemConstructAuthoringFields');
-    expect(modelInspector).toContain('mode === "expert" && experimentalSemAuthoringEnabled && pathRole === "covariance" ? <NativeSemCovarianceAuthoringFields');
+  it("exposes Standard representation controls while keeping unqualified covariance authoring Labs-scoped", () => {
+    const nodes = [node("x"), node("y")];
+    const covariance = newNativeScientificCovarianceEdgeV4("cov-x-y", "x", "y");
+    const standardInspector = renderToStaticMarkup(<NativeModelInspector
+      initialMode="expert"
+      initialTab="parameter"
+      nodesOverride={nodes}
+      edgesOverride={[covariance]}
+      selectedNodeIdOverride="x"
+      selectedEdgeIdOverride={null}
+      experimentalLabsEnabledOverride={false}
+    />);
+    const standardCovariance = renderToStaticMarkup(<NativeModelInspector
+      initialMode="expert"
+      initialTab="parameter"
+      nodesOverride={nodes}
+      edgesOverride={[covariance]}
+      selectedNodeIdOverride={null}
+      selectedEdgeIdOverride={covariance.id}
+      experimentalLabsEnabledOverride={false}
+    />);
+    const labsCovariance = renderToStaticMarkup(<NativeModelInspector
+      initialMode="expert"
+      initialTab="parameter"
+      nodesOverride={nodes}
+      edgesOverride={[covariance]}
+      selectedNodeIdOverride={null}
+      selectedEdgeIdOverride={covariance.id}
+      experimentalLabsEnabledOverride
+    />);
+
     expect(standardInspector).toContain("Scientific representation");
-    expect(standardInspector).not.toContain("Model covariance");
-    expect(legacyInspector).toContain("state.uiPreferences.experimentalLabsEnabled");
-    expect(legacyInspector).toContain("experimentalSemAuthoringEnabled ? <NativeSemConstructAuthoringFields");
-    expect(legacyInspector).toContain("experimentalSemAuthoringEnabled ? <NativeSemCovarianceAuthoringFields");
+    expect(standardInspector).toContain("Common factor");
+    expect(standardCovariance).not.toContain("Residual/error covariance");
+    expect(labsCovariance).toContain("Model covariance");
+    expect(labsCovariance).toContain("Residual/error covariance");
   });
 });

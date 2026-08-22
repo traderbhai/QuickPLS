@@ -33,6 +33,9 @@ describe("internal moderated-mediation revision service boundary", () => {
   });
 
   it("uses the exact native v2 command and returns only a strictly reopened transaction", async () => {
+    const transaction = transactionV2();
+    const request = requestV2();
+    const sourceBefore = structuredClone(transaction.snapshot);
     const invokeNative = vi.fn(async () => ({
       status: "ok",
       value: {
@@ -46,17 +49,24 @@ describe("internal moderated-mediation revision service boundary", () => {
       value: destinationSnapshotV2(),
     } as const));
 
-    const outcome = await reviseInternalGeneralSemModeratedMediationAtV2(transactionV2(), {
+    const outcome = await reviseInternalGeneralSemModeratedMediationAtV2(transaction, {
       invokeNative,
       inspectDestination,
     });
 
     expect(outcome.status).toBe("ok");
+    expect(request).toMatchObject({
+      surface: "standard",
+      experimentalLabsEnabled: false,
+      revision: { recipeExecutionSurface: "native_general_sem_pls_standard_v1" },
+    });
     expect(invokeNative).toHaveBeenCalledWith(
       "revise_internal_general_sem_execution_authority_v2",
-      { request: requestV2() },
+      { request },
     );
     expect(inspectDestination).toHaveBeenCalledWith("D:\\revision-v2.qpls");
+    expect(transaction.snapshot).toEqual(sourceBefore);
+    if (outcome.status === "ok") expect(outcome.value.snapshot).toEqual(destinationSnapshotV2());
   });
 
   it("fails closed when native transport rejects and never claims persistence", async () => {

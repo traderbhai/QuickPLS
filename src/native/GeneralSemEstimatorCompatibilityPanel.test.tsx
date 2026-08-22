@@ -113,7 +113,7 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     expect(blockedSelectedHtml).not.toContain("Selected CB-SEM General v3");
   });
 
-  it("qualifies Standard percentile two-sided bootstrap and renders every exact capability cell", () => {
+  it("renders exact Standard bootstrap cells with one supported estimator and one corrective blocker", () => {
     const config = defaultGeneralSemConfigV1();
     config.inference = {
       kind: "case_bootstrap",
@@ -130,11 +130,10 @@ describe("GeneralSemEstimatorCompatibilityPanel", () => {
     />);
 
     expect(html).toContain("PLS-SEM General v3: Supported");
-    expect(html).toContain("General multiple-mediation percentile case-bootstrap inference passes the bounded exact-cell compiler preflight.");
     expect(html).toContain("qpls3.pls.mediation (pls_mediation_v1)");
     expect(html).toContain("qpls3.pls.general_sem_multiple_mediation_bootstrap (general_sem_pls_full_model_case_bootstrap_v1)");
-    expect(html).toContain("Runtime inference must carry a matching complete-model re-estimation receipt before publication.");
-    expect(html).toContain("Compatibility inspection only: a blocked or unpublished candidate has no calculation action.");
+    expect(html).toContain("Diagnostics and next actions");
+    expect(html).toContain("Cannot select:");
     expect(html.match(/<button[^>]*disabled=""[^>]*data-general-sem-estimator-select=/g)).toHaveLength(1);
     expect(html).toMatch(/<button(?=[^>]*data-general-sem-estimator-select="qpls\.pls_sem\.v3")(?![^>]*disabled="")[^>]*>Select PLS-SEM General v3<\/button>/);
     expect(html).toContain('aria-disabled="true"');

@@ -12,6 +12,42 @@ function deferred<T>() {
 }
 
 describe("native scoped async submission", () => {
+  it("keeps Recode busy through completion and rejects a superseded dialog scope", async () => {
+    const currentOperation = deferred<void>();
+    const currentBusy: boolean[] = [];
+    const currentComplete = vi.fn();
+    const current = runNativeScopedSubmission({
+      perform: () => currentOperation.promise,
+      isCurrent: () => true,
+      setBusy: (busy) => currentBusy.push(busy),
+      complete: currentComplete,
+      fail: vi.fn(),
+    });
+    expect(currentBusy).toEqual([true]);
+    expect(currentComplete).not.toHaveBeenCalled();
+    currentOperation.resolve();
+    await current;
+    expect(currentBusy).toEqual([true, false]);
+    expect(currentComplete).toHaveBeenCalledOnce();
+
+    const staleOperation = deferred<void>();
+    const staleBusy: boolean[] = [];
+    const staleComplete = vi.fn();
+    let originatingDialogStillCurrent = true;
+    const stale = runNativeScopedSubmission({
+      perform: () => staleOperation.promise,
+      isCurrent: () => originatingDialogStillCurrent,
+      setBusy: (busy) => staleBusy.push(busy),
+      complete: staleComplete,
+      fail: vi.fn(),
+    });
+    originatingDialogStillCurrent = false;
+    staleOperation.resolve();
+    await stale;
+    expect(staleBusy).toEqual([true]);
+    expect(staleComplete).not.toHaveBeenCalled();
+  });
+
   it("holds the busy guard until a deferred mutation completes", async () => {
     const operation = deferred<void>();
     const setBusy = vi.fn();

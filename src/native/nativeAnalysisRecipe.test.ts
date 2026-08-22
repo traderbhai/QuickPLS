@@ -1116,13 +1116,13 @@ describe("advanced validated backend family mappings", () => {
     }), "processGraph");
   });
 
-  it("maps typed NCA variables, ceiling, and permutations with independent bounds", () => {
-    const recipe = buildNativeAnalysisRecipe(makeInput("nca", { ncaX: " x ", ncaY: " y ", ncaCeiling: "cr_fdh", ncaPermutationSamples: 10_000 }));
+  it("maps typed NCA variables, ceiling, permutations, and the fixed single-worker contract", () => {
+    const recipe = buildNativeAnalysisRecipe(makeInput("nca", { ncaX: " x ", ncaY: " y ", ncaCeiling: "cr_fdh", ncaPermutationSamples: 10_000, workers: 8 }));
     expect(recipe.metadata).toEqual({
       status: "validated_nca_v2_bounded_scope",
     });
     expect(recipe.method_config).toEqual({ kind: "nca", condition: "x", outcome: "y", ceiling: "cr_fdh", permutation_samples: 10_000 });
-    expect(recipe.settings).toMatchObject({ weighting_scheme: "path", preprocessing: "unstandardized" });
+    expect(recipe.settings).toMatchObject({ weighting_scheme: "path", preprocessing: "unstandardized", workers: 1 });
     expectFieldError(makeInput("nca", { ncaX: null, ncaY: "y" }), "ncaX");
     expectFieldError(makeInput("nca", { ncaX: "x", ncaY: null }), "ncaY");
     expectFieldError(makeInput("nca", { ncaX: "x", ncaY: "y", ncaPermutationSamples: 0 }), "ncaPermutationSamples");

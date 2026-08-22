@@ -158,8 +158,10 @@ describe("native PROCESS v2 graph authoring", () => {
     expect(markup).toContain("Binary (must be exact 0/1; uncentered)");
     expect(markup).not.toContain("original sample raw mean - SD, mean, and mean + SD");
     expect(markup).not.toMatch(/[\u00c2\u00c3\ufffd]|\u00e2[\u2020\u20ac]/u);
-    expect(markup).toContain("Start graph-defined path analysis with bootstrap");
+    expect(markup).toContain("Start calculation");
     expect(markup).toContain("id=\"nd-process-graph-preview\"");
+    expect(markup).toContain("nd-canvas-host readonly-diagram-viewport");
+    expect(markup).toContain("Graph-defined path analysis preview");
     expect(markup).toContain("7/8 graph predictors");
     expect(markup).toMatch(/data-process-control="true" disabled=""[^>]*><span>D<\/span>/);
     expect(markup).toContain("40 global listwise-complete cases");

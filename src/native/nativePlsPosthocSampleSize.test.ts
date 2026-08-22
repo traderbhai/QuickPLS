@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import type { AnalysisRun } from "../types";
 import {
+  buildNativeResultNavigation,
   nativePlsPosthocMinimumSampleSizeProjection,
   nativeResultTables,
 } from "./nativeResults";
@@ -115,6 +116,8 @@ describe("PLS posthoc minimum sample size", () => {
       ["Technical requirement", "Not met"],
       ["Formula assumptions", "5% significance, 80% power, directional inverse-square-root test"],
     ]));
+    expect(buildNativeResultNavigation(run).groups.find((group) => group.id === "inference")?.items)
+      .toContainEqual(expect.objectContaining({ id: "posthoc_minimum_sample_size", title: "Post-hoc minimum sample size" }));
   });
 
   it("rejects coordinated display tampering instead of rendering it", () => {

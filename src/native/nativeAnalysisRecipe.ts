@@ -288,7 +288,7 @@ function buildSettings(
   const maxIterations = kind === "gsca" ? 3_000 : (source.maxIterations ?? 3_000);
   const regressionBootstrap = kind === "regression" && source.regressionBootstrap === true;
   const cbsemBootstrap = kind === "cbsem" && (source.cbsemBootstrapSamples ?? 0) > 0;
-  const workers = (kind === "regression" && !regressionBootstrap) || (kind === "cbsem" && !cbsemBootstrap)
+  const workers = kind === "nca" || (kind === "regression" && !regressionBootstrap) || (kind === "cbsem" && !cbsemBootstrap)
     ? 1
     : source.workers;
   const preprocessing = kind === "nca" || kind === "regression"

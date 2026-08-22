@@ -81,7 +81,7 @@ describe("nativePlsReadiness", () => {
     expect(result.warnings).toEqual([]);
   });
 
-  it("accepts bounded point-only ML and routes every archived CB-SEM bootstrap setting to the exact workspace", () => {
+  it("accepts bounded point ML and redirects archived bootstrap settings to unified CB-SEM Calculate", () => {
     const semSettings: AnalysisUiSettings = {
       ...settings,
       method: "cbsem",
@@ -523,7 +523,7 @@ describe("nativePlsReadiness", () => {
     expect(formative.blockers.find((item) => item.id === "calculation")?.detail).toContain("reflective measurement models");
   });
 
-  it("enforces the promoted two-stage moderation calculation scope", () => {
+  it("accepts qualified interaction_v2 while keeping legacy two-stage moderation bounded", () => {
     const moderator: Node<ConstructData> = { id: "m", position: { x: 0, y: 160 }, data: { label: "Moderator", shortName: "M", mode: "reflective", indicators: ["m1", "m2"] } };
     const interaction: Node<ConstructData> = {
       id: "xm",

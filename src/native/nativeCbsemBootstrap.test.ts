@@ -245,7 +245,8 @@ describe("historical native CB-SEM bootstrap v2 compatibility", () => {
     expect(markup).not.toContain('id="nd-calculation-cbsem-confidence"');
     expect(markup).not.toContain("Calculation method unavailable");
     expect(markup).toMatch(/class="primary" type="submit" disabled=""/);
-    expect(markup).toContain('id="nd-calculation-workers"');
+    expect(markup).not.toContain('id="nd-calculation-workers"');
+    expect(markup).not.toContain('id="nd-calculation-seed"');
     expect(markup).not.toContain('data-limited-scope-warning="true"');
     expect(nativeAnalysisCatalogItem("cbsem").description)
       .toContain("optional exact case bootstrap");

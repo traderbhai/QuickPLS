@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { Dataset } from "../types";
 import {
+  NativeSemParameterTable,
   observedSemanticsForParameterTable,
   semDataBindingForParameterTable,
 } from "./NativeSemParameterTable";
@@ -18,6 +21,23 @@ function dataset(patch: Partial<Dataset> = {}): Dataset {
 }
 
 describe("native SEM parameter table inputs", () => {
+  it("renders Advanced Parameter Table as a labelled, focusable modal region", () => {
+    const html = renderToStaticMarkup(createElement(NativeSemParameterTable, {
+      modelName: "Current model",
+      presentation: "dialog",
+      onShowCanvas: () => undefined,
+      onContinueToCalculation: () => undefined,
+    }));
+
+    expect(html).toContain('id="nd-advanced-parameter-table"');
+    expect(html).toContain('role="region"');
+    expect(html).toContain('aria-labelledby="nd-advanced-parameter-table-heading"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain("Advanced Parameter Table");
+    expect(html).toContain("Continue to Calculate");
+    expect(html).toContain('aria-label="Scrollable parameter table"');
+  });
+
   it("uses the current raw dataset identity and explicit listwise policy", () => {
     expect(semDataBindingForParameterTable(dataset())).toEqual({
       kind: "raw",

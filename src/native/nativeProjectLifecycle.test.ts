@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { NativeProjectSignatureInput } from "./nativeProjectLifecycle";
 import {
   hasUnsavedNativeProjectChanges,
@@ -6,6 +6,7 @@ import {
   nativeLegacyProjectOperationBlocker,
   nativeProjectSignature,
   nativeSavedProjectSignature,
+  resolveNativeWorkspaceReplacementChoiceV1,
 } from "./nativeProjectLifecycle";
 
 const importVersion = {
@@ -109,6 +110,23 @@ const base: NativeProjectSignatureInput = {
 };
 
 describe("native project lifecycle", () => {
+  it("preserves dirty work on Cancel and replaces it only after discard or a completed save", async () => {
+    const save = vi.fn(async () => true);
+    let dirty = true;
+
+    await expect(resolveNativeWorkspaceReplacementChoiceV1("Cancel", save, () => dirty)).resolves.toBe(false);
+    expect(save).not.toHaveBeenCalled();
+    await expect(resolveNativeWorkspaceReplacementChoiceV1("Don't Save", save, () => dirty)).resolves.toBe(true);
+    expect(save).not.toHaveBeenCalled();
+
+    await expect(resolveNativeWorkspaceReplacementChoiceV1("Save", save, () => dirty)).resolves.toBe(false);
+    expect(save).toHaveBeenCalledOnce();
+    dirty = false;
+    await expect(resolveNativeWorkspaceReplacementChoiceV1("Yes", save, () => dirty)).resolves.toBe(true);
+    expect(save).toHaveBeenCalledTimes(2);
+    await expect(resolveNativeWorkspaceReplacementChoiceV1("unexpected", save, () => dirty)).resolves.toBe(false);
+  });
+
   it("blocks even clean workspace replacement while a schema-6 Standard source remains bound", () => {
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(false, false)).toBeNull();
     expect(nativeSchema6BoundWorkspaceReplacementBlocker(true, false)).toContain("Close the calculation-ready project");

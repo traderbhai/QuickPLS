@@ -36,6 +36,7 @@ import {
   nativeProjectSignature,
   nativeSavedProjectSignature,
   nativeSchema6BoundWorkspaceReplacementBlocker,
+  resolveNativeWorkspaceReplacementChoiceV1,
 } from "./nativeProjectLifecycle";
 import {
   buildNativeAnalysisRecipe,
@@ -408,13 +409,11 @@ export function NativeDesktopController() {
           buttons: { yes: "Save", no: "Don't Save", cancel: "Cancel" },
         },
       );
-      if (choice === "Cancel") return false;
-      if (choice === "Yes" || choice === "Save") {
-        const saved = await saveProjectRef.current(!projectWritableRef.current);
-        if (!saved || dirtyRef.current) return false;
-        return true;
-      }
-      return choice === "No" || choice === "Don't Save";
+      return resolveNativeWorkspaceReplacementChoiceV1(
+        choice,
+        () => saveProjectRef.current(!projectWritableRef.current),
+        () => dirtyRef.current,
+      );
     } catch (error) {
       pushToast({ tone: "error", title: "Project switch failed", detail: errorMessage(error) });
       return false;

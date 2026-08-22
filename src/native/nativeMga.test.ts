@@ -135,6 +135,6 @@ describe("native combined MICOM and two-group permutation MGA setup contract", (
 
   it("keeps raw group identities visible when value labels are present", () => {
     expect(nativeGroupOptionLabel({ value: "A", label: "Treatment", observations: 11, completeCases: 10 }))
-      .toBe("Treatment [A] — 10 complete of 11");
+      .toBe("Treatment [A] · N=10 · 1 excluded");
   });
 });

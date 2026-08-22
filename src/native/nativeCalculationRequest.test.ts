@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { AnalysisUiSettings } from "../types";
+import type { AnalysisUiSettings, Dataset } from "../types";
 import { createNativeCalculationRequest, parseNativeCalculationRequest } from "./nativeCalculationRequest";
-import type { NativeLogisticProfile } from "./nativeLogistic";
+import { nativeLogisticReadiness, type NativeLogisticProfile } from "./nativeLogistic";
 
 const settings: AnalysisUiSettings = {
   method: "plsc",
@@ -141,6 +141,49 @@ describe("native calculation request", () => {
     };
     expect(parseNativeCalculationRequest(malformed)).toBeNull();
     expect(createNativeCalculationRequest("plsc", settings, request.logisticProfile)).not.toHaveProperty("logisticProfile");
+  });
+
+  it("revalidates the same binary outcome profile carried by logistic job dispatch", () => {
+    const logisticSettings: AnalysisUiSettings = {
+      ...settings,
+      method: "regression",
+      regressionType: "logistic",
+      regressionOutcome: "converted",
+      regressionPredictors: "score",
+      regressionControls: null,
+    };
+    const dataset: Dataset = {
+      id: logisticProfile.datasetId,
+      name: "Binary outcome",
+      fingerprint: logisticProfile.datasetFingerprint,
+      columns: ["converted", "score"],
+      rows: Array.from({ length: 8 }, (_, index) => ({ converted: index % 2, score: index + 1 })),
+      missing: 0,
+    };
+    const parsed = parseNativeCalculationRequest(
+      createNativeCalculationRequest("regression", logisticSettings, logisticProfile),
+    );
+    expect(parsed?.kind).toBe("regression");
+    if (!parsed || parsed.kind !== "regression") throw new Error("Expected a validated regression dispatch request.");
+
+    expect(nativeLogisticReadiness(dataset, parsed.settings, parsed.logisticProfile ?? null))
+      .toMatchObject({ canRun: true, profileRequired: false });
+    expect(nativeLogisticReadiness(
+      { ...dataset, fingerprint: "sha256:changed" },
+      parsed.settings,
+      parsed.logisticProfile ?? null,
+    )).toMatchObject({
+      canRun: false,
+      blockers: [expect.stringContaining("Reload the complete logistic outcome profile")],
+    });
+    expect(nativeLogisticReadiness(
+      dataset,
+      parsed.settings,
+      { ...parsed.logisticProfile!, zeroCases: 8, oneCases: 0 },
+    )).toMatchObject({
+      canRun: false,
+      blockers: [expect.stringMatching(/both 0 and 1|dispatch proof is invalid/i)],
+    });
   });
 
   it("preserves only a complete typed regression-bootstrap dispatch snapshot", () => {

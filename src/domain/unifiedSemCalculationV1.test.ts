@@ -82,16 +82,18 @@ function addTwoWayInteraction(
   focalSource: string,
   moderator: string,
   target: string,
+  suffix = "",
 ): void {
   const focal = value.relations.find((relation) => relation.kind === "structural"
     && relation.source === focalSource
     && relation.target === target);
   if (!focal || focal.kind !== "structural") throw new Error("Missing focal path");
-  const output = "derived:interaction";
+  const idSuffix = suffix ? `:${suffix}` : "";
+  const output = `derived:interaction${idSuffix}`;
   value.variables.push({ kind: "derived", id: output, label: "Interaction" });
   value.derived_terms.push({
     kind: "interaction_v2",
-    id: "term:interaction",
+    id: `term:interaction${idSuffix}`,
     output,
     operands: [focalSource, moderator],
     focal_relation: focal.id,
@@ -100,16 +102,16 @@ function addTwoWayInteraction(
   });
   value.relations.push({
     kind: "structural",
-    id: "relation:interaction-effect",
+    id: `relation:interaction-effect${idSuffix}`,
     source: output,
     target,
-    parameter: "parameter:interaction-effect",
+    parameter: `parameter:interaction-effect${idSuffix}`,
     role: "structural",
     intercept_parameter: null,
   });
   value.parameters.push({
     kind: "free",
-    id: "parameter:interaction-effect",
+    id: `parameter:interaction-effect${idSuffix}`,
     label: "Interaction effect",
     target: { kind: "regression", source: output, target },
     group_overrides: [],
@@ -324,6 +326,41 @@ describe("unified SEM Calculate routing", () => {
     ]);
     expect(inference.expectedResultCategories).toContain("Three-Way Moderation");
     expect(inference.moderatedMediation).toBeNull();
+  });
+
+  it("routes qualified simultaneous two-way and bounded three-way interaction_v2 models to exact cells", () => {
+    const simultaneous = model([["x", "y"], ["w", "y"], ["z", "y"]]);
+    addTwoWayInteraction(simultaneous, "construct:x", "construct:w", "construct:y");
+    addTwoWayInteraction(simultaneous, "construct:x", "construct:z", "construct:y", "second");
+    const simultaneousPlan = resolveUnifiedSemCalculationV1({
+      method: "pls_algorithm",
+      context: context(simultaneous),
+      bootstrap,
+    });
+    expect(simultaneousPlan.inventory).toMatchObject({
+      twoWayInteractionCount: 2,
+      threeWayInteractionCount: 0,
+    });
+    expect(simultaneousPlan.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_multiple_two_way_moderation_point",
+    ]);
+
+    const boundedThreeWay = model([["x", "y"], ["w", "y"], ["z", "y"]]);
+    addTwoWayInteraction(boundedThreeWay, "construct:x", "construct:w", "construct:y");
+    addThreeWayInteraction(boundedThreeWay, "construct:x", "construct:w", "construct:z", "construct:y");
+    const threeWayPlan = resolveUnifiedSemCalculationV1({
+      method: "pls_bootstrap",
+      context: context(boundedThreeWay),
+      bootstrap,
+    });
+    expect(threeWayPlan.inventory).toMatchObject({
+      twoWayInteractionCount: 1,
+      threeWayInteractionCount: 1,
+    });
+    expect(threeWayPlan.capabilityCells.map((cell) => cell.cell_id)).toEqual([
+      "qpls3.pls.general_sem_three_way_moderation_point",
+      "qpls3.pls.general_sem_three_way_moderation_bootstrap",
+    ]);
   });
 
   it("offers fixed five-target moderated mediation only from PLS bootstrapping", () => {

@@ -51,7 +51,6 @@ import {
   nativeCapabilitySettingsForWorkbenchKindV2,
   nativeAnalysisSettingsForWorkbenchKind,
   nativeAnalysisCatalogItem,
-  nativeAnalysisStartLabel,
   isNativeEstablishedWorkingAnalysisKindV1,
   type NativeAnalysisCatalogItem,
   type NativeAnalysisCategoryId,
@@ -60,7 +59,11 @@ import {
 import { NATIVE_ANALYSIS_RECIPE_BOUNDS, NATIVE_CBSEM_ANALYTIC_STUDENTIZED_CAPS } from "./nativeAnalysisRecipe";
 import { buildNativePlsSampleSizePowerRecipe } from "./nativePlsSampleSizePower";
 import { nativeCalculationPhaseLabel } from "./nativeCalculationLifecycle";
-import type { NativePlsReadiness } from "./nativePlsReadiness";
+import {
+  NATIVE_PREDICTION_FOLDS,
+  NATIVE_PREDICTION_REPEATS,
+} from "./nativeCalculationMode";
+import type { NativePlsReadiness, NativePlsReadinessItem } from "./nativePlsReadiness";
 import {
   nativeEligibleGroupColumns,
   nativeGroupOptionLabel,
@@ -134,11 +137,6 @@ const ACTIVE_RUN_STATUSES = new Set<RunMonitorState["status"]>([
   "validating",
   "running",
   "cancelling",
-]);
-
-const RETRY_RUN_STATUSES = new Set<RunMonitorState["status"]>([
-  "failed",
-  "cancelled",
 ]);
 
 const CATEGORY_ORDER: readonly NativeAnalysisCategoryId[] = [
@@ -373,9 +371,102 @@ export function dispatchNativeCalculationStartV1<T>(
   return "legacy";
 }
 
+export type NativeCalculationBlockerTierV1 =
+  | "scientific_invalidity"
+  | "unsupported_scope"
+  | "runtime"
+  | "advice";
+
 export interface NativeCalculationBlockingMessageV1 {
+  readonly tier: NativeCalculationBlockerTierV1;
   readonly cause: string;
   readonly correction: string | null;
+  /** Optional focus target for the one direct correction shown in the dialog. */
+  readonly correctionTargetId?: string | null;
+  readonly correctionActionLabel?: string | null;
+}
+
+const NATIVE_CALCULATION_BLOCKER_PRIORITY_V1: Readonly<Record<NativeCalculationBlockerTierV1, number>> = {
+  scientific_invalidity: 0,
+  unsupported_scope: 1,
+  runtime: 2,
+  advice: 3,
+};
+
+/**
+ * Chooses one actionable blocker without allowing desktop availability to hide
+ * a data, model, or method-scope problem. Equal-tier ordering stays stable.
+ */
+export function nativePrimaryCalculationBlockerV1(
+  blockers: readonly NativeCalculationBlockingMessageV1[],
+): NativeCalculationBlockingMessageV1 | null {
+  let primary: NativeCalculationBlockingMessageV1 | null = null;
+  for (const blocker of blockers) {
+    const cause = blocker.cause.trim();
+    if (!cause) continue;
+    const normalized = { ...blocker, cause };
+    if (!primary
+      || NATIVE_CALCULATION_BLOCKER_PRIORITY_V1[normalized.tier]
+        < NATIVE_CALCULATION_BLOCKER_PRIORITY_V1[primary.tier]) {
+      primary = normalized;
+    }
+  }
+  return primary;
+}
+
+function readinessBlockingMessageV1(
+  blocker: Pick<NativePlsReadinessItem, "id" | "detail">,
+): NativeCalculationBlockingMessageV1 {
+  if (blocker.id === "runtime") return {
+    tier: "runtime",
+    cause: blocker.detail,
+    correction: "Open this project in the installed QuickPLS desktop app.",
+  };
+  if (blocker.id === "data" || blocker.id === "provenance-anchor") return {
+    tier: "scientific_invalidity",
+    cause: blocker.detail,
+    correction: "Import, reopen, or select a compatible fingerprinted dataset.",
+  };
+  if (["constructs", "indicators", "model", "numeric-indicators"].includes(blocker.id)) return {
+    tier: "scientific_invalidity",
+    cause: blocker.detail,
+    correction: "Correct the active model or its indicator assignments on Canvas.",
+  };
+  const unsupportedScope = /\b(?:does not support|not supported|unsupported|not available|available only|bounded to)\b/i.test(blocker.detail);
+  return {
+    tier: unsupportedScope ? "unsupported_scope" : "scientific_invalidity",
+    cause: blocker.detail,
+    correction: unsupportedScope
+      ? "Choose a compatible method or revise the unsupported model or setting."
+      : "Correct the selected method settings or active data described above.",
+  };
+}
+
+function methodProfileBlockingMessageV1(
+  cause: string,
+  correction: string,
+  correctionTargetId?: string,
+  correctionActionLabel?: string,
+): NativeCalculationBlockingMessageV1 {
+  return {
+    tier: "scientific_invalidity",
+    cause,
+    correction,
+    correctionTargetId,
+    correctionActionLabel,
+  };
+}
+
+export function nativeLogisticOutcomeBlockingMessageV1(
+  profile: NativeLogisticProfile | null | undefined,
+): NativeCalculationBlockingMessageV1 | null {
+  if (!profile || (profile.invalidOutcomeRows === 0 && profile.zeroCases > 0 && profile.oneCases > 0)) return null;
+  return methodProfileBlockingMessageV1(
+    `${profile.outcome} must contain both binary classes and no other complete-case values. Detected: 0 (${profile.zeroCases}), 1 (${profile.oneCases}), outside 0/1 (${profile.invalidOutcomeRows}).`,
+    `Recode ${profile.outcome} to numeric 0/1 in Data, or choose another outcome.`,
+    "nd-calculation-regression-outcome",
+    "Change outcome",
+  );
 }
 
 export function unifiedSemPrimaryBlockingMessageV1(
@@ -383,11 +474,16 @@ export function unifiedSemPrimaryBlockingMessageV1(
 ): NativeCalculationBlockingMessageV1 | null {
   const diagnostic = plan?.decision?.diagnostics.find((item) => item.severity === "error");
   if (diagnostic) return {
+    tier: "unsupported_scope",
     cause: diagnostic.message,
     correction: diagnostic.corrections[0] ?? null,
   };
   const cause = plan?.blockers[0]?.trim();
-  return cause ? { cause, correction: null } : null;
+  return cause ? {
+    tier: "unsupported_scope",
+    cause,
+    correction: "Revise the unsupported model feature or choose a compatible calculation method.",
+  } : null;
 }
 
 /**
@@ -472,7 +568,6 @@ export default function NativeCalculationDialog({
     && nativeCalculationMethodIsVisible(selectedCatalogEntry, experimentalLabsEnabled),
   );
   const running = ACTIVE_RUN_STATUSES.has(runMonitor.status);
-  const retry = RETRY_RUN_STATUSES.has(runMonitor.status);
   const rovingKind = filteredMethods.some((method) => method.kind === focusedKind)
     ? focusedKind
     : filteredMethods.some((method) => method.kind === kind)
@@ -580,38 +675,129 @@ export default function NativeCalculationDialog({
       : null,
     [currentProcessProfileState, dataset, processSelected, processProfileSettings],
   );
-  const groupProfileBlockers = kind !== "mga"
+  const groupProfileBlockerEntries: NativeCalculationBlockingMessageV1[] = kind !== "mga"
     ? []
     : groupProfileState.status === "loading"
-      ? ["Loading complete-dataset group counts."]
+      ? [{
+          tier: "advice",
+          cause: "Loading complete-dataset group counts.",
+          correction: "Wait for the complete-case group profile to finish.",
+        }]
       : groupProfileState.status === "failed"
-        ? [groupProfileState.error]
+        ? [{
+            tier: groupProfileState.error.includes("installed desktop app") ? "runtime" : "scientific_invalidity",
+            cause: groupProfileState.error,
+            correction: groupProfileState.error.includes("installed desktop app")
+              ? "Open this project in the installed QuickPLS desktop app."
+              : "Choose the grouping variable again to reload its complete-dataset profile.",
+            correctionTargetId: "nd-calculation-group-column",
+            correctionActionLabel: "Change grouping variable",
+          }]
         : groupProfileState.status === "idle"
-          ? ["Choose a grouping variable to load complete-dataset counts."]
-          : groupProfileAssessment.blockers;
-  const logisticProfileBlockers = !logisticSelected
+          ? [methodProfileBlockingMessageV1(
+              "Choose a grouping variable to load complete-dataset counts.",
+              "Select an unassigned grouping variable.",
+              "nd-calculation-group-column",
+              "Choose grouping variable",
+            )]
+          : groupProfileAssessment.blockers.map((cause) => methodProfileBlockingMessageV1(
+              cause,
+              cause.includes("Group B")
+                ? "Choose a valid Group B value with enough complete cases."
+                : cause.includes("Group A")
+                  ? "Choose a valid Group A value with enough complete cases."
+                  : cause.includes("Confirm MICOM")
+                    ? "Review and confirm MICOM Step 1 after verifying configural invariance."
+                  : "Correct the grouping variable, group values, or MICOM confirmation above.",
+              cause.includes("Group B")
+                ? "nd-calculation-group-b"
+                : cause.includes("Group A")
+                  ? "nd-calculation-group-a"
+                  : cause.includes("Confirm MICOM")
+                    ? "nd-calculation-micom-configural"
+                  : "nd-calculation-group-column",
+              cause.includes("Group B")
+                ? "Change Group B"
+                : cause.includes("Group A")
+                  ? "Change Group A"
+                  : cause.includes("Confirm MICOM")
+                    ? "Review confirmation"
+                    : "Review groups",
+            ));
+  const logisticOutcomeBlocker = nativeLogisticOutcomeBlockingMessageV1(logisticProfileAssessment?.profile);
+  const logisticProfileBlockerEntries: NativeCalculationBlockingMessageV1[] = !logisticSelected
     ? []
     : logisticProfileAssessment && !logisticProfileAssessment.canRun
-      ? logisticProfileAssessment.blockers
+      ? [
+          ...(logisticOutcomeBlocker ? [logisticOutcomeBlocker] : []),
+          ...logisticProfileAssessment.blockers
+            .filter((cause) => !logisticOutcomeBlocker
+              || (!cause.includes("not coded exactly 0 or 1") && !cause.includes("both class 0 and class 1")))
+            .map((cause) => methodProfileBlockingMessageV1(
+              cause,
+              cause.toLocaleLowerCase().includes("outcome")
+                ? "Recode the outcome to numeric 0/1, or choose another outcome."
+                : "Correct the selected regression variables or active data.",
+              cause.toLocaleLowerCase().includes("outcome") ? "nd-calculation-regression-outcome" : undefined,
+              cause.toLocaleLowerCase().includes("outcome") ? "Change outcome" : undefined,
+            )),
+        ]
       : currentLogisticProfileState.status === "failed"
-      ? [currentLogisticProfileState.error]
+      ? [{
+          tier: currentLogisticProfileState.error.includes("installed desktop app") ? "runtime" : "scientific_invalidity",
+          cause: currentLogisticProfileState.error,
+          correction: currentLogisticProfileState.error.includes("installed desktop app")
+            ? "Open this project in the installed QuickPLS desktop app."
+            : "Choose the outcome again to reload its complete-dataset profile.",
+          correctionTargetId: "nd-calculation-regression-outcome",
+          correctionActionLabel: "Change outcome",
+        }]
       : currentLogisticProfileState.status !== "ready"
-        ? ["Profile all dataset rows before starting binary logistic regression."]
+        ? [{
+            tier: "advice",
+            cause: "Profile all dataset rows before starting binary logistic regression.",
+            correction: "Wait for the complete-dataset outcome profile to finish.",
+          }]
         : [];
-  const processProfileBlockers = !processSelected
+  const processProfileBlockerEntries: NativeCalculationBlockingMessageV1[] = !processSelected
     ? []
     : processProfileAssessment && !processProfileAssessment.canRun
-      ? processProfileAssessment.blockers
+      ? processProfileAssessment.blockers.map((cause) => methodProfileBlockingMessageV1(
+          cause,
+          "Correct the PROCESS graph roles or active data described above.",
+        ))
       : currentProcessProfileState.status === "failed"
-        ? [currentProcessProfileState.error]
+        ? [{
+            tier: currentProcessProfileState.error.includes("installed desktop app") ? "runtime" : "scientific_invalidity",
+            cause: currentProcessProfileState.error,
+            correction: currentProcessProfileState.error.includes("installed desktop app")
+              ? "Open this project in the installed QuickPLS desktop app."
+              : "Retry the complete-dataset PROCESS profile.",
+            correctionTargetId: currentProcessProfileState.error.includes("installed desktop app")
+              ? undefined
+              : "nd-calculation-process-profile-retry",
+            correctionActionLabel: currentProcessProfileState.error.includes("installed desktop app")
+              ? undefined
+              : "Retry profile",
+          }]
         : currentProcessProfileState.status !== "ready"
-          ? ["Profile all dataset rows before starting graph-defined path analysis."]
+          ? [{
+              tier: "advice",
+              cause: "Profile all dataset rows before starting graph-defined path analysis.",
+              correction: "Wait for the complete-dataset PROCESS profile to finish.",
+            }]
           : [];
   const archivedCbsemBootstrapSetting = !unifiedSem
     && kind === "cbsem"
     && (settings.cbsemBootstrapSamples ?? 0) > 0;
-  const cbsemPointRouteBlockers = archivedCbsemBootstrapSetting
-    ? ["Clear the archived bootstrap setting before running this legacy point-estimate setup. Reopen the project through the unified CB-SEM calculation workflow for saved bootstrap inference."]
+  const cbsemPointRouteBlockerEntries: NativeCalculationBlockingMessageV1[] = archivedCbsemBootstrapSetting
+    ? [{
+        tier: "unsupported_scope",
+        cause: "This legacy point-estimate setup still carries an archived bootstrap setting.",
+        correction: "Clear the archived setting here, or reopen the project through unified CB-SEM for bootstrap inference.",
+        correctionTargetId: "nd-calculation-cbsem-clear-archived-bootstrap",
+        correctionActionLabel: "Clear setting",
+      }]
     : [];
   const unifiedRouteSelected = Boolean(unifiedSemPlan && unifiedSemPlan.route !== "legacy");
   const unifiedReadinessBlockers = unifiedRouteSelected
@@ -623,31 +809,31 @@ export default function NativeCalculationDialog({
       ? readiness.blockers.filter((blocker) => blocker.id === "runtime")
       : readiness.blockers.filter((blocker) => blocker.id !== "calculation")
     : [];
-  const methodProfileBlockers = [...new Set([
-    ...groupProfileBlockers,
-    ...logisticProfileBlockers,
-    ...processProfileBlockers,
-    ...cbsemPointRouteBlockers,
-    ...(unifiedSemPlan?.route !== "legacy" ? unifiedSemPlan?.blockers ?? [] : []),
-    ...unifiedReadinessBlockers.map((blocker) => blocker.detail),
-    ...(unifiedRouteSelected && !onUnifiedSemAction
-      ? ["The unified calculation controller is unavailable. Close this setup and reopen the active project before calculating."]
-      : []),
-  ])];
+  const activeReadinessBlockers = unifiedRouteSelected
+    ? unifiedReadinessBlockers
+    : readiness.blockers;
   const unifiedPrimaryBlocker = unifiedRouteSelected
     ? unifiedSemPrimaryBlockingMessageV1(unifiedSemPlan)
     : null;
-  const fallbackPrimaryBlocker = !unifiedRouteSelected && !readiness.canRun
-    ? readiness.blockers[0]?.detail ?? readiness.summary
-    : methodProfileBlockers[0];
-  const primaryCalculationBlocker: NativeCalculationBlockingMessageV1 | null = unifiedPrimaryBlocker
-    ?? (fallbackPrimaryBlocker ? { cause: fallbackPrimaryBlocker, correction: null } : null);
+  const primaryCalculationBlocker = nativePrimaryCalculationBlockerV1([
+    ...groupProfileBlockerEntries,
+    ...logisticProfileBlockerEntries,
+    ...processProfileBlockerEntries,
+    ...cbsemPointRouteBlockerEntries,
+    ...(unifiedPrimaryBlocker ? [unifiedPrimaryBlocker] : []),
+    ...activeReadinessBlockers.map(readinessBlockingMessageV1),
+    ...(unifiedRouteSelected && !onUnifiedSemAction ? [{
+      tier: "runtime" as const,
+      cause: "The unified calculation controller is unavailable.",
+      correction: "Close this setup and reopen the active project before calculating.",
+    }] : []),
+  ]);
   const canStart = !registryUnavailableReason
     && selectedMethodVisible
     && (unifiedRouteSelected ? unifiedSemPlan?.canStart === true : readiness.canRun)
     && (kind !== "mga" || (groupProfileState.status === "ready" && groupProfileAssessment.canRun))
-    && logisticProfileBlockers.length === 0
-    && processProfileBlockers.length === 0
+    && logisticProfileBlockerEntries.length === 0
+    && processProfileBlockerEntries.length === 0
     && !archivedCbsemBootstrapSetting
     && unifiedReadinessBlockers.length === 0
     && (!unifiedRouteSelected || Boolean(onUnifiedSemAction))
@@ -954,6 +1140,7 @@ export default function NativeCalculationDialog({
         </div>
       </aside>
 
+      <div className="nd-dialog-content-shell">
       <div className="nd-dialog-content">
         {running ? (
           <RunProgress methodLabel={selectedMethod.label} monitor={runMonitor} active />
@@ -966,6 +1153,7 @@ export default function NativeCalculationDialog({
               aria-labelledby={panelTitleId(kind)}
             >
               <header className="nd-method-settings-header">
+                <span className="nd-selected-method-category">{selectedMethod.categoryLabel}</span>
                 <div className="nd-method-settings-title-row">
                   <h3 id={panelTitleId(kind)}>{selectedMethod.label}</h3>
                   {openMethodDetails ? <button type="button" className="nd-method-details-link" onClick={openMethodDetails}>Method Details</button> : null}
@@ -1018,10 +1206,22 @@ export default function NativeCalculationDialog({
             </section>
 
             {primaryCalculationBlocker ? (
-              <div className="nd-blocker" role="alert">
+              <div className={`nd-blocker ${primaryCalculationBlocker.tier}`} role="alert" data-blocker-tier={primaryCalculationBlocker.tier}>
                 <strong>Cannot start this calculation</strong>
                 <span><strong>Cause:</strong> {primaryCalculationBlocker.cause}</span>
                 {primaryCalculationBlocker.correction ? <span><strong>Correction:</strong> {primaryCalculationBlocker.correction}</span> : null}
+                {primaryCalculationBlocker.correctionTargetId && primaryCalculationBlocker.correctionActionLabel ? (
+                  <button
+                    type="button"
+                    className="nd-blocker-action"
+                    aria-controls={primaryCalculationBlocker.correctionTargetId}
+                    onClick={() => {
+                      const target = document.getElementById(primaryCalculationBlocker.correctionTargetId!);
+                      if (target instanceof HTMLButtonElement) target.click();
+                      else target?.focus();
+                    }}
+                  >{primaryCalculationBlocker.correctionActionLabel}</button>
+                ) : null}
               </div>
             ) : null}
 
@@ -1050,6 +1250,8 @@ export default function NativeCalculationDialog({
           </section>
         )}
       </div>
+      <div className="nd-dialog-scroll-fade" aria-hidden="true" />
+      </div>
 
       <footer>
         {running ? (
@@ -1061,9 +1263,7 @@ export default function NativeCalculationDialog({
             <button type="button" onClick={close}>Close</button>
             <button className="primary" type="submit" disabled={!canStart}>
               <Play size={14} aria-hidden="true" />
-              {selectedMethodVisible
-                ? nativeAnalysisStartLabel(kind, retry, settings.regressionType, settings.regressionBootstrap)
-                : "Start calculation"}
+              Start calculation
             </button>
           </>
         )}
@@ -1094,6 +1294,8 @@ function UnifiedSemFeatureSummary({
   const interactions = plan.inventory?.interactions ?? [];
   const indirectPathCount = plan.inventory?.indirectPathCount ?? 0;
   const indirectPathCountCapped = plan.inventory?.indirectPathCountCapped ?? false;
+  const cbsemStructuralRegressionCount = plan.inventory?.structuralRegressionCount
+    ?? context.model.relations.filter((relation) => relation.kind === "structural").length;
   let moderatedMediationCandidates: ReturnType<typeof unifiedSemModeratedMediationCandidatesV1> = [];
   try {
     moderatedMediationCandidates = unifiedSemModeratedMediationCandidatesV1(context, bootstrapOptions);
@@ -1135,6 +1337,12 @@ function UnifiedSemFeatureSummary({
       </span>
     </div> : null}
     {plan.method === "cbsem" ? <>
+      <div className="nd-setting-note wide" id="nd-calculation-cbsem-topology" role="status">
+        <span>Model topology</span>
+        <strong>{cbsemStructuralRegressionCount > 0
+          ? "Recursive structural equation model"
+          : "Confirmatory factor analysis"}</strong>
+      </div>
       <label className="wide" htmlFor="nd-calculation-cbsem-inference">Inference
         <select
           id="nd-calculation-cbsem-inference"
@@ -1154,7 +1362,7 @@ function UnifiedSemFeatureSummary({
           authorityKey: context.authorityKey,
           plan,
         })}
-      >Advanced Parameter Table</button>
+      >Advanced parameters…</button>
     </> : null}
     {plan.method === "pls_bootstrap" && plan.moderatedMediation?.candidateCount ? <div
       className="nd-setting-note wide"
@@ -1230,7 +1438,7 @@ function MethodSettings({
   const cbsemBcaType7 = cbsemBootstrap
     && (settings.cbsemBootstrapInterval ?? "percentile_type7") === "bca_type7";
   const cbsemBoundedLabsInterval = cbsemAnalyticStudentized || cbsemBcaType7;
-  const resampling = kind === "pls_bootstrap" || kind === "plsc_bootstrap" || kind === "pls_permutation" || kind === "pls_posthoc_technical_minimum_sample_size" || kind === "pls_sample_size_power" || kind === "mga" || kind === "predict" || kind === "nca" || regressionBootstrap || cbsemBootstrap;
+  const resampling = kind === "pls_bootstrap" || kind === "plsc_bootstrap" || kind === "pls_permutation" || kind === "pls_posthoc_technical_minimum_sample_size" || kind === "pls_sample_size_power" || kind === "mga" || kind === "predict" || kind === "nca" || regressionBootstrap || (unifiedCbsem && cbsemBootstrap);
   const selectedGroupColumn = settings.groupColumn?.trim() ?? "";
   const selectedGroupColumnEligible = !selectedGroupColumn || groupColumns.includes(selectedGroupColumn);
   const groupValues = groupProfileState.profile?.groups ?? [];
@@ -1354,6 +1562,10 @@ function MethodSettings({
       : { regressionControls: next.join(",") || null });
   };
 
+  if ((unifiedPls && kind === "pls_algorithm") || (unifiedCbsem && !cbsemBootstrap)) {
+    return null;
+  }
+
   return (
     <fieldset>
       <legend>Method settings</legend>
@@ -1388,7 +1600,7 @@ function MethodSettings({
           </label>
         ) : null}
 
-        {kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "gsca" ? <label htmlFor="nd-calculation-max-iterations">Maximum iterations
+        {!unifiedPls && !unifiedCbsem && kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "gsca" ? <label htmlFor="nd-calculation-max-iterations">Maximum iterations
           <input
             id="nd-calculation-max-iterations"
             type="number"
@@ -1400,7 +1612,7 @@ function MethodSettings({
           />
         </label> : null}
 
-        {kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "gsca" ? <label htmlFor="nd-calculation-tolerance">Stop criterion
+        {!unifiedPls && !unifiedCbsem && kind !== "nca" && kind !== "pca" && kind !== "regression" && kind !== "gsca" ? <label htmlFor="nd-calculation-tolerance">Stop criterion
           <input
             id="nd-calculation-tolerance"
             type="number"
@@ -1411,6 +1623,20 @@ function MethodSettings({
             onChange={(event) => setSettings({ tolerance: Number(event.target.value) })}
           />
         </label> : null}
+
+        {kind === "predict" ? (
+          <div className="nd-setting-note wide" id="nd-calculation-prediction-plan" role="note">
+            <span>Cross-validation design</span>
+            <strong>{NATIVE_PREDICTION_FOLDS} folds × {NATIVE_PREDICTION_REPEATS} repetitions (fixed)</strong>
+          </div>
+        ) : null}
+
+        {kind === "gsca" ? (
+          <div className="nd-setting-note wide" id="nd-calculation-gsca-fixed-summary" role="note">
+            <span>Fixed execution</span>
+            <strong>Joint global least-squares ALS · 3,000 iterations · 1e-7 stop criterion · point estimates</strong>
+          </div>
+        ) : null}
 
         {kind === "pls_bootstrap" || kind === "pls_posthoc_technical_minimum_sample_size" ? (
           <>
@@ -1632,6 +1858,7 @@ function MethodSettings({
 
             {groupProfileState.status === "loading" ? <p role="status">Reading complete-dataset group counts...</p> : null}
             {groupProfileState.status === "ready" ? (
+              <>
               <div className="nd-mga-group-grid">
                 <label htmlFor="nd-calculation-group-a">Group A
                   <select
@@ -1662,6 +1889,19 @@ function MethodSettings({
                   </select>
                 </label>
               </div>
+              {groupProfileAssessment.groupA || groupProfileAssessment.groupB ? (
+                <dl className="nd-mga-group-summary" aria-label="Selected group sample summary">
+                  {groupProfileAssessment.groupA ? <div>
+                    <dt>Group A</dt>
+                    <dd>{nativeGroupOptionLabel(groupProfileAssessment.groupA)}</dd>
+                  </div> : null}
+                  {groupProfileAssessment.groupB ? <div>
+                    <dt>Group B</dt>
+                    <dd>{nativeGroupOptionLabel(groupProfileAssessment.groupB)}</dd>
+                  </div> : null}
+                </dl>
+              ) : null}
+              </>
             ) : null}
 
             <label htmlFor="nd-calculation-group-permutations">Permutations
@@ -1704,7 +1944,7 @@ function MethodSettings({
         ) : null}
 
         {kind === "ipma" ? (
-          <label className="wide" htmlFor="nd-calculation-ipma-target">Endogenous target
+          <><label className="wide" htmlFor="nd-calculation-ipma-target">Endogenous target
             <select
               id="nd-calculation-ipma-target"
               required
@@ -1715,6 +1955,10 @@ function MethodSettings({
               {ipmaTargets.map((target) => <option key={target.id} value={target.id}>{target.optionLabel}</option>)}
             </select>
           </label>
+          <div className="nd-setting-note wide" id="nd-calculation-ipma-fixed-scope" role="note">
+            <span>Current IPMA scope</span>
+            <strong>All direct and indirect predecessors · observed-range 0–100 performance. Selectable scope and theoretical ranges require the versioned IPMA v2 capability.</strong>
+          </div></>
         ) : null}
 
         {kind === "cbsem" ? (
@@ -1735,9 +1979,13 @@ function MethodSettings({
                 <option value="cfa">Confirmatory factor analysis (no paths)</option>
               </select>
             </label> : null}
+            {!unifiedCbsem ? <div className="nd-setting-note wide" id="nd-calculation-cbsem-point-contract" role="note">
+              <span>Inference</span>
+              <strong>Maximum-likelihood point estimates</strong>
+            </div> : null}
             {!unifiedCbsem && cbsemBootstrap ? <div className="nd-inline-warning wide" id="nd-calculation-cbsem-archived-bootstrap" role="alert">
               <strong>Clear the archived bootstrap setting before running this point-estimate setup.</strong>
-              <button type="button" onClick={() => setSettings({
+              <button id="nd-calculation-cbsem-clear-archived-bootstrap" type="button" onClick={() => setSettings({
                 cbsemBootstrapSamples: 0,
                 cbsemBootstrapInterval: "percentile_type7",
                 cbsemBootstrapTestTail: "two_sided",
@@ -1816,6 +2064,10 @@ function MethodSettings({
                 onChange={(event) => setSettings({ ncaPermutationSamples: Number(event.target.value) })}
               />
             </label>
+            <div className="nd-setting-note wide" id="nd-calculation-nca-fixed-evidence" role="note">
+              <span>Fixed evidence policy</span>
+              <strong>Bottlenecks 10%–90% in 10-point steps · one-sided α 0.05 · deterministic replay from seed {settings.seed} · fixed single-worker execution</strong>
+            </div>
           </>
         ) : null}
 
@@ -2016,7 +2268,7 @@ function MethodSettings({
                 <span>Complete-dataset outcome profile</span>
                 <strong>
                   {logisticProfileState.status === "ready" && logisticProfileAssessment?.profile
-                    ? `${logisticProfileAssessment.profile.completeCases} complete cases: ${logisticProfileAssessment.profile.zeroCases} class 0 and ${logisticProfileAssessment.profile.oneCases} class 1; ${logisticProfileAssessment.profile.omittedRows} omitted by listwise deletion`
+                    ? `Detected values: 0 (${logisticProfileAssessment.profile.zeroCases}), 1 (${logisticProfileAssessment.profile.oneCases}), outside 0/1 (${logisticProfileAssessment.profile.invalidOutcomeRows}); ${logisticProfileAssessment.profile.completeCases} complete cases and ${logisticProfileAssessment.profile.omittedRows} omitted by listwise deletion`
                     : logisticProfileState.status === "loading"
                       ? <><LoaderCircle className="nd-spin" size={14} aria-hidden="true" /> Profiling bounded row pages...</>
                       : logisticProfileState.status === "failed"
@@ -2068,7 +2320,7 @@ function MethodSettings({
             onChange={(event) => setSettings({ seed: Number(event.target.value) })}
           />
         </label> : null}
-        {kind === "pls_bootstrap" || kind === "plsc_bootstrap" || kind === "pls_permutation" || kind === "pls_posthoc_technical_minimum_sample_size" || cbsemBootstrap ? (
+        {(kind === "pls_bootstrap" && !unifiedPls) || kind === "plsc_bootstrap" || kind === "pls_permutation" || kind === "pls_posthoc_technical_minimum_sample_size" ? (
             <label htmlFor="nd-calculation-workers">Parallel workers
               <input
                 id="nd-calculation-workers"

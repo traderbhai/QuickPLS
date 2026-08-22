@@ -158,7 +158,8 @@ export function nativeGroupOptionLabel(group: DatasetGroupProfileValue): string 
   const identity = group.label && group.label !== group.value
     ? `${group.label} [${group.value}]`
     : group.value;
-  return `${identity} — ${group.completeCases} complete of ${group.observations}`;
+  const excluded = Math.max(0, group.observations - group.completeCases);
+  return `${identity} · N=${group.completeCases} · ${excluded} excluded`;
 }
 
 function finiteResidentValue(value: string | number | null | undefined): boolean {
