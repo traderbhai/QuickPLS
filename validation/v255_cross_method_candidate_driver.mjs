@@ -409,7 +409,19 @@ async function main() {
   await writeJsonNew(path.join(args.evidenceDir, `v255_cross_method_${args.phase}.json`), report);
 }
 
-main().catch((error) => {
-  process.stderr.write(`${error?.stack ?? error}\n`);
-  process.exitCode = 1;
-});
+try {
+  await main();
+  await new Promise((resolve, reject) => {
+    process.stdout.write(`${JSON.stringify({ passed: true })}\n`, (error) => {
+      if (error) reject(error);
+      else resolve();
+    });
+  });
+  // The wrapper, not this attach-only client, owns and terminates QuickPLS.
+  process.exit(0);
+} catch (error) {
+  await new Promise((resolve) => {
+    process.stderr.write(`${error?.stack ?? error}\n`, resolve);
+  });
+  process.exit(1);
+}

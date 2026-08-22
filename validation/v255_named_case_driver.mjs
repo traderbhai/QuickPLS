@@ -1075,8 +1075,18 @@ let outcome;
 try {
   outcome = await main();
 } catch (error) {
-  console.error(error instanceof Error ? error.message : String(error));
+  await new Promise((resolve) => {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`, resolve);
+  });
   process.exit(1);
 }
-console.log(JSON.stringify({ passed: outcome.report.passed, cases: outcome.report.cases.length, report: outcome.reportPath }, null, 2));
-if (!outcome.report.passed) process.exit(1);
+await new Promise((resolve, reject) => {
+  process.stdout.write(`${JSON.stringify({ passed: outcome.report.passed, cases: outcome.report.cases.length, report: outcome.reportPath }, null, 2)}\n`, (error) => {
+    if (error) reject(error);
+    else resolve();
+  });
+});
+// This attach-only driver never owns the candidate. Exit the local CDP client
+// after the report and stdout are flushed; the PowerShell supervisor retains
+// sole authority over the exact QuickPLS process tree.
+process.exit(outcome.report.passed ? 0 : 1);

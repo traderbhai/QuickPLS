@@ -759,4 +759,14 @@ if (!report.passed) {
   console.error(report.failures[0] ?? "QuickPLS 2.55 method evidence crawler failed.");
   process.exit(1);
 }
-console.log(JSON.stringify({ passed: true, setups: report.setups.length, archive_rows: report.archive_inventory.length }, null, 2));
+await new Promise((resolve, reject) => {
+  process.stdout.write(`${JSON.stringify({ passed: true, setups: report.setups.length, archive_rows: report.archive_inventory.length }, null, 2)}\n`, (error) => {
+    if (error) reject(error);
+    else resolve();
+  });
+});
+// In packaged mode this process owns only the Playwright CDP client. Exiting
+// locally detaches that client without sending Browser.close to the
+// wrapper-owned QuickPLS/WebView process, whose exact PID tree remains under
+// the PowerShell supervisor's authority.
+process.exit(0);
