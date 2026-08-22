@@ -51,6 +51,14 @@ validation/results/**/structural_path_randomization_v1_*.json text eol=crlf
 validation/results/method_factory/pls_algorithm_v1/work/independent_reference/*.json text eol=crlf
 validation/results/v247_tauri_native_acceptance_structural_path_randomization.json text eol=crlf
 
+# Consolidated diagnostics bind exact materialized report and stream bytes.
+# Keep checkout line endings deterministic on every platform.
+validation/results/v255_consolidated_diagnostics_*/v255_consolidated_diagnostics.json text eol=crlf
+validation/results/v255_consolidated_diagnostics_*/v255_source_contract_audit.json text eol=crlf
+validation/results/v255_consolidated_diagnostics_*/v255_final_contract_audit.json text eol=crlf
+validation/results/v255_consolidated_diagnostics_*/logs/*.log text eol=lf
+validation/results/v255_consolidated_diagnostics_*/logs/python_export_semantic_readback.stderr.log text eol=crlf
+
 *.png binary
 *.jpg binary
 *.jpeg binary
