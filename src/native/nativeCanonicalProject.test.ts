@@ -266,6 +266,69 @@ describe("canonical native project reconciliation", () => {
     expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)?.method).toBe("PLS-SEM Bootstrapping");
   });
 
+  it("prioritizes the exact typed post-hoc recipe identity over its shared PLS bootstrap artifacts", () => {
+    const bootstrapRecipe = recipe({
+      schema_version: 3,
+      settings: { ...recipe().settings, bootstrap_samples: 100 },
+      method_config: { kind: "pls_bootstrap" },
+    });
+    const posthocRecipe = recipe({
+      schema_version: 3,
+      settings: { ...recipe().settings, bootstrap_samples: 100 },
+      method_config: {
+        kind: "pls_posthoc_technical_minimum_sample_size",
+        capability_cell: {
+          registry_schema_version: 2,
+          capability_id: "smartpls.pls_power_analysis",
+          cell_id: "qpls3.pls.posthoc_technical_minimum_sample_size",
+          capability_version: "pls_posthoc_technical_minimum_sample_size_v2",
+        },
+        method_version: "inverse_square_root_posthoc_v2",
+        base_analysis: "pls_bootstrap",
+        inference: "case_bootstrap_normal_reference_two_sided",
+      },
+      metadata: { status: "standard_posthoc_technical_minimum_sample_size_v2" },
+    });
+    const bootstrapEnvelope = envelope({
+      provenance: {
+        ...envelope().provenance,
+        method_version: "pls_pm_v1+inverse_square_root_posthoc_v2+indexed_resampling_v4",
+        settings: posthocRecipe.settings,
+      },
+      payload: {
+        kind: "pls_pm_v2",
+        estimation: (envelope().payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>).estimation,
+        assessment: (envelope().payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>).assessment,
+        bootstrap: {
+          method_version: "pls_bootstrap_v1",
+          plan: { replicates: 100, master_seed: 42, operation: "bootstrap" },
+          usable_replicates: 100,
+          failed_replicates: [],
+          percentile: { confidence_level: 0.95, parameters: [] },
+        },
+      },
+    });
+
+    expect(nativeRunFromCanonicalResult(bootstrapEnvelope, posthocRecipe)).toMatchObject({
+      method: "Post-hoc Technical Minimum Sample Size",
+      name: "Post-hoc Technical Minimum Sample Size run",
+    });
+    expect(nativeRunFromCanonicalResult(bootstrapEnvelope, bootstrapRecipe)).toMatchObject({
+      method: "PLS-SEM Bootstrapping",
+      name: "PLS-SEM Bootstrapping run",
+    });
+    expect(nativeRunFromCanonicalResult({
+      ...bootstrapEnvelope,
+      provenance: {
+        ...bootstrapEnvelope.provenance,
+        method_version: "pls_pm_v1+indexed_resampling_v4",
+      },
+    }, posthocRecipe)).toMatchObject({
+      method: "PLS-SEM Bootstrapping",
+      name: "PLS-SEM Bootstrapping run",
+    });
+  });
+
   it("binds explicit one-sided bootstrap receipts to recipe, marker, order, and plus-one arithmetic", () => {
     const baseEnvelope = envelope();
     const basePayload = baseEnvelope.payload as Extract<AnalysisResultEnvelope["payload"], { kind: "pls_pm_v1" }>;

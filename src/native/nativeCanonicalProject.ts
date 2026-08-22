@@ -551,12 +551,33 @@ export function currentNativeModelPresentation(
   return { nodes, edges, diagramLayout };
 }
 
+function hasCanonicalPlsPosthocTechnicalMinimumSampleSizeIdentity(
+  envelope: AnalysisResultEnvelope,
+  recipe: NativeCanonicalAnalysisRecipe,
+): boolean {
+  const config = recipe.method_config;
+  return recipe.schema_version === 3
+    && recipe.settings.method === "pls_pm"
+    && config?.kind === "pls_posthoc_technical_minimum_sample_size"
+    && config.capability_cell.registry_schema_version === 2
+    && config.capability_cell.capability_id === "smartpls.pls_power_analysis"
+    && config.capability_cell.cell_id === "qpls3.pls.posthoc_technical_minimum_sample_size"
+    && config.capability_cell.capability_version === "pls_posthoc_technical_minimum_sample_size_v2"
+    && config.method_version === "inverse_square_root_posthoc_v2"
+    && envelope.provenance.method === "pls_pm"
+    && envelope.provenance.settings.method === "pls_pm"
+    && envelope.provenance.method_version.split("+").includes(config.method_version);
+}
+
 function canonicalMethodLabel(
   envelope: AnalysisResultEnvelope,
   recipe: NativeCanonicalAnalysisRecipe,
   hasBootstrap: boolean,
   hasPermutation: boolean,
 ) {
+  if (hasCanonicalPlsPosthocTechnicalMinimumSampleSizeIdentity(envelope, recipe)) {
+    return "Post-hoc Technical Minimum Sample Size";
+  }
   if (recipe.settings.method === "predict") {
     const version = envelope.payload.kind === "legacy"
       || envelope.payload.kind === "pls_sample_size_power_v1"
