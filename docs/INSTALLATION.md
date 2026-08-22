@@ -1,10 +1,13 @@
 # QuickPLS Installation
 
-Current source version: **2.54.0**. Its final unsigned Windows candidate,
-release-artifact package and checksums, and isolated packaged lifecycle smoke
-passed. Code signing is excluded.
+Current source version: **2.55.0**. The post-hoc-corrected formal source reports
+`20260822T064330Z` at source `0ae22eb` and `20260822T064832Z` at source
+`0238e20` each passed 14/14 using the same diagnostic script and suite contract.
+A fresh provenance-bound unsigned setup, portable, CLI, and checksum package,
+its installed and portable packaged journeys, the evidence bundle, and
+publication remain pending. Code signing is excluded.
 
-Release page: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned.
+Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Every earlier local 2.55 candidate, including `20260822T052553Z`, is historical and ineligible because the current validation and post-hoc reopen-label product correction postdate it. Exact typed post-hoc PLS authority now takes precedence over the generic bootstrap fallback, and the focused identity suite passed 17/17; this is not packaged validation. The install wrapper separately permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects all other byte differences. A fresh candidate, install, and smoke run remain pending and no 2.55 download or installed-app success is claimed.
 
 ## Choose An Install Type
 
@@ -55,3 +58,5 @@ QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activ
 ## Uninstall
 
 If you used the installer, uninstall QuickPLS from Windows Apps/Programs. If you used the portable executable, delete the executable when no longer needed.
+
+For the controlled 2.55 release qualification, the existing registered QuickPLS 2.53 installation may be removed through its exact registered uninstaller before the isolated candidate install. Project files, recovery data, and QuickPLS application user data must remain untouched and should be verified unchanged across that operation. The portable executable may be used for its separate portable journey, but it does not substitute for installed-candidate evidence.
