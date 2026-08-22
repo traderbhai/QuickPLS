@@ -1,20 +1,20 @@
 # QuickPLS Installation
 
-Current source version: **2.55.0**. The renderer/process-trust-chain-remediated
-formal source reports `20260822T082854Z` at source `b4a73f7` and
-`20260822T083409Z` at source `1f0fa28` each passed 14/14 using the identical
-diagnostic script and suite/invocation contract. They are separate evidence
-records and are not claimed to be byte-identical reports. Renderer console/page
-errors now fail closed, attach-only phases use fresh wrapper-owned processes,
-and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are
-closed. A fresh provenance-bound unsigned setup, portable, CLI, and checksum
-package, its isolated install and installed and portable packaged journeys,
-evidence collection and bundling, and publication remain pending. Code signing
-is excluded. The only permitted opt-in waiver is the actual Windows 200%
-scaling case; its real observed DPI screenshot and receipt remain required and
-the other 54 named cases must pass.
+Current source version: **2.55.0**. Formal diagnostic `20260822T104806Z` at
+source `5ac7d8e` executed all 14 steps and passed 13; only
+`frontend_typecheck` failed. One remediation batch corrected that typed fixture,
+and the same-script, same-suite final diagnostic `20260822T105458Z` at source `6289b44`
+passed 14/14. Both records use runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
+the reports are separate evidence records and are not byte-identical.
+A fresh provenance-bound unsigned setup, portable, CLI, and checksum package,
+its isolated install, both installed and portable packaged journeys, evidence
+collection and bundling, and publication remain pending. Code signing is
+excluded. Exactly one case—the actual Windows 200% scaling case—may use the
+opt-in waiver; its real observed DPI screenshot and receipt remain required,
+its status remains `waived`, and the other 54 named cases must pass.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Candidate `20260822T070205Z` and every earlier local 2.55 candidate or install attempt are historical and ineligible because the trust-chain remediation and current formal validation postdate them. Exact typed post-hoc PLS authority now takes precedence over the generic bootstrap fallback, and the focused identity suite passed 17/17; this is not packaged validation. The install wrapper separately permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects all other byte differences. A fresh candidate build, isolated install, installed and portable smoke, evidence collection and bundling, and publication remain pending; no 2.55 download or installed-app success is claimed.
+Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Candidate/install attempt `20260822T084527Z` and every earlier local 2.55 attempt are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. A fresh candidate build, isolated install, installed and portable smoke, evidence collection and bundling, and publication remain pending; no 2.55 download or installed-app success is claimed.
 
 ## Choose An Install Type
 
@@ -66,4 +66,4 @@ QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activ
 
 If you used the installer, uninstall QuickPLS from Windows Apps/Programs. If you used the portable executable, delete the executable when no longer needed.
 
-For the controlled 2.55 release qualification, the existing registered QuickPLS 2.53 installation may be removed through its exact registered uninstaller before the isolated candidate install. Project files, recovery data, and QuickPLS application user data must remain untouched and should be verified unchanged across that operation. The portable executable may be used for its separate portable journey, but it does not substitute for installed-candidate evidence.
+For controlled 2.55 release qualification, an existing registered QuickPLS installation may be removed only through its exact registered uninstaller before the isolated candidate install. Project files, recovery data, and QuickPLS application user data must remain untouched and must be verified unchanged across that operation. The portable executable is still required for its separate journey, but it does not substitute for installed-candidate evidence.

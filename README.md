@@ -2,7 +2,7 @@
 
 QuickPLS is a free, proprietary, Windows desktop application for researchers working with PLS-SEM, SEM diagrams, reproducible analysis workflows, results interpretation, and publication-ready exports. Its analytical workflows require no internet connection, account, or cloud service. The QuickPLS application and page make no external requests; the Microsoft-managed WebView2 runtime can still make its own background service connections unless a separately verified OS-level network boundary is applied.
 
-Current source version: **2.55.0**. The renderer/process-trust-chain-remediated formal source reports `20260822T082854Z` (source `b4a73f7`) and `20260822T083409Z` (source `1f0fa28`) each passed 14/14. They used the identical diagnostic script and suite/invocation contract; they are separate evidence records and are not claimed to be byte-identical reports. The remediation makes renderer console/page-error evidence fail closed, uses fresh wrapper-owned processes at attach-only phase boundaries, and closes the candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings. Exact typed post-hoc PLS authority also takes precedence over the generic bootstrap fallback, with its focused identity suite passing 17/17. This is source evidence, not packaged validation. Candidate `20260822T070205Z` and every earlier candidate or install attempt are historical and ineligible because the remediation and current formal validation postdate them. A fresh provenance-bound unsigned candidate build, isolated install, installed and portable packaged journeys, evidence collection and bundling, and publication are still pending and are not claimed here. The product owner authorized one opt-in waiver only for the actual Windows 200% scaling case; that route must still record the real observed DPI and browser scale in a screenshot and receipt, while the other 54 named evidence cases remain mandatory. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe the bounded analytical capability, not the signing state of the installer.
+Current source version: **2.55.0**. Formal diagnostic `20260822T104806Z` at source `5ac7d8e` executed all 14 steps and passed 13; only `frontend_typecheck` failed. One remediation batch corrected that typed exact-fit presentation fixture, and the same-script, same-suite final diagnostic `20260822T105458Z` at source `6289b44` passed 14/14. Both records use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`; they are separate evidence records and are not byte-identical. Renderer console/page-error evidence fails closed, attach-only phases use fresh wrapper-owned processes, and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are closed. This is source evidence, not packaged validation. Candidate/install attempt `20260822T084527Z` and every earlier 2.55 attempt are ineligible. A fresh provenance-bound unsigned candidate build, isolated install, installed and portable packaged journeys, evidence collection and bundling, and publication remain pending. Exactly one named case—the actual Windows 200% scaling case—may use the opt-in waiver; its real DPI screenshot and receipt remain mandatory, its status remains `waived` rather than `passed`, and the other 54 named cases must pass. If an existing registered QuickPLS installation must be removed, only its exact registered uninstaller may be used; project files, recovery data, and QuickPLS application user data must remain untouched. Portable evidence does not replace installed evidence. Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Code signing is excluded; method labels such as **Standard** describe bounded analytical capability, not installer signing state.
 
 QuickPLS runs locally. It does not require an account, activation server, cloud storage, R, Python, or remote computation at runtime, and QuickPLS product telemetry is disabled. This functional-offline scope is not a claim that the complete WebView2 process tree has zero egress or no platform-runtime telemetry.
 
@@ -40,32 +40,30 @@ dialogs, scientific-first eligibility messages, and truthful fixed-setting
 summaries for the existing 18 public methods. Its rebaselined interaction suite
 and evidence contracts cover all 18 setup surfaces and 64 declared setup cases,
 and require 29 cross-method journeys and 26 specialized journeys for the
-candidate evidence package. The renderer/process-trust-chain-remediated formal
-source-gate reports `20260822T082854Z` (source `b4a73f7`) and
-`20260822T083409Z` (source `1f0fa28`) each succeeded 14/14 under the identical
-diagnostic script and suite/invocation contract. They are separate evidence
-records, not byte-identical reports. The passes include full Vitest, focused
-Rust authority/archive
-lifecycle tests, full TypeScript checking, a production frontend build,
-six-format semantic export readback, the 17-item regression rebaseline, the
-18-method setup crawl, and the final evidence contract. The trust-chain
-remediation additionally fails closed on renderer console/page errors, enforces
-fresh wrapper-owned attach-only phase processes, and binds candidate, phase, and
-trusted-driver process roles and hashes. The single product-owner
-waiver is opt-in and applies only to actual Windows 200% scaling; it does not
-turn the observed DPI result into a pass, and the actual-DPI screenshot and
-receipt remain required. A fresh unsigned setup, portable, CLI, and checksum
-package, installed/portable journeys, the evidence bundle, and publication all
+candidate evidence package. Formal diagnostic `20260822T104806Z` at source
+`5ac7d8e` executed 14 steps and passed 13, with only `frontend_typecheck`
+failing. After one batch remediation, the same-script, same-suite final diagnostic
+`20260822T105458Z` at source `6289b44` passed 14/14. Both used runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`.
+The two reports are separate evidence records and are not byte-identical.
+The final pass includes full Vitest, focused Rust authority/archive lifecycle
+tests, full TypeScript checking, a production frontend build, six-format
+semantic export readback, the 17-item regression rebaseline, the 18-method setup
+crawl, and the final evidence contract. The trust-chain remediation fails closed
+on renderer console/page errors, enforces fresh wrapper-owned attach-only phase
+processes, and binds candidate, phase, and trusted-driver process roles and
+hashes. Exactly one opt-in waiver applies only to actual Windows 200% scaling;
+the observed-DPI screenshot and receipt remain required and the other 54 cases
+must pass. A fresh unsigned setup, portable, CLI, and checksum package,
+installed and portable journeys, the evidence bundle, and publication all
 remain pending; the latest downloadable release therefore remains 2.54.0.
 
-Candidate `20260822T070205Z` and every earlier 2.55 candidate or install attempt
-are historical and ineligible because the trust-chain remediation and current
-formal validation came later. The exact typed post-hoc authority now takes
-precedence over the generic bootstrap fallback, and its focused identity suite passed
-17/17; this has not yet been validated in a packaged candidate. The separate
-install-comparison correction accepts only Tauri's exact three-byte `UNK` →
-`NSS` marker transition and rejects any other byte difference. Fresh candidate,
-install, and smoke evidence is still required.
+Every earlier 2.55 candidate or install attempt is historical and ineligible.
+Exact typed post-hoc authority now takes precedence over the generic bootstrap
+fallback, but it still requires fresh packaged validation. The install comparison
+accepts only Tauri's exact three-byte `UNK` → `NSS` marker transition and rejects
+any other byte difference. Fresh candidate, install, and smoke evidence is still
+required.
 
 ## Download
 
@@ -119,7 +117,7 @@ Substantial scientific work remains across full PLS inference and assessment, pr
 
 Primary documentation:
 
-- [QuickPLS 2.55.0 Release Notes — source gates complete; fresh candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
+- [QuickPLS 2.55.0 Release Notes — final source gate complete; fresh candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [QuickPLS 2.54.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [QuickPLS 2.53.0 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [QuickPLS 2.52.0 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)
@@ -213,11 +211,11 @@ See [Native Desktop Redesign](docs/NATIVE_DESKTOP_REDESIGN.md) for the manual pa
 
 ## Release Files And Checksums
 
-Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. Candidate `20260822T070205Z` and every earlier local Version 2.55.0 candidate or install attempt are ineligible because the renderer/process trust-chain remediation and current formal validation postdate them. The marker-only install comparison is also corrected, but neither correction has fresh packaged proof. One new provenance-bound unsigned candidate must still be built and complete the required isolated install plus installed and portable journeys before evidence collection, bundling, and publication. The latest published files remain the verified Version 2.54.0 setup, portable app, CLI, and checksums on the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
+Local versioned builds write setup, portable, CLI, and checksum files to `target/release/artifacts/`. Candidate/install attempt `20260822T084527Z` and every earlier local Version 2.55.0 attempt are historical and ineligible. The marker-only install comparison is corrected but has no fresh packaged proof. One new provenance-bound unsigned candidate must still be built and complete the required isolated install plus installed and portable journeys before evidence collection, bundling, and publication. The latest published files remain the verified Version 2.54.0 setup, portable app, CLI, and checksums on the [`v2.54.0` release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0).
 
 ## Documentation
 
-- [Version 2.55 Release Notes — source gates complete; fresh candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
+- [Version 2.55 Release Notes — final source gate complete; fresh candidate pending](docs/RELEASE_NOTES_V2_55_0.md)
 - [Version 2.54 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_54_0.md)
 - [Version 2.53 Release Notes — verified unsigned candidate](docs/RELEASE_NOTES_V2_53_0.md)
 - [Version 2.52 Release Notes](docs/RELEASE_NOTES_V2_52_0.md)

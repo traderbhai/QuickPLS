@@ -1,6 +1,6 @@
 # QuickPLS 2.55.0 Release Notes
 
-Status: renderer/process-trust-chain-remediated, waiver-qualified source gate complete; fresh provenance-bound unsigned candidate build, isolated install, installed/portable smoke, evidence collection and bundle, merge/tag, and publication pending.
+Status: one-batch-remediated final source gate complete; fresh provenance-bound unsigned candidate build, isolated install, installed and portable smoke, evidence collection and bundle, final audit, merge/tag, and publication pending.
 
 QuickPLS 2.55 focuses on professional Calculate setup, model-aware diagram layout, and a fail-closed current-method evidence architecture and collection workflow. It preserves the existing 18 public Calculate methods and does not relabel or replace historical scientific identities.
 
@@ -30,6 +30,7 @@ These changes do not alter model topology, estimands, analytical methods, or sci
 - The public method catalogue remains exactly 18 entries.
 - The setup matrix declares 64 method-option cases plus one direct Calculate capture for each method.
 - Cross-method and specialized contracts cover imports, exports, persistence, mediation, moderation, higher-order constructs, CB-SEM, regression, PROCESS, and archive lifecycle behavior.
+- Frozen evidence is closed over exactly 18 method receipts, 28 routes, 45 captures, and 71 one-family observations, backed by 14 curated static archives plus the declared named and post-hoc supplements.
 - Candidate build, install, and packaged automation are provenance-bound and restricted to exact harness-owned process trees.
 - Renderer console/page-error evidence fails closed, attach-only phases use fresh wrapper-owned processes, and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are closed.
 - The one permitted accessibility waiver is opt-in, scoped only to the actual Windows 200% scaling case, and cannot convert that assertion into a pass.
@@ -37,7 +38,7 @@ These changes do not alter model topology, estimands, analytical methods, or sci
 
 ## Source verification
 
-The renderer/process-trust-chain-remediated consolidated gate passed all 14 steps in both the formal first run and the final rerun using the identical diagnostic script and suite/invocation contract:
+The consolidated source gate executes these 14 steps:
 
 1. `diff_check` — clean patch contract;
 2. `v255_evidence_contract` — source evidence declarations;
@@ -54,7 +55,7 @@ The renderer/process-trust-chain-remediated consolidated gate passed all 14 step
 13. `method_setup_crawler` — the exact 18-method setup crawler; and
 14. `v255_final_evidence_contract` — final evidence contract.
 
-The qualifying first report is stored under `validation/results/v255_consolidated_diagnostics_20260822T082854Z/` and is bound to source `b4a73f7`. The final report is stored under `validation/results/v255_consolidated_diagnostics_20260822T083409Z/` and is bound to source `1f0fa28`. Both passed 14/14 under the identical script and suite/invocation contract. They are separate timestamped evidence records and are not claimed to be byte-identical reports.
+The formal first report is stored under `validation/results/v255_consolidated_diagnostics_20260822T104806Z/` and is bound to source `5ac7d8e`. It executed all 14 steps and passed 13; only `frontend_typecheck` failed. One remediation batch corrected the typed exact-fit presentation fixture. The final diagnostic, using the identical script and invocation contract, is stored under `validation/results/v255_consolidated_diagnostics_20260822T105458Z/`, is bound to source `6289b44`, and passed 14/14. Both records use runner SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`. The retained failure and final pass are separate timestamped evidence records and are not byte-identical.
 
 ## Product-owner DPI waiver
 
@@ -64,9 +65,9 @@ The waived route must still launch normally without forced scaling, capture the 
 
 ## Fresh candidate checkpoint
 
-Candidate `20260822T070205Z` and every earlier 2.55 candidate or install attempt are historical and ineligible because the renderer/process trust-chain remediation and current formal validation postdate them. Exact typed post-hoc authority also takes precedence over the generic PLS-SEM bootstrap fallback and passed its focused identity suite 17/17, but the remediated trust chain and typed-authority correction have not yet been exercised in a packaged candidate. The separate install-comparison correction permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. A fresh clean-source, provenance-bound unsigned setup, portable, CLI, and checksum package must be built from the current 2.55 authorities. No fresh candidate build, isolated installation, installed or portable smoke, evidence collection or bundle, final audit, merge, tag, or publication success is claimed yet.
+Candidate/install attempt `20260822T084527Z` and every earlier 2.55 attempt are historical and ineligible. The install comparison permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. A fresh clean-source, provenance-bound unsigned setup, portable, CLI, and checksum package must be built from the current 2.55 authorities. No fresh candidate build, isolated installation, installed or portable smoke, evidence collection or bundle, final audit, merge, tag, or publication success is claimed yet.
 
-The existing registered QuickPLS 2.53 installation may be uninstalled through its exact registered uninstaller before the isolated 2.55 install. That operation must leave project, recovery, and application user-data locations untouched. Using the fresh portable executable does not replace the separate installed-candidate journey.
+An existing registered QuickPLS installation may be removed only through its exact registered uninstaller before the isolated 2.55 install. That operation must leave project files, recovery data, and QuickPLS application user data untouched and verified unchanged. Installed and portable candidate journeys are both mandatory; neither substitutes for the other.
 
 ## What is not yet claimed
 

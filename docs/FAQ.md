@@ -10,27 +10,27 @@ No. QuickPLS is proprietary source-available software. The source can be inspect
 
 ## What is the current version?
 
-The coordinated source version is 2.55.0. Its formal reports after
-renderer/process trust-chain remediation, `20260822T082854Z` at source
-`b4a73f7` and
-`20260822T083409Z` at source `1f0fa28`, each passed 14/14 using the identical
-diagnostic script and suite/invocation contract. They are separate evidence
-records and are not claimed to be byte-identical reports. Renderer console/page
-errors now fail closed, attach-only phases use fresh wrapper-owned processes,
-and candidate/phase/trusted-driver PID, role, suite, and SHA-256 bindings are
-closed. Exact typed post-hoc PLS authority also takes precedence over the
-generic bootstrap fallback during reopen, and its focused identity suite passed
-17/17; these corrections have not yet been validated in a packaged candidate.
-Candidate `20260822T070205Z` and every earlier candidate or install attempt are
-historical and ineligible because the remediation and current formal validation
-postdate them. The separate install
-comparison now accepts only Tauri's exact three-byte `UNK` → `NSS` marker
-transition and rejects every other byte difference. A fresh unsigned candidate,
-isolated install, installed and portable packaged evidence, evidence collection
-and bundling, and publication are still pending. The latest published public
-pre-release remains
-[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0); the
-2.55 candidate remains unsigned and code signing is excluded.
+The coordinated source version is 2.55.0. Formal diagnostic
+`20260822T104806Z` at source `5ac7d8e` executed all 14 steps and passed 13;
+only `frontend_typecheck` failed. One remediation batch corrected the typed
+exact-fit presentation fixture, and the same-script, same-suite final diagnostic
+`20260822T105458Z` at source `6289b44` passed 14/14. Both records use runner
+SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
+the reports are separate evidence records and are not byte-identical.
+Renderer console/page errors fail closed, attach-only phases use fresh
+wrapper-owned processes, and candidate/phase/trusted-driver identities and
+hashes are bound. Candidate/install attempt `20260822T084527Z` and every earlier
+attempt are historical and ineligible. A fresh unsigned candidate, isolated
+install, installed and portable packaged evidence, evidence collection and
+bundling, and publication remain pending. Exactly one case—the actual Windows
+200% scaling case—may be `waived`; its real DPI screenshot and receipt remain
+required and the other 54 named cases must pass. If an existing registered
+installation must be removed, only its exact registered uninstaller may be
+used, with project files, recovery data, and QuickPLS application user data left
+untouched. Portable evidence does not replace installed evidence. The latest
+published public pre-release remains
+[`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0); 2.55
+remains unsigned and code signing is excluded.
 
 ## Does QuickPLS import SmartPLS projects?
 
@@ -126,21 +126,22 @@ presentation-only path bend and moderation-anchor editing, and reuses the full
 read-only diagram renderer for PROCESS preview. Calculate dialogs share compact,
 responsive behavior, prioritize scientific blockers, and disclose only controls
 and fixed policies that the engine actually implements. The exact 18-method
-catalogue is unchanged. The renderer/process-trust-chain-remediated formal
-source-gate passes `20260822T082854Z` and `20260822T083409Z` succeeded 14/14
-using the identical diagnostic script and suite/invocation contract; their
-reports are separate evidence records, not byte-identical files. Renderer
-console/page errors now fail closed and every candidate/phase/trusted-driver
-process role and hash is bound.
-The product owner authorized one opt-in waiver only for the actual Windows 200%
-scaling case; its actual observed DPI screenshot and receipt remain required,
-and all other 54 named cases remain mandatory. A fresh candidate, installed and
-portable evidence, the evidence bundle, and publication remain pending. See the
+catalogue is unchanged. Formal diagnostic `20260822T104806Z` at source
+`5ac7d8e` passed 13 of 14 executed steps, with only `frontend_typecheck`
+failing. After one remediation batch, the same-script, same-suite final diagnostic
+`20260822T105458Z` at source `6289b44` passed 14/14; both used runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
+the reports are separate evidence records and are not byte-identical.
+Renderer console/page errors fail closed and every candidate/phase/trusted-driver
+process role and hash is bound. Exactly one opt-in waiver applies only to the
+actual Windows 200% scaling case; its observed-DPI screenshot and receipt remain
+required, its status remains `waived`, and the other 54 named cases must pass.
+A fresh candidate, installed and portable evidence, the evidence bundle, and
+publication remain pending. See the
 [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
-Candidate `20260822T070205Z` and every earlier candidate or install attempt are
-historical and ineligible because the trust-chain remediation and current formal
-validation postdate them.
+Candidate/install attempt `20260822T084527Z` and every earlier attempt are
+historical and ineligible.
 The focused 17/17 source test covers the exact typed identity correction, not a
 packaged executable. The install wrapper separately accepts only the exact
 Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte
