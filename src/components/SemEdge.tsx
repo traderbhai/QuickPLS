@@ -1,11 +1,87 @@
 import { BaseEdge, EdgeLabelRenderer, getBezierPath, getSmoothStepPath, getStraightPath, useInternalNode, useStore, type EdgeProps, type Position } from "@xyflow/react";
 import { useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import { isMeasurementConnectorEdgeData } from "../domain/diagramGraph";
 import { continuousBoundaryRoute, semNodeBox } from "../domain/semGeometry";
 import { useWorkspace } from "../store";
+import type { ModelEditCommandV1 } from "../types";
 
 type LabelOffset = { x?: number; y?: number };
-type VisualPoint = { x: number; y: number };
+export type VisualPoint = { x: number; y: number };
+
+export interface SemEdgeEditPermissions {
+  bendPoints: boolean;
+  moveLabel: boolean;
+  deleteRelationship: boolean;
+  reverseRelationship: boolean;
+}
+
+export function semEdgeEditPermissions(data: unknown): SemEdgeEditPermissions {
+  const visualOnly = Boolean(data && typeof data === "object" && !Array.isArray(data)
+    && (data as { visualOnly?: unknown }).visualOnly === true);
+  const editableMeasurement = isMeasurementConnectorEdgeData(data) && data.routeEditable;
+  const relationshipEditable = !visualOnly
+    && (!(data && typeof data === "object" && !Array.isArray(data))
+      || (data as { relationshipEditable?: unknown }).relationshipEditable !== false);
+  return {
+    bendPoints: relationshipEditable || editableMeasurement,
+    moveLabel: relationshipEditable,
+    deleteRelationship: relationshipEditable,
+    reverseRelationship: relationshipEditable,
+  };
+}
+
+export interface SemEdgeLabelInteractionContract {
+  interactive: boolean;
+  role?: "button";
+  tabIndex?: 0;
+  ariaLabel?: string;
+  title?: string;
+}
+
+export function semEdgeLabelInteractionContract(
+  text: string,
+  permissions: Pick<SemEdgeEditPermissions, "moveLabel">,
+): SemEdgeLabelInteractionContract {
+  if (!permissions.moveLabel) return { interactive: false };
+  return {
+    interactive: true,
+    role: "button",
+    tabIndex: 0,
+    ariaLabel: `Move label for ${text || "selected path"}`,
+    title: "Drag to move label. Arrow keys nudge; Home resets.",
+  };
+}
+
+export function semEdgeBendEditCommand(
+  relationId: string,
+  data: unknown,
+  points: VisualPoint[],
+): ModelEditCommandV1 {
+  if (isMeasurementConnectorEdgeData(data)) {
+    return {
+      kind: "set_measurement_connector_bend_points",
+      constructId: data.constructId,
+      column: data.indicator,
+      points,
+    };
+  }
+  return { kind: "set_path_bend_points", relationId, points };
+}
+
+export function semEdgeResetRouteCommand(
+  relationId: string,
+  data: unknown,
+): ModelEditCommandV1 {
+  if (isMeasurementConnectorEdgeData(data)) {
+    return {
+      kind: "reset_measurement_connector_route",
+      constructId: data.constructId,
+      column: data.indicator,
+    };
+  }
+  return { kind: "reset_path_route", relationId };
+}
 
 function polylinePath(
   source: VisualPoint,
@@ -84,14 +160,16 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
       : getStraightPath({ sourceX: renderedSource.x, sourceY: renderedSource.y, targetX: renderedTarget.x, targetY: renderedTarget.y });
   const offset = (data?.labelOffset ?? {}) as LabelOffset;
   const edgeClassName = String(data?.edgeClassName ?? "");
-  const visualOnly = data?.visualOnly === true;
+  const editPermissions = semEdgeEditPermissions(data);
+  const measurementConnector = isMeasurementConnectorEdgeData(data);
   const x = labelX + Number(offset.x ?? 0);
   const y = labelY + Number(offset.y ?? 0);
   const text = typeof label === "string" ? label : "";
   const isGenericPathLabel = text.trim().toLowerCase() === "path";
   const shouldShowLabel = Boolean(text && (!isGenericPathLabel || selected));
+  const labelInteraction = semEdgeLabelInteractionContract(text, editPermissions);
   const startDrag = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (visualOnly) return;
+    if (!editPermissions.moveLabel) return;
     event.preventDefault();
     event.stopPropagation();
     checkpoint();
@@ -111,7 +189,14 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
     window.addEventListener("pointerup", up, { once: true });
   };
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    if (visualOnly) return;
+    if (event.key === "Delete" || event.key === "Backspace") {
+      if (!editPermissions.deleteRelationship) return;
+      event.preventDefault();
+      setSelectedEdge(id);
+      removeSelection();
+      return;
+    }
+    if (!editPermissions.moveLabel) return;
     const step = event.shiftKey ? 12 : 4;
     if (event.key === "ArrowUp") {
       event.preventDefault();
@@ -128,23 +213,19 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
     } else if (event.key === "Home") {
       event.preventDefault();
       resetEdgeLabel(id);
-    } else if (event.key === "Delete" || event.key === "Backspace") {
-      event.preventDefault();
-      setSelectedEdge(id);
-      removeSelection();
     }
   };
   const commitBendPoints = (points: VisualPoint[]) => {
-    void executeModelEditCommand({ kind: "set_path_bend_points", relationId: id, points })
+    void executeModelEditCommand(semEdgeBendEditCommand(id, data, points))
       .then((result) => window.dispatchEvent(new CustomEvent("quickpls:model-edit-result", { detail: result })))
       .catch(() => undefined)
       .finally(() => setDraftBendPoints(null));
   };
   const startBendDrag = (index: number, event: ReactPointerEvent<HTMLButtonElement>) => {
-    if (visualOnly) return;
+    if (!editPermissions.bendPoints) return;
     event.preventDefault();
     event.stopPropagation();
-    setSelectedEdge(id);
+    if (!measurementConnector) setSelectedEdge(id);
     const original = displayedBendPoints.map((point) => ({ ...point }));
     const start = { x: event.clientX, y: event.clientY };
     let latest = original;
@@ -180,7 +261,7 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
     window.addEventListener("keydown", cancelOnEscape);
   };
   const handleBendKeyDown = (index: number, event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (visualOnly) return;
+    if (!editPermissions.bendPoints) return;
     const step = event.shiftKey ? 12 : 4;
     const delta = event.key === "ArrowUp" ? { x: 0, y: -step }
       : event.key === "ArrowDown" ? { x: 0, y: step }
@@ -194,7 +275,7 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
         : point));
     } else if (event.key === "Home") {
       event.preventDefault();
-      void executeModelEditCommand({ kind: "reset_path_route", relationId: id });
+      void executeModelEditCommand(semEdgeResetRouteCommand(id, data));
     } else if ((event.key === "Delete" || event.key === "Backspace") && displayedBendPoints.length > 1) {
       event.preventDefault();
       commitBendPoints(displayedBendPoints.filter((_, pointIndex) => pointIndex !== index));
@@ -204,16 +285,28 @@ export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY
   return <>
     <BaseEdge id={id} path={path} markerEnd={markerEnd} markerStart={markerStart} style={style} interactionWidth={interactionWidth} className={`${edgeClassName}${selected ? " selected" : ""}`} />
     {shouldShowLabel ? <EdgeLabelRenderer>
-      <div className={`sem-edge-label${isGenericPathLabel ? " generic-path-label" : ""}${selected ? " selected" : ""}`} role="button" tabIndex={0} aria-label={`Move label for ${text || "selected path"}`} title="Drag to move label. Arrow keys nudge; Home resets." style={{ transform: `translate(-50%, -50%) translate(${x}px, ${y}px)` }} onPointerDown={startDrag} onKeyDown={handleKeyDown}>
+      <div
+        className={`sem-edge-label${isGenericPathLabel ? " generic-path-label" : ""}${selected ? " selected" : ""}`}
+        role={labelInteraction.role}
+        tabIndex={labelInteraction.tabIndex}
+        aria-label={labelInteraction.ariaLabel}
+        title={labelInteraction.title}
+        style={{
+          transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`,
+          ...(labelInteraction.interactive ? {} : { cursor: "default", pointerEvents: "none", userSelect: "text" }),
+        }}
+        onPointerDown={labelInteraction.interactive ? startDrag : undefined}
+        onKeyDown={labelInteraction.interactive ? handleKeyDown : undefined}
+      >
         {text}
       </div>
     </EdgeLabelRenderer> : null}
-    {selected && !visualOnly && routing === "polyline" ? <EdgeLabelRenderer>
+    {selected && editPermissions.bendPoints && routing === "polyline" ? <EdgeLabelRenderer>
       {displayedBendPoints.map((point, index) => <button
         key={`${id}-bend-${index}`}
         type="button"
         className="sem-edge-bend-handle nodrag nopan"
-        aria-label={`Bend ${index + 1} for selected path`}
+        aria-label={`Bend ${index + 1} for selected ${measurementConnector ? "measurement connector" : "path"}`}
         title="Drag to reshape path. Arrow keys nudge; Home resets the route."
         style={{ transform: `translate(-50%, -50%) translate(${point.x}px, ${point.y}px)` }}
         onPointerDown={(event) => startBendDrag(index, event)}

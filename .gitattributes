@@ -18,6 +18,8 @@
 *.R text eol=crlf
 Cargo.lock text eol=lf
 validation/fixtures/v255/named-sem-evidence.csv text eol=lf
+validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv text eol=lf
+validation/fixtures/organizational_identification_v1.csv text eol=lf
 
 # Independent-reference inputs were originally qualified from canonical LF.
 validation/Resolve-Rscript.ps1 text eol=lf

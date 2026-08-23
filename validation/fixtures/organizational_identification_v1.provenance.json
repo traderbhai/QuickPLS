@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "sample_id": "organizational_identification",
+  "source": {
+    "file_name": "Organizational Identification Model Data.xlsx",
+    "sheet": "Sheet1",
+    "range": "A1:V306",
+    "sha256": "5d803952b8009d406ab2f6317527d3df646de083ea86aa0b534a65b339713ae7",
+    "bytes": 36216,
+    "rows": 305,
+    "columns": 22,
+    "privacy_note": "The source workbook contains creator and data-connection metadata. The checked-in fixture contains cell values only and omits that metadata."
+  },
+  "selection": {
+    "modeled_indicators": 21,
+    "excluded_from_model": [
+      "gender"
+    ],
+    "excluded_column_treatment": "Retained as an unmodeled coded numeric variable. Codes 1 and 2 have no inferred labels; the default CSV import records numeric/continuous metadata.",
+    "constructs": [
+      {
+        "id": "org_prestige",
+        "indicators": ["org_pre1", "org_pre2", "org_pre3", "org_pre4", "org_pre5", "org_pre6", "org_pre7", "org_pre8"]
+      },
+      {
+        "id": "org_identification",
+        "indicators": ["org_ident1", "org_ident2", "org_ident3", "org_ident4", "org_ident5", "org_ident6"]
+      },
+      {
+        "id": "affective_commitment_joy",
+        "indicators": ["ac_joy1", "ac_joy2", "ac_joy3", "ac_joy4"]
+      },
+      {
+        "id": "affective_commitment_love",
+        "indicators": ["ac_love1", "ac_love2", "ac_love3"]
+      }
+    ]
+  },
+  "quality": {
+    "numeric_integer_cells": 6710,
+    "indicator_cells": 6405,
+    "missing_cells": 0,
+    "formula_cells": 0,
+    "error_cells": 0,
+    "sentinel_cells": 0,
+    "out_of_range_cells": 0,
+    "indicator_range": [1, 5],
+    "gender_range": [1, 2],
+    "gender_counts": {
+      "1": 157,
+      "2": 148
+    },
+    "full_row_unique_count": 303,
+    "full_row_duplicate_groups": 2,
+    "full_row_redundant_count": 2,
+    "full_row_duplicate_excel_rows": [[39, 40], [229, 274]],
+    "modeled_pattern_unique_count": 302,
+    "modeled_pattern_duplicate_groups": 3,
+    "modeled_pattern_redundant_count": 3,
+    "modeled_pattern_duplicate_excel_rows": [[12, 214], [39, 40], [229, 274]],
+    "straightlined_modeled_rows": 0
+  },
+  "cleaning": {
+    "treatment": "none",
+    "missing_data_treatment": "none_required",
+    "duplicate_treatment": "preserved",
+    "reverse_coding": "none",
+    "row_order": "source_order_preserved"
+  },
+  "canonicalization": {
+    "profile": "xlsx_sheet_values_to_csv_v1",
+    "header_order": [
+      "gender",
+      "org_pre1",
+      "org_pre2",
+      "org_pre3",
+      "org_pre4",
+      "org_pre5",
+      "org_pre6",
+      "org_pre7",
+      "org_pre8",
+      "org_ident1",
+      "org_ident2",
+      "org_ident3",
+      "org_ident4",
+      "org_ident5",
+      "org_ident6",
+      "ac_joy1",
+      "ac_joy2",
+      "ac_joy3",
+      "ac_joy4",
+      "ac_love1",
+      "ac_love2",
+      "ac_love3"
+    ],
+    "encoding": "UTF-8",
+    "byte_order_mark": false,
+    "delimiter": ",",
+    "quoting": "RFC 4180 minimal",
+    "line_ending": "LF",
+    "terminal_newline": true,
+    "number_serialization": "base-10 integers"
+  },
+  "output": {
+    "file_name": "organizational_identification_v1.csv",
+    "sha256": "5066d3b4bd24d14ad5d3efc91c1c40c57c41de63d987456d2cf8aad40c20ceed",
+    "bytes": 13624,
+    "lines": 306,
+    "rows": 305,
+    "columns": 22,
+    "modeled_indicators": 21,
+    "missing_cells": 0,
+    "dataset_fingerprint": "v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a"
+  },
+  "reference": {
+    "file": "validation/benchmarks/organizational_identification/screenshot_reference_v1.json",
+    "sha256": "9c1c6848f055ec2f3c00b1d3fe81ddb9fc973a4cc279b0399ffa54ca339af4fa",
+    "screenshot_file_name": "oi_model.png",
+    "screenshot_sha256": "6809e7f76ed209f8f83dfc2c16fa057c1f5d6e5f09633a9507eb3dd278e83544",
+    "screenshot_bytes": 238157,
+    "precision_decimals": 3,
+    "display_value_count": 27,
+    "display_value_matches": 27
+  },
+  "reference_scope": "The completed QuickPLS run matches all 27 screenshot values after rounding to three decimals. This is displayed-value parity, not bitwise equivalence with an external engine."
+}

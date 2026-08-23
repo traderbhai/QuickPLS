@@ -392,6 +392,10 @@ describe("StandardSemModelV4 diagram projection", () => {
       bendPoints: [{ x: 310, y: 74 }, { x: 410, y: 166 }],
       pinned: true,
     };
+    projected.diagramLayout.measurementConnectorLayouts["construct:x"] = {
+      x1: { routing: "polyline", bendPoints: [{ x: 170, y: 54 }] },
+      x2: { routing: "curved" },
+    };
     const parsed = parseStandardSemModelV4DiagramLayoutV1({
       schema_version: 1,
       model_id: "standard-model",
@@ -404,6 +408,12 @@ describe("StandardSemModelV4 diagram projection", () => {
       labelOffset: undefined,
       pinned: true,
     });
+    expect(parsed.diagram_layout.measurementConnectorLayouts).toEqual({
+      "construct:x": {
+        x1: { routing: "polyline", bendPoints: [{ x: 170, y: 54 }] },
+        x2: { routing: "curved" },
+      },
+    });
     expect(projectStandardSemModelV4DiagramV1(authority(), parsed)).toEqual(projected);
     expect(() => parseStandardSemModelV4DiagramLayoutV1({ ...parsed, model_id: " standard-model " }))
       .toThrowError(expect.objectContaining({ code: "standard_sem_projection.stable_id_invalid" }));
@@ -411,6 +421,18 @@ describe("StandardSemModelV4 diagram projection", () => {
     invalid.diagram_layout.constructLayouts["construct:x"].x = Number.NaN;
     expect(() => parseStandardSemModelV4DiagramLayoutV1(invalid))
       .toThrowError(expect.objectContaining({ code: "standard_sem_projection.number_invalid" }));
+  });
+
+  it("accepts older strict layouts without measurement connector metadata", () => {
+    const projected = projectStandardSemModelV4DiagramV1(authority());
+    const legacyLayout = structuredClone(projected.diagramLayout) as unknown as Record<string, unknown>;
+    delete legacyLayout.measurementConnectorLayouts;
+    const parsed = parseStandardSemModelV4DiagramLayoutV1({
+      schema_version: 1,
+      model_id: authority().model.id,
+      diagram_layout: legacyLayout,
+    });
+    expect(parsed.diagram_layout.measurementConnectorLayouts).toEqual({});
   });
 
   it("seeds captions, notes, shapes, images, and lines into layout without changing scientific authority", () => {

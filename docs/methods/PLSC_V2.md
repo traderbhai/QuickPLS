@@ -41,4 +41,4 @@ The two-indicator case is allowed but has limited reliability information. Broad
 
 The native method selector, applicability checks, correction/result tables, and export projections are source-bound and tested. Release qualification remains pending genuine packaged Windows execution, export, save/reopen, and the final method audit.
 
-The 12-case Corporate Reputation demo is intentionally not positive PLSc evidence: its attenuation-corrected correlation matrix is inadmissible under the canonical equation. That failure must remain visible rather than being clamped or hidden.
+The legacy 12-case `validation/fixtures/corporate_reputation.csv` smoke fixture is intentionally not positive PLSc evidence: its attenuation-corrected correlation matrix is inadmissible under the canonical equation. It is separate from the full built-in Corporate Reputation PLS-SEM sample. That failure must remain visible rather than being clamped or hidden.

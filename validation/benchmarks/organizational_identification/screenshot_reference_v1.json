@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "benchmark": "Organizational Identification Model screenshot",
+  "reference_precision_decimals": 3,
+  "screenshot_sha256": "6809e7f76ed209f8f83dfc2c16fa057c1f5d6e5f09633a9507eb3dd278e83544",
+  "comparison_rule": "Round each QuickPLS point estimate to three decimals, preserving its sign, and compare it with the supplied screenshot display.",
+  "sources": [
+    "oi_model.png"
+  ],
+  "settings": {
+    "method": "pls_pm_v1",
+    "weighting_scheme": "path",
+    "preprocessing": "standardized",
+    "initial_outer_weights": 1.0,
+    "maximum_iterations": 3000,
+    "stop_criterion": 1e-7,
+    "missing_data": "listwise",
+    "construct_measurement": "reflective_mode_a",
+    "observations": 305
+  },
+  "model": {
+    "constructs": [
+      {
+        "id": "org_prestige",
+        "label": "Organizational Prestige",
+        "mode": "reflective",
+        "indicators": ["org_pre1", "org_pre2", "org_pre3", "org_pre4", "org_pre5", "org_pre6", "org_pre7", "org_pre8"]
+      },
+      {
+        "id": "org_identification",
+        "label": "Organizational Identification",
+        "mode": "reflective",
+        "indicators": ["org_ident1", "org_ident2", "org_ident3", "org_ident4", "org_ident5", "org_ident6"]
+      },
+      {
+        "id": "affective_commitment_joy",
+        "label": "Affective Commitment (Joy)",
+        "mode": "reflective",
+        "indicators": ["ac_joy1", "ac_joy2", "ac_joy3", "ac_joy4"]
+      },
+      {
+        "id": "affective_commitment_love",
+        "label": "Affective Commitment (Love)",
+        "mode": "reflective",
+        "indicators": ["ac_love1", "ac_love2", "ac_love3"]
+      }
+    ],
+    "paths": [
+      "org_prestige->org_identification",
+      "org_identification->affective_commitment_joy",
+      "org_identification->affective_commitment_love"
+    ]
+  },
+  "values": {
+    "path:org_prestige->org_identification": 0.362,
+    "path:org_identification->affective_commitment_joy": 0.614,
+    "path:org_identification->affective_commitment_love": -0.409,
+    "r2:org_identification": 0.131,
+    "r2:affective_commitment_joy": 0.377,
+    "r2:affective_commitment_love": 0.167,
+    "loading:org_prestige:org_pre1": 0.773,
+    "loading:org_prestige:org_pre2": 0.828,
+    "loading:org_prestige:org_pre3": 0.779,
+    "loading:org_prestige:org_pre4": 0.794,
+    "loading:org_prestige:org_pre5": 0.794,
+    "loading:org_prestige:org_pre6": 0.848,
+    "loading:org_prestige:org_pre7": 0.785,
+    "loading:org_prestige:org_pre8": 0.798,
+    "loading:org_identification:org_ident1": 0.786,
+    "loading:org_identification:org_ident2": 0.758,
+    "loading:org_identification:org_ident3": 0.636,
+    "loading:org_identification:org_ident4": 0.822,
+    "loading:org_identification:org_ident5": 0.812,
+    "loading:org_identification:org_ident6": 0.746,
+    "loading:affective_commitment_joy:ac_joy1": 0.743,
+    "loading:affective_commitment_joy:ac_joy2": 0.788,
+    "loading:affective_commitment_joy:ac_joy3": 0.822,
+    "loading:affective_commitment_joy:ac_joy4": 0.711,
+    "loading:affective_commitment_love:ac_love1": 0.792,
+    "loading:affective_commitment_love:ac_love2": 0.664,
+    "loading:affective_commitment_love:ac_love3": 0.817
+  },
+  "verification": {
+    "dataset_fingerprint": "v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a",
+    "converged": true,
+    "iterations": 7,
+    "final_max_outer_weight_change": 8.33536528688228e-9,
+    "observations_used": 305,
+    "observations_omitted": 0,
+    "warnings": 0,
+    "display_value_matches": 27,
+    "display_value_count": 27
+  },
+  "reference_scope": "The completed QuickPLS run matches all 27 values visible in the supplied screenshot after rounding to three decimals; this is displayed-value parity, not bitwise equivalence with an external engine."
+}

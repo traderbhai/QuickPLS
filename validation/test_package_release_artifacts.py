@@ -13,8 +13,8 @@ from validation import package_release_artifacts as release
 
 
 VERSION = "3.0.0"
-REPOSITORY_RELEASE_VERSION = "2.55.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_55_0_calculate_evidence"
+REPOSITORY_RELEASE_VERSION = "2.55.4"
+REPOSITORY_ARTIFACT_LABEL = "v2_55_4_measurement_label_alignment"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -293,9 +293,18 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
     def test_scoped_methods_release_metadata_and_current_facing_copy_are_coordinated(self) -> None:
         version, evidence = release.read_version_contract(REPOSITORY_ROOT)
         package = json.loads((REPOSITORY_ROOT / "package.json").read_text(encoding="utf-8"))
+        native = (REPOSITORY_ROOT / "src" / "native" / "NativeDesktopApp.tsx").read_text(encoding="utf-8")
         prototype = (REPOSITORY_ROOT / "src" / "v2" / "NativePrototypeApp.tsx").read_text(encoding="utf-8")
+        build_wrapper = (REPOSITORY_ROOT / "validation" / "run_v255_unsigned_candidate_build.ps1").read_text(
+            encoding="utf-8"
+        )
         readme = (REPOSITORY_ROOT / "README.md").read_text(encoding="utf-8")
         installation = (REPOSITORY_ROOT / "docs" / "INSTALLATION.md").read_text(encoding="utf-8")
+        release_notes = (REPOSITORY_ROOT / "docs" / "RELEASE_NOTES_V2_55_4.md").read_text(encoding="utf-8")
+        historical_release_notes = (REPOSITORY_ROOT / "docs" / "RELEASE_NOTES_V2_55_3.md").read_text(
+            encoding="utf-8"
+        )
+        changelog = (REPOSITORY_ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
 
         self.assertEqual(version, REPOSITORY_RELEASE_VERSION)
         self.assertEqual(set(evidence["cargo_members"]), REPOSITORY_CARGO_PACKAGES)
@@ -307,11 +316,16 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             f"-Label {REPOSITORY_ARTIFACT_LABEL}",
         )
         self.assertEqual(package["scripts"]["qpls:desktop:build-versioned"], "npm run qpls:release:artifacts")
-        self.assertEqual(prototype.count('const releaseVersion = "2.55.0";'), 1)
+        self.assertEqual(native.count('<dt>Version</dt><dd>2.55.4</dd>'), 1)
+        self.assertEqual(prototype.count('const releaseVersion = "2.55.4";'), 1)
+        self.assertEqual(prototype.count("<h3>QuickPLS 2.55.4</h3>"), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
+        self.assertIn('[string]$Label = "v2_55_4_measurement_label_alignment"', build_wrapper)
+        self.assertIn('version -ne "2.55.4"', build_wrapper)
+        self.assertIn("QuickPLS_2.55.4_x64-setup.exe", build_wrapper)
 
         self.assertIn(
-            "Current source version: **2.55.0**.",
+            "Current source version: **2.55.4**.",
             readme,
         )
         self.assertIn(
@@ -334,7 +348,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
         self.assertIn(
-            "Current source version: **2.55.0**.",
+            "Current source version: **2.55.4**.",
             installation,
         )
         self.assertIn(
@@ -355,6 +369,17 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         )
         self.assertNotIn("All three executables run fully offline after download.", installation)
         self.assertIn("_x64_cli.exe -Algorithm SHA256", installation)
+        self.assertIn("# QuickPLS 2.55.4 Release Notes", release_notes)
+        current_installer = "QuickPLS_2.55.4_x64-setup.exe"
+        current_hash = "9380af48bf3ed847ce744e5d68560f296ba27ab88264015c171fed187899dce1"
+        self.assertIn(current_installer, release_notes)
+        self.assertIn(current_hash, release_notes)
+        self.assertIn(current_installer, changelog)
+        self.assertIn(current_hash, changelog)
+        self.assertIn("tested local preview", release_notes)
+        historical_hash = "bd88a2d15a5ebeacb91279095c806b92c2b7eda79234bda3d59a9cbde52978d1"
+        self.assertIn(historical_hash, historical_release_notes)
+        self.assertIn(historical_hash, changelog)
 
 
 class ArtifactPackagingTests(unittest.TestCase):

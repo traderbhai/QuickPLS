@@ -501,10 +501,11 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
             '.nd-launcher[aria-label="Project launcher"]',
             '.nd-sample-project-list button[data-sample-id]',
             'launcher.locator(`.nd-sample-project-list button[data-sample-id="${sample.id}"]`)',
-            '["corporate_reputation", "simple_pls", "mediation"]',
+            '["corporate_reputation", "simple_pls", "mediation", "organizational_identification"]',
             'id: "corporate_reputation"',
             'id: "simple_pls"',
             'id: "mediation"',
+            'id: "organizational_identification"',
             "await openResultTable(sample.pathTable)",
             "await structuralPaths().count()",
             "evidence.checks.bundledSampleGallery",
@@ -528,13 +529,14 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         ]
         self.assertEqual(
             re.findall(
-                r'id: "(corporate_reputation|simple_pls|mediation)"[\s\S]*?pathTable: "([^"]+)"',
+                r'id: "(corporate_reputation|simple_pls|mediation|organizational_identification)"[\s\S]*?pathTable: "([^"]+)"',
                 sample_contracts,
             ),
             [
-                ("corporate_reputation", "Direct effects"),
+                ("corporate_reputation", "Path coefficients"),
                 ("simple_pls", "Path coefficients"),
                 ("mediation", "Direct effects"),
+                ("organizational_identification", "Path coefficients"),
             ],
         )
         self.assertNotIn(".first().click() // bundled sample", self.harness_source)

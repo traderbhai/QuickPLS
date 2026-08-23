@@ -100,6 +100,7 @@ SECTION_CHECKS: dict[str, dict[str, list[tuple[str, str]]]] = {
             ("Corporate reputation", "corporate reputation sample"),
             ("Simple reflective PLS-SEM", "simple PLS sample"),
             ("Mediation", "mediation sample"),
+            ("Organizational Identification Model", "organizational identification sample"),
             ("onOpenSample={openNativeSampleProject}", "live launcher binds exact sample action"),
             ('commandEvent("open-demo-project", { sampleId })', "selected sample identity forwarded"),
             ('case "project.open-demo": commandEvent("open-demo-project"); return;', "File menu preserves corporate default"),
@@ -112,10 +113,11 @@ SECTION_CHECKS: dict[str, dict[str, list[tuple[str, str]]]] = {
             ('invoke<NativeProjectSnapshot>("open_demo_project", { sampleId })', "Tauri invocation forwards camelCase sample ID"),
         ],
         "src-tauri/src/lib.rs": [
-            ('"corporate_reputation" => build_demo_project()', "corporate sample selector"),
-            ("build_bundled_sample_project(BundledSampleProject::parse(other)?)", "typed bundled sample selector"),
+            ("build_bundled_sample_project(BundledSampleProject::parse(sample_id)?)", "typed bundled sample selector"),
         ],
         "src-tauri/src/sample_projects.rs": [
+            ('"corporate_reputation" => Ok(Self::CorporateReputation)', "corporate reputation backend identity"),
+            ('"organizational_identification" => Ok(Self::OrganizationalIdentification)', "organizational identification backend identity"),
             ('"simple_pls" => Ok(Self::SimplePls)', "simple PLS backend identity"),
             ('"mediation" => Ok(Self::Mediation)', "mediation backend identity"),
             ("append_validated_result(recipe, result)", "sample contains a contract-validated completed result"),

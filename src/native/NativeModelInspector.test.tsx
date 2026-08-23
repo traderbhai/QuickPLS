@@ -205,6 +205,82 @@ describe("native model inspector customer workflow", () => {
     expect(html).toContain("Routing changes presentation only; it does not change the scientific relationship.");
   });
 
+  it("shows an expert-only, accessible editor for a selected measurement connector without path actions", () => {
+    const construct = useWorkspace.getState().nodes.find((node) => node.data.indicators.length > 0)!;
+    const indicator = construct.data.indicators[0]!;
+    const selection = { constructId: construct.id, indicator };
+
+    const expert = renderToStaticMarkup(<NativeModelInspector
+      initialMode="expert"
+      initialTab="appearance"
+      selectedNodeIdOverride={null}
+      selectedEdgeIdOverride={null}
+      selectedMeasurementConnectorOverride={selection}
+    />);
+    const basic = renderToStaticMarkup(<NativeModelInspector
+      initialMode="basic"
+      initialTab="appearance"
+      selectedNodeIdOverride={null}
+      selectedEdgeIdOverride={null}
+      selectedMeasurementConnectorOverride={selection}
+    />);
+
+    expect(expert).toContain('id="nd-model-inspector-heading">Measurement connector</strong>');
+    expect(expert).toContain(`aria-label="Connector route for ${indicator} in ${construct.data.label}"`);
+    for (const option of ["Straight (default)", "Curved", "Orthogonal", "Polyline (editable bends)"]) {
+      expect(expert).toContain(`>${option}</option>`);
+    }
+    expect(expert).toContain("Reset connector route");
+    expect(expert).toContain("Connector routing is presentation-only; it does not change the scientific measurement relationship or arrow direction.");
+    expect(expert).not.toContain(">Reverse</button>");
+    expect(expert).not.toContain("Delete relationship");
+    expect(basic).toContain("Switch to Expert to change this measurement connector&#x27;s presentation route.");
+    expect(basic).not.toContain("Reset connector route");
+  });
+
+  it("keeps construct-wide measurement routing compact and Expert-only", () => {
+    const construct = useWorkspace.getState().nodes.find((node) => node.data.indicators.length > 0)!;
+    const basic = renderToStaticMarkup(<NativeModelInspector
+      initialMode="basic"
+      initialTab="appearance"
+      selectedNodeIdOverride={construct.id}
+      selectedEdgeIdOverride={null}
+      selectedMeasurementConnectorOverride={null}
+    />);
+    const expert = renderToStaticMarkup(<NativeModelInspector
+      initialMode="expert"
+      initialTab="appearance"
+      selectedNodeIdOverride={construct.id}
+      selectedEdgeIdOverride={null}
+      selectedMeasurementConnectorOverride={null}
+    />);
+
+    expect(basic).not.toContain("All measurement connectors");
+    expect(expert).toContain("All measurement connectors");
+    expect(expert).toContain(`aria-label="Routing for all measurement connectors of ${construct.data.label}"`);
+    expect(expert).toContain("Reset all connector routes");
+    expect(expert).toContain("Select an indicator or connector to edit one route.");
+  });
+
+  it("disables measurement connector routing in result and publication diagrams", () => {
+    const construct = useWorkspace.getState().nodes.find((node) => node.data.indicators.length > 0)!;
+    const indicator = construct.data.indicators[0]!;
+
+    for (const diagramModeOverride of ["smartpls_result", "publication"] as const) {
+      const html = renderToStaticMarkup(<NativeModelInspector
+        initialMode="expert"
+        initialTab="appearance"
+        diagramModeOverride={diagramModeOverride}
+        selectedNodeIdOverride={null}
+        selectedEdgeIdOverride={null}
+        selectedMeasurementConnectorOverride={{ constructId: construct.id, indicator }}
+      />);
+
+      expect(html).toContain(`disabled="" aria-label="Connector route for ${indicator} in ${construct.data.label}"`);
+      expect(html).toContain('type="button" class="nd-secondary-command" disabled="">Reset connector route</button>');
+    }
+  });
+
   it("renders every projected interaction construction from canonicalMethod exactly", () => {
     for (const [canonicalMethod, label] of [
       ["two_stage", "Two-stage"],

@@ -1,5 +1,15 @@
 import { MarkerType, type Edge, type Node, type XYPosition } from "@xyflow/react";
-import type { AnalysisRun, ConstructData, DiagramLayoutState, DiagramMode, DiagramOverlayMode, IndicatorLayout, IndicatorSide } from "../types";
+import type {
+  AnalysisRun,
+  ConstructData,
+  DiagramLayoutState,
+  DiagramMode,
+  DiagramOverlayMode,
+  EdgeRouteStyle,
+  IndicatorLayout,
+  IndicatorSide,
+  MeasurementConnectorLayout,
+} from "../types";
 import {
   deriveModerationAnchorProjections,
   hiddenInteractionNodeIds,
@@ -56,10 +66,14 @@ export interface DiagramGraph {
 export interface DiagramGraphOptions {
   layout?: DiagramLayoutState;
   layoutSource?: "current_canvas" | "tidy_publication";
+  /** Effective Canvas editability after surface, publication, and layout locks. */
+  layoutEditingEnabled?: boolean;
   /** Selected HOC whose lower-order membership should be projected visually. */
   selectedHigherOrderId?: string | null;
   /** Selected presentation-only interaction anchor in the editable canvas. */
   selectedInteractionTermId?: string | null;
+  /** Selected presentation-only indicator connector in the editable canvas. */
+  selectedMeasurementConnector?: { constructId: string; indicator: string } | null;
   /** Result-driven read-only highlighting without altering the scientific graph. */
   resultOverlay?: ResultOverlaySelectionV1 | null;
   /** Expert-only compatibility view; generated interaction constructs are hidden by default. */
@@ -70,6 +84,32 @@ export interface DiagramGraphOptions {
   moderationConnectorBendPoints?: Readonly<Record<string, readonly XYPosition[]>>;
   /** Optional transient anchors for read-only previews that have no scientific interaction nodes. */
   moderationAnchorProjections?: readonly ModerationAnchorProjectionV1[];
+}
+
+export interface MeasurementConnectorEdgeData extends Record<string, unknown> {
+  visualOnly: true;
+  relationshipKind: "measurement_connector";
+  constructId: string;
+  indicator: string;
+  routeEditable: boolean;
+  perimeterRouting: "continuous";
+  routing: "straight" | "default" | "smoothstep" | "polyline";
+  bendPoints?: XYPosition[];
+  edgeClassName: string;
+}
+
+export interface StructuralSemEdgeData extends Record<string, unknown> {
+  relationshipEditable: boolean;
+}
+
+export function isMeasurementConnectorEdgeData(value: unknown): value is MeasurementConnectorEdgeData {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const data = value as Partial<MeasurementConnectorEdgeData>;
+  return data.visualOnly === true
+    && data.relationshipKind === "measurement_connector"
+    && typeof data.constructId === "string"
+    && typeof data.indicator === "string"
+    && typeof data.routeEditable === "boolean";
 }
 
 const LATENT_WIDTH = 150;
@@ -84,13 +124,76 @@ const SMARTPLS_INDICATOR_WIDTH = SEM_SIZES.smartplsIndicator.width;
 const SMARTPLS_INDICATOR_HEIGHT = SEM_SIZES.smartplsIndicator.height;
 const SMARTPLS_VERTICAL_GAP = 320;
 
-export const isIndicatorNodeId = (id: string) => id.startsWith("indicator::");
-export const indicatorNodeId = (constructId: string, indicator: string) => `indicator::${constructId}::${encodeURIComponent(indicator)}`;
-export const parseIndicatorNodeId = (id: string) => {
-  const [, constructId, encoded] = id.split("::");
-  if (!constructId || !encoded) return null;
-  return { constructId, indicator: decodeURIComponent(encoded) };
+const derivedDiagramIdPart = (value: string) => encodeURIComponent(value);
+const decodedDiagramIdPart = (value: string) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
+  }
 };
+
+export const isIndicatorNodeId = (id: string) => id.startsWith("indicator::");
+export const indicatorNodeId = (constructId: string, indicator: string) => `indicator::${derivedDiagramIdPart(constructId)}::${derivedDiagramIdPart(indicator)}`;
+export const parseIndicatorNodeId = (id: string) => {
+  const [prefix, encodedConstructId, encodedIndicator, ...extra] = id.split("::");
+  if (prefix !== "indicator" || !encodedConstructId || !encodedIndicator || extra.length) return null;
+  const constructId = decodedDiagramIdPart(encodedConstructId);
+  const indicator = decodedDiagramIdPart(encodedIndicator);
+  return constructId && indicator ? { constructId, indicator } : null;
+};
+
+export const measurementConnectorEdgeId = (constructId: string, indicator: string) =>
+  `measurement::${derivedDiagramIdPart(constructId)}::${derivedDiagramIdPart(indicator)}`;
+
+export const parseMeasurementConnectorEdgeId = (id: string) => {
+  const [prefix, encodedConstructId, encodedIndicator, ...extra] = id.split("::");
+  if (prefix !== "measurement" || !encodedConstructId || !encodedIndicator || extra.length) return null;
+  const constructId = decodedDiagramIdPart(encodedConstructId);
+  const indicator = decodedDiagramIdPart(encodedIndicator);
+  return constructId && indicator ? { constructId, indicator } : null;
+};
+
+function measurementConnectorRoutingStyle(routing: EdgeRouteStyle): MeasurementConnectorEdgeData["routing"] {
+  if (routing === "curved") return "default";
+  if (routing === "orthogonal") return "smoothstep";
+  return routing;
+}
+
+function defaultMeasurementConnectorBend(
+  constructNode: Node,
+  indicatorNode: Node,
+): XYPosition[] {
+  const constructCenter = boxCenter(semNodeBox(constructNode));
+  const indicatorCenter = boxCenter(semNodeBox(indicatorNode));
+  const dx = indicatorCenter.x - constructCenter.x;
+  const dy = indicatorCenter.y - constructCenter.y;
+  const length = Math.hypot(dx, dy);
+  const normal = length > 0.001
+    ? { x: -dy / length, y: dx / length }
+    : { x: 1, y: -1 };
+  return [{
+    x: Math.round((constructCenter.x + indicatorCenter.x) / 2 + normal.x * 36),
+    y: Math.round((constructCenter.y + indicatorCenter.y) / 2 + normal.y * 36),
+  }];
+}
+
+function measurementConnectorRoute(
+  layout: MeasurementConnectorLayout | undefined,
+  constructNode: Node,
+  indicatorNode: Node,
+  reuseStoredBends: boolean,
+): Pick<MeasurementConnectorEdgeData, "routing" | "bendPoints"> {
+  const style = layout?.routing ?? "straight";
+  if (style !== "polyline") return { routing: measurementConnectorRoutingStyle(style) };
+  const storedBends = reuseStoredBends ? finiteBendPoints(layout?.bendPoints) : [];
+  return {
+    routing: "polyline",
+    bendPoints: storedBends.length
+      ? storedBends
+      : defaultMeasurementConnectorBend(constructNode, indicatorNode),
+  };
+}
 
 export function buildDiagramGraph(
   modelNodes: Array<Node<ConstructData>>,
@@ -114,6 +217,9 @@ export function buildDiagramGraph(
   const paperStyle = mode === "sem" || mode === "publication" || mode === "smartpls_result";
   const lockedResultMode = mode === "smartpls_result" || mode === "publication";
   const smartplsPlacement = (mode === "publication" || mode === "smartpls_result") && options.layoutSource !== "current_canvas" ? smartplsLayout(displayModelNodes, structuralEdges, options.layout) : null;
+  const layoutEditingEnabled = options.layoutEditingEnabled !== false
+    && !lockedResultMode
+    && !Boolean(options.layout?.layoutLocked);
   const structuralShape = structuralShapeMaps(displayModelNodes, structuralEdges);
   const result = run?.status === "completed" ? run.result : undefined;
   const compatible = result ? resultMatchesModel(modelNodes, scientificStructuralEdges, result) : true;
@@ -163,15 +269,19 @@ export function buildDiagramGraph(
           : edge.data?.role === "control" ? "Control" : edge.label ?? "Path",
       markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 16 : 16, height: paperStyle ? 16 : 16, color: paperStyle ? "#222" : undefined },
       className: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
-      selectable: !lockedResultMode,
+      selectable: layoutEditingEnabled,
+      focusable: layoutEditingEnabled,
+      reconnectable: layoutEditingEnabled,
+      deletable: layoutEditingEnabled,
       data: {
         ...edge.data,
+        relationshipEditable: layoutEditingEnabled,
         perimeterRouting: "continuous",
         routing: routeLayout.routing,
         ...(routeLayout.bendPoints?.length ? { bendPoints: routeLayout.bendPoints } : {}),
         labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset,
         edgeClassName: edge.data?.role === "control" ? "control-edge" : paperStyle ? "smartpls-structural-edge structural-edge" : "structural-edge",
-      },
+      } satisfies StructuralSemEdgeData,
     };
   });
 
@@ -350,6 +460,7 @@ export function buildDiagramGraph(
       node.data.indicators.forEach((indicator, index) => {
         const estimate = loadingByConstruct.get(node.id)?.get(indicator);
         const indicatorPosition = placement[index] ?? latentPosition;
+        const reflective = node.data.mode === "reflective";
         const latentForRoute = visualNodes.find((visualNode) => visualNode.id === node.id);
         const indicatorForRoute = {
           id: indicatorNodeId(node.id, indicator),
@@ -357,6 +468,24 @@ export function buildDiagramGraph(
           position: indicatorPosition,
         } as Node<LatentNodeData | IndicatorNodeData>;
         const route = paperStyle && latentForRoute ? routeSides(latentForRoute, indicatorForRoute) : null;
+        const constructForRoute = latentForRoute ?? {
+          id: node.id,
+          type: "latent",
+          position: latentPosition,
+        } as Node<LatentNodeData | IndicatorNodeData>;
+        const connectorRoute = measurementConnectorRoute(
+          options.layout?.measurementConnectorLayouts?.[node.id]?.[indicator],
+          constructForRoute,
+          indicatorForRoute,
+          !smartplsPlacement,
+        );
+        const routeEditable = layoutEditingEnabled;
+        const selected = routeEditable
+          && options.selectedMeasurementConnector?.constructId === node.id
+          && options.selectedMeasurementConnector.indicator === indicator;
+        const edgeClassName = reflective
+          ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective`
+          : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`;
         visualNodes.push({
           id: indicatorNodeId(node.id, indicator),
           type: "indicator",
@@ -365,9 +494,8 @@ export function buildDiagramGraph(
           selectable: true,
           data: { constructId: node.id, indicator, mode: node.data.mode, displayMode: mode, loading: estimate?.loading, weight: estimate?.weight },
         });
-        const reflective = node.data.mode === "reflective";
         visualEdges.push({
-          id: `measurement::${node.id}::${indicator}`,
+          id: measurementConnectorEdgeId(node.id, indicator),
           source: reflective ? node.id : indicatorNodeId(node.id, indicator),
           target: reflective ? indicatorNodeId(node.id, indicator) : node.id,
           sourceHandle: route ? handleId("source", reflective ? route.source : route.target) : undefined,
@@ -378,16 +506,24 @@ export function buildDiagramGraph(
             : paperStyle ? ""
               : reflective ? "loading" : "weight",
           markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 13 : 14, height: paperStyle ? 13 : 14, color: paperStyle ? "#222" : undefined },
-          className: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
-          selectable: false,
+          className: edgeClassName,
+          selectable: routeEditable,
+          focusable: routeEditable,
+          selected,
+          deletable: false,
+          reconnectable: false,
+          interactionWidth: routeEditable ? 24 : 12,
           data: {
             visualOnly: true,
+            relationshipKind: "measurement_connector",
+            constructId: node.id,
+            indicator,
+            routeEditable,
             perimeterRouting: "continuous",
-            routing: "straight",
-            edgeClassName: reflective
-              ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective`
-              : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
-          },
+            routing: connectorRoute.routing,
+            ...(connectorRoute.bendPoints?.length ? { bendPoints: connectorRoute.bendPoints } : {}),
+            edgeClassName,
+          } satisfies MeasurementConnectorEdgeData,
         });
       });
     }
@@ -399,12 +535,22 @@ export function buildDiagramGraph(
         markerStart: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         markerEnd: { type: MarkerType.ArrowClosed, width: 12, height: 12 },
         className: "covariance-edge",
-        data: { ...edge.data, routing: "default", labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset, edgeClassName: "covariance-edge" },
+        selectable: layoutEditingEnabled,
+        focusable: layoutEditingEnabled,
+        reconnectable: layoutEditingEnabled,
+        deletable: layoutEditingEnabled,
+        data: {
+          ...edge.data,
+          relationshipEditable: layoutEditingEnabled,
+          routing: "default",
+          labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset,
+          edgeClassName: "covariance-edge",
+        } satisfies StructuralSemEdgeData,
       });
     }
   }
 
-  const routedEdges = paperStyle ? applyAutomaticEdgeRoutes(visualEdges, visualNodes, options.layout) : visualEdges;
+  const routedEdges = paperStyle ? applyAutomaticEdgeRoutes(visualEdges, options.layout) : visualEdges;
   repositionModerationAnchors(routedEdges, visualNodes);
   const connectorRoutedEdges = paperStyle ? applyAutomaticModerationConnectorRoutes(routedEdges, visualNodes) : routedEdges;
   const edgesWithLabelOffsets = applyAutomaticEdgeLabelOffsets(connectorRoutedEdges, visualNodes);
@@ -427,14 +573,24 @@ function applyAutomaticEdgeLabelOffsets(edges: Edge[], nodes: DiagramGraph["node
   return edges.map((edge) => {
     const label = typeof edge.label === "string" ? edge.label : "";
     if (!label) return edge;
+    const measurementConnector = isMeasurementConnectorEdgeData(edge.data);
     const existing = edge.data?.labelOffset;
-    if (existing && typeof existing === "object") return edge;
+    if (!measurementConnector && existing && typeof existing === "object") return edge;
     const source = nodes.find((node) => node.id === edge.source);
     const target = nodes.find((node) => node.id === edge.target);
     if (!source || !target) return edge;
     const mid = polylineMidpoint(renderedEdgePolyline(edge, source, target));
     const width = Math.min(190, Math.max(34, label.length * 7 + 14));
     const height = 20;
+    // Loading and weight badges belong to their generated measurement route.
+    // SemEdge already derives an on-path anchor for every supported routing
+    // style, so a perpendicular offset would detach the value from the
+    // connector it describes. Reserve its centered rectangle so labels that
+    // are allocated later (for example covariance labels) still avoid it.
+    if (measurementConnector) {
+      occupied.push({ x: mid.x - width / 2, y: mid.y - height / 2, width, height });
+      return edge;
+    }
     const candidates = [
       { x: 0, y: -18 },
       { x: 0, y: 18 },
@@ -465,30 +621,14 @@ function finiteBendPoints(value: unknown): SemPoint[] {
   });
 }
 
-function applyAutomaticEdgeRoutes(edges: Edge[], nodes: DiagramGraph["nodes"], layout?: DiagramLayoutState): Edge[] {
+function applyAutomaticEdgeRoutes(edges: Edge[], layout?: DiagramLayoutState): Edge[] {
   return edges.map((edge) => {
     const className = String(edge.className ?? edge.data?.edgeClassName ?? "");
     const structural = className.includes("structural-edge") || className.includes("control-edge");
-    const measurement = className.includes("measurement-edge");
-    if (!structural && !measurement) return edge;
-    const savedRoute = structural ? layout?.edgeLayouts[edge.id] : undefined;
+    if (!structural) return edge;
+    const savedRoute = layout?.edgeLayouts[edge.id];
     if (savedRoute?.pinned) return edge;
-    if (structural) {
-      return { ...edge, data: { ...edge.data, routing: "straight", bendPoints: undefined } };
-    }
-    const source = nodes.find((node) => node.id === edge.source);
-    const target = nodes.find((node) => node.id === edge.target);
-    if (!source || !target) return edge;
-    const route = renderedEdgePolyline(edge, source, target);
-    const obstacles = nodes
-      .filter((node) => node.id !== edge.source && node.id !== edge.target)
-      .filter((node) => !(isModerationAnchorData(node.data) && node.data.focalRelationId === edge.id))
-      .map((node) => semNodeBox(node));
-    const bends = routePolylineAroundObstacles(route[0]!, route[route.length - 1]!, obstacles, measurement ? 8 : 14);
-    if (!bends.length) {
-      return { ...edge, data: { ...edge.data, routing: "straight", bendPoints: undefined } };
-    }
-    return { ...edge, data: { ...edge.data, routing: "polyline", bendPoints: bends } };
+    return { ...edge, data: { ...edge.data, routing: "straight", bendPoints: undefined } };
   });
 }
 
@@ -568,6 +708,7 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
   const shape = structuralShapeMaps(modelNodes, structuralEdges);
   const constructLayouts: DiagramLayoutState["constructLayouts"] = {};
   const indicatorLayouts: DiagramLayoutState["indicatorLayouts"] = {};
+  const measurementConnectorLayouts: DiagramLayoutState["measurementConnectorLayouts"] = {};
   for (const node of modelNodes) {
     constructLayouts[node.id] = {
       x: existing?.constructLayouts?.[node.id]?.x ?? node.position.x,
@@ -586,6 +727,17 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
         : { side: indicatorSide(node.id, shape, false), order: index };
     });
     indicatorLayouts[node.id] = currentIndicators;
+    const currentConnectors: Record<string, MeasurementConnectorLayout> = {};
+    for (const indicator of node.data.indicators) {
+      const previous = existing?.measurementConnectorLayouts?.[node.id]?.[indicator];
+      if (!previous || !["straight", "curved", "orthogonal", "polyline"].includes(previous.routing)) continue;
+      const bendPoints = finiteBendPoints(previous.bendPoints);
+      currentConnectors[indicator] = {
+        routing: previous.routing,
+        ...(bendPoints.length ? { bendPoints } : {}),
+      };
+    }
+    if (Object.keys(currentConnectors).length) measurementConnectorLayouts[node.id] = currentConnectors;
   }
   const edgeLayouts: DiagramLayoutState["edgeLayouts"] = {};
   for (const edge of modelEdges) {
@@ -599,6 +751,7 @@ export function defaultDiagramLayout(modelNodes: Array<Node<ConstructData>>, mod
     constructLayouts,
     indicatorLayouts,
     edgeLayouts,
+    measurementConnectorLayouts,
     diagramViewport: existing?.diagramViewport,
     diagramTheme: existing?.diagramTheme === "academic_grayscale" || existing?.diagramTheme === "quickpls_color" || existing?.diagramTheme === "high_contrast" || existing?.diagramTheme === "journal_mono" || existing?.diagramTheme === "smartpls_like" ? existing.diagramTheme : "smartpls_like",
     showGrid: existing?.showGrid ?? true,

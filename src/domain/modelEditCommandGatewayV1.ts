@@ -591,6 +591,15 @@ export function reconcileModelEditDiagramLayoutV1(
   for (const edge of edges) {
     if (previous.edgeLayouts[edge.id]) next.edgeLayouts[edge.id] = cloneEdgeLayout(previous.edgeLayouts[edge.id]);
   }
+  next.measurementConnectorLayouts = {};
+  for (const node of nodes) {
+    const previousConnectors = previous.measurementConnectorLayouts?.[node.id] ?? {};
+    const survivingConnectors = Object.fromEntries(node.data.indicators.flatMap((indicator) => {
+      const connector = previousConnectors[indicator];
+      return connector ? [[indicator, cloneMeasurementConnectorLayout(connector)]] : [];
+    }));
+    if (Object.keys(survivingConnectors).length) next.measurementConnectorLayouts[node.id] = survivingConnectors;
+  }
   return next;
 }
 
@@ -685,5 +694,12 @@ function cloneEdgeLayout(layout: DiagramLayoutState["edgeLayouts"][string]) {
     ...layout,
     ...(layout.bendPoints ? { bendPoints: layout.bendPoints.map((point) => ({ ...point })) } : {}),
     ...(layout.labelOffset ? { labelOffset: { ...layout.labelOffset } } : {}),
+  };
+}
+
+function cloneMeasurementConnectorLayout(layout: DiagramLayoutState["measurementConnectorLayouts"][string][string]) {
+  return {
+    ...layout,
+    ...(layout.bendPoints ? { bendPoints: layout.bendPoints.map((point) => ({ ...point })) } : {}),
   };
 }

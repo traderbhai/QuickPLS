@@ -1,8 +1,12 @@
 # SmartPLS Sample Validation Workflow
 
 QuickPLS can use public SmartPLS/book sample datasets as external validation
-inputs, but they should stay outside the bundled application unless their
-license explicitly permits redistribution.
+inputs. Such files normally stay outside the bundled application. The
+product-owner-approved Corporate Reputation comparison is the one explicit
+tracked exception: QuickPLS bundles only the prepared 31-indicator CSV and its
+provenance, model, and independent comparison reference—not a SmartPLS project,
+logo, application asset, or result screenshot. Release owners remain responsible
+for confirming redistribution terms.
 
 ## Purpose
 
@@ -89,3 +93,8 @@ acceptable to commit:
 - comparison summaries;
 - screenshots created for internal UI review when legally appropriate;
 - documentation describing where developers can download the original files.
+
+The approved Corporate Reputation product fixture is maintained at
+`validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv`, with
+its exact source and cleaning receipt beside it. Any replacement or additional
+third-party dataset still requires a separate redistribution decision.

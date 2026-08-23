@@ -2328,7 +2328,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, .react-flow__no
 .sample-project-gallery header div, .guided-research-flow header div, .reviewer-pack-preview header { min-width: 0; }
 .sample-project-gallery strong, .guided-research-flow strong, .reviewer-pack-preview strong { font-size: 13px; }
 .sample-project-gallery span, .guided-research-flow span, .reviewer-pack-preview span { color: var(--muted); font-size: 10px; }
-.sample-project-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 8px; }
+.sample-project-grid { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
 .sample-project-card { min-height: 74px; padding: 9px 10px; display: grid; gap: 4px; border: 1px solid #d7e2e5; border-radius: 5px; background: white; text-align: left; cursor: pointer; }
 .sample-project-card:hover, .sample-project-card.active { border-color: #71c3c6; background: #eefafa; }
 .sample-project-card strong { font-size: 11px; }

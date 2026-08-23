@@ -2,6 +2,53 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [2.55.4] - 2026-08-23 (local preview)
+
+- Centered every measurement loading and weight badge on its exact connector path instead of applying a generic above/below offset.
+- Applied the presentation correction consistently to Straight, Curved, Orthogonal, and Polyline measurement connectors in Model, Results, and Publication diagrams.
+- Kept structural-path label placement, analytical values, measurement direction, model identity, and stored results unchanged.
+- Added **Organizational Identification Model** as the fourth bundled sample with 305 cases, four reflective constructs, 21 modeled indicators, three paths, and a completed PLS-SEM result.
+- Added deterministic provenance and a 27/27 three-decimal screenshot-parity test while preserving every supplied row and leaving `gender` unassigned.
+
+An earlier unsigned local 2.55.4 installer with SHA-256
+`9380af48bf3ed847ce744e5d68560f296ba27ab88264015c171fed187899dce1`
+predates the fourth sample and is now historical. A fresh
+`QuickPLS_2.55.4_x64-setup.exe` installer and provenance-bound install/portable
+smoke, evidence, and final publication audit are required for the current
+source.
+
+## [2.55.3] - 2026-08-23 (local preview)
+
+- Added presentation-only Straight, Curved, Orthogonal, and Polyline routing for construct–indicator measurement connectors.
+- Added per-connector and per-construct route controls, undoable bend editing, persistence, and orphan-route cleanup without changing model identity or analytical results.
+- Retained the 2.55.2 Results → Edit Model fix so the model canvas becomes editable while completed-result diagrams remain read-only in Results.
+
+An unsigned local installer was built at
+`target/release/bundle/nsis/QuickPLS_2.55.3_x64-setup.exe` with SHA-256
+`bd88a2d15a5ebeacb91279095c806b92c2b7eda79234bda3d59a9cbde52978d1`.
+It is a tested local preview, not a formally qualified public candidate; public
+release still requires provenance-bound install/portable smoke, evidence, and a
+final publication audit.
+
+## [2.55.2] - 2026-08-23 (local preview)
+
+- Fixed Results → Edit Model so it exits locked result/publication presentation mode and restores an editable SEM canvas.
+- Made all bundled sample projects open their Model canvas in editable mode.
+- Kept completed-result diagrams read-only within Results.
+
+The 2.55.2 local preview was superseded by 2.55.3 before public release. Its
+unsigned local artifacts and historical evidence do not qualify 2.55.3.
+
+## [2.55.1] - 2026-08-23 (local preview)
+
+- Added the full 344-case Corporate Reputation project to the built-in sample gallery.
+- Bundled its eight-construct, 31-indicator mixed formative/reflective PLS-SEM model and all 13 structural paths.
+- Stored a completed QuickPLS result and added deterministic checks for 48 SmartPLS reference values at three-decimal display precision.
+- Preserved the existing synthetic Corporate Reputation fixture used by lower-level engine and CLI tests.
+
+The 2.55.1 local preview was superseded by 2.55.2 before public release because
+the sample's Model canvas retained its locked result presentation mode.
+
 ## [2.55.0] - Unreleased
 
 - Added model-aware Canvas layout and routing that reserves construct/indicator envelopes, avoids eligible obstacles, preserves pinned manual routes, and exposes presentation-only bend and moderation-anchor editing.

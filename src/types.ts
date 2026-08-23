@@ -95,6 +95,12 @@ export interface EdgeLayout {
   pinned?: boolean;
 }
 
+/** Presentation-only routing for a generated indicator-to-construct connector. */
+export interface MeasurementConnectorLayout {
+  routing: EdgeRouteStyle;
+  bendPoints?: DiagramPoint[];
+}
+
 export interface DiagramViewport {
   x: number;
   y: number;
@@ -118,6 +124,7 @@ export interface DiagramLayoutState {
   constructLayouts: Record<string, ConstructLayout>;
   indicatorLayouts: Record<string, Record<string, IndicatorLayout>>;
   edgeLayouts: Record<string, EdgeLayout>;
+  measurementConnectorLayouts: Record<string, Record<string, MeasurementConnectorLayout>>;
   diagramViewport?: DiagramViewport;
   diagramTheme: "academic_grayscale" | "smartpls_like" | "quickpls_color" | "journal_mono" | "high_contrast";
   showGrid: boolean;
@@ -198,6 +205,9 @@ export type ModelEditCommandV1 =
   | { kind: "reset_path_route"; relationId: string }
   | { kind: "nudge_path_label"; relationId: string; offset: DiagramPoint }
   | { kind: "reset_path_label"; relationId: string }
+  | { kind: "set_measurement_connector_routing"; constructId: string; column?: string; routing: EdgeRouteStyle }
+  | { kind: "set_measurement_connector_bend_points"; constructId: string; column: string; points: DiagramPoint[] }
+  | { kind: "reset_measurement_connector_route"; constructId: string; column?: string }
   | { kind: "set_moderation_anchor_fraction"; interactionTermId: string; fraction: number }
   | { kind: "set_standard_sem_presentation"; presentation: StandardSemPresentationLayoutV1 }
   | { kind: "set_construct_pinned"; constructId: string; pinned: boolean }
@@ -272,7 +282,7 @@ export interface MethodSetupState {
   expandedSections: string[];
 }
 
-export type NativeSampleProjectId = "corporate_reputation" | "simple_pls" | "mediation";
+export type NativeSampleProjectId = "corporate_reputation" | "simple_pls" | "mediation" | "organizational_identification";
 
 export interface OnboardingState {
   dismissed: boolean;

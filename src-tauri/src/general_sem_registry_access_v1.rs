@@ -189,10 +189,12 @@ pub(crate) fn selected_general_sem_execution_cell_v1(
     if has_interactions {
         return selected_general_sem_execution_cell_for_topology_v1(true, &config.inference);
     }
-    if matches!(config.inference, GeneralSemInferenceV1::CaseBootstrap { .. })
-        && compile_pls_plan_v3(model, config)
-            .map(|plan| plan.topology().specific_directed_paths().len() == 1)
-            .unwrap_or(false)
+    if matches!(
+        config.inference,
+        GeneralSemInferenceV1::CaseBootstrap { .. }
+    ) && compile_pls_plan_v3(model, config)
+        .map(|plan| plan.topology().specific_directed_paths().len() == 1)
+        .unwrap_or(false)
     {
         return pls_general_single_mediation_bootstrap_capability_cell_v1();
     }
@@ -346,9 +348,9 @@ fn authorize_general_sem_registry_access_with_v1(
 mod tests {
     use super::*;
     use qpls_core::{
-        CAPABILITY_REGISTRY_V2_JSON, Construct, InteractionHierarchyPolicyV2,
-        InteractionMethodV4, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
-        StructuralPath, convert_legacy_basic_model_v4,
+        CAPABILITY_REGISTRY_V2_JSON, Construct, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, StructuralPath,
+        convert_legacy_basic_model_v4,
     };
     use serde_json::{Value, json};
     use uuid::Uuid;
@@ -413,7 +415,11 @@ mod tests {
         model.derived_terms.push(SemDerivedTermV4::InteractionV2 {
             id: "interaction:x_by_w_by_z".into(),
             output: "derived:interaction:x_by_w_by_z".into(),
-            operands: vec!["construct:x".into(), "construct:w".into(), "construct:z".into()],
+            operands: vec![
+                "construct:x".into(),
+                "construct:w".into(),
+                "construct:z".into(),
+            ],
             focal_relation: "relation:x_y".into(),
             method: InteractionMethodV4::TwoStage,
             hierarchy_policy: InteractionHierarchyPolicyV2::Strong,

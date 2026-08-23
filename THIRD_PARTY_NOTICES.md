@@ -4,6 +4,27 @@ See [Dependency Notices for v1.0.0](docs/DEPENDENCY_NOTICES_V1_0.md).
 
 Third-party dependencies retain their original licenses. QuickPLS remains proprietary.
 
+## Corporate Reputation comparison sample
+
+The bundled Corporate Reputation sample is an independent QuickPLS reproduction
+based on the public SmartPLS Corporate Reputation teaching example:
+https://www.smartpls.com/documentation/sample-projects/corporate-reputation/
+
+QuickPLS includes a product-owner-supplied, prepared 344-case/31-indicator CSV.
+Eleven `-99` missing markers were replaced with their indicator means before
+bundling; exact source and output hashes are recorded in
+`validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.provenance.json`.
+QuickPLS does not bundle a SmartPLS project, logo, interface asset, or result
+screenshot. QuickPLS is not affiliated with or endorsed by SmartPLS GmbH.
+
+## Organizational Identification sample
+
+The bundled Organizational Identification Model uses a product-owner-supplied
+305-case values-only CSV. The source workbook and supplied result screenshot are
+not bundled. No missing-value replacement, recoding, or row removal was
+performed; the preparation and comparison checksums are recorded in
+`validation/fixtures/organizational_identification_v1.provenance.json`.
+
 ## React Flow (`@xyflow/react`)
 
 MIT License

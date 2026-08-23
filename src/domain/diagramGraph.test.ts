@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
 import type { Edge, Node } from "@xyflow/react";
-import { buildDiagramGraph, defaultDiagramLayout, indicatorNodeId, layoutSmartplsModel, modelFingerprint, parseIndicatorNodeId } from "./diagramGraph";
-import type { AnalysisRun, ConstructData, PlsResult } from "../types";
+import {
+  buildDiagramGraph,
+  defaultDiagramLayout,
+  indicatorNodeId,
+  layoutSmartplsModel,
+  measurementConnectorEdgeId,
+  modelFingerprint,
+  parseIndicatorNodeId,
+  parseMeasurementConnectorEdgeId,
+} from "./diagramGraph";
+import { polylineMidpoint, renderedEdgePolyline, semRectsOverlap } from "./semGeometry";
+import type { AnalysisRun, ConstructData, DiagramMode, EdgeRouteStyle, PlsResult } from "../types";
 
 const nodes: Array<Node<ConstructData>> = [
   { id: "x", type: "construct", position: { x: 200, y: 100 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] } },
@@ -27,6 +37,24 @@ const result: PlsResult = {
 const run: AnalysisRun = { id: "run-1", name: "PLS run", method: "PLS-SEM", createdAt: "2026-07-19T00:00:00.000Z", seed: 1, status: "completed", warnings: [], fingerprint: "fixture", result };
 
 describe("SEM diagram graph", () => {
+  it.each([
+    ["construct::quality", "qual::1"],
+    ["construct with spaces", "indicator with spaces"],
+    ["construct%encoded", "indicator%value"],
+  ])("round-trips collision-prone derived connector identities (%s, %s)", (constructId, indicator) => {
+    const indicatorId = indicatorNodeId(constructId, indicator);
+    const connectorId = measurementConnectorEdgeId(constructId, indicator);
+    expect(parseIndicatorNodeId(indicatorId)).toEqual({ constructId, indicator });
+    expect(parseMeasurementConnectorEdgeId(connectorId)).toEqual({ constructId, indicator });
+    expect(indicatorId.split("::")).toHaveLength(3);
+    expect(connectorId.split("::")).toHaveLength(3);
+  });
+
+  it("keeps derived IDs distinct when delimiters move between the construct and indicator", () => {
+    expect(indicatorNodeId("a::b", "c")).not.toBe(indicatorNodeId("a", "b::c"));
+    expect(measurementConnectorEdgeId("a::b", "c")).not.toBe(measurementConnectorEdgeId("a", "b::c"));
+  });
+
   it("derives visible latent and indicator nodes without changing model ids", () => {
     const graph = buildDiagramGraph(nodes, edges, "sem", "model");
     expect(graph.nodes.filter((node) => node.type === "latent")).toHaveLength(2);
@@ -188,8 +216,240 @@ describe("SEM diagram graph", () => {
     expect(reflective.target).toBe(indicatorNodeId("x", "x1"));
     expect(formative.source).toBe(indicatorNodeId("y", "y1"));
     expect(formative.target).toBe("y");
-    expect(reflective.data).toMatchObject({ perimeterRouting: "continuous" });
-    expect(formative.data).toMatchObject({ perimeterRouting: "continuous" });
+    expect(reflective.data).toMatchObject({
+      visualOnly: true,
+      relationshipKind: "measurement_connector",
+      constructId: "x",
+      indicator: "x1",
+      routeEditable: true,
+      perimeterRouting: "continuous",
+      routing: "straight",
+    });
+    expect(formative.data).toMatchObject({
+      visualOnly: true,
+      relationshipKind: "measurement_connector",
+      constructId: "y",
+      indicator: "y1",
+      routeEditable: true,
+      perimeterRouting: "continuous",
+      routing: "straight",
+    });
+    expect(reflective).toMatchObject({ selectable: true, focusable: true, deletable: false, reconnectable: false });
+    expect(formative).toMatchObject({ selectable: true, focusable: true, deletable: false, reconnectable: false });
+  });
+
+  it("maps every saved measurement connector style without changing scientific arrow direction", () => {
+    const routes: Array<[EdgeRouteStyle, string]> = [
+      ["straight", "straight"],
+      ["curved", "default"],
+      ["orthogonal", "smoothstep"],
+      ["polyline", "polyline"],
+    ];
+    for (const [savedStyle, renderedStyle] of routes) {
+      const layout = defaultDiagramLayout(nodes, edges);
+      const bendPoints = [{ x: 314, y: 72 }, { x: 392, y: 154 }];
+      layout.measurementConnectorLayouts = {
+        x: { x1: { routing: savedStyle, ...(savedStyle === "polyline" ? { bendPoints } : {}) } },
+        y: { y1: { routing: savedStyle, ...(savedStyle === "polyline" ? { bendPoints } : {}) } },
+      };
+      const graph = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+      const reflective = graph.edges.find((edge) => edge.id === "measurement::x::x1")!;
+      const formative = graph.edges.find((edge) => edge.id === "measurement::y::y1")!;
+      expect(reflective.data?.routing).toBe(renderedStyle);
+      expect(formative.data?.routing).toBe(renderedStyle);
+      expect(reflective.data?.bendPoints).toEqual(savedStyle === "polyline" ? bendPoints : undefined);
+      expect(formative.data?.bendPoints).toEqual(savedStyle === "polyline" ? bendPoints : undefined);
+      expect([reflective.source, reflective.target]).toEqual(["x", indicatorNodeId("x", "x1")]);
+      expect([formative.source, formative.target]).toEqual([indicatorNodeId("y", "y1"), "y"]);
+    }
+  });
+
+  it("keeps reflective loadings and formative weights on every measurement route", () => {
+    const routes: EdgeRouteStyle[] = ["straight", "curved", "orthogonal", "polyline"];
+    const surfaces: DiagramMode[] = ["sem", "smartpls_result", "publication"];
+    for (const routing of routes) {
+      const layout = defaultDiagramLayout(nodes, edges);
+      layout.measurementConnectorLayouts = {
+        x: { x1: { routing, ...(routing === "polyline" ? { bendPoints: [{ x: 314, y: 72 }] } : {}) } },
+        y: { y1: { routing, ...(routing === "polyline" ? { bendPoints: [{ x: 430, y: 176 }] } : {}) } },
+      };
+
+      for (const surface of surfaces) {
+        const graph = buildDiagramGraph(nodes, edges, surface, "model", run, { layout });
+        const reflective = graph.edges.find((edge) => edge.id === measurementConnectorEdgeId("x", "x1"))!;
+        const formative = graph.edges.find((edge) => edge.id === measurementConnectorEdgeId("y", "y1"))!;
+
+        expect(reflective.label).toBe("0.910");
+        expect(formative.label).toBe("0.670");
+        expect(reflective.data?.labelOffset).toBeUndefined();
+        expect(formative.data?.labelOffset).toBeUndefined();
+        const structuralOffset = graph.edges.find((edge) => edge.id === "x-y")?.data?.labelOffset;
+        expect(structuralOffset).toEqual(expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+        expect(structuralOffset).not.toEqual({ x: 0, y: 0 });
+      }
+    }
+  });
+
+  it("reserves centered measurement badges when allocating later covariance labels", () => {
+    const covarianceEdges: Edge[] = [
+      ...edges,
+      { id: "x-y-covariance", source: "x", target: "y", label: "Covariance", data: { role: "covariance" } },
+    ];
+    const layout = defaultDiagramLayout(nodes, covarianceEdges);
+    layout.indicatorLayouts.x.x1 = { side: "free", x: 500, y: 120, order: 0, pinned: true };
+
+    const graph = buildDiagramGraph(nodes, covarianceEdges, "sem", "model", run, { layout });
+    const measurement = graph.edges.find((edge) => edge.id === measurementConnectorEdgeId("x", "x1"))!;
+    const covariance = graph.edges.find((edge) => edge.id === "x-y-covariance")!;
+    const labelRect = (edge: Edge) => {
+      const source = graph.nodes.find((node) => node.id === edge.source)!;
+      const target = graph.nodes.find((node) => node.id === edge.target)!;
+      const mid = polylineMidpoint(renderedEdgePolyline(edge, source, target));
+      const label = String(edge.label ?? "");
+      const width = Math.min(190, Math.max(34, label.length * 7 + 14));
+      const offset = edge.data?.labelOffset as { x?: number; y?: number } | undefined;
+      return {
+        x: mid.x + Number(offset?.x ?? 0) - width / 2,
+        y: mid.y + Number(offset?.y ?? 0) - 10,
+        width,
+        height: 20,
+      };
+    };
+
+    expect(measurement.data?.labelOffset).toBeUndefined();
+    expect(covariance.data?.labelOffset).toEqual(expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
+    expect(semRectsOverlap(labelRect(measurement), labelRect(covariance))).toBe(false);
+  });
+
+  it("creates one deterministic editable bend for a polyline connector without saved points", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    layout.measurementConnectorLayouts = { x: { x1: { routing: "polyline" } } };
+    const first = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+    const second = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+    const firstBends = first.edges.find((edge) => edge.id === "measurement::x::x1")?.data?.bendPoints;
+    const secondBends = second.edges.find((edge) => edge.id === "measurement::x::x1")?.data?.bendPoints;
+    expect(firstBends).toEqual([expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) })]);
+    expect(secondBends).toEqual(firstBends);
+  });
+
+  it("regenerates measurement polyline bends inside tidy-publication coordinates", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    const farCanvasBend = [{ x: 100_000, y: -100_000 }];
+    layout.measurementConnectorLayouts = { x: { x1: { routing: "polyline", bendPoints: farCanvasBend } } };
+
+    const current = buildDiagramGraph(nodes, edges, "smartpls_result", "model", run, {
+      layout,
+      layoutSource: "current_canvas",
+    });
+    expect(current.edges.find((edge) => edge.id === measurementConnectorEdgeId("x", "x1"))?.data?.bendPoints)
+      .toEqual(farCanvasBend);
+
+    const tidy = buildDiagramGraph(nodes, edges, "smartpls_result", "model", run, {
+      layout,
+      layoutSource: "tidy_publication",
+    });
+    const connector = tidy.edges.find((edge) => edge.id === measurementConnectorEdgeId("x", "x1"))!;
+    const source = tidy.nodes.find((node) => node.id === connector.source)!;
+    const target = tidy.nodes.find((node) => node.id === connector.target)!;
+    const route = renderedEdgePolyline(connector, source, target);
+    expect(connector.data?.routing).toBe("polyline");
+    expect(connector.data?.bendPoints).not.toEqual(farCanvasBend);
+    expect(Math.max(...route.map((point) => Math.abs(point.x)))).toBeLessThan(2_000);
+    expect(Math.max(...route.map((point) => Math.abs(point.y)))).toBeLessThan(2_000);
+  });
+
+  it("selects measurement connectors only while the editor layout is editable", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    const selectedMeasurementConnector = { constructId: "x", indicator: "x1" };
+    const editor = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout, selectedMeasurementConnector });
+    expect(editor.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({
+      selected: true,
+      selectable: true,
+      focusable: true,
+      data: { routeEditable: true },
+    });
+
+    const lockedLayout = { ...layout, layoutLocked: true };
+    const locked = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout: lockedLayout, selectedMeasurementConnector });
+    expect(locked.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({
+      selected: false,
+      selectable: false,
+      focusable: false,
+      data: { routeEditable: false },
+    });
+
+    const publicationPending = buildDiagramGraph(nodes, edges, "sem", "model", undefined, {
+      layout,
+      selectedMeasurementConnector,
+      layoutEditingEnabled: false,
+    });
+    expect(publicationPending.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({
+      selected: false,
+      selectable: false,
+      focusable: false,
+      data: { routeEditable: false },
+    });
+
+    const results = buildDiagramGraph(nodes, edges, "smartpls_result", "model", run, { layout, selectedMeasurementConnector });
+    expect(results.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({
+      selected: false,
+      selectable: false,
+      focusable: false,
+      data: { routeEditable: false },
+    });
+
+    const publication = buildDiagramGraph(nodes, edges, "publication", "model", run, { layout, selectedMeasurementConnector });
+    expect(publication.edges.find((edge) => edge.id === "measurement::x::x1")).toMatchObject({
+      selected: false,
+      selectable: false,
+      focusable: false,
+      data: { routeEditable: false },
+    });
+  });
+
+  it("projects explicit structural editability for editor and every locked surface", () => {
+    const layout = defaultDiagramLayout(nodes, edges);
+    const editor = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout });
+    expect(editor.edges.find((edge) => edge.id === "x-y")).toMatchObject({
+      selectable: true,
+      focusable: true,
+      reconnectable: true,
+      deletable: true,
+      data: { relationshipEditable: true },
+    });
+
+    const pending = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout, layoutEditingEnabled: false });
+    expect(pending.edges.find((edge) => edge.id === "x-y")).toMatchObject({
+      selectable: false,
+      focusable: false,
+      reconnectable: false,
+      deletable: false,
+      data: { relationshipEditable: false },
+    });
+
+    const locked = buildDiagramGraph(nodes, edges, "sem", "model", undefined, { layout: { ...layout, layoutLocked: true } });
+    expect(locked.edges.find((edge) => edge.id === "x-y")?.data).toMatchObject({ relationshipEditable: false });
+
+    const results = buildDiagramGraph(nodes, edges, "smartpls_result", "model", run, { layout });
+    expect(results.edges.find((edge) => edge.id === "x-y")?.data).toMatchObject({ relationshipEditable: false });
+
+    const otherScientificRelationships: Edge[] = [
+      { id: "control:x-y", source: "x", target: "y", data: { role: "control" } },
+      { id: "covariance:x-y", source: "x", target: "y", data: { role: "covariance" } },
+    ];
+    const lockedRelationships = buildDiagramGraph(nodes, otherScientificRelationships, "sem", "model", undefined, {
+      layout: defaultDiagramLayout(nodes, otherScientificRelationships),
+      layoutEditingEnabled: false,
+    });
+    for (const id of otherScientificRelationships.map((edge) => edge.id)) {
+      expect(lockedRelationships.edges.find((edge) => edge.id === id)).toMatchObject({
+        selectable: false,
+        focusable: false,
+        reconnectable: false,
+        deletable: false,
+        data: { relationshipEditable: false },
+      });
+    }
   });
 
   it("shows numeric overlays only for compatible selected runs", () => {
@@ -319,7 +579,7 @@ describe("SEM diagram graph", () => {
     expect(outcome.position.x - predictor.position.x).toBeLessThan(700);
   });
 
-  it("keeps unpinned construct paths straight through obstacles while measurement arrows may detour", () => {
+  it("keeps default structural paths and measurement connectors straight through obstacles", () => {
     const obstacleNodes: Array<Node<ConstructData>> = [
       { id: "source", type: "construct", position: { x: 0, y: 80 }, data: { label: "Source", shortName: "S", mode: "reflective", indicators: ["s1"] } },
       { id: "blocker", type: "construct", position: { x: 250, y: 80 }, data: { label: "Blocker", shortName: "B", mode: "reflective", indicators: [] } },
@@ -334,10 +594,12 @@ describe("SEM diagram graph", () => {
       routing: "straight",
     });
     expect(graph.edges.find((edge) => edge.id === "source-target")?.data?.bendPoints).toBeUndefined();
-    expect(graph.edges.find((edge) => edge.id === "measurement::source::s1")?.data).toMatchObject({
+    const measurement = graph.edges.find((edge) => edge.id === "measurement::source::s1")!;
+    expect(measurement.data).toMatchObject({
       perimeterRouting: "continuous",
-      routing: "polyline",
+      routing: "straight",
     });
+    expect(measurement.data?.bendPoints).toBeUndefined();
 
     layout.edgeLayouts["source-target"] = { routing: "straight", pinned: true, labelOffset: { x: 12, y: -8 } };
     const pinned = buildDiagramGraph(obstacleNodes, obstacleEdges, "sem", "model", undefined, { layout });

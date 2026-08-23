@@ -59,6 +59,16 @@ describe("ModelCanvas strict Standard authority routing", () => {
     ]);
   });
 
+  it("keeps measurement connector selection separate from scientific path and context actions", () => {
+    const source = readFileSync("src/components/ModelCanvas.tsx", "utf8");
+    expect(source).toContain("selectedMeasurementConnector,");
+    expect(source).toContain("layoutEditingEnabled: canEditLayout,");
+    expect(source).toContain("setSelectedMeasurementConnector({ constructId, indicator });");
+    expect(source).toContain("if (canEditLayout) selectMeasurementConnector(measurementConnector.constructId, measurementConnector.indicator);");
+    expect(source).toContain('window.setTimeout(() => window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-appearance")), 0);');
+    expect(source).not.toContain('requestNativeContextMenu(event, { kind: "path", id: measurementConnector');
+  });
+
   it("never persists presentation-only moderation anchors", () => {
     const scientific: Node = { id: "x", position: { x: 0, y: 0 }, data: {} };
     const anchor: Node = { id: "moderation-anchor::term", position: { x: 20, y: 20 }, data: { visualOnly: true } };

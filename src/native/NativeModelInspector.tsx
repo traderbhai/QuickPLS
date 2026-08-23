@@ -22,6 +22,8 @@ import {
 import type { NativePlsReadiness, NativePlsReadinessStatus } from "./nativePlsReadiness";
 import type {
   ConstructData,
+  DiagramMode,
+  EdgeRouteStyle,
   HigherOrderConstructData,
   IndicatorSide,
   InteractionData,
@@ -323,6 +325,8 @@ export interface NativeModelInspectorProps {
   edgesOverride?: readonly Edge[];
   selectedNodeIdOverride?: string | null;
   selectedEdgeIdOverride?: string | null;
+  selectedMeasurementConnectorOverride?: { constructId: string; indicator: string } | null;
+  diagramModeOverride?: DiagramMode;
   experimentalLabsEnabledOverride?: boolean;
   strictAuthorityOverride?: StandardSemModelV4AuthorityRecordV1 | null;
   readiness?: NativePlsReadiness;
@@ -338,6 +342,8 @@ export function NativeModelInspector({
   edgesOverride,
   selectedNodeIdOverride,
   selectedEdgeIdOverride,
+  selectedMeasurementConnectorOverride,
+  diagramModeOverride,
   experimentalLabsEnabledOverride,
   strictAuthorityOverride,
   readiness,
@@ -351,8 +357,10 @@ export function NativeModelInspector({
   const storeEdges = useWorkspace((state) => state.edges);
   const storeSelectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const storeSelectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
+  const storeSelectedMeasurementConnector = useWorkspace((state) => state.selectedMeasurementConnector);
   const storeExperimentalSemAuthoringEnabled = useWorkspace((state) => state.uiPreferences.experimentalLabsEnabled);
   const generalSemPublicationPending = useWorkspace((state) => state.generalSemPublicationPending);
+  const storeDiagramMode = useWorkspace((state) => state.diagramMode);
   const diagramLayout = useWorkspace((state) => state.diagramLayout);
   const activeModelId = useWorkspace((state) => state.activeModelId);
   const storeStrictAuthority = useWorkspace((state) => state.activeModelId
@@ -368,11 +376,22 @@ export function NativeModelInspector({
 
   const selectedNodeId = selectedNodeIdOverride === undefined ? storeSelectedNodeId : selectedNodeIdOverride;
   const selectedEdgeId = selectedEdgeIdOverride === undefined ? storeSelectedEdgeId : selectedEdgeIdOverride;
+  const diagramMode = diagramModeOverride ?? storeDiagramMode;
+  const requestedMeasurementConnector = selectedMeasurementConnectorOverride === undefined
+    ? storeSelectedMeasurementConnector
+    : selectedMeasurementConnectorOverride;
   const experimentalSemAuthoringEnabled = experimentalLabsEnabledOverride ?? storeExperimentalSemAuthoringEnabled;
   const constructRepresentationAuthoringEnabled = experimentalSemAuthoringEnabled
     || standardCbsemConstructAuthoringAvailable;
   const nodes = nodesOverride ?? storeNodes;
   const edges = edgesOverride ?? storeEdges;
+  const connectorConstruct = requestedMeasurementConnector
+    ? nodes.find((node) => node.id === requestedMeasurementConnector.constructId)
+    : undefined;
+  const selectedMeasurementConnector = requestedMeasurementConnector
+    && connectorConstruct?.data.indicators.includes(requestedMeasurementConnector.indicator)
+    ? requestedMeasurementConnector
+    : null;
   const selected = nodes.find((node) => node.id === selectedNodeId);
   const selectedInteraction = selected?.data.semantic === "interaction"
     ? selected.data.interaction
@@ -381,6 +400,9 @@ export function NativeModelInspector({
   const source = nodes.find((node) => node.id === selectedPath?.source)?.data.label ?? selectedPath?.source ?? "";
   const target = nodes.find((node) => node.id === selectedPath?.target)?.data.label ?? selectedPath?.target ?? "";
   const routing = diagramLayout.edgeLayouts[selectedPath?.id ?? ""]?.routing ?? "straight";
+  const measurementConnectorRouting = selectedMeasurementConnector
+    ? diagramLayout.measurementConnectorLayouts?.[selectedMeasurementConnector.constructId]?.[selectedMeasurementConnector.indicator]?.routing ?? "straight"
+    : "straight";
   const pathRole: NativePathRole = selectedPath?.data?.role === "control" || selectedPath?.data?.role === "covariance"
     ? selectedPath.data.role
     : "structural";
@@ -398,7 +420,7 @@ export function NativeModelInspector({
   const [activeTab, setActiveTab] = useState<NativeModelInspectorTab>(initialTab);
   const [authorityFeedback, setAuthorityFeedback] = useState<AuthorityFeedback | null>(null);
 
-  useEffect(() => setAuthorityFeedback(null), [activeModelId, selectedNodeId, selectedEdgeId]);
+  useEffect(() => setAuthorityFeedback(null), [activeModelId, selectedMeasurementConnector?.constructId, selectedMeasurementConnector?.indicator, selectedNodeId, selectedEdgeId]);
   const commitAuthority = async (intent: StandardSemModelV4EditorIntentV1) => {
     setAuthorityFeedback({ tone: "pending", message: "Committing strict Standard model edit…" });
     const result = await commitStandardIntent(intent);
@@ -414,7 +436,7 @@ export function NativeModelInspector({
     return result;
   };
 
-  useEffect(() => setActiveTab("model"), [selectedNodeId, selectedEdgeId]);
+  useEffect(() => setActiveTab("model"), [selectedMeasurementConnector?.constructId, selectedMeasurementConnector?.indicator, selectedNodeId, selectedEdgeId]);
   useEffect(() => {
     const showModelEditor = () => setActiveTab("model");
     const showAppearanceEditor = () => setActiveTab("appearance");
@@ -508,12 +530,23 @@ export function NativeModelInspector({
     if (selected) void commitAuthority({ kind: "delete_construct", variable_id: selected.id });
   };
 
-  const heading = selected ? "Construct" : selectedPath ? "Path" : "Model properties";
+  const heading = selectedMeasurementConnector ? "Measurement connector" : selected ? "Construct" : selectedPath ? "Path" : "Model properties";
   const panelId = `nd-model-inspector-${activeTab}-panel`;
   const tabId = `nd-model-inspector-${activeTab}-tab`;
   const preflight = readiness ? nativeModelInspectorPreflightPreview(readiness) : null;
   const assignedIndicatorCount = nodes.reduce((count, node) => count + node.data.indicators.length, 0);
   const selectedIndicatorLayouts = selected ? diagramLayout.indicatorLayouts[selected.id] ?? {} : {};
+  const selectedMeasurementConnectorLayouts = selected ? diagramLayout.measurementConnectorLayouts?.[selected.id] ?? {} : {};
+  const constructMeasurementConnectorRouting: EdgeRouteStyle | "mixed" = selected && selected.data.indicators.length
+    ? (() => {
+        const routes = selected.data.indicators.map((indicator) => selectedMeasurementConnectorLayouts[indicator]?.routing ?? "straight");
+        return routes.every((route) => route === routes[0]) ? routes[0]! : "mixed";
+      })()
+    : "straight";
+  const connectorRouteEditingDisabled = generalSemPublicationPending
+    || diagramLayout.layoutLocked
+    || diagramMode === "publication"
+    || diagramMode === "smartpls_result";
   const constructIndicatorPosition = selected && selected.data.indicators.length
     ? (() => {
         const positions = selected.data.indicators.map((indicator) => selectedIndicatorLayouts[indicator]?.side ?? "automatic");
@@ -529,6 +562,31 @@ export function NativeModelInspector({
     if (!selected) return;
     if (value === "automatic") void executeModelEdit({ kind: "reset_indicator_layout", constructId: selected.id, column });
     else void executeModelEdit({ kind: "set_indicator_side", constructId: selected.id, column, side: value });
+  };
+  const setSelectedMeasurementConnectorRouting = (routing: EdgeRouteStyle) => {
+    if (!selectedMeasurementConnector || connectorRouteEditingDisabled) return;
+    void executeModelEdit({
+      kind: "set_measurement_connector_routing",
+      constructId: selectedMeasurementConnector.constructId,
+      column: selectedMeasurementConnector.indicator,
+      routing,
+    });
+  };
+  const resetSelectedMeasurementConnectorRouting = () => {
+    if (!selectedMeasurementConnector || connectorRouteEditingDisabled) return;
+    void executeModelEdit({
+      kind: "reset_measurement_connector_route",
+      constructId: selectedMeasurementConnector.constructId,
+      column: selectedMeasurementConnector.indicator,
+    });
+  };
+  const setAllMeasurementConnectorRouting = (routing: EdgeRouteStyle) => {
+    if (!selected || connectorRouteEditingDisabled) return;
+    void executeModelEdit({ kind: "set_measurement_connector_routing", constructId: selected.id, routing });
+  };
+  const resetAllMeasurementConnectorRouting = () => {
+    if (!selected || connectorRouteEditingDisabled) return;
+    void executeModelEdit({ kind: "reset_measurement_connector_route", constructId: selected.id });
   };
 
   return <aside className="nd-properties nd-model-inspector" aria-labelledby="nd-model-inspector-heading">
@@ -558,7 +616,14 @@ export function NativeModelInspector({
     <fieldset disabled={generalSemPublicationPending} style={{ border: 0, margin: 0, minInlineSize: 0, padding: 0 }}>
     <section id={panelId} className="nd-inspector-panel" role="tabpanel" aria-labelledby={tabId} tabIndex={0}>
       {activeTab === "model" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        {selected ? <>
+        {selectedMeasurementConnector && connectorConstruct ? <>
+          <dl className="nd-property-list">
+            <div><dt>Construct</dt><dd>{connectorConstruct.data.label}</dd></div>
+            <div><dt>Indicator</dt><dd>{selectedMeasurementConnector.indicator}</dd></div>
+            <div><dt>Direction</dt><dd>{connectorConstruct.data.mode === "reflective" ? `${connectorConstruct.data.label} → ${selectedMeasurementConnector.indicator}` : `${selectedMeasurementConnector.indicator} → ${connectorConstruct.data.label}`}</dd></div>
+          </dl>
+          <p className="nd-property-note">This connector is a presentation object for the construct measurement model.</p>
+        </> : selected ? <>
           <label>Name<CommitTextInput id="nd-model-construct-name" value={selected.data.label} onCommit={renameConstruct} /></label>
           {selected.data.semantic !== "interaction" ? <label>Short name<CommitTextInput value={selected.data.shortName} maxLength={12} onCommit={(shortName) => updateConstruct(selected.id, { shortName })} /></label> : null}
           {strictAuthority ? <p className="nd-property-note">The short name is projected presentation metadata; strict scientific edits use the authority controls below.</p> : null}
@@ -604,7 +669,10 @@ export function NativeModelInspector({
       </form> : null}
 
       {activeTab === "parameter" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        {selectedInteraction ? <>
+        {selectedMeasurementConnector && connectorConstruct ? <>
+          <dl className="nd-property-list"><div><dt>Measurement model</dt><dd>{connectorConstruct.data.mode === "reflective" ? "Reflective" : "Formative"}</dd></div><div><dt>Indicator</dt><dd>{selectedMeasurementConnector.indicator}</dd></div></dl>
+          <p className="nd-property-note">The connector has no separate scientific parameter. Its estimate and direction come from the construct measurement model.</p>
+        </> : selectedInteraction ? <>
           <dl className="nd-property-list"><div><dt>Parameter</dt><dd>{interactionMethodLabel(selectedInteraction)}</dd></div><div><dt>Manifest indicators</dt><dd>Not applicable</dd></div></dl>
           <p className="nd-property-note">The interaction parameter is derived from its ordered operand scores.</p>
         </> : selected?.data.semantic === "higher_order" && selected.data.higherOrder ? <>
@@ -630,7 +698,17 @@ export function NativeModelInspector({
       </form> : null}
 
       {activeTab === "appearance" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        {selected ? <>
+        {selectedMeasurementConnector && connectorConstruct ? mode === "expert" ? <>
+          <label>Connector route<select
+            value={measurementConnectorRouting}
+            disabled={connectorRouteEditingDisabled}
+            aria-label={`Connector route for ${selectedMeasurementConnector.indicator} in ${connectorConstruct.data.label}`}
+            aria-describedby="nd-measurement-connector-routing-note"
+            onChange={(event) => setSelectedMeasurementConnectorRouting(event.target.value as EdgeRouteStyle)}
+          ><option value="straight">Straight (default)</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option><option value="polyline">Polyline (editable bends)</option></select></label>
+          <button type="button" className="nd-secondary-command" disabled={connectorRouteEditingDisabled} onClick={resetSelectedMeasurementConnectorRouting}>Reset connector route</button>
+          <p id="nd-measurement-connector-routing-note" className="nd-property-note">Connector routing is presentation-only; it does not change the scientific measurement relationship or arrow direction.</p>
+        </> : <p className="nd-property-note">Switch to Expert to change this measurement connector's presentation route.</p> : selected ? <>
           <dl className="nd-property-list"><div><dt>Canvas X</dt><dd>{Math.round(selected.position.x)}</dd></div><div><dt>Canvas Y</dt><dd>{Math.round(selected.position.y)}</dd></div></dl>
           <button type="button" className="nd-secondary-command" aria-pressed={Boolean(diagramLayout.constructLayouts[selected.id]?.pinned)} onClick={() => void executeModelEdit({ kind: "set_construct_pinned", constructId: selected.id, pinned: !diagramLayout.constructLayouts[selected.id]?.pinned })}>{diagramLayout.constructLayouts[selected.id]?.pinned ? "Unpin construct" : "Pin construct"}</button>
           {selected.data.semantic !== "interaction" && selected.data.semantic !== "higher_order" && selected.data.indicators.length ? <>
@@ -642,6 +720,17 @@ export function NativeModelInspector({
               })}
             </div>
             <button type="button" className="nd-secondary-command" onClick={() => void executeModelEdit({ kind: "reset_indicator_layout", constructId: selected.id })}>Reset all indicator positions</button>
+            {mode === "expert" ? <>
+              <label>All measurement connectors<select
+                value={constructMeasurementConnectorRouting}
+                disabled={connectorRouteEditingDisabled}
+                aria-label={`Routing for all measurement connectors of ${selected.data.label}`}
+                aria-describedby="nd-all-measurement-connectors-note"
+                onChange={(event) => setAllMeasurementConnectorRouting(event.target.value as EdgeRouteStyle)}
+              >{constructMeasurementConnectorRouting === "mixed" ? <option value="mixed" disabled>Mixed routes</option> : null}<option value="straight">Straight (default)</option><option value="curved">Curved</option><option value="orthogonal">Orthogonal</option><option value="polyline">Polyline (editable bends)</option></select></label>
+              <button type="button" className="nd-secondary-command" disabled={connectorRouteEditingDisabled} onClick={resetAllMeasurementConnectorRouting}>Reset all connector routes</button>
+              <p id="nd-all-measurement-connectors-note" className="nd-property-note">Applies one presentation route to every measurement connector in this construct. Select an indicator or connector to edit one route.</p>
+            </> : null}
           </> : null}
           <p className="nd-property-note">Move the construct with the canvas, keyboard focus, or Arrange command. Its saved position is presentation-only.</p>
         </> : selectedPath ? <>
@@ -652,7 +741,10 @@ export function NativeModelInspector({
       </form> : null}
 
       {activeTab === "data-binding" ? <form className="nd-property-form" onSubmit={(event) => event.preventDefault()}>
-        {selected && selected.data.semantic !== "interaction" && selected.data.semantic !== "higher_order" ? <>
+        {selectedMeasurementConnector && connectorConstruct ? <>
+          <dl className="nd-property-list"><div><dt>Dataset variable</dt><dd>{selectedMeasurementConnector.indicator}</dd></div><div><dt>Bound construct</dt><dd>{connectorConstruct.data.label}</dd></div></dl>
+          <p className="nd-property-note">Edit indicator assignment from the construct's Data Binding section.</p>
+        </> : selected && selected.data.semantic !== "interaction" && selected.data.semantic !== "higher_order" ? <>
           <label>Assign dataset variable<select value="" onChange={(event) => assignDatasetIndicator(event.target.value)}><option value="">Choose variable…</option>{availableIndicators.map((indicator) => <option key={indicator} value={indicator}>{indicator}</option>)}</select></label>
           <div className="nd-binding-list" aria-label={`Variables bound to ${selected.data.label}`}>
             {selected.data.indicators.map((indicator) => <div key={indicator}><span>{indicator}</span><button type="button" aria-label={`Remove ${indicator} from ${selected.data.label}`} onClick={() => removeDatasetIndicator(indicator)}>Remove</button></div>)}

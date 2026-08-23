@@ -15,7 +15,7 @@ import {
 } from "@xyflow/react";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import type { DragEvent, KeyboardEvent as ReactKeyboardEvent } from "react";
-import { buildDiagramGraph, isIndicatorNodeId, parseIndicatorNodeId, type DiagramGraph } from "../domain/diagramGraph";
+import { buildDiagramGraph, isIndicatorNodeId, isMeasurementConnectorEdgeData, parseIndicatorNodeId, parseMeasurementConnectorEdgeId, type DiagramGraph } from "../domain/diagramGraph";
 import {
   dispatchModerationCanvasRequest,
   isModerationAnchorData,
@@ -69,6 +69,30 @@ export interface ModelCanvasProps {
   presentation?: "editor" | "results_readonly";
   resultOverlay?: ResultOverlaySelectionV1 | null;
   showGeneratedInteractionTerms?: boolean;
+}
+
+export interface MeasurementConnectorSelection {
+  constructId: string;
+  indicator: string;
+}
+
+/**
+ * Measurement connectors are projected edges rather than scientific model
+ * relationships. Resolve their owning construct and indicator without
+ * promoting the visual edge to a persisted path selection.
+ */
+export function measurementConnectorSelectionForEdge(
+  edge: Pick<Edge, "id" | "source" | "target" | "data">,
+): MeasurementConnectorSelection | null {
+  if (isMeasurementConnectorEdgeData(edge.data)) {
+    return { constructId: edge.data.constructId, indicator: edge.data.indicator };
+  }
+  if (!edge.id.startsWith("measurement::")) return null;
+  const indicatorNode = [edge.source, edge.target].find(isIndicatorNodeId);
+  const parsedIndicator = indicatorNode ? parseIndicatorNodeId(indicatorNode) : null;
+  const constructEndpoint = indicatorNode === edge.source ? edge.target : indicatorNode === edge.target ? edge.source : null;
+  if (parsedIndicator && parsedIndicator.constructId === constructEndpoint) return parsedIndicator;
+  return parseMeasurementConnectorEdgeId(edge.id);
 }
 
 /**
@@ -178,8 +202,10 @@ export function ModelCanvas({
   const addCovariance = useWorkspace((state) => state.addCovariance);
   const selectedNodeId = useWorkspace((state) => state.selectedNodeId);
   const selectedEdgeId = useWorkspace((state) => state.selectedEdgeId);
+  const selectedMeasurementConnector = useWorkspace((state) => state.selectedMeasurementConnector);
   const setSelectedNode = useWorkspace((state) => state.setSelectedNode);
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
+  const setSelectedMeasurementConnector = useWorkspace((state) => state.setSelectedMeasurementConnector);
   const setDiagramTool = useWorkspace((state) => state.setDiagramTool);
   const setDiagramViewport = useWorkspace((state) => state.setDiagramViewport);
   const removeSelection = useWorkspace((state) => state.removeSelection);
@@ -225,6 +251,10 @@ export function ModelCanvas({
   const resultRuns = useMemo(() => runs.filter((run) => run.status === "completed" && run.result), [runs]);
   const selectedResultRun = useMemo(() => resultRuns.find((run) => run.id === selectedResultRunId), [resultRuns, selectedResultRunId]);
   const canvasDiagramMode = readOnlyResultsPresentation ? "smartpls_result" : diagramMode;
+  const resultDiagramMode = canvasDiagramMode === "smartpls_result" || canvasDiagramMode === "publication";
+  const paperStyleCanvas = canvasDiagramMode === "sem" || canvasDiagramMode === "publication" || canvasDiagramMode === "smartpls_result";
+  const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
+  const canEditLayout = !resultDiagramMode && !layoutLocked && !generalSemPublicationPending;
   const graph = useMemo(() => buildDiagramGraph(
     nodes,
     edges,
@@ -234,22 +264,20 @@ export function ModelCanvas({
     {
       layout: diagramLayout,
       layoutSource: readOnlyResultsPresentation || diagramMode === "publication" ? "current_canvas" : undefined,
+      layoutEditingEnabled: canEditLayout,
       selectedHigherOrderId: selectedNodeId,
       selectedInteractionTermId,
+      selectedMeasurementConnector,
       resultOverlay,
       showGeneratedInteractionTerms,
       moderationAnchorFractions: diagramLayout.moderationAnchorFractions,
       moderationConnectorBendPoints: diagramLayout.moderationConnectorBendPoints,
     },
-  ), [canvasDiagramMode, diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, readOnlyResultsPresentation, resultOverlay, selectedInteractionTermId, selectedNodeId, selectedResultRun, showGeneratedInteractionTerms]);
+  ), [canEditLayout, canvasDiagramMode, diagramLayout, diagramMode, diagramOverlaySettings.mode, edges, nodes, readOnlyResultsPresentation, resultOverlay, selectedInteractionTermId, selectedMeasurementConnector, selectedNodeId, selectedResultRun, showGeneratedInteractionTerms]);
   const [canvasNodes, setCanvasNodes] = useState(graph.nodes);
   const draggingNodeId = useRef<string | null>(null);
   const dragGuideFrame = useRef<number | null>(null);
   const pendingDragGuideNode = useRef<Node | null>(null);
-  const resultDiagramMode = canvasDiagramMode === "smartpls_result" || canvasDiagramMode === "publication";
-  const paperStyleCanvas = canvasDiagramMode === "sem" || canvasDiagramMode === "publication" || canvasDiagramMode === "smartpls_result";
-  const layoutLocked = diagramLayout.layoutLocked && !resultDiagramMode;
-  const canEditLayout = !resultDiagramMode && !layoutLocked && !generalSemPublicationPending;
   const initialViewportPlan = modelCanvasInitialViewportPlan(diagramLayout.diagramViewport);
   const standardPresentation = diagramLayout.standardSemPresentation ?? { schemaVersion: 1, objects: [] };
   const updateStandardPresentation = (presentation: StandardSemPresentationLayoutV1) => {
@@ -780,17 +808,21 @@ export function ModelCanvas({
       window.removeEventListener("quickpls:model-redo", handleRedo);
     };
   }, [arrangeModel, canEditLayout, diagramLayout.constructLayouts, flow, generalSemPublicationPending, layoutLocked, readOnlyResultsPresentation, redo, removeSelection, selectTool, selectedInteractionTermId, selectedNodeId, strictAuthority, undo]);
-  const selectIndicatorForToolbar = (constructId: string, _indicator: string) => {
+  const selectMeasurementConnector = (constructId: string, indicator: string) => {
     setSelectedInteractionTermId(null);
-    setSelectedNode(constructId);
+    setSelectedNode(null);
+    setSelectedEdge(null);
+    setSelectedMeasurementConnector({ constructId, indicator });
   };
   const selectModeratingEffect = (interactionTermId: string) => {
+    setSelectedMeasurementConnector(null);
     setSelectedNode(null);
     setSelectedEdge(null);
     setSelectedInteractionTermId(interactionTermId);
   };
   const clearSelectionForCanvas = () => {
     setSelectedInteractionTermId(null);
+    setSelectedMeasurementConnector(null);
     setSelectedNode(null);
   };
   const requestCreateModeratingEffect = (relationId: string, moderatorId: string | undefined, origin: "drag" | "keyboard" | "menu") => {
@@ -1060,7 +1092,8 @@ export function ModelCanvas({
         }
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) {
-          selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
+          if (canEditLayout) selectMeasurementConnector(indicator.constructId, indicator.indicator);
+          else setSelectedNode(indicator.constructId);
           return;
         }
         if (!canEditLayout) {
@@ -1091,7 +1124,13 @@ export function ModelCanvas({
           selectModeratingEffect(edge.data.interactionTermId);
           return;
         }
+        const measurementConnector = measurementConnectorSelectionForEdge(edge);
+        if (measurementConnector) {
+          if (canEditLayout) selectMeasurementConnector(measurementConnector.constructId, measurementConnector.indicator);
+          return;
+        }
         setSelectedInteractionTermId(null);
+        setSelectedMeasurementConnector(null);
         setSelectedEdge(edge.id);
       }}
       onNodeContextMenu={(event, node) => {
@@ -1104,9 +1143,11 @@ export function ModelCanvas({
         }
         const indicator = parseIndicatorNodeId(node.id);
         if (indicator) {
-          selectIndicatorForToolbar(indicator.constructId, indicator.indicator);
-          requestNativeContextMenu(event, { kind: "construct", id: indicator.constructId });
+          event.stopPropagation();
+          selectMeasurementConnector(indicator.constructId, indicator.indicator);
+          window.setTimeout(() => window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-appearance")), 0);
         } else {
+          setSelectedMeasurementConnector(null);
           setSelectedNode(node.id);
           requestNativeContextMenu(event, { kind: "construct", id: node.id });
         }
@@ -1119,11 +1160,14 @@ export function ModelCanvas({
           requestNativeContextMenu(event, { kind: "moderation", interactionTermId: edge.data.interactionTermId });
           return;
         }
-        if (edge.id.startsWith("measurement::")) {
-          clearSelectionForCanvas();
-          requestNativeContextMenu(event, { kind: "canvas" });
+        const measurementConnector = measurementConnectorSelectionForEdge(edge);
+        if (measurementConnector) {
+          event.stopPropagation();
+          selectMeasurementConnector(measurementConnector.constructId, measurementConnector.indicator);
+          window.setTimeout(() => window.dispatchEvent(new CustomEvent("quickpls:model-inspector-show-appearance")), 0);
           return;
         }
+        setSelectedMeasurementConnector(null);
         setSelectedEdge(edge.id);
         requestNativeContextMenu(event, { kind: "path", id: edge.id });
       }}

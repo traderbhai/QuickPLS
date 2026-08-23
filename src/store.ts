@@ -177,6 +177,7 @@ export interface WorkspaceState {
   edges: Edge[];
   selectedNodeId: string | null;
   selectedEdgeId: string | null;
+  selectedMeasurementConnector: { constructId: string; indicator: string } | null;
   selectedResultRunId: string | null;
   explorerTab: ExplorerTab;
   explorerCollapsed: boolean;
@@ -232,6 +233,7 @@ export interface WorkspaceState {
   clearWorkflowFeedback: () => void;
   setSelectedNode: (id: string | null) => void;
   setSelectedEdge: (id: string | null) => void;
+  setSelectedMeasurementConnector: (selection: { constructId: string; indicator: string } | null) => void;
   setSelectedResultRun: (id: string | null) => void;
   setExplorerTab: (tab: ExplorerTab) => void;
   setExplorerCollapsed: (collapsed: boolean) => void;
@@ -1028,6 +1030,7 @@ const applyLegacyPathModelEditV1 = (
         ...historyPatch(state),
         selectedNodeId: null,
         selectedEdgeId: edge.id,
+        selectedMeasurementConnector: null,
         edges,
         diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, state.nodes, edges),
       },
@@ -1180,6 +1183,7 @@ const applyLegacyHigherOrderModelEditV1 = (
         ...historyPatch(state),
         selectedNodeId: node.id,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         nodes,
         edges,
         diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
@@ -1224,6 +1228,7 @@ const applyLegacyHigherOrderModelEditV1 = (
       ...historyPatch(state),
       selectedNodeId: current.id,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes,
       diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     },
@@ -1363,6 +1368,7 @@ const applyLegacyModeratingEffectModelEditV1 = (
       ...historyPatch(state),
       selectedNodeId: node.id,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes,
       edges,
       diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, edges),
@@ -1419,6 +1425,7 @@ const applyLegacyScientificModelEditV1 = (
         ...historyPatch(state),
         selectedNodeId: node.id,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         nodes,
         diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
       },
@@ -1625,6 +1632,110 @@ const applyPresentationModelEditV1 = (
       status: "applied",
       state: { ...state, ...historyPatch(state), edges, diagramLayout },
       affected: { constructIds: [], indicatorIds: [], relationshipIds: [edge.id] },
+    };
+  }
+
+  if (command.kind === "set_measurement_connector_routing"
+    || command.kind === "set_measurement_connector_bend_points"
+    || command.kind === "reset_measurement_connector_route") {
+    const construct = state.nodes.find((node) => node.id === command.constructId);
+    if (!construct) {
+      return blockedModelEditTransitionV1(
+        "model_edit.construct_unavailable",
+        `Construct '${command.constructId}' is not present on the Canvas.`,
+        "Refresh the model and select an existing measurement connector.",
+      );
+    }
+    const requestedColumn = command.column;
+    const indicators = requestedColumn === undefined ? [...construct.data.indicators] : [requestedColumn];
+    if (!indicators.length) {
+      return blockedModelEditTransitionV1(
+        "model_edit.measurement_connector_unavailable",
+        `Construct '${construct.id}' has no assigned measurement indicators.`,
+        "Assign an indicator to the construct before changing connector routing.",
+      );
+    }
+    const unavailable = indicators.find((indicator) => !construct.data.indicators.includes(indicator));
+    if (unavailable !== undefined) {
+      return blockedModelEditTransitionV1(
+        "model_edit.indicator_not_assigned",
+        `Column '${unavailable}' is not assigned to construct '${construct.id}'.`,
+        "Choose a connector for an indicator currently assigned to the construct.",
+      );
+    }
+
+    const currentByConstruct = state.diagramLayout.measurementConnectorLayouts?.[construct.id] ?? {};
+    const nextByConstruct: DiagramLayoutState["measurementConnectorLayouts"][string] = Object.fromEntries(Object.entries(currentByConstruct).map(([indicator, layout]) => [
+      indicator,
+      {
+        ...layout,
+        ...(layout.bendPoints ? { bendPoints: layout.bendPoints.map((point) => ({ ...point })) } : {}),
+      },
+    ]));
+    let changed = false;
+
+    if (command.kind === "set_measurement_connector_routing") {
+      for (const indicator of indicators) {
+        const current = nextByConstruct[indicator];
+        if (command.routing === "straight") {
+          if (current) {
+            delete nextByConstruct[indicator];
+            changed = true;
+          }
+          continue;
+        }
+        const next = {
+          ...(current ?? {}),
+          routing: command.routing,
+        };
+        if (JSON.stringify(current) !== JSON.stringify(next)) {
+          nextByConstruct[indicator] = next;
+          changed = true;
+        }
+      }
+    } else if (command.kind === "set_measurement_connector_bend_points") {
+      const points = command.points.map((point) => ({ x: Number(point.x), y: Number(point.y) }));
+      if (!points.length || points.length > 12 || points.some((point) => !Number.isFinite(point.x) || !Number.isFinite(point.y))) {
+        return blockedModelEditTransitionV1(
+          "model_edit.measurement_connector_bends_invalid",
+          "A measurement connector polyline needs between one and twelve finite bend points.",
+          "Move an existing connector bend handle or reset the connector route.",
+        );
+      }
+      const current = nextByConstruct[command.column];
+      const next = { routing: "polyline" as const, bendPoints: points };
+      if (JSON.stringify(current) !== JSON.stringify(next)) {
+        nextByConstruct[command.column] = next;
+        changed = true;
+      }
+    } else if (command.column === undefined) {
+      changed = Object.keys(nextByConstruct).length > 0;
+      Object.keys(nextByConstruct).forEach((indicator) => delete nextByConstruct[indicator]);
+    } else if (nextByConstruct[command.column]) {
+      delete nextByConstruct[command.column];
+      changed = true;
+    }
+
+    if (!changed) {
+      return blockedModelEditTransitionV1(
+        "model_edit.no_change",
+        "The selected measurement connector route is already using its default or requested style.",
+        "Choose a different routing style or keep the current connector route.",
+      );
+    }
+    const measurementConnectorLayouts = {
+      ...(state.diagramLayout.measurementConnectorLayouts ?? {}),
+    };
+    if (Object.keys(nextByConstruct).length) measurementConnectorLayouts[construct.id] = nextByConstruct;
+    else delete measurementConnectorLayouts[construct.id];
+    return {
+      status: "applied",
+      state: {
+        ...state,
+        ...historyPatch(state),
+        diagramLayout: { ...state.diagramLayout, measurementConnectorLayouts },
+      },
+      affected: { constructIds: [construct.id], indicatorIds: indicators, relationshipIds: [] },
     };
   }
 
@@ -1921,6 +2032,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   edges: initialEdges,
   selectedNodeId: "satisfaction",
   selectedEdgeId: null,
+  selectedMeasurementConnector: null,
   selectedResultRunId: null,
   explorerTab: "constructs",
   explorerCollapsed: false,
@@ -1983,8 +2095,11 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
   }),
   setWorkflowCommandContext: (context) => set({ workflowCommandContext: context ? { ...context, timestamp: Date.now() } : null }),
   clearWorkflowFeedback: () => set({ workflowDestinationContext: null, workflowCommandContext: null }),
-  setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null }),
-  setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null }),
+  setSelectedNode: (selectedNodeId) => set({ selectedNodeId, selectedEdgeId: null, selectedMeasurementConnector: null }),
+  setSelectedEdge: (selectedEdgeId) => set({ selectedEdgeId, selectedNodeId: null, selectedMeasurementConnector: null }),
+  setSelectedMeasurementConnector: (selectedMeasurementConnector) => set(selectedMeasurementConnector
+    ? { selectedMeasurementConnector, selectedNodeId: null, selectedEdgeId: null }
+    : { selectedMeasurementConnector: null }),
   setSelectedResultRun: (selectedResultRunId) => set((state) => ({ selectedResultRunId, diagramOverlaySettings: { ...state.diagramOverlaySettings, selectedRunId: selectedResultRunId } })),
   setExplorerTab: (explorerTab) => set({ explorerTab }),
   setExplorerCollapsed: (explorerCollapsed) => set({ explorerCollapsed }),
@@ -2193,7 +2308,9 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         );
       }
       if (transition.status !== "applied") return state;
-      const next = transition.state;
+      const next = transaction === "scientific"
+        ? { ...transition.state, selectedMeasurementConnector: null }
+        : transition.state;
       const activeAuthority = activeStandardSemModelV4Authority(next);
       return transaction === "presentation" && activeAuthority && next.activeModelId
         ? {
@@ -2257,6 +2374,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         future: [current, ...state.future].slice(0, 50),
         selectedNodeId: null,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         selectedResultRunId: null,
       };
     }
@@ -2268,6 +2386,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       future: [current, ...state.future].slice(0, 50),
       selectedNodeId: null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       selectedResultRunId: null,
     };
   }),
@@ -2309,6 +2428,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         future: state.future.slice(1),
         selectedNodeId: null,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         selectedResultRunId: null,
       };
     }
@@ -2320,6 +2440,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       future: state.future.slice(1),
       selectedNodeId: null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       selectedResultRunId: null,
     };
   }),
@@ -2396,6 +2517,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: null,
       selectedEdgeId: id,
+      selectedMeasurementConnector: null,
       edges: addEdge({
         ...connection,
         id,
@@ -2415,6 +2537,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       edges: reconnectEdge(edge, connection, state.edges, { shouldReplaceId: false }),
       selectedNodeId: null,
       selectedEdgeId: edge.id,
+      selectedMeasurementConnector: null,
     };
   }),
   addPath: (source, target) => set((state) => {
@@ -2425,6 +2548,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: null,
       selectedEdgeId: id,
+      selectedMeasurementConnector: null,
       edges: addEdge({
         id,
         source,
@@ -2446,6 +2570,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: null,
       selectedEdgeId: id,
+      selectedMeasurementConnector: null,
       edges: [...state.edges, newNativeScientificCovarianceEdgeV4(id, left, right)],
     };
   }),
@@ -2541,6 +2666,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: id,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes: [...state.nodes, {
         id,
         type: "construct",
@@ -2608,6 +2734,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         ...historyPatch(state),
         selectedNodeId: id,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         nodes: [
           ...state.nodes.map((node) => ({ ...node, selected: false })),
           {
@@ -2683,6 +2810,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         ...historyPatch(state),
         selectedNodeId: constructId,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         nodes: state.nodes.map((node) => node.id === constructId
           ? {
               ...node,
@@ -2839,6 +2967,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: id,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes: [...state.nodes.map((node) => ({
         ...node,
         data: { ...node.data, indicators: node.data.indicators.filter((indicator) => !validIndicators.includes(indicator)) },
@@ -2880,6 +3009,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: createdIds.at(-1) ?? null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes: nextNodes.map((node) => createdIds.includes(node.id) ? node : { ...node, selected: false }),
     };
   }),
@@ -2917,6 +3047,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       ...historyPatch(state),
       selectedNodeId: createdIds.at(-1) ?? null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes: nextNodes.map((node) => createdIds.includes(node.id) ? node : { ...node, selected: false }),
     };
   }),
@@ -2928,6 +3059,8 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     return {
       ...historyPatch(state),
       selectedNodeId: id,
+      selectedEdgeId: null,
+      selectedMeasurementConnector: null,
       nodes: [...state.nodes, {
         ...source,
         id,
@@ -2960,6 +3093,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       edges: state.edges.filter((edge) => !edgeIds.has(edge.id) && !nodeIds.has(edge.source) && !nodeIds.has(edge.target)),
       selectedNodeId: null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
     };
   }),
   reverseSelectedPath: () => set((state) => {
@@ -3154,6 +3288,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     }));
     return {
       ...historyPatch(state),
+      selectedMeasurementConnector: null,
       nodes,
       diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
@@ -3174,6 +3309,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     }));
     return {
       ...historyPatch(state),
+      selectedMeasurementConnector: null,
       nodes,
       diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
@@ -3188,6 +3324,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     } : node);
     return {
       ...historyPatch(state),
+      selectedMeasurementConnector: null,
       nodes,
       diagramLayout: reconcileModelEditDiagramLayoutV1(state.diagramLayout, nodes, state.edges),
     };
@@ -3284,6 +3421,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
             diagramLayout: syncedDiagramLayout(target.nodes, target.edges, target.diagramLayout),
             selectedNodeId: target.nodes[0]?.id ?? null,
             selectedEdgeId: null,
+            selectedMeasurementConnector: null,
             past: [],
             future: [],
           }
@@ -3332,6 +3470,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
               diagramLayout: projection.diagramLayout,
               selectedNodeId: projection.nodes[0]?.id ?? null,
               selectedEdgeId: null,
+              selectedMeasurementConnector: null,
               past: [],
               future: [],
             }
@@ -3409,6 +3548,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         diagramLayout: active.diagramLayout,
         selectedNodeId: active.nodes[0]?.id ?? null,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         selectedResultRunId: null,
         diagramTool: "select",
         view: "models",
@@ -3484,6 +3624,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           dataset: datasetFromStandardSemModelV4Descriptor(targetDescriptor),
           selectedNodeId: projection.nodes[0]?.id ?? null,
           selectedEdgeId: null,
+          selectedMeasurementConnector: null,
           diagramTool: "select",
           view: "models",
           past: [],
@@ -3689,6 +3830,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
           diagramLayout: preservedLayout,
           selectedNodeId: null,
           selectedEdgeId: null,
+          selectedMeasurementConnector: null,
         };
       });
       return committed
@@ -3759,6 +3901,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
         diagramLayout: syncedDiagramLayout(target.nodes, target.edges, target.diagramLayout),
         selectedNodeId: target.nodes[0]?.id ?? null,
         selectedEdgeId: null,
+        selectedMeasurementConnector: null,
         diagramTool: "select",
         past: [],
         future: [],
@@ -3891,6 +4034,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       diagramLayout: source.diagramLayout,
       selectedNodeId: null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
     };
     const projection = projectStandardSemModelV4DiagramV1(source.authority, source.layout);
     const locks = { ...state.standardSemModelV4ScientificEditLocks };
@@ -3917,6 +4061,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
       diagramLayout: projection.diagramLayout,
       selectedNodeId: null,
       selectedEdgeId: null,
+      selectedMeasurementConnector: null,
     };
   }),
   setGeneralSemPublicationPending: (generalSemPublicationPending) => set({ generalSemPublicationPending }),
@@ -3926,6 +4071,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     edges: [],
     selectedNodeId: null,
     selectedEdgeId: null,
+    selectedMeasurementConnector: null,
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
@@ -3975,6 +4121,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     edges: initialEdges,
     selectedNodeId: "satisfaction",
     selectedEdgeId: null,
+    selectedMeasurementConnector: null,
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,
@@ -4057,6 +4204,7 @@ export const useWorkspace = create<WorkspaceState>()((set, get) => ({
     diagramLayout: syncedDiagramLayout(project.nodes, project.edges, project.diagramLayout),
     selectedNodeId: project.nodes[0]?.id ?? null,
     selectedEdgeId: null,
+    selectedMeasurementConnector: null,
     selectedResultRunId: null,
     explorerTab: "constructs",
     explorerCollapsed: false,

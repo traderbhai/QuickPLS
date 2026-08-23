@@ -4602,15 +4602,19 @@ mod tests {
     }
 
     #[cfg(windows)]
-    fn strict_v3_three_way_source_fixture(
-    ) -> (qpls_data::Dataset, AnalysisRecipeV4, SemModelV4, [String; 4]) {
+    fn strict_v3_three_way_source_fixture() -> (
+        qpls_data::Dataset,
+        AnalysisRecipeV4,
+        SemModelV4,
+        [String; 4],
+    ) {
         use chrono::{TimeZone, Utc};
         use qpls_core::{
             ANALYSIS_RECIPE_SCHEMA_VERSION, AnalysisMethod, AnalysisRecipe,
             AnalysisRecipeModelBindingV4, AnalysisSettings, Construct,
             LegacyBasicModelInterpretationV4, MeasurementMode, MethodConfig, ModelSpec,
-            SemDataBindingV4, SemVariableV4, StructuralPath,
-            confirm_legacy_recipe_estimand_v4, migrate_analysis_recipe_to_v4_pending,
+            SemDataBindingV4, SemVariableV4, StructuralPath, confirm_legacy_recipe_estimand_v4,
+            migrate_analysis_recipe_to_v4_pending,
         };
         use qpls_data::{ImportOptions, import_delimited_bytes};
         use std::collections::BTreeMap;
@@ -4638,12 +4642,12 @@ mod tests {
             // allocator, which is where colon-bearing authored IDs previously
             // produced overlong generated schema-6 identities.
             paths: [("authored:x", "authored:y")]
-            .into_iter()
-            .map(|(source, target)| StructuralPath {
-                source: source.into(),
-                target: target.into(),
-            })
-            .collect(),
+                .into_iter()
+                .map(|(source, target)| StructuralPath {
+                    source: source.into(),
+                    target: target.into(),
+                })
+                .collect(),
             controls: Vec::new(),
             higher_order_constructs: Vec::new(),
             interactions: Vec::new(),
@@ -4654,8 +4658,7 @@ mod tests {
             let x = (row - 40.0) / 13.0;
             let w = (row * 0.71).sin() + 0.2 * (row * 0.13).cos();
             let z = (row * 0.37).cos() - 0.3 * (row * 0.19).sin();
-            let y = 0.25 * x + 0.20 * w - 0.15 * z + 0.65 * x * w
-                - 0.30 * x * z
+            let y = 0.25 * x + 0.20 * w - 0.15 * z + 0.65 * x * w - 0.30 * x * z
                 + 0.20 * w * z
                 + 0.45 * x * w * z;
             csv.push_str(&format!(
@@ -4709,9 +4712,7 @@ mod tests {
                 .iter()
                 .find_map(|variable| match variable {
                     SemVariableV4::Composite {
-                        id,
-                        label: actual,
-                        ..
+                        id, label: actual, ..
                     } if actual == label => Some(id.clone()),
                     _ => None,
                 })
@@ -4742,11 +4743,7 @@ mod tests {
     }
 
     #[cfg(windows)]
-    fn strict_structural_relation_id(
-        model: &SemModelV4,
-        source: &str,
-        target: &str,
-    ) -> String {
+    fn strict_structural_relation_id(model: &SemModelV4, source: &str, target: &str) -> String {
         model
             .relations
             .iter()
@@ -4767,17 +4764,14 @@ mod tests {
     #[test]
     fn strict_v3_colon_ids_execute_build_append_and_reopen_three_way_canonical_result() {
         use chrono::{TimeZone, Utc};
-        use qpls_core::{
-            SemDerivedTermV4, sha256_serialized,
-        };
+        use qpls_core::{SemDerivedTermV4, sha256_serialized};
         use qpls_project::{
             GeneralSemExecutionAuthorityRevisionIdentityV1,
             GeneralSemExecutionAuthorityRevisionIntentV1,
-            GeneralSemExecutionAuthorityRevisionRequestV1,
-            GeneralSemExecutionAuthoritySourcePinV1, GeneralSemModeratingEffectTargetV1,
-            GeneralSemRevisionGenerationV1, GeneralSemRevisionHierarchyPolicyV1,
-            GeneralSemRevisionInteractionMethodV1, ProjectModelPayloadV6,
-            append_canonical_result_document_v2_file_v6,
+            GeneralSemExecutionAuthorityRevisionRequestV1, GeneralSemExecutionAuthoritySourcePinV1,
+            GeneralSemModeratingEffectTargetV1, GeneralSemRevisionGenerationV1,
+            GeneralSemRevisionHierarchyPolicyV1, GeneralSemRevisionInteractionMethodV1,
+            ProjectModelPayloadV6, append_canonical_result_document_v2_file_v6,
             create_general_sem_execution_authority_revision_v1,
             create_populated_general_sem_project_archive_v6, load_project_archive_v6,
         };
@@ -4813,8 +4807,7 @@ mod tests {
             recipe.clone(),
         )
         .unwrap();
-        let two_way_project_id =
-            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0020);
+        let two_way_project_id = Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0020);
         let two_way_receipt = create_general_sem_execution_authority_revision_v1(
             &source_path,
             &source_receipt.destination_archive_sha256,
@@ -4834,9 +4827,7 @@ mod tests {
                     created_at: Utc.with_ymd_and_hms(2026, 8, 22, 8, 1, 0).unwrap(),
                     model_id: "model:strict-v3:two-way".into(),
                     model_name: "Strict V3 two-way revision".into(),
-                    recipe_id: Uuid::from_u128(
-                        0x3254_0000_0000_0000_0000_0000_0000_0021,
-                    ),
+                    recipe_id: Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0021),
                 },
                 intent: GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
                     intent_version: 3,
@@ -4862,8 +4853,7 @@ mod tests {
             "general_sem_v1_moderation_term_",
         );
 
-        let three_way_project_id =
-            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0030);
+        let three_way_project_id = Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0030);
         let three_way_receipt = create_general_sem_execution_authority_revision_v1(
             &two_way_path,
             &two_way_receipt.destination_archive_sha256,
@@ -4872,16 +4862,12 @@ mod tests {
                 source: GeneralSemExecutionAuthoritySourcePinV1 {
                     project_id: two_way_project_id,
                     model_id: two_way_receipt.resident_model_id.clone(),
-                    model_document_sha256: two_way_receipt
-                        .resident_model_document_sha256
-                        .clone(),
+                    model_document_sha256: two_way_receipt.resident_model_document_sha256.clone(),
                     model_scientific_sha256: two_way_receipt
                         .resident_model_scientific_sha256
                         .clone(),
                     recipe_id: two_way_receipt.resident_recipe_id,
-                    recipe_document_sha256: two_way_receipt
-                        .resident_recipe_document_sha256
-                        .clone(),
+                    recipe_document_sha256: two_way_receipt.resident_recipe_document_sha256.clone(),
                 },
                 revision: GeneralSemExecutionAuthorityRevisionIdentityV1 {
                     project_id: three_way_project_id,
@@ -4889,9 +4875,7 @@ mod tests {
                     created_at: Utc.with_ymd_and_hms(2026, 8, 22, 8, 2, 0).unwrap(),
                     model_id: "model:strict-v3:three-way".into(),
                     model_name: "Strict V3 three-way revision".into(),
-                    recipe_id: Uuid::from_u128(
-                        0x3254_0000_0000_0000_0000_0000_0000_0031,
-                    ),
+                    recipe_id: Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0031),
                 },
                 intent: GeneralSemExecutionAuthorityRevisionIntentV1::AddModeratingEffectV3 {
                     intent_version: 3,
@@ -4905,8 +4889,8 @@ mod tests {
                     method: GeneralSemRevisionInteractionMethodV1::TwoStage,
                     hierarchy_policy: GeneralSemRevisionHierarchyPolicyV1::Strong,
                 },
-                expected_capability_cell:
-                    pls_general_three_way_moderation_point_capability_cell_v1(),
+                expected_capability_cell: pls_general_three_way_moderation_point_capability_cell_v1(
+                ),
                 recipe_execution_surface:
                     qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
             },
@@ -4942,14 +4926,8 @@ mod tests {
                     _ => None,
                 })
                 .unwrap();
-            assert_canonical_generated_id(
-                relation_id,
-                "general_sem_v1_moderation_main_relation_",
-            );
-            assert_canonical_generated_id(
-                parameter_id,
-                "general_sem_v1_moderation_parameter_",
-            );
+            assert_canonical_generated_id(relation_id, "general_sem_v1_moderation_main_relation_");
+            assert_canonical_generated_id(parameter_id, "general_sem_v1_moderation_parameter_");
         }
         assert_eq!(resident_model.derived_terms.len(), 4);
         assert!(resident_model.derived_terms.iter().all(|term| matches!(
@@ -4959,8 +4937,8 @@ mod tests {
                 ..
             }
         )));
-        let artifact = compile_general_sem_pls_recipe_v1(resident_recipe, Some(resident_model))
-            .unwrap();
+        let artifact =
+            compile_general_sem_pls_recipe_v1(resident_recipe, Some(resident_model)).unwrap();
         assert_eq!(
             artifact.capability_cell(),
             &pls_general_three_way_moderation_point_capability_cell_v1()
@@ -5095,8 +5073,8 @@ mod tests {
         assert_eq!(append.canonical_result_document_count, 1);
         let reopened = load_project_archive_v6(&three_way_path).unwrap();
         assert_eq!(reopened.document.canonical_result_documents.len(), 1);
-        let reopened_canonical = reopened.document.canonical_result_documents[0]
-            .canonical_document();
+        let reopened_canonical =
+            reopened.document.canonical_result_documents[0].canonical_document();
         reopened_canonical.ensure_valid().unwrap();
         validate_archived_general_sem_pls_method_identity_v1(reopened_canonical).unwrap();
     }

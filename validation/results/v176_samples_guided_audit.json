@@ -1,7 +1,7 @@
 {
   "passed": true,
   "section": "v176_samples_guided",
-  "generated_at": "2026-08-13T12:45:43.459775+00:00",
+  "generated_at": "2026-08-23T13:13:46.904348+00:00",
   "checked_files": [
     "src-tauri/src/lib.rs",
     "src-tauri/src/sample_projects.rs",
@@ -33,6 +33,10 @@
     },
     {
       "file": "src/native/NativeDesktopApp.tsx",
+      "label": "organizational identification sample"
+    },
+    {
+      "file": "src/native/NativeDesktopApp.tsx",
       "label": "live launcher binds exact sample action"
     },
     {
@@ -57,11 +61,15 @@
     },
     {
       "file": "src-tauri/src/lib.rs",
-      "label": "corporate sample selector"
+      "label": "typed bundled sample selector"
     },
     {
-      "file": "src-tauri/src/lib.rs",
-      "label": "typed bundled sample selector"
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "corporate reputation backend identity"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "organizational identification backend identity"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",

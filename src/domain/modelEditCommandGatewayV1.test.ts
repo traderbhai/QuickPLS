@@ -67,6 +67,7 @@ describe("model edit command gateway v1 domain", () => {
     expect(modelEditTransactionClassV1({ kind: "tidy_constructs", constructIds: ["x", "y"] })).toBe("presentation");
     expect(modelEditTransactionClassV1({ kind: "set_construct_pinned", constructId: "x", pinned: true })).toBe("presentation");
     expect(modelEditTransactionClassV1({ kind: "arrange_model", direction: "horizontal" })).toBe("presentation");
+    expect(modelEditTransactionClassV1({ kind: "set_measurement_connector_routing", constructId: "x", column: "x1", routing: "curved" })).toBe("presentation");
   });
 
   it("derives exact strict intents without changing construct or observed identities", () => {
@@ -160,6 +161,13 @@ describe("model edit command gateway v1 domain", () => {
     layout.constructLayouts.x = { ...layout.constructLayouts.x, pinned: true, width: 188 };
     layout.indicatorLayouts.x.x1 = { side: "right", order: 0, pinned: true };
     layout.edgeLayouts["x-y"] = { routing: "orthogonal", bendPoints: [{ x: 280, y: 80 }], labelOffset: { x: 9, y: -7 }, pinned: true };
+    layout.measurementConnectorLayouts = {
+      x: {
+        x1: { routing: "polyline", bendPoints: [{ x: 180, y: 90 }] },
+        orphan: { routing: "curved" },
+      },
+      missing: { ghost: { routing: "orthogonal" } },
+    };
     layout.diagramViewport = { x: 20, y: 30, zoom: 1.25 };
     layout.moderationAnchorFractions = { "term:xw": 0.42 };
     layout.moderationConnectorBendPoints = { "connector:xw": [{ x: 12, y: 18 }] };
@@ -170,6 +178,9 @@ describe("model edit command gateway v1 domain", () => {
     expect(reconciled.constructLayouts.x).toMatchObject({ pinned: true, width: 188 });
     expect(reconciled.indicatorLayouts.x.x1).toEqual({ side: "right", order: 0, pinned: true });
     expect(reconciled.edgeLayouts["x-y"]).toEqual(layout.edgeLayouts["x-y"]);
+    expect(reconciled.measurementConnectorLayouts).toEqual({
+      x: { x1: { routing: "polyline", bendPoints: [{ x: 180, y: 90 }] } },
+    });
     expect(reconciled.diagramViewport).toEqual(layout.diagramViewport);
     expect(reconciled.moderationAnchorFractions).toEqual(layout.moderationAnchorFractions);
     expect(reconciled.moderationConnectorBendPoints).toEqual(layout.moderationConnectorBendPoints);
@@ -181,6 +192,7 @@ describe("model edit command gateway v1 domain", () => {
     layout.constructLayouts.x = { ...layout.constructLayouts.x, pinned: true };
     layout.indicatorLayouts.x.x1 = { side: "bottom", order: 0, pinned: true };
     layout.edgeLayouts["x-y"] = { routing: "curved", labelOffset: { x: 12, y: -4 }, pinned: true };
+    layout.measurementConnectorLayouts = { x: { x1: { routing: "orthogonal" } } };
     layout.moderationAnchorFractions = { "term:xw": 0.55 };
 
     const arranged = arrangeModelPreservingLayoutV1(nodes, edges, layout, "horizontal");
@@ -188,6 +200,7 @@ describe("model edit command gateway v1 domain", () => {
     expect(arranged.diagramLayout.constructLayouts.x.pinned).toBe(true);
     expect(arranged.diagramLayout.indicatorLayouts.x.x1).toEqual(layout.indicatorLayouts.x.x1);
     expect(arranged.diagramLayout.edgeLayouts["x-y"]).toEqual(layout.edgeLayouts["x-y"]);
+    expect(arranged.diagramLayout.measurementConnectorLayouts).toEqual(layout.measurementConnectorLayouts);
     expect(arranged.diagramLayout.moderationAnchorFractions).toEqual(layout.moderationAnchorFractions);
     expect(arranged.movedConstructIds).not.toContain("x");
   });

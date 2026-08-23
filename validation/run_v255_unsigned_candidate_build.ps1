@@ -3,7 +3,7 @@ param(
     [string]$BuildRoot = "",
     [string]$ArtifactDirectory = "",
     [string]$ReleaseReportPath = "",
-    [string]$Label = "v2_55_0_calculate_evidence"
+    [string]$Label = "v2_55_4_measurement_label_alignment"
 )
 
 # Builds into a brand-new Cargo target directory and preserves artifacts only
@@ -38,8 +38,8 @@ $packageStderr = Join-Path $target "package_release_artifacts.stderr.log"
 foreach ($required in @($python, $npm, $cargo, $packager)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Required build input is missing: $required" }
 }
-if ((Get-Content -LiteralPath (Join-Path $root "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json).version -ne "2.55.0") {
-    throw "The 2.55 candidate build may run only after all version authorities are 2.55.0."
+if ((Get-Content -LiteralPath (Join-Path $root "package.json") -Raw -Encoding UTF8 | ConvertFrom-Json).version -ne "2.55.4") {
+    throw "The 2.55.4 candidate build may run only after all version authorities are 2.55.4."
 }
 if (Test-Path -LiteralPath $target) { throw "BuildRoot must be a brand-new directory: $target" }
 $targetParent = Split-Path -Parent $target
@@ -157,7 +157,7 @@ function New-BuildSessionPayload([bool]$Passed, [object[]]$Commands, $FinalDiskS
         schema_version = 2
         suite_id = "quickpls_unsigned_candidate_build_session_v2"
         passed = $Passed
-        target_release = "2.55.0"
+        target_release = "2.55.4"
         source = $source
         target_directory = [IO.Path]::GetFullPath($target)
         target_preexisting = $false
@@ -276,7 +276,7 @@ if ($buildFailure) {
 foreach ($requiredOutput in @(
     (Join-Path $releaseDir "quickpls-desktop.exe"),
     (Join-Path $releaseDir "qpls.exe"),
-    (Join-Path $releaseDir "bundle\nsis\QuickPLS_2.55.0_x64-setup.exe")
+    (Join-Path $releaseDir "bundle\nsis\QuickPLS_2.55.4_x64-setup.exe")
 )) {
     if (-not (Test-Path -LiteralPath $requiredOutput -PathType Leaf) -or (Get-Item -LiteralPath $requiredOutput).Length -le 0) {
         throw "Candidate build output is missing or empty: $requiredOutput"
@@ -295,7 +295,7 @@ New-Item -ItemType Directory -Path $artifactRoot -Force | Out-Null
 & $python $packager --channel unsigned-preview --label $Label --release-dir $releaseDir --artifact-dir $artifactRoot --report $reportPath --build-session $sessionPath 1> $packageStdout 2> $packageStderr
 if ($LASTEXITCODE -ne 0) { throw "Release artifact preservation failed. See $packageStderr" }
 $releaseReport = Get-Content -LiteralPath $reportPath -Raw -Encoding UTF8 | ConvertFrom-Json
-if ($releaseReport.passed -ne $true -or $releaseReport.schema_version -ne 3 -or $releaseReport.version -ne "2.55.0" -or $releaseReport.source.commit -ne $source.commit) {
+if ($releaseReport.passed -ne $true -or $releaseReport.schema_version -ne 3 -or $releaseReport.version -ne "2.55.4" -or $releaseReport.source.commit -ne $source.commit) {
     throw "The release artifact report is incomplete or is not bound to this build source."
 }
 if (@($releaseReport.artifacts | Where-Object { $_.role -in @("portable", "cli", "setup") -and $_.copy_verified -eq $true }).Count -ne 3) {
@@ -307,7 +307,7 @@ $diskAfter = Get-DiskSnapshot "after unsigned 2.55 candidate build"
     schema_version = 1
     suite_id = "quickpls_v255_unsigned_candidate_build_v1"
     passed = $true
-    target_release = "2.55.0"
+    target_release = "2.55.4"
     source_commit = $source.commit
     source_tree = $source.tree
     source_manifest_sha256 = $source.tracked_manifest_sha256

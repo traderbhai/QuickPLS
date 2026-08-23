@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "sample_id": "corporate_reputation",
+  "source": {
+    "file_name": "Corporate Reputation Data.xlsx",
+    "sheet": "Sheet2",
+    "sha256": "45373b5177b19352d146c0a3b9bc66d58255744b795e453974d1248f816db9cb",
+    "rows": 344,
+    "columns": 41
+  },
+  "selection": {
+    "modeled_indicators": 31,
+    "excluded_columns": [
+      "serviceprovider",
+      "servicetype",
+      "csor_global",
+      "attr_global",
+      "perf_global",
+      "qual_global",
+      "switch_1",
+      "switch_2",
+      "switch_3",
+      "switch_4"
+    ]
+  },
+  "cleaning": {
+    "missing_marker": -99,
+    "missing_cells": 11,
+    "rows_with_missing": 8,
+    "missing_by_column": {
+      "cusl_1": 3,
+      "cusl_2": 4,
+      "cusl_3": 3,
+      "cusa": 1
+    },
+    "treatment": "indicator_mean_replacement",
+    "replacement_means": {
+      "cusl_1": 5.129032258064516,
+      "cusl_2": 5.276470588235294,
+      "cusl_3": 5.651026392961877,
+      "cusa": 5.440233236151603
+    }
+  },
+  "output": {
+    "file_name": "corporate_reputation_smartpls_mean_replaced_v1.csv",
+    "sha256": "2f2b369d74086d8d9646b052fec98991fbb7b870169f106f175c320ace9b97cb",
+    "bytes": 21707,
+    "rows": 344,
+    "columns": 31,
+    "missing_cells": 0,
+    "dataset_fingerprint": "v2:2c46656f75626ca8fae8ca0752326dd5847f96e168dc02fa8195aeadb4a4a836"
+  },
+  "reference": {
+    "file": "validation/benchmarks/corporate_reputation_smartpls/smartpls_reference_v1.json",
+    "sha256": "730c96d062b1724fcd2405da1116d6d4fb34162c02abbb72f5dd51380814f441",
+    "screenshot_sha256": "2d604f98aaeb618469486be3bfea55cc57d1901ad49cab8b5d97dd17504f9ed9",
+    "precision_decimals": 3
+  },
+  "reference_scope": "The completed sample run matches all 48 values visible in the supplied SmartPLS result after rounding to three decimals; this is displayed-value parity, not bitwise equivalence."
+}

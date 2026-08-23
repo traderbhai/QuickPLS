@@ -3092,10 +3092,7 @@ fn open_demo_project(
 }
 
 fn build_sample_project(sample_id: &str) -> Result<Project, String> {
-    match sample_id {
-        "corporate_reputation" => build_demo_project(),
-        other => build_bundled_sample_project(BundledSampleProject::parse(other)?),
-    }
+    build_bundled_sample_project(BundledSampleProject::parse(sample_id)?)
 }
 
 #[tauri::command]
@@ -5303,9 +5300,14 @@ mod desktop_job_tests {
     }
 
     #[test]
-    fn sample_project_selector_opens_only_the_three_advertised_projects() {
+    fn sample_project_selector_opens_only_the_four_advertised_projects() {
         for (sample_id, expected_name, expected_constructs) in [
-            ("corporate_reputation", "Corporate Reputation Sample", 4),
+            ("corporate_reputation", "Corporate Reputation Sample", 8),
+            (
+                "organizational_identification",
+                "Organizational Identification Model",
+                4,
+            ),
             ("simple_pls", "Simple Reflective PLS Sample", 2),
             ("mediation", "Mediation Sample", 3),
         ] {

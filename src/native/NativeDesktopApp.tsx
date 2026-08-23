@@ -195,6 +195,7 @@ import { useWorkspace } from "../store";
 import type {
   AnalysisRun,
   AnalysisUiSettings,
+  DiagramMode,
   InteractionData,
   ModelEditCommandV1,
   NativeCanonicalModelSpec,
@@ -218,6 +219,15 @@ export function completedRunNavigationTarget(
   return status === "completed" && lastRunId && lastRunId !== lastNavigatedCompletedRunId
     ? lastRunId
     : null;
+}
+
+export function diagramModeForNativeSurfaceNavigation(
+  current: DiagramMode,
+  next: NativeSurface,
+): DiagramMode {
+  return next === "model" && (current === "smartpls_result" || current === "publication")
+    ? "sem"
+    : current;
 }
 
 interface StrictDesktopModerationIntentCommonV1 {
@@ -420,7 +430,7 @@ export const NATIVE_BUNDLED_SAMPLE_PROJECTS = [
   {
     id: "corporate_reputation",
     label: "Corporate reputation",
-    detail: "Four constructs and a completed bootstrap-backed PLS-SEM run.",
+    detail: "344 cases, 8 constructs, 31 modeled indicators, 13 paths, and a completed SmartPLS comparison run.",
   },
   {
     id: "simple_pls",
@@ -431,6 +441,11 @@ export const NATIVE_BUNDLED_SAMPLE_PROJECTS = [
     id: "mediation",
     label: "Mediation",
     detail: "Three constructs with completed direct, indirect, and total effects.",
+  },
+  {
+    id: "organizational_identification",
+    label: "Organizational Identification Model",
+    detail: "305 cases, 4 reflective constructs, 21 modeled indicators, 3 paths, and a completed PLS-SEM run.",
   },
 ] as const satisfies ReadonlyArray<{
   id: NativeSampleProjectId;
@@ -957,6 +972,9 @@ export function NativeDesktopApp() {
       });
       return;
     }
+    const workspace = useWorkspace.getState();
+    const nextDiagramMode = diagramModeForNativeSurfaceNavigation(workspace.diagramMode, next);
+    if (nextDiagramMode !== workspace.diagramMode) workspace.setDiagramMode(nextDiagramMode);
     setSurface(next);
     setOpenMenu(null);
     setContextMenu(null);
@@ -3597,7 +3615,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.4</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({

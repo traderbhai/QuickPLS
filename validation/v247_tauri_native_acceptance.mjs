@@ -2258,7 +2258,7 @@ async function inspectBundledSample(sample) {
     pathTable: sample.pathTable,
     pathRows,
   };
-  if (JSON.stringify(visibleSampleIds) !== JSON.stringify(["corporate_reputation", "simple_pls", "mediation"])
+  if (JSON.stringify(visibleSampleIds) !== JSON.stringify(["corporate_reputation", "simple_pls", "mediation", "organizational_identification"])
     || observed.project !== sample.project
     || observed.dataset !== sample.dataset
     || observed.cases !== `${sample.cases} cases`
@@ -12787,12 +12787,12 @@ try {
       {
         id: "corporate_reputation",
         project: "Corporate Reputation Sample",
-        dataset: "corporate_reputation.csv",
-        cases: 12,
-        constructs: 4,
-        paths: 3,
-        runLabel: "PLS-SEM Bootstrapping run",
-        pathTable: "Direct effects",
+        dataset: "corporate_reputation_smartpls_mean_replaced_v1.csv",
+        cases: 344,
+        constructs: 8,
+        paths: 13,
+        runLabel: "PLS-SEM Algorithm run",
+        pathTable: "Path coefficients",
       },
       {
         id: "simple_pls",
@@ -12813,6 +12813,16 @@ try {
         paths: 2,
         runLabel: "PLS-SEM Algorithm run",
         pathTable: "Direct effects",
+      },
+      {
+        id: "organizational_identification",
+        project: "Organizational Identification Model",
+        dataset: "organizational_identification_v1.csv",
+        cases: 305,
+        constructs: 4,
+        paths: 3,
+        runLabel: "PLS-SEM Algorithm run",
+        pathTable: "Path coefficients",
       },
     ];
     const bundledSamples = [];

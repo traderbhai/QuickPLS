@@ -12,6 +12,7 @@ import {
   aboutVisibleAnalysisLabelsV2,
   buildStrictDesktopModerationIntentV1,
   completedRunNavigationTarget,
+  diagramModeForNativeSurfaceNavigation,
   Launcher,
   namedSemAdvancedEqualitySnapshotV1,
   nativeGeneralSemRevisionCommandDisabledReasonV1,
@@ -233,7 +234,7 @@ describe("native desktop multi-model shell contracts", () => {
     }
   });
 
-  it("mounts exactly the three genuine sample choices in the production launcher", () => {
+  it("mounts exactly the four genuine sample choices in the production launcher", () => {
     const markup = renderToStaticMarkup(createElement(Launcher, {
       projectName: "No project open",
       projectPath: null,
@@ -249,12 +250,16 @@ describe("native desktop multi-model shell contracts", () => {
       "corporate_reputation",
       "simple_pls",
       "mediation",
+      "organizational_identification",
     ]);
-    expect(markup.match(/data-sample-id=/g)).toHaveLength(3);
+    expect(markup.match(/data-sample-id=/g)).toHaveLength(4);
     for (const sample of NATIVE_BUNDLED_SAMPLE_PROJECTS) {
       expect(markup).toContain(`data-sample-id="${sample.id}"`);
       expect(markup).toContain(sample.label);
     }
+    expect(markup).toContain("344 cases, 8 constructs, 31 modeled indicators, 13 paths");
+    expect(markup).toContain("Organizational Identification Model");
+    expect(markup).toContain("305 cases, 4 reflective constructs, 21 modeled indicators, 3 paths");
     expect(markup).not.toContain("PLSpredict");
     expect(markup).not.toContain("CB-SEM CFA");
   });
@@ -374,6 +379,18 @@ describe("native desktop multi-model shell contracts", () => {
     expect(source).toContain("projectModels.some((model) => model.id === modelId)");
     expect(source).toContain("const resultModelId = generalSemResultSelected");
     expect(source).toContain('commandEvent("open-explorer-model", { modelId: resultModelId })');
+  });
+
+  it("turns locked result and publication canvases back into an editor when Model opens", () => {
+    expect(diagramModeForNativeSurfaceNavigation("smartpls_result", "model")).toBe("sem");
+    expect(diagramModeForNativeSurfaceNavigation("publication", "model")).toBe("sem");
+    expect(diagramModeForNativeSurfaceNavigation("sem", "model")).toBe("sem");
+    expect(diagramModeForNativeSurfaceNavigation("compact", "model")).toBe("compact");
+    expect(diagramModeForNativeSurfaceNavigation("smartpls_result", "results")).toBe("smartpls_result");
+
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+    expect(source).toContain("diagramModeForNativeSurfaceNavigation(workspace.diagramMode, next)");
+    expect(source).toContain("workspace.setDiagramMode(nextDiagramMode)");
   });
 
   it("shows the active editable model name in the command context and document tab", () => {

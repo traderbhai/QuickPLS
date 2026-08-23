@@ -389,6 +389,7 @@ function presentationLayoutSeed(model: SemModelV4): Partial<DiagramLayoutState> 
     constructLayouts,
     indicatorLayouts: {},
     edgeLayouts,
+    measurementConnectorLayouts: {},
     diagramViewport: model.presentation.zoom === undefined || model.presentation.zoom === null
       ? undefined
       : { x: model.presentation.pan_x ?? 0, y: model.presentation.pan_y ?? 0, zoom: model.presentation.zoom },
@@ -469,7 +470,7 @@ function withoutInternalModerationNotes<T extends Partial<DiagramLayoutState> | 
 function parseDiagramLayout(value: unknown): DiagramLayoutState {
   const layout = exact(
     value,
-    ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "diagramViewport", "diagramTheme", "showGrid", "layoutLocked", "standardSemPresentation", "moderationAnchorFractions", "moderationConnectorBendPoints"],
+    ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "measurementConnectorLayouts", "diagramViewport", "diagramTheme", "showGrid", "layoutLocked", "standardSemPresentation", "moderationAnchorFractions", "moderationConnectorBendPoints"],
     ["diagramVersion", "constructLayouts", "indicatorLayouts", "edgeLayouts", "diagramTheme", "showGrid", "layoutLocked"],
     "layout.diagram_layout",
   );
@@ -500,6 +501,26 @@ function parseDiagramLayout(value: unknown): DiagramLayoutState {
     const labelOffset = item.labelOffset === undefined ? undefined : parsePoint(item.labelOffset, `${id}.labelOffset`);
     edgeLayouts[id] = { routing: item.routing as DiagramLayoutState["edgeLayouts"][string]["routing"], bendPoints: points, labelOffset, pinned: optionalBoolean(item.pinned, `${id}.pinned`) };
   }
+  const measurementConnectorLayouts: DiagramLayoutState["measurementConnectorLayouts"] = {};
+  for (const [constructId, rawConnectors] of Object.entries(object(layout.measurementConnectorLayouts ?? {}, "layout.diagram_layout.measurementConnectorLayouts"))) {
+    exactStableId(constructId, `layout.diagram_layout.measurementConnectorLayouts.${constructId}`);
+    const connectors: DiagramLayoutState["measurementConnectorLayouts"][string] = {};
+    for (const [indicator, raw] of Object.entries(object(rawConnectors, `layout.diagram_layout.measurementConnectorLayouts.${constructId}`))) {
+      const item = exact(raw, ["routing", "bendPoints"], ["routing"], `layout.diagram_layout.measurementConnectorLayouts.${constructId}.${indicator}`);
+      if (!["straight", "curved", "orthogonal", "polyline"].includes(String(item.routing))) {
+        fail("standard_sem_projection.measurement_connector_routing_invalid", indicator, "The measurement connector routing is invalid.");
+      }
+      const points = item.bendPoints === undefined ? undefined : parsePoints(item.bendPoints, `${constructId}.${indicator}.bendPoints`);
+      if (points && (points.length < 1 || points.length > 12)) {
+        fail("standard_sem_projection.measurement_connector_points_invalid", indicator, "A measurement connector supports between one and twelve presentation bend points.");
+      }
+      connectors[indicator] = {
+        routing: item.routing as DiagramLayoutState["measurementConnectorLayouts"][string][string]["routing"],
+        ...(points ? { bendPoints: points } : {}),
+      };
+    }
+    if (Object.keys(connectors).length) measurementConnectorLayouts[constructId] = connectors;
+  }
   const viewport = layout.diagramViewport === undefined ? undefined : exact(layout.diagramViewport, ["x", "y", "zoom"], ["x", "y", "zoom"], "layout.diagram_layout.diagramViewport");
   const themes = ["academic_grayscale", "smartpls_like", "quickpls_color", "journal_mono", "high_contrast"] as const;
   if (!themes.includes(layout.diagramTheme as typeof themes[number])) fail("standard_sem_projection.theme_invalid", "layout.diagram_layout.diagramTheme", "The diagram theme is invalid.");
@@ -527,6 +548,7 @@ function parseDiagramLayout(value: unknown): DiagramLayoutState {
     constructLayouts,
     indicatorLayouts,
     edgeLayouts,
+    measurementConnectorLayouts,
     diagramViewport: viewport ? { x: finite(viewport.x, "viewport.x"), y: finite(viewport.y, "viewport.y"), zoom: finite(viewport.zoom, "viewport.zoom") } : undefined,
     diagramTheme: layout.diagramTheme as typeof themes[number],
     showGrid,

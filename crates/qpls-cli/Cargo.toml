@@ -21,6 +21,7 @@ qpls-resampling = { path = "../qpls-resampling" }
 qpls-runner = { path = "../qpls-runner" }
 rust_xlsxwriter.workspace = true
 serde_json.workspace = true
+sha2.workspace = true
 
 [dev-dependencies]
 calamine.workspace = true

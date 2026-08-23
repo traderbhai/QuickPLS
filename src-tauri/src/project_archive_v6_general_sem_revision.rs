@@ -626,11 +626,10 @@ mod tests {
             "standard",
             qpls_project::GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
         );
-        request.revision.intent =
-            GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
-                term_id: "hoc:term".into(),
-                output_id: "hoc:output".into(),
-            };
+        request.revision.intent = GeneralSemExecutionAuthorityRevisionIntentV1::RemoveHigherOrder {
+            term_id: "hoc:term".into(),
+            output_id: "hoc:output".into(),
+        };
         request.revision.expected_capability_cell =
             qpls_core::pls_general_recursive_effects_capability_cell_v1();
         let outcome = revise_using(request, |surface, enabled, cell| {

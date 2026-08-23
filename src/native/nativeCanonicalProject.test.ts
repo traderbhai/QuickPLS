@@ -8,6 +8,7 @@ import type {
 } from "../types";
 import {
   compactNativeWorkspaceRuns,
+  currentNativeModelPresentation,
   nativeModelSnapshotFromCanonical,
   nativeRunFromCanonicalResult,
   reconcileNativeCanonicalProject,
@@ -242,6 +243,33 @@ describe("canonical native project reconciliation", () => {
     expect(reconciled.nodes.every((node) => node.position.x === 700)).toBe(true);
     expect(reconciled.savedReports).toEqual([{ resultId: "result-1", name: "Reviewer view", savedAt: "2026-08-11T12:00:00Z" }]);
     expect(reconciled.explorerSelection).toEqual({ kind: "model", modelId: second.id });
+  });
+
+  it("round-trips measurement connector routes through the native project presentation snapshot", () => {
+    const canonicalModel = model();
+    const source = nativeModelSnapshotFromCanonical(canonicalModel);
+    source.diagramLayout!.measurementConnectorLayouts = {
+      x: {
+        x1: { routing: "polyline", bendPoints: [{ x: 180, y: 72 }, { x: 260, y: 144 }] },
+        x2: { routing: "curved" },
+      },
+    };
+    const presentation = currentNativeModelPresentation(source.nodes, source.edges, source.diagramLayout!);
+    const persisted = JSON.parse(JSON.stringify({
+      models: [canonicalModel],
+      recipes: [],
+      results: [],
+      activeModelId: canonicalModel.id,
+      modelPresentations: { [canonicalModel.id]: presentation },
+      savedReports: [],
+      workspace: null,
+    })) as Pick<NativeProjectSnapshot, "models" | "recipes" | "results" | "activeModelId" | "modelPresentations" | "savedReports" | "workspace">;
+
+    const reopened = reconcileNativeCanonicalProject(persisted);
+
+    expect(reopened.diagramLayout?.measurementConnectorLayouts).toEqual(source.diagramLayout!.measurementConnectorLayouts);
+    expect(reopened.modelPresentations[canonicalModel.id]?.diagramLayout?.measurementConnectorLayouts)
+      .toEqual(source.diagramLayout!.measurementConnectorLayouts);
   });
 
   it("derives the method identity from canonical settings and real resampling artifacts", () => {
