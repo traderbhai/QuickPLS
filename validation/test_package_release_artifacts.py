@@ -326,6 +326,9 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertIn('[string]$Label = "v2_55_5_oi_sample_catalog"', build_wrapper)
         self.assertIn('version -ne "2.55.5"', build_wrapper)
         self.assertIn("QuickPLS_2.55.5_x64-setup.exe", build_wrapper)
+        self.assertIn("function Get-Sha256Upper", build_wrapper)
+        self.assertIn("[Security.Cryptography.SHA256]::Create()", build_wrapper)
+        self.assertNotIn("Get-FileHash", build_wrapper)
 
         self.assertIn(
             "Current source version: **2.55.5**.",

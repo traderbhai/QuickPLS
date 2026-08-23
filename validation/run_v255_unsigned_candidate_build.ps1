@@ -143,8 +143,26 @@ function Get-LogBinding([string]$PathValue) {
     [ordered]@{
         path = $item.FullName
         bytes = [long]$item.Length
-        sha256 = (Get-FileHash -LiteralPath $item.FullName -Algorithm SHA256).Hash.ToUpperInvariant()
+        sha256 = Get-Sha256Upper $item.FullName
     }
+}
+
+function Get-Sha256Upper([string]$PathValue) {
+    if (-not (Test-Path -LiteralPath $PathValue -PathType Leaf)) {
+        throw "SHA-256 input is missing: $PathValue"
+    }
+    $stream = [IO.File]::OpenRead($PathValue)
+    try {
+        $sha256 = [Security.Cryptography.SHA256]::Create()
+        try {
+            $digest = $sha256.ComputeHash($stream)
+        } finally {
+            $sha256.Dispose()
+        }
+    } finally {
+        $stream.Dispose()
+    }
+    ([BitConverter]::ToString($digest)).Replace("-", "")
 }
 
 function Write-Utf8NoBom([string]$PathValue, [string]$TextValue) {
@@ -312,9 +330,9 @@ $diskAfter = Get-DiskSnapshot "after unsigned 2.55 candidate build"
     source_tree = $source.tree
     source_manifest_sha256 = $source.tracked_manifest_sha256
     release_report = [IO.Path]::GetFullPath($reportPath)
-    release_report_sha256 = (Get-FileHash -LiteralPath $reportPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    release_report_sha256 = Get-Sha256Upper $reportPath
     build_session = $sessionPath
-    build_session_sha256 = (Get-FileHash -LiteralPath $sessionPath -Algorithm SHA256).Hash.ToUpperInvariant()
+    build_session_sha256 = Get-Sha256Upper $sessionPath
     minimum_free_gib = $minimumFreeGiB
     disk_snapshots = @($diskBefore, $diskAfterBuild, $diskAfter)
 } | ConvertTo-Json -Depth 12
