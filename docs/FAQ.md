@@ -14,19 +14,25 @@ The coordinated source version is 2.55.0. Formal first diagnostic
 `20260822T142953Z` at source `2e3a23f` executed all 14 steps and passed 13; the
 sole failure was `frontend_typecheck`, where
 `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
-`TS2339`. The same-script, same-suite formal final diagnostic
-`20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest
-suites, 1697/1697 tests, 17/17 rebaseline assertions,
-and zero captured console errors. Both formal records use runner
-SHA-256 `64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
-the reports are separate evidence records and are not byte-identical.
+`TS2339`. The final consolidated diagnostic `20260823T030939Z` at source
+`e5723df08b7205ce75f1887c5f4709f235ad893c` passed 14/14, including 453/453
+Vitest suites, 1724/1724 tests, 17/17 rebaseline assertions, and zero captured
+console errors. Its report is
+`validation/results/v255_consolidated_diagnostics_20260823T030939Z/v255_consolidated_diagnostics.json`,
+has SHA-256 `03da7a8e0db2924d0157eb0cb0ca92e841fffd61f470d5cd16ccd58f87fe9b2a`,
+and is retained in evidence commit `8a727262c07dd38bae38d8154e1662c78fbb8ee7`.
+Both formal records use runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796` and are
+separate evidence records, not byte-identical.
 Renderer console/page errors fail closed, attach-only phases use fresh
 wrapper-owned processes, and candidate/phase/trusted-driver identities and
-hashes are bound. Candidate/install/smoke attempts `20260822T145055Z`,
-`20260822T151222Z`, and every earlier 2.55 candidate, install, or smoke attempt
-are historical and ineligible. One new unsigned 2.55 candidate, isolated
-install, and full installed-and-portable smoke remain pending, followed by
-evidence collection, bundling, and publication. Exactly one case—the actual Windows
+hashes are bound. The superseded final diagnostic `20260823T000930Z`,
+candidate/install/smoke attempts `20260823T004848Z` and `20260823T005212Z`,
+portable probe `20260822T233111Z`, and all prior 2.55 candidate, install, smoke,
+diagnostic, or probe attempts are historical and ineligible. One new unsigned
+2.55 candidate, isolated install, full installed-and-portable smoke, evidence
+collection and bundling, final audit, and publication remain pending. Exactly
+one case—the actual Windows
 200% scaling case—may be `waived`; its real DPI screenshot and receipt remain
 required and the other 54 named cases must pass. If an existing registered
 installation must be removed, only its exact registered uninstaller may be
@@ -133,23 +139,28 @@ and fixed policies that the engine actually implements. The exact 18-method
 catalogue is unchanged. Formal first diagnostic `20260822T142953Z` at source
 `2e3a23f` passed 13 of 14 executed steps; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
-reported TypeScript error `TS2339`. The same-script, same-suite formal final
-diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14, including
-453/453 Vitest suites, 1697/1697 tests, 17/17 rebaseline assertions,
-and zero captured console errors; both formal records used runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
-the reports are separate evidence records and are not byte-identical.
+reported TypeScript error `TS2339`. The final consolidated diagnostic
+`20260823T030939Z` at source `e5723df08b7205ce75f1887c5f4709f235ad893c`
+passed 14/14, including 453/453 Vitest suites, 1724/1724 tests, 17/17 rebaseline
+assertions, and zero captured console errors. Its report is
+`validation/results/v255_consolidated_diagnostics_20260823T030939Z/v255_consolidated_diagnostics.json`,
+has SHA-256 `03da7a8e0db2924d0157eb0cb0ca92e841fffd61f470d5cd16ccd58f87fe9b2a`,
+and is retained in evidence commit `8a727262c07dd38bae38d8154e1662c78fbb8ee7`.
+Both formal records used runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796` and are
+separate evidence records, not byte-identical.
 Renderer console/page errors fail closed and every candidate/phase/trusted-driver
 process role and hash is bound. Exactly one opt-in waiver applies only to the
 actual Windows 200% scaling case; its observed-DPI screenshot and receipt remain
 required, its status remains `waived`, and the other 54 named cases must pass.
-A new candidate, isolated install, full installed-and-portable smoke, the
-evidence bundle, and publication remain pending. See the
+A new candidate, isolated install, full installed-and-portable smoke, evidence
+collection and bundling, final audit, and publication remain pending. See the
 [2.55 release notes](RELEASE_NOTES_V2_55_0.md).
 
-Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
-every earlier 2.55 candidate, install, or smoke attempt are historical and
-ineligible.
+The superseded final diagnostic `20260823T000930Z`, candidate/install/smoke
+attempts `20260823T004848Z` and `20260823T005212Z`, portable probe
+`20260822T233111Z`, and all prior 2.55 candidate, install, smoke, diagnostic, or
+probe attempts are historical and ineligible.
 The focused 17/17 source test covers the exact typed identity correction, not a
 packaged executable. The install wrapper separately accepts only the exact
 Tauri `UNK` → `NSS` three-byte marker change and rejects any other byte

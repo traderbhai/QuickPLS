@@ -1,22 +1,26 @@
 # QuickPLS Installation
 
-Current source version: **2.54.0**. Formal first diagnostic `20260822T142953Z`
+Current source version: **2.55.0**. Formal first diagnostic `20260822T142953Z`
 at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was
 `frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
-reported TypeScript error `TS2339`. The same-script, same-suite formal final
-diagnostic `20260822T155928Z` at source `6aa92b7` passed 14/14,
-including 453/453 Vitest suites, 1697/1697 tests, all 17 rebaseline assertions,
-and zero captured console errors. Both formal records use runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
-the reports are separate evidence records and are not byte-identical.
-A new provenance-bound unsigned setup, portable, CLI, and checksum package,
-its isolated install, and full installed-and-portable smoke remain pending,
-followed by evidence collection, bundling, and publication. Code signing is
-excluded. Exactly one case—the actual Windows 200% scaling case—may use the
+reported TypeScript error `TS2339`. The final consolidated diagnostic
+`20260823T030939Z` at source `e5723df08b7205ce75f1887c5f4709f235ad893c`
+passed 14/14, including 453/453 Vitest suites, 1724/1724 tests, 17/17
+interactions, and zero captured console errors. Its report is
+`validation/results/v255_consolidated_diagnostics_20260823T030939Z/v255_consolidated_diagnostics.json`,
+has SHA-256 `03da7a8e0db2924d0157eb0cb0ca92e841fffd61f470d5cd16ccd58f87fe9b2a`,
+and is retained in evidence commit `8a727262c07dd38bae38d8154e1662c78fbb8ee7`.
+Both formal records use runner SHA-256
+`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796` and are
+separate evidence records, not byte-identical. A new provenance-bound unsigned
+setup, portable, CLI, and checksum package, its isolated install, full
+installed-and-portable smoke, evidence collection and bundling, final audit,
+and publication remain pending. Code signing is excluded. Exactly one
+case—the actual Windows 200% scaling case—may use the
 opt-in waiver; its real observed DPI screenshot and receipt remain required,
 its status remains `waived`, and the other 54 named cases must pass.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and every earlier local 2.55 candidate, install, or smoke attempt are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new candidate build, isolated install, and full installed-and-portable smoke remain pending, followed by evidence collection, bundling, and publication; no 2.55 download or installed-app success is claimed.
+Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. The superseded final diagnostic `20260823T000930Z`, candidate/install/smoke attempts `20260823T004848Z` and `20260823T005212Z`, portable probe `20260822T233111Z`, and all prior local 2.55 candidate, install, smoke, diagnostic, or probe attempts are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new candidate build, isolated install, full installed-and-portable smoke, evidence collection and bundling, final audit, and publication remain pending; no 2.55 download or installed-app success is claimed.
 
 ## Choose An Install Type
 
