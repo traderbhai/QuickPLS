@@ -1,0 +1,11 @@
+[plugin vite:reporter] 
+(!) D:/QuickPLS/src/store.ts is dynamically imported by D:/QuickPLS/src/services/projectService.ts but also statically imported by D:/QuickPLS/src/components/ConstructNode.tsx, D:/QuickPLS/src/components/IndicatorNode.tsx, D:/QuickPLS/src/components/LatentNode.tsx, D:/QuickPLS/src/components/ModelCanvas.tsx, D:/QuickPLS/src/components/SemEdge.tsx, D:/QuickPLS/src/components/SettingsWorkspace.tsx, D:/QuickPLS/src/internalProjectArchiveV6SessionStore.ts, D:/QuickPLS/src/native/NativeDataSurface.tsx, D:/QuickPLS/src/native/NativeDesktopApp.tsx, D:/QuickPLS/src/native/NativeDesktopController.tsx, D:/QuickPLS/src/native/NativeExportDialog.tsx, D:/QuickPLS/src/native/NativeModelInspector.tsx, D:/QuickPLS/src/native/NativeRecipeV4CbsemWorkspace.tsx, D:/QuickPLS/src/native/NativeRecipeV4GeneralSemWorkspace.tsx, D:/QuickPLS/src/native/NativeResultsSurface.tsx, D:/QuickPLS/src/native/NativeSemParameterTable.tsx, D:/QuickPLS/src/native/NativeUtilityDialog.tsx, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) D:/QuickPLS/src/internalProjectArchiveV6SessionStore.ts is dynamically imported by D:/QuickPLS/src/services/projectService.ts but also statically imported by D:/QuickPLS/src/components/InternalProjectArchiveV6SessionPanel.tsx, D:/QuickPLS/src/native/NativeDataSurface.tsx, D:/QuickPLS/src/native/NativeDesktopApp.tsx, D:/QuickPLS/src/native/NativeDesktopController.tsx, D:/QuickPLS/src/native/NativeRecipeV4CbsemWorkspace.tsx, D:/QuickPLS/src/native/NativeRecipeV4GeneralSemWorkspace.tsx, dynamic import will not move module into another chunk.
+
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.

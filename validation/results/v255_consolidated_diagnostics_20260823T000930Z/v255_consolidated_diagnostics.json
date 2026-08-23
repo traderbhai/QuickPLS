@@ -1,0 +1,1522 @@
+{
+    "schema_version":  1,
+    "suite_id":  "quickpls_v255_calculate_evidence_consolidated_diagnostics_v1",
+    "target_release":  "2.55.0",
+    "version_authority":  "2.54.0 until this gate, remediation, packaged smoke, and release evidence all pass",
+    "source":  {
+                   "commit":  "d5b508aa9e8703dfc169a9f224ee76d9a2796d02",
+                   "worktree_clean":  true,
+                   "package_version":  "2.54.0",
+                   "gate_script":  "validation/run_v255_consolidated_diagnostics.ps1",
+                   "gate_script_sha256":  "64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796"
+               },
+    "passed":  true,
+    "policy":  {
+                   "serial":  true,
+                   "maximum_concurrent_calculations":  1,
+                   "code_signing":  false,
+                   "repeated_scientific_qualification_matrices":  false,
+                   "batch_fix_then_identical_rerun":  true,
+                   "canonical_parameters_locked":  true,
+                   "minimum_free_gib_exclusive":  20,
+                   "emergency_free_gib_exclusive":  20.25,
+                   "disk_watch_interval_milliseconds":  500,
+                   "default_disk_step_headroom_gib":  0.5,
+                   "cargo_incremental":  0,
+                   "cargo_target_dir":  "D:\\QuickPLS\\target",
+                   "target_drive_reused":  "D: workspace target",
+                   "tools":  {
+                                 "CargoPath":  {
+                                                   "requested":  "cargo",
+                                                   "resolved_path":  "C:\\Users\\mohd.naved\\.cargo\\bin\\cargo.exe",
+                                                   "sha256":  "86478e53f769379d7f0ebfa7c9aa97cb76ca92233f79aa2cc0dbee2efaac73c7"
+                                               },
+                                 "NpmPath":  {
+                                                 "requested":  "npm.cmd",
+                                                 "resolved_path":  "C:\\Program Files\\nodejs\\npm.cmd",
+                                                 "sha256":  "21b46c69ad6e2f231f02a9e120f4ba6c8e75fef5a45637103002eab99f888ab8"
+                                             },
+                                 "NodePath":  {
+                                                  "requested":  "node",
+                                                  "resolved_path":  "C:\\Program Files\\nodejs\\node.exe",
+                                                  "sha256":  "33b1bc1a8aca11fd5a4f2699e51019c63c0af30cf437701d07af69be7706771b"
+                                              },
+                                 "PythonPath":  {
+                                                    "requested":  "python",
+                                                    "resolved_path":  "C:\\Python313\\python.exe",
+                                                    "sha256":  "03573716a7fcbd8b7fed8fe0163bbfbd3a852546920d6a666123f307c8dac7d9"
+                                                },
+                                 "GitPath":  {
+                                                 "requested":  "git",
+                                                 "resolved_path":  "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\Git\\cmd\\git.exe",
+                                                 "sha256":  "81ef35ae005ca9318018d18e3327578ce939fb99feaad6b2d7c8ab15f3de8db5"
+                                             }
+                             },
+                   "step_reserves_gib":  {
+                                             "frontend_full_vitest":  2.5,
+                                             "rust_authority":  2.5,
+                                             "rust_archive_schema6_authoring":  2.5,
+                                             "rust_archive_three_way":  2.5,
+                                             "rust_desktop_three_way":  2.5,
+                                             "frontend_typecheck":  1,
+                                             "frontend_build":  1.5,
+                                             "python_export_semantic_readback":  0.5,
+                                             "rebaselined_interactions":  0.5,
+                                             "method_setup_crawler":  0.5
+                                         }
+               },
+    "summary":  {
+                    "total":  14,
+                    "failed":  [
+
+                               ],
+                    "skipped":  [
+
+                                ]
+                },
+    "artifacts":  {
+                      "vitest_report":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_full_vitest.json",
+                      "vitest_report_sha256":  "d4038ee3317e083373cbc1e2027674d84259e4cf2458fc57f3edd1e0d894167a",
+                      "rebaseline_report":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\interaction_contracts\\v255_rebased_interaction_contracts.json",
+                      "rebaseline_report_sha256":  "0965efc3a7dc538466f5859182d7b9172cad1a832b7c92942e3f9bf26e1d8597",
+                      "source_contract_audit":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_source_contract_audit.json",
+                      "source_contract_audit_sha256":  "f5300f76bfd57b25f4c233982dcab0744803a3b85dbceeaebbc6c59c7e0ad8b7",
+                      "final_contract_audit":  "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_final_contract_audit.json",
+                      "final_contract_audit_sha256":  "766eb0a3b082cfa121394d0f17b4c41de10e4c0551ed4f0ed788f54f7cc213b0"
+                  },
+    "disk_snapshots":  [
+                           {
+                               "label":  "before_consolidated_pass",
+                               "captured_at":  "2026-08-23T00:09:32.1698126Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.37,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.322,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_full_vitest",
+                               "captured_at":  "2026-08-23T00:09:34.1659043Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.37,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.322,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_full_vitest",
+                               "captured_at":  "2026-08-23T00:10:23.8709935Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_authority",
+                               "captured_at":  "2026-08-23T00:10:23.9077911Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_authority",
+                               "captured_at":  "2026-08-23T00:10:30.0496219Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_archive_schema6_authoring",
+                               "captured_at":  "2026-08-23T00:10:30.0913552Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_archive_schema6_authoring",
+                               "captured_at":  "2026-08-23T00:10:32.8800276Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_archive_three_way",
+                               "captured_at":  "2026-08-23T00:10:32.9204159Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_archive_three_way",
+                               "captured_at":  "2026-08-23T00:10:35.7391712Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_rust_desktop_three_way",
+                               "captured_at":  "2026-08-23T00:10:35.7762361Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.326,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  22.5,
+                                                  "reserved_headroom_gib":  2.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_rust_desktop_three_way",
+                               "captured_at":  "2026-08-23T00:12:29.0088235Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_typecheck",
+                               "captured_at":  "2026-08-23T00:12:29.0435739Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  21,
+                                                  "reserved_headroom_gib":  1,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  21,
+                                                  "reserved_headroom_gib":  1,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_typecheck",
+                               "captured_at":  "2026-08-23T00:12:56.6425313Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_frontend_build",
+                               "captured_at":  "2026-08-23T00:12:56.6716133Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  21.5,
+                                                  "reserved_headroom_gib":  1.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  21.5,
+                                                  "reserved_headroom_gib":  1.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_frontend_build",
+                               "captured_at":  "2026-08-23T00:13:06.7451426Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_python_export_semantic_readback",
+                               "captured_at":  "2026-08-23T00:13:06.7857344Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_python_export_semantic_readback",
+                               "captured_at":  "2026-08-23T00:13:07.4156010Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_rebaselined_interactions",
+                               "captured_at":  "2026-08-23T00:13:07.4553990Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_rebaselined_interactions",
+                               "captured_at":  "2026-08-23T00:13:08.6357806Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "before_method_setup_crawler",
+                               "captured_at":  "2026-08-23T00:13:08.6734769Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.321,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20.5,
+                                                  "reserved_headroom_gib":  0.5,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_method_setup_crawler",
+                               "captured_at":  "2026-08-23T00:13:22.6141761Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.319,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           },
+                           {
+                               "label":  "after_consolidated_pass",
+                               "captured_at":  "2026-08-23T00:13:23.6370650Z",
+                               "passed":  true,
+                               "drives":  [
+                                              {
+                                                  "name":  "C",
+                                                  "free_gib":  25.325,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              },
+                                              {
+                                                  "name":  "D",
+                                                  "free_gib":  25.319,
+                                                  "floor_gib_exclusive":  20,
+                                                  "required_free_gib_exclusive":  20,
+                                                  "reserved_headroom_gib":  0,
+                                                  "passed":  true
+                                              }
+                                          ]
+                           }
+                       ],
+    "steps":  [
+                  {
+                      "id":  "diff_check",
+                      "description":  "Git whitespace-error check",
+                      "executable":  "C:\\Users\\mohd.naved\\AppData\\Local\\Programs\\Git\\cmd\\git.exe",
+                      "arguments":  [
+                                        "diff",
+                                        "--check"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  187,
+                      "stdout":  "logs/diff_check.stdout.log",
+                      "stderr":  "logs/diff_check.stderr.log",
+                      "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:09:32.2334436Z",
+                      "ended_at":  "2026-08-23T00:09:32.4327588Z",
+                      "disk_watcher":  null
+                  },
+                  {
+                      "id":  "v255_evidence_contract",
+                      "description":  "Validate the 18-method evidence matrix and interaction-first rebaseline",
+                      "executable":  "C:\\Python313\\python.exe",
+                      "arguments":  [
+                                        "validation/v255_product_completion_audit.py",
+                                        "--output",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_source_contract_audit.json"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  1067,
+                      "stdout":  "logs/v255_evidence_contract.stdout.log",
+                      "stderr":  "logs/v255_evidence_contract.stderr.log",
+                      "stdout_sha256":  "c2ef6ecf2a3bd038d5b13a3d4acfc9ce4f27afbd558e6123874b35751dd780d9",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:09:32.4347859Z",
+                      "ended_at":  "2026-08-23T00:09:33.5129565Z",
+                      "disk_watcher":  null
+                  },
+                  {
+                      "id":  "v255_rebased_contract",
+                      "description":  "Validate the 17 replacement interaction contracts",
+                      "executable":  "C:\\Program Files\\nodejs\\node.exe",
+                      "arguments":  [
+                                        "validation/v255_rebased_interaction_contracts.mjs",
+                                        "--mode",
+                                        "contract"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  569,
+                      "stdout":  "logs/v255_rebased_contract.stdout.log",
+                      "stderr":  "logs/v255_rebased_contract.stderr.log",
+                      "stdout_sha256":  "e64560f5ab535aab3ec96988b2a87b8aa3978724738a827a493a04172c7a0b3f",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:09:33.5143850Z",
+                      "ended_at":  "2026-08-23T00:09:34.1076647Z",
+                      "disk_watcher":  null
+                  },
+                  {
+                      "id":  "frontend_full_vitest",
+                      "description":  "One full current frontend and domain Vitest traversal with machine-readable assertions",
+                      "executable":  "C:\\Program Files\\nodejs\\npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "test",
+                                        "--",
+                                        "--reporter=json",
+                                        "--outputFile",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_full_vitest.json"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  49648,
+                      "stdout":  "logs/frontend_full_vitest.stdout.log",
+                      "stderr":  "logs/frontend_full_vitest.stderr.log",
+                      "stdout_sha256":  "7f8bcdace730d2cd1c3cecdcb1b4e46726f6d1e0b151014ecb20f032d6a5e14a",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:09:34.1684039Z",
+                      "ended_at":  "2026-08-23T00:10:23.8259078Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  34180,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  82,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.3,
+                                                                    "D":  25.322
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_full_vitest",
+                                                       "captured_at":  "2026-08-23T00:09:34.1659043Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.37,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.322,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_full_vitest",
+                                                      "captured_at":  "2026-08-23T00:10:23.8709935Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.326,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_authority",
+                      "description":  "Focused exact Registry authority test",
+                      "executable":  "C:\\Users\\mohd.naved\\.cargo\\bin\\cargo.exe",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-core",
+                                        "embedded_registry_is_the_exact_option_cell_authority",
+                                        "--",
+                                        "--nocapture"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  6090,
+                      "stdout":  "logs/rust_authority.stdout.log",
+                      "stderr":  "logs/rust_authority.stderr.log",
+                      "stdout_sha256":  "15ac3cb7470f748f862c85ccaa73929867f7748c4f9b4ab6dece088a8f7f4460",
+                      "stderr_sha256":  "d8d228ca819385b3dd40909db28bd56c427fc26258484306dabc1d917a3b6bb9",
+                      "started_at":  "2026-08-23T00:10:23.9105188Z",
+                      "ended_at":  "2026-08-23T00:10:30.0135365Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  26516,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  11,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.326,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_authority",
+                                                       "captured_at":  "2026-08-23T00:10:23.9077911Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.326,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_authority",
+                                                      "captured_at":  "2026-08-23T00:10:30.0496219Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.326,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_archive_schema6_authoring",
+                      "description":  "Focused schema-6 author/save/reopen authority test",
+                      "executable":  "C:\\Users\\mohd.naved\\.cargo\\bin\\cargo.exe",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-project",
+                                        "--test",
+                                        "schema6_sem_model_v4_authoring_shapes",
+                                        "section_3_1_shapes_author_serialize_and_reopen_through_standalone_schema6",
+                                        "--",
+                                        "--exact",
+                                        "--nocapture"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  2739,
+                      "stdout":  "logs/rust_archive_schema6_authoring.stdout.log",
+                      "stderr":  "logs/rust_archive_schema6_authoring.stderr.log",
+                      "stdout_sha256":  "efcf7c7c3eaaf57e20c8702a1e8635ac718371a844ce2042adf83811ae0ca60c",
+                      "stderr_sha256":  "2bed4bd692fb427382e87a893925ac4afa59d0a9dac192d6a31aac43df17fda4",
+                      "started_at":  "2026-08-23T00:10:30.0923553Z",
+                      "ended_at":  "2026-08-23T00:10:32.8393919Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  25260,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  5,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.326,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_archive_schema6_authoring",
+                                                       "captured_at":  "2026-08-23T00:10:30.0913552Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.326,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_archive_schema6_authoring",
+                                                      "captured_at":  "2026-08-23T00:10:32.8800276Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.326,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_archive_three_way",
+                      "description":  "Focused three-way canonical append/reopen/tamper lifecycle",
+                      "executable":  "C:\\Users\\mohd.naved\\.cargo\\bin\\cargo.exe",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "qpls-project",
+                                        "project_schema_v6::tests::three_way_canonical_append_reopen_and_tamper_fail_closed",
+                                        "--lib",
+                                        "--",
+                                        "--exact",
+                                        "--nocapture"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  2764,
+                      "stdout":  "logs/rust_archive_three_way.stdout.log",
+                      "stderr":  "logs/rust_archive_three_way.stderr.log",
+                      "stdout_sha256":  "acbf0ce96b9ec4b9dfdf1f80b66edd80f23945c12791ddba0d2ae31117844b82",
+                      "stderr_sha256":  "ec7d1dbf7c4a3e283c670844abb4bf1e2fb6f98f1ac42d4cf9a153513a898b8a",
+                      "started_at":  "2026-08-23T00:10:32.9224219Z",
+                      "ended_at":  "2026-08-23T00:10:35.6966110Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  65956,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  5,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.326,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_archive_three_way",
+                                                       "captured_at":  "2026-08-23T00:10:32.9204159Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.326,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_archive_three_way",
+                                                      "captured_at":  "2026-08-23T00:10:35.7391712Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.326,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rust_desktop_three_way",
+                      "description":  "Focused desktop three-way execute/build/append/reopen lifecycle",
+                      "executable":  "C:\\Users\\mohd.naved\\.cargo\\bin\\cargo.exe",
+                      "arguments":  [
+                                        "test",
+                                        "--locked",
+                                        "-p",
+                                        "quickpls-desktop",
+                                        "recipe_v4_general_sem_canonical_result::tests::strict_v3_colon_ids_execute_build_append_and_reopen_three_way_canonical_result",
+                                        "--lib",
+                                        "--",
+                                        "--exact",
+                                        "--nocapture"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  113142,
+                      "stdout":  "logs/rust_desktop_three_way.stdout.log",
+                      "stderr":  "logs/rust_desktop_three_way.stderr.log",
+                      "stdout_sha256":  "111b488be443f87bcca41da92e13ea90eb5ba355a15ba7466835860a02f8b9bc",
+                      "stderr_sha256":  "a7ab55f0211a6a58cc4de038c4ea9b8410aecc4e888ac66e9291058419983683",
+                      "started_at":  "2026-08-23T00:10:35.7772368Z",
+                      "ended_at":  "2026-08-23T00:12:28.9622411Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  14188,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  196,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.324,
+                                                                    "D":  23.907
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rust_desktop_three_way",
+                                                       "captured_at":  "2026-08-23T00:10:35.7762361Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.326,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  22.5,
+                                                                          "reserved_headroom_gib":  2.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rust_desktop_three_way",
+                                                      "captured_at":  "2026-08-23T00:12:29.0088235Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "frontend_typecheck",
+                      "description":  "Full frontend typecheck",
+                      "executable":  "C:\\Program Files\\nodejs\\npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "typecheck:full"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  27537,
+                      "stdout":  "logs/frontend_typecheck.stdout.log",
+                      "stderr":  "logs/frontend_typecheck.stderr.log",
+                      "stdout_sha256":  "0c630adacdba0fd4cedb9fba6442a9794325ae7d04ef3de291e07f3796536c9e",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:12:29.0505495Z",
+                      "ended_at":  "2026-08-23T00:12:56.5931045Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  63292,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  50,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.325,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_typecheck",
+                                                       "captured_at":  "2026-08-23T00:12:29.0435739Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.325,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  21,
+                                                                          "reserved_headroom_gib":  1,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  21,
+                                                                          "reserved_headroom_gib":  1,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_typecheck",
+                                                      "captured_at":  "2026-08-23T00:12:56.6425313Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "frontend_build",
+                      "description":  "Production frontend bundle",
+                      "executable":  "C:\\Program Files\\nodejs\\npm.cmd",
+                      "arguments":  [
+                                        "run",
+                                        "build:bundle"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  10002,
+                      "stdout":  "logs/frontend_build.stdout.log",
+                      "stderr":  "logs/frontend_build.stderr.log",
+                      "stdout_sha256":  "eb2693524a3712ae24e9ae92785ebcc5ad60a8ac8afc6fb63254ce233076ed0c",
+                      "stderr_sha256":  "d25b83d1f0560d83552f4c747337c122e993dbca8d0194be22596e2b2da99b5d",
+                      "started_at":  "2026-08-23T00:12:56.6716133Z",
+                      "ended_at":  "2026-08-23T00:13:06.6996334Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  32556,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  18,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.32,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_frontend_build",
+                                                       "captured_at":  "2026-08-23T00:12:56.6716133Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.325,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  21.5,
+                                                                          "reserved_headroom_gib":  1.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  21.5,
+                                                                          "reserved_headroom_gib":  1.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_frontend_build",
+                                                      "captured_at":  "2026-08-23T00:13:06.7451426Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "python_export_semantic_readback",
+                      "description":  "Focused canonical CSV/XLSX/HTML/PDF/SVG/PNG semantic export readback",
+                      "executable":  "C:\\Python313\\python.exe",
+                      "arguments":  [
+                                        "validation/test_general_sem_rank0_export_semantic_readback.py"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  582,
+                      "stdout":  "logs/python_export_semantic_readback.stdout.log",
+                      "stderr":  "logs/python_export_semantic_readback.stderr.log",
+                      "stdout_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "stderr_sha256":  "690849f59fed16caab16b14bcffc1df7f1a7512354ddc67284d0dc2c63d73c1c",
+                      "started_at":  "2026-08-23T00:13:06.7878506Z",
+                      "ended_at":  "2026-08-23T00:13:07.3708615Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  50832,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  1,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.325,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_python_export_semantic_readback",
+                                                       "captured_at":  "2026-08-23T00:13:06.7857344Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.325,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_python_export_semantic_readback",
+                                                      "captured_at":  "2026-08-23T00:13:07.4156010Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "rebaselined_interactions",
+                      "description":  "1024x700 interaction evidence reconciled with exact Vitest assertions",
+                      "executable":  "C:\\Program Files\\nodejs\\node.exe",
+                      "arguments":  [
+                                        "validation/v255_rebased_interaction_contracts.mjs",
+                                        "--mode",
+                                        "browser",
+                                        "--evidence-dir",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\interaction_contracts",
+                                        "--vitest-report",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_full_vitest.json",
+                                        "--port",
+                                        "57655"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  1131,
+                      "stdout":  "logs/rebaselined_interactions.stdout.log",
+                      "stderr":  "logs/rebaselined_interactions.stderr.log",
+                      "stdout_sha256":  "0965efc3a7dc538466f5859182d7b9172cad1a832b7c92942e3f9bf26e1d8597",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:13:07.4559043Z",
+                      "ended_at":  "2026-08-23T00:13:08.5973276Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  57516,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  2,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.325,
+                                                                    "D":  25.321
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_rebaselined_interactions",
+                                                       "captured_at":  "2026-08-23T00:13:07.4553990Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.325,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_rebaselined_interactions",
+                                                      "captured_at":  "2026-08-23T00:13:08.6357806Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.321,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "method_setup_crawler",
+                      "description":  "Serial complete Calculate setup and pre-candidate reusable-archive inventory crawl",
+                      "executable":  "C:\\Program Files\\nodejs\\node.exe",
+                      "arguments":  [
+                                        "validation/v255_method_evidence_crawler.mjs",
+                                        "--mode",
+                                        "preview",
+                                        "--result-evidence-phase",
+                                        "source",
+                                        "--evidence-dir",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\method_evidence",
+                                        "--vitest-report",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_full_vitest.json",
+                                        "--port",
+                                        "57656"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  13889,
+                      "stdout":  "logs/method_setup_crawler.stdout.log",
+                      "stderr":  "logs/method_setup_crawler.stderr.log",
+                      "stdout_sha256":  "cb3be05c47a123ac094f4c7ebc2ac2eb927df3948cbcabcf0f7d3313d8fafa47",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:13:08.6754743Z",
+                      "ended_at":  "2026-08-23T00:13:22.5672810Z",
+                      "disk_watcher":  {
+                                           "launched_pid":  9984,
+                                           "process_tree_termination_is_pid_scoped":  true,
+                                           "emergency_free_gib_exclusive":  20.25,
+                                           "poll_interval_milliseconds":  500,
+                                           "stopped_for_low_disk":  false,
+                                           "samples":  25,
+                                           "minimum_free_gib":  {
+                                                                    "C":  25.325,
+                                                                    "D":  25.319
+                                                                }
+                                       },
+                      "disk_gate":  {
+                                        "before":  {
+                                                       "label":  "before_method_setup_crawler",
+                                                       "captured_at":  "2026-08-23T00:13:08.6734769Z",
+                                                       "passed":  true,
+                                                       "drives":  [
+                                                                      {
+                                                                          "name":  "C",
+                                                                          "free_gib":  25.325,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      },
+                                                                      {
+                                                                          "name":  "D",
+                                                                          "free_gib":  25.321,
+                                                                          "floor_gib_exclusive":  20,
+                                                                          "required_free_gib_exclusive":  20.5,
+                                                                          "reserved_headroom_gib":  0.5,
+                                                                          "passed":  true
+                                                                      }
+                                                                  ]
+                                                   },
+                                        "after":  {
+                                                      "label":  "after_method_setup_crawler",
+                                                      "captured_at":  "2026-08-23T00:13:22.6141761Z",
+                                                      "passed":  true,
+                                                      "drives":  [
+                                                                     {
+                                                                         "name":  "C",
+                                                                         "free_gib":  25.325,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     },
+                                                                     {
+                                                                         "name":  "D",
+                                                                         "free_gib":  25.319,
+                                                                         "floor_gib_exclusive":  20,
+                                                                         "required_free_gib_exclusive":  20,
+                                                                         "reserved_headroom_gib":  0,
+                                                                         "passed":  true
+                                                                     }
+                                                                 ]
+                                                  }
+                                    }
+                  },
+                  {
+                      "id":  "v255_final_evidence_contract",
+                      "description":  "Require all 17 rebaselined contracts and hash their reports",
+                      "executable":  "C:\\Python313\\python.exe",
+                      "arguments":  [
+                                        "validation/v255_product_completion_audit.py",
+                                        "--output",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_final_contract_audit.json",
+                                        "--final-stage",
+                                        "--vitest-report",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\v255_full_vitest.json",
+                                        "--rebaseline-report",
+                                        "D:\\QuickPLS\\validation\\results\\v255_consolidated_diagnostics_20260823T000930Z\\interaction_contracts\\v255_rebased_interaction_contracts.json"
+                                    ],
+                      "status":  "passed",
+                      "exit_code":  0,
+                      "error":  null,
+                      "duration_ms":  948,
+                      "stdout":  "logs/v255_final_evidence_contract.stdout.log",
+                      "stderr":  "logs/v255_final_evidence_contract.stderr.log",
+                      "stdout_sha256":  "c8536c8ffaa86b862eeb57f956b2dc5d2c3e4af1a92f8c8e2abc6443bd872718",
+                      "stderr_sha256":  "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+                      "started_at":  "2026-08-23T00:13:22.6141761Z",
+                      "ended_at":  "2026-08-23T00:13:23.5713742Z",
+                      "disk_watcher":  null
+                  }
+              ],
+    "next_gate":  "Run validation/run_v255_installed_portable_smoke.ps1 only after this source diagnostic and its one batch remediation pass succeed."
+}
