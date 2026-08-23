@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { convertLegacyBasicModelV4, parseSemModelV4AuthoringDraft, type LegacyBasicModelV4Input, type SemModelV4, type SemVariableV4 } from "./semModelV4";
+import { convertLegacyBasicModelV4, parseSemModelV4AuthoringDraft, validateSemModelV4, type LegacyBasicModelV4Input, type SemModelV4, type SemVariableV4 } from "./semModelV4";
 import {
   GENERAL_SEM_MODERATING_EFFECT_INTENT_VERSION_V3,
   GENERAL_SEM_INTERACTION_V2_EDITOR_INTENT_VERSION_V1,
@@ -11,6 +11,7 @@ import {
   standardSemGeneralSemInteractionV2OutputIdV1,
   standardSemGeneralSemInteractionV2TermIdV1,
   standardSemGeneralSemModerationV3ThreeWayTermIdV1,
+  standardSemFactorVarianceParameterIdV1,
   standardSemMeasurementRelationIdV1,
   type AddGeneralSemInteractionV2EditorIntentV1,
   type StandardSemModelV4AuthorityRecordV1,
@@ -47,6 +48,37 @@ const observed = (id: string): Extract<SemVariableV4, { kind: "observed" }> => (
   missing_markers: [],
   transformation_lineage: [],
 });
+
+function importedCfaModel(): SemModelV4 {
+  const importedSeed = convertLegacyBasicModelV4({
+    ...legacy,
+    id: "imported-cfa",
+    name: "Imported CFA",
+    constructs: [
+      { id: "m1", name: "Mediator 1", short_name: "M1", mode: "reflective", indicators: ["m11", "m12", "m13"] },
+      { id: "x", name: "Predictor", short_name: "X", mode: "reflective", indicators: ["x1", "x2", "x3"] },
+      { id: "y", name: "Outcome", short_name: "Y", mode: "reflective", indicators: ["y1", "y2", "y3"] },
+    ],
+    paths: [],
+  }, "cbsem_common_factor");
+  const importedVarianceIds = new Map([
+    ["construct:m1", "factor_variance_6d31"],
+    ["construct:x", "factor_variance_78"],
+    ["construct:y", "factor_variance_79"],
+  ]);
+  const replacedParameterIds = new Map(importedSeed.variables.flatMap((variable) => variable.kind === "common_factor"
+    ? [[variable.disturbance_policy.parameter, importedVarianceIds.get(variable.id)!] as const]
+    : []));
+  return parseSemModelV4AuthoringDraft({
+    ...importedSeed,
+    variables: importedSeed.variables.map((variable) => variable.kind === "common_factor"
+      ? { ...variable, disturbance_policy: { ...variable.disturbance_policy, parameter: importedVarianceIds.get(variable.id)! } }
+      : variable),
+    parameters: importedSeed.parameters.map((parameter) => replacedParameterIds.has(parameter.id)
+      ? { ...parameter, id: replacedParameterIds.get(parameter.id)! }
+      : parameter),
+  });
+}
 
 function interactionAuthority(): StandardSemModelV4AuthorityRecordV1 {
   const withModerator = reduceStandardSemModelV4AuthorityV1(authority(), {
@@ -187,6 +219,287 @@ describe("StandardSemModelV4 authority", () => {
     });
     expect(candidate.model.variables).toContainEqual(expect.objectContaining({ id: "construct:z", identification: { kind: "fixed_variance" } }));
     expect(candidate.model.parameters).toContainEqual(expect.objectContaining({ kind: "fixed", value: 1 }));
+  });
+
+  it("preserves imported factor-variance identities across Advanced Parameter equality edits", () => {
+    const imported = importedCfaModel();
+    const factorVarianceIds = new Map(imported.variables.flatMap((variable) => variable.kind === "common_factor"
+      ? [[variable.id, variable.disturbance_policy.parameter] as const]
+      : []));
+    expect([...factorVarianceIds.values()]).toEqual(["factor_variance_6d31", "factor_variance_78", "factor_variance_79"]);
+    expect(imported.parameters.some((parameter) => parameter.id.startsWith("standard:v1:factor-variance:"))).toBe(false);
+
+    const loadingIds = imported.parameters
+      .filter((parameter) => parameter.kind === "free" && parameter.target.kind === "loading" && parameter.target.construct === "construct:m1")
+      .map((parameter) => parameter.id);
+    expect(loadingIds).toHaveLength(2);
+    const first = reduceStandardSemModelV4AuthorityV1(authority(imported), {
+      kind: "set_parameter_specification",
+      parameter_id: loadingIds[0],
+      specification: { kind: "free", start: 0.7, lower: null, upper: null, equality_label: "V255Evidence" },
+    });
+    const second = reduceStandardSemModelV4AuthorityV1(authority(first.model, "b".repeat(64)), {
+      kind: "set_parameter_specification",
+      parameter_id: loadingIds[1],
+      specification: { kind: "free", start: 0.7, lower: null, upper: null, equality_label: "V255Evidence" },
+    });
+
+    expect(second.model.parameters).toHaveLength(imported.parameters.length);
+    expect(second.model.parameters.some((parameter) => parameter.id.startsWith("standard:v1:factor-variance:"))).toBe(false);
+    expect(second.model.variables.flatMap((variable) => variable.kind === "common_factor"
+      ? [[variable.id, variable.disturbance_policy.parameter] as const]
+      : [])).toEqual([...factorVarianceIds.entries()]);
+    for (const parameterId of factorVarianceIds.values()) {
+      const before = imported.parameters.find((parameter) => parameter.id === parameterId)!;
+      const after = second.model.parameters.find((parameter) => parameter.id === parameterId)!;
+      const { label: _beforeLabel, ...beforeAuthority } = before;
+      const { label: _afterLabel, ...afterAuthority } = after;
+      expect(afterAuthority).toEqual(beforeAuthority);
+    }
+    expect(second.model.parameters.filter((parameter) => loadingIds.includes(parameter.id)))
+      .toEqual(expect.arrayContaining(loadingIds.map((id) => expect.objectContaining({ id, kind: "free", equality_label: "V255Evidence" }))));
+    expect(validateSemModelV4(second.model)).toEqual([]);
+  });
+
+  it("retargets an imported factor variance without changing its identity when endogeneity changes", () => {
+    const source = authority();
+    const structural = source.model.relations.find((relation) => relation.kind === "structural");
+    if (!structural || structural.kind !== "structural") throw new Error("Expected an imported structural relationship.");
+    const outcome = source.model.variables.find((variable) => variable.id === structural.target);
+    if (!outcome || outcome.kind !== "common_factor") throw new Error("Expected an imported common-factor outcome.");
+    const parameterId = outcome.disturbance_policy.parameter;
+
+    const removed = reduceStandardSemModelV4AuthorityV1(source, {
+      kind: "delete_relationship",
+      relationship_id: structural.id,
+    });
+    expect(removed.model.variables).toContainEqual(expect.objectContaining({
+      id: outcome.id,
+      disturbance_policy: { kind: "exogenous_variance", parameter: parameterId },
+    }));
+    expect(removed.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      target: { kind: "variance", endpoint: { kind: "variable", id: outcome.id } },
+    }));
+
+    const restored = reduceStandardSemModelV4AuthorityV1(authority(removed.model, "b".repeat(64)), {
+      kind: "add_relationship",
+      relationship_id: "relationship:restored",
+      definition: { kind: "structural", source: structural.source, target: structural.target, label: "Restored path" },
+    });
+    expect(restored.model.variables).toContainEqual(expect.objectContaining({
+      id: outcome.id,
+      disturbance_policy: { kind: "endogenous_disturbance", parameter: parameterId },
+    }));
+    expect(restored.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      target: { kind: "variance", endpoint: { kind: "disturbance_of", id: outcome.id } },
+    }));
+    expect(restored.model.parameters.some((parameter) => parameter.id.startsWith("standard:v1:factor-variance:"))).toBe(false);
+    expect(validateSemModelV4(restored.model)).toEqual([]);
+  });
+
+  it("keeps an imported variance identity through fixed-variance identification and parameter restore", () => {
+    const imported = importedCfaModel();
+    const factor = imported.variables.find((variable) => variable.id === "construct:m1");
+    if (!factor || factor.kind !== "common_factor" || factor.identification.kind !== "marker_loading") {
+      throw new Error("Expected the imported marker-identified factor.");
+    }
+    const parameterId = factor.disturbance_policy.parameter;
+    const marker = factor.identification.indicator;
+
+    const fixed = reduceStandardSemModelV4AuthorityV1(authority(imported), {
+      kind: "set_factor_identification",
+      variable_id: factor.id,
+      identification: { kind: "fixed_variance" },
+    });
+    expect(fixed.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      identification: { kind: "fixed_variance" },
+      disturbance_policy: { kind: "exogenous_variance", parameter: parameterId },
+    }));
+    expect(fixed.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      kind: "fixed",
+      value: 1,
+    }));
+
+    const markerRestored = reduceStandardSemModelV4AuthorityV1(authority(fixed.model, "b".repeat(64)), {
+      kind: "set_factor_identification",
+      variable_id: factor.id,
+      identification: { kind: "marker_loading", indicator: marker },
+    });
+    expect(markerRestored.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      identification: { kind: "marker_loading", indicator: marker },
+      disturbance_policy: { kind: "exogenous_variance", parameter: parameterId },
+    }));
+    expect(markerRestored.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      kind: "free",
+      start: 1,
+      lower: 0,
+    }));
+
+    const overridden = reduceStandardSemModelV4AuthorityV1(authority(markerRestored.model, "c".repeat(64)), {
+      kind: "set_parameter_specification",
+      parameter_id: parameterId,
+      specification: { kind: "fixed", value: 2 },
+    });
+    const parameterRestored = reduceStandardSemModelV4AuthorityV1(authority(overridden.model, "d".repeat(64)), {
+      kind: "restore_parameter",
+      parameter_id: parameterId,
+    });
+    expect(parameterRestored.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      kind: "free",
+    }));
+    expect(parameterRestored.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      disturbance_policy: { kind: "exogenous_variance", parameter: parameterId },
+    }));
+    expect(parameterRestored.model.parameters.some((parameter) => parameter.id.startsWith("standard:v1:factor-variance:"))).toBe(false);
+    expect(validateSemModelV4(parameterRestored.model)).toEqual([]);
+  });
+
+  it("removes an imported factor variance when converting to a composite and creates a new identity only when restored", () => {
+    const imported = importedCfaModel();
+    const factor = imported.variables.find((variable) => variable.id === "construct:m1");
+    if (!factor || factor.kind !== "common_factor" || factor.identification.kind !== "marker_loading") {
+      throw new Error("Expected the imported marker-identified factor.");
+    }
+    const importedParameterId = factor.disturbance_policy.parameter;
+    const standardParameterId = standardSemFactorVarianceParameterIdV1(factor.id);
+    const importedParameter = imported.parameters.find((parameter) => parameter.id === importedParameterId)!;
+    const duplicated = parseSemModelV4AuthoringDraft({
+      ...imported,
+      parameters: [
+        ...imported.parameters,
+        { ...importedParameter, id: standardParameterId, label: "Duplicated factor variance" },
+      ],
+    });
+
+    const composite = reduceStandardSemModelV4AuthorityV1(authority(duplicated), {
+      kind: "set_construct_representation",
+      variable_id: factor.id,
+      representation: { kind: "composite", weighting: { kind: "mode_a" } },
+    });
+    expect(composite.model.variables).toContainEqual(expect.objectContaining({ id: factor.id, kind: "composite" }));
+    expect(composite.model.parameters.some((parameter) => parameter.id === importedParameterId)).toBe(false);
+    expect(composite.model.parameters.some((parameter) => parameter.id === standardParameterId)).toBe(false);
+    expect(composite.model.parameters.some((parameter) => parameter.target.kind === "variance"
+      && parameter.target.endpoint.kind !== "residual_of"
+      && parameter.target.endpoint.id === factor.id)).toBe(false);
+    expect(validateSemModelV4(composite.model)).toEqual([]);
+
+    const restored = reduceStandardSemModelV4AuthorityV1(authority(composite.model, "b".repeat(64)), {
+      kind: "set_construct_representation",
+      variable_id: factor.id,
+      representation: { kind: "common_factor", identification: { kind: "marker_loading", indicator: factor.identification.indicator } },
+    });
+    const restoredParameterId = standardParameterId;
+    expect(restored.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      kind: "common_factor",
+      disturbance_policy: { kind: "exogenous_variance", parameter: restoredParameterId },
+    }));
+    expect(restored.model.parameters.some((parameter) => parameter.id === importedParameterId)).toBe(false);
+    expect(restored.model.parameters.filter((parameter) => parameter.id === restoredParameterId)).toHaveLength(1);
+    expect(validateSemModelV4(restored.model)).toEqual([]);
+  });
+
+  it("preserves a valid fixed-zero disturbance across unrelated edits and retargets it in place with endogeneity", () => {
+    const imported = importedCfaModel();
+    const factor = imported.variables.find((variable) => variable.id === "construct:m1");
+    if (!factor || factor.kind !== "common_factor") throw new Error("Expected the imported common factor.");
+    const parameterId = factor.disturbance_policy.parameter;
+    const fixedZeroToleranceBoundary = 1e-12;
+    const fixedZero = parseSemModelV4AuthoringDraft({
+      ...imported,
+      variables: imported.variables.map((variable) => variable.id === factor.id && variable.kind === "common_factor"
+        ? { ...variable, disturbance_policy: { kind: "fixed_zero", parameter: parameterId } }
+        : variable),
+      parameters: imported.parameters.map((parameter) => parameter.id === parameterId
+        ? { kind: "fixed", id: parameter.id, label: parameter.label, target: parameter.target, value: fixedZeroToleranceBoundary, group_overrides: parameter.group_overrides ?? [] }
+        : parameter),
+    });
+    expect(validateSemModelV4(fixedZero)).toEqual([]);
+
+    const unrelated = reduceStandardSemModelV4AuthorityV1(authority(fixedZero), {
+      kind: "set_model_name",
+      name: "Imported CFA renamed",
+    });
+    expect(unrelated.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      disturbance_policy: { kind: "fixed_zero", parameter: parameterId },
+    }));
+    expect(unrelated.model.parameters.find((parameter) => parameter.id === parameterId))
+      .toEqual(fixedZero.parameters.find((parameter) => parameter.id === parameterId));
+
+    const endogenous = reduceStandardSemModelV4AuthorityV1(authority(unrelated.model, "b".repeat(64)), {
+      kind: "add_relationship",
+      relationship_id: "relationship:x-m1",
+      definition: { kind: "structural", source: "construct:x", target: factor.id, label: "Predictor to mediator" },
+    });
+    expect(endogenous.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      disturbance_policy: { kind: "fixed_zero", parameter: parameterId },
+    }));
+    expect(endogenous.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      kind: "fixed",
+      value: fixedZeroToleranceBoundary,
+      target: { kind: "variance", endpoint: { kind: "disturbance_of", id: factor.id } },
+    }));
+    expect(validateSemModelV4(endogenous.model)).toEqual([]);
+
+    const exogenous = reduceStandardSemModelV4AuthorityV1(authority(endogenous.model, "c".repeat(64)), {
+      kind: "delete_relationship",
+      relationship_id: "relationship:x-m1",
+    });
+    expect(exogenous.model.variables).toContainEqual(expect.objectContaining({
+      id: factor.id,
+      disturbance_policy: { kind: "fixed_zero", parameter: parameterId },
+    }));
+    expect(exogenous.model.parameters).toContainEqual(expect.objectContaining({
+      id: parameterId,
+      kind: "fixed",
+      value: fixedZeroToleranceBoundary,
+      target: { kind: "variance", endpoint: { kind: "variable", id: factor.id } },
+    }));
+    expect(exogenous.model.parameters.some((parameter) => parameter.id.startsWith("standard:v1:factor-variance:"))).toBe(false);
+    expect(validateSemModelV4(exogenous.model)).toEqual([]);
+  });
+
+  it("fails closed when a new factor's generated variance identity already belongs to another parameter", () => {
+    const source = importedCfaModel();
+    const collisionId = standardSemFactorVarianceParameterIdV1("construct:z");
+    const loading = source.relations.find((relation) => relation.kind === "measurement_effect");
+    if (!loading || loading.kind !== "measurement_effect") throw new Error("Expected an imported loading.");
+    const collisionSource = parseSemModelV4AuthoringDraft({
+      ...source,
+      relations: source.relations.map((relation) => relation.id === loading.id
+        ? { ...relation, parameter: collisionId }
+        : relation),
+      parameters: source.parameters.map((parameter) => parameter.id === loading.parameter
+        ? { ...parameter, id: collisionId }
+        : parameter),
+    });
+    expect(validateSemModelV4(collisionSource)).toEqual([]);
+    const before = JSON.stringify(collisionSource);
+
+    expect(() => reduceStandardSemModelV4AuthorityV1(authority(collisionSource), {
+      kind: "add_construct",
+      variable_id: "construct:z",
+      label: "Collision factor",
+      representation: { kind: "common_factor", identification: { kind: "marker_loading", indicator: "observed:z1" } },
+      indicators: [observed("observed:z1"), observed("observed:z2")],
+    })).toThrowError(expect.objectContaining({
+      code: "standard_sem_authority.identity_duplicate",
+      subject: collisionId,
+    }));
+    expect(JSON.stringify(collisionSource)).toBe(before);
+    expect(collisionSource.parameters.find((parameter) => parameter.id === collisionId)?.target.kind).toBe("loading");
   });
 
   it("replaces a HOC atomically while preserving its term, output, and structural relationships", () => {

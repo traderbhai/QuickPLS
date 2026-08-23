@@ -833,7 +833,7 @@ function setFactorIdentification(model: MutableModel, variableId: string, identi
       }
     }
   }
-  const varianceId = standardSemFactorVarianceParameterIdV1(variableId);
+  const varianceId = factor.disturbance_policy.parameter;
   if (previousIdentification.kind === "fixed_variance" && identification.kind !== "fixed_variance") {
     const previousVariance = parameter(model, varianceId);
     if (previousVariance.kind === "fixed" && previousVariance.value === 1) {
@@ -1686,13 +1686,23 @@ function addMeasurement(model: MutableModel, constructId: string, observedId: st
 }
 
 function removeMeasurementBlock(model: MutableModel, constructId: string, removeObservedVariables: boolean) {
+  const current = construct(model, constructId);
+  const disturbanceParameterId = current.kind === "common_factor"
+    ? current.disturbance_policy.parameter
+    : null;
+  const factorVarianceParameterIds = model.parameters.flatMap((parameter) => parameter.target.kind === "variance"
+    && parameter.target.endpoint.id === constructId
+    && (parameter.target.endpoint.kind === "variable" || parameter.target.endpoint.kind === "disturbance_of")
+    ? [parameter.id]
+    : []);
   const relations = model.relations.filter((relation): relation is Extract<SemRelationV4, { kind: "measurement_effect" | "measurement_causal" }> => isMeasurementFor(relation, constructId));
   const observedIds = relations.map(measurementObservedId);
   const relationIds = new Set(relations.map((relation) => relation.id));
   model.relations = model.relations.filter((relation) => !relationIds.has(relation.id));
   removeParameters(model, new Set([
     ...relations.map((relation) => relation.parameter),
-    standardSemFactorVarianceParameterIdV1(constructId),
+    ...factorVarianceParameterIds,
+    ...(disturbanceParameterId ? [disturbanceParameterId] : []),
     standardSemLatentMeanParameterIdV1(constructId),
     ...observedIds.map(standardSemResidualVarianceParameterIdV1),
   ]));
@@ -1703,15 +1713,33 @@ function removeMeasurementBlock(model: MutableModel, constructId: string, remove
 function normalizeFactorDisturbances(model: MutableModel) {
   for (const variable of model.variables) {
     if (variable.kind !== "common_factor") continue;
-    const id = standardSemFactorVarianceParameterIdV1(variable.id);
+    const currentId = variable.disturbance_policy.parameter;
+    const current = model.parameters.find((parameter) => parameter.id === currentId);
+    const currentEndpoint = current?.target.kind === "variance" ? current.target.endpoint : null;
+    const currentIsFactorVariance = currentEndpoint !== null
+      && currentEndpoint.id === variable.id
+      && (currentEndpoint.kind === "variable" || currentEndpoint.kind === "disturbance_of");
+    const preserveFixedZero = currentIsFactorVariance
+      && variable.disturbance_policy.kind === "fixed_zero"
+      && current?.kind === "fixed"
+      && Math.abs(current.value) <= 1e-12;
+    const fallbackId = standardSemFactorVarianceParameterIdV1(variable.id);
+    if (!currentIsFactorVariance && model.parameters.some((parameter) => parameter.id === fallbackId)) {
+      duplicate("parameter", fallbackId);
+    }
+    const id = currentIsFactorVariance ? currentId : fallbackId;
     const endogenous = hasIncomingStructural(model, variable.id);
-    variable.disturbance_policy = endogenous
-      ? { kind: "endogenous_disturbance", parameter: id }
-      : { kind: "exogenous_variance", parameter: id };
+    variable.disturbance_policy = preserveFixedZero
+      ? { kind: "fixed_zero", parameter: id }
+      : endogenous
+        ? { kind: "endogenous_disturbance", parameter: id }
+        : { kind: "exogenous_variance", parameter: id };
     const target: SemParameterTargetV4 = { kind: "variance", endpoint: { kind: endogenous ? "disturbance_of" : "variable", id: variable.id } };
     const existing = model.parameters.find((parameter) => parameter.id === id);
     if (!existing) model.parameters.push(defaultParameter(id, `${endogenous ? "Disturbance variance" : "Variance"}(${variable.label})`, target, 1, 0));
-    else replaceParameter(model, { ...existing, target, label: `${endogenous ? "Disturbance variance" : "Variance"}(${variable.label})` } as SemParameterV4);
+    else replaceParameter(model, preserveFixedZero
+      ? { ...existing, target } as SemParameterV4
+      : { ...existing, target, label: `${endogenous ? "Disturbance variance" : "Variance"}(${variable.label})` } as SemParameterV4);
   }
 }
 
