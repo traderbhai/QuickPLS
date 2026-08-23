@@ -7,6 +7,12 @@ The checked-in evidence is:
 - `validation/fixtures/organizational_identification_v1.csv`
 - `validation/fixtures/organizational_identification_v1.provenance.json`
 - `validation/benchmarks/organizational_identification/screenshot_reference_v1.json`
+- `validation/benchmarks/organizational_identification/mediation_reference_v1.json`
+- `validation/benchmarks/organizational_identification/moderation_reference_v1.json`
+- `validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json`
+- `validation/benchmarks/organizational_identification/higher_order_reference_v1.json`
+
+All four OI-based bundled projects reference the same values-only CSV asset. The fixture is not copied for each alternative model. The moderation reference is retained as benchmark evidence but is not bundled as a sample project.
 
 ## Data preparation
 
@@ -53,3 +59,5 @@ v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a
 ## Interpretation boundary
 
 The screenshot exposes values to three decimals. Passing this benchmark proves equality of the displayed values at that precision; it does not establish bitwise equivalence with unexposed calculations from another engine. A full-precision external result export should be recorded as a separate reference if one becomes available.
+
+The mediation variant matches its supplied screenshot at the displayed three-decimal precision. The supplied moderation screenshot is retained as benchmark evidence but is not bundled: the editable ordinary-project path is scientifically qualified for one interaction, while its exact parallel two-outcome topology belongs to the stricter General SEM workflow. The moderated-mediation sample is explicitly a point topology: it freezes the current qualified single-interaction PLS point result and separately records the nearby supplied screenshot values. The dedicated moderated-mediation method is not bundled because its result is not yet covered by the ordinary-project persistence contract; conditional-effect inference requires a separately qualified workflow. The higher-order reference freezes QuickPLS's supported disjoint two-stage result and separately records the nearby screenshot values, so it does not claim screenshot parity.

@@ -4,6 +4,10 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { defaultDiagramLayout } from "../domain/diagramGraph";
 import {
+  DEFAULT_BUNDLED_SAMPLE_PROJECT_ID,
+  parseNativeSampleProjectId,
+} from "../domain/bundledSampleCatalog";
+import {
   autosaveNativeProject,
   adoptNativeSchema6RevisionSourceV1,
   cancelNativePlsJob,
@@ -682,7 +686,7 @@ export function NativeDesktopController() {
     }
   };
 
-  const openDemoProject = async (sampleId: NativeSampleProjectId = "corporate_reputation") => {
+  const openDemoProject = async (sampleId: NativeSampleProjectId = DEFAULT_BUNDLED_SAMPLE_PROJECT_ID) => {
     if (!isNativeDesktop()) return;
     if (!await confirmWorkspaceReplacement("opening the sample project")) return;
     if (loadNativeSnapshot(await openNativeDemoProject(sampleId))) clearPresentedCanonicalResult();
@@ -1481,7 +1485,8 @@ export function NativeDesktopController() {
       if (path) void openProject(path).catch((error) => pushToast({ tone: "error", title: "Open failed", detail: errorMessage(error) }));
     };
     const onOpenDemo = (event: Event) => {
-      const sampleId = (event as CustomEvent<{ sampleId?: NativeSampleProjectId }>).detail?.sampleId;
+      const requestedSampleId = (event as CustomEvent<{ sampleId?: unknown }>).detail?.sampleId;
+      const sampleId = parseNativeSampleProjectId(requestedSampleId) ?? DEFAULT_BUNDLED_SAMPLE_PROJECT_ID;
       void openDemoProject(sampleId).catch((error) => pushToast({ tone: "error", title: "Demo failed", detail: errorMessage(error) }));
     };
     const onSave = () => { void saveProject(false).catch((error) => pushToast({ tone: "error", title: "Save failed", detail: errorMessage(error) })); };

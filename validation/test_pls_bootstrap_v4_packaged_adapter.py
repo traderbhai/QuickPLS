@@ -17,6 +17,7 @@ if str(VALIDATION) not in sys.path:
     sys.path.insert(0, str(VALIDATION))
 
 import pls_bootstrap_v4_packaged_acceptance as packaged  # noqa: E402
+from packaged_windows_acceptance_v2 import packaged_acceptance_contract_descriptor  # noqa: E402
 
 
 def baseline_report() -> dict:
@@ -233,11 +234,10 @@ class BootstrapV4PackagedAdapterTests(unittest.TestCase):
             "final_scope": "regression_bootstrap",
             "graceful_process_cleanup_verified": True,
             "acceptance_contract": {
-                "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                **packaged_acceptance_contract_descriptor(),
                 "contract_id": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_id"],
                 "contract_version": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_version"],
                 "required_check_count": packaged.EXPECTED_CUMULATIVE_CHECKS,
-                "sha256": packaged.CONTRACT_FILE_SHA256,
             },
             "exports": [
                 {

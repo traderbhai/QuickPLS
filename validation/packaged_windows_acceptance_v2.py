@@ -20,6 +20,8 @@ ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_CONTRACT_PATH = (
     ROOT / "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
 )
+BUNDLED_SAMPLE_CATALOG_PATH = ROOT / "src/data/bundledSampleProjects.v1.json"
+BUNDLED_SAMPLE_CATALOG_REPOSITORY_PATH = "src/data/bundledSampleProjects.v1.json"
 CHECK_ID = re.compile(r"^[A-Za-z][A-Za-z0-9_]*$")
 TOKEN = re.compile(r"^[a-z][a-z0-9_]*$")
 
@@ -177,6 +179,16 @@ PHASE2_RELEASE_CHECK_IDS = phase2_release_required_check_ids(CONTRACT)
 CONTRACT_REPOSITORY_PATH = "validation/capabilities/packaged_windows_acceptance_v2.manifest.json"
 CONTRACT_FILE_SHA256 = hashlib.sha256(DEFAULT_CONTRACT_PATH.read_bytes()).hexdigest()
 CONTRACT_FILE_SIZE = DEFAULT_CONTRACT_PATH.stat().st_size
+BUNDLED_SAMPLE_CATALOG_SHA256 = hashlib.sha256(BUNDLED_SAMPLE_CATALOG_PATH.read_bytes()).hexdigest()
+BUNDLED_SAMPLE_CATALOG_SIZE = BUNDLED_SAMPLE_CATALOG_PATH.stat().st_size
+
+
+def bundled_sample_catalog_descriptor() -> dict[str, Any]:
+    return {
+        "path": BUNDLED_SAMPLE_CATALOG_REPOSITORY_PATH,
+        "size": BUNDLED_SAMPLE_CATALOG_SIZE,
+        "sha256": BUNDLED_SAMPLE_CATALOG_SHA256,
+    }
 
 
 def packaged_acceptance_contract_descriptor() -> dict[str, Any]:
@@ -184,6 +196,7 @@ def packaged_acceptance_contract_descriptor() -> dict[str, Any]:
         "path": CONTRACT_REPOSITORY_PATH,
         "size": CONTRACT_FILE_SIZE,
         "sha256": CONTRACT_FILE_SHA256,
+        "bundled_sample_catalog": bundled_sample_catalog_descriptor(),
     }
 
 
@@ -202,6 +215,7 @@ def receipt_binds_packaged_acceptance_contract(receipt: Any) -> bool:
         and descriptor.get("contract_version") == CONTRACT["contract_version"]
         and descriptor.get("required_check_count") == EXPECTED_CHECK_COUNT
         and descriptor.get("sha256") == CONTRACT_FILE_SHA256
+        and descriptor.get("bundled_sample_catalog") == bundled_sample_catalog_descriptor()
     )
 
 

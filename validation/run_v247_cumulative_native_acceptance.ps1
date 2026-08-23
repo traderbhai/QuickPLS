@@ -13,11 +13,12 @@ $cumulativeReportPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot
 $fullReportPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_tauri_native_acceptance_full.json"))
 $cumulativeReceiptPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results\v247_cumulative_native_acceptance_receipt.json"))
 $acceptanceContractPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\capabilities\packaged_windows_acceptance_v2.manifest.json"))
+$bundledSampleCatalogPath = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "src\data\bundledSampleProjects.v1.json"))
 $resultsDirectory = [System.IO.Path]::GetFullPath((Join-Path $repositoryRoot "validation\results"))
 $cdpEndpoint = "http://127.0.0.1:9222"
 $supervisorStartedUtc = [DateTime]::UtcNow
 
-foreach ($requiredFile in @($desktopExecutable, $cliExecutable, $harnessPath, $closeHelperPath, $cumulativeAssemblerPath, $acceptanceContractPath)) {
+foreach ($requiredFile in @($desktopExecutable, $cliExecutable, $harnessPath, $closeHelperPath, $cumulativeAssemblerPath, $acceptanceContractPath, $bundledSampleCatalogPath)) {
     if (-not (Test-Path -LiteralPath $requiredFile -PathType Leaf)) {
         throw "Required cumulative native acceptance input is missing: $requiredFile"
     }
@@ -619,6 +620,11 @@ $receipt = [pscustomobject]@{
         contract_version = [string]$acceptanceContract.contract_version
         required_check_count = $expectedFinalCheckCount
         sha256 = (Get-FileHash -LiteralPath $acceptanceContractPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        bundled_sample_catalog = [pscustomobject]@{
+            path = "src/data/bundledSampleProjects.v1.json"
+            size = [int64](Get-Item -LiteralPath $bundledSampleCatalogPath).Length
+            sha256 = (Get-FileHash -LiteralPath $bundledSampleCatalogPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
     }
     assembler = [pscustomobject]@{
         path = "validation/assemble_v247_cumulative_native_acceptance.py"

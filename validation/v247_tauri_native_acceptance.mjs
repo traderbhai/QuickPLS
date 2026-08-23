@@ -14,6 +14,138 @@ import {
 
 const execFileAsync = promisify(execFile);
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const bundledSampleCatalogPath = path.join(root, "src", "data", "bundledSampleProjects.v1.json");
+const legacyBundledSampleResultTables = Object.freeze({
+  corporate_reputation: "Path coefficients",
+  simple_pls: "Path coefficients",
+  mediation: "Direct effects",
+  organizational_identification: "Path coefficients",
+});
+const requestedOiBundledSampleIds = Object.freeze([
+  "organizational_identification_mediation",
+  "organizational_identification_moderated_mediation",
+  "organizational_identification_higher_order",
+]);
+const excludedOiBundledSampleId = "organizational_identification_moderation";
+const expectedBundledSampleScopeSubstitutionIds = Object.freeze([
+  "organizational_identification_moderated_mediation",
+  "organizational_identification_higher_order",
+]);
+
+function bundledSampleContractsFromCatalog(catalog) {
+  if (catalog?.schemaVersion !== 1 || !Array.isArray(catalog.datasets)
+    || !catalog.constructSets || typeof catalog.constructSets !== "object" || Array.isArray(catalog.constructSets)
+    || !Array.isArray(catalog.samples) || catalog.samples.length === 0) {
+    throw new Error("The bundled sample catalog must be a non-empty schema-version-1 document.");
+  }
+  const datasets = new Map(catalog.datasets.map((dataset) => [dataset?.id, dataset]));
+  if (datasets.size !== catalog.datasets.length || [...datasets.keys()].some((id) => typeof id !== "string" || !id)) {
+    throw new Error("The bundled sample catalog must contain unique, non-empty dataset identities.");
+  }
+  const sampleIds = catalog.samples.map((sample) => sample?.id);
+  if (new Set(sampleIds).size !== sampleIds.length || sampleIds.some((id) => typeof id !== "string" || !id)) {
+    throw new Error("The bundled sample catalog must contain unique, non-empty sample identities.");
+  }
+  const legacyIds = Object.keys(legacyBundledSampleResultTables);
+  const expectedSampleIds = [...legacyIds, ...requestedOiBundledSampleIds];
+  if (JSON.stringify(sampleIds) !== JSON.stringify(expectedSampleIds)
+    || sampleIds.includes(excludedOiBundledSampleId)
+    || catalog.defaultSampleId !== "corporate_reputation") {
+    throw new Error("The shared catalog must preserve the legacy four and contain only the three selected OI additions.");
+  }
+  const contracts = catalog.samples.map((sample) => {
+    const dataset = datasets.get(sample.datasetId);
+    const acceptance = sample.acceptance;
+    const model = sample.model;
+    const runs = sample.runs;
+    const baseConstructs = model && Array.isArray(catalog.constructSets[model.constructSetId])
+      ? catalog.constructSets[model.constructSetId]
+      : null;
+    if (!dataset || !acceptance || !model || !Array.isArray(model.paths)
+      || !Array.isArray(model.extraConstructs) || !Array.isArray(model.interactions)
+      || !Array.isArray(model.higher_order_constructs) || !Array.isArray(baseConstructs)
+      || !Array.isArray(runs) || runs.length !== 1) {
+      throw new Error(`Bundled sample ${sample.id} is missing its dataset, model, acceptance, or single completed-run contract.`);
+    }
+    const constructs = [...baseConstructs, ...model.extraConstructs];
+    const constructIds = constructs.map((construct) => construct?.id);
+    if (model.paths.length !== acceptance.pathCount || constructs.length !== acceptance.constructCount
+      || new Set(constructIds).size !== constructIds.length
+      || constructIds.some((id) => typeof id !== "string" || !id)) {
+      throw new Error(`Bundled sample ${sample.id} acceptance counts or construct identities do not match its model.`);
+    }
+    const generatedInteractionIds = new Set(model.interactions.map((interaction) => interaction.product_construct));
+    const higherOrderIds = new Set(model.higher_order_constructs.map((higherOrder) => higherOrder.id));
+    if (generatedInteractionIds.size !== model.interactions.length
+      || model.interactions.some((interaction) => !constructIds.includes(interaction.product_construct)
+        || !constructIds.includes(interaction.outcome)
+        || !model.paths.some((candidate) => candidate.source === interaction.product_construct
+          && candidate.target === interaction.outcome))
+      || higherOrderIds.size !== model.higher_order_constructs.length
+      || model.higher_order_constructs.some((higherOrder) => !constructIds.includes(higherOrder.id)
+        || !Array.isArray(higherOrder.components) || higherOrder.components.length < 2
+        || higherOrder.components.some((component) => !constructIds.includes(component)))) {
+      throw new Error(`Bundled sample ${sample.id} has an invalid generated interaction or higher-order contract.`);
+    }
+    const diagramConstructs = constructs.length - generatedInteractionIds.size;
+    const resultPaths = higherOrderIds.size > 0
+      ? model.paths.filter((candidate) => higherOrderIds.has(candidate.source) || higherOrderIds.has(candidate.target)).length
+      : model.paths.filter((candidate) => !generatedInteractionIds.has(candidate.source) && !generatedInteractionIds.has(candidate.target)).length;
+    const run = runs[0];
+    const runLabel = acceptance.runLabel
+      ?? (run?.methodConfig?.kind === "pls_algorithm" ? "PLS-SEM Algorithm run" : null);
+    const resultTable = acceptance.resultTable
+      ?? legacyBundledSampleResultTables[sample.id]
+      ?? (higherOrderIds.size > 0 ? "Higher-order structural paths" : null);
+    const referencePath = acceptance.referencePath ?? null;
+    const referenceScope = sample.metadata?.reference_scope ?? null;
+    const evidenceBoundary = sample.metadata?.evidence_boundary ?? null;
+    if (!Number.isInteger(acceptance.caseCount) || !Number.isInteger(acceptance.constructCount)
+      || !Number.isInteger(acceptance.pathCount) || diagramConstructs < 1 || resultPaths < 1
+      || typeof sample.label !== "string" || !sample.label.trim()
+      || typeof sample.detail !== "string" || !sample.detail.trim()
+      || typeof sample.projectName !== "string" || !sample.projectName
+      || typeof dataset.fileName !== "string" || !dataset.fileName || !runLabel) {
+      throw new Error(`Bundled sample ${sample.id} has an incomplete packaged-acceptance contract.`);
+    }
+    if (referencePath !== null && (typeof referencePath !== "string" || !referencePath
+      || sample.metadata?.smartpls_reference !== referencePath
+      || typeof referenceScope !== "string" || !referenceScope
+      || typeof evidenceBoundary !== "string" || !evidenceBoundary)) {
+      throw new Error(`Bundled sample ${sample.id} has an incomplete scientific-reference disclosure.`);
+    }
+    return Object.freeze({
+      id: sample.id,
+      label: sample.label,
+      detail: sample.detail,
+      project: sample.projectName,
+      datasetId: sample.datasetId,
+      dataset: dataset.fileName,
+      cases: acceptance.caseCount,
+      constructs: constructs.length,
+      diagramConstructs,
+      paths: model.paths.length,
+      resultPaths,
+      runLabel,
+      resultTable,
+      referencePath,
+      referenceScope,
+      evidenceBoundary,
+      scopeSubstitution: typeof evidenceBoundary === "string"
+        && /not_claimed|qualified_scope|close_to/.test(evidenceBoundary),
+    });
+  });
+  const scopeSubstitutionIds = contracts.filter((sample) => sample.scopeSubstitution).map((sample) => sample.id);
+  if (JSON.stringify(scopeSubstitutionIds) !== JSON.stringify(expectedBundledSampleScopeSubstitutionIds)) {
+    throw new Error("The bundled sample catalog must retain exactly the moderated-mediation and higher-order non-parity disclosures.");
+  }
+  return contracts;
+}
+
+const bundledSampleCatalogBytes = await fs.readFile(bundledSampleCatalogPath);
+const bundledSampleCatalogSha256 = createHash("sha256").update(bundledSampleCatalogBytes).digest("hex");
+const bundledSampleCatalog = JSON.parse(bundledSampleCatalogBytes.toString("utf8"));
+const bundledSampleContracts = bundledSampleContractsFromCatalog(bundledSampleCatalog);
 const screenshotDir = path.join(root, "validation", "results", "screens", "v247-native-desktop-acceptance");
 const reportPath = path.join(root, "validation", "results", "v247_tauri_native_acceptance.json");
 const logisticPackagedReportPath = path.join(root, "validation", "results", "logistic_v2_packaged_acceptance.json");
@@ -2223,6 +2355,19 @@ async function openMenuItem(menu, item) {
   await page.getByRole("menuitem", { name: item, exact: true }).click();
 }
 
+async function openBundledSampleResultTable(sample) {
+  let title = sample.resultTable;
+  if (!title) {
+    const availableTitles = (await page.locator('.nd-result-tree [role="treeitem"]').allTextContents())
+      .map((value) => value.trim());
+    title = ["Direct effects", "Path coefficients"].find((candidate) => availableTitles.includes(candidate)) ?? null;
+  }
+  if (!title) {
+    throw new Error(`The live ${sample.id} bundled result did not expose a structural-result table.`);
+  }
+  return { title, rows: await openResultTable(title) };
+}
+
 async function inspectBundledSample(sample) {
   await waitForSurface("launcher");
   const launcher = page.locator('.nd-launcher[aria-label="Project launcher"]');
@@ -2235,30 +2380,42 @@ async function inspectBundledSample(sample) {
   if (await selectedCard.count() !== 1) {
     throw new Error(`The live launcher did not expose exactly one ${sample.id} sample card.`);
   }
+  const cardLabel = (await selectedCard.locator("strong").textContent())?.trim() ?? "";
+  const cardDetail = (await selectedCard.locator("small").textContent())?.trim() ?? "";
   await selectedCard.click();
   await waitForSurface("model");
-  await page.locator(".react-flow__node-latent").nth(sample.constructs - 1)
+  await page.locator(".react-flow__node-latent").nth(sample.diagramConstructs - 1)
     .waitFor({ state: "visible", timeout: 30_000 });
   await openMenuItem("View", "Results");
   await waitForSurface("results");
   const selectedRun = page.locator(".nd-run-select select");
   await selectedRun.waitFor({ state: "visible", timeout: 30_000 });
   const runOptions = (await selectedRun.locator("option").allTextContents()).map((value) => value.trim());
-  const pathRows = await openResultTable(sample.pathTable);
+  const resultTable = await openBundledSampleResultTable(sample);
   const statusItems = page.locator(".nd-statusbar > span");
   const observed = {
     sampleId: sample.id,
     visibleSampleIds,
+    cardLabel,
+    cardDetail,
     project: (await page.locator(".nd-window-project").textContent())?.trim() ?? "",
     dataset: (await statusItems.nth(2).textContent())?.trim() ?? "",
     cases: (await statusItems.nth(3).textContent())?.trim() ?? "",
     renderedConstructs: (await statusItems.nth(4).textContent())?.trim() ?? "",
     runOptions,
     selectedRunId: await selectedRun.inputValue(),
-    pathTable: sample.pathTable,
-    pathRows,
+    pathTable: resultTable.title,
+    pathRows: resultTable.rows,
+    scientificReference: {
+      path: sample.referencePath,
+      scope: sample.referenceScope,
+      boundary: sample.evidenceBoundary,
+      deliberateScopeSubstitution: sample.scopeSubstitution,
+    },
   };
-  if (JSON.stringify(visibleSampleIds) !== JSON.stringify(["corporate_reputation", "simple_pls", "mediation", "organizational_identification"])
+  if (JSON.stringify(visibleSampleIds) !== JSON.stringify(bundledSampleContracts.map((candidate) => candidate.id))
+    || observed.cardLabel !== sample.label
+    || observed.cardDetail !== sample.detail
     || observed.project !== sample.project
     || observed.dataset !== sample.dataset
     || observed.cases !== `${sample.cases} cases`
@@ -2266,13 +2423,13 @@ async function inspectBundledSample(sample) {
     || runOptions.length !== 1
     || runOptions[0] !== sample.runLabel
     || !observed.selectedRunId
-    || pathRows !== sample.paths) {
+    || resultTable.rows !== sample.resultPaths) {
     throw new Error(`The live ${sample.id} launcher card did not hydrate its exact bundled project/result contract: ${JSON.stringify(observed)}`);
   }
   await openMenuItem("View", "Edit Model");
   await waitForSurface("model");
   const renderedPaths = await structuralPaths().count();
-  if (await page.locator(".react-flow__node-latent").count() !== sample.constructs
+  if (await page.locator(".react-flow__node-latent").count() !== sample.diagramConstructs
     || renderedPaths !== sample.paths) {
     throw new Error(`The live ${sample.id} sample model did not render its exact construct/path shape.`);
   }
@@ -12783,48 +12940,6 @@ try {
     if (!mgaOnly) {
     await capture("12-tauri-native-launcher-1440x900.png");
 
-    const bundledSampleContracts = [
-      {
-        id: "corporate_reputation",
-        project: "Corporate Reputation Sample",
-        dataset: "corporate_reputation_smartpls_mean_replaced_v1.csv",
-        cases: 344,
-        constructs: 8,
-        paths: 13,
-        runLabel: "PLS-SEM Algorithm run",
-        pathTable: "Path coefficients",
-      },
-      {
-        id: "simple_pls",
-        project: "Simple Reflective PLS Sample",
-        dataset: "simple_reflective.csv",
-        cases: 6,
-        constructs: 2,
-        paths: 1,
-        runLabel: "PLS-SEM Algorithm run",
-        pathTable: "Path coefficients",
-      },
-      {
-        id: "mediation",
-        project: "Mediation Sample",
-        dataset: "mediation_sample.csv",
-        cases: 8,
-        constructs: 3,
-        paths: 2,
-        runLabel: "PLS-SEM Algorithm run",
-        pathTable: "Direct effects",
-      },
-      {
-        id: "organizational_identification",
-        project: "Organizational Identification Model",
-        dataset: "organizational_identification_v1.csv",
-        cases: 305,
-        constructs: 4,
-        paths: 3,
-        runLabel: "PLS-SEM Algorithm run",
-        pathTable: "Path coefficients",
-      },
-    ];
     const bundledSamples = [];
     for (const sampleContract of bundledSampleContracts) {
       await reloadToLauncher();
@@ -12833,8 +12948,20 @@ try {
     }
     evidence.checks.bundledSampleGallery = {
       passed: bundledSamples.length === bundledSampleContracts.length,
+      catalogSchemaVersion: bundledSampleCatalog.schemaVersion,
+      catalogSha256: bundledSampleCatalogSha256,
+      defaultSampleId: bundledSampleCatalog.defaultSampleId,
+      datasetCount: bundledSampleCatalog.datasets.length,
+      catalogSampleCount: bundledSampleContracts.length,
       sampleIds: bundledSamples.map((sample) => sample.sampleId),
       samples: bundledSamples,
+      deliberateScopeSubstitutions: bundledSamples
+        .filter((sample) => sample.scientificReference.deliberateScopeSubstitution)
+        .map((sample) => ({
+          sampleId: sample.sampleId,
+          scope: sample.scientificReference.scope,
+          boundary: sample.scientificReference.boundary,
+        })),
       liveLauncher: true,
       typedSelector: true,
       completedCanonicalResults: true,

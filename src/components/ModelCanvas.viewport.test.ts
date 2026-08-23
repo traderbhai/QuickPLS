@@ -13,6 +13,7 @@ describe("ModelCanvas persisted viewport restoration", () => {
       diagramVersion: "sem_designer_v1",
       constructLayouts: {},
       indicatorLayouts: {},
+      measurementConnectorLayouts: {},
       edgeLayouts: {},
       diagramViewport: persistedViewport,
       diagramTheme: "smartpls_like",

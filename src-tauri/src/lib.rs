@@ -114,7 +114,7 @@ use recipe_v4_jobs::{
     start_internal_labs_recipe_v4_pls_job,
 };
 use regex::{Captures, Regex};
-use sample_projects::{BundledSampleProject, build_bundled_sample_project};
+use sample_projects::build_bundled_sample_project;
 use sem_model_v4_scientific_digest::internal_sem_model_v4_scientific_sha256;
 use serde::Deserialize;
 use serde::Serialize;
@@ -3092,7 +3092,7 @@ fn open_demo_project(
 }
 
 fn build_sample_project(sample_id: &str) -> Result<Project, String> {
-    build_bundled_sample_project(BundledSampleProject::parse(sample_id)?)
+    build_bundled_sample_project(sample_id)
 }
 
 #[tauri::command]
@@ -5300,7 +5300,7 @@ mod desktop_job_tests {
     }
 
     #[test]
-    fn sample_project_selector_opens_only_the_four_advertised_projects() {
+    fn sample_project_selector_opens_only_the_seven_advertised_projects() {
         for (sample_id, expected_name, expected_constructs) in [
             ("corporate_reputation", "Corporate Reputation Sample", 8),
             (
@@ -5310,6 +5310,21 @@ mod desktop_job_tests {
             ),
             ("simple_pls", "Simple Reflective PLS Sample", 2),
             ("mediation", "Mediation Sample", 3),
+            (
+                "organizational_identification_mediation",
+                "Organizational Identification - Mediation",
+                4,
+            ),
+            (
+                "organizational_identification_moderated_mediation",
+                "Organizational Identification - Moderated Mediation (Point Topology)",
+                5,
+            ),
+            (
+                "organizational_identification_higher_order",
+                "Organizational Identification - Higher-Order",
+                5,
+            ),
         ] {
             let project = build_sample_project(sample_id).unwrap();
             assert_eq!(project.manifest.name, expected_name);

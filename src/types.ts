@@ -1,4 +1,7 @@
 import type { Edge, Node } from "@xyflow/react";
+import type { NativeSampleProjectId } from "./domain/bundledSampleCatalog";
+
+export type { NativeSampleProjectId } from "./domain/bundledSampleCatalog";
 
 export type WorkspaceView = "welcome" | "data" | "models" | "analyses" | "run" | "runs" | "groups" | "reports" | "trust" | "settings";
 export type ExplorerTab = "constructs" | "variables" | "structure" | "issues";
@@ -281,8 +284,6 @@ export interface MethodSetupState {
   selectedPreset: MethodPresetId;
   expandedSections: string[];
 }
-
-export type NativeSampleProjectId = "corporate_reputation" | "simple_pls" | "mediation" | "organizational_identification";
 
 export interface OnboardingState {
   dismissed: boolean;

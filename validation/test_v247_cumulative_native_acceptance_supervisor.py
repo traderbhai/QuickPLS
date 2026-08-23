@@ -16,6 +16,7 @@ ACCEPTANCE_CONTRACT = ROOT / "validation/capabilities/packaged_windows_acceptanc
 CLOSE_HELPER = ROOT / "validation/close_tauri_test_window.mjs"
 DESKTOP_LIB = ROOT / "src-tauri/src/lib.rs"
 ASSEMBLER = ROOT / "validation/assemble_v247_cumulative_native_acceptance.py"
+SAMPLE_CATALOG = ROOT / "src/data/bundledSampleProjects.v1.json"
 
 
 class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
@@ -29,6 +30,7 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         cls.close_helper_source = CLOSE_HELPER.read_text(encoding="utf-8")
         cls.desktop_lib_source = DESKTOP_LIB.read_text(encoding="utf-8")
         cls.assembler_source = ASSEMBLER.read_text(encoding="utf-8")
+        cls.sample_catalog = json.loads(SAMPLE_CATALOG.read_text(encoding="utf-8"))
 
     def test_powershell_51_parser_accepts_supervisor(self) -> None:
         command = (
@@ -137,6 +139,8 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         self.assertIn("$unexpectedChecks", self.source)
         self.assertNotIn("check order differs from the manifest", self.source)
         self.assertIn("acceptance_contract = [pscustomobject]", self.source)
+        self.assertIn("bundled_sample_catalog = [pscustomobject]", self.source)
+        self.assertIn('path = "src/data/bundledSampleProjects.v1.json"', self.source)
         self.assertIn("-NotBeforeUtc $supervisorStartedUtc", self.source)
 
     def test_phase2_release_checks_are_the_exact_frozen_fourteen_check_union(self) -> None:
@@ -185,7 +189,7 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         self.assertIn("contract.usedObservations !== ncaObservations", self.harness_source)
         self.assertIn("contract.observations !== ncaObservations", self.harness_source)
         self.assertIn(
-            "const isolatedFocusedOnly = mgaOnly || hocOnly || predictionOnly || cbsemOnly || pcaOnly || olsOnly",
+            "const isolatedFocusedOnly = mgaOnly || hocOnly || predictionOnly || cbsemOnly || cbsemExactBootstrapOnly || pcaOnly || olsOnly",
             self.harness_source,
         )
         self.assertIn(
@@ -193,7 +197,7 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
             self.harness_source,
         )
         self.assertIn(
-            "|| structuralPathRandomizationOnly || gscaOnly;",
+            "|| structuralPathRandomizationOnly || gscaOnly || plscBootstrapOnly || plsSampleSizePowerOnly;",
             self.harness_source,
         )
         self.assertIn("const ncaTerminalStatePromise = page.waitForFunction", self.harness_source)
@@ -497,18 +501,33 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
 
     def test_live_packaged_launcher_opens_every_typed_bundled_sample(self) -> None:
         required = (
+            'path.join(root, "src", "data", "bundledSampleProjects.v1.json")',
+            "const bundledSampleCatalogBytes = await fs.readFile(bundledSampleCatalogPath)",
+            'createHash("sha256").update(bundledSampleCatalogBytes).digest("hex")',
+            'JSON.parse(bundledSampleCatalogBytes.toString("utf8"))',
+            "function bundledSampleContractsFromCatalog(catalog)",
+            "const requestedOiBundledSampleIds = Object.freeze([",
+            'const excludedOiBundledSampleId = "organizational_identification_moderation"',
+            "const expectedBundledSampleScopeSubstitutionIds = Object.freeze([",
+            "const contracts = catalog.samples.map((sample) =>",
+            "const constructs = [...baseConstructs, ...model.extraConstructs]",
+            "sample.metadata?.smartpls_reference !== referencePath",
             "async function inspectBundledSample(sample)",
+            "async function openBundledSampleResultTable(sample)",
             '.nd-launcher[aria-label="Project launcher"]',
             '.nd-sample-project-list button[data-sample-id]',
             'launcher.locator(`.nd-sample-project-list button[data-sample-id="${sample.id}"]`)',
-            '["corporate_reputation", "simple_pls", "mediation", "organizational_identification"]',
-            'id: "corporate_reputation"',
-            'id: "simple_pls"',
-            'id: "mediation"',
-            'id: "organizational_identification"',
-            "await openResultTable(sample.pathTable)",
+            "bundledSampleContracts.map((sample) => sample.id)",
+            "await openBundledSampleResultTable(sample)",
+            "catalogSha256: bundledSampleCatalogSha256",
+            "cardLabel",
+            "cardDetail",
+            "scientificReference",
+            "deliberateScopeSubstitution",
             "await structuralPaths().count()",
             "evidence.checks.bundledSampleGallery",
+            "catalogSampleCount",
+            "deliberateScopeSubstitutions",
             "liveLauncher: true",
             "typedSelector: true",
             "completedCanonicalResults: true",
@@ -518,27 +537,54 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         )
         for token in required:
             self.assertIn(token, self.harness_source)
-        sample_contracts_start = self.harness_source.index(
-            "const bundledSampleContracts = ["
-        )
-        sample_contracts_end = self.harness_source.index(
-            "    ];", sample_contracts_start
-        )
-        sample_contracts = self.harness_source[
-            sample_contracts_start:sample_contracts_end
-        ]
+        self.assertNotIn("const bundledSampleContracts = [", self.harness_source)
+        self.assertEqual(self.sample_catalog["schemaVersion"], 1)
+        sample_ids = [sample["id"] for sample in self.sample_catalog["samples"]]
         self.assertEqual(
-            re.findall(
-                r'id: "(corporate_reputation|simple_pls|mediation|organizational_identification)"[\s\S]*?pathTable: "([^"]+)"',
-                sample_contracts,
-            ),
+            sample_ids[:4],
+            ["corporate_reputation", "simple_pls", "mediation", "organizational_identification"],
+        )
+        requested_oi_ids = [
+            "organizational_identification_mediation",
+            "organizational_identification_moderated_mediation",
+            "organizational_identification_higher_order",
+        ]
+        self.assertEqual(sample_ids[4:7], requested_oi_ids)
+        self.assertNotIn("organizational_identification_moderation", sample_ids)
+        self.assertEqual(self.sample_catalog["defaultSampleId"], "corporate_reputation")
+        self.assertEqual(len(sample_ids), len(set(sample_ids)))
+        self.assertEqual(len(sample_ids), 7)
+        samples_by_id = {sample["id"]: sample for sample in self.sample_catalog["samples"]}
+        for sample_id in requested_oi_ids:
+            sample = samples_by_id[sample_id]
+            self.assertEqual(sample["datasetId"], "organizational_identification_v1")
+            self.assertEqual(sample["model"]["constructSetId"], "organizational_identification_v1")
+            self.assertEqual(sample["acceptance"]["referencePath"], sample["metadata"]["smartpls_reference"])
+            self.assertTrue(sample["metadata"]["reference_scope"])
+            self.assertTrue(sample["metadata"]["evidence_boundary"])
+        self.assertEqual(
             [
-                ("corporate_reputation", "Path coefficients"),
-                ("simple_pls", "Path coefficients"),
-                ("mediation", "Direct effects"),
-                ("organizational_identification", "Path coefficients"),
+                sample_id
+                for sample_id in requested_oi_ids
+                if any(
+                    token in samples_by_id[sample_id]["metadata"]["evidence_boundary"]
+                    for token in ("not_claimed", "close_to")
+                )
+            ],
+            [
+                "organizational_identification_moderated_mediation",
+                "organizational_identification_higher_order",
             ],
         )
+        legacy_result_tables = {
+            "corporate_reputation": "Path coefficients",
+            "simple_pls": "Path coefficients",
+            "mediation": "Direct effects",
+            "organizational_identification": "Path coefficients",
+        }
+        for sample_id, table in legacy_result_tables.items():
+            self.assertIn(f'{sample_id}: "{table}"', self.harness_source)
+        self.assertIn("for (const sampleContract of bundledSampleContracts)", self.harness_source)
         self.assertNotIn(".first().click() // bundled sample", self.harness_source)
 
     def test_project_saved_toast_waits_bind_the_newest_visible_toast(self) -> None:

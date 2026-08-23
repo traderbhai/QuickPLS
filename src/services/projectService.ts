@@ -57,6 +57,7 @@ import {
   type ProjectUpgradePlanStateV1,
 } from "../domain/internalProjectUpgradeV6";
 import type { SemModelV4 } from "../domain/semModelV4";
+import { DEFAULT_BUNDLED_SAMPLE_PROJECT_ID } from "../domain/bundledSampleCatalog";
 import type {
   AnalysisResultEnvelope,
   ColumnMetadata,
@@ -338,7 +339,7 @@ export async function openNativeProject() {
   return openNativeProjectAt(path);
 }
 
-export async function openNativeDemoProject(sampleId: NativeSampleProjectId = "corporate_reputation") {
+export async function openNativeDemoProject(sampleId: NativeSampleProjectId = DEFAULT_BUNDLED_SAMPLE_PROJECT_ID) {
   const project = await invoke<NativeProjectSnapshot>("open_demo_project", { sampleId });
   return normalizeProjectSnapshot(project);
 }

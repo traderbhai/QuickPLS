@@ -13,6 +13,7 @@ import {
 } from "@xyflow/react";
 import { create } from "zustand";
 import { initialEdges, initialNodes, sampleDataset } from "./data/sample";
+import { DEFAULT_BUNDLED_SAMPLE_PROJECT_ID } from "./domain/bundledSampleCatalog";
 import { defaultDiagramLayout } from "./domain/diagramGraph";
 import {
   arrangeModelPreservingLayoutV1,
@@ -419,7 +420,7 @@ const defaultResultWorkspaceState: ResultWorkspaceState = {
   showInterpretationColumns: true,
 };
 const defaultMethodSetupState: MethodSetupState = { mode: "basic", selectedPreset: "standard_pls", expandedSections: ["basic"] };
-const defaultOnboardingState: OnboardingState = { dismissed: false, selectedDemo: "corporate_reputation", recentProjectCards: [] };
+const defaultOnboardingState: OnboardingState = { dismissed: false, selectedDemo: DEFAULT_BUNDLED_SAMPLE_PROJECT_ID, recentProjectCards: [] };
 const defaultLargeModelViewState: LargeModelViewState = { indicatorsCollapsed: false, isolatedConstructId: null, neighborhoodMode: "off" };
 const defaultRunMonitor: RunMonitorState = {
   status: "idle",

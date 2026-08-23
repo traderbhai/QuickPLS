@@ -636,6 +636,7 @@ describe("CanonicalResultDocumentV2 native runtime adapter", () => {
       diagramVersion: "sem_designer_v1",
       constructLayouts: {},
       indicatorLayouts: {},
+      measurementConnectorLayouts: {},
       edgeLayouts: {},
       diagramTheme: "journal_mono",
       showGrid: false,

@@ -41,6 +41,7 @@ from phase2_release_packaged_common import (
     PACKAGED_ACCEPTANCE_CONTRACT,
     PACKAGED_ACCEPTANCE_CONTRACT_PATH,
     functional_check_passed,
+    packaged_acceptance_contract_descriptor,
     packaged_viewport_contract,
     read_archive as read_strict_archive,
     validate_required_report_checks,
@@ -369,6 +370,7 @@ def packaged_workflow_contract(
 def locate_and_verify_receipt(not_before: datetime) -> tuple[dict[str, Any], Path, dict[str, Any]]:
     receipt = strict_load_json(CUMULATIVE_RECEIPT)
     build_receipt = strict_load_json(BUILD_RECEIPT)
+    expected_contract_descriptor = packaged_acceptance_contract_descriptor()
     report_path = ROOT / receipt["report"]
     report_descriptor = {
         "size": receipt.get("report_size"),
@@ -394,6 +396,8 @@ def locate_and_verify_receipt(not_before: datetime) -> tuple[dict[str, Any], Pat
         == EXPECTED_CHECK_COUNT
         and receipt["acceptance_contract"].get("sha256")
         == sha256_file(PACKAGED_ACCEPTANCE_CONTRACT_PATH)
+        and receipt["acceptance_contract"].get("bundled_sample_catalog")
+        == expected_contract_descriptor["bundled_sample_catalog"]
         and receipt.get("graceful_process_cleanup_verified") is True
         and _utc(receipt.get("supervisor_started_at_utc"))
         >= _utc(build_receipt.get("build_finished_at_utc"))

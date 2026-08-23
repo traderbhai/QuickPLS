@@ -61,6 +61,7 @@ import type {
 import type { SemModelV4 } from "../domain/semModelV4";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { InternalLabsRecipeV4CbsemExecutionRequestV1 } from "../domain/internalRecipeV4CbsemExecution";
+import { parseNativeSampleProjectId } from "../domain/bundledSampleCatalog";
 
 const mocks = vi.hoisted(() => ({ invoke: vi.fn(), save: vi.fn() }));
 
@@ -992,7 +993,9 @@ describe("native canonical project services", () => {
       workspace: null,
     });
 
-    await openNativeDemoProject("mediation");
+    const mediationSampleId = parseNativeSampleProjectId("mediation");
+    expect(mediationSampleId).not.toBeNull();
+    await openNativeDemoProject(mediationSampleId!);
 
     expect(mocks.invoke).toHaveBeenCalledWith("open_demo_project", { sampleId: "mediation" });
   });

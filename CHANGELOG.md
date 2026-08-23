@@ -2,6 +2,16 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [2.55.5] - 2026-08-23 (local preview)
+
+- Added three OI-based editable samples—Mediation, Moderated Mediation (Point Topology), and a disjoint two-stage Higher-Order model—while reusing one embedded 305-case dataset.
+- Replaced duplicated frontend/backend sample lists with one versioned manifest that declares model topology, runs, layout, provenance, and acceptance evidence.
+- Added current-engine reference tests and explicit evidence boundaries where the qualified QuickPLS specification is close to, but not identical to, a supplied screenshot.
+
+A fresh `QuickPLS_2.55.5_x64-setup.exe` installer and provenance-bound artifact
+package are required for this source. No earlier installer qualifies as a
+2.55.5 candidate.
+
 ## [2.55.4] - 2026-08-23 (local preview)
 
 - Centered every measurement loading and weight badge on its exact connector path instead of applying a generic above/below offset.

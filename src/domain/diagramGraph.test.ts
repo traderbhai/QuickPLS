@@ -139,6 +139,76 @@ describe("SEM diagram graph", () => {
     expect(modelEdges).toEqual(before);
   });
 
+  it("keeps two-stage HOC result overlays compatible without authoring generated score indicators", () => {
+    const hocNodes: Array<Node<ConstructData>> = [
+      { id: "op", type: "construct", position: { x: 20, y: 100 }, data: { label: "Prestige", shortName: "OP", mode: "reflective", indicators: ["op1"] } },
+      { id: "oi", type: "construct", position: { x: 220, y: 100 }, data: { label: "Identification", shortName: "OI", mode: "reflective", indicators: ["oi1"] } },
+      { id: "acj", type: "construct", position: { x: 220, y: 260 }, data: { label: "Joy", shortName: "ACJ", mode: "reflective", indicators: ["joy1"] } },
+      { id: "acl", type: "construct", position: { x: 220, y: 400 }, data: { label: "Love", shortName: "ACL", mode: "reflective", indicators: ["love1"] } },
+      {
+        id: "ac",
+        type: "construct",
+        position: { x: 480, y: 160 },
+        data: {
+          label: "Affective commitment",
+          shortName: "AC",
+          mode: "reflective",
+          indicators: [],
+          semantic: "higher_order",
+          higherOrder: {
+            id: "term:ac",
+            components: ["acj", "acl"],
+            method: "two_stage",
+            canonicalApproach: "disjoint_two_stage",
+            measurementType: "reflective_reflective",
+          },
+        },
+      },
+    ];
+    const hocEdges: Edge[] = [
+      { id: "op-oi", source: "op", target: "oi" },
+      { id: "oi-ac", source: "oi", target: "ac" },
+      { id: "op-ac", source: "op", target: "ac" },
+    ];
+    const hocResult: PlsResult = {
+      ...result,
+      outer_estimates: [
+        { construct: "op", indicator: "op1", weight: 0.7, loading: 0.82 },
+        { construct: "oi", indicator: "oi1", weight: 0.8, loading: 0.86 },
+        { construct: "acj", indicator: "joy1", weight: 0.6, loading: 0.81 },
+        { construct: "acl", indicator: "love1", weight: 0.5, loading: 0.79 },
+        { construct: "ac", indicator: "__qpls_hoc_ac_acj", weight: 0.71, loading: 0.916 },
+        { construct: "ac", indicator: "__qpls_hoc_ac_acl", weight: -0.45, loading: -0.774 },
+      ],
+      paths: [
+        { source: "op", target: "oi", coefficient: 0.361 },
+        { source: "oi", target: "ac", coefficient: 0.553 },
+        { source: "op", target: "ac", coefficient: 0.169 },
+      ],
+      r_squared: { oi: 0.131, ac: 0.403 },
+    };
+    const hocRun: AnalysisRun = { ...run, id: "hoc-run", result: hocResult };
+
+    const graph = buildDiagramGraph(hocNodes, hocEdges, "smartpls_result", "paths_r2", hocRun);
+
+    expect(graph.compatible).toBe(true);
+    expect(graph.edges.find((edge) => edge.id === "oi-ac")?.label).toBe("0.553");
+    expect(graph.nodes.find((node) => node.id === "ac")?.data.resultR2).toBe(0.403);
+    expect(graph.edges.some((edge) => edge.id.includes("__qpls_hoc_"))).toBe(false);
+
+    const stale = buildDiagramGraph(hocNodes, hocEdges, "smartpls_result", "paths_r2", {
+      ...hocRun,
+      result: {
+        ...hocResult,
+        outer_estimates: [
+          ...hocResult.outer_estimates,
+          { construct: "ac", indicator: "__qpls_hoc_ac_unknown", weight: 0.1, loading: 0.1 },
+        ],
+      },
+    });
+    expect(stale.compatible).toBe(false);
+  });
+
   it("hides generated interaction constructs and projects visual-only path anchors", () => {
     const moderationNodes: Array<Node<ConstructData>> = [
       ...nodes,

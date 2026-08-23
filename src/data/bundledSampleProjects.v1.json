@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "defaultSampleId": "corporate_reputation",
+  "datasets": [
+    {
+      "id": "corporate_reputation_mean_replaced_v1",
+      "fileName": "corporate_reputation_smartpls_mean_replaced_v1.csv",
+      "sourcePath": "validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv",
+      "sha256": "2f2b369d74086d8d9646b052fec98991fbb7b870169f106f175c320ace9b97cb",
+      "expectedFingerprint": "v2:2c46656f75626ca8fae8ca0752326dd5847f96e168dc02fa8195aeadb4a4a836",
+      "lineageSummary": "Bundled Corporate Reputation sample; -99 missing values were replaced by indicator means before import.",
+      "metadata": {
+        "preprocessing_receipt": "validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.provenance.json",
+        "preprocessing_receipt_sha256": "eff5124d1a7589aee4a7cf580c16de93a2fefebb6fc4b03d9efa60a8768f009b",
+        "source_workbook_sha256": "45373b5177b19352d146c0a3b9bc66d58255744b795e453974d1248f816db9cb",
+        "cleaned_csv_sha256": "2f2b369d74086d8d9646b052fec98991fbb7b870169f106f175c320ace9b97cb",
+        "source_missing_marker": "-99",
+        "source_missing_treatment": "external_indicator_mean_replacement_before_quickpls_import"
+      }
+    },
+    {
+      "id": "organizational_identification_v1",
+      "fileName": "organizational_identification_v1.csv",
+      "sourcePath": "validation/fixtures/organizational_identification_v1.csv",
+      "sha256": "5066d3b4bd24d14ad5d3efc91c1c40c57c41de63d987456d2cf8aad40c20ceed",
+      "expectedFingerprint": "v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a",
+      "lineageSummary": "Bundled Organizational Identification dataset; all 305 source cases were complete and no value replacement was required.",
+      "metadata": {
+        "preprocessing_receipt": "validation/fixtures/organizational_identification_v1.provenance.json",
+        "preprocessing_receipt_sha256": "98f13a5c7b59cbf1ff54fbda218ee0d2b9423a07d87b0d2a9f3e765cdd930b5b",
+        "source_workbook_sha256": "5d803952b8009d406ab2f6317527d3df646de083ea86aa0b534a65b339713ae7",
+        "bundled_csv_sha256": "5066d3b4bd24d14ad5d3efc91c1c40c57c41de63d987456d2cf8aad40c20ceed",
+        "source_missing_marker": "none_observed",
+        "source_missing_treatment": "none_required_all_305_cases_complete"
+      }
+    },
+    {
+      "id": "simple_reflective_v1",
+      "fileName": "simple_reflective.csv",
+      "sourcePath": "validation/fixtures/simple_reflective.csv",
+      "sha256": "99f61b1191dab4dfbe3760e9863032cb5a00c9337d7c0497485b840ae21d804e",
+      "lineageSummary": "Bundled Simple Reflective PLS dataset.",
+      "metadata": {}
+    },
+    {
+      "id": "mediation_sample_v1",
+      "fileName": "mediation_sample.csv",
+      "sourcePath": "validation/fixtures/mediation_sample.csv",
+      "sha256": "a3d72957700977cfc8416d1378dc7753e9cbb2bdc1f6907b95a7c170da0adcd0",
+      "lineageSummary": "Bundled three-construct mediation dataset.",
+      "metadata": {}
+    }
+  ],
+  "constructSets": {
+    "corporate_reputation_v1": [
+      {"id":"qual","name":"Quality","short_name":"QUAL","mode":"formative","indicators":["qual_1","qual_2","qual_3","qual_4","qual_5","qual_6","qual_7","qual_8"]},
+      {"id":"perf","name":"Performance","short_name":"PERF","mode":"formative","indicators":["perf_1","perf_2","perf_3","perf_4","perf_5"]},
+      {"id":"csor","name":"Corporate social responsibility","short_name":"CSOR","mode":"formative","indicators":["csor_1","csor_2","csor_3","csor_4","csor_5"]},
+      {"id":"attr","name":"Attractiveness","short_name":"ATTR","mode":"formative","indicators":["attr_1","attr_2","attr_3"]},
+      {"id":"comp","name":"Competence","short_name":"COMP","mode":"reflective","indicators":["comp_1","comp_2","comp_3"]},
+      {"id":"like","name":"Likeability","short_name":"LIKE","mode":"reflective","indicators":["like_1","like_2","like_3"]},
+      {"id":"cusa","name":"Customer satisfaction","short_name":"CUSA","mode":"reflective","indicators":["cusa"]},
+      {"id":"cusl","name":"Customer loyalty","short_name":"CUSL","mode":"reflective","indicators":["cusl_1","cusl_2","cusl_3"]}
+    ],
+    "organizational_identification_v1": [
+      {"id":"org_prestige","name":"Organizational Prestige","short_name":"OP","mode":"reflective","indicators":["org_pre1","org_pre2","org_pre3","org_pre4","org_pre5","org_pre6","org_pre7","org_pre8"]},
+      {"id":"org_identification","name":"Organizational Identification","short_name":"OI","mode":"reflective","indicators":["org_ident1","org_ident2","org_ident3","org_ident4","org_ident5","org_ident6"]},
+      {"id":"affective_commitment_joy","name":"Affective Commitment (Joy)","short_name":"ACJ","mode":"reflective","indicators":["ac_joy1","ac_joy2","ac_joy3","ac_joy4"]},
+      {"id":"affective_commitment_love","name":"Affective Commitment (Love)","short_name":"ACL","mode":"reflective","indicators":["ac_love1","ac_love2","ac_love3"]}
+    ],
+    "simple_reflective_v1": [
+      {"id":"x","name":"Predictor","short_name":"X","mode":"reflective","indicators":["x1","x2"]},
+      {"id":"y","name":"Outcome","short_name":"Y","mode":"reflective","indicators":["y1","y2"]}
+    ],
+    "mediation_v1": [
+      {"id":"x","name":"Predictor","short_name":"X","mode":"reflective","indicators":["x"]},
+      {"id":"m","name":"Mediator","short_name":"M","mode":"reflective","indicators":["m"]},
+      {"id":"y","name":"Outcome","short_name":"Y","mode":"reflective","indicators":["y"]}
+    ]
+  },
+  "samples": [
+    {
+      "id": "corporate_reputation",
+      "label": "Corporate reputation",
+      "detail": "344 cases, 8 constructs, 31 modeled indicators, 13 paths, and a completed SmartPLS comparison run.",
+      "projectName": "Corporate Reputation Sample",
+      "sampleVersion": "quickpls_sample_corporate_reputation_smartpls_v1",
+      "datasetId": "corporate_reputation_mean_replaced_v1",
+      "model": {
+        "id": "00000000-0000-0000-0000-000000003201",
+        "name": "Corporate reputation - full SmartPLS comparison model",
+        "constructSetId": "corporate_reputation_v1",
+        "extraConstructs": [],
+        "paths": [
+          {"source":"attr","target":"comp"},{"source":"attr","target":"like"},
+          {"source":"csor","target":"comp"},{"source":"csor","target":"like"},
+          {"source":"perf","target":"comp"},{"source":"perf","target":"like"},
+          {"source":"qual","target":"comp"},{"source":"qual","target":"like"},
+          {"source":"comp","target":"cusa"},{"source":"comp","target":"cusl"},
+          {"source":"like","target":"cusa"},{"source":"like","target":"cusl"},
+          {"source":"cusa","target":"cusl"}
+        ],
+        "controls": [], "higher_order_constructs": [], "interactions": []
+      },
+      "runs": [{
+        "id":"00000000-0000-0000-0000-000000003202","createdAt":"2026-08-23T00:00:00Z",
+        "settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260823,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},
+        "methodConfig":{"kind":"pls_algorithm"},"metadata":{}
+      }],
+      "presentation":{"edgeType":"smoothstep","positions":{"perf":{"x":80,"y":260},"csor":{"x":80,"y":610},"qual":{"x":430,"y":80},"attr":{"x":430,"y":860},"comp":{"x":850,"y":280},"like":{"x":850,"y":650},"cusa":{"x":1210,"y":460},"cusl":{"x":1570,"y":460}}},
+      "metadata":{"reference_scope":"matches_48_published_smartpls_values_at_three_decimals","smartpls_reference":"validation/benchmarks/corporate_reputation_smartpls/smartpls_reference_v1.json","smartpls_reference_sha256":"730c96d062b1724fcd2405da1116d6d4fb34162c02abbb72f5dd51380814f441","smartpls_screenshot_sha256":"2d604f98aaeb618469486be3bfea55cc57d1901ad49cab8b5d97dd17504f9ed9","reference_precision_decimals":"3","evidence_boundary":"displayed_three_decimal_parity_not_bitwise_equivalence"},
+      "acceptance":{"caseCount":344,"columnCount":31,"constructCount":8,"pathCount":13,"referencePath":"validation/benchmarks/corporate_reputation_smartpls/smartpls_reference_v1.json","expectedValueCount":48}
+    },
+    {
+      "id":"simple_pls","label":"Simple reflective PLS-SEM","detail":"Two reflective constructs and a completed PLS algorithm run.","projectName":"Simple Reflective PLS Sample","sampleVersion":"quickpls_sample_simple_pls_v1","datasetId":"simple_reflective_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003001","name":"Simple reflective PLS model","constructSetId":"simple_reflective_v1","extraConstructs":[],"paths":[{"source":"x","target":"y"}],"controls":[],"higher_order_constructs":[],"interactions":[]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003002","createdAt":"2026-08-13T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260718,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{}},"metadata":{},"acceptance":{"caseCount":6,"columnCount":4,"constructCount":2,"pathCount":1}
+    },
+    {
+      "id":"mediation","label":"Mediation","detail":"Three constructs with completed direct, indirect, and total effects.","projectName":"Mediation Sample","sampleVersion":"quickpls_sample_mediation_v1","datasetId":"mediation_sample_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003101","name":"Three-construct mediation model","constructSetId":"mediation_v1","extraConstructs":[],"paths":[{"source":"x","target":"m"},{"source":"m","target":"y"}],"controls":[],"higher_order_constructs":[],"interactions":[]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003102","createdAt":"2026-08-13T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260718,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{}},"metadata":{},"acceptance":{"caseCount":8,"columnCount":3,"constructCount":3,"pathCount":2}
+    },
+    {
+      "id":"organizational_identification","label":"Organizational Identification Model","detail":"305 cases, 4 reflective constructs, 21 modeled indicators, 3 paths, and a completed PLS-SEM run.","projectName":"Organizational Identification Model","sampleVersion":"quickpls_sample_organizational_identification_v1","datasetId":"organizational_identification_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003301","name":"Organizational Identification Model","constructSetId":"organizational_identification_v1","extraConstructs":[],"paths":[{"source":"org_prestige","target":"org_identification"},{"source":"org_identification","target":"affective_commitment_joy"},{"source":"org_identification","target":"affective_commitment_love"}],"controls":[],"higher_order_constructs":[],"interactions":[]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003302","createdAt":"2026-08-23T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260823,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{"org_prestige":{"x":140,"y":430},"org_identification":{"x":720,"y":430},"affective_commitment_joy":{"x":1280,"y":250},"affective_commitment_love":{"x":1280,"y":650}}},
+      "metadata":{"reference_scope":"matches_27_supplied_screenshot_values_at_three_decimals","smartpls_reference":"validation/benchmarks/organizational_identification/screenshot_reference_v1.json","smartpls_reference_sha256":"9c1c6848f055ec2f3c00b1d3fe81ddb9fc973a4cc279b0399ffa54ca339af4fa","smartpls_screenshot_sha256":"6809e7f76ed209f8f83dfc2c16fa057c1f5d6e5f09633a9507eb3dd278e83544","reference_precision_decimals":"3","evidence_boundary":"displayed_three_decimal_parity_not_bitwise_equivalence"},
+      "acceptance":{"caseCount":305,"columnCount":22,"constructCount":4,"pathCount":3,"referencePath":"validation/benchmarks/organizational_identification/screenshot_reference_v1.json","expectedValueCount":27}
+    },
+    {
+      "id":"organizational_identification_mediation","label":"Organizational Identification - Mediation","detail":"OI dataset with parallel mediation outcomes, direct effects, and a completed PLS-SEM run.","projectName":"Organizational Identification - Mediation","sampleVersion":"quickpls_sample_organizational_identification_mediation_v1","datasetId":"organizational_identification_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003401","name":"Organizational Identification Mediation Model","constructSetId":"organizational_identification_v1","extraConstructs":[],"paths":[{"source":"org_prestige","target":"org_identification"},{"source":"org_identification","target":"affective_commitment_joy"},{"source":"org_prestige","target":"affective_commitment_joy"},{"source":"org_identification","target":"affective_commitment_love"},{"source":"org_prestige","target":"affective_commitment_love"}],"controls":[],"higher_order_constructs":[],"interactions":[]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003402","createdAt":"2026-08-23T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260823,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{"org_prestige":{"x":120,"y":480},"org_identification":{"x":650,"y":250},"affective_commitment_joy":{"x":1220,"y":230},"affective_commitment_love":{"x":1220,"y":680}}},
+      "metadata":{"reference_scope":"matches_29_supplied_screenshot_values_at_three_decimals","smartpls_reference":"validation/benchmarks/organizational_identification/mediation_reference_v1.json","smartpls_reference_sha256":"f33e077b1c952a75e5a816167d38f76e7a607459e3cf3afc755835c9015cf44d","smartpls_screenshot_sha256":"39b5c9dda8fdb7daf9f4848be91c509b8090a66991169e5854505c0db4ce188f","reference_precision_decimals":"3","evidence_boundary":"alternative_pedagogical_model_on_the_shared_oi_dataset"},
+      "acceptance":{"caseCount":305,"columnCount":22,"constructCount":4,"pathCount":5,"referencePath":"validation/benchmarks/organizational_identification/mediation_reference_v1.json","expectedValueCount":29}
+    },
+    {
+      "id":"organizational_identification_moderated_mediation","label":"Organizational Identification - Moderated Mediation (Point Topology)","detail":"Second-stage moderated-mediation point topology with organizational prestige moderating the Joy-to-Love path; includes a completed PLS-SEM point-estimate run, not dedicated conditional-effect inference.","projectName":"Organizational Identification - Moderated Mediation (Point Topology)","sampleVersion":"quickpls_sample_organizational_identification_moderated_mediation_v1","datasetId":"organizational_identification_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003601","name":"Organizational Identification Moderated Mediation Point-Topology Model","constructSetId":"organizational_identification_v1","extraConstructs":[{"id":"interaction_acj_op_acl","name":"ACJ x OP to ACL","short_name":"ACJ×OP","mode":"formative","indicators":[]}],"paths":[{"source":"org_identification","target":"affective_commitment_joy"},{"source":"org_identification","target":"affective_commitment_love"},{"source":"affective_commitment_joy","target":"affective_commitment_love"},{"source":"org_prestige","target":"affective_commitment_love"},{"source":"interaction_acj_op_acl","target":"affective_commitment_love"}],"controls":[],"higher_order_constructs":[],"interactions":[{"id":"acj_x_op_to_acl","predictor":"affective_commitment_joy","moderator":"org_prestige","product_construct":"interaction_acj_op_acl","outcome":"affective_commitment_love","method":"two_stage_product_score"}]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003602","createdAt":"2026-08-23T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260823,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{"org_prestige":{"x":130,"y":680},"org_identification":{"x":520,"y":210},"affective_commitment_joy":{"x":1000,"y":210},"affective_commitment_love":{"x":1320,"y":680},"interaction_acj_op_acl":{"x":1110,"y":500}}},
+      "metadata":{"reference_scope":"quickpls_single_interaction_point_topology_values_at_three_decimals","smartpls_reference":"validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json","smartpls_reference_sha256":"38c62b105bf408fa9a30c0917417a4047c18284cf7d1d555d4e346a3984c5337","smartpls_screenshot_sha256":"bf8dc275db752fb863be7de690071dd589eca91bdcec9b6b8179157075e0da7f","reference_precision_decimals":"3","evidence_boundary":"editable_ordinary_project_pls_point_topology_only_not_dedicated_moderated_mediation_inference_and_not_claimed_as_strict_general_sem_screenshot_parity"},
+      "acceptance":{"caseCount":305,"columnCount":22,"constructCount":5,"pathCount":5,"referencePath":"validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json","expectedValueCount":27}
+    },
+    {
+      "id":"organizational_identification_higher_order","label":"Organizational Identification - Higher-Order","detail":"Reflective-reflective affective commitment HOC estimated with the supported disjoint two-stage approach.","projectName":"Organizational Identification - Higher-Order","sampleVersion":"quickpls_sample_organizational_identification_higher_order_v1","datasetId":"organizational_identification_v1",
+      "model":{"id":"00000000-0000-0000-0000-000000003701","name":"Organizational Identification Higher-Order Model","constructSetId":"organizational_identification_v1","extraConstructs":[{"id":"affective_commitment","name":"Affective Commitment","short_name":"AC","mode":"reflective","indicators":[]}],"paths":[{"source":"org_prestige","target":"org_identification"},{"source":"org_identification","target":"affective_commitment"},{"source":"org_prestige","target":"affective_commitment"}],"controls":[],"higher_order_constructs":[{"id":"affective_commitment","components":["affective_commitment_joy","affective_commitment_love"],"method":"two_stage","stage_one_recipe":null}],"interactions":[]},
+      "runs":[{"id":"00000000-0000-0000-0000-000000003702","createdAt":"2026-08-23T00:00:00Z","settings":{"method":"pls_pm","weighting_scheme":"path","tolerance":1e-7,"max_iterations":3000,"bootstrap_samples":0,"studentized_inner_samples":0,"permutation_samples":0,"seed":20260823,"workers":1,"confidence_level":0.95,"preprocessing":"standardized","missing_data":"listwise_deletion","case_weight_column":null},"methodConfig":{"kind":"pls_algorithm"},"metadata":{}}],
+      "presentation":{"edgeType":"straight","positions":{"org_prestige":{"x":130,"y":500},"org_identification":{"x":620,"y":220},"affective_commitment":{"x":1050,"y":500},"affective_commitment_joy":{"x":1480,"y":280},"affective_commitment_love":{"x":1480,"y":690}}},
+      "metadata":{"reference_scope":"quickpls_disjoint_two_stage_values_recorded_at_three_decimals","smartpls_reference":"validation/benchmarks/organizational_identification/higher_order_reference_v1.json","smartpls_reference_sha256":"f8bc9b295832305e498750adbe7befae0dc1de68bb9afb90b134dff3d48f38b7","smartpls_screenshot_sha256":"47cea13e1be0aa6abd4ae41f14a8fc75debcac0f1c5cbc8aa9ec6b825176af15","reference_precision_decimals":"3","evidence_boundary":"supported_quickpls_disjoint_two_stage_not_claimed_as_screenshot_parity"},
+      "acceptance":{"caseCount":305,"columnCount":22,"constructCount":5,"pathCount":3,"referencePath":"validation/benchmarks/organizational_identification/higher_order_reference_v1.json","expectedValueCount":21}
+    }
+  ]
+}

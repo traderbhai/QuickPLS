@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 import { methods } from "../data/sample";
 import { analysisReadiness } from "../domain/analysisReadiness";
 import { analysisCatalogCapabilityEntriesV2 } from "../domain/analysisCatalogCapabilityV2";
+import {
+  DEFAULT_BUNDLED_SAMPLE_PROJECT_ID,
+  parseNativeSampleProjectId,
+} from "../domain/bundledSampleCatalog";
 import { DESKTOP_MENU_ORDER } from "../domain/desktopCommands";
 import { evaluateMethodApplicability, topBarMethods } from "../domain/methodApplicability";
 import { useWorkspace } from "../store";
@@ -103,7 +107,7 @@ export function TopBar() {
     loadNativeProjectSnapshot(project);
     if (project?.recovered) window.alert(project.recoverySource === "autosave" ? "QuickPLS recovered newer autosaved work." : "The primary project was damaged. QuickPLS opened the previous valid backup.");
   };
-  const openDemoProjectCommand = async (sampleId: NativeSampleProjectId = "corporate_reputation") => {
+  const openDemoProjectCommand = async (sampleId: NativeSampleProjectId = DEFAULT_BUNDLED_SAMPLE_PROJECT_ID) => {
     if (!isNativeDesktop()) { window.alert("The demo project opens in the native QuickPLS desktop application."); return; }
     loadNativeProjectSnapshot(await openNativeDemoProject(sampleId));
   };
@@ -534,7 +538,8 @@ export function TopBar() {
     };
     const handleOpenProject = () => { void openProjectCommand().catch((error) => window.alert(error)); };
     const handleOpenDemo = (event: Event) => {
-      const sampleId = (event as CustomEvent<{ sampleId?: NativeSampleProjectId }>).detail?.sampleId;
+      const requestedSampleId = (event as CustomEvent<{ sampleId?: unknown }>).detail?.sampleId;
+      const sampleId = parseNativeSampleProjectId(requestedSampleId) ?? DEFAULT_BUNDLED_SAMPLE_PROJECT_ID;
       void openDemoProjectCommand(sampleId).catch((error) => window.alert(error));
     };
     const handleSaveProject = () => { void saveProject().catch((error) => window.alert(error)); };

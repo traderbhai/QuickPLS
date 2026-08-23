@@ -1,13 +1,7 @@
 import { CheckCircle2, Database, FileText, FlaskConical, FolderOpen, Keyboard, Network, Play, Plus, Save, ShieldCheck } from "lucide-react";
+import { BUNDLED_SAMPLE_PROJECTS } from "../domain/bundledSampleCatalog";
 import { useWorkspace } from "../store";
 import { Card, InlineNotice, MetricCard, PageHeader, Panel, WorkspacePage } from "./Ui";
-
-const sampleProjects = [
-  ["corporate_reputation", "Corporate reputation", "Full 344-case model with 8 constructs, 31 modeled indicators, 13 paths, and a completed comparison run."],
-  ["simple_pls", "Simple reflective PLS-SEM", "Dataset, reflective constructs, paths, run, and report."],
-  ["mediation", "Mediation", "Direct, indirect, and total effects from a completed three-construct run."],
-  ["organizational_identification", "Organizational Identification Model", "305 cases, 4 reflective constructs, 21 modeled indicators, 3 paths, and a completed PLS-SEM run."],
-] as const;
 
 export function OnboardingWorkspace() {
   const setView = useWorkspace((state) => state.setView);
@@ -119,11 +113,11 @@ export function OnboardingWorkspace() {
       <li className={runs.length ? "active" : ""}><CheckCircle2 size={15} /><div><strong>Report</strong><span>{runs.length ? "Diagram and tables are ready for report setup" : "Run a method to unlock exports"}</span></div><button className="secondary-button" onClick={() => start("reports")}>Prepare</button></li>
     </ol>
     <section className="sample-project-gallery home-v2-samples" aria-label="Sample project gallery">
-      <header><div><strong>Sample project gallery</strong><span>Open one of four complete bundled workflows, then inspect Data, Model, Results, and Report.</span></div><button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-demo-project", { detail: { sampleId: onboarding.selectedDemo } }))}><FlaskConical size={15} />Open selected sample</button></header>
+      <header><div><strong>Sample project gallery</strong><span>Open one of {BUNDLED_SAMPLE_PROJECTS.length} complete bundled workflows, then inspect Data, Model, Results, and Report.</span></div><button className="secondary-button" onClick={() => window.dispatchEvent(new CustomEvent("quickpls:open-demo-project", { detail: { sampleId: onboarding.selectedDemo } }))}><FlaskConical size={15} />Open selected sample</button></header>
       <div className="sample-project-grid">
-        {sampleProjects.map(([id, label, detail]) => <button key={id} type="button" className={onboarding.selectedDemo === id ? "sample-project-card active" : "sample-project-card"} onClick={() => setOnboardingState({ selectedDemo: id })}>
-          <strong>{label}</strong>
-          <span>{detail}</span>
+        {BUNDLED_SAMPLE_PROJECTS.map((sample) => <button key={sample.id} type="button" className={onboarding.selectedDemo === sample.id ? "sample-project-card active" : "sample-project-card"} onClick={() => setOnboardingState({ selectedDemo: sample.id })}>
+          <strong>{sample.label}</strong>
+          <span>{sample.detail}</span>
         </button>)}
       </div>
     </section>

@@ -1077,17 +1077,28 @@ function resultMatchesModel(nodes: Array<Node<ConstructData>>, edges: Edge[], re
   const currentPaths = new Set(edges.map((edge) => `${edge.source}\u0000${edge.target}`));
   const resultPaths = new Set(result.paths.map((path) => `${path.source}\u0000${path.target}`));
   if (currentPaths.size !== resultPaths.size || [...currentPaths].some((path) => !resultPaths.has(path))) return false;
+  const generatedHigherOrderIndicators = new Map(nodes.flatMap((node) => {
+    const declaration = node.data.semantic === "higher_order" ? node.data.higherOrder : undefined;
+    if (!declaration) return [];
+    const higherOrderIds = new Set([node.id, declaration.id]);
+    return [[node.id, new Set([...higherOrderIds].flatMap((higherOrderId) => (
+      declaration.components.map((componentId) => `__qpls_hoc_${higherOrderId}_${componentId}`)
+    )))]] as const;
+  }));
   const resultIndicators = new Map<string, Set<string>>();
   for (const estimate of result.outer_estimates) {
     if (!nodeIds.has(estimate.construct)) return false;
+    if (generatedHigherOrderIndicators.get(estimate.construct)?.has(estimate.indicator)) continue;
     const indicators = resultIndicators.get(estimate.construct) ?? new Set<string>();
     indicators.add(estimate.indicator);
     resultIndicators.set(estimate.construct, indicators);
   }
   return nodes.every((node) => {
     const indicators = resultIndicators.get(node.id);
-    return indicators !== undefined
-      && indicators.size === node.data.indicators.length
+    if (!indicators) {
+      return node.data.semantic === "higher_order" && node.data.indicators.length === 0;
+    }
+    return indicators.size === node.data.indicators.length
       && node.data.indicators.every((indicator) => indicators.has(indicator));
   });
 }

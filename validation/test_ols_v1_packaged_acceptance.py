@@ -15,6 +15,7 @@ if str(VALIDATION) not in sys.path:
     sys.path.insert(0, str(VALIDATION))
 
 import ols_v1_packaged_acceptance as adapter  # noqa: E402
+from packaged_windows_acceptance_v2 import packaged_acceptance_contract_descriptor  # noqa: E402
 
 
 RUN_ID = "ols-run"
@@ -180,11 +181,10 @@ class OlsV1PackagedAcceptanceTests(unittest.TestCase):
                 "final_scope": "regression_bootstrap",
                 "graceful_process_cleanup_verified": True,
                 "acceptance_contract": {
-                    "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                    **packaged_acceptance_contract_descriptor(),
                     "contract_id": adapter.PACKAGED_ACCEPTANCE_CONTRACT["contract_id"],
                     "contract_version": adapter.PACKAGED_ACCEPTANCE_CONTRACT["contract_version"],
                     "required_check_count": adapter.EXPECTED_CUMULATIVE_CHECKS,
-                    "sha256": adapter.CONTRACT_FILE_SHA256,
                 },
                 "exports": [
                     {

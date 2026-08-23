@@ -127,6 +127,9 @@ class Phase2ReleasePackagedSourceTests(unittest.TestCase):
         self.assertNotIn(f"[int]$receipt.checks -ne {adapter.EXPECTED_CHECK_COUNT}", source)
         self.assertIn("$expectedCheckCount", source)
         self.assertIn("$receipt.acceptance_contract.sha256 -ne $acceptanceContractSha256", source)
+        self.assertIn('$receipt.acceptance_contract.bundled_sample_catalog.path -ne "src/data/bundledSampleProjects.v1.json"', source)
+        self.assertIn("$receipt.acceptance_contract.bundled_sample_catalog.size -ne $bundledSampleCatalogSize", source)
+        self.assertIn("$receipt.acceptance_contract.bundled_sample_catalog.sha256 -ne $bundledSampleCatalogSha256", source)
         self.assertIn("$notBeforeUtc = [string]$receipt.supervisor_started_at_utc", source)
         for contract in adapter.METHODS.values():
             self.assertEqual(source.count(f'Script = "{contract.adapter_script}"'), 1)
@@ -397,11 +400,10 @@ class Phase2ReleasePackagedSemanticTests(unittest.TestCase):
                 "final_scope": "regression_bootstrap",
                 "graceful_process_cleanup_verified": True,
                 "acceptance_contract": {
-                    "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                    **adapter.packaged_acceptance_contract_descriptor(),
                     "contract_id": adapter.PACKAGED_ACCEPTANCE_CONTRACT["contract_id"],
                     "contract_version": adapter.PACKAGED_ACCEPTANCE_CONTRACT["contract_version"],
                     "required_check_count": adapter.EXPECTED_CHECK_COUNT,
-                    "sha256": adapter.descriptor(adapter.PACKAGED_ACCEPTANCE_CONTRACT_PATH)["sha256"],
                 },
                 "exports": [{"role": "gsca", "path": "validation/results/gsca.xlsx", "size": 4, "sha256": hashlib.sha256(b"xlsx").hexdigest()}],
             }

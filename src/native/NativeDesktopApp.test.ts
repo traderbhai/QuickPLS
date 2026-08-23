@@ -4,6 +4,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import {
+  BUNDLED_SAMPLE_PROJECTS,
+  parseNativeSampleProjectId,
+} from "../domain/bundledSampleCatalog";
+import {
   standardSemGeneralSemModerationV3IdentityV1,
 } from "../domain/standardSemModelV4Authority";
 import { useWorkspace } from "../store";
@@ -234,7 +238,7 @@ describe("native desktop multi-model shell contracts", () => {
     }
   });
 
-  it("mounts exactly the four genuine sample choices in the production launcher", () => {
+  it("mounts every manifest-backed sample choice in the production launcher", () => {
     const markup = renderToStaticMarkup(createElement(Launcher, {
       projectName: "No project open",
       projectPath: null,
@@ -246,20 +250,13 @@ describe("native desktop multi-model shell contracts", () => {
       onOpenSample: vi.fn(),
     }));
 
-    expect(NATIVE_BUNDLED_SAMPLE_PROJECTS.map((sample) => sample.id)).toEqual([
-      "corporate_reputation",
-      "simple_pls",
-      "mediation",
-      "organizational_identification",
-    ]);
-    expect(markup.match(/data-sample-id=/g)).toHaveLength(4);
+    expect(NATIVE_BUNDLED_SAMPLE_PROJECTS).toBe(BUNDLED_SAMPLE_PROJECTS);
+    expect(markup.match(/data-sample-id=/g)).toHaveLength(BUNDLED_SAMPLE_PROJECTS.length);
     for (const sample of NATIVE_BUNDLED_SAMPLE_PROJECTS) {
       expect(markup).toContain(`data-sample-id="${sample.id}"`);
       expect(markup).toContain(sample.label);
+      expect(markup).toContain(sample.detail);
     }
-    expect(markup).toContain("344 cases, 8 constructs, 31 modeled indicators, 13 paths");
-    expect(markup).toContain("Organizational Identification Model");
-    expect(markup).toContain("305 cases, 4 reflective constructs, 21 modeled indicators, 3 paths");
     expect(markup).not.toContain("PLSpredict");
     expect(markup).not.toContain("CB-SEM CFA");
   });
@@ -268,7 +265,9 @@ describe("native desktop multi-model shell contracts", () => {
     const dispatchEvent = vi.fn();
     vi.stubGlobal("window", { dispatchEvent });
 
-    openNativeSampleProject("mediation");
+    const mediationSampleId = parseNativeSampleProjectId("mediation");
+    expect(mediationSampleId).not.toBeNull();
+    openNativeSampleProject(mediationSampleId!);
 
     expect(dispatchEvent).toHaveBeenCalledTimes(1);
     const event = dispatchEvent.mock.calls[0][0] as CustomEvent;

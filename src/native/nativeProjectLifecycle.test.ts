@@ -101,6 +101,7 @@ const base: NativeProjectSignatureInput = {
     diagramVersion: "sem_designer_v1",
     constructLayouts: {},
     indicatorLayouts: {},
+    measurementConnectorLayouts: {},
     edgeLayouts: {},
     diagramViewport: { x: 0, y: 0, zoom: 1 },
     diagramTheme: "smartpls_like",

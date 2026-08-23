@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import copy
-import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -12,6 +11,7 @@ from validation.packaged_windows_acceptance_v2 import (
     EXPECTED_CHECK_IDS,
     PHASE2_RELEASE_CHECK_IDS,
     PackagedAcceptanceContractError,
+    packaged_acceptance_contract_descriptor,
     receipt_binds_packaged_acceptance_contract,
     validate_packaged_acceptance_contract,
     validate_required_report_checks,
@@ -99,24 +99,29 @@ class PackagedWindowsAcceptanceV2Tests(unittest.TestCase):
             receipt_binds_packaged_acceptance_contract(historical),
             "the historical schema-v1 receipt must not satisfy the V2 manifest contract",
         )
-        self.assertTrue(
+        self.assertFalse(
             receipt_binds_packaged_acceptance_contract(receipt),
-            "the fresh cumulative receipt must bind the current V2 manifest contract",
+            "the stale cumulative receipt must not bind the new bundled-sample catalog",
         )
         current = {
             **receipt,
             "schema_version": 2,
             "acceptance_contract": {
-                "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                **packaged_acceptance_contract_descriptor(),
                 "contract_id": CONTRACT["contract_id"],
                 "contract_version": CONTRACT["contract_version"],
                 "required_check_count": EXPECTED_CHECK_COUNT,
-                "sha256": hashlib.sha256(
-                    (ROOT / "validation/capabilities/packaged_windows_acceptance_v2.manifest.json").read_bytes()
-                ).hexdigest(),
             },
         }
         self.assertTrue(receipt_binds_packaged_acceptance_contract(current))
+        current["acceptance_contract"]["bundled_sample_catalog"]["sha256"] = "0" * 64
+        self.assertFalse(receipt_binds_packaged_acceptance_contract(current))
+        current["acceptance_contract"] = {
+            **packaged_acceptance_contract_descriptor(),
+            "contract_id": CONTRACT["contract_id"],
+            "contract_version": CONTRACT["contract_version"],
+            "required_check_count": EXPECTED_CHECK_COUNT,
+        }
         current["acceptance_contract"]["sha256"] = "0" * 64
         self.assertFalse(receipt_binds_packaged_acceptance_contract(current))
 

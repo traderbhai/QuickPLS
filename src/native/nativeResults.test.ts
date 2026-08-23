@@ -3419,6 +3419,29 @@ describe("native result navigation", () => {
       label: "Capability component of Organizational strength",
     });
     expect(table("hoc_structural_paths")?.rows).toEqual([["Organizational strength → Performance", "0.740000"]]);
+    const incomingRun: AnalysisRun = {
+      ...run,
+      modelSnapshot: {
+        ...run.modelSnapshot!,
+        edges: [{ id: "y-hoc", source: "y", target: "hoc" }],
+      },
+      result: {
+        ...run.result!,
+        paths: [{ source: "y", target: "hoc", coefficient: 0.553 }],
+        effects: [{ source: "y", target: "hoc", direct: 0.553, indirect: 0, total: 0.553 }],
+        r_squared: { hoc: 0.403 },
+      },
+    };
+    const incomingNavigation = buildNativeResultNavigation(incomingRun);
+    expect(incomingNavigation.tables.find((candidate) => candidate.id === "hoc_structural_paths")?.rows)
+      .toEqual([["Performance → Organizational strength", "0.553000"]]);
+    expect(nativeResultRowOverlaySelectionV1(incomingRun, "hoc_structural_paths", 0)).toEqual({
+      kind: "generic",
+      nodeIds: ["y", "hoc"],
+      relationIds: ["y-hoc"],
+      interactionTermIds: [],
+      label: "Performance → Organizational strength",
+    });
     expect(table("hoc_scope")?.title).toBe("Higher-order method and run details");
     expect(table("hoc_scope")?.advisory).toMatchObject({
       tone: "neutral",

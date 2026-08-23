@@ -28,6 +28,7 @@ use archive_integrity::{
     validate_manifest_checksums, validate_raw_central_directory, verify_archive_checksums,
 };
 use chrono::{DateTime, Utc};
+use faer::{Mat, prelude::SolveLstsq};
 use qpls_assessment::{
     ASSESSMENT_METHOD_VERSION, ASSESSMENT_METHOD_VERSION_V1, ASSESSMENT_METHOD_VERSION_V2,
     ASSESSMENT_METHOD_VERSION_V3, ASSESSMENT_METHOD_VERSION_V4, ASSESSMENT_METHOD_VERSION_V5,
@@ -8166,6 +8167,71 @@ fn validate_mediation_contract(
 
 const TWO_STAGE_SCOPE_WARNING_PREFIX: &str = "Disjoint two-stage higher-order estimation";
 
+fn recompute_hoc_structural_equation(
+    predictor_scores: &[&[f64]],
+    target_scores: &[f64],
+) -> Option<(Vec<f64>, f64)> {
+    if predictor_scores.is_empty()
+        || target_scores.len() < 3
+        || target_scores.iter().any(|value| !value.is_finite())
+        || predictor_scores.iter().any(|scores| {
+            scores.len() != target_scores.len() || scores.iter().any(|value| !value.is_finite())
+        })
+    {
+        return None;
+    }
+    let rows = target_scores.len();
+    let columns = predictor_scores.len();
+    if rows < columns {
+        return None;
+    }
+    // Mirror the estimator's standardized score-space OLS exactly. Predictors
+    // are centered for the solve; persisted construct scores are already
+    // zero-mean, so fitted values and R² use the stored score scale directly.
+    let centers = predictor_scores
+        .iter()
+        .map(|scores| scores.iter().sum::<f64>() / scores.len() as f64)
+        .collect::<Vec<_>>();
+    let matrix = Mat::from_fn(rows, columns, |row, column| {
+        predictor_scores[column][row] - centers[column]
+    });
+    let qr = matrix.col_piv_qr();
+    let diagonal = qr.thin_R();
+    let diagonal_count = rows.min(columns);
+    let max_diagonal = (0..diagonal_count)
+        .map(|index| diagonal[(index, index)].abs())
+        .fold(0.0, f64::max);
+    let rank_tolerance = max_diagonal * (rows.max(columns) as f64) * f64::EPSILON * 100.0;
+    let rank = (0..diagonal_count)
+        .filter(|index| diagonal[(*index, *index)].abs() > rank_tolerance)
+        .count();
+    if rank < columns {
+        return None;
+    }
+    let rhs = Mat::from_fn(rows, 1, |row, _| target_scores[row]);
+    let solution = qr.solve_lstsq(&rhs);
+    let coefficients = (0..columns)
+        .map(|index| solution[(index, 0)])
+        .collect::<Vec<_>>();
+    if coefficients.iter().any(|value| !value.is_finite()) {
+        return None;
+    }
+    let residual = (0..rows)
+        .map(|row| {
+            let fitted = predictor_scores
+                .iter()
+                .zip(&coefficients)
+                .map(|(scores, coefficient)| scores[row] * coefficient)
+                .sum::<f64>();
+            (target_scores[row] - fitted).powi(2)
+        })
+        .sum::<f64>();
+    let total = target_scores.iter().map(|value| value * value).sum::<f64>();
+    let r_squared = 1.0 - residual / total;
+    (residual.is_finite() && total.is_finite() && total > f64::EPSILON && r_squared.is_finite())
+        .then_some((coefficients, r_squared))
+}
+
 fn validate_higher_order_contract(
     result: &AnalysisResult,
     estimation: &PlsResult,
@@ -8227,7 +8293,7 @@ fn validate_higher_order_contract(
         || !recipe.model.controls.is_empty()
         || !recipe.model.interactions.is_empty()
         || recipe.model.higher_order_constructs.len() != 1
-        || recipe.model.paths.len() != 1
+        || recipe.model.paths.is_empty()
     {
         return Err(invalid());
     }
@@ -8269,14 +8335,32 @@ fn validate_higher_order_contract(
     {
         return Err(invalid());
     }
-    let path = &recipe.model.paths[0];
-    if path.source != higher_order.id
-        || path.target == higher_order.id
-        || component_ids.contains(path.target.as_str())
-        || constructs.get(path.target.as_str()).is_none_or(|target| {
-            target.mode != MeasurementMode::Reflective || target.indicators.is_empty()
-        })
-    {
+    let mut expected_paths = BTreeSet::new();
+    let mut predictors_by_target = BTreeMap::<String, Vec<String>>::new();
+    let mut hoc_has_structural_path = false;
+    for path in &recipe.model.paths {
+        let source = constructs.get(path.source.as_str());
+        let target = constructs.get(path.target.as_str());
+        if path.source == path.target
+            || source.is_none()
+            || target.is_none()
+            || (!path.source.eq(&higher_order.id)
+                && source.is_some_and(|construct| construct.indicators.is_empty()))
+            || (!path.target.eq(&higher_order.id)
+                && target.is_some_and(|construct| construct.indicators.is_empty()))
+            || component_ids.contains(path.source.as_str())
+            || component_ids.contains(path.target.as_str())
+            || !expected_paths.insert((path.source.clone(), path.target.clone()))
+        {
+            return Err(invalid());
+        }
+        hoc_has_structural_path |= path.source == higher_order.id || path.target == higher_order.id;
+        predictors_by_target
+            .entry(path.target.clone())
+            .or_default()
+            .push(path.source.clone());
+    }
+    if !hoc_has_structural_path {
         return Err(invalid());
     }
 
@@ -8290,8 +8374,10 @@ fn validate_higher_order_contract(
     for construct in &recipe.model.constructs {
         if construct.id == higher_order.id {
             for indicator in &generated_indicators {
+                if !expected_indicators.insert(indicator.clone()) {
+                    return Err(invalid());
+                }
                 expected_outer.insert((construct.id.clone(), indicator.clone()));
-                expected_indicators.insert(indicator.clone());
             }
         } else {
             for indicator in &construct.indicators {
@@ -8371,48 +8457,62 @@ fn validate_higher_order_contract(
             return Err(invalid());
         }
     }
-    let source_scores = &estimation.construct_scores[&path.source];
-    let target_scores = &estimation.construct_scores[&path.target];
-    let source_mean = source_scores.iter().sum::<f64>() / source_scores.len() as f64;
-    let denominator = source_scores
-        .iter()
-        .map(|value| (value - source_mean).powi(2))
-        .sum::<f64>();
-    if !denominator.is_finite() || denominator <= f64::EPSILON {
-        return Err(invalid());
-    }
-    let expected_coefficient = source_scores
-        .iter()
-        .zip(target_scores)
-        .map(|(source, target)| (source - source_mean) * target)
-        .sum::<f64>()
-        / denominator;
-    let expected_fitted = source_scores
-        .iter()
-        .map(|source| source * expected_coefficient)
-        .collect::<Vec<_>>();
-    let residual = target_scores
-        .iter()
-        .zip(&expected_fitted)
-        .map(|(actual, fitted)| (actual - fitted).powi(2))
-        .sum::<f64>();
-    let total = target_scores.iter().map(|value| value * value).sum::<f64>();
-    let expected_r_squared = 1.0 - residual / total;
-    if estimation.paths.len() != 1
-        || estimation.paths[0].source != path.source
-        || estimation.paths[0].target != path.target
-        || !close_enough(estimation.paths[0].coefficient, expected_coefficient)
-        || estimation.r_squared.len() != 1
+    let mut actual_paths = BTreeMap::new();
+    if estimation.paths.iter().any(|path| {
+        !path.coefficient.is_finite()
+            || actual_paths
+                .insert((path.source.clone(), path.target.clone()), path.coefficient)
+                .is_some()
+    }) || actual_paths.keys().cloned().collect::<BTreeSet<_>>() != expected_paths
         || estimation
             .r_squared
-            .get(&path.target)
-            .is_none_or(|value| !close_enough(*value, expected_r_squared))
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<_>>()
+            != predictors_by_target
+                .keys()
+                .cloned()
+                .collect::<BTreeSet<_>>()
         || estimation
-            .warnings
+            .r_squared
+            .values()
+            .any(|value| !value.is_finite())
+    {
+        return Err(invalid());
+    }
+    for (target, sources) in &predictors_by_target {
+        let predictor_scores = sources
             .iter()
-            .filter(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
-            .count()
-            != 1
+            .map(|source| estimation.construct_scores[source].as_slice())
+            .collect::<Vec<_>>();
+        let Some((coefficients, expected_r_squared)) = recompute_hoc_structural_equation(
+            &predictor_scores,
+            &estimation.construct_scores[target],
+        ) else {
+            return Err(invalid());
+        };
+        if sources
+            .iter()
+            .zip(coefficients)
+            .any(|(source, coefficient)| {
+                actual_paths
+                    .get(&(source.clone(), target.clone()))
+                    .is_none_or(|actual| !close_enough(*actual, coefficient))
+            })
+            || estimation
+                .r_squared
+                .get(target)
+                .is_none_or(|actual| !close_enough(*actual, expected_r_squared))
+        {
+            return Err(invalid());
+        }
+    }
+    if estimation
+        .warnings
+        .iter()
+        .filter(|warning| warning.starts_with(TWO_STAGE_SCOPE_WARNING_PREFIX))
+        .count()
+        != 1
     {
         return Err(invalid());
     }
@@ -13333,6 +13433,88 @@ mod tests {
             "../../../validation/results/higher_order_two_stage_base.recipe.json"
         ));
         recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
+        (dataset, recipe, result)
+    }
+
+    fn runner_generated_endogenous_higher_order() -> (Dataset, AnalysisRecipe, AnalysisResult) {
+        let dataset = import_delimited_bytes(
+            include_bytes!("../../../validation/fixtures/organizational_identification_v1.csv"),
+            "organizational_identification_v1.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let mut recipe = migrated_execution_recipe(include_bytes!(
+            "../../../validation/results/higher_order_two_stage_base.recipe.json"
+        ));
+        recipe.dataset_fingerprint = dataset.fingerprint.0.clone();
+        recipe.model = ModelSpec {
+            id: Uuid::new_v4(),
+            name: "Organizational Identification endogenous HOC".into(),
+            constructs: vec![
+                qpls_core::Construct {
+                    id: "org_prestige".into(),
+                    name: "Organizational Prestige".into(),
+                    short_name: "OP".into(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: (1..=8).map(|index| format!("org_pre{index}")).collect(),
+                },
+                qpls_core::Construct {
+                    id: "org_identification".into(),
+                    name: "Organizational Identification".into(),
+                    short_name: "OI".into(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: (1..=6).map(|index| format!("org_ident{index}")).collect(),
+                },
+                qpls_core::Construct {
+                    id: "affective_commitment_joy".into(),
+                    name: "Affective Commitment (Joy)".into(),
+                    short_name: "ACJ".into(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: (1..=4).map(|index| format!("ac_joy{index}")).collect(),
+                },
+                qpls_core::Construct {
+                    id: "affective_commitment_love".into(),
+                    name: "Affective Commitment (Love)".into(),
+                    short_name: "ACL".into(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: (1..=3).map(|index| format!("ac_love{index}")).collect(),
+                },
+                qpls_core::Construct {
+                    id: "affective_commitment".into(),
+                    name: "Affective Commitment".into(),
+                    short_name: "AC".into(),
+                    mode: MeasurementMode::Reflective,
+                    indicators: Vec::new(),
+                },
+            ],
+            paths: vec![
+                qpls_core::StructuralPath {
+                    source: "org_prestige".into(),
+                    target: "org_identification".into(),
+                },
+                qpls_core::StructuralPath {
+                    source: "org_identification".into(),
+                    target: "affective_commitment".into(),
+                },
+                qpls_core::StructuralPath {
+                    source: "org_prestige".into(),
+                    target: "affective_commitment".into(),
+                },
+            ],
+            controls: Vec::new(),
+            higher_order_constructs: vec![qpls_core::HigherOrderConstruct {
+                id: "affective_commitment".into(),
+                components: vec![
+                    "affective_commitment_joy".into(),
+                    "affective_commitment_love".into(),
+                ],
+                method: HigherOrderMethod::TwoStage,
+                stage_one_recipe: None,
+            }],
+            interactions: Vec::new(),
+        };
         let result = qpls_runner::run_pls_analysis(&dataset, &recipe, || false, |_| {}).unwrap();
         (dataset, recipe, result)
     }
@@ -18653,6 +18835,105 @@ mod tests {
             resampled_recipe,
             resampled_result,
         );
+    }
+
+    #[test]
+    fn endogenous_two_stage_hoc_validates_multi_predictor_equations_and_rejects_tampering() {
+        let (dataset, recipe, result) = runner_generated_endogenous_higher_order();
+        let estimation: PlsResult =
+            serde_json::from_value(estimation_payload(&result).clone()).unwrap();
+        let assessment: AssessmentResult = match &result.payload {
+            AnalysisPayload::PlsPmV1 { assessment, .. }
+            | AnalysisPayload::PlsPmV2 { assessment, .. }
+            | AnalysisPayload::PlsPmV3 { assessment, .. } => {
+                serde_json::from_value(assessment.clone()).unwrap()
+            }
+            AnalysisPayload::PlsSampleSizePowerV1 { .. }
+            | AnalysisPayload::PlsSampleSizePowerV2 { .. }
+            | AnalysisPayload::Legacy { .. } => panic!("expected a typed PLS assessment payload"),
+        };
+        let coefficient = |source: &str, target: &str| {
+            estimation
+                .paths
+                .iter()
+                .find(|path| path.source == source && path.target == target)
+                .map(|path| path.coefficient)
+                .unwrap()
+        };
+        for (source, target, expected) in [
+            ("org_prestige", "org_identification", 0.361_419_346_945_f64),
+            (
+                "org_identification",
+                "affective_commitment",
+                0.553_481_492_949_f64,
+            ),
+            (
+                "org_prestige",
+                "affective_commitment",
+                0.169_316_513_166_f64,
+            ),
+        ] {
+            assert!((coefficient(source, target) - expected).abs() < 1e-9);
+        }
+        assert!((estimation.r_squared["org_identification"] - 0.130_623_944_346).abs() < 1e-9);
+        assert!((estimation.r_squared["affective_commitment"] - 0.402_749_629_440).abs() < 1e-9);
+
+        let mut project = Project::new("Validated endogenous disjoint two-stage HOC");
+        project.datasets.push(dataset.clone());
+        project.models.push(recipe.model.clone());
+        project
+            .append_validated_result(recipe.clone(), result.clone())
+            .unwrap();
+
+        let assert_contract_rejects = |tampered: &PlsResult| {
+            assert!(matches!(
+                validate_higher_order_contract(&result, tampered, &assessment, Some(&recipe)),
+                Err(ProjectError::Invalid(_))
+            ));
+        };
+        for path_index in 0..estimation.paths.len() {
+            let mut tampered = estimation.clone();
+            tampered.paths[path_index].coefficient += 0.01 * (path_index + 1) as f64;
+            assert_contract_rejects(&tampered);
+        }
+        let mut missing_path = estimation.clone();
+        missing_path.paths.pop();
+        assert_contract_rejects(&missing_path);
+        let mut duplicate_path = estimation.clone();
+        duplicate_path.paths.push(duplicate_path.paths[0].clone());
+        assert_contract_rejects(&duplicate_path);
+        for target in ["org_identification", "affective_commitment"] {
+            let mut tampered = estimation.clone();
+            *tampered.r_squared.get_mut(target).unwrap() += 0.01;
+            assert_contract_rejects(&tampered);
+        }
+        let mut missing_r_squared = estimation.clone();
+        missing_r_squared.r_squared.remove("org_identification");
+        assert_contract_rejects(&missing_r_squared);
+
+        let mut tampered_score = estimation;
+        tampered_score
+            .construct_scores
+            .get_mut("org_prestige")
+            .unwrap()[0] += 0.25;
+        assert_contract_rejects(&tampered_score);
+
+        let mut structural_component = recipe;
+        structural_component
+            .model
+            .paths
+            .push(qpls_core::StructuralPath {
+                source: "affective_commitment_joy".into(),
+                target: "org_identification".into(),
+            });
+        let structural_component_result =
+            qpls_runner::run_pls_analysis(&dataset, &structural_component, || false, |_| {})
+                .unwrap();
+        assert!(matches!(
+            Project::new("structural HOC component")
+                .append_validated_result(structural_component, structural_component_result),
+            Err(ProjectError::Invalid(_))
+        ));
     }
 
     #[test]

@@ -1,14 +1,25 @@
 {
   "passed": true,
   "section": "v176_samples_guided",
-  "generated_at": "2026-08-23T13:13:46.904348+00:00",
+  "generated_at": "2026-08-23T15:57:15.340230+00:00",
   "checked_files": [
     "src-tauri/src/lib.rs",
     "src-tauri/src/sample_projects.rs",
     "src/App.tsx",
+    "src/data/bundledSampleProjects.v1.json",
+    "src/domain/bundledSampleCatalog.ts",
     "src/native/NativeDesktopApp.tsx",
     "src/native/NativeDesktopController.tsx",
-    "src/services/projectService.ts"
+    "src/services/projectService.ts",
+    "validation/benchmarks/corporate_reputation_smartpls/smartpls_reference_v1.json",
+    "validation/benchmarks/organizational_identification/higher_order_reference_v1.json",
+    "validation/benchmarks/organizational_identification/mediation_reference_v1.json",
+    "validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json",
+    "validation/benchmarks/organizational_identification/screenshot_reference_v1.json",
+    "validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv",
+    "validation/fixtures/mediation_sample.csv",
+    "validation/fixtures/organizational_identification_v1.csv",
+    "validation/fixtures/simple_reflective.csv"
   ],
   "passed_checks": [
     {
@@ -17,23 +28,11 @@
     },
     {
       "file": "src/native/NativeDesktopApp.tsx",
-      "label": "typed production sample catalogue"
+      "label": "shared production sample catalogue"
     },
     {
       "file": "src/native/NativeDesktopApp.tsx",
-      "label": "corporate reputation sample"
-    },
-    {
-      "file": "src/native/NativeDesktopApp.tsx",
-      "label": "simple PLS sample"
-    },
-    {
-      "file": "src/native/NativeDesktopApp.tsx",
-      "label": "mediation sample"
-    },
-    {
-      "file": "src/native/NativeDesktopApp.tsx",
-      "label": "organizational identification sample"
+      "label": "launcher renders every catalog sample"
     },
     {
       "file": "src/native/NativeDesktopApp.tsx",
@@ -49,7 +48,11 @@
     },
     {
       "file": "src/native/NativeDesktopController.tsx",
-      "label": "native event reads selected sample identity"
+      "label": "native event validates selected catalog identity"
+    },
+    {
+      "file": "src/native/NativeDesktopController.tsx",
+      "label": "native event uses the catalog default"
     },
     {
       "file": "src/native/NativeDesktopController.tsx",
@@ -61,23 +64,23 @@
     },
     {
       "file": "src-tauri/src/lib.rs",
-      "label": "typed bundled sample selector"
+      "label": "catalog-backed bundled sample selector"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
-      "label": "corporate reputation backend identity"
+      "label": "backend embeds the shared sample catalogue"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
-      "label": "organizational identification backend identity"
+      "label": "backend parses the shared sample catalogue"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
-      "label": "simple PLS backend identity"
+      "label": "backend resolves sample identities from the catalogue"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
-      "label": "mediation backend identity"
+      "label": "backend tests iterate the catalogue"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
@@ -90,10 +93,117 @@
     {
       "file": "src-tauri/src/sample_projects.rs",
       "label": "sample reopen test"
+    },
+    {
+      "file": "src/domain/bundledSampleCatalog.ts",
+      "label": "frontend imports the shared sample catalogue"
+    },
+    {
+      "file": "src/domain/bundledSampleCatalog.ts",
+      "label": "frontend validates the shared sample catalogue"
+    },
+    {
+      "file": "src/domain/bundledSampleCatalog.ts",
+      "label": "frontend exposes catalog-backed sample cards"
+    },
+    {
+      "file": "src/domain/bundledSampleCatalog.ts",
+      "label": "frontend validates catalog-backed sample identities"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "shared sample catalogue contract"
+    },
+    {
+      "file": "validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv",
+      "label": "catalog dataset corporate_reputation_mean_replaced_v1 contract"
+    },
+    {
+      "file": "validation/fixtures/organizational_identification_v1.csv",
+      "label": "catalog dataset organizational_identification_v1 contract"
+    },
+    {
+      "file": "validation/fixtures/simple_reflective.csv",
+      "label": "catalog dataset simple_reflective_v1 contract"
+    },
+    {
+      "file": "validation/fixtures/mediation_sample.csv",
+      "label": "catalog dataset mediation_sample_v1 contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample corporate_reputation contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample simple_pls contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample mediation contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample organizational_identification contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample organizational_identification_mediation contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample organizational_identification_moderated_mediation contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample organizational_identification_higher_order contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "legacy bundled sample contracts"
     }
   ],
   "missing": [],
   "frontend_only": false,
   "native_backend_bound": true,
-  "numerical_outputs_changed": false
+  "numerical_outputs_changed": false,
+  "bundled_sample_catalog": {
+    "sample_count": 7,
+    "sample_ids": [
+      "corporate_reputation",
+      "simple_pls",
+      "mediation",
+      "organizational_identification",
+      "organizational_identification_mediation",
+      "organizational_identification_moderated_mediation",
+      "organizational_identification_higher_order"
+    ],
+    "dataset_count": 4,
+    "legacy_sample_ids": [
+      "corporate_reputation",
+      "simple_pls",
+      "mediation",
+      "organizational_identification"
+    ],
+    "requested_oi_samples": {
+      "organizational_identification_mediation": {
+        "reference_kind": "supplied_screenshot_three_decimal_values",
+        "reference_path": "validation/benchmarks/organizational_identification/mediation_reference_v1.json",
+        "evidence_boundary": "alternative_pedagogical_model_on_the_shared_oi_dataset",
+        "uses_shared_oi_dataset": true
+      },
+      "organizational_identification_moderated_mediation": {
+        "reference_kind": "quickpls_qualified_single_interaction_point_topology_three_decimal_values",
+        "reference_path": "validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json",
+        "evidence_boundary": "editable_ordinary_project_pls_point_topology_only_not_dedicated_moderated_mediation_inference_and_not_claimed_as_strict_general_sem_screenshot_parity",
+        "uses_shared_oi_dataset": true
+      },
+      "organizational_identification_higher_order": {
+        "reference_kind": "quickpls_disjoint_two_stage_three_decimal_values",
+        "reference_path": "validation/benchmarks/organizational_identification/higher_order_reference_v1.json",
+        "evidence_boundary": "supported_quickpls_disjoint_two_stage_not_claimed_as_screenshot_parity",
+        "uses_shared_oi_dataset": true
+      }
+    }
+  }
 }

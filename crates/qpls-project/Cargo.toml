@@ -6,6 +6,7 @@ license.workspace = true
 
 [dependencies]
 chrono.workspace = true
+faer.workspace = true
 qpls-core = { path = "../qpls-core" }
 qpls-data = { path = "../qpls-data" }
 qpls-estimation = { path = "../qpls-estimation" }

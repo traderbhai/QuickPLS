@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "sample_id": "organizational_identification_higher_order",
+  "reference_kind": "quickpls_disjoint_two_stage_three_decimal_values",
+  "source_screenshot_sha256": "47cea13e1be0aa6abd4ae41f14a8fc75debcac0f1c5cbc8aa9ec6b825176af15",
+  "dataset_fingerprint": "v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a",
+  "precision_decimals": 3,
+  "values": {
+    "path:org_prestige->org_identification": 0.361,
+    "path:org_identification->affective_commitment": 0.553,
+    "path:org_prestige->affective_commitment": 0.169,
+    "r2:org_identification": 0.131,
+    "r2:affective_commitment": 0.403,
+    "loading:org_prestige:org_pre1": 0.775,
+    "loading:org_prestige:org_pre2": 0.823,
+    "loading:org_prestige:org_pre3": 0.773,
+    "loading:org_prestige:org_pre4": 0.805,
+    "loading:org_prestige:org_pre5": 0.801,
+    "loading:org_prestige:org_pre6": 0.847,
+    "loading:org_prestige:org_pre7": 0.780,
+    "loading:org_prestige:org_pre8": 0.796,
+    "loading:org_identification:org_ident1": 0.788,
+    "loading:org_identification:org_ident2": 0.759,
+    "loading:org_identification:org_ident3": 0.637,
+    "loading:org_identification:org_ident4": 0.819,
+    "loading:org_identification:org_ident5": 0.810,
+    "loading:org_identification:org_ident6": 0.746,
+    "loading:affective_commitment:__qpls_hoc_affective_commitment_affective_commitment_joy": 0.916,
+    "loading:affective_commitment:__qpls_hoc_affective_commitment_affective_commitment_love": -0.774
+  },
+  "supplied_screenshot_values": {
+    "path:org_prestige->org_identification": 0.361,
+    "path:org_identification->affective_commitment": 0.552,
+    "path:org_prestige->affective_commitment": 0.177,
+    "r2:org_identification": 0.131,
+    "r2:affective_commitment": 0.406,
+    "loading:affective_commitment:acj_component_score": 0.915,
+    "loading:affective_commitment:acl_component_score": -0.788
+  },
+  "evidence_boundary": "QuickPLS uses its supported disjoint two-stage HOC estimator. The supplied screenshot uses a nearby but not identical stage-two specification, so screenshot parity is not claimed."
+}

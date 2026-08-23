@@ -526,7 +526,9 @@ def validate_cumulative_receipt(
         and acceptance_contract.get("contract_id") == PACKAGED_ACCEPTANCE_CONTRACT["contract_id"]
         and acceptance_contract.get("contract_version") == PACKAGED_ACCEPTANCE_CONTRACT["contract_version"]
         and acceptance_contract.get("required_check_count") == EXPECTED_CHECK_COUNT
-        and acceptance_contract.get("sha256") == expected_contract_descriptor["sha256"],
+        and acceptance_contract.get("sha256") == expected_contract_descriptor["sha256"]
+        and acceptance_contract.get("bundled_sample_catalog")
+        == expected_contract_descriptor["bundled_sample_catalog"],
         "cumulative receipt acceptance-contract descriptor is stale or invalid",
     )
     report_path = ROOT / str(receipt.get("report", ""))

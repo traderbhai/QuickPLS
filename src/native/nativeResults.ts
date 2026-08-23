@@ -2247,8 +2247,8 @@ function nativeHigherOrderProjection(
   if (!componentRows.length) return null;
 
   const structuralRows = run.result.paths
-    .filter((row) => constructIds.has(row.source)
-      && !constructIds.has(row.target)
+    .filter((row) => (constructIds.has(row.source) || constructIds.has(row.target))
+      && hasText(row.source)
       && hasText(row.target)
       && isFiniteNumber(row.coefficient))
     .map((row) => [constructPathLabel([row.source, row.target], constructLabel), formatNumber(row.coefficient)]);
@@ -4420,7 +4420,7 @@ export function nativeResultRowOverlaySelectionV1(
     }
     if (selectedResultId === "hoc_structural_paths") {
       const hocIds = new Set(declarations.map((declaration) => declaration.hocId));
-      const selected = result.paths.filter((row) => hocIds.has(row.source) && !hocIds.has(row.target))[rowIndex!];
+      const selected = result.paths.filter((row) => hocIds.has(row.source) || hocIds.has(row.target))[rowIndex!];
       return selected
         ? nativePathOverlayV1(run, [selected.source, selected.target], identity.relation({ source: selected.source, target: selected.target }))
         : null;

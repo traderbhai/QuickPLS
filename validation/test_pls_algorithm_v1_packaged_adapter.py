@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 import pls_algorithm_v1_factory_audit as audit
 import pls_algorithm_v1_packaged_acceptance as packaged
+from packaged_windows_acceptance_v2 import packaged_acceptance_contract_descriptor
 
 
 class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
@@ -107,11 +108,10 @@ class PlsAlgorithmV1PackagedAdapterTests(unittest.TestCase):
             "final_scope": "regression_bootstrap",
             "graceful_process_cleanup_verified": True,
             "acceptance_contract": {
-                "path": "validation/capabilities/packaged_windows_acceptance_v2.manifest.json",
+                **packaged_acceptance_contract_descriptor(),
                 "contract_id": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_id"],
                 "contract_version": packaged.PACKAGED_ACCEPTANCE_CONTRACT["contract_version"],
                 "required_check_count": packaged.EXPECTED_CUMULATIVE_CHECKS,
-                "sha256": packaged.CONTRACT_FILE_SHA256,
             },
             "exports": [
                 {
