@@ -6,19 +6,23 @@ This guide follows the Version 2.55 source workflow:
 sole failure was `frontend_typecheck`, where
 `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
 `TS2339`. The same-script, same-suite formal final diagnostic
-`20260822T155928Z` at source `6aa92b7` passed 14/14, including 453/453 Vitest
-suites, 1697/1697 tests, 17/17 rebaseline assertions,
-and zero captured console errors. Both formal records use runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796`;
-the reports are separate evidence records and are not byte-identical.
-A new provenance-bound unsigned 2.55 candidate build, isolated install, and
+`20260823T000930Z` at source `d5b508aa9e8703dfc169a9f224ee76d9a2796d02`
+passed 14/14, including 453/453 Vitest suites, 1722/1722 tests, 17/17
+rebaseline assertions, and zero captured console errors. Its authoritative
+report is
+`validation/results/v255_consolidated_diagnostics_20260823T000930Z/v255_consolidated_diagnostics.json`
+with SHA-256 `F83542DC2BD6427F00583842932B00CB6F551814FBA0BD636F01AB1F0B99C562`;
+the retained first failure and final pass are separate evidence records and are
+not byte-identical.
+A fresh provenance-bound unsigned 2.55 candidate build, isolated install, and
 full installed-and-portable smoke remain pending, followed by evidence
 collection, bundling, and publication; the latest downloadable public pre-release
 remains `v2.54.0` and code signing is excluded.
 
-Candidate/install/smoke attempts `20260822T145055Z`, `20260822T151222Z`, and
-every earlier 2.55 candidate, install, or smoke attempt are historical and
-ineligible.
+The superseded diagnostics `20260822T202919Z` and `20260822T224933Z`, failed diagnostic attempt
+`20260822T223906Z`, candidate builds `20260822T205741Z` and `20260822T230754Z`, portable probes
+`20260822T214629Z` and `20260822T233111Z`, and all other later failed, probe, or build attempts are
+historical and ineligible.
 The exact typed post-hoc authority correction passed its focused identity suite
 17/17 but has not yet been validated in a packaged executable. The install
 wrapper separately accepts only Tauri's exact three-byte `UNK` → `NSS` marker

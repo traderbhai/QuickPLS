@@ -13,8 +13,8 @@ from validation import package_release_artifacts as release
 
 
 VERSION = "3.0.0"
-REPOSITORY_RELEASE_VERSION = "2.54.0"
-REPOSITORY_ARTIFACT_LABEL = "v2_54_0_canvas_results"
+REPOSITORY_RELEASE_VERSION = "2.55.0"
+REPOSITORY_ARTIFACT_LABEL = "v2_55_0_calculate_evidence"
 REPOSITORY_ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_CARGO_PACKAGES = {
     "qpls-assessment",
@@ -307,11 +307,11 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
             f"-Label {REPOSITORY_ARTIFACT_LABEL}",
         )
         self.assertEqual(package["scripts"]["qpls:desktop:build-versioned"], "npm run qpls:release:artifacts")
-        self.assertEqual(prototype.count('const releaseVersion = "2.54.0";'), 1)
+        self.assertEqual(prototype.count('const releaseVersion = "2.55.0";'), 1)
         self.assertNotIn('const releaseVersion = "2.45.0";', prototype)
 
         self.assertIn(
-            "Current source version: **2.54.0**.",
+            "Current source version: **2.55.0**.",
             readme,
         )
         self.assertIn(
@@ -334,7 +334,7 @@ class RepositoryReleaseMetadataTests(unittest.TestCase):
         self.assertNotIn("coordinated public 2.46.0 release transition is still pending", readme)
 
         self.assertIn(
-            "Current source version: **2.54.0**.",
+            "Current source version: **2.55.0**.",
             installation,
         )
         self.assertIn(
