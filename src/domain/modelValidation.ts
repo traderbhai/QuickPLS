@@ -23,11 +23,18 @@ export function validateModel(nodes: Array<Node<ConstructData>>, edges: Edge[]):
     }
   }
 
+  const higherOrderTermIds = new Set<string>();
   for (const node of nodes.filter((candidate) => candidate.data.semantic === "higher_order")) {
     const higherOrder = node.data.higherOrder;
-    if (!higherOrder || higherOrder.id !== node.id) {
+    const termId = typeof higherOrder?.id === "string" ? higherOrder.id.trim() : "";
+    if (!higherOrder || !termId) {
       issues.push({ code: "higher_order.invalid", subject: node.id });
       continue;
+    }
+    if (higherOrderTermIds.has(termId)) {
+      issues.push({ code: "higher_order.invalid", subject: node.id });
+    } else {
+      higherOrderTermIds.add(termId);
     }
     if (higherOrder.components.length < 2) {
       issues.push({ code: "higher_order.components", subject: node.id });

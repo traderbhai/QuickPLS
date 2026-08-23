@@ -112,9 +112,9 @@ describe("validateModel", () => {
       .toContainEqual({ code: "interaction.invalid", subject: "xzw" });
   });
 
-  it("accepts a valid indicator-free higher-order construct placeholder", () => {
+  it("accepts a strict indicator-free higher-order construct with distinct term and output identities", () => {
     const higherOrder: Node<ConstructData> = {
-      id: "hoc",
+      id: "derived:hoc",
       position: { x: 2, y: 0 },
       data: {
         label: "Higher-order construct",
@@ -122,7 +122,7 @@ describe("validateModel", () => {
         mode: "reflective",
         indicators: [],
         semantic: "higher_order",
-        higherOrder: { id: "hoc", components: ["x", "y"], method: "two_stage", stage_one_recipe: null },
+        higherOrder: { id: "hoc:rr", components: ["x", "y"], method: "two_stage", stage_one_recipe: null },
       },
     };
 
@@ -130,7 +130,7 @@ describe("validateModel", () => {
   });
 
   it("blocks incomplete and infeasible higher-order declarations before dispatch", () => {
-    const malformed: Node<ConstructData> = {
+    const blankTerm: Node<ConstructData> = {
       id: "hoc",
       position: { x: 2, y: 0 },
       data: {
@@ -139,15 +139,21 @@ describe("validateModel", () => {
         mode: "reflective",
         indicators: [],
         semantic: "higher_order",
-        higherOrder: { id: "wrong-id", components: ["x"], method: "hybrid", stage_one_recipe: null },
+        higherOrder: { id: "   ", components: ["x"], method: "hybrid", stage_one_recipe: null },
       },
     };
-    expect(validateModel([...nodes, malformed], edges)).toContainEqual({ code: "higher_order.invalid", subject: "hoc" });
+    const missingDeclaration: Node<ConstructData> = {
+      ...blankTerm,
+      id: "hoc-missing",
+      data: { ...blankTerm.data, higherOrder: undefined },
+    };
+    expect(validateModel([...nodes, blankTerm], edges)).toContainEqual({ code: "higher_order.invalid", subject: "hoc" });
+    expect(validateModel([...nodes, missingDeclaration], edges)).toContainEqual({ code: "higher_order.invalid", subject: "hoc-missing" });
 
     const infeasible = {
-      ...malformed,
+      ...blankTerm,
       data: {
-        ...malformed.data,
+        ...blankTerm.data,
         higherOrder: { id: "hoc", components: ["x", "missing", "x"], method: "hybrid" as const, stage_one_recipe: null },
       },
     };
@@ -158,6 +164,24 @@ describe("validateModel", () => {
       { code: "higher_order.duplicate_component", subject: "hoc:x" },
       { code: "higher_order.hybrid_component_indicators", subject: "hoc:x" },
     ]));
+  });
+
+  it("rejects duplicate higher-order scientific term identities without collapsing output identities", () => {
+    const higherOrder = (outputId: string): Node<ConstructData> => ({
+      id: outputId,
+      position: { x: 2, y: 0 },
+      data: {
+        label: outputId,
+        shortName: "HOC",
+        mode: "reflective",
+        indicators: [],
+        semantic: "higher_order",
+        higherOrder: { id: "hoc:rr", components: ["x", "y"], method: "two_stage", stage_one_recipe: null },
+      },
+    });
+
+    expect(validateModel([...nodes, higherOrder("derived:hoc"), higherOrder("derived:hoc-copy")], edges))
+      .toContainEqual({ code: "higher_order.invalid", subject: "derived:hoc-copy" });
   });
 
   it("accepts multiple distinct interactions on the same focal path", () => {

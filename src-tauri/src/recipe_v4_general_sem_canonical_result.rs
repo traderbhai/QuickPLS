@@ -1481,11 +1481,12 @@ fn build_recipe_v4_general_sem_pls_three_way_canonical_result_v1(
         cells.push(bootstrap_cell.clone());
     }
     sort_and_deduplicate_cells(&mut cells);
-    let table_cells = if inferred {
+    let mut table_cells = if inferred {
         vec![point_cell.clone(), bootstrap_cell.clone()]
     } else {
         vec![point_cell.clone()]
     };
+    sort_and_deduplicate_cells(&mut table_cells);
     project_canonical_joint_stage_two_structural_tables_v1(
         &mut document,
         artifact.plan(),
@@ -5004,6 +5005,83 @@ mod tests {
         assert!(!results.three_way_conditional_interaction_effects.is_empty());
         assert!(!results.three_way_simple_slopes.is_empty());
         assert!(results.three_way_moderation_bootstrap_receipt.is_none());
+
+        let mut bootstrap_recipe = resident_recipe.clone();
+        bootstrap_recipe.settings.bootstrap_samples = 20;
+        bootstrap_recipe.settings.seed = qpls_core::GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1;
+        bootstrap_recipe.settings.confidence_level = 0.95;
+        bootstrap_recipe.settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+        bootstrap_recipe.settings.studentized_inner_samples = 0;
+        bootstrap_recipe.settings.workers = 1;
+        bootstrap_recipe.general_sem_config = Some(GeneralSemConfigV1 {
+            inference: GeneralSemInferenceV1::CaseBootstrap {
+                resamples: 20,
+                seed: qpls_core::GENERAL_SEM_CASE_BOOTSTRAP_MAX_SEED_V1,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            },
+            ..GeneralSemConfigV1::default()
+        });
+        bootstrap_recipe.ensure_valid().unwrap();
+        let bootstrap_artifact =
+            compile_general_sem_pls_recipe_v1(&bootstrap_recipe, Some(resident_model)).unwrap();
+        let bootstrap_analytical = run_compiled_general_sem_pls_recipe_v1(
+            &loaded.datasets[0],
+            &bootstrap_recipe,
+            resident_model,
+            &bootstrap_artifact,
+            || false,
+            |_| {},
+        )
+        .unwrap();
+        assert!(
+            bootstrap_analytical
+                .three_way_bootstrap_inference()
+                .is_some()
+        );
+        let bootstrap_canonical = build_recipe_v4_general_sem_pls_canonical_result_v1(
+            Uuid::from_u128(0x3254_0000_0000_0000_0000_0000_0000_0041),
+            three_way_project_id,
+            loaded.datasets[0].id,
+            "2026-08-22T08:04:00.000Z",
+            "2026-08-22T08:04:01.000Z",
+            &bootstrap_recipe,
+            resident_model,
+            &bootstrap_analytical,
+        )
+        .unwrap();
+        let expected_inferred_cells = vec![
+            pls_general_three_way_moderation_bootstrap_capability_cell_v1(),
+            pls_general_three_way_moderation_point_capability_cell_v1(),
+        ];
+        let three_way_section = bootstrap_canonical
+            .sections
+            .iter()
+            .find(|section| section.id == GENERAL_SEM_THREE_WAY_SECTION_ID_V1)
+            .unwrap();
+        assert_eq!(
+            three_way_section.capability_cells.as_ref(),
+            Some(&expected_inferred_cells)
+        );
+        for table_id in [
+            GENERAL_SEM_THREE_WAY_EFFECT_TABLE_ID_V1,
+            GENERAL_SEM_THREE_WAY_CONDITIONAL_TABLE_ID_V1,
+            GENERAL_SEM_THREE_WAY_SIMPLE_SLOPES_TABLE_ID_V1,
+        ] {
+            assert_eq!(
+                bootstrap_canonical
+                    .tables
+                    .iter()
+                    .find(|table| table.id == table_id)
+                    .and_then(|table| table.capability_cells.as_ref()),
+                Some(&expected_inferred_cells),
+                "{table_id} must use exact option-cell order"
+            );
+        }
+        let archive_bootstrap: qpls_project::CanonicalResultDocumentV2 =
+            serde_json::from_value(serde_json::to_value(&bootstrap_canonical).unwrap()).unwrap();
+        archive_bootstrap.ensure_valid().unwrap();
 
         let archive_canonical: qpls_project::CanonicalResultDocumentV2 =
             serde_json::from_value(serde_json::to_value(&canonical).unwrap()).unwrap();

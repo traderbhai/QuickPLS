@@ -227,7 +227,62 @@ describe("nativePlsReadiness", () => {
     }
   });
 
-  it("accepts a valid generated HOC block and blocks malformed HOC metadata", () => {
+  it("accepts distinct strict HOC term/output identities for every HCM type in point and bootstrap", () => {
+    const outcome: Node<ConstructData> = {
+      id: "outcome",
+      position: { x: 500, y: 90 },
+      data: { label: "Outcome", shortName: "OUT", mode: "reflective", indicators: ["y2"] },
+    };
+    for (const [code, measurementType, componentMode, hocMode] of [
+      ["rr", "reflective_reflective", "reflective", "reflective"],
+      ["rf", "reflective_formative", "reflective", "formative"],
+      ["fr", "formative_reflective", "formative", "reflective"],
+      ["ff", "formative_formative", "formative", "formative"],
+    ] as const) {
+      const component: Node<ConstructData> = {
+        id: "z",
+        position: { x: 0, y: 180 },
+        data: { label: "Second component", shortName: "Z", mode: componentMode, indicators: ["y1"] },
+      };
+      const firstComponent: Node<ConstructData> = {
+        ...nodes[0],
+        data: { ...nodes[0].data, mode: componentMode },
+      };
+      const higherOrder: Node<ConstructData> = {
+        id: "derived:hoc",
+        position: { x: 150, y: 180 },
+        data: {
+          label: `Higher-order construct ${code.toUpperCase()}`,
+          shortName: "HOC",
+          mode: hocMode,
+          indicators: [],
+          semantic: "higher_order",
+          higherOrder: {
+            id: `hoc:${code}`,
+            components: ["x", "z"],
+            method: "two_stage",
+            canonicalApproach: "disjoint_two_stage",
+            measurementType,
+            stage_one_recipe: null,
+          },
+        },
+      };
+      const hocNodes = [firstComponent, component, outcome, higherOrder];
+      const hocEdges = [{ id: "hoc-outcome", source: "derived:hoc", target: "outcome" }];
+      const point = readiness({ nodes: hocNodes, edges: hocEdges });
+      expect(point.canRun, `${code.toUpperCase()} point`).toBe(true);
+      expect(point.items.find((item) => item.id === "calculation")?.detail).toContain("chosen approach");
+
+      const bootstrap = readiness({
+        nodes: hocNodes,
+        edges: hocEdges,
+        settings: { ...settings, method: "bootstrap", bootstrapSamples: 100 },
+      });
+      expect(bootstrap.canRun, `${code.toUpperCase()} bootstrap`).toBe(true);
+    }
+  });
+
+  it("blocks malformed HOC metadata", () => {
     const component: Node<ConstructData> = {
       id: "z",
       position: { x: 0, y: 180 },
@@ -238,8 +293,8 @@ describe("nativePlsReadiness", () => {
       position: { x: 500, y: 90 },
       data: { label: "Outcome", shortName: "OUT", mode: "reflective", indicators: ["y2"] },
     };
-    const higherOrder: Node<ConstructData> = {
-      id: "hoc",
+    const malformed: Node<ConstructData> = {
+      id: "derived:hoc",
       position: { x: 150, y: 180 },
       data: {
         label: "Higher-order construct",
@@ -247,20 +302,11 @@ describe("nativePlsReadiness", () => {
         mode: "reflective",
         indicators: [],
         semantic: "higher_order",
-        higherOrder: { id: "hoc", components: ["x", "z"], method: "two_stage", stage_one_recipe: null },
+        higherOrder: { id: "hoc:rr", components: ["missing"], method: "two_stage", stage_one_recipe: null },
       },
     };
-    const hocNodes = [nodes[0], component, outcome, higherOrder];
-    const hocEdges = [{ id: "hoc-outcome", source: "hoc", target: "outcome" }];
-    const valid = readiness({ nodes: hocNodes, edges: hocEdges });
-    expect(valid.canRun).toBe(true);
-    expect(valid.items.find((item) => item.id === "calculation")?.detail).toContain("chosen approach");
-    expect(readiness({ nodes: hocNodes, edges: hocEdges, settings: { ...settings, method: "bootstrap", bootstrapSamples: 100 } }).canRun).toBe(true);
+    const hocEdges = [{ id: "hoc-outcome", source: "derived:hoc", target: "outcome" }];
 
-    const malformed: Node<ConstructData> = {
-      ...higherOrder,
-      data: { ...higherOrder.data, higherOrder: { ...higherOrder.data.higherOrder!, components: ["missing"] } },
-    };
     const blocked = readiness({ nodes: [nodes[0], component, outcome, malformed], edges: hocEdges });
     expect(blocked.canRun).toBe(false);
     expect(blocked.blockers.find((item) => item.id === "model")?.detail).toContain("higher-order construct");

@@ -386,11 +386,13 @@ function materializeManifestCase(entry) {
     inference: route.inference,
     bootstrap_samples: route.bootstrap_samples,
   };
+  const requiresRequestedRevision = route.moderated_stage === "first_stage"
+    || route.moderated_stage === "second_stage";
   const steps = [
     { action: "goto_packaged" },
     { action: "create_project", name: `QuickPLS 2.55 evidence ${entry.id}` },
     { action: "load_named_sem_fixture", fixture: route.fixture },
-    prepareCalculationRevision,
+    ...(requiresRequestedRevision ? [] : [prepareCalculationRevision]),
   ];
   if (route.advanced_parameter_revision === true) {
     steps.push({ action: "exercise_advanced_parameter_revision" }, { action: "save_and_reopen_case_revision" });
@@ -402,7 +404,7 @@ function materializeManifestCase(entry) {
     bootstrap_samples: route.bootstrap_samples,
     moderated_stage: route.moderated_stage,
     route_contains: route.route_contains,
-    requires_requested_revision: false,
+    requires_requested_revision: requiresRequestedRevision,
     completion_timeout_ms: route.completion_timeout_ms ?? 300_000,
   }, { action: "select_result_table", table_id: route.table_id });
   if (route.archive_supplement_public_kind !== undefined) {
@@ -1134,10 +1136,14 @@ async function executeStep(page, step, context) {
         await selection.selectOption(match.value);
         moderatedStage = step.moderated_stage;
       }
+      const start = dialog.getByRole("button", { name: "Start calculation", exact: true });
+      const startEnableDeadline = Date.now() + timeout;
+      while (Date.now() < startEnableDeadline && !await start.isEnabled().catch(() => false)) {
+        await page.waitForTimeout(100);
+      }
+      assert(await start.isEnabled().catch(() => false), `Calculation is blocked: ${compact(await dialog.textContent())}`);
       const routeText = compact(await dialog.textContent());
       for (const expected of step.route_contains ?? []) assert(routeText.includes(expected), `Calculation route omits ${expected}: ${routeText}`);
-      const start = dialog.getByRole("button", { name: "Start calculation", exact: true });
-      assert(await start.isEnabled(), `Calculation is blocked: ${routeText}`);
       context.lastCalculation = { method: step.method, inference: step.inference ?? (step.method === "pls_bootstrap" ? "case_bootstrap" : "point"), moderatedStage, routeText };
       await start.click({ timeout });
       await dialog.waitFor({ state: "hidden", timeout }).catch(() => undefined);
@@ -1153,27 +1159,102 @@ async function executeStep(page, step, context) {
         "The active calculation-ready archive changed before calculation started.");
     }
     if (step.requires_requested_revision) {
+      assert(step.moderated_stage === "first_stage" || step.moderated_stage === "second_stage",
+        "Requested calculation revisions are reserved for an exact moderated-mediation path selection.");
       requestedRevisionTarget = path.join(context.evidenceDir, `${safeFileName(context.currentCaseId)}-requested-calculation.qpls`);
       assert(!await exists(requestedRevisionTarget), `Requested-calculation revision target already exists: ${requestedRevisionTarget}`);
       requestedRevisionHelper = createDialogHelper({ python: context.python, mode: "save", target: requestedRevisionTarget, allowedRoot: context.evidenceDir, extension: "qpls", candidatePid: context.candidatePid, candidatePath: context.candidatePath });
       const ready = await requestedRevisionHelper.ready;
       assert(ready?.passed === true && ready?.event === "ready", `Requested-calculation Save helper was not ready: ${JSON.stringify(ready)}`);
     }
-    try {
-      await configureAndStart();
-      if (requestedRevisionHelper) {
-        const completed = await requestedRevisionHelper.completed;
-        assert(completed?.passed === true, `Requested-calculation revision Save failed: ${JSON.stringify(completed)}`);
-        context.calculationRevision = { target: requestedRevisionTarget, initialSha256: await fileSha256(requestedRevisionTarget) };
-      }
-    } finally {
-      requestedRevisionHelper?.stop();
-    }
     const advanced = page.getByRole("dialog", { name: "Calculate Advanced Model", exact: true });
     const advancedProgress = advanced.locator(".nd-cbsem-v4-monitor").filter({ visible: true });
     const activatedAuthority = advanced.getByText("Activated calculation authority", { exact: true }).filter({ visible: true });
     const exactCompatibility = advanced.locator("#nd-cbsem-compatibility-calculation").filter({ visible: true });
     const resultsWorkspace = page.locator(".nd-results-workspace").filter({ visible: true });
+    const recoveryClickTimeout = Math.min(timeout, 1_000);
+    const calculationAdvancedAutomatically = async () => (
+      await advancedProgress.isVisible().catch(() => false)
+      || await resultsWorkspace.isVisible().catch(() => false)
+    );
+    try {
+      await configureAndStart();
+      if (requestedRevisionHelper) {
+        await advanced.waitFor({ state: "visible", timeout });
+        const activate = advanced.getByRole("button", { name: "Save and activate project…", exact: true });
+        const activationDeadline = Date.now() + timeout;
+        let activationStarted = false;
+        while (Date.now() < activationDeadline) {
+          // The product's one-click coordinator may begin the same exact save
+          // before Playwright reaches the recovery control. Existing target
+          // bytes prove that activation is already underway; never double-click.
+          if (await exists(requestedRevisionTarget)) {
+            activationStarted = true;
+            break;
+          }
+          if (await activate.isVisible().catch(() => false)
+            && await activate.isEnabled().catch(() => false)) {
+            const activationClicked = await activate.click({ timeout: recoveryClickTimeout })
+              .then(() => true)
+              .catch(() => false);
+            if (activationClicked || await exists(requestedRevisionTarget)) {
+              activationStarted = true;
+              break;
+            }
+          }
+          await page.waitForTimeout(100);
+        }
+        assert(activationStarted, `Requested-calculation revision never exposed an enabled activation control: ${compact(await advanced.textContent())}`);
+        const completed = await requestedRevisionHelper.completed;
+        assert(completed?.passed === true, `Requested-calculation revision Save failed: ${JSON.stringify(completed)}`);
+        const requestedRevisionSha256 = String(completed.file?.sha256 ?? "").toLocaleLowerCase("en-US");
+        assert(/^[0-9a-f]{64}$/u.test(requestedRevisionSha256),
+          `Requested-calculation Save did not report an exact activation SHA-256: ${JSON.stringify(completed)}`);
+        context.calculationRevision = { target: requestedRevisionTarget, initialSha256: requestedRevisionSha256 };
+        await waitForOpenedProjectPath(page, requestedRevisionTarget, timeout);
+        const calculate = advanced.getByRole("button", { name: "Calculate moderated-mediation bootstrap", exact: true });
+        const calculationStartDeadline = Date.now() + timeout;
+        let calculationStarted = false;
+        while (Date.now() < calculationStartDeadline) {
+          // The calculation-presentation coordinator may advance immediately
+          // after activation, removing the transient authority/setup view.
+          if (await calculationAdvancedAutomatically()) {
+            calculationStarted = true;
+            break;
+          }
+          const activatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)
+            && await calculate.isVisible().catch(() => false)
+            && await calculate.isEnabled().catch(() => false);
+          if (activatedAndCalculable) {
+            const requestedRevisionLiveSha256 = await fileSha256(requestedRevisionTarget);
+            if (await calculationAdvancedAutomatically()) {
+              calculationStarted = true;
+              break;
+            }
+            const stillActivatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)
+              && await calculate.isVisible().catch(() => false)
+              && await calculate.isEnabled().catch(() => false);
+            if (!stillActivatedAndCalculable) {
+              await page.waitForTimeout(100);
+              continue;
+            }
+            assert(requestedRevisionLiveSha256 === requestedRevisionSha256,
+              "The activated requested-calculation archive changed before calculation started.");
+            const calculationClicked = await calculate.click({ timeout: recoveryClickTimeout })
+              .then(() => true)
+              .catch(() => false);
+            if (calculationClicked || await calculationAdvancedAutomatically()) {
+              calculationStarted = true;
+              break;
+            }
+          }
+          await page.waitForTimeout(100);
+        }
+        assert(calculationStarted, `The activated moderated-mediation authority never exposed an enabled Calculate action: ${compact(await advanced.textContent())}`);
+      }
+    } finally {
+      requestedRevisionHelper?.stop();
+    }
     const transitionDeadline = Date.now() + (step.requires_requested_revision ? timeout : Math.min(timeout, 30_000));
     let transitionReady = false;
     while (Date.now() < transitionDeadline) {

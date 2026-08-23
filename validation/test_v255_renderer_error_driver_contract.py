@@ -213,7 +213,10 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertIn('method: route.method,', generic_plan)
         self.assertIn('inference: route.inference,', generic_plan)
         self.assertIn('bootstrap_samples: route.bootstrap_samples,', generic_plan)
-        self.assertIn('prepareCalculationRevision,', generic_plan)
+        self.assertIn('const requiresRequestedRevision = route.moderated_stage === "first_stage"', generic_plan)
+        self.assertIn('|| route.moderated_stage === "second_stage";', generic_plan)
+        self.assertIn('...(requiresRequestedRevision ? [] : [prepareCalculationRevision])', generic_plan)
+        self.assertIn('requires_requested_revision: requiresRequestedRevision', generic_plan)
         exact_cfa_plan = named[
             named.index('if (route.kind === "fresh_cfa_bootstrap_result")'):
             named.index('assert(route.kind === "fresh_sem_result"')
@@ -328,6 +331,8 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         ]
         self.assertIn('"--window-title", "QuickPLS"', dialog_helper)
         self.assertNotIn("windowTitle: await page.title()", named)
+        owned_dialog_helper = source("windows_native_owned_file_dialog.py")
+        self.assertIn('"file": file_evidence,', owned_dialog_helper)
 
         run_calculation = named[
             named.index('if (step.action === "run_calculation")'):
@@ -354,8 +359,8 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             run_calculation.index('await configureAndStart();'),
         )
         self.assertLess(
-            run_calculation.index('const completed = await requestedRevisionHelper.completed'),
             run_calculation.index('const advancedProgress = advanced.locator'),
+            run_calculation.index('await configureAndStart();'),
         )
         self.assertIn('const advancedProgress = advanced.locator(".nd-cbsem-v4-monitor").filter({ visible: true })', run_calculation)
         self.assertIn('const resultsWorkspace = page.locator(".nd-results-workspace").filter({ visible: true })', run_calculation)
@@ -375,7 +380,60 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
         self.assertNotIn(
             'bounded timeout: ${routeText}', run_calculation
         )
-        self.assertNotIn('name: "Save and activate project…"', run_calculation)
+        self.assertIn('const startEnableDeadline = Date.now() + timeout;', run_calculation)
+        self.assertIn('Date.now() < startEnableDeadline && !await start.isEnabled().catch(() => false)', run_calculation)
+        self.assertIn('await page.waitForTimeout(100);', run_calculation)
+        start_deadline = run_calculation.index('const startEnableDeadline = Date.now() + timeout;')
+        start_loop = run_calculation.index('while (Date.now() < startEnableDeadline')
+        start_guard = run_calculation.index('assert(await start.isEnabled().catch(() => false)')
+        route_text = run_calculation.index('const routeText = compact(await dialog.textContent());')
+        start_click = run_calculation.index('await start.click({ timeout });')
+        self.assertTrue(start_deadline < start_loop < start_guard < route_text < start_click)
+        self.assertIn('name: "Save and activate project…", exact: true', run_calculation)
+        self.assertNotIn('await activate.waitFor({ state: "visible", timeout });', run_calculation)
+        self.assertLess(
+            run_calculation.index('if (await exists(requestedRevisionTarget))'),
+            run_calculation.index('if (await activate.isVisible().catch(() => false)'),
+        )
+        self.assertIn('const recoveryClickTimeout = Math.min(timeout, 1_000);', run_calculation)
+        self.assertIn('const calculationAdvancedAutomatically = async () => (', run_calculation)
+        self.assertIn('const activationClicked = await activate.click({ timeout: recoveryClickTimeout })', run_calculation)
+        self.assertIn('if (activationClicked || await exists(requestedRevisionTarget))', run_calculation)
+        self.assertIn('const requestedRevisionSha256 = String(completed.file?.sha256 ?? "").toLocaleLowerCase("en-US");', run_calculation)
+        self.assertIn('/^[0-9a-f]{64}$/u.test(requestedRevisionSha256)', run_calculation)
+        self.assertIn('waitForOpenedProjectPath(page, requestedRevisionTarget, timeout)', run_calculation)
+        self.assertNotIn('await activatedAuthority.waitFor({ state: "visible", timeout });', run_calculation)
+        self.assertIn('name: "Calculate moderated-mediation bootstrap", exact: true', run_calculation)
+        self.assertIn('const activatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)', run_calculation)
+        self.assertIn('const requestedRevisionLiveSha256 = await fileSha256(requestedRevisionTarget);', run_calculation)
+        self.assertIn('const stillActivatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)', run_calculation)
+        self.assertIn('const calculationClicked = await calculate.click({ timeout: recoveryClickTimeout })', run_calculation)
+        self.assertIn('if (calculationClicked || await calculationAdvancedAutomatically())', run_calculation)
+        activation_deadline = run_calculation.index('const activationDeadline = Date.now() + timeout;')
+        activation_loop = run_calculation.index('while (Date.now() < activationDeadline)')
+        activation_click = run_calculation.index('const activationClicked = await activate.click({ timeout: recoveryClickTimeout })')
+        activation_catch = run_calculation.index('.catch(() => false);', activation_click)
+        helper_completed = run_calculation.index('const completed = await requestedRevisionHelper.completed')
+        self.assertTrue(activation_deadline < activation_loop < activation_click < activation_catch < helper_completed)
+
+        automatic_check = 'if (await calculationAdvancedAutomatically())'
+        self.assertEqual(2, run_calculation.count(automatic_check))
+        initial_auto = run_calculation.index(automatic_check)
+        initial_ready = run_calculation.index('const activatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)')
+        initial_ready_guard = run_calculation.index('if (activatedAndCalculable)', initial_ready)
+        live_hash = run_calculation.index('const requestedRevisionLiveSha256 = await fileSha256(requestedRevisionTarget);')
+        post_hash_auto = run_calculation.index(automatic_check, live_hash)
+        still_ready = run_calculation.index('const stillActivatedAndCalculable = await activatedAuthority.isVisible().catch(() => false)')
+        still_ready_guard = run_calculation.index('if (!stillActivatedAndCalculable)', still_ready)
+        integrity_guard = run_calculation.index('assert(requestedRevisionLiveSha256 === requestedRevisionSha256')
+        calculation_click = run_calculation.index('const calculationClicked = await calculate.click({ timeout: recoveryClickTimeout })')
+        calculation_catch = run_calculation.index('.catch(() => false);', calculation_click)
+        calculation_accept = run_calculation.index('if (calculationClicked || await calculationAdvancedAutomatically())')
+        self.assertTrue(
+            helper_completed < initial_auto < initial_ready < initial_ready_guard < live_hash
+            < post_hash_auto < still_ready < still_ready_guard < integrity_guard
+            < calculation_click < calculation_catch < calculation_accept
+        )
         self.assertNotIn('advancedState.includes("New calculation-ready draft")', run_calculation)
 
         supplement = named[
@@ -480,10 +538,11 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             named.index('const query = {', named.index('assert(route.kind === "fresh_sem_result"'))
         ]
         self.assertLess(
-            generic_plan.index("prepareCalculationRevision,"),
+            generic_plan.index("...(requiresRequestedRevision ? [] : [prepareCalculationRevision])"),
             generic_plan.index('action: "run_calculation"'),
         )
-        self.assertIn("requires_requested_revision: false", generic_plan)
+        self.assertIn("requires_requested_revision: requiresRequestedRevision", generic_plan)
+        self.assertNotIn("requires_requested_revision: false", generic_plan)
         self.assertNotIn('route.method === "pls_bootstrap"', generic_plan)
 
         run_calculation = named[
@@ -641,6 +700,10 @@ class V255RendererErrorDriverContractTests(unittest.TestCase):
             "values": [-1, 0, 1],
         }
         simultaneous = routes["specialized_result:simultaneous two-way moderation"]
+        self.assertEqual(
+            ["Standardized product", "Rescaled gamma"],
+            simultaneous["header_contains"],
+        )
         self.assertEqual(
             [explicit_w, {**explicit_w, "moderator_id": "construct:z"}],
             simultaneous["result_counts"]["conditional_probe_contracts"],
