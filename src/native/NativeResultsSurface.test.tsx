@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
+import { initialEdges, initialNodes } from "../data/sample";
 import { completedSamplePlsRun } from "../data/smokeRun";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { ResultTable } from "../domain/resultTables";
@@ -41,6 +42,45 @@ const navigation: NativeResultNavigation = {
   tables: [],
 };
 
+function completedCorporateResultRun(): AnalysisRun {
+  const run = completedSamplePlsRun();
+  run.modelSnapshot = {
+    nodes: structuredClone(initialNodes),
+    edges: structuredClone(initialEdges),
+  };
+  return run;
+}
+
+function renderSelectedResultTable(
+  run: AnalysisRun,
+  resultNavigation: NativeResultNavigation,
+  tableId: string,
+) {
+  const selectedItem = resultNavigation.groups
+    .flatMap((group) => group.items)
+    .find((item) => item.id === tableId);
+  if (!selectedItem) throw new Error(`Missing ${tableId} navigation item.`);
+  const selectedTable = resultTableForItem(resultNavigation, selectedItem.id);
+  if (!selectedTable) throw new Error(`Missing ${tableId} result table.`);
+  const markup = renderToStaticMarkup(<NativeResultsSurface
+    runs={[run]}
+    selectedRun={run}
+    selectedRunId={run.id}
+    setSelectedRunId={vi.fn()}
+    navigation={resultNavigation}
+    selectedItem={selectedItem}
+    selectedTable={selectedTable}
+    setSelectedTableId={vi.fn()}
+    propertiesOpen={false}
+  />);
+  return { markup, selectedTable };
+}
+
+function renderCorporateResultTable(tableId: "outer_loadings" | "cross_loadings") {
+  const run = completedCorporateResultRun();
+  return renderSelectedResultTable(run, buildNativeResultNavigation(run), tableId);
+}
+
 function completedHigherOrderRun(): AnalysisRun {
   const run = completedSamplePlsRun();
   run.id = "results-surface-hoc";
@@ -70,6 +110,115 @@ function completedHigherOrderRun(): AnalysisRun {
   );
   return run;
 }
+
+describe("native Results authored construct presentation", () => {
+  it("renders an already-presented Corporate outer-loadings table without unmatched suffixes", () => {
+    const { markup, selectedTable } = renderCorporateResultTable("outer_loadings");
+
+    expect(selectedTable.rows[0]?.[0]).toBe("Competence");
+    expect(markup).not.toContain("(unmatched saved construct)");
+    expect(markup.match(/>Competence<\/td>/g) ?? []).toHaveLength(3);
+    expect(markup).toContain(">Customer Satisfaction</td>");
+    expect(markup).toContain(">Customer Loyalty</td>");
+  });
+
+  it("renders an already-presented Corporate cross-loadings table without unmatched suffixes", () => {
+    const { markup, selectedTable } = renderCorporateResultTable("cross_loadings");
+
+    expect(selectedTable.rows[0]?.slice(1, 3)).toEqual(["Competence", "Competence"]);
+    expect(markup).not.toContain("(unmatched saved construct)");
+    expect(markup.match(/>Competence<\/td>/g) ?? []).toHaveLength(2);
+    expect(markup).toContain(">Customer Satisfaction</td>");
+    expect(markup).toContain(">Customer Loyalty</td>");
+  });
+
+  it("renders every Corporate construct-bearing table without unmatched suffixes", () => {
+    const run = completedCorporateResultRun();
+    const resultNavigation = buildNativeResultNavigation(run);
+    const constructLabels = initialNodes.map((node) => node.data.label);
+    const constructBearingTables = resultNavigation.tables.filter((table) => table.rows.some((row) => (
+      row.some((cell) => constructLabels.some((label) => cell.includes(label)))
+    )));
+
+    expect(constructBearingTables.map((table) => table.id)).toEqual(expect.arrayContaining([
+      "outer_loadings",
+      "r_squared",
+      "direct_effects",
+      "construct_reliability",
+      "cross_loadings",
+    ]));
+    const tablesWithFalseUnmatchedLabels = constructBearingTables.flatMap((table) => {
+      const { markup } = renderSelectedResultTable(run, resultNavigation, table.id);
+      return markup.includes("(unmatched saved construct)") ? [table.id] : [];
+    });
+    expect(tablesWithFalseUnmatchedLabels).toEqual([]);
+  });
+
+  it("preserves raw model-bound endogeneity Source and Target IDs in the diagnostic table", () => {
+    const run = completedCorporateResultRun();
+    run.result!.endogeneity = {
+      method_version: "gaussian_copula_endogeneity_v1",
+      transform: "rankit_inverse_normal_v1",
+      estimates: [{
+        source: "competence",
+        target: "satisfaction",
+        path_coefficient: 0.43,
+        copula_coefficient: -0.12,
+        standard_error: 0.05,
+        t_statistic: -2.4,
+        p_value_two_sided: 0.02,
+        predictor_skewness: 0.82,
+        applicable: true,
+        warning: null,
+      }],
+      warnings: [],
+    };
+    const resultNavigation = buildNativeResultNavigation(run);
+    const { markup, selectedTable } = renderSelectedResultTable(run, resultNavigation, "endogeneity_copula");
+
+    expect(selectedTable.rows[0]?.slice(0, 2)).toEqual(["competence", "satisfaction"]);
+    expect(markup).toContain(">competence</td>");
+    expect(markup).toContain(">satisfaction</td>");
+    expect(markup).not.toContain(">Competence</td>");
+    expect(markup).not.toContain(">Customer Satisfaction</td>");
+  });
+
+  it("still presents a raw PLS power target-path design assumption", () => {
+    const run: AnalysisRun = {
+      id: "power-design-surface",
+      name: "Prospective power run",
+      method: "PLS-SEM Sample Size and Power Analysis",
+      createdAt: "2026-08-23T00:00:00Z",
+      seed: 20_260_813,
+      status: "completed",
+      warnings: [],
+      fingerprint: "prospective-design",
+    };
+    const table: ResultTable = {
+      id: "pls_power_design_assumptions",
+      title: "Design assumptions",
+      status: "validated",
+      warning: null,
+      columns: ["assumption", "value"],
+      rows: [["target_path", "x -> y"]],
+    };
+    const resultNavigation: NativeResultNavigation = {
+      runId: run.id,
+      defaultItemId: table.id,
+      groups: [{
+        id: "sample_size_power",
+        title: "Sample size and power",
+        items: [{ id: table.id, kind: "table", title: table.title, tableId: table.id }],
+      }],
+      tables: [table],
+    };
+    const { markup, selectedTable } = renderSelectedResultTable(run, resultNavigation, table.id);
+
+    expect(selectedTable.rows[0]?.[1]).toBe("x -> y");
+    expect(markup).toContain(">X → Y</td>");
+    expect(markup).not.toContain(">x -&gt; y</td>");
+  });
+});
 
 describe("native Results tree accessibility", () => {
   it("renders a searchable categorized tree for a selected schema-6 canonical output", () => {

@@ -307,10 +307,24 @@ export default function NativeResultsSurface({
     () => createAuthoredResultIdentityResolver(selectedRun?.modelSnapshot),
     [selectedRun?.modelSnapshot],
   );
+  const selectedTableNeedsIdentityProjection = Boolean(selectedTable && (
+    !selectedRun?.modelSnapshot
+    || cbsemResult
+    || powerResult
+    || processResult
+    || selectedTable.id === "endogeneity_copula"
+    || /^(?:process_|legacy_process_)/u.test(selectedTable.id)
+  ));
   const displayedSelectedTable = useMemo(
     () => {
       if (!selectedTable) return undefined;
-      const displayed = authoredResultTablePresentation(selectedTable, selectedRunIdentity);
+      // Snapshot-backed native table builders already own authored construct
+      // labels. Re-projecting those labels makes the historical-ID safeguard
+      // misclassify them as unmatched. Raw and partly raw families keep their
+      // single surface projection here.
+      const displayed = selectedTableNeedsIdentityProjection
+        ? authoredResultTablePresentation(selectedTable, selectedRunIdentity)
+        : selectedTable;
       if (!selectedRun) return displayed;
       const rows = displayed.rows.map((_row, rowIndex) => {
         const overlay = nativeResultRowOverlaySelectionV1(selectedRun, selectedTable.id, rowIndex);
@@ -325,7 +339,7 @@ export default function NativeResultsSurface({
         ? { ...displayed, presentation: { ...displayed.presentation, rows } }
         : displayed;
     },
-    [selectedRun, selectedRunIdentity, selectedTable],
+    [selectedRun, selectedRunIdentity, selectedTable, selectedTableNeedsIdentityProjection],
   );
   const [activeNativeRow, setActiveNativeRow] = useState<{
     runId: string;
