@@ -1,6 +1,7 @@
-import { BaseEdge, EdgeLabelRenderer, getBezierPath, getSmoothStepPath, getStraightPath, useStore, type EdgeProps } from "@xyflow/react";
+import { BaseEdge, EdgeLabelRenderer, getBezierPath, getSmoothStepPath, getStraightPath, useInternalNode, useStore, type EdgeProps, type Position } from "@xyflow/react";
 import { useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import { continuousBoundaryRoute, semNodeBox } from "../domain/semGeometry";
 import { useWorkspace } from "../store";
 
 type LabelOffset = { x?: number; y?: number };
@@ -40,7 +41,7 @@ function polylinePath(
   ];
 }
 
-export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, markerStart, label, selected, data, style, interactionWidth }: EdgeProps) {
+export function SemEdge({ id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, markerStart, label, selected, data, style, interactionWidth }: EdgeProps) {
   const checkpoint = useWorkspace((state) => state.checkpoint);
   const executeModelEditCommand = useWorkspace((state) => state.executeModelEditCommand);
   const nudgeEdgeLabel = useWorkspace((state) => state.nudgeEdgeLabel);
@@ -49,6 +50,8 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
   const setSelectedEdge = useWorkspace((state) => state.setSelectedEdge);
   const setEdgeLabelOffset = useWorkspace((state) => state.setEdgeLabelOffset);
   const zoom = useStore((state) => state.transform[2]);
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
   const routing = String(data?.routing ?? "straight");
   const bendPoints = Array.isArray(data?.bendPoints)
     ? data.bendPoints.flatMap((candidate): VisualPoint[] => {
@@ -61,13 +64,24 @@ export function SemEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition
   const bendKey = JSON.stringify(bendPoints);
   const [draftBendPoints, setDraftBendPoints] = useState<{ key: string; points: VisualPoint[] } | null>(null);
   const displayedBendPoints = draftBendPoints?.key === bendKey ? draftBendPoints.points : bendPoints;
+  const continuousRoute = data?.perimeterRouting === "continuous" && sourceNode && targetNode
+    ? continuousBoundaryRoute(
+      semNodeBox({ type: sourceNode.type, position: sourceNode.internals.positionAbsolute }),
+      semNodeBox({ type: targetNode.type, position: targetNode.internals.positionAbsolute }),
+      routing === "polyline" ? displayedBendPoints : [],
+    )
+    : null;
+  const renderedSource = continuousRoute?.start ?? { x: sourceX, y: sourceY };
+  const renderedTarget = continuousRoute?.end ?? { x: targetX, y: targetY };
+  const renderedSourcePosition = (continuousRoute?.source ?? sourcePosition) as Position;
+  const renderedTargetPosition = (continuousRoute?.target ?? targetPosition) as Position;
   const [path, labelX, labelY] = routing === "polyline" && displayedBendPoints.length
-    ? polylinePath({ x: sourceX, y: sourceY }, displayedBendPoints, { x: targetX, y: targetY })
+    ? polylinePath(renderedSource, displayedBendPoints, renderedTarget)
     : routing === "smoothstep"
-    ? getSmoothStepPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, borderRadius: 8 })
+    ? getSmoothStepPath({ sourceX: renderedSource.x, sourceY: renderedSource.y, targetX: renderedTarget.x, targetY: renderedTarget.y, sourcePosition: renderedSourcePosition, targetPosition: renderedTargetPosition, borderRadius: 8 })
     : routing === "default"
-      ? getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition })
-      : getStraightPath({ sourceX, sourceY, targetX, targetY });
+      ? getBezierPath({ sourceX: renderedSource.x, sourceY: renderedSource.y, targetX: renderedTarget.x, targetY: renderedTarget.y, sourcePosition: renderedSourcePosition, targetPosition: renderedTargetPosition })
+      : getStraightPath({ sourceX: renderedSource.x, sourceY: renderedSource.y, targetX: renderedTarget.x, targetY: renderedTarget.y });
   const offset = (data?.labelOffset ?? {}) as LabelOffset;
   const edgeClassName = String(data?.edgeClassName ?? "");
   const visualOnly = data?.visualOnly === true;

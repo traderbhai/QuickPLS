@@ -6,6 +6,7 @@ import type { AnalysisRun, ConstructData, PlsResult } from "../types";
 import { completedStructuralPathRandomizationRun } from "../native/nativeStructuralPathRandomization.testFixture";
 import { NATIVE_STRUCTURAL_PATH_RANDOMIZATION_WARNING } from "../native/nativeStructuralPathRandomization";
 import { moderationConnectorEdgeId } from "./moderationDiagramProjectionV1";
+import { SEM_SIZES, routeBetweenBoxes, type SemBox } from "./semGeometry";
 
 const nodes: Array<Node<ConstructData>> = [
   { id: "x", type: "construct", position: { x: 100, y: 80 }, data: { label: "Predictor", shortName: "X", mode: "reflective", indicators: ["x1", "x2"] } },
@@ -94,6 +95,58 @@ describe("publication diagram SVG", () => {
     expect(svg).not.toContain("diagram-context-menu");
     expect(svg).not.toContain("selection");
   });
+
+  it("exports an unpinned diagonal structural path as one straight segment on the exact latent perimeters", () => {
+    const diagonalNodes: Array<Node<ConstructData>> = [
+      { id: "source", type: "construct", position: { x: 90, y: 70 }, data: { label: "Source", shortName: "S", mode: "reflective", indicators: [] } },
+      { id: "target", type: "construct", position: { x: 430, y: 255 }, data: { label: "Target", shortName: "T", mode: "reflective", indicators: [] } },
+    ];
+    const diagonalEdges: Edge[] = [{ id: "source-target", source: "source", target: "target", label: "Path" }];
+    const layout = defaultDiagramLayout(diagonalNodes, diagonalEdges);
+    expect(layout.edgeLayouts["source-target"].pinned).not.toBe(true);
+
+    const svg = publicationDiagramSvg(diagonalNodes, diagonalEdges, undefined, { layoutSource: "current_canvas" }, layout);
+    const edgeTag = svg.match(/<path class="edge" d="([^"]+)" ([^>]+)\/>/);
+    expect(edgeTag).not.toBeNull();
+    const path = edgeTag?.[1] ?? "";
+    expect(path.match(/[ML]/g)).toEqual(["M", "L"]);
+    expect(edgeTag?.[2].match(/marker-end=/g)).toHaveLength(1);
+    expect(edgeTag?.[2]).not.toContain("marker-start=");
+
+    const coordinates = [...path.matchAll(/[-+]?(?:\d+\.?\d*|\.\d+)(?:e[-+]?\d+)?/gi)].map((match) => Number(match[0]));
+    expect(coordinates).toHaveLength(4);
+    const [startX, startY, endX, endY] = coordinates;
+    const exportedEllipses = [...svg.matchAll(/<ellipse class="smartpls-latent" cx="([^"]+)" cy="([^"]+)" rx="([^"]+)" ry="([^"]+)"\/>/g)]
+      .map((match) => ({ cx: Number(match[1]), cy: Number(match[2]), rx: Number(match[3]), ry: Number(match[4]) }));
+    expect(exportedEllipses).toHaveLength(2);
+
+    const boxes = exportedEllipses.map(({ cx, cy, rx, ry }): SemBox => ({
+      x: cx - rx,
+      y: cy - ry,
+      width: SEM_SIZES.smartplsLatent.width,
+      height: SEM_SIZES.smartplsLatent.height,
+      kind: "latent",
+      ellipse: true,
+      ellipseWidth: rx * 2,
+      ellipseHeight: ry * 2,
+      ellipseOffsetY: 0,
+    }));
+    const exactRoute = routeBetweenBoxes(boxes[0], boxes[1]);
+    expect(startX).toBeCloseTo(exactRoute.start.x, 8);
+    expect(startY).toBeCloseTo(exactRoute.start.y, 8);
+    expect(endX).toBeCloseTo(exactRoute.end.x, 8);
+    expect(endY).toBeCloseTo(exactRoute.end.y, 8);
+
+    const isCardinal = (point: { x: number; y: number }, ellipse: (typeof exportedEllipses)[number]) => {
+      const dx = Math.abs(point.x - ellipse.cx);
+      const dy = Math.abs(point.y - ellipse.cy);
+      return (Math.abs(dx - ellipse.rx) < 1e-8 && dy < 1e-8)
+        || (dx < 1e-8 && Math.abs(dy - ellipse.ry) < 1e-8);
+    };
+    expect(isCardinal({ x: startX, y: startY }, exportedEllipses[0])).toBe(false);
+    expect(isCardinal({ x: endX, y: endY }, exportedEllipses[1])).toBe(false);
+  });
+
   it("exports persisted edge label offsets", () => {
     const layout = defaultDiagramLayout(nodes, edges);
     const baseline = publicationDiagramSvg(nodes, edges, run, { layoutSource: "current_canvas" }, layout);

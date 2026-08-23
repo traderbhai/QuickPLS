@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Edge, Node } from "@xyflow/react";
-import { boundaryPoint, fractionAlongPolyline, measureDiagramQuality, renderedEdgePolyline, routeBetweenBoxes, routePolylineAroundObstacles, semNodeBox } from "./semGeometry";
+import { boundaryPoint, continuousBoundaryRoute, fractionAlongPolyline, measureDiagramQuality, renderedEdgePolyline, routeBetweenBoxes, routePolylineAroundObstacles, semNodeBox } from "./semGeometry";
 
 describe("SEM geometry", () => {
   it("returns true ellipse boundary points for cardinal directions", () => {
@@ -40,6 +40,85 @@ describe("SEM geometry", () => {
     expect(route.end.x).toBeLessThan(430);
   });
 
+  it.each([
+    { targetPosition: { x: 340, y: 260 }, xDirection: 1, yDirection: 1 },
+    { targetPosition: { x: -140, y: 260 }, xDirection: -1, yDirection: 1 },
+    { targetPosition: { x: -140, y: -120 }, xDirection: -1, yDirection: -1 },
+    { targetPosition: { x: 340, y: -120 }, xDirection: 1, yDirection: -1 },
+  ])("uses exact continuous ellipse intersections in every diagonal quadrant", ({ targetPosition, xDirection, yDirection }) => {
+    const source = semNodeBox({ type: "latent", position: { x: 100, y: 100 } } as Node);
+    const target = semNodeBox({ type: "latent", position: targetPosition } as Node);
+    const route = continuousBoundaryRoute(source, target);
+    const sourceCenter = { x: 152, y: 134 };
+    const targetCenter = { x: targetPosition.x + 52, y: targetPosition.y + 34 };
+
+    expect(((route.start.x - sourceCenter.x) / 52) ** 2 + ((route.start.y - sourceCenter.y) / 34) ** 2).toBeCloseTo(1, 10);
+    expect(((route.end.x - targetCenter.x) / 52) ** 2 + ((route.end.y - targetCenter.y) / 34) ** 2).toBeCloseTo(1, 10);
+    expect(Math.sign(route.start.x - sourceCenter.x)).toBe(xDirection);
+    expect(Math.sign(route.start.y - sourceCenter.y)).toBe(yDirection);
+    expect(Math.sign(route.end.x - targetCenter.x)).toBe(-xDirection);
+    expect(Math.sign(route.end.y - targetCenter.y)).toBe(-yDirection);
+  });
+
+  it("aims continuous polyline endpoints at their adjacent bends", () => {
+    const sourceNode = { type: "latent", position: { x: 100, y: 100 } } as Node;
+    const targetNode = { type: "indicator", position: { x: 500, y: 250 } } as Node;
+    const firstBend = { x: 210, y: 60 };
+    const lastBend = { x: 450, y: 500 };
+    const points = renderedEdgePolyline({
+      sourceHandle: "source-right",
+      targetHandle: "target-left",
+      data: { perimeterRouting: "continuous", routing: "polyline", bendPoints: [firstBend, lastBend] },
+    }, sourceNode, targetNode);
+    const start = points[0]!;
+    const end = points.at(-1)!;
+    const sourceCenter = { x: 152, y: 134 };
+    const targetCenter = { x: 544, y: 264 };
+
+    expect(points).toHaveLength(4);
+    expect(((start.x - sourceCenter.x) / 52) ** 2 + ((start.y - sourceCenter.y) / 34) ** 2).toBeCloseTo(1, 10);
+    expect((start.x - sourceCenter.x) * (firstBend.y - sourceCenter.y)
+      - (start.y - sourceCenter.y) * (firstBend.x - sourceCenter.x)).toBeCloseTo(0, 8);
+    expect(end.y).toBeCloseTo(278, 10);
+    expect((end.x - targetCenter.x) * (lastBend.y - targetCenter.y)
+      - (end.y - targetCenter.y) * (lastBend.x - targetCenter.x)).toBeCloseTo(0, 8);
+  });
+
+  it.each(["straight", "default", "smoothstep"])("aims continuous %s routes at the opposite center", (routing) => {
+    const sourceNode = { type: "latent", position: { x: 100, y: 100 } } as Node;
+    const targetNode = { type: "latent", position: { x: 400, y: 260 } } as Node;
+    const expected = continuousBoundaryRoute(semNodeBox(sourceNode), semNodeBox(targetNode));
+    const points = renderedEdgePolyline({
+      sourceHandle: "source-right",
+      targetHandle: "target-left",
+      data: { perimeterRouting: "continuous", routing, bendPoints: [{ x: 152, y: 40 }] },
+    }, sourceNode, targetNode);
+
+    expect(points[0]!.x).toBeCloseTo(expected.start.x, 8);
+    expect(points[0]!.y).toBeCloseTo(expected.start.y, 8);
+    expect(points.at(-1)!.x).toBeCloseTo(expected.end.x, 8);
+    expect(points.at(-1)!.y).toBeCloseTo(expected.end.y, 8);
+  });
+
+  it("keeps coincident and zero-size continuous routes finite", () => {
+    const coincident = semNodeBox({ type: "latent", position: { x: 100, y: 100 } } as Node);
+    const coincidentRoute = continuousBoundaryRoute(coincident, coincident, [{ x: Number.NaN, y: Number.POSITIVE_INFINITY }]);
+    const zeroSize = { x: 20, y: 30, width: 0, height: 0, kind: "indicator" as const };
+    const zeroSizeRoute = continuousBoundaryRoute(zeroSize, zeroSize);
+    const zeroSizeEllipse = { ...zeroSize, kind: "latent" as const, ellipse: true };
+    const zeroSizeEllipseRoute = continuousBoundaryRoute(zeroSizeEllipse, zeroSizeEllipse);
+
+    expect([coincidentRoute.start.x, coincidentRoute.start.y, coincidentRoute.end.x, coincidentRoute.end.y, coincidentRoute.length].every(Number.isFinite)).toBe(true);
+    expect(coincidentRoute.start).toEqual({ x: 204, y: 134 });
+    expect(coincidentRoute.end).toEqual({ x: 100, y: 134 });
+    expect([zeroSizeRoute.start.x, zeroSizeRoute.start.y, zeroSizeRoute.end.x, zeroSizeRoute.end.y, zeroSizeRoute.length].every(Number.isFinite)).toBe(true);
+    expect(zeroSizeRoute.start).toEqual({ x: 20, y: 30 });
+    expect(zeroSizeRoute.end).toEqual({ x: 20, y: 30 });
+    expect([zeroSizeEllipseRoute.start.x, zeroSizeEllipseRoute.start.y, zeroSizeEllipseRoute.end.x, zeroSizeEllipseRoute.end.y, zeroSizeEllipseRoute.length].every(Number.isFinite)).toBe(true);
+    expect(zeroSizeEllipseRoute.start).toEqual({ x: 20, y: 30 });
+    expect(zeroSizeEllipseRoute.end).toEqual({ x: 20, y: 30 });
+  });
+
   it("uses named React Flow handles as the rendered polyline endpoints", () => {
     const source = { type: "latent", position: { x: 100, y: 100 } } as Node;
     const target = { type: "latent", position: { x: 400, y: 260 } } as Node;
@@ -48,6 +127,21 @@ describe("SEM geometry", () => {
       { x: 300, y: 120 },
       { x: 400, y: 294 },
     ]);
+  });
+
+  it("lets flagged edges ignore cardinal handles for exact diagonal endpoints", () => {
+    const source = { type: "latent", position: { x: 100, y: 100 } } as Node;
+    const target = { type: "latent", position: { x: 400, y: 260 } } as Node;
+    const points = renderedEdgePolyline({
+      sourceHandle: "source-right",
+      targetHandle: "target-left",
+      data: { perimeterRouting: "continuous", routing: "straight" },
+    }, source, target);
+
+    expect(points[0]).not.toEqual({ x: 204, y: 134 });
+    expect(points.at(-1)).not.toEqual({ x: 400, y: 294 });
+    expect(((points[0]!.x - 152) / 52) ** 2 + ((points[0]!.y - 134) / 34) ** 2).toBeCloseTo(1, 10);
+    expect(((points.at(-1)!.x - 452) / 52) ** 2 + ((points.at(-1)!.y - 294) / 34) ** 2).toBeCloseTo(1, 10);
   });
 
   it("samples the same curved and orthogonal route shapes used by SemEdge", () => {

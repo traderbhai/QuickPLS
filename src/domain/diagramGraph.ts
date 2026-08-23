@@ -166,6 +166,7 @@ export function buildDiagramGraph(
       selectable: !lockedResultMode,
       data: {
         ...edge.data,
+        perimeterRouting: "continuous",
         routing: routeLayout.routing,
         ...(routeLayout.bendPoints?.length ? { bendPoints: routeLayout.bendPoints } : {}),
         labelOffset: options.layout?.edgeLayouts[edge.id]?.labelOffset,
@@ -379,7 +380,14 @@ export function buildDiagramGraph(
           markerEnd: { type: MarkerType.ArrowClosed, width: paperStyle ? 13 : 14, height: paperStyle ? 13 : 14, color: paperStyle ? "#222" : undefined },
           className: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
           selectable: false,
-          data: { visualOnly: true, routing: "straight", edgeClassName: reflective ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective` : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative` },
+          data: {
+            visualOnly: true,
+            perimeterRouting: "continuous",
+            routing: "straight",
+            edgeClassName: reflective
+              ? `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge reflective`
+              : `${paperStyle ? "smartpls-measurement-edge " : ""}measurement-edge formative`,
+          },
         });
       });
     }
@@ -465,6 +473,9 @@ function applyAutomaticEdgeRoutes(edges: Edge[], nodes: DiagramGraph["nodes"], l
     if (!structural && !measurement) return edge;
     const savedRoute = structural ? layout?.edgeLayouts[edge.id] : undefined;
     if (savedRoute?.pinned) return edge;
+    if (structural) {
+      return { ...edge, data: { ...edge.data, routing: "straight", bendPoints: undefined } };
+    }
     const source = nodes.find((node) => node.id === edge.source);
     const target = nodes.find((node) => node.id === edge.target);
     if (!source || !target) return edge;

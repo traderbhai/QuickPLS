@@ -32,7 +32,9 @@ describe("SEM diagram graph", () => {
     expect(graph.nodes.filter((node) => node.type === "latent")).toHaveLength(2);
     expect(graph.nodes.filter((node) => node.type === "indicator")).toHaveLength(3);
     expect(graph.edges.filter((edge) => edge.id.startsWith("measurement::"))).toHaveLength(3);
-    expect(graph.edges.find((edge) => edge.id === "x-y")).toBeTruthy();
+    expect(graph.edges.find((edge) => edge.id === "x-y")?.data).toMatchObject({ perimeterRouting: "continuous" });
+    expect(graph.edges.filter((edge) => edge.id.startsWith("measurement::"))
+      .every((edge) => edge.data?.perimeterRouting === "continuous")).toBe(true);
   });
 
   it("expands a presentation-only mediation relation chain to its intermediate nodes", () => {
@@ -186,6 +188,8 @@ describe("SEM diagram graph", () => {
     expect(reflective.target).toBe(indicatorNodeId("x", "x1"));
     expect(formative.source).toBe(indicatorNodeId("y", "y1"));
     expect(formative.target).toBe("y");
+    expect(reflective.data).toMatchObject({ perimeterRouting: "continuous" });
+    expect(formative.data).toMatchObject({ perimeterRouting: "continuous" });
   });
 
   it("shows numeric overlays only for compatible selected runs", () => {
@@ -260,6 +264,13 @@ describe("SEM diagram graph", () => {
     layout.edgeLayouts["x-y"] = { routing: "orthogonal", pinned: true };
     const pinned = buildDiagramGraph(nodes, legacyBent, "sem", "model", undefined, { layout });
     expect(pinned.edges.find((edge) => edge.id === "x-y")?.data?.routing).toBe("smoothstep");
+
+    layout.edgeLayouts["x-y"] = { routing: "curved", pinned: true };
+    const curved = buildDiagramGraph(nodes, legacyBent, "sem", "model", undefined, { layout });
+    expect(curved.edges.find((edge) => edge.id === "x-y")?.data).toMatchObject({
+      perimeterRouting: "continuous",
+      routing: "default",
+    });
   });
 
   it("keeps the editable SEM canvas tied to manual node positions", () => {
@@ -308,7 +319,7 @@ describe("SEM diagram graph", () => {
     expect(outcome.position.x - predictor.position.x).toBeLessThan(700);
   });
 
-  it("routes structural and measurement arrows around intervening construct bodies", () => {
+  it("keeps unpinned construct paths straight through obstacles while measurement arrows may detour", () => {
     const obstacleNodes: Array<Node<ConstructData>> = [
       { id: "source", type: "construct", position: { x: 0, y: 80 }, data: { label: "Source", shortName: "S", mode: "reflective", indicators: ["s1"] } },
       { id: "blocker", type: "construct", position: { x: 250, y: 80 }, data: { label: "Blocker", shortName: "B", mode: "reflective", indicators: [] } },
@@ -318,8 +329,15 @@ describe("SEM diagram graph", () => {
     const layout = defaultDiagramLayout(obstacleNodes, obstacleEdges);
     layout.indicatorLayouts.source.s1 = { side: "free", x: 500, y: 100, order: 0, pinned: true };
     const graph = buildDiagramGraph(obstacleNodes, obstacleEdges, "sem", "model", undefined, { layout });
-    expect(graph.edges.find((edge) => edge.id === "source-target")?.data).toMatchObject({ routing: "polyline" });
-    expect(graph.edges.find((edge) => edge.id === "measurement::source::s1")?.data).toMatchObject({ routing: "polyline" });
+    expect(graph.edges.find((edge) => edge.id === "source-target")?.data).toMatchObject({
+      perimeterRouting: "continuous",
+      routing: "straight",
+    });
+    expect(graph.edges.find((edge) => edge.id === "source-target")?.data?.bendPoints).toBeUndefined();
+    expect(graph.edges.find((edge) => edge.id === "measurement::source::s1")?.data).toMatchObject({
+      perimeterRouting: "continuous",
+      routing: "polyline",
+    });
 
     layout.edgeLayouts["source-target"] = { routing: "straight", pinned: true, labelOffset: { x: 12, y: -8 } };
     const pinned = buildDiagramGraph(obstacleNodes, obstacleEdges, "sem", "model", undefined, { layout });
@@ -327,6 +345,27 @@ describe("SEM diagram graph", () => {
       routing: "straight",
       labelOffset: { x: 12, y: -8 },
     });
+  });
+
+  it("keeps crossing construct paths straight without adding junction semantics", () => {
+    const crossingNodes: Array<Node<ConstructData>> = [
+      { id: "top-left", type: "construct", position: { x: 0, y: 0 }, data: { label: "Top left", shortName: "TL", mode: "reflective", indicators: [] } },
+      { id: "bottom-left", type: "construct", position: { x: 0, y: 260 }, data: { label: "Bottom left", shortName: "BL", mode: "reflective", indicators: [] } },
+      { id: "top-right", type: "construct", position: { x: 500, y: 0 }, data: { label: "Top right", shortName: "TR", mode: "reflective", indicators: [] } },
+      { id: "bottom-right", type: "construct", position: { x: 500, y: 260 }, data: { label: "Bottom right", shortName: "BR", mode: "reflective", indicators: [] } },
+    ];
+    const crossingEdges: Edge[] = [
+      { id: "descending", source: "top-left", target: "bottom-right" },
+      { id: "ascending-control", source: "bottom-left", target: "top-right", data: { role: "control" } },
+    ];
+
+    const graph = buildDiagramGraph(crossingNodes, crossingEdges, "sem", "model");
+    for (const id of ["descending", "ascending-control"]) {
+      const edge = graph.edges.find((candidate) => candidate.id === id)!;
+      expect(edge.data).toMatchObject({ perimeterRouting: "continuous", routing: "straight" });
+      expect(edge.data?.bendPoints).toBeUndefined();
+      expect(edge.data?.junction).toBeUndefined();
+    }
   });
 
   it("keeps manual polyline bends and separates colliding automatic path labels", () => {

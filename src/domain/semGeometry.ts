@@ -97,7 +97,10 @@ export function boundaryPoint(box: SemBox, toward: SemPoint): SemPoint {
   if (box.ellipse) {
     const rx = (box.ellipseWidth ?? box.width) / 2;
     const ry = (box.ellipseHeight ?? box.height) / 2;
-    const scale = 1 / Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
+    if (!Number.isFinite(rx) || !Number.isFinite(ry) || rx <= 0 || ry <= 0) return center;
+    const denominator = Math.sqrt((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry));
+    if (!Number.isFinite(denominator) || denominator < 1e-9) return center;
+    const scale = 1 / denominator;
     return { x: center.x + dx * scale, y: center.y + dy * scale };
   }
 
@@ -124,6 +127,46 @@ export function routeBetweenBoxes(sourceBox: SemBox, targetBox: SemBox): SemRout
   const sourceCenter = boxCenter(sourceBox);
   const start = boundaryPoint(sourceBox, targetCenter);
   const end = boundaryPoint(targetBox, sourceCenter);
+  return {
+    source: sideForBoundaryPoint(sourceBox, start),
+    target: sideForBoundaryPoint(targetBox, end),
+    start,
+    end,
+    length: distance(start, end),
+  };
+}
+
+function usableAim(primary: SemPoint | undefined, fallback: SemPoint, center: SemPoint, fallbackDirection: -1 | 1): SemPoint {
+  for (const candidate of [primary, fallback]) {
+    if (candidate
+      && Number.isFinite(candidate.x)
+      && Number.isFinite(candidate.y)
+      && (Math.abs(candidate.x - center.x) >= 1e-9 || Math.abs(candidate.y - center.y) >= 1e-9)) {
+      return candidate;
+    }
+  }
+  return { x: center.x + fallbackDirection, y: center.y };
+}
+
+/**
+ * Resolves exact visual endpoints on the source and target perimeters.
+ * Straight, curved, and orthogonal routes aim toward the opposite center. A
+ * polyline passes its bends so each endpoint instead aims toward its adjacent
+ * segment. Coincident centers and center-aligned bends use a deterministic
+ * horizontal fallback, keeping every returned coordinate finite.
+ */
+export function continuousBoundaryRoute(
+  sourceBox: SemBox,
+  targetBox: SemBox,
+  bends: readonly SemPoint[] = [],
+): SemRoute {
+  const sourceCenter = boxCenter(sourceBox);
+  const targetCenter = boxCenter(targetBox);
+  const finiteBends = bends.filter((point) => Number.isFinite(point.x) && Number.isFinite(point.y));
+  const sourceAim = usableAim(finiteBends[0], targetCenter, sourceCenter, 1);
+  const targetAim = usableAim(finiteBends.at(-1), sourceCenter, targetCenter, -1);
+  const start = boundaryPoint(sourceBox, sourceAim);
+  const end = boundaryPoint(targetBox, targetAim);
   return {
     source: sideForBoundaryPoint(sourceBox, start),
     target: sideForBoundaryPoint(targetBox, end),
@@ -200,9 +243,9 @@ function sampledSvgPath(path: string): SemPoint[] {
 }
 
 /**
- * Mirrors the endpoints React Flow renders for named cardinal handles. This is
- * the shared presentation authority for routing, labels, and moderation
- * anchors; persisted bend points remain unchanged.
+ * Mirrors the path SemEdge renders. Named cardinal handles remain the legacy
+ * behavior; edges that opt into continuous perimeter routing use exact ellipse
+ * or rectangle intersections without changing persisted handles or bends.
  */
 export function renderedEdgePolyline(
   edge: Pick<Edge, "sourceHandle" | "targetHandle" | "data">,
@@ -216,6 +259,7 @@ export function renderedEdgePolyline(
   const targetSide = sideFromHandleId(edge.targetHandle);
   const rawBends = (edge.data as { bendPoints?: unknown } | undefined)?.bendPoints;
   const routing = String((edge.data as { routing?: unknown } | undefined)?.routing ?? "straight");
+  const continuousPerimeter = (edge.data as { perimeterRouting?: unknown } | undefined)?.perimeterRouting === "continuous";
   const bends = Array.isArray(rawBends)
     ? rawBends.flatMap((point): SemPoint[] => {
         if (!point || typeof point !== "object") return [];
@@ -224,10 +268,17 @@ export function renderedEdgePolyline(
         return Number.isFinite(x) && Number.isFinite(y) ? [{ x, y }] : [];
       })
     : [];
-  const start = sourceSide ? pointOnBoxSide(sourceBox, sourceSide) : fallback.start;
-  const end = targetSide ? pointOnBoxSide(targetBox, targetSide) : fallback.end;
-  const sourcePosition = (sourceSide ?? fallback.source) as Position;
-  const targetPosition = (targetSide ?? fallback.target) as Position;
+  const continuousRoute = continuousPerimeter
+    ? continuousBoundaryRoute(sourceBox, targetBox, routing === "polyline" ? bends : [])
+    : fallback;
+  const start = continuousPerimeter
+    ? continuousRoute.start
+    : sourceSide ? pointOnBoxSide(sourceBox, sourceSide) : fallback.start;
+  const end = continuousPerimeter
+    ? continuousRoute.end
+    : targetSide ? pointOnBoxSide(targetBox, targetSide) : fallback.end;
+  const sourcePosition = (continuousPerimeter ? continuousRoute.source : sourceSide ?? fallback.source) as Position;
+  const targetPosition = (continuousPerimeter ? continuousRoute.target : targetSide ?? fallback.target) as Position;
   if (routing === "default") {
     const sampled = sampledSvgPath(getBezierPath({
       sourceX: start.x,
