@@ -156,6 +156,26 @@ def validate_declared_step_paths(
         errors.append(f"{prefix}: arguments must be an array")
         return
     arguments = [str(item) for item in arguments]
+    required_test_identities = step.get("required_test_identities")
+    if required_test_identities is not None:
+        if step.get("executable") != "cargo" or "test" not in arguments:
+            errors.append(
+                f"{prefix}: required_test_identities is valid only for direct Cargo test steps"
+            )
+        if (
+            not isinstance(required_test_identities, list)
+            or not required_test_identities
+            or any(
+                not isinstance(identity, str) or not identity.strip()
+                for identity in required_test_identities
+            )
+        ):
+            errors.append(
+                f"{prefix}: required_test_identities must be a nonempty string array"
+            )
+            required_test_identities = []
+        elif len(set(required_test_identities)) != len(required_test_identities):
+            errors.append(f"{prefix}: required_test_identities contains duplicates")
     if not isinstance(step.get("uses_cargo"), bool):
         errors.append(f"{prefix}: uses_cargo must be explicit")
     if not isinstance(step.get("maximum_seconds"), int) or step.get("maximum_seconds", 0) <= 0:
@@ -232,6 +252,27 @@ def validate_declared_step_paths(
                     f"{prefix}: Cargo lib-test filter is absent from package source: "
                     f"{test_filter} (missing {missing_tokens})"
                 )
+            for identity in required_test_identities or []:
+                if test_filter and test_filter not in identity:
+                    errors.append(
+                        f"{prefix}: required test identity is outside the Cargo filter: "
+                        f"{identity}"
+                    )
+                identity_parts = identity.split("::")
+                function_name = identity_parts[-1]
+                if not re.search(
+                    rf"(?m)^\s*fn\s+{re.escape(function_name)}\s*\(",
+                    source_corpus,
+                ):
+                    errors.append(
+                        f"{prefix}: required Cargo test function is absent from package "
+                        f"source: {identity}"
+                    )
+                if len(identity_parts) > 2 and identity_parts[0] not in source_corpus:
+                    errors.append(
+                        f"{prefix}: required Cargo test module is absent from package "
+                        f"source: {identity}"
+                    )
 
 
 def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:

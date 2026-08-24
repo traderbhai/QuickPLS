@@ -262,8 +262,6 @@ describe("MultiMod versioned TypeScript contracts", () => {
         ...base,
         phase: {
           kind: "inference",
-          algorithm: "fimix_pls_v2",
-          locked_k: 2,
         },
       }),
     ).toThrow(/lock/u);
@@ -340,7 +338,6 @@ describe("MultiMod versioned TypeScript contracts", () => {
               terms: [
                 { term_id: "term:x", factor_variable_ids: ["x"] },
                 { term_id: "term:c", factor_variable_ids: ["c"] },
-                { term_id: "term:z", factor_variable_ids: ["z"] },
               ],
             },
             {
@@ -350,7 +347,6 @@ describe("MultiMod versioned TypeScript contracts", () => {
                 { term_id: "term:m", factor_variable_ids: ["m"] },
                 { term_id: "term:x", factor_variable_ids: ["x"] },
                 { term_id: "term:c", factor_variable_ids: ["c"] },
-                { term_id: "term:z", factor_variable_ids: ["z"] },
               ],
             },
           ],

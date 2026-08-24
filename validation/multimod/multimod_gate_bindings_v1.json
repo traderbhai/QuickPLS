@@ -92,6 +92,11 @@
           "step_id": "estimation_multigroup",
           "executable": "cargo",
           "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "multigroup_"],
+          "required_test_identities": [
+            "multigroup_v1::tests::typed_group_values_do_not_collapse_across_source_types",
+            "multigroup_micom_v1::tests::incomplete_step_one_fails_before_refitting",
+            "multigroup_frequency_v1::tests::point_counts_are_exactly_the_expanded_group_membership"
+          ],
           "uses_cargo": true,
           "maximum_seconds": 1200,
           "expected_outputs": []
@@ -166,6 +171,13 @@
           "step_id": "runner_multimod_tests",
           "executable": "cargo",
           "arguments": ["test", "--locked", "-p", "qpls-runner", "--lib", "multimod_"],
+          "required_test_identities": [
+            "multimod_execution_v1::tests::shared_ledger_seed_is_stable_and_domain_separated",
+            "multimod_conditional_raw_v2::tests::row_mask_binds_membership_not_runtime_weight_representation",
+            "multimod_mga_execution_cache_v1::tests::cancellation_does_not_commit_and_resume_reuses_completed_shard",
+            "multimod_canonical_result_v1::tests::every_scientific_context_identity_mismatch_fails_before_projection",
+            "multimod_weighted_pls_point_v1::tests::execution_identity_is_stable"
+          ],
           "uses_cargo": true,
           "maximum_seconds": 2400,
           "expected_outputs": []

@@ -33,6 +33,13 @@ pwsh -NoProfile -File .\validation\run_v256_multimod_qualification.ps1 `
 
 Use `-Resume` only for the same plan digest and candidate commit. The driver
 never cleans Cargo output, edits source, merges, pushes, tags or publishes.
+When an open issue invalidates a later gate, the driver follows the complete
+transitive dependency graph and records that gate as `blocked` without running
+it. The next clean candidate campaign reruns the full chain; this avoids
+spending build or simulation time on evidence that cannot be promoted. A
+blocked gate is terminal for campaign accounting, but it always produces a
+`completed_with_issues` campaign and a nonzero driver exit; it can never count
+as clean or release-acceptable evidence.
 
 ## Independent reference oracles
 

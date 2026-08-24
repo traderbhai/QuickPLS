@@ -208,12 +208,28 @@ foreach ($step in @($binding.steps)) {
     $stderrText = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw -Encoding UTF8 } else { "" }
     $isCargoTest = [bool]$step.uses_cargo -and @($arguments | Where-Object { $_ -ceq "test" }).Count -gt 0
     $rustTestsPassed = 0
+    $rustTestsFailed = 0
     if ($isCargoTest) {
-        foreach ($match in [regex]::Matches($stdoutText + "`n" + $stderrText, 'test result:\s+ok\.\s+([0-9]+) passed')) {
+        foreach ($match in [regex]::Matches($stdoutText + "`n" + $stderrText, 'test result:\s+(?:ok|FAILED)\.\s+([0-9]+) passed;\s+([0-9]+) failed')) {
             $rustTestsPassed += [int]$match.Groups[1].Value
+            $rustTestsFailed += [int]$match.Groups[2].Value
         }
     }
-    $emptyCargoTest = $isCargoTest -and $rustTestsPassed -lt 1
+    $rustTestsExecuted = $rustTestsPassed + $rustTestsFailed
+    $emptyCargoTest = $isCargoTest -and $exitCode -eq 0 -and $rustTestsExecuted -lt 1
+    $executedRustTests = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    if ($isCargoTest) {
+        foreach ($match in [regex]::Matches($stdoutText + "`n" + $stderrText, '(?m)^test\s+([^\s]+)\s+\.\.\.\s+(?:ok|FAILED)\s*$')) {
+            [void]$executedRustTests.Add($match.Groups[1].Value)
+        }
+    }
+    $requiredRustTests = @()
+    if ($step.PSObject.Properties.Name -ccontains "required_test_identities") {
+        $requiredRustTests = @($step.required_test_identities | ForEach-Object { [string]$_ })
+    }
+    $missingRequiredRustTests = @(
+        $requiredRustTests | Where-Object { -not $executedRustTests.Contains($_) }
+    )
     $expectedOutputs = [System.Collections.Generic.List[object]]::new()
     $missingOutputs = [System.Collections.Generic.List[string]]::new()
     foreach ($declaredOutput in @($step.expected_outputs)) {
@@ -228,7 +244,7 @@ foreach ($step in @($binding.steps)) {
             $missingOutputs.Add($resolvedOutput)
         }
     }
-    $passed = $exitCode -eq 0 -and -not $budgetExceeded -and -not $emptyCargoTest -and $missingOutputs.Count -eq 0
+    $passed = $exitCode -eq 0 -and -not $budgetExceeded -and -not $emptyCargoTest -and $missingRequiredRustTests.Count -eq 0 -and $missingOutputs.Count -eq 0
     $stepReceipts.Add([ordered]@{
         step_id = $stepId
         executable = $resolvedExecutable
@@ -242,7 +258,11 @@ foreach ($step in @($binding.steps)) {
         budget_exceeded = $budgetExceeded
         timeout_terminated = $timedOut
         rust_tests_passed = if ($isCargoTest) { $rustTestsPassed } else { $null }
+        rust_tests_failed = if ($isCargoTest) { $rustTestsFailed } else { $null }
+        rust_tests_executed = if ($isCargoTest) { $rustTestsExecuted } else { $null }
         empty_cargo_test_rejected = $emptyCargoTest
+        required_test_identities = $requiredRustTests
+        missing_required_test_identities = $missingRequiredRustTests
         status = if ($passed) { "passed" } else { "failed" }
         stdout_path = $stdoutPath
         stdout_sha256 = Get-LowerSha256 -Path $stdoutPath
@@ -258,7 +278,7 @@ foreach ($step in @($binding.steps)) {
         $tail = ($stderrText + "`n" + $stdoutText)
         if ($tail.Length -gt 131072) { $tail = $tail.Substring($tail.Length - 131072) }
         $failureDigest = Get-TextSha256 -Text $tail
-        $reason = if ($timedOut) { "timeout" } elseif ($budgetExceeded) { "budget" } elseif ($emptyCargoTest) { "zero_tests" } elseif ($missingOutputs.Count -gt 0) { "missing_output" } else { "exit_$exitCode" }
+        $reason = if ($timedOut) { "timeout" } elseif ($budgetExceeded) { "budget" } elseif ($emptyCargoTest) { "zero_tests" } elseif ($exitCode -ne 0) { "exit_$exitCode" } elseif ($missingRequiredRustTests.Count -gt 0) { "missing_required_test" } elseif ($missingOutputs.Count -gt 0) { "missing_output" } else { "exit_$exitCode" }
         $failureSignature = "$stepId`:$reason`:$failureDigest"
     }
 }

@@ -149,6 +149,19 @@ pub fn base_recipe_model(
     Ok((recipe, model))
 }
 
+/// Mirrors the production staging boundary before a qualification fixture
+/// attaches exactly one additive MultiMod configuration. The legacy recipe is
+/// used only to exercise ModelSpec -> SemModelV4 conversion; neither its
+/// method identity nor a previously staged MultiMod request may leak forward.
+pub fn stage_additive_multimod_recipe(recipe: &mut AnalysisRecipeV4, method: AnalysisMethod) {
+    recipe.settings.method = method;
+    recipe.method_config = None;
+    recipe.mga_multigroup = None;
+    recipe.pls_heterogeneity = None;
+    recipe.general_sem_conditional_process = None;
+    recipe.interventional_causal_mediation = None;
+}
+
 pub fn finalize_recipe(recipe: &mut AnalysisRecipeV4, model: &SemModelV4) -> Result<(), DynError> {
     model.ensure_valid()?;
     recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {

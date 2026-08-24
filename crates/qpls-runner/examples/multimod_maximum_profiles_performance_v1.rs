@@ -305,6 +305,7 @@ fn resumable_mga(seed: u64) -> Result<serde_json::Value, DynError> {
         })
         .collect::<Vec<_>>();
     add_groups(&mut model, "group", &levels);
+    stage_additive_multimod_recipe(&mut recipe, AnalysisMethod::Mga);
     recipe.mga_multigroup = Some(MgaMultigroupV1 {
         schema_version: MGA_MULTIGROUP_V1_SCHEMA_VERSION,
         profile: MgaModelProfileV1::GeneralSemPls,

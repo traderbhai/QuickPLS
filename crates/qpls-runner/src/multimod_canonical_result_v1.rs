@@ -3050,7 +3050,7 @@ mod tests {
                 .unwrap()
                 .rows
                 .len(),
-            1
+            2
         );
     }
 

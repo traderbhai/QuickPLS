@@ -23,7 +23,7 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaCha20Rng;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use statrs::distribution::{Binomial, DiscreteCDF, Hypergeometric};
+use statrs::distribution::{Binomial, DiscreteCDF};
 use std::collections::{BTreeMap, BTreeSet};
 
 pub const FREQUENCY_MULTIGROUP_PAIRWISE_PLAN_VERSION_V1: &str =
@@ -40,6 +40,12 @@ pub const FREQUENCY_MICOM_PAIRWISE_METHOD_VERSION_V1: &str =
 const PAIRWISE_STREAM: &[u8] = b"qpls-mga-frequency-pairwise-v1";
 const OMNIBUS_STREAM: &[u8] = b"qpls-mga-frequency-omnibus-v1";
 const BOOTSTRAP_STREAM: &[u8] = b"qpls-mga-frequency-bootstrap-v1";
+const MAX_EXACT_FREQUENCY_TOTAL: u64 = (1_u64 << 53) - 1;
+const HYPERGEOMETRIC_DIRECT_THRESHOLD: u64 = 10;
+const HYPERGEOMETRIC_MAX_REJECTION_ATTEMPTS: usize = 1_000_000;
+const HRUA_LOG_RATIO_OVERSHOOT_TOLERANCE: f64 = 1e-10;
+const HRUA_D1: f64 = 1.715_527_769_921_413_5; // 2 * sqrt(2 / e)
+const HRUA_D2: f64 = 0.898_916_162_058_898_8; // 3 - 2 * sqrt(3 / e)
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -398,21 +404,341 @@ fn open_unit_interval(rng: &mut ChaCha20Rng) -> f64 {
     rng.random_range(1..DENOMINATOR) as f64 / DENOMINATOR as f64
 }
 
+fn bounded_discrete_inverse_cdf<F>(lower: u64, upper: u64, probability: f64, mut cdf: F) -> u64
+where
+    F: FnMut(u64) -> f64,
+{
+    debug_assert!(lower <= upper);
+    debug_assert!(probability > 0.0 && probability < 1.0);
+    let mut left = lower;
+    let mut right = upper;
+    while left < right {
+        let midpoint = left + (right - left) / 2;
+        if cdf(midpoint) >= probability {
+            right = midpoint;
+        } else {
+            left = midpoint + 1;
+        }
+    }
+    left
+}
+
+// The direct-complement and HRUA structure below is adapted from NumPy commit
+// ffa72d99810dc54fa4222c3ffc623c4b268191b1, file
+// `numpy/random/src/distributions/random_hypergeometric.c` (NumPy Developers,
+// BSD-3-Clause; full source digest and notice in THIRD_PARTY_NOTICES.md). NumPy
+// explicitly limits each population class to less than 1e9 because subtracting
+// four large log-factorials loses precision. QuickPLS admits totals through
+// 2^53-1, so a shifted, analytically combined log-ratio avoids that cancellation.
+
+fn log1pmx(value: f64) -> f64 {
+    debug_assert!(value > -1.0);
+    if value.abs() < 0.01 {
+        // log(1+x)-x, evaluated without cancellation. At |x|<0.01 the first
+        // omitted term after twenty terms is below 5e-43.
+        let mut power = value * value;
+        let mut sum = -power / 2.0;
+        for denominator in 3..=20 {
+            power *= value;
+            let term = power / f64::from(denominator);
+            if denominator % 2 == 0 {
+                sum -= term;
+            } else {
+                sum += term;
+            }
+        }
+        sum
+    } else {
+        value.ln_1p() - value
+    }
+}
+
+fn compensated_sum(values: impl IntoIterator<Item = f64>) -> f64 {
+    let mut sum: f64 = 0.0;
+    let mut correction: f64 = 0.0;
+    for value in values {
+        let next = sum + value;
+        correction += if sum.abs() >= value.abs() {
+            (sum - next) + value
+        } else {
+            (value - next) + sum
+        };
+        sum = next;
+    }
+    sum + correction
+}
+
+fn stirling_correction(value: f64) -> f64 {
+    let inverse = value.recip();
+    let inverse_squared = inverse * inverse;
+    inverse
+        * (1.0 / 12.0
+            + inverse_squared
+                * (-1.0 / 360.0
+                    + inverse_squared * (1.0 / 1_260.0 + inverse_squared * (-1.0 / 1_680.0))))
+}
+
+fn log_u128_ratio(numerator: u128, denominator: u128) -> f64 {
+    debug_assert!(numerator > 0 && denominator > 0);
+    if numerator == denominator {
+        return 0.0;
+    }
+    if numerator > denominator {
+        ((numerator - denominator) as f64 / denominator as f64).ln_1p()
+    } else {
+        -((denominator - numerator) as f64 / numerator as f64).ln_1p()
+    }
+}
+
+fn signed_cell(cell: u64, sign: i64, delta: i64) -> u64 {
+    let value = i128::from(cell) + i128::from(sign) * i128::from(delta);
+    u64::try_from(value).expect("candidate is inside the hypergeometric support")
+}
+
+fn interior_hypergeometric_log_ratio(cells: [u64; 4], delta: i64) -> f64 {
+    const SIGNS: [i64; 4] = [1, -1, -1, 1];
+    debug_assert!(cells.iter().all(|cell| *cell >= 128));
+    let candidate_cells: [u64; 4] = std::array::from_fn(|index| {
+        let value = signed_cell(cells[index], SIGNS[index], delta);
+        debug_assert!(value >= 128);
+        value
+    });
+    let cross_ratio = log_u128_ratio(
+        u128::from(cells[0]) * u128::from(cells[3]),
+        u128::from(cells[1]) * u128::from(cells[2]),
+    );
+    let delta = delta as f64;
+    let inverse_sum = compensated_sum(cells.map(|cell| (cell as f64).recip()));
+    let signed_inverse_sum = compensated_sum(
+        cells
+            .iter()
+            .zip(SIGNS)
+            .map(|(cell, sign)| sign as f64 / *cell as f64),
+    );
+    let log1pmx_sum = compensated_sum(cells.iter().zip(candidate_cells).zip(SIGNS).map(
+        |((cell, candidate), sign)| {
+            (candidate as f64 + 0.5) * log1pmx(sign as f64 * delta / *cell as f64)
+        },
+    ));
+    let correction_sum =
+        compensated_sum(cells.iter().zip(candidate_cells).map(|(cell, candidate)| {
+            stirling_correction(*cell as f64) - stirling_correction(candidate as f64)
+        }));
+    compensated_sum([
+        -delta * cross_ratio,
+        -delta * delta * inverse_sum,
+        -0.5 * delta * signed_inverse_sum,
+        -log1pmx_sum,
+        correction_sum,
+    ])
+}
+
+fn hypergeometric_cells(
+    mode: u64,
+    minimum_class: u64,
+    maximum_class: u64,
+    computed_sample: u64,
+) -> [u64; 4] {
+    [
+        mode,
+        minimum_class - mode,
+        computed_sample - mode,
+        maximum_class - computed_sample + mode,
+    ]
+}
+
+fn log_ratio_requires_shift(cells: [u64; 4], delta: i64) -> bool {
+    const SIGNS: [i64; 4] = [1, -1, -1, 1];
+    cells.iter().any(|cell| *cell < 128)
+        || cells
+            .into_iter()
+            .zip(SIGNS)
+            .any(|(cell, sign)| signed_cell(cell, sign, delta) < 128)
+}
+
+fn hypergeometric_log_ratio(
+    mode: u64,
+    candidate: u64,
+    minimum_class: u64,
+    maximum_class: u64,
+    computed_sample: u64,
+) -> f64 {
+    const SHIFT: u64 = 128;
+    const SIGNS: [i64; 4] = [1, -1, -1, 1];
+    let delta = i64::try_from(candidate).expect("admitted frequency bound fits i64")
+        - i64::try_from(mode).expect("admitted frequency bound fits i64");
+    if delta == 0 {
+        return 0.0;
+    }
+    let cells = hypergeometric_cells(mode, minimum_class, maximum_class, computed_sample);
+    debug_assert!(SIGNS.into_iter().enumerate().all(|(index, sign)| {
+        i128::from(cells[index]) + i128::from(sign) * i128::from(delta) >= 0
+    }));
+    if !log_ratio_requires_shift(cells, delta) {
+        return interior_hypergeometric_log_ratio(cells, delta);
+    }
+    // Shifting every factorial cell by the same fixed amount gives an exact
+    // identity. It keeps both baseline and candidate cells in the accurate
+    // Stirling interior while the correction restores the original factorials.
+    let shifted_cells = cells.map(|cell| cell + SHIFT);
+    let shifted_ratio = interior_hypergeometric_log_ratio(shifted_cells, delta);
+    let delta_float = delta as f64;
+    let exact_shift_correction = compensated_sum((1..=SHIFT).flat_map(|offset| {
+        cells
+            .into_iter()
+            .zip(SIGNS)
+            .map(move |(cell, sign)| (sign as f64 * delta_float / (cell + offset) as f64).ln_1p())
+    }));
+    compensated_sum([shifted_ratio, exact_shift_correction])
+}
+
+fn direct_hypergeometric_draw(
+    population: u64,
+    successes: u64,
+    draws: u64,
+    rng: &mut ChaCha20Rng,
+) -> u64 {
+    let mut computed_sample = draws.min(population - draws);
+    let mut remaining_population = population;
+    let mut remaining_successes = successes;
+    while computed_sample > 0
+        && remaining_successes > 0
+        && remaining_population > remaining_successes
+    {
+        if rng.random_range(0..remaining_population) < remaining_successes {
+            remaining_successes -= 1;
+        }
+        remaining_population -= 1;
+        computed_sample -= 1;
+    }
+    if remaining_population == remaining_successes {
+        remaining_successes -= computed_sample;
+    }
+    if draws > population / 2 {
+        remaining_successes
+    } else {
+        successes - remaining_successes
+    }
+}
+
+fn hrua_proposal_upper_exclusive(computed_sample: u64, minimum_class: u64) -> u64 {
+    computed_sample.min(minimum_class) + 1
+}
+
+fn hrua_hypergeometric_draw(
+    population: u64,
+    successes: u64,
+    draws: u64,
+    rng: &mut ChaCha20Rng,
+) -> Result<u64, FrequencyMultigroupErrorV1> {
+    let failures = population - successes;
+    let minimum_class = successes.min(failures);
+    let maximum_class = successes.max(failures);
+    let computed_sample = draws.min(population - draws);
+    let success_probability = minimum_class as f64 / population as f64;
+    let failure_probability = maximum_class as f64 / population as f64;
+    let mean = computed_sample as f64 * success_probability;
+    let center = mean + 0.5;
+    let variance = (population - computed_sample) as f64
+        * computed_sample as f64
+        * success_probability
+        * failure_probability
+        / (population - 1) as f64;
+    let scale = (variance + 0.5).sqrt();
+    let envelope = HRUA_D1 * scale + HRUA_D2;
+    let mode = (((u128::from(computed_sample) + 1) * (u128::from(minimum_class) + 1))
+        / (u128::from(population) + 2)) as u64;
+    // Unlike NumPy's pragmatic 16-sigma cap, QuickPLS retains the complete
+    // mathematical support. Extremely remote proposals are rare, but assigning
+    // them zero probability would not be an exact count-space draw.
+    let proposal_upper_exclusive = hrua_proposal_upper_exclusive(computed_sample, minimum_class);
+    if proposal_upper_exclusive == 0
+        || !center.is_finite()
+        || !envelope.is_finite()
+        || envelope <= 0.0
+    {
+        return Err(FrequencyMultigroupErrorV1::Distribution(
+            "HRUA initialization produced a nonfinite or empty proposal".into(),
+        ));
+    }
+
+    for _ in 0..HYPERGEOMETRIC_MAX_REJECTION_ATTEMPTS {
+        let uniform = open_unit_interval(rng);
+        let auxiliary = open_unit_interval(rng);
+        let proposal = center + envelope * (auxiliary - 0.5) / uniform;
+        if proposal < 0.0 || proposal >= proposal_upper_exclusive as f64 {
+            continue;
+        }
+        let candidate = proposal.floor() as u64;
+        let raw_log_ratio = hypergeometric_log_ratio(
+            mode,
+            candidate,
+            minimum_class,
+            maximum_class,
+            computed_sample,
+        );
+        if !raw_log_ratio.is_finite() || raw_log_ratio > HRUA_LOG_RATIO_OVERSHOOT_TOLERANCE {
+            return Err(FrequencyMultigroupErrorV1::Distribution(format!(
+                "HRUA acceptance ratio is numerically invalid: {raw_log_ratio}"
+            )));
+        }
+        // The exact integer mode makes this ratio nonpositive. Clamp only the
+        // harmless final-rounding overshoot admitted by the tolerance above.
+        let log_ratio = raw_log_ratio.min(0.0);
+        if uniform * (4.0 - uniform) - 3.0 <= log_ratio
+            || (uniform * (uniform - log_ratio) < 1.0 && 2.0 * uniform.ln() <= log_ratio)
+        {
+            let mut result = candidate;
+            if successes > failures {
+                result = computed_sample - result;
+            }
+            if computed_sample < draws {
+                result = successes - result;
+            }
+            return Ok(result);
+        }
+    }
+    Err(FrequencyMultigroupErrorV1::Distribution(format!(
+        "HRUA did not accept a draw within {HYPERGEOMETRIC_MAX_REJECTION_ATTEMPTS} attempts"
+    )))
+}
+
 fn hypergeometric_draw(
     population: u64,
     successes: u64,
     draws: u64,
     rng: &mut ChaCha20Rng,
 ) -> Result<u64, FrequencyMultigroupErrorV1> {
+    if population > MAX_EXACT_FREQUENCY_TOTAL {
+        return Err(FrequencyMultigroupErrorV1::Distribution(format!(
+            "frequency population {population} exceeds the admitted exact-integer total {MAX_EXACT_FREQUENCY_TOTAL}"
+        )));
+    }
+    if successes > population || draws > population {
+        return Err(FrequencyMultigroupErrorV1::Distribution(
+            "hypergeometric successes and draws must not exceed the population".into(),
+        ));
+    }
     if draws == 0 || successes == 0 {
         return Ok(0);
     }
     if successes == population {
         return Ok(draws);
     }
-    Hypergeometric::new(population, successes, draws)
-        .map_err(|error| FrequencyMultigroupErrorV1::Distribution(error.to_string()))
-        .map(|distribution| distribution.inverse_cdf(open_unit_interval(rng)))
+    let complement_draws = population - draws;
+    let result = if draws.min(complement_draws) <= HYPERGEOMETRIC_DIRECT_THRESHOLD {
+        direct_hypergeometric_draw(population, successes, draws, rng)
+    } else {
+        hrua_hypergeometric_draw(population, successes, draws, rng)?
+    };
+    let lower = draws.saturating_sub(population - successes);
+    let upper = draws.min(successes);
+    if result < lower || result > upper {
+        return Err(FrequencyMultigroupErrorV1::Distribution(format!(
+            "hypergeometric draw {result} fell outside [{lower}, {upper}]"
+        )));
+    }
+    Ok(result)
 }
 
 fn multinomial_draw(
@@ -435,9 +761,11 @@ fn multinomial_draw(
         } else if probability >= 1.0 {
             remaining_draws
         } else {
-            Binomial::new(probability, remaining_draws)
-                .map_err(|error| FrequencyMultigroupErrorV1::Distribution(error.to_string()))?
-                .inverse_cdf(open_unit_interval(rng))
+            let distribution = Binomial::new(probability, remaining_draws)
+                .map_err(|error| FrequencyMultigroupErrorV1::Distribution(error.to_string()))?;
+            bounded_discrete_inverse_cdf(0, remaining_draws, open_unit_interval(rng), |value| {
+                distribution.cdf(value)
+            })
         };
         counts.push(count);
         remaining_draws -= count;
@@ -1781,6 +2109,7 @@ where
 mod tests {
     use super::*;
     use crate::{ParameterEstimateV1, ParameterFamilyV1, TypedGroupValueV1};
+    use std::time::Instant;
 
     fn design() -> FrequencyMultigroupDesignV1 {
         FrequencyMultigroupDesignV1 {
@@ -1817,6 +2146,237 @@ mod tests {
         ParameterIdentityV1 {
             stable_id: "path:x:y".into(),
             family: ParameterFamilyV1::StructuralPath,
+        }
+    }
+
+    fn combinations(total: u64, selected: u64) -> u128 {
+        if selected > total {
+            return 0;
+        }
+        let selected = selected.min(total - selected);
+        (1..=selected).fold(1_u128, |value, index| {
+            value * u128::from(total - selected + index) / u128::from(index)
+        })
+    }
+
+    fn assert_matches_expanded_hypergeometric(
+        population: u64,
+        successes: u64,
+        draws: u64,
+        trials: usize,
+        seed: [u8; 32],
+    ) {
+        let lower = draws.saturating_sub(population - successes);
+        let upper = draws.min(successes);
+        let mut observed = vec![0_usize; (upper - lower + 1) as usize];
+        let mut rng = ChaCha20Rng::from_seed(seed);
+        for _ in 0..trials {
+            let draw = hypergeometric_draw(population, successes, draws, &mut rng).unwrap();
+            observed[(draw - lower) as usize] += 1;
+        }
+        let denominator = combinations(population, draws) as f64;
+        let mut expected_cdf = 0.0;
+        let mut observed_cdf = 0.0;
+        for value in lower..=upper {
+            let ways = combinations(successes, value)
+                * combinations(population - successes, draws - value);
+            expected_cdf += ways as f64 / denominator;
+            observed_cdf += observed[(value - lower) as usize] as f64 / trials as f64;
+            assert!(
+                (observed_cdf - expected_cdf).abs() < 0.01,
+                "count-space CDF {observed_cdf} differs from expanded CDF {expected_cdf} at {value}"
+            );
+        }
+    }
+
+    #[test]
+    fn small_count_space_hypergeometric_matches_literal_expanded_sampling() {
+        // The first case exercises the exact direct-complement path; the
+        // second exercises HRUA. The reference PMF counts all equally likely
+        // subsets of the physically expanded population.
+        assert_matches_expanded_hypergeometric(10, 4, 3, 100_000, [17; 32]);
+        assert_matches_expanded_hypergeometric(40, 17, 19, 100_000, [29; 32]);
+    }
+
+    #[test]
+    fn shifted_log_ratio_matches_high_precision_frequency_boundary_oracles() {
+        let population = MAX_EXACT_FREQUENCY_TOTAL;
+        let cases = [
+            // Balanced 2^53-1 population: approximately 16 and 1 standard
+            // deviations on both sides of the exact mode.
+            (
+                4_503_599_627_370_495,
+                4_503_599_627_370_496,
+                4_503_599_627_316_174,
+                2_251_799_813_658_087,
+                -379_625_063_i64,
+                -128.000_000_170_606_85,
+            ),
+            (
+                4_503_599_627_370_495,
+                4_503_599_627_370_496,
+                4_503_599_627_316_174,
+                2_251_799_813_658_087,
+                379_625_062,
+                -127.999_999_833_432_06,
+            ),
+            (
+                4_503_599_627_370_495,
+                4_503_599_627_370_496,
+                4_503_599_627_316_174,
+                2_251_799_813_658_087,
+                -23_726_567,
+                -0.500_000_014_495_865_4,
+            ),
+            (
+                4_503_599_627_370_495,
+                4_503_599_627_370_496,
+                4_503_599_627_316_174,
+                2_251_799_813_658_087,
+                23_726_566,
+                -0.499_999_993_422_441,
+            ),
+            // Highly skewed class split at the same maximum population.
+            (
+                9_007_199_254_740,
+                population - 9_007_199_254_740,
+                4_503_599_627_370_495,
+                4_503_599_627_370,
+                -23_997_590,
+                -128.000_007_609_462_9,
+            ),
+            (
+                9_007_199_254_740,
+                population - 9_007_199_254_740,
+                4_503_599_627_370_495,
+                4_503_599_627_370,
+                23_997_589,
+                -127.999_996_952_392_34,
+            ),
+        ];
+        for (minimum, maximum, sample, mode, delta, expected) in cases {
+            let cells = hypergeometric_cells(mode, minimum, maximum, sample);
+            assert!(
+                !log_ratio_requires_shift(cells, delta),
+                "large interior oracle should use the four-term fast path"
+            );
+            let candidate = u64::try_from(i64::try_from(mode).unwrap() + delta).unwrap();
+            let actual = hypergeometric_log_ratio(mode, candidate, minimum, maximum, sample);
+            assert!(actual.is_finite() && actual <= 1e-12);
+            assert!(
+                (actual - expected).abs() <= 5e-11,
+                "boundary log-ratio {actual} differs from oracle {expected} for d={delta}"
+            );
+        }
+    }
+
+    #[test]
+    fn shifted_log_ratio_preserves_two_modes_and_zero_mode_boundary() {
+        // Hypergeometric(10, 5, 5) has adjacent modes 2 and 3.
+        let tied = hypergeometric_log_ratio(3, 2, 5, 5, 5);
+        assert!(
+            tied.abs() <= 5e-14,
+            "tied modes must have equal mass: {tied}"
+        );
+
+        let population = MAX_EXACT_FREQUENCY_TOTAL;
+        let minimum = 1;
+        let maximum = population - minimum;
+        let sample = 100;
+        let mode = (((u128::from(sample) + 1) * (u128::from(minimum) + 1))
+            / (u128::from(population) + 2)) as u64;
+        assert_eq!(mode, 0);
+        assert!(log_ratio_requires_shift(
+            hypergeometric_cells(mode, minimum, maximum, sample),
+            1
+        ));
+        assert_eq!(
+            hypergeometric_log_ratio(mode, mode, minimum, maximum, sample),
+            0.0
+        );
+        let adjacent = hypergeometric_log_ratio(mode, 1, minimum, maximum, sample);
+        assert!(adjacent.is_finite() && adjacent < 0.0);
+    }
+
+    #[test]
+    fn hypergeometric_draw_scales_to_the_exact_frequency_boundary() {
+        let population = MAX_EXACT_FREQUENCY_TOTAL;
+        let successes = population / 2 + 12_345;
+        let draws = population / 2 - 54_321;
+        let computed_sample = draws.min(population - draws);
+        let minimum_class = successes.min(population - successes);
+        let full_proposal_support = hrua_proposal_upper_exclusive(computed_sample, minimum_class);
+        let probability = minimum_class as f64 / population as f64;
+        let variance = (population - computed_sample) as f64
+            * computed_sample as f64
+            * probability
+            * (1.0 - probability)
+            / (population - 1) as f64;
+        let former_sixteen_sigma_cap =
+            (computed_sample as f64 * probability + 0.5 + 16.0 * (variance + 0.5).sqrt()).floor()
+                as u64;
+        assert_eq!(
+            full_proposal_support,
+            computed_sample.min(minimum_class) + 1
+        );
+        assert!(full_proposal_support > former_sixteen_sigma_cap);
+        let lower = draws.saturating_sub(population - successes);
+        let upper = draws.min(successes);
+        let started = Instant::now();
+        let sample = |seed| {
+            let mut rng = ChaCha20Rng::from_seed(seed);
+            (0..512)
+                .map(|_| hypergeometric_draw(population, successes, draws, &mut rng).unwrap())
+                .collect::<Vec<_>>()
+        };
+        let first = sample([41; 32]);
+        let second = sample([41; 32]);
+        assert_eq!(first, second);
+        assert!(first.iter().all(|value| *value >= lower && *value <= upper));
+        assert!(
+            started.elapsed().as_secs_f64() < 10.0,
+            "boundary sampler must remain independent of expanded population size"
+        );
+
+        // Near-complete draws use the exact complement path and preserve the
+        // same admitted boundary without allocating expanded rows.
+        let mut rng = ChaCha20Rng::from_seed([43; 32]);
+        let near_complete =
+            hypergeometric_draw(population, successes, population - 7, &mut rng).unwrap();
+        assert!((successes - 7..=successes).contains(&near_complete));
+        assert!(matches!(
+            hypergeometric_draw(population + 1, successes, draws, &mut rng),
+            Err(FrequencyMultigroupErrorV1::Distribution(_))
+        ));
+    }
+
+    #[test]
+    fn boundary_draws_preserve_class_swap_and_sample_complement_symmetry() {
+        let population = MAX_EXACT_FREQUENCY_TOTAL;
+        let successes = population / 3 + 17;
+        let draws = population / 2 - 31;
+        let mut original_rng = ChaCha20Rng::from_seed([53; 32]);
+        let mut class_swap_rng = ChaCha20Rng::from_seed([53; 32]);
+        let mut sample_complement_rng = ChaCha20Rng::from_seed([53; 32]);
+        for _ in 0..64 {
+            let original =
+                hypergeometric_draw(population, successes, draws, &mut original_rng).unwrap();
+            let class_swap = hypergeometric_draw(
+                population,
+                population - successes,
+                draws,
+                &mut class_swap_rng,
+            )
+            .unwrap();
+            let sample_complement = hypergeometric_draw(
+                population,
+                successes,
+                population - draws,
+                &mut sample_complement_rng,
+            )
+            .unwrap();
+            assert_eq!(class_swap, draws - original);
+            assert_eq!(sample_complement, successes - original);
         }
     }
 

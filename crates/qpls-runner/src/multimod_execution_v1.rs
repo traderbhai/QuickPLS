@@ -1393,6 +1393,23 @@ pub fn multimod_replicate_seed_v1(master_seed: u64, domain: &str, index: u32) ->
     state ^ (state >> 31)
 }
 
+/// Converts an outer additive MultiMod Recipe V4 into the internal ordinary
+/// PLS point recipe used only to compile a lower-order scoring plan. The outer
+/// compiled MultiMod artifact remains the scientific authority.
+fn stage_internal_pls_point_recipe_v1(recipe: &mut AnalysisRecipeV4) {
+    recipe.settings.method = AnalysisMethod::PlsPm;
+    recipe.settings.bootstrap_samples = 0;
+    recipe.settings.permutation_samples = 0;
+    recipe.settings.studentized_inner_samples = 0;
+    recipe.settings.case_weight_column = None;
+    recipe.method_config = Some(MethodConfig::PlsAlgorithm);
+    recipe.general_sem_config = None;
+    recipe.mga_multigroup = None;
+    recipe.pls_heterogeneity = None;
+    recipe.general_sem_conditional_process = None;
+    recipe.interventional_causal_mediation = None;
+}
+
 fn validate_shared_ledger(
     ledger: &PreparedSharedReplicateLedgerV1,
 ) -> Result<Vec<usize>, MultiModRunnerErrorV1> {
@@ -3008,11 +3025,7 @@ fn projected_interaction_mga_authority_v1(
                 ))
             },
         )?;
-    point_recipe.settings.bootstrap_samples = 0;
-    point_recipe.settings.permutation_samples = 0;
-    point_recipe.settings.studentized_inner_samples = 0;
-    point_recipe.settings.case_weight_column = None;
-    point_recipe.mga_multigroup = None;
+    stage_internal_pls_point_recipe_v1(&mut point_recipe);
     let target = RecipeV4CompilerTarget::PlsPlanV2;
     let point_artifact = compile_analysis_recipe_v4(
         &point_recipe,
@@ -3637,11 +3650,7 @@ fn compile_hoc_mga_stage_v1(
             "multimod.runner.mga.hoc_stage_recipe_rejected:{error}"
         ))
     })?;
-    stage_recipe.settings.bootstrap_samples = 0;
-    stage_recipe.settings.permutation_samples = 0;
-    stage_recipe.settings.studentized_inner_samples = 0;
-    stage_recipe.settings.case_weight_column = None;
-    stage_recipe.mga_multigroup = None;
+    stage_internal_pls_point_recipe_v1(&mut stage_recipe);
     stage_recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
         scientific_sha256: model
             .scientific_sha256()
@@ -9794,11 +9803,7 @@ fn projected_heterogeneity_authority_v2(
                 "multimod.runner.heterogeneity.stage_one_projection_rejected:{error}"
             ))
         })?;
-    point_recipe.settings.bootstrap_samples = 0;
-    point_recipe.settings.permutation_samples = 0;
-    point_recipe.settings.studentized_inner_samples = 0;
-    point_recipe.settings.case_weight_column = None;
-    point_recipe.pls_heterogeneity = None;
+    stage_internal_pls_point_recipe_v1(&mut point_recipe);
     let target = RecipeV4CompilerTarget::PlsPlanV2;
     let point_artifact = compile_analysis_recipe_v4(
         &point_recipe,
@@ -14806,6 +14811,74 @@ where
 mod tests {
     use super::*;
     use qpls_estimation::ConditionalLinearCoefficientV2;
+
+    #[test]
+    fn internal_pls_point_staging_replaces_outer_additive_method_authority() {
+        let mut recipe = AnalysisRecipeV4 {
+            schema_version: qpls_core::ANALYSIS_RECIPE_V4_SCHEMA_VERSION,
+            id: uuid::Uuid::from_u128(1),
+            created_at: chrono::DateTime::<chrono::Utc>::from_timestamp(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: "fixture-dataset".into(),
+            model_binding: AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference {
+                model_id: "fixture-model".into(),
+                scientific_sha256: "0".repeat(64),
+            },
+            estimand_confirmation: qpls_core::LegacyEstimandConfirmationV4::NotLegacy,
+            settings: qpls_core::AnalysisSettings {
+                method: AnalysisMethod::Predict,
+                bootstrap_samples: 500,
+                permutation_samples: 5_000,
+                studentized_inner_samples: 200,
+                case_weight_column: Some("outer-weight".into()),
+                ..qpls_core::AnalysisSettings::default()
+            },
+            method_config: None,
+            general_sem_config: Some(qpls_core::GeneralSemConfigV1::default()),
+            mga_multigroup: None,
+            pls_heterogeneity: Some(qpls_core::PlsUnobservedHeterogeneityConfigV2 {
+                schema_version: qpls_core::PLS_HETEROGENEITY_V2_SCHEMA_VERSION,
+                profile: qpls_core::HeterogeneityInteractionProfileV2::P0Structural,
+                phase: qpls_core::HeterogeneityPhaseV2::Discovery {
+                    candidate_k: vec![2],
+                    algorithms: vec![qpls_core::HeterogeneityAlgorithmV2::FimixPlsV2],
+                },
+                seed: 42,
+                fimix: qpls_core::FimixSettingsV2::default(),
+                pls_pos: qpls_core::PlsPosSettingsV2::default(),
+                pos_common_metric: None,
+                bootstrap: None,
+            }),
+            general_sem_conditional_process: None,
+            interventional_causal_mediation: None,
+            metadata: std::collections::BTreeMap::new(),
+            legacy_source: None,
+        };
+        recipe.ensure_valid().unwrap();
+        let outer = recipe.clone();
+        let mut conflicting_outer = outer.clone();
+        conflicting_outer.method_config = Some(MethodConfig::PlsAlgorithm);
+        assert_eq!(
+            conflicting_outer.ensure_valid().unwrap_err(),
+            qpls_core::AnalysisRecipeV4Error::MultiModLegacyMethodConfigConflict
+        );
+
+        stage_internal_pls_point_recipe_v1(&mut recipe);
+
+        assert!(outer.pls_heterogeneity.is_some());
+        assert!(outer.method_config.is_none());
+        assert_eq!(recipe.settings.method, AnalysisMethod::PlsPm);
+        assert_eq!(recipe.settings.bootstrap_samples, 0);
+        assert_eq!(recipe.settings.permutation_samples, 0);
+        assert_eq!(recipe.settings.studentized_inner_samples, 0);
+        assert!(recipe.settings.case_weight_column.is_none());
+        assert_eq!(recipe.method_config, Some(MethodConfig::PlsAlgorithm));
+        assert!(recipe.general_sem_config.is_none());
+        assert!(recipe.mga_multigroup.is_none());
+        assert!(recipe.pls_heterogeneity.is_none());
+        assert!(recipe.general_sem_conditional_process.is_none());
+        assert!(recipe.interventional_causal_mediation.is_none());
+        recipe.ensure_valid().unwrap();
+    }
 
     fn test_group(index: usize) -> GroupIndexV1 {
         GroupIndexV1::new(index).unwrap()

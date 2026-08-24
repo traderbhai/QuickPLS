@@ -156,5 +156,10 @@ live.
 driver draft. Until every plan gate is marked ready and bound to a real command,
 the driver refuses execution and can only print its plan. The campaign writes
 one issue inventory and never edits source. Foundational fixes invalidate all
-dependent gates as recorded in the plan. Qualification does not merge, push,
-tag, publish or replace public installer artifacts.
+dependent gates as recorded in the plan. Open upstream issues are resolved
+through the transitive dependency graph, and invalidated gates are recorded as
+blocked without being executed. Blocked gates are terminal for campaign
+accounting but force a `completed_with_issues` result and a nonzero exit; only
+`passed` gates with valid evidence can contribute to release acceptance.
+Qualification does not merge, push, tag,
+publish or replace public installer artifacts.

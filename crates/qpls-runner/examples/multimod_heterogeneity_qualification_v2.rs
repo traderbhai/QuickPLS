@@ -640,6 +640,7 @@ fn run_config(
     recipe.settings.workers =
         metamorphic::configured_workers_v1(recipe.settings.workers).map_err(invalid)?;
     metamorphic::transform_model_declaration_order_v1(&mut model);
+    stage_additive_multimod_recipe(&mut recipe, AnalysisMethod::Predict);
     recipe.pls_heterogeneity = Some(config.clone());
     finalize_recipe(&mut recipe, &model)?;
     let artifact = prepare_multimod_recipe_v1(

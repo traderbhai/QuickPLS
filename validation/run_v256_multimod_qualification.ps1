@@ -87,6 +87,35 @@ function Relative-EvidencePath([string]$CampaignRoot, [string]$Path) {
     return $resolved.Substring($root.Length).Replace("\", "/")
 }
 
+function Get-InvalidatingRootGates([string]$TargetGateId, $Inventory, $CampaignPlan) {
+    $roots = @()
+    foreach ($issue in @($Inventory.issues | Where-Object { $_.disposition -eq "open" })) {
+        $frontier = @($issue.invalidated_downstream_gates | ForEach-Object { [string]$_ })
+        $visited = @{}
+        $targetReached = $false
+        while ($frontier.Count -gt 0 -and -not $targetReached) {
+            $candidate = [string]$frontier[0]
+            if ($frontier.Count -eq 1) {
+                $frontier = @()
+            } else {
+                $frontier = @($frontier[1..($frontier.Count - 1)])
+            }
+            if ($visited.ContainsKey($candidate)) { continue }
+            $visited[$candidate] = $true
+            if ($candidate -ceq $TargetGateId) {
+                $targetReached = $true
+                break
+            }
+            $candidatePlan = @($CampaignPlan.gates | Where-Object { $_.gate_id -ceq $candidate })
+            if ($candidatePlan.Count -eq 1) {
+                $frontier += @($candidatePlan[0].invalidates_on_failure | ForEach-Object { [string]$_ })
+            }
+        }
+        if ($targetReached) { $roots += [string]$issue.gate }
+    }
+    return @($roots | Sort-Object -Unique)
+}
+
 function Show-CampaignPlan {
     $unbound = @($plan.gates | Where-Object { $_.implementation_status -ne "ready" -or $null -eq $_.command })
     Write-Host "Plan: $($plan.plan_id)"
@@ -160,7 +189,24 @@ try {
         Assert-CandidateUnchanged $preflight.candidate_commit_sha
         if (@(Get-Process -Name cargo -ErrorAction SilentlyContinue).Count -gt 0) { throw "Another Cargo process is active before $($gate.gate_id)." }
         if ($gate.stage -eq "package") { $null = Assert-DiskThresholds }
-        $invalidatedBy = @($inventory.issues | Where-Object { $_.disposition -eq "open" -and @($_.invalidated_downstream_gates) -contains $gate.gate_id } | ForEach-Object gate)
+        $invalidatedBy = @(Get-InvalidatingRootGates $gate.gate_id $inventory $plan)
+        if ($invalidatedBy.Count -gt 0) {
+            $blockedAt = (Get-Date).ToUniversalTime().ToString("o")
+            $gateState.status = "blocked"
+            $gateState.evidence_valid = $false
+            $gateState.invalidated_by = $invalidatedBy
+            $gateState.started_at_utc = $blockedAt
+            $gateState.completed_at_utc = $blockedAt
+            $gateState.duration_ms = 0
+            $gateState.exit_code = $null
+            $gateState.input_digest = $null
+            $gateState.receipt = $null
+            $gateState.receipt_sha256 = $null
+            $gateState.stdout = $null
+            $gateState.stderr = $null
+            Write-JsonAtomic $statePath $state
+            continue
+        }
         $gateDirectory = Join-Path $campaignRoot $gate.gate_id
         New-Item -ItemType Directory -Path $gateDirectory -Force | Out-Null
         $stdoutPath = Join-Path $gateDirectory "stdout.log"; $stderrPath = Join-Path $gateDirectory "stderr.log"; $receiptPath = Join-Path $gateDirectory "gate_receipt.json"
@@ -218,11 +264,11 @@ try {
     }
 } finally { foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], "Process") } }
 
-$failed = @($state.gates | Where-Object status -eq "failed"); $pending = @($state.gates | Where-Object status -notin @("passed", "failed"))
-if ($pending.Count) { $state.status = "running"; $inventory.campaign_status = "running" } elseif ($failed.Count -or @($inventory.issues).Count) { $state.status = "completed_with_issues"; $inventory.campaign_status = "completed_with_issues" } else { $state.status = "completed_clean"; $inventory.campaign_status = "completed_clean" }
+$failed = @($state.gates | Where-Object status -eq "failed"); $blocked = @($state.gates | Where-Object status -eq "blocked"); $pending = @($state.gates | Where-Object status -notin @("passed", "failed", "blocked"))
+if ($pending.Count) { $state.status = "running"; $inventory.campaign_status = "running" } elseif ($failed.Count -or $blocked.Count -or @($inventory.issues).Count) { $state.status = "completed_with_issues"; $inventory.campaign_status = "completed_with_issues" } else { $state.status = "completed_clean"; $inventory.campaign_status = "completed_clean" }
 $state.completed_at_utc = (Get-Date).ToUniversalTime().ToString("o"); $inventory.generated_at_utc = (Get-Date).ToUniversalTime().ToString("o"); Write-JsonAtomic $statePath $state; Write-JsonAtomic $issuePath $inventory
 $evidenceIndex = [ordered]@{ schema_version = 1; campaign_id = $campaignId; campaign_pass = $CampaignPass; candidate_commit_sha = $preflight.candidate_commit_sha; candidate_version = [string]$plan.candidate.final_version; plan_sha256 = $planSha256; binding_sha256 = $bindingSha256; campaign_state_sha256 = Get-LowerSha256 $statePath; issue_inventory_sha256 = Get-LowerSha256 $issuePath; gate_receipts = @($state.gates | Where-Object receipt_sha256 | ForEach-Object { [ordered]@{ gate_id = $_.gate_id; path = $_.receipt; sha256 = $_.receipt_sha256; input_digest = $_.input_digest; seed = $_.seed } }); generated_at_utc = (Get-Date).ToUniversalTime().ToString("o") }
 Write-JsonAtomic (Join-Path $campaignRoot "campaign_evidence_index.json") $evidenceIndex
 $finalDisk = Assert-DiskThresholds
 Write-Host "Campaign status: $($state.status)"; Write-Host "Campaign root: $campaignRoot"; Write-Host "Issue inventory: $issuePath"; Write-Host "Retained free space: C $($finalDisk.C) GiB; D $($finalDisk.D) GiB"
-if ($failed.Count -or @($inventory.issues).Count) { exit 1 }
+if ($failed.Count -or $blocked.Count -or @($inventory.issues).Count) { exit 1 }
