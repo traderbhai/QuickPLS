@@ -470,7 +470,8 @@ function Initialize-GateAttemptDirectory {
     if ($gateDirectory -cne $expected) { throw "Gate attempt path is not the exact planned gate directory: $GateId" }
     $gatePrefix = $gateDirectory.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
     $sharedOutputs = @(
-        $GateBinding.steps.expected_outputs |
+        $GateBinding.steps |
+            ForEach-Object { @($_.expected_outputs) } |
             ForEach-Object { Expand-ReviewedExpectedOutputPath ([string]$_) $CampaignRoot $GateId } |
             Sort-Object -Unique |
             Where-Object {
@@ -1252,6 +1253,15 @@ function Invoke-SchedulerGraphSelfTest {
             -not (Test-Path -LiteralPath (Join-Path $fixtureHistory "gate\gate_receipt.json") -PathType Leaf) -or
             -not (Test-Path -LiteralPath (Join-Path $fixtureHistory "shared\shared-fixture\result.json") -PathType Leaf)
         ) { throw "Gate rerun did not rotate gate-local and shared outputs together." }
+        $emptyOutputBinding = [pscustomobject]@{
+            steps = @([pscustomobject]@{ expected_outputs = @() })
+        }
+        $emptyOutputDirectory = Initialize-GateAttemptDirectory `
+            $receiptFixtureRoot "empty-output.fixture" $emptyOutputBinding
+        if (
+            -not (Test-Path -LiteralPath $emptyOutputDirectory -PathType Container) -or
+            @(Get-ChildItem -LiteralPath $emptyOutputDirectory -Force).Count -ne 0
+        ) { throw "Singleton step with no expected outputs could not initialize its gate directory." }
     } finally {
         if (Test-Path -LiteralPath $receiptFixtureRoot) {
             $resolvedFixture = [IO.Path]::GetFullPath((Resolve-Path -LiteralPath $receiptFixtureRoot).Path)
@@ -1287,7 +1297,8 @@ function Invoke-SchedulerGraphSelfTest {
             "coherent_failed_receipt_retains_diagnostics_but_not_passed_evidence",
             "passed_gate_state_rejects_seed_and_root_tampering",
             "passed_receipt_integrity_rejects_hash_and_semantic_tampering",
-            "rerun_rotates_gate_and_shared_outputs"
+            "rerun_rotates_gate_and_shared_outputs",
+            "singleton_empty_expected_outputs_are_supported"
         )
     }
 }
