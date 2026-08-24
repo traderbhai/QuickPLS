@@ -101,7 +101,7 @@ Show-CampaignPlan
 if (-not $Execute) { Write-Host "Plan-only mode completed. No campaign output, test, build, package or evidence was created."; return }
 $unbound = @($plan.gates | Where-Object { $_.implementation_status -ne "ready" -or $null -eq $_.command })
 if ($unbound.Count -gt 0) { throw "Unbound gates: $(($unbound.gate_id) -join ', ')" }
-if (@($bindings.gates).Count -ne 32 -or (Compare-Object @($bindings.gates.gate_id) @($plan.gates.gate_id)).Count -ne 0) { throw "Reviewed gate catalog differs from the 32-gate plan." }
+if (@($bindings.gates).Count -ne 32 -or @(Compare-Object @($bindings.gates.gate_id) @($plan.gates.gate_id)).Count -ne 0) { throw "Reviewed gate catalog differs from the 32-gate plan." }
 if ($bindings.binding_kind -cne "reviewed_executable_coverage_v1" -or $bindings.placeholder_bindings_permitted -ne $false) { throw "Gate catalog does not explicitly reject placeholder coverage." }
 
 $priorInventoryBinding = $null
