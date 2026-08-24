@@ -70,6 +70,25 @@ foreach ($producerWrapperName in @(
 }
 
 $bindings = Get-Content -LiteralPath $bindingPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
+$metamorphicGates = @(
+    $bindings.gates | Where-Object { [string]$_.gate_id -eq "metamorphic.global" }
+)
+Assert-Contract ($metamorphicGates.Count -eq 1) `
+    "Expected exactly one metamorphic.global gate binding."
+$metamorphicInputs = @(
+    $metamorphicGates[0].input_artifacts | ForEach-Object { [string]$_ }
+)
+foreach ($sourceBoundWrapper in @(
+    "run_multimod_mga_qualification_v1.ps1",
+    "run_multimod_heterogeneity_qualification_v2.ps1",
+    "run_conditional_causal_raw_qualification_v1.ps1",
+    "run_multimod_metamorphic_qualification_v1.ps1"
+)) {
+    Assert-Contract (
+        $metamorphicInputs -ccontains "validation/multimod/$sourceBoundWrapper"
+    ) "Metamorphic qualification must hash $sourceBoundWrapper as an input artifact."
+}
+
 function Get-GateStep {
     param(
         [Parameter(Mandatory = $true)][string]$GateId,

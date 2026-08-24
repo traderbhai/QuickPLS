@@ -596,6 +596,8 @@
         "crates/qpls-runner/examples/multimod_conditional_qualification_v1.rs",
         "crates/qpls-runner/examples/multimod_causal_qualification_v1.rs",
         "validation/multimod/run_multimod_mga_qualification_v1.ps1",
+        "validation/multimod/run_multimod_heterogeneity_qualification_v2.ps1",
+        "validation/multimod/run_conditional_causal_raw_qualification_v1.ps1",
         "validation/multimod/compare_multimod_mga_qualification_v1.py",
         "validation/multimod/multimod_mga_shards_v1.py",
         "validation/multimod/test_multimod_mga_shards_v1.py",
