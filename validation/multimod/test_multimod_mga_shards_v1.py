@@ -267,6 +267,21 @@ class MgaShardContractTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, producer)
 
+    def test_multiple_hoc_mga_uses_only_the_additive_base_projection(self) -> None:
+        runner = (
+            Path(__file__).parents[2]
+            / "crates/qpls-runner/src/multimod_execution_v1.rs"
+        ).read_text(encoding="utf-8")
+        start = runner.index("fn projected_hoc_mga_authority_v1(")
+        end = runner.index("fn run_hoc_mga_stage_v1", start)
+        authority = runner[start:end]
+        self.assertIn(
+            "compile_pls_higher_order_lower_order_projection_multimod_v2",
+            authority,
+        )
+        self.assertNotIn("project_general_sem_pls_stage_one_recipe_v1", authority)
+        self.assertIn("if &base_stage.plan != plan.base_plan()", authority)
+
     def test_bounded_moderated_mediation_fixture_selects_exact_indirect_path(self) -> None:
         producer = (
             Path(__file__).parents[2]

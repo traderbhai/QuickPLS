@@ -49,6 +49,7 @@ use qpls_core::{
     SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
     StructuralRelationRoleV4, ValidatedExecutionRecipe, compile_analysis_recipe_v4,
     compile_multimod_recipe_v1, compile_multimod_weighted_pls_recipe_v4_v1,
+    compile_pls_higher_order_lower_order_projection_multimod_v2,
     compile_pls_higher_order_repeated_stage_projection_multimod_v2,
     compile_pls_higher_order_score_stage_projection_multimod_v2, compile_pls_plan_v3,
     compile_pls_plan_v3_multimod_multiple_hoc_v2, project_general_sem_pls_base_recipe_v1,
@@ -4762,19 +4763,14 @@ fn projected_hoc_mga_authority_v1(
         ));
     }
 
-    let (mut base_recipe, base_model) =
-        project_general_sem_pls_stage_one_recipe_v1(recipe, &scientific_model).map_err(
-            |error| {
-                MultiModRunnerErrorV1::UnsupportedProfile(format!(
-                    "multimod.runner.mga.hoc_base_projection_rejected:{error}"
-                ))
-            },
-        )?;
-    base_recipe.settings.bootstrap_samples = 0;
-    base_recipe.settings.permutation_samples = 0;
-    base_recipe.settings.studentized_inner_samples = 0;
-    base_recipe.mga_multigroup = None;
-    let base_stage = compile_hoc_mga_stage_v1(&base_recipe, base_model)?;
+    let base_model = compile_pls_higher_order_lower_order_projection_multimod_v2(&scientific_model)
+        .map(|projection| projection.projected_model().clone())
+        .map_err(|error| {
+            MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.hoc_base_projection_rejected:{error}"
+            ))
+        })?;
+    let base_stage = compile_hoc_mga_stage_v1(recipe, base_model)?;
     if &base_stage.plan != plan.base_plan() {
         return Err(MultiModRunnerErrorV1::Authority(
             "multiple-HOC base-stage artifact differs from the compiled plan".into(),
