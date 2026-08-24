@@ -80,7 +80,7 @@ function attachment(
           model_scientific_sha256: SHA.model,
           dataset_id: "00000000-0000-0000-0000-000000000204",
           dataset_fingerprint: SHA.dataset,
-          engine_version: "2.56.0-multimod.1",
+          engine_version: "2.56.0",
           seed: 42,
           capability_cell: {
             registry_schema_version: 2,

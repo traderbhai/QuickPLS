@@ -291,7 +291,7 @@ describe("strict native MultiMod job adapter", () => {
             model_scientific_sha256: authority.modelScientificSha256,
             dataset_id: authority.datasetId,
             dataset_fingerprint: authority.datasetFingerprint,
-            engine_version: "2.56.0-multimod.1",
+            engine_version: "2.56.0",
             seed: 42,
             capability_cell: {
               registry_schema_version: 2,

@@ -48,7 +48,7 @@ fn labs_provenance(recipe_id: Uuid) -> MultimodProvenanceV1 {
         model_scientific_sha256: "c".repeat(64),
         dataset_id: "00000000-0000-0000-0000-000000000204".into(),
         dataset_fingerprint: "dataset-fingerprint".into(),
-        engine_version: "2.56.0-multimod.1".into(),
+        engine_version: "2.56.0".into(),
         seed: 42,
         capability_cell: CapabilityCellReferenceV2 {
             registry_schema_version: 2,

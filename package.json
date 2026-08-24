@@ -1,7 +1,7 @@
 {
   "name": "quickpls",
   "private": true,
-  "version": "2.56.0-multimod.1",
+  "version": "2.56.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
