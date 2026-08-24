@@ -58,6 +58,64 @@ pub enum MultimodWeightedPlsPointErrorV1 {
     ResultContract(String),
 }
 
+/// Runner-internal proof that the deterministic weighted authority has been
+/// validated against its exact group-free source recipe/model once. MGA keeps
+/// this value for the lifetime of a run so thousands of resampled point fits
+/// cannot accidentally trigger thousands of compiler replays.
+#[derive(Debug, Clone)]
+pub(crate) struct PreparedMultimodWeightedPlsPointV1 {
+    authority: MultimodCompiledWeightedPlsRecipeV1,
+    execution: ValidatedExecutionRecipe,
+}
+
+impl PreparedMultimodWeightedPlsPointV1 {
+    pub(crate) fn point_recipe(&self) -> &AnalysisRecipeV4 {
+        self.authority.point_recipe()
+    }
+
+    pub(crate) fn point_model(&self) -> &SemModelV4 {
+        self.authority.point_model()
+    }
+
+    pub(crate) fn plan(&self) -> &qpls_core::CompiledPlsPlanV2 {
+        self.authority.plan()
+    }
+}
+
+pub(crate) fn prepare_compiled_multimod_weighted_pls_point_v1(
+    source_recipe: &AnalysisRecipeV4,
+    source_model: &SemModelV4,
+    requested_weight: &AnalysisWeightBindingV1,
+    authority: &MultimodCompiledWeightedPlsRecipeV1,
+) -> Result<PreparedMultimodWeightedPlsPointV1, MultimodWeightedPlsPointErrorV1> {
+    validate_multimod_weighted_pls_recipe_v4_v1(
+        authority,
+        source_recipe,
+        source_model,
+        requested_weight,
+    )
+    .map_err(|error| MultimodWeightedPlsPointErrorV1::Authority(error.to_string()))?;
+    let mut projected = crate::project_pls_plan_to_current_recipe(
+        authority.point_recipe(),
+        authority.point_model(),
+        authority.plan(),
+    )
+    .map_err(|error| MultimodWeightedPlsPointErrorV1::Projection(error.to_string()))?;
+    projected.settings.method = AnalysisMethod::Wpls;
+    projected.settings.case_weight_column =
+        Some(authority.receipt().weight_source_column().to_string());
+    projected.method_config = Some(MethodConfig::Wpls);
+    let execution = ValidatedExecutionRecipe::for_dataset(
+        &projected,
+        authority.receipt().source_dataset_fingerprint(),
+    )
+    .map_err(|error| MultimodWeightedPlsPointErrorV1::Projection(error.to_string()))?;
+    Ok(PreparedMultimodWeightedPlsPointV1 {
+        authority: authority.clone(),
+        execution,
+    })
+}
+
 /// Execute one fully weighted PLS score/path fit.  The caller prepares the
 /// dataset weight column first (mean-one case weights or positive compact
 /// frequency counts); this function applies it in every production WPLS
@@ -74,13 +132,25 @@ pub fn run_compiled_multimod_weighted_pls_point_v1(
     if should_cancel() {
         return Err(MultimodWeightedPlsPointErrorV1::Cancelled);
     }
-    validate_multimod_weighted_pls_recipe_v4_v1(
-        authority,
+    let prepared = prepare_compiled_multimod_weighted_pls_point_v1(
         source_recipe,
         source_model,
         requested_weight,
-    )
-    .map_err(|error| MultimodWeightedPlsPointErrorV1::Authority(error.to_string()))?;
+        authority,
+    )?;
+    run_prepared_multimod_weighted_pls_point_v1(dataset, &prepared, should_cancel, progress)
+}
+
+pub(crate) fn run_prepared_multimod_weighted_pls_point_v1(
+    dataset: &Dataset,
+    prepared: &PreparedMultimodWeightedPlsPointV1,
+    should_cancel: impl Fn() -> bool + Sync,
+    progress: impl Fn(RunnerProgress) + Sync,
+) -> Result<MultimodWeightedPlsPointResultV1, MultimodWeightedPlsPointErrorV1> {
+    if should_cancel() {
+        return Err(MultimodWeightedPlsPointErrorV1::Cancelled);
+    }
+    let authority = &prepared.authority;
     if dataset.schema.kind != DataKind::Raw {
         return Err(MultimodWeightedPlsPointErrorV1::RawDataRequired);
     }
@@ -90,18 +160,6 @@ pub fn run_compiled_multimod_weighted_pls_point_v1(
         return Err(MultimodWeightedPlsPointErrorV1::DatasetIdentity);
     }
 
-    let mut projected = crate::project_pls_plan_to_current_recipe(
-        authority.point_recipe(),
-        authority.point_model(),
-        authority.plan(),
-    )
-    .map_err(|error| MultimodWeightedPlsPointErrorV1::Projection(error.to_string()))?;
-    projected.settings.method = AnalysisMethod::Wpls;
-    projected.settings.case_weight_column =
-        Some(authority.receipt().weight_source_column().to_string());
-    projected.method_config = Some(MethodConfig::Wpls);
-    let execution = ValidatedExecutionRecipe::for_dataset(&projected, &dataset.fingerprint.0)
-        .map_err(|error| MultimodWeightedPlsPointErrorV1::Projection(error.to_string()))?;
     let mut report_progress = |update: qpls_estimation::EstimationProgress| {
         progress(RunnerProgress {
             phase: format!("multimod_weighted_pls:{}", update.phase.as_str()),
@@ -110,11 +168,12 @@ pub fn run_compiled_multimod_weighted_pls_point_v1(
         });
         !should_cancel()
     };
-    let estimation = estimate_pls_validated_with_control(dataset, &execution, &mut report_progress)
-        .map_err(|error| match error {
-            EstimationError::Cancelled => MultimodWeightedPlsPointErrorV1::Cancelled,
-            other => MultimodWeightedPlsPointErrorV1::Estimation(other.to_string()),
-        })?;
+    let estimation =
+        estimate_pls_validated_with_control(dataset, &prepared.execution, &mut report_progress)
+            .map_err(|error| match error {
+                EstimationError::Cancelled => MultimodWeightedPlsPointErrorV1::Cancelled,
+                other => MultimodWeightedPlsPointErrorV1::Estimation(other.to_string()),
+            })?;
     validate_weighted_point_result_v1(authority, dataset, &estimation)?;
     let applied_weight_sum = estimation
         .wpls

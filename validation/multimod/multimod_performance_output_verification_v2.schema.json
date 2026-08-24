@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "qpls://validation/multimod/performance-output-verification/v2",
+  "title": "QuickPLS MultiMod performance-output verification V2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "report_id", "passed", "mga", "heterogeneity",
+    "maximum", "execution_topology", "producer_outputs"
+  ],
+  "properties": {
+    "schema_version": { "const": 2 },
+    "report_id": { "const": "qpls.v256.multimod.performance-output-verification.v2" },
+    "passed": { "const": true },
+    "mga": { "type": "object" },
+    "heterogeneity": { "type": "object" },
+    "maximum": { "type": "object" },
+    "execution_topology": { "type": "object" },
+    "producer_outputs": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "sha256", "size"],
+        "properties": {
+          "path": { "type": "string", "minLength": 1 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "size": { "type": "integer", "minimum": 1 }
+        }
+      }
+    }
+  }
+}

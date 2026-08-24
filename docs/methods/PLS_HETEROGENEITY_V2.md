@@ -399,6 +399,24 @@ recomputes the exact reproducing-start inventory and configured tolerances. A
 release claim still depends on the complete source-bound campaign and live
 manifest gates described above.
 
+The validation-only producer is checkpointed rather than monolithic. After one
+Cargo build, a fast raw-runner sentinel must pass before independent recovery,
+scenario, candidate-K, POS-discovery, boundary, and bootstrap shards may run.
+Every shard is bound to the exact plan, commit, executable, seed, scale, and
+dependency receipts and is atomically sealed with SHA-256. Fixed-K inference
+reuses the retained discovery identity from its prerequisite shard. Independent
+non-Cargo executable shards may run concurrently, while bootstrap concurrency
+is separately bounded. Deterministic aggregation recreates the same raw report
+shape consumed by the independent comparator; partial output can never become
+a scientific result. The wrapper requires a fully clean tracked/untracked tree
+and baseline, one-worker, non-compact, unsigned fixture environment; the
+comparator separately enforces the 400-row seed-42 qualification identity.
+Cargo build, plan generation, sentinel, all shards, aggregation, and comparison
+are supervised against the remaining budget with process-tree termination and
+bounded exit waits. A two-minute sentinel, 110-minute default campaign cap,
+and 30-minute per-shard cap retain valid checkpoints for exact-identity resume
+instead of allowing an unbounded, uncheckpointed run.
+
 The production matrix also runs publication-profile PLS-POS candidates and
 500-draw fixed-K bootstrap ledgers at each exact K from 2 through 5. The K=3
 through K=5 cells use 400-row balanced strong-separation fixtures, the exact

@@ -27,7 +27,8 @@ function parseArguments(argv) {
     "endpoint", "kind", "candidate-path", "candidate-sha256", "candidate-pid",
     "candidate-commit", "candidate-version", "plan-sha256", "binding-sha256",
     "authority-document-sha256", "authority-binding-sha256",
-    "prepackage-manifest-set-sha256", "package-receipt-sha256", "seed", "output",
+    "prepackage-manifest-set-sha256", "package-receipt-sha256",
+    "scientific-deadline-epoch-ms", "seed", "output",
   ]) {
     if (!values[required]) throw new Error(`--${required} is required.`);
   }
@@ -37,6 +38,16 @@ function parseArguments(argv) {
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
+}
+
+function remainingScientificMilliseconds(operation) {
+  const remaining = scientificDeadlineEpochMs - Date.now();
+  assert(remaining > 0, `${operation} reached the driver-wide scientific deadline.`);
+  return remaining;
+}
+
+function assertWithinScientificDeadline(operation) {
+  remainingScientificMilliseconds(operation);
 }
 
 function sha256(bytes) {
@@ -59,15 +70,19 @@ function stableSlug(value) {
 }
 
 async function nativeInvoke(page, command, payload = {}) {
-  return page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
+  assertWithinScientificDeadline(`Native command ${command} start`);
+  const value = await page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
     const invoke = globalThis.__TAURI_INTERNALS__?.invoke;
     if (typeof invoke !== "function") throw new Error("Tauri invoke bridge is unavailable.");
     return invoke(commandName, invokePayload);
   }, { command, payload });
+  assertWithinScientificDeadline(`Native command ${command} completion`);
+  return value;
 }
 
 async function expectInvokeRejected(page, command, payload) {
-  return page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
+  assertWithinScientificDeadline(`Rejected native command ${command} start`);
+  const value = await page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
     try {
       await globalThis.__TAURI_INTERNALS__.invoke(commandName, invokePayload);
       return { rejected: false, message: "" };
@@ -75,17 +90,25 @@ async function expectInvokeRejected(page, command, payload) {
       return { rejected: true, message: String(error) };
     }
   }, { command, payload });
+  assertWithinScientificDeadline(`Rejected native command ${command} completion`);
+  return value;
 }
 
 async function pollJob(page, jobId, maximumSeconds, predicate = (snapshot) => TERMINAL.has(snapshot.state)) {
-  const deadline = Date.now() + maximumSeconds * 1000;
+  const familyDeadlineEpochMs = Date.now() + maximumSeconds * 1000;
+  const deadline = Math.min(familyDeadlineEpochMs, scientificDeadlineEpochMs);
+  assert(deadline > Date.now(), `MultiMod job ${jobId} has no driver-wide scientific time remaining.`);
   let snapshot;
   while (Date.now() < deadline) {
     snapshot = await nativeInvoke(page, "status_internal_labs_multimod_job_v1", { jobId });
-    if (predicate(snapshot)) return snapshot;
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    if (predicate(snapshot)) {
+      assert(Date.now() <= deadline, `MultiMod job ${jobId} reached a terminal predicate after its effective deadline.`);
+      return snapshot;
+    }
+    const remaining = deadline - Date.now();
+    if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, Math.min(100, remaining)));
   }
-  throw new Error(`MultiMod job ${jobId} exceeded its ${maximumSeconds}-second packaged-smoke budget; last state was ${snapshot?.state ?? "unknown"}.`);
+  throw new Error(`MultiMod job ${jobId} exceeded the earlier of its ${maximumSeconds}-second family budget and the driver-wide scientific deadline; last state was ${snapshot?.state ?? "unknown"}.`);
 }
 
 function stagedRequest(fixture) {
@@ -300,6 +323,13 @@ async function integrityVariants(page, fixtureRoot, result) {
 }
 
 const args = parseArguments(process.argv.slice(2));
+const driverStartedEpochMs = Date.now();
+const scientificDeadlineEpochMs = Number(args["scientific-deadline-epoch-ms"]);
+assert(
+  Number.isSafeInteger(scientificDeadlineEpochMs)
+    && scientificDeadlineEpochMs > driverStartedEpochMs,
+  "The driver-wide scientific deadline must be a future JavaScript-safe epoch millisecond.",
+);
 assert(/^[a-f0-9]{40}$/u.test(args["candidate-commit"]), "Candidate commit binding is invalid.");
 assert(args["candidate-version"] === "2.56.0", "Candidate version binding is invalid.");
 for (const digest of ["candidate-sha256", "plan-sha256", "binding-sha256", "authority-document-sha256", "authority-binding-sha256", "prepackage-manifest-set-sha256", "package-receipt-sha256"]) {
@@ -308,6 +338,7 @@ for (const digest of ["candidate-sha256", "plan-sha256", "binding-sha256", "auth
 assert(/^\d+$/u.test(args.seed), "Seed binding is invalid.");
 const numericSeed = Number(args.seed);
 assert(Number.isSafeInteger(numericSeed) && numericSeed >= 0, "Packaged workflow seed must be an unsigned JavaScript-safe integer.");
+assertWithinScientificDeadline("Packaged workflow initialization");
 const output = path.resolve(args.output);
 const outputDirectory = path.dirname(output);
 const workRoot = path.join(outputDirectory, `${args.kind}-production-workflows`);
@@ -409,6 +440,7 @@ try {
   const chartFormats = new Set(families.flatMap((family) => family.exports.map((entry) => entry.format)));
   assert(chartFormats.has("svg") && chartFormats.has("png"), "The four-family canonical matrix exposed no chart for SVG/PNG semantic publication and readback.");
 
+  assertWithinScientificDeadline("Packaged accessibility checks");
   const accessibility = await page.evaluate(() => {
     const visible = (element) => {
       const style = getComputedStyle(element);
@@ -444,6 +476,8 @@ try {
   assert(functionalNetwork.length === 0 && remoteResources.length === 0, "Packaged candidate attempted non-loopback network access during real workflows.");
   assert(consoleErrors.length === 0, `Packaged candidate emitted renderer errors: ${consoleErrors.join(" | ")}`);
   const screenshotBytes = fs.readFileSync(screenshot);
+  const completedEpochMs = Date.now();
+  assert(completedEpochMs <= scientificDeadlineEpochMs, "Packaged workflow completed after its driver-wide scientific deadline.");
   const report = {
     schema_version: 1,
     report_id: "qpls.v256.multimod.packaged-offline-production-smoke.v1",
@@ -481,9 +515,20 @@ try {
     offline: { passed: true, functional_network_requests: functionalNetwork, remote_resource_urls: remoteResources },
     console_errors: consoleErrors,
     screenshot: { path: screenshot, sha256: sha256(screenshotBytes), size: screenshotBytes.length },
+    timing: {
+      contract_id: "qpls.v256.multimod.packaged-driver-scientific-deadline.v1",
+      driver_started_epoch_ms: driverStartedEpochMs,
+      scientific_deadline_epoch_ms: scientificDeadlineEpochMs,
+      completed_epoch_ms: completedEpochMs,
+      elapsed_milliseconds: completedEpochMs - driverStartedEpochMs,
+      remaining_milliseconds_at_publication: scientificDeadlineEpochMs - completedEpochMs,
+      poll_deadlines_clamped_to_family_and_driver: true,
+      late_exit_rejection_enabled: true,
+    },
     generated_at_utc: new Date().toISOString(),
   };
   writeJsonAtomic(output, report);
+  assert(Date.now() <= scientificDeadlineEpochMs, "Packaged report publication crossed the driver-wide scientific deadline.");
   process.stdout.write(`${JSON.stringify(report)}\n`);
 } finally {
   await browser.close();

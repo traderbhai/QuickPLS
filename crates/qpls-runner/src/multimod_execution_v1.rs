@@ -9,6 +9,10 @@ use crate::{
     MgaExecutionCacheErrorV1, MgaExecutionCacheV1, MgaExecutionPlanV1, MgaExecutionShardKindV1,
     MgaExecutionShardPayloadV1, RunnerProgress, build_mga_execution_plan_v1,
     execute_or_reuse_mga_shard_with_checkpoint_v1,
+    multimod_weighted_pls_point_v1::{
+        PreparedMultimodWeightedPlsPointV1, prepare_compiled_multimod_weighted_pls_point_v1,
+        run_prepared_multimod_weighted_pls_point_v1,
+    },
     recipe_v4_general_sem_hoc_point_execution::{
         GeneralSemPlsHocScoreAlignmentReferenceV1, align_general_sem_pls_hoc_result_signs_v1,
     },
@@ -16,10 +20,11 @@ use crate::{
 };
 use qpls_core::{
     AnalysisMethod, AnalysisRecipeModelBindingV4, AnalysisRecipeV4, CompiledMultiModPlanV1,
-    CompiledMultiModRecipeV1, CompiledPlsPlanV2, CompiledPlsPlanV3, CompiledRecipePlanV4,
+    CompiledMultiModRecipeV1, CompiledPlsBlockModeV2, CompiledPlsPlanV2, CompiledPlsPlanV3,
+    CompiledRecipePlanV4, CompositeWeightNormalizationV4, CompositeWeightingV4,
     ConditionalProcessIntervalV2 as CoreConditionalIntervalV2,
     ConditionalProcessProfileV2 as CoreConditionalProfileV2, ConditionalProcessTargetKindV2,
-    ConditionalProcessTargetResultV2, ExcludedRowReceiptV1,
+    ConditionalProcessTargetResultV2, DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION, ExcludedRowReceiptV1,
     GENERAL_SEM_CONDITIONAL_PROCESS_RESULT_V2_SCHEMA_VERSION, GeneralSemConditionalProcessResultV2,
     GeneralSemInferenceV1, HeterogeneityAlgorithmV2 as CoreHeterogeneityAlgorithmV2,
     HeterogeneityCandidateMethodV2, HeterogeneityCandidateStateV2, HeterogeneityCandidateV2,
@@ -36,16 +41,17 @@ use qpls_core::{
     MultiModAnalysisResultV1, MultiModCompilationReceiptV1, MultiModCompilerTargetV1,
     MultimodIntervalV1, MultimodParameterEstimateV1, MultimodProvenanceV1,
     MultimodQualificationStateV1, MultimodReplicateFailureKindV1, MultimodReplicateFailureV1,
-    MultimodReplicateLedgerSummaryV1, MultiplicityAdjustmentV1,
+    MultimodReplicateLedgerSummaryV1, MultiplicityAdjustmentV1, ObservedRoleV4, ObservedScaleV4,
     PLS_HETEROGENEITY_ANALYSIS_V2_SCHEMA_VERSION, PLS_MULTIGROUP_ANALYSIS_V1_SCHEMA_VERSION,
     PlsHeterogeneityAnalysisV2, PlsMultigroupAnalysisV1, RecipeV4CompilerTarget, SemGroupV4,
-    SemModelV4, SemParameterTargetV4, SemVariableV4, StructuralRelationRoleV4,
-    compile_analysis_recipe_v4, compile_multimod_recipe_v1,
+    SemModelV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
+    StructuralRelationRoleV4, ValidatedExecutionRecipe, compile_analysis_recipe_v4,
+    compile_multimod_recipe_v1, compile_multimod_weighted_pls_recipe_v4_v1,
     compile_pls_higher_order_repeated_stage_projection_multimod_v2,
     compile_pls_higher_order_score_stage_projection_multimod_v2, compile_pls_plan_v3,
     compile_pls_plan_v3_multimod_multiple_hoc_v2, project_general_sem_pls_base_recipe_v1,
     project_general_sem_pls_stage_one_recipe_v1, sha256_serialized,
-    validate_compiled_multimod_recipe_v1,
+    validate_compiled_analysis_recipe_v4, validate_compiled_multimod_recipe_v1,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
@@ -72,10 +78,10 @@ use qpls_estimation::{
     MultigroupEligibilityV1, MultigroupFitRequestV1, MultigroupRefitterV1,
     MultigroupResamplingConfigV1, OmnibusPermutationResultV1, OrderedGroupPairV1,
     PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2, PLS_POS_PUBLISHED_METHOD_VERSION_V2,
-    POS_STANDARDIZED_OUTCOME_MEAN_TOLERANCE_V2, PairwisePartitionPlanV1,
+    PLSC_METHOD_VERSION, POS_STANDARDIZED_OUTCOME_MEAN_TOLERANCE_V2, PairwisePartitionPlanV1,
     PairwisePermutationResultV1, ParameterEstimateV1, ParameterFamilyV1, ParameterIdentityV1,
     ParameterVectorV1, ParametricGroupEstimateV1, ParametricGroupSeMethodV1, PlsAliasColumnSpecV1,
-    PlsPosFullRefitterV2, PlsPosV2Config, PlsPosV2Result, PlsResult,
+    PlsPointEstimateAttributionV1, PlsPosFullRefitterV2, PlsPosV2Config, PlsPosV2Result, PlsResult,
     PooledStandardizedMetricReceiptV2, PooledStructuralBaselineV2, PosCommonMetricGateInputV1,
     PosCommonMetricGateResultV1, PosCommonMetricGateStatusV1, PosConstructComparabilityEvidenceV1,
     PosFullRefitReceiptV2, PosOutcomeFitAuditV2, PosOutcomeR2V2,
@@ -91,7 +97,8 @@ use qpls_estimation::{
     conditional_probe_contrast_v2,
     estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control,
     estimate_general_sem_pls_three_way_moderation_v1_with_control,
-    estimate_interventional_mediation_v1, evaluate_pos_common_metric_gate_v1, fit_fimix_pls_v2,
+    estimate_interventional_mediation_v1, estimate_pls_validated_with_control,
+    evaluate_pos_common_metric_gate_v1, fit_fimix_pls_v2,
     fit_pls_pos_destination_scored_interactions_v2, fit_pls_pos_published_v2,
     fit_pooled_metric_segment_baselines_v2, fit_pooled_structural_baseline_v2,
     henseler_directional_probabilities_v1, heterogeneity_bootstrap_replicate_seed_v2,
@@ -923,9 +930,27 @@ pub fn multimod_mga_publishable_parameter_identities_v1(
         MultiModRunnerErrorV1::Authority("MGA configuration disappeared after compilation".into())
     })?;
     validate_prepared_group_membership_v1(dataset, config, design)?;
+    let ordinary_authority = matches!(
+        config.profile,
+        qpls_core::MgaModelProfileV1::GeneralSemPls
+            | qpls_core::MgaModelProfileV1::ReflectivePlsc
+            | qpls_core::MgaModelProfileV1::CaseWeightedPls
+            | qpls_core::MgaModelProfileV1::FrequencyWeightedPls
+    )
+    .then(|| projected_ordinary_pls_authority_v1(recipe, model, config))
+    .transpose()?;
     let eligible = if config.profile == qpls_core::MgaModelProfileV1::FrequencyWeightedPls {
+        let weight_source_column = ordinary_authority
+            .as_ref()
+            .and_then(OrdinaryPlsPointAuthorityV1::weight_source_column)
+            .ok_or_else(|| {
+                MultiModRunnerErrorV1::Authority(
+                    "frequency-weighted MGA target resolution lost its resolved weight source column"
+                        .into(),
+                )
+            })?;
         let (frequency_design, _, _) =
-            frequency_multigroup_design_from_raw_v1(dataset, config, design)?;
+            frequency_multigroup_design_from_raw_v1(dataset, weight_source_column, design)?;
         assess_frequency_multigroup_design_v1(&frequency_design).eligible
     } else {
         assess_multigroup_design_v1(design).eligible
@@ -940,19 +965,16 @@ pub fn multimod_mga_publishable_parameter_identities_v1(
         | qpls_core::MgaModelProfileV1::ReflectivePlsc
         | qpls_core::MgaModelProfileV1::CaseWeightedPls
         | qpls_core::MgaModelProfileV1::FrequencyWeightedPls => {
-            let (_, point_model, point_artifact) =
-                projected_ordinary_pls_authority_v1(recipe, model, config)?;
-            let CompiledRecipePlanV4::PlsPlanV2 { plan } = point_artifact.plan() else {
-                return Err(MultiModRunnerErrorV1::Authority(
-                    "ordinary MGA target authority did not emit a PLS plan".into(),
-                ));
-            };
-            Ok(
-                ordinary_pls_parameter_projections_v1(config, &point_model, plan)?
-                    .into_iter()
-                    .map(|projection| projection.identity)
-                    .collect(),
-            )
+            let authority = ordinary_authority.expect("ordinary profile authority prepared above");
+            Ok(ordinary_pls_parameter_projections_with_technical_v1(
+                config,
+                authority.point_model(),
+                authority.plan(),
+                authority.technical_construct_ids(),
+            )?
+            .into_iter()
+            .map(|projection| projection.identity)
+            .collect())
         }
         qpls_core::MgaModelProfileV1::MultipleTwoWayModeration
         | qpls_core::MgaModelProfileV1::BoundedThreeWayModeration
@@ -1572,35 +1594,527 @@ enum OrdinaryPlsParameterSourceV1 {
 struct OrdinaryPlsParameterProjectionV1 {
     identity: ParameterIdentityV1,
     source: OrdinaryPlsParameterSourceV1,
+    micom_required_constructs: BTreeSet<String>,
 }
 
 impl OrdinaryPlsParameterProjectionV1 {
     fn required_constructs(&self) -> BTreeSet<String> {
-        match &self.source {
-            OrdinaryPlsParameterSourceV1::StructuralPath { source, target, .. } => {
-                BTreeSet::from([source.clone(), target.clone()])
+        self.micom_required_constructs.clone()
+    }
+}
+
+const MGA_OBSERVED_CONTROL_LOWERING_MAX_V1: usize = 50;
+const MGA_OBSERVED_CONTROL_LOWERING_IDENTITY_V1: &str =
+    "qpls.mga.observed-control-fixed-unit-lowering.v1";
+
+#[derive(Debug, Clone)]
+struct MgaObservedControlLoweringIdsV1 {
+    indicator_id: String,
+    measurement_relation_id: String,
+    measurement_parameter_id: String,
+}
+
+fn mga_observed_control_lowering_ids_v1(
+    observed_id: &str,
+    source_column: &str,
+) -> MgaObservedControlLoweringIdsV1 {
+    let digest = sha256_serialized(&(
+        MGA_OBSERVED_CONTROL_LOWERING_IDENTITY_V1,
+        observed_id,
+        source_column,
+    ));
+    MgaObservedControlLoweringIdsV1 {
+        indicator_id: format!("qpls_mga_observed_control_indicator_v1_{digest}"),
+        measurement_relation_id: format!("qpls_mga_observed_control_relation_v1_{digest}"),
+        measurement_parameter_id: format!("qpls_mga_observed_control_parameter_v1_{digest}"),
+    }
+}
+
+#[derive(Debug, Clone)]
+struct MgaObservedControlLoweringSpecV1 {
+    observed_id: String,
+    label: String,
+    source_column: String,
+    generated: MgaObservedControlLoweringIdsV1,
+}
+
+/// Lowers only the admitted observed-control shape into the fixed-score
+/// representation already supported by the PLS V2 point engine. The source
+/// SemModelV4 remains the outer scientific authority: its observed variable
+/// id becomes the internal composite id, its source column moves unchanged to
+/// one technical indicator, and every authored control relation/parameter id
+/// remains untouched.
+fn lower_observed_controls_for_mga_pls_v1(
+    point_model: &mut SemModelV4,
+    profile: qpls_core::MgaModelProfileV1,
+    grouping_variable_id: &str,
+    grouping_column: &str,
+) -> Result<BTreeSet<String>, MultiModRunnerErrorV1> {
+    let mut observed = point_model
+        .variables
+        .iter()
+        .filter_map(|variable| match variable {
+            SemVariableV4::Observed {
+                id,
+                label,
+                source_column,
+                scale,
+                role,
+                missing_markers,
+                transformation_lineage,
+                ..
+            } => Some((
+                id.clone(),
+                label.clone(),
+                source_column.clone(),
+                *scale,
+                role.clone(),
+                missing_markers.is_empty(),
+                transformation_lineage.is_empty(),
+            )),
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    observed.sort_by(|left, right| left.0.cmp(&right.0));
+
+    let mut lowering = Vec::new();
+    for (
+        observed_id,
+        label,
+        source_column,
+        scale,
+        role,
+        missing_markers_empty,
+        transformation_lineage_empty,
+    ) in observed
+    {
+        let structural_sources = point_model
+            .relations
+            .iter()
+            .filter_map(|relation| match relation {
+                SemRelationV4::Structural {
+                    source,
+                    target,
+                    role,
+                    ..
+                } if source == &observed_id => Some((target.as_str(), *role)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        let used_as_structural_target = point_model.relations.iter().any(|relation| {
+            matches!(relation, SemRelationV4::Structural { target, .. } if target == &observed_id)
+        });
+        if used_as_structural_target {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_target_unsupported:{observed_id}"
+            )));
+        }
+        if structural_sources.is_empty() {
+            continue;
+        }
+        if role != ObservedRoleV4::Control
+            || structural_sources
+                .iter()
+                .any(|(_, relation_role)| *relation_role != StructuralRelationRoleV4::Control)
+        {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_role_or_relation_unsupported:{observed_id}"
+            )));
+        }
+        if scale != ObservedScaleV4::Continuous
+            || !missing_markers_empty
+            || !transformation_lineage_empty
+        {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_scale_or_metadata_unsupported:{observed_id}"
+            )));
+        }
+        if structural_sources.iter().any(|(target, _)| {
+            !point_model.variables.iter().any(|variable| {
+                matches!(variable, SemVariableV4::Composite { id, .. } if id.as_str() == *target)
+            })
+        }) {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_target_kind_unsupported:{observed_id}"
+            )));
+        }
+        let has_mixed_relation_use = point_model.relations.iter().any(|relation| match relation {
+            SemRelationV4::Structural { source, role, .. } if source == &observed_id => {
+                *role != StructuralRelationRoleV4::Control
             }
-            OrdinaryPlsParameterSourceV1::OuterLoading { construct, .. }
-            | OrdinaryPlsParameterSourceV1::OuterWeight { construct, .. }
-            | OrdinaryPlsParameterSourceV1::RSquared { construct } => {
-                BTreeSet::from([construct.clone()])
+            SemRelationV4::Structural { target, .. } => target == &observed_id,
+            SemRelationV4::MeasurementEffect {
+                construct,
+                indicator,
+                ..
+            } => construct == &observed_id || indicator == &observed_id,
+            SemRelationV4::MeasurementCausal {
+                indicator,
+                composite,
+                ..
+            } => indicator == &observed_id || composite == &observed_id,
+            SemRelationV4::Covariance { left, right, .. } => {
+                left.variable_id() == observed_id.as_str()
+                    || right.variable_id() == observed_id.as_str()
+            }
+        });
+        let has_derived_use = point_model.derived_terms.iter().any(|term| match term {
+            qpls_core::SemDerivedTermV4::Interaction {
+                output,
+                predictor,
+                moderator,
+                ..
+            } => [output, predictor, moderator]
+                .iter()
+                .any(|candidate| *candidate == &observed_id),
+            qpls_core::SemDerivedTermV4::InteractionV2 {
+                output, operands, ..
+            } => output == &observed_id || operands.iter().any(|value| value == &observed_id),
+            qpls_core::SemDerivedTermV4::HigherOrder {
+                output, components, ..
+            } => output == &observed_id || components.iter().any(|value| value == &observed_id),
+            qpls_core::SemDerivedTermV4::Polynomial { output, source, .. } => {
+                output == &observed_id || source == &observed_id
+            }
+        });
+        if has_mixed_relation_use || has_derived_use {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_mixed_use_unsupported:{observed_id}"
+            )));
+        }
+        if source_column == grouping_column
+            || point_model
+            .variables
+            .iter()
+            .filter(|variable| {
+                matches!(variable, SemVariableV4::Observed { source_column: candidate, .. } if candidate == &source_column)
+            })
+            .count()
+            != 1
+        {
+            return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.mga.observed_control_source_collision:{observed_id}"
+            )));
+        }
+        lowering.push(MgaObservedControlLoweringSpecV1 {
+            generated: mga_observed_control_lowering_ids_v1(&observed_id, &source_column),
+            observed_id,
+            label,
+            source_column,
+        });
+    }
+
+    if lowering.is_empty() {
+        return Ok(BTreeSet::new());
+    }
+    if profile != qpls_core::MgaModelProfileV1::GeneralSemPls {
+        return Err(MultiModRunnerErrorV1::UnsupportedProfile(
+            "multimod.runner.mga.observed_control_general_sem_pls_only".into(),
+        ));
+    }
+    if lowering.len() > MGA_OBSERVED_CONTROL_LOWERING_MAX_V1 {
+        return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+            "multimod.runner.mga.observed_control_count_unsupported:{}>{MGA_OBSERVED_CONTROL_LOWERING_MAX_V1}",
+            lowering.len()
+        )));
+    }
+
+    let mut occupied = point_model
+        .variables
+        .iter()
+        .map(|value| value.id().to_owned())
+        .chain(
+            point_model
+                .relations
+                .iter()
+                .map(|value| value.id().to_owned()),
+        )
+        .chain(
+            point_model
+                .parameters
+                .iter()
+                .map(|value| value.id().to_owned()),
+        )
+        .chain(
+            point_model
+                .constraints
+                .iter()
+                .map(|value| value.id().to_owned()),
+        )
+        .chain(
+            point_model
+                .derived_terms
+                .iter()
+                .map(|value| value.id().to_owned()),
+        )
+        .chain(
+            point_model
+                .annotations
+                .iter()
+                .map(|value| value.id().to_owned()),
+        )
+        .chain(
+            point_model
+                .variables
+                .iter()
+                .filter_map(|variable| match variable {
+                    SemVariableV4::Observed { source_column, .. } => Some(source_column.clone()),
+                    _ => None,
+                }),
+        )
+        .collect::<BTreeSet<_>>();
+    occupied.insert(grouping_variable_id.to_owned());
+    occupied.insert(grouping_column.to_owned());
+    for spec in &lowering {
+        for identity in [
+            &spec.generated.indicator_id,
+            &spec.generated.measurement_relation_id,
+            &spec.generated.measurement_parameter_id,
+        ] {
+            if !occupied.insert(identity.clone()) {
+                return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.mga.observed_control_generated_identity_collision:{identity}"
+                )));
             }
         }
     }
+
+    let technical_construct_ids = lowering
+        .iter()
+        .map(|spec| spec.observed_id.clone())
+        .collect::<BTreeSet<_>>();
+    for spec in lowering {
+        let variable = point_model
+            .variables
+            .iter_mut()
+            .find(|variable| variable.id() == spec.observed_id)
+            .expect("lowering specifications come from the point model");
+        *variable = SemVariableV4::Composite {
+            id: spec.observed_id.clone(),
+            label: spec.label.clone(),
+            weighting: CompositeWeightingV4::Unit {
+                normalization: CompositeWeightNormalizationV4::None,
+            },
+        };
+        point_model.variables.push(SemVariableV4::Observed {
+            id: spec.generated.indicator_id.clone(),
+            label: format!("Internal MGA observed-control input: {}", spec.label),
+            source_column: spec.source_column,
+            scale: ObservedScaleV4::Continuous,
+            role: ObservedRoleV4::Indicator,
+            categories: Vec::new(),
+            value_labels: BTreeMap::new(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
+        point_model
+            .relations
+            .push(SemRelationV4::MeasurementCausal {
+                id: spec.generated.measurement_relation_id,
+                indicator: spec.generated.indicator_id.clone(),
+                composite: spec.observed_id.clone(),
+                parameter: spec.generated.measurement_parameter_id.clone(),
+            });
+        point_model.parameters.push(SemParameterV4::Free {
+            id: spec.generated.measurement_parameter_id,
+            label: format!("Internal fixed unit score for {}", spec.label),
+            target: SemParameterTargetV4::Weight {
+                indicator: spec.generated.indicator_id,
+                composite: spec.observed_id,
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+    }
+    *point_model = point_model.canonicalized();
+    Ok(technical_construct_ids)
+}
+
+#[derive(Debug, Clone)]
+enum OrdinaryPlsPointExecutionAuthorityV1 {
+    Standard {
+        point_recipe: AnalysisRecipeV4,
+        point_model: SemModelV4,
+        point_artifact: qpls_core::CompiledAnalysisRecipeV4,
+    },
+    ReflectivePlsc {
+        point_recipe: AnalysisRecipeV4,
+        point_model: SemModelV4,
+        point_artifact: qpls_core::CompiledAnalysisRecipeV4,
+        execution: ValidatedExecutionRecipe,
+    },
+    Weighted {
+        prepared: PreparedMultimodWeightedPlsPointV1,
+        weight_source_column: String,
+    },
+}
+
+#[derive(Debug, Clone)]
+struct OrdinaryPlsPointAuthorityV1 {
+    execution: OrdinaryPlsPointExecutionAuthorityV1,
+    technical_observed_control_construct_ids: BTreeSet<String>,
+}
+
+impl OrdinaryPlsPointAuthorityV1 {
+    fn point_recipe(&self) -> &AnalysisRecipeV4 {
+        match &self.execution {
+            OrdinaryPlsPointExecutionAuthorityV1::Standard { point_recipe, .. }
+            | OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { point_recipe, .. } => {
+                point_recipe
+            }
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted { prepared, .. } => {
+                prepared.point_recipe()
+            }
+        }
+    }
+
+    fn point_model(&self) -> &SemModelV4 {
+        match &self.execution {
+            OrdinaryPlsPointExecutionAuthorityV1::Standard { point_model, .. }
+            | OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { point_model, .. } => {
+                point_model
+            }
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted { prepared, .. } => {
+                prepared.point_model()
+            }
+        }
+    }
+
+    fn plan(&self) -> &CompiledPlsPlanV2 {
+        match &self.execution {
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted { prepared, .. } => prepared.plan(),
+            OrdinaryPlsPointExecutionAuthorityV1::Standard { point_artifact, .. }
+            | OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { point_artifact, .. } => {
+                let CompiledRecipePlanV4::PlsPlanV2 { plan } = point_artifact.plan() else {
+                    unreachable!("ordinary MGA point authority always embeds a PLS v2 plan")
+                };
+                plan
+            }
+        }
+    }
+
+    fn technical_construct_ids(&self) -> &BTreeSet<String> {
+        &self.technical_observed_control_construct_ids
+    }
+
+    fn weight_source_column(&self) -> Option<&str> {
+        match &self.execution {
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted {
+                weight_source_column,
+                ..
+            } => Some(weight_source_column),
+            OrdinaryPlsPointExecutionAuthorityV1::Standard { .. }
+            | OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { .. } => None,
+        }
+    }
+
+    fn repeats_plsc_correction(&self) -> bool {
+        matches!(
+            &self.execution,
+            OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { .. }
+        )
+    }
+
+    fn execute<C>(&self, dataset: &Dataset, should_cancel: &C) -> Result<PlsResult, RefitFailureV1>
+    where
+        C: Fn() -> bool + Sync,
+    {
+        match &self.execution {
+            OrdinaryPlsPointExecutionAuthorityV1::Standard {
+                point_recipe,
+                point_model,
+                point_artifact,
+            } => run_compiled_pls_recipe_v4(
+                dataset,
+                point_recipe,
+                point_model,
+                point_artifact,
+                None,
+                || should_cancel(),
+                |_| {},
+            )
+            .map(|execution| execution.estimation().clone())
+            .map_err(refit_execution_failure_v1),
+            OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { execution, .. } => {
+                run_prepared_multimod_reflective_plsc_point_v1(
+                    dataset,
+                    self.point_recipe(),
+                    self.plan(),
+                    execution,
+                    should_cancel,
+                )
+            }
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted { prepared, .. } => {
+                run_prepared_multimod_weighted_pls_point_v1(
+                    dataset,
+                    prepared,
+                    || should_cancel(),
+                    |_| {},
+                )
+                .map(|execution| execution.estimation)
+                .map_err(weighted_point_refit_failure_v1)
+            }
+        }
+    }
+}
+
+fn prepare_multimod_reflective_plsc_execution_v1(
+    point_recipe: &AnalysisRecipeV4,
+    point_model: &SemModelV4,
+    point_artifact: &qpls_core::CompiledAnalysisRecipeV4,
+) -> Result<ValidatedExecutionRecipe, MultiModRunnerErrorV1> {
+    validate_compiled_analysis_recipe_v4(point_artifact, point_recipe, Some(point_model)).map_err(
+        |error| {
+            MultiModRunnerErrorV1::Authority(format!(
+                "multimod.runner.mga.plsc_point_authority_invalid: {error}"
+            ))
+        },
+    )?;
+    let CompiledRecipePlanV4::PlsPlanV2 { plan } = point_artifact.plan() else {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "multimod.runner.mga.plsc_point_plan_missing".into(),
+        ));
+    };
+    if plan.blocks().iter().any(|block| {
+        block.mode() != CompiledPlsBlockModeV2::ModeA
+            || block.indicators().len() < 2
+            || block.fixed_scoring().is_some()
+    }) {
+        return Err(MultiModRunnerErrorV1::UnsupportedProfile(
+            "multimod.runner.mga.plsc_reflective_plan_required: PLSc MGA requires estimated Mode-A blocks with at least two indicators"
+                .into(),
+        ));
+    }
+    let mut projected = crate::recipe_v4_pls_execution::project_pls_plan_to_current_recipe(
+        point_recipe,
+        point_model,
+        plan,
+    )
+    .map_err(|error| {
+        MultiModRunnerErrorV1::Authority(format!(
+            "multimod.runner.mga.plsc_point_projection_failed: {error}"
+        ))
+    })?;
+    projected.settings.method = AnalysisMethod::Plsc;
+    projected.settings.case_weight_column = None;
+    projected.method_config = Some(MethodConfig::Plsc);
+    ValidatedExecutionRecipe::for_dataset(&projected, &point_recipe.dataset_fingerprint).map_err(
+        |error| {
+            MultiModRunnerErrorV1::Authority(format!(
+                "multimod.runner.mga.plsc_execution_recipe_invalid: {error}"
+            ))
+        },
+    )
 }
 
 fn projected_ordinary_pls_authority_v1(
     recipe: &AnalysisRecipeV4,
     model: &SemModelV4,
     config: &MgaMultigroupV1,
-) -> Result<
-    (
-        AnalysisRecipeV4,
-        SemModelV4,
-        qpls_core::CompiledAnalysisRecipeV4,
-    ),
-    MultiModRunnerErrorV1,
-> {
+) -> Result<OrdinaryPlsPointAuthorityV1, MultiModRunnerErrorV1> {
     if !matches!(
         config.profile,
         qpls_core::MgaModelProfileV1::GeneralSemPls
@@ -1652,6 +2166,12 @@ fn projected_ordinary_pls_authority_v1(
     point_model
         .variables
         .retain(|variable| variable.id() != grouping_variable);
+    let technical_observed_control_construct_ids = lower_observed_controls_for_mga_pls_v1(
+        &mut point_model,
+        config.profile,
+        &grouping_variable,
+        &config.grouping_column,
+    )?;
     point_model.annotations.clear();
     point_model.presentation = Default::default();
     point_model
@@ -1666,8 +2186,11 @@ fn projected_ordinary_pls_authority_v1(
         qpls_core::MgaModelProfileV1::GeneralSemPls => {
             (AnalysisMethod::PlsPm, MethodConfig::PlsAlgorithm, None)
         }
+        // PLSc uses an ordinary compiled score/path plan. The MultiMod-only
+        // execution adapter below switches only the projected legacy recipe
+        // to PLSc and re-applies the correction in every sampled fit.
         qpls_core::MgaModelProfileV1::ReflectivePlsc => {
-            (AnalysisMethod::Plsc, MethodConfig::Plsc, None)
+            (AnalysisMethod::PlsPm, MethodConfig::PlsAlgorithm, None)
         }
         qpls_core::MgaModelProfileV1::CaseWeightedPls => {
             let Some(qpls_core::AnalysisWeightBindingV1::Case { column }) = &config.weight else {
@@ -1722,19 +2245,95 @@ fn projected_ordinary_pls_authority_v1(
             ));
         }
     };
-    let target = RecipeV4CompilerTarget::PlsPlanV2;
-    let artifact = compile_analysis_recipe_v4(
-        &point_recipe,
-        Some(&point_model),
-        target,
-        target.capability_cell_for_recipe(&point_recipe),
-    )
-    .map_err(|error| {
-        MultiModRunnerErrorV1::UnsupportedProfile(format!(
-            "multimod.runner.mga.ordinary_pls_projection_rejected: {error}"
-        ))
-    })?;
-    Ok((point_recipe, point_model, artifact))
+    let execution = match config.profile {
+        qpls_core::MgaModelProfileV1::CaseWeightedPls
+        | qpls_core::MgaModelProfileV1::FrequencyWeightedPls => {
+            let requested_weight = config.weight.as_ref().ok_or_else(|| {
+                MultiModRunnerErrorV1::Authority(
+                    "weighted MGA lost its typed weight binding".into(),
+                )
+            })?;
+            let authority = compile_multimod_weighted_pls_recipe_v4_v1(
+                &point_recipe,
+                &point_model,
+                requested_weight,
+            )
+            .map_err(|error| {
+                MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.mga.weighted_pls_projection_rejected: {error}"
+                ))
+            })?;
+            let expected_weight_semantics = match config.profile {
+                qpls_core::MgaModelProfileV1::CaseWeightedPls => {
+                    qpls_core::MultimodCompiledWeightSemanticsV1::PositiveCase
+                }
+                qpls_core::MgaModelProfileV1::FrequencyWeightedPls => {
+                    qpls_core::MultimodCompiledWeightSemanticsV1::PositiveIntegerFrequencyCountSpace
+                }
+                _ => unreachable!("weighted authority branch is profile-guarded"),
+            };
+            if authority.receipt().weight_semantics() != expected_weight_semantics {
+                return Err(MultiModRunnerErrorV1::Authority(
+                    "multimod.runner.mga.weighted_point_semantics_mismatch".into(),
+                ));
+            }
+            let weight_source_column = authority.receipt().weight_source_column().to_owned();
+            let prepared = prepare_compiled_multimod_weighted_pls_point_v1(
+                &point_recipe,
+                &point_model,
+                requested_weight,
+                &authority,
+            )
+            .map_err(|error| {
+                MultiModRunnerErrorV1::Authority(format!(
+                    "multimod.runner.mga.weighted_point_authority_invalid: {error}"
+                ))
+            })?;
+            OrdinaryPlsPointExecutionAuthorityV1::Weighted {
+                prepared,
+                weight_source_column,
+            }
+        }
+        qpls_core::MgaModelProfileV1::GeneralSemPls
+        | qpls_core::MgaModelProfileV1::ReflectivePlsc => {
+            let target = RecipeV4CompilerTarget::PlsPlanV2;
+            let point_artifact = compile_analysis_recipe_v4(
+                &point_recipe,
+                Some(&point_model),
+                target,
+                target.capability_cell_for_recipe(&point_recipe),
+            )
+            .map_err(|error| {
+                MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.mga.ordinary_pls_projection_rejected: {error}"
+                ))
+            })?;
+            if config.profile == qpls_core::MgaModelProfileV1::ReflectivePlsc {
+                let execution = prepare_multimod_reflective_plsc_execution_v1(
+                    &point_recipe,
+                    &point_model,
+                    &point_artifact,
+                )?;
+                OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc {
+                    point_recipe,
+                    point_model,
+                    point_artifact,
+                    execution,
+                }
+            } else {
+                OrdinaryPlsPointExecutionAuthorityV1::Standard {
+                    point_recipe,
+                    point_model,
+                    point_artifact,
+                }
+            }
+        }
+        _ => unreachable!("profile admission checked above"),
+    };
+    Ok(OrdinaryPlsPointAuthorityV1 {
+        execution,
+        technical_observed_control_construct_ids,
+    })
 }
 
 fn ordinary_pls_scoring_blocks_v1(plan: &CompiledPlsPlanV2) -> Vec<OrdinaryPlsScoringBlockV1> {
@@ -1756,11 +2355,28 @@ fn ordinary_pls_scoring_blocks_v1(plan: &CompiledPlsPlanV2) -> Vec<OrdinaryPlsSc
         .collect()
 }
 
+fn ordinary_pls_micom_construct_ids_v1(
+    blocks: &[OrdinaryPlsScoringBlockV1],
+    technical_construct_ids: &BTreeSet<String>,
+) -> Vec<String> {
+    blocks
+        .iter()
+        .filter(|block| !technical_construct_ids.contains(&block.construct_id))
+        .map(|block| block.construct_id.clone())
+        .collect()
+}
+
 fn synthetic_ordinary_pls_parameter_projections_v1(
     plan: &CompiledPlsPlanV2,
+    technical_construct_ids: &BTreeSet<String>,
 ) -> Vec<OrdinaryPlsParameterProjectionV1> {
     let mut projections = Vec::new();
     for path in plan.paths() {
+        let micom_required_constructs = [path.source(), path.target()]
+            .into_iter()
+            .filter(|construct| !technical_construct_ids.contains(*construct))
+            .map(str::to_owned)
+            .collect();
         projections.push(OrdinaryPlsParameterProjectionV1 {
             identity: ParameterIdentityV1 {
                 stable_id: path.parameter_id().into(),
@@ -1771,6 +2387,7 @@ fn synthetic_ordinary_pls_parameter_projections_v1(
                 target: path.target().into(),
                 role: path.role(),
             },
+            micom_required_constructs,
         });
     }
     let mut endogenous = BTreeSet::new();
@@ -1778,6 +2395,9 @@ fn synthetic_ordinary_pls_parameter_projections_v1(
         endogenous.insert(path.target().to_owned());
     }
     for block in plan.blocks() {
+        if technical_construct_ids.contains(block.construct_id()) {
+            continue;
+        }
         for indicator in block.indicators() {
             for (prefix, family) in [
                 ("outer_loading", ParameterFamilyV1::OuterLoading),
@@ -1804,17 +2424,24 @@ fn synthetic_ordinary_pls_parameter_projections_v1(
                         family,
                     },
                     source,
+                    micom_required_constructs: BTreeSet::from([block.construct_id().to_owned()]),
                 });
             }
         }
     }
     for construct in endogenous {
+        if technical_construct_ids.contains(&construct) {
+            continue;
+        }
         projections.push(OrdinaryPlsParameterProjectionV1 {
             identity: ParameterIdentityV1 {
                 stable_id: format!("r_squared:{construct}"),
                 family: ParameterFamilyV1::RSquared,
             },
-            source: OrdinaryPlsParameterSourceV1::RSquared { construct },
+            source: OrdinaryPlsParameterSourceV1::RSquared {
+                construct: construct.clone(),
+            },
+            micom_required_constructs: BTreeSet::from([construct]),
         });
     }
     projections.sort_by(|left, right| left.identity.stable_id.cmp(&right.identity.stable_id));
@@ -1826,6 +2453,7 @@ fn explicit_ordinary_pls_parameter_projection_v1(
     model: &SemModelV4,
     plan: &CompiledPlsPlanV2,
     synthetic: &[OrdinaryPlsParameterProjectionV1],
+    technical_construct_ids: &BTreeSet<String>,
 ) -> Result<OrdinaryPlsParameterProjectionV1, MultiModRunnerErrorV1> {
     if let Some(candidate) = synthetic
         .iter()
@@ -1863,6 +2491,11 @@ fn explicit_ordinary_pls_parameter_projection_v1(
                     target: path.target().into(),
                     role: path.role(),
                 },
+                micom_required_constructs: [path.source(), path.target()]
+                    .into_iter()
+                    .filter(|construct| !technical_construct_ids.contains(*construct))
+                    .map(str::to_owned)
+                    .collect(),
             })
         }
         SemParameterTargetV4::Loading { .. } | SemParameterTargetV4::Weight { .. } => {
@@ -1881,6 +2514,11 @@ fn explicit_ordinary_pls_parameter_projection_v1(
                         "multimod.runner.mga.parameter_unmapped: measurement parameter {parameter_id} is absent from the compiled PLS plan"
                     ))
                 })?;
+            if technical_construct_ids.contains(block.construct_id()) {
+                return Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.mga.technical_observed_control_measurement_target_unsupported:{parameter_id}"
+                )));
+            }
             let (family, source) = match parameter.target() {
                 SemParameterTargetV4::Loading { .. } => (
                     ParameterFamilyV1::OuterLoading,
@@ -1904,6 +2542,7 @@ fn explicit_ordinary_pls_parameter_projection_v1(
                     family,
                 },
                 source,
+                micom_required_constructs: BTreeSet::from([block.construct_id().to_owned()]),
             })
         }
         _ => Err(MultiModRunnerErrorV1::UnsupportedProfile(format!(
@@ -1917,7 +2556,16 @@ fn ordinary_pls_parameter_projections_v1(
     model: &SemModelV4,
     plan: &CompiledPlsPlanV2,
 ) -> Result<Vec<OrdinaryPlsParameterProjectionV1>, MultiModRunnerErrorV1> {
-    let synthetic = synthetic_ordinary_pls_parameter_projections_v1(plan);
+    ordinary_pls_parameter_projections_with_technical_v1(config, model, plan, &BTreeSet::new())
+}
+
+fn ordinary_pls_parameter_projections_with_technical_v1(
+    config: &MgaMultigroupV1,
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV2,
+    technical_construct_ids: &BTreeSet<String>,
+) -> Result<Vec<OrdinaryPlsParameterProjectionV1>, MultiModRunnerErrorV1> {
+    let synthetic = synthetic_ordinary_pls_parameter_projections_v1(plan, technical_construct_ids);
     let projections = if config.selected_parameter_ids.is_empty() {
         synthetic
     } else {
@@ -1925,7 +2573,13 @@ fn ordinary_pls_parameter_projections_v1(
             .selected_parameter_ids
             .iter()
             .map(|parameter_id| {
-                explicit_ordinary_pls_parameter_projection_v1(parameter_id, model, plan, &synthetic)
+                explicit_ordinary_pls_parameter_projection_v1(
+                    parameter_id,
+                    model,
+                    plan,
+                    &synthetic,
+                    technical_construct_ids,
+                )
             })
             .collect::<Result<Vec<_>, _>>()?
     };
@@ -1983,7 +2637,7 @@ impl OrdinaryPlsRawScoreCacheV1 {
     where
         C: Fn() -> bool + Sync,
     {
-        let indices = checked_source_rows_v1(dataset, source_rows)
+        let indices = checked_source_row_indices_v1(dataset, source_rows)
             .map_err(|failure| MultiModRunnerErrorV1::PreparedInput(failure.detail))?;
         let sampled =
             resample_dataset_columns_v1(dataset, source_columns, &indices, || should_cancel())
@@ -2105,16 +2759,10 @@ impl OrdinaryPlsRawScoreCacheV1 {
     }
 }
 
-fn checked_source_rows_v1(
+fn checked_source_row_indices_v1(
     dataset: &Dataset,
     source_rows: &[u64],
 ) -> Result<Vec<usize>, RefitFailureV1> {
-    if source_rows.len() < 10 {
-        return Err(RefitFailureV1::new(
-            RefitFailureCodeV1::InsufficientRows,
-            "ordinary PLS MGA refits require at least ten rows",
-        ));
-    }
     source_rows
         .iter()
         .map(|row| {
@@ -2129,6 +2777,50 @@ fn checked_source_rows_v1(
                 })
         })
         .collect()
+}
+
+fn checked_source_rows_v1(
+    dataset: &Dataset,
+    source_rows: &[u64],
+) -> Result<Vec<usize>, RefitFailureV1> {
+    if source_rows.len() < 10 {
+        return Err(RefitFailureV1::new(
+            RefitFailureCodeV1::InsufficientRows,
+            "ordinary PLS MGA refits require at least ten rows",
+        ));
+    }
+    checked_source_row_indices_v1(dataset, source_rows)
+}
+
+fn checked_frequency_source_rows_v1(
+    dataset: &Dataset,
+    source_rows: &[u64],
+    counts: &[u64],
+) -> Result<Vec<usize>, RefitFailureV1> {
+    if source_rows.len() != counts.len()
+        || source_rows.is_empty()
+        || counts.iter().any(|count| *count == 0)
+    {
+        return Err(RefitFailureV1::new(
+            RefitFailureCodeV1::InsufficientRows,
+            "frequency PLS refit requires aligned nonempty positive counts",
+        ));
+    }
+    let represented = counts.iter().try_fold(0_u64, |total, count| {
+        total.checked_add(*count).ok_or_else(|| {
+            RefitFailureV1::new(
+                RefitFailureCodeV1::ParameterContractMismatch,
+                "frequency PLS represented-case count overflowed",
+            )
+        })
+    })?;
+    if represented < 10 {
+        return Err(RefitFailureV1::new(
+            RefitFailureCodeV1::InsufficientRows,
+            "frequency PLS MGA refits require at least ten represented cases",
+        ));
+    }
+    checked_source_row_indices_v1(dataset, source_rows)
 }
 
 fn refit_execution_failure_v1(error: crate::RecipeV4PlsExecutionError) -> RefitFailureV1 {
@@ -2151,6 +2843,264 @@ fn refit_execution_failure_v1(error: crate::RecipeV4PlsExecutionError) -> RefitF
         _ => RefitFailureCodeV1::EngineFailure,
     };
     RefitFailureV1::new(code, error.to_string())
+}
+
+fn weighted_point_refit_failure_v1(
+    error: crate::MultimodWeightedPlsPointErrorV1,
+) -> RefitFailureV1 {
+    let code = match &error {
+        crate::MultimodWeightedPlsPointErrorV1::Cancelled => RefitFailureCodeV1::Cancelled,
+        crate::MultimodWeightedPlsPointErrorV1::DatasetIdentity
+        | crate::MultimodWeightedPlsPointErrorV1::ResultContract(_)
+        | crate::MultimodWeightedPlsPointErrorV1::Authority(_)
+        | crate::MultimodWeightedPlsPointErrorV1::Projection(_)
+        | crate::MultimodWeightedPlsPointErrorV1::RawDataRequired => {
+            RefitFailureCodeV1::ParameterContractMismatch
+        }
+        crate::MultimodWeightedPlsPointErrorV1::Estimation(_) => RefitFailureCodeV1::EngineFailure,
+    };
+    RefitFailureV1::new(code, error.to_string())
+}
+
+fn run_prepared_multimod_reflective_plsc_point_v1<C>(
+    dataset: &Dataset,
+    point_recipe: &AnalysisRecipeV4,
+    plan: &CompiledPlsPlanV2,
+    execution: &ValidatedExecutionRecipe,
+    should_cancel: &C,
+) -> Result<PlsResult, RefitFailureV1>
+where
+    C: Fn() -> bool + Sync,
+{
+    if should_cancel() {
+        return Err(RefitFailureV1::new(
+            RefitFailureCodeV1::Cancelled,
+            "cancelled before reflective PLSc refit",
+        ));
+    }
+    if dataset.fingerprint.0 != point_recipe.dataset_fingerprint
+        || dataset.id.to_string() != plan.dataset_id()
+    {
+        return Err(RefitFailureV1::new(
+            RefitFailureCodeV1::ParameterContractMismatch,
+            "reflective PLSc execution dataset differs from the compiled point authority",
+        ));
+    }
+    let mut report_progress = |_: qpls_estimation::EstimationProgress| !should_cancel();
+    let result = estimate_pls_validated_with_control(dataset, execution, &mut report_progress)
+        .map_err(|error| {
+            let code = match &error {
+                EstimationError::Cancelled => RefitFailureCodeV1::Cancelled,
+                EstimationError::InsufficientObservations => RefitFailureCodeV1::InsufficientRows,
+                EstimationError::NonConvergence(_) => RefitFailureCodeV1::Nonconvergence,
+                EstimationError::RankDeficient(_)
+                | EstimationError::ConstantIndicator(_)
+                | EstimationError::OlsNonPositiveResidualDegreesOfFreedom { .. } => {
+                    RefitFailureCodeV1::SingularModel
+                }
+                EstimationError::Numerical(_) => RefitFailureCodeV1::NonFiniteEstimate,
+                _ => RefitFailureCodeV1::EngineFailure,
+            };
+            RefitFailureV1::new(code, error.to_string())
+        })?;
+    validate_multimod_reflective_plsc_point_v1(dataset, point_recipe, plan, &result)?;
+    Ok(result)
+}
+
+fn validate_multimod_reflective_plsc_point_v1(
+    dataset: &Dataset,
+    point_recipe: &AnalysisRecipeV4,
+    plan: &CompiledPlsPlanV2,
+    result: &PlsResult,
+) -> Result<(), RefitFailureV1> {
+    let invalid = |detail: String| {
+        RefitFailureV1::new(
+            RefitFailureCodeV1::ParameterContractMismatch,
+            format!("reflective PLSc point contract failed: {detail}"),
+        )
+    };
+    if !result.converged
+        || result.method_version != PLSC_METHOD_VERSION
+        || result.used_observations != dataset.batch.num_rows()
+        || result.omitted_observations != 0
+        || result.wpls.is_some()
+        || result.point_estimate_attribution.as_ref()
+            != Some(&PlsPointEstimateAttributionV1::for_preprocessing(
+                point_recipe.settings.preprocessing.clone(),
+            ))
+    {
+        return Err(invalid(
+            "method identity, convergence, row accounting, weight state, or point scale is invalid"
+                .into(),
+        ));
+    }
+    let Some(plsc) = result.plsc.as_ref() else {
+        return Err(invalid("plsc_v2 payload is absent".into()));
+    };
+    if plsc.method_version != PLSC_METHOD_VERSION
+        || plsc.reliability_method_version != DIJKSTRA_HENSELER_RHO_A_METHOD_VERSION
+        || plsc.corrected_paths != result.paths
+        || plsc.corrected_r_squared != result.r_squared
+    {
+        return Err(invalid(
+            "plsc_v2 identity or corrected structural payload differs from the published point"
+                .into(),
+        ));
+    }
+
+    let expected_constructs = plan
+        .blocks()
+        .iter()
+        .map(|block| block.construct_id().to_owned())
+        .collect::<BTreeSet<_>>();
+    let score_constructs = result
+        .construct_scores
+        .keys()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let reliability_constructs = plsc
+        .reliabilities
+        .iter()
+        .map(|entry| entry.construct.clone())
+        .collect::<BTreeSet<_>>();
+    if expected_constructs != score_constructs
+        || expected_constructs != reliability_constructs
+        || plsc.reliabilities.len() != expected_constructs.len()
+        || result.construct_scores.values().any(|scores| {
+            scores.len() != dataset.batch.num_rows()
+                || scores.iter().any(|value| !value.is_finite())
+        })
+        || plsc
+            .reliabilities
+            .iter()
+            .any(|entry| !entry.rho_a.is_finite() || entry.rho_a <= 0.0 || entry.rho_a > 1.0)
+    {
+        return Err(invalid(
+            "construct-score or reliability inventory differs from the compiled plan".into(),
+        ));
+    }
+
+    let expected_outer = plan
+        .blocks()
+        .iter()
+        .flat_map(|block| {
+            block.indicators().iter().map(|indicator| {
+                (
+                    block.construct_id().to_owned(),
+                    indicator.source_column().to_owned(),
+                )
+            })
+        })
+        .collect::<BTreeSet<_>>();
+    let ordinary_outer = result
+        .outer_estimates
+        .iter()
+        .map(|entry| (entry.construct.clone(), entry.indicator.clone()))
+        .collect::<BTreeSet<_>>();
+    let corrected_outer = plsc
+        .corrected_outer_loadings
+        .iter()
+        .map(|entry| (entry.construct.clone(), entry.indicator.clone()))
+        .collect::<BTreeSet<_>>();
+    if expected_outer != ordinary_outer
+        || expected_outer != corrected_outer
+        || result.outer_estimates.len() != expected_outer.len()
+        || plsc.corrected_outer_loadings.len() != expected_outer.len()
+        || result
+            .outer_estimates
+            .iter()
+            .chain(&plsc.corrected_outer_loadings)
+            .any(|entry| !entry.weight.is_finite() || !entry.loading.is_finite())
+    {
+        return Err(invalid(
+            "ordinary or corrected outer inventory differs from the compiled plan".into(),
+        ));
+    }
+
+    let expected_paths = plan
+        .paths()
+        .iter()
+        .map(|path| (path.source().to_owned(), path.target().to_owned()))
+        .collect::<BTreeSet<_>>();
+    let actual_paths = result
+        .paths
+        .iter()
+        .map(|path| (path.source.clone(), path.target.clone()))
+        .collect::<BTreeSet<_>>();
+    let expected_controls = plan
+        .paths()
+        .iter()
+        .filter(|path| path.role() == StructuralRelationRoleV4::Control)
+        .map(|path| (path.source().to_owned(), path.target().to_owned()))
+        .collect::<BTreeSet<_>>();
+    let actual_controls = result
+        .control_estimates
+        .iter()
+        .map(|path| (path.source.clone(), path.target.clone()))
+        .collect::<BTreeSet<_>>();
+    let expected_endogenous = plan
+        .paths()
+        .iter()
+        .map(|path| path.target().to_owned())
+        .collect::<BTreeSet<_>>();
+    let actual_endogenous = result.r_squared.keys().cloned().collect::<BTreeSet<_>>();
+    if expected_paths != actual_paths
+        || result.paths.len() != expected_paths.len()
+        || expected_controls != actual_controls
+        || result.control_estimates.len() != expected_controls.len()
+        || expected_endogenous != actual_endogenous
+        || result
+            .paths
+            .iter()
+            .any(|path| !path.coefficient.is_finite())
+        || result
+            .control_estimates
+            .iter()
+            .any(|path| !path.coefficient.is_finite())
+        || result.r_squared.values().any(|value| !value.is_finite())
+    {
+        return Err(invalid(format!(
+            "corrected path, control, or R-squared inventory differs from the compiled plan: expected_paths={expected_paths:?}, actual_paths={actual_paths:?}, expected_controls={expected_controls:?}, actual_controls={actual_controls:?}, expected_endogenous={expected_endogenous:?}, actual_endogenous={actual_endogenous:?}"
+        )));
+    }
+
+    let expected_correlations = expected_constructs
+        .iter()
+        .enumerate()
+        .flat_map(|(left_index, left)| {
+            expected_constructs
+                .iter()
+                .skip(left_index + 1)
+                .map(move |right| (left.clone(), right.clone()))
+        })
+        .collect::<BTreeSet<_>>();
+    let actual_correlations = plsc
+        .construct_correlations
+        .iter()
+        .map(|entry| {
+            if entry.left <= entry.right {
+                (entry.left.clone(), entry.right.clone())
+            } else {
+                (entry.right.clone(), entry.left.clone())
+            }
+        })
+        .collect::<BTreeSet<_>>();
+    if expected_correlations != actual_correlations
+        || plsc.construct_correlations.len() != expected_correlations.len()
+        || plsc.construct_correlations.iter().any(|entry| {
+            !entry.original.is_finite()
+                || !entry.corrected.is_finite()
+                || entry.corrected.abs() > 1.0
+        })
+        || result.effects.iter().any(|effect| {
+            !effect.direct.is_finite() || !effect.indirect.is_finite() || !effect.total.is_finite()
+        })
+    {
+        return Err(invalid(
+            "corrected correlation or effect inventory contains missing or nonfinite values".into(),
+        ));
+    }
+    Ok(())
 }
 
 fn sample_standard_deviation_v1(values: &[f64]) -> f64 {
@@ -2247,13 +3197,28 @@ fn apply_pls_fit_signs_v1(result: &mut PlsResult, signs: &BTreeMap<String, f64>)
         control.coefficient *= signs.get(&control.source).copied().unwrap_or(1.0)
             * signs.get(&control.target).copied().unwrap_or(1.0);
     }
+    for effect in &mut result.effects {
+        let sign = signs.get(&effect.source).copied().unwrap_or(1.0)
+            * signs.get(&effect.target).copied().unwrap_or(1.0);
+        effect.direct *= sign;
+        effect.indirect *= sign;
+        effect.total *= sign;
+    }
     if let Some(plsc) = &mut result.plsc {
         for estimate in &mut plsc.corrected_outer_loadings {
-            estimate.loading *= signs.get(&estimate.construct).copied().unwrap_or(1.0);
+            let sign = signs.get(&estimate.construct).copied().unwrap_or(1.0);
+            estimate.weight *= sign;
+            estimate.loading *= sign;
         }
         for path in &mut plsc.corrected_paths {
             path.coefficient *= signs.get(&path.source).copied().unwrap_or(1.0)
                 * signs.get(&path.target).copied().unwrap_or(1.0);
+        }
+        for correlation in &mut plsc.construct_correlations {
+            let sign = signs.get(&correlation.left).copied().unwrap_or(1.0)
+                * signs.get(&correlation.right).copied().unwrap_or(1.0);
+            correlation.original *= sign;
+            correlation.corrected *= sign;
         }
     }
 }
@@ -2289,9 +3254,7 @@ fn align_pls_fit_to_reference_v1(
 
 struct OrdinaryPlsMgaRefitterV1<'a, C, P> {
     dataset: &'a Dataset,
-    point_recipe: AnalysisRecipeV4,
-    point_model: SemModelV4,
-    point_artifact: qpls_core::CompiledAnalysisRecipeV4,
+    authority: OrdinaryPlsPointAuthorityV1,
     source_columns: Vec<String>,
     profile: qpls_core::MgaModelProfileV1,
     weight_column: Option<String>,
@@ -2354,17 +3317,7 @@ where
             }
             _ => sampled,
         };
-        let execution = run_compiled_pls_recipe_v4(
-            &sampled,
-            &self.point_recipe,
-            &self.point_model,
-            &self.point_artifact,
-            None,
-            || (self.should_cancel)(),
-            |_| {},
-        )
-        .map_err(refit_execution_failure_v1)?;
-        let mut result = execution.estimation().clone();
+        let mut result = self.authority.execute(&sampled, self.should_cancel)?;
         if !result.converged {
             return Err(RefitFailureV1::new(
                 RefitFailureCodeV1::Nonconvergence,
@@ -2493,7 +3446,17 @@ where
     P: Fn(MultiModRunnerProgressV1) + Sync,
 {
     fn fit_micom(&mut self, request: &MicomFitRequestV1) -> Result<MicomFitV1, RefitFailureV1> {
-        let mut scores = Vec::with_capacity(request.training_groups.len() * self.blocks.len());
+        let scientific_block_count = self
+            .blocks
+            .iter()
+            .filter(|block| {
+                !self
+                    .authority
+                    .technical_construct_ids()
+                    .contains(&block.construct_id)
+            })
+            .count();
+        let mut scores = Vec::with_capacity(request.training_groups.len() * scientific_block_count);
         for training in &request.training_groups {
             report(
                 self.progress,
@@ -2513,6 +3476,13 @@ where
             let fit = self.fit_rows(&training.source_rows)?;
             self.micom_completed = self.micom_completed.saturating_add(1);
             for block in &self.blocks {
+                if self
+                    .authority
+                    .technical_construct_ids()
+                    .contains(&block.construct_id)
+                {
+                    continue;
+                }
                 scores.push(MicomGroupConstructScoresV1 {
                     group: training.group,
                     construct_id: block.construct_id.clone(),
@@ -2536,6 +3506,12 @@ where
             self.micom_completed = self.micom_completed.saturating_add(1);
             self.blocks
                 .iter()
+                .filter(|block| {
+                    !self
+                        .authority
+                        .technical_construct_ids()
+                        .contains(&block.construct_id)
+                })
                 .map(|block| {
                     let pooled_scores = fit
                         .construct_scores
@@ -2583,9 +3559,7 @@ fn run_frequency_pls_sample_v1<C>(
     source_rows: &[u64],
     counts: &[u64],
     weight_column: &str,
-    point_recipe: &AnalysisRecipeV4,
-    point_model: &SemModelV4,
-    point_artifact: &qpls_core::CompiledAnalysisRecipeV4,
+    authority: &OrdinaryPlsPointAuthorityV1,
     should_cancel: &C,
 ) -> Result<PlsResult, RefitFailureV1>
 where
@@ -2612,7 +3586,7 @@ where
     }
     let canonical_rows = by_row.keys().copied().collect::<Vec<_>>();
     let canonical_counts = by_row.values().copied().collect::<Vec<_>>();
-    let indices = checked_source_rows_v1(dataset, &canonical_rows)?;
+    let indices = checked_frequency_source_rows_v1(dataset, &canonical_rows, &canonical_counts)?;
     let sampled =
         resample_dataset_columns_v1(dataset, source_columns, &indices, || should_cancel())
             .map_err(|error| match error {
@@ -2630,17 +3604,7 @@ where
                 )
             })?
             .0;
-    let execution = run_compiled_pls_recipe_v4(
-        &sampled,
-        point_recipe,
-        point_model,
-        point_artifact,
-        None,
-        || should_cancel(),
-        |_| {},
-    )
-    .map_err(refit_execution_failure_v1)?;
-    let result = execution.estimation().clone();
+    let result = authority.execute(&sampled, should_cancel)?;
     if !result.converged {
         return Err(RefitFailureV1::new(
             RefitFailureCodeV1::Nonconvergence,
@@ -2658,9 +3622,7 @@ where
 
 struct FrequencyOrdinaryPlsMgaRefitterV1<'a, C, P> {
     dataset: &'a Dataset,
-    point_recipe: AnalysisRecipeV4,
-    point_model: SemModelV4,
-    point_artifact: qpls_core::CompiledAnalysisRecipeV4,
+    authority: OrdinaryPlsPointAuthorityV1,
     source_columns: Vec<String>,
     weight_column: String,
     blocks: Vec<OrdinaryPlsScoringBlockV1>,
@@ -2687,9 +3649,7 @@ where
             rows,
             counts,
             &self.weight_column,
-            &self.point_recipe,
-            &self.point_model,
-            &self.point_artifact,
+            &self.authority,
             self.should_cancel,
         )?;
         let mut signs = BTreeMap::<String, f64>::new();
@@ -2841,7 +3801,17 @@ where
         &mut self,
         request: &FrequencyMicomFitRequestV1,
     ) -> Result<MicomFitV1, RefitFailureV1> {
-        let mut scores = Vec::with_capacity(request.training_groups.len() * self.blocks.len());
+        let scientific_block_count = self
+            .blocks
+            .iter()
+            .filter(|block| {
+                !self
+                    .authority
+                    .technical_construct_ids()
+                    .contains(&block.construct_id)
+            })
+            .count();
+        let mut scores = Vec::with_capacity(request.training_groups.len() * scientific_block_count);
         for training in &request.training_groups {
             report(
                 self.progress,
@@ -2861,6 +3831,13 @@ where
             let fit = self.fit_counts(&training.source_rows, &training.counts)?;
             self.micom_completed = self.micom_completed.saturating_add(1);
             for block in &self.blocks {
+                if self
+                    .authority
+                    .technical_construct_ids()
+                    .contains(&block.construct_id)
+                {
+                    continue;
+                }
                 scores.push(MicomGroupConstructScoresV1 {
                     group: training.group,
                     construct_id: block.construct_id.clone(),
@@ -2891,6 +3868,12 @@ where
             self.micom_completed = self.micom_completed.saturating_add(1);
             self.blocks
                 .iter()
+                .filter(|block| {
+                    !self
+                        .authority
+                        .technical_construct_ids()
+                        .contains(&block.construct_id)
+                })
                 .map(|block| {
                     Ok(MicomPooledConstructScoresV1 {
                         construct_id: block.construct_id.clone(),
@@ -5320,17 +6303,9 @@ fn validate_prepared_group_membership_v1(
 
 fn frequency_multigroup_design_from_raw_v1(
     dataset: &Dataset,
-    config: &MgaMultigroupV1,
+    weight_column: &str,
     design: &MultigroupDesignV1,
 ) -> Result<(FrequencyMultigroupDesignV1, Vec<u64>, Vec<u64>), MultiModRunnerErrorV1> {
-    let Some(qpls_core::AnalysisWeightBindingV1::Frequency {
-        column: weight_column,
-    }) = &config.weight
-    else {
-        return Err(MultiModRunnerErrorV1::Authority(
-            "frequency-weighted MGA lost its typed frequency binding".into(),
-        ));
-    };
     let mut canonical_rows = design
         .rows
         .iter()
@@ -5433,6 +6408,64 @@ where
     })?
     .estimation()
     .clone();
+    if !result.converged
+        || result.used_observations != source_rows.len()
+        || result.omitted_observations != 0
+    {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "the selected MGA row universe is not a complete, converged pooled PLS sample".into(),
+        ));
+    }
+    Ok(result)
+}
+
+fn pooled_mga_point_fit_v1<C>(
+    dataset: &Dataset,
+    source_columns: &[String],
+    source_rows: &[u64],
+    authority: &OrdinaryPlsPointAuthorityV1,
+    profile: qpls_core::MgaModelProfileV1,
+    weight_column: Option<&str>,
+    should_cancel: &C,
+) -> Result<PlsResult, MultiModRunnerErrorV1>
+where
+    C: Fn() -> bool + Sync,
+{
+    let indices = checked_source_rows_v1(dataset, source_rows)
+        .map_err(|failure| MultiModRunnerErrorV1::PreparedInput(failure.detail))?;
+    let sampled =
+        resample_dataset_columns_v1(dataset, source_columns, &indices, || should_cancel())
+            .map_err(|error| match error {
+                EstimationError::Cancelled => MultiModRunnerErrorV1::Cancelled,
+                other => MultiModRunnerErrorV1::Kernel(other.to_string()),
+            })?;
+    let sampled = if profile == qpls_core::MgaModelProfileV1::CaseWeightedPls {
+        prepare_multimod_case_weight_dataset_v1(
+            &sampled,
+            weight_column.ok_or_else(|| {
+                MultiModRunnerErrorV1::Authority(
+                    "case-weighted pooled fit omitted its weight column".into(),
+                )
+            })?,
+        )
+        .map_err(|error| {
+            MultiModRunnerErrorV1::PreparedInput(format!(
+                "case-weight normalization failed for the pooled fit: {error}"
+            ))
+        })?
+        .0
+    } else {
+        sampled
+    };
+    let result = authority
+        .execute(&sampled, should_cancel)
+        .map_err(|failure| match failure.code {
+            RefitFailureCodeV1::Cancelled => MultiModRunnerErrorV1::Cancelled,
+            _ => MultiModRunnerErrorV1::Kernel(format!(
+                "multimod.runner.mga.pooled_reference_fit_failed: {}",
+                failure.detail
+            )),
+        })?;
     if !result.converged
         || result.used_observations != source_rows.len()
         || result.omitted_observations != 0
@@ -5855,15 +6888,15 @@ where
         1,
         "mga:ordinary_pls:projection",
     );
-    let (point_recipe, point_model, point_artifact) =
-        projected_ordinary_pls_authority_v1(recipe, model, config)?;
-    let CompiledRecipePlanV4::PlsPlanV2 { plan: point_plan } = point_artifact.plan() else {
-        return Err(MultiModRunnerErrorV1::Authority(
-            "ordinary PLS point projection did not emit a PLS plan".into(),
-        ));
-    };
+    let authority = projected_ordinary_pls_authority_v1(recipe, model, config)?;
+    let point_plan = authority.plan();
     let blocks = ordinary_pls_scoring_blocks_v1(point_plan);
-    let projections = ordinary_pls_parameter_projections_v1(config, &point_model, point_plan)?;
+    let projections = ordinary_pls_parameter_projections_with_technical_v1(
+        config,
+        authority.point_model(),
+        point_plan,
+        authority.technical_construct_ids(),
+    )?;
     let mut equation_predecessors = BTreeMap::<String, Vec<String>>::new();
     for path in point_plan.paths() {
         equation_predecessors
@@ -5898,8 +6931,17 @@ where
         .map(|projection| projection.identity.clone())
         .collect::<Vec<_>>();
     let mut source_columns = ordinary_pls_source_columns_v1(dataset, &blocks)?;
-    let weight_column = match &config.weight {
-        Some(qpls_core::AnalysisWeightBindingV1::Case { column }) => Some(column.clone()),
+    let weight_column = match config.profile {
+        qpls_core::MgaModelProfileV1::CaseWeightedPls => Some(
+            authority
+                .weight_source_column()
+                .ok_or_else(|| {
+                    MultiModRunnerErrorV1::Authority(
+                        "case-weighted MGA lost its resolved weight source column".into(),
+                    )
+                })?
+                .to_owned(),
+        ),
         _ => None,
     };
     if let Some(column) = &weight_column {
@@ -5955,13 +6997,11 @@ where
         1,
         "mga:ordinary_pls:pooled_reference",
     );
-    let pooled_fit = pooled_ordinary_pls_fit_v1(
+    let pooled_fit = pooled_mga_point_fit_v1(
         dataset,
         &source_columns,
         &orientation_rows,
-        &point_recipe,
-        &point_model,
-        &point_artifact,
+        &authority,
         config.profile,
         weight_column.as_deref(),
         &should_cancel,
@@ -6016,9 +7056,7 @@ where
     };
     let mut refitter = OrdinaryPlsMgaRefitterV1 {
         dataset,
-        point_recipe,
-        point_model,
-        point_artifact,
+        authority,
         source_columns,
         profile: config.profile,
         weight_column,
@@ -6192,11 +7230,10 @@ where
     let mut micom_ledgers = Vec::new();
     let mut micom_partition_plan_receipts = BTreeMap::new();
     if config.procedures.contains(&MgaProcedureV1::MicomPairwise) {
-        let construct_ids = refitter
-            .blocks
-            .iter()
-            .map(|block| block.construct_id.clone())
-            .collect::<Vec<_>>();
+        let construct_ids = ordinary_pls_micom_construct_ids_v1(
+            &refitter.blocks,
+            refitter.authority.technical_construct_ids(),
+        );
         let receipt = MicomConfiguralReceiptV1 {
             identical_indicators_and_coding: config
                 .configural_checklist
@@ -6346,8 +7383,7 @@ where
             deterministic_sign_orientation: true,
             interaction_products_rebuilt_per_request: false,
             hoc_dependency_stages_refit_per_request: false,
-            plsc_correction_repeated_per_request: config.profile
-                == qpls_core::MgaModelProfileV1::ReflectivePlsc,
+            plsc_correction_repeated_per_request: refitter.authority.repeats_plsc_correction(),
             positive_case_weights_applied_per_request: config.profile
                 == qpls_core::MgaModelProfileV1::CaseWeightedPls,
             integer_frequency_count_space_equivalent: false,
@@ -6478,23 +7514,6 @@ where
     );
     enforce_multimod_sidecar_cost_v1("mga", predicted_sidecar_bytes, &progress)?;
     validate_prepared_group_membership_v1(dataset, config, design)?;
-    let Some(qpls_core::AnalysisWeightBindingV1::Frequency {
-        column: weight_column,
-    }) = &config.weight
-    else {
-        return Err(MultiModRunnerErrorV1::Authority(
-            "frequency-weighted MGA lost its typed frequency binding".into(),
-        ));
-    };
-    let (frequency_design, orientation_rows, orientation_counts) =
-        frequency_multigroup_design_from_raw_v1(dataset, config, design)?;
-    let frequency_eligibility = assess_frequency_multigroup_design_v1(&frequency_design);
-    if !frequency_eligibility.eligible {
-        return Err(MultiModRunnerErrorV1::PreparedInput(format!(
-            "frequency MGA design is ineligible: {:?}",
-            frequency_eligibility.blockers
-        )));
-    }
     report(
         &progress,
         MultiModRunnerPhaseV1::PreparingPointInputs,
@@ -6502,21 +7521,38 @@ where
         1,
         "mga:frequency:projection",
     );
-    let (point_recipe, point_model, point_artifact) =
-        projected_ordinary_pls_authority_v1(recipe, model, config)?;
-    let CompiledRecipePlanV4::PlsPlanV2 { plan: point_plan } = point_artifact.plan() else {
-        return Err(MultiModRunnerErrorV1::Authority(
-            "frequency PLS point projection did not emit a PLS plan".into(),
-        ));
-    };
+    let authority = projected_ordinary_pls_authority_v1(recipe, model, config)?;
+    let weight_column = authority
+        .weight_source_column()
+        .ok_or_else(|| {
+            MultiModRunnerErrorV1::Authority(
+                "frequency-weighted MGA lost its resolved weight source column".into(),
+            )
+        })?
+        .to_owned();
+    let (frequency_design, orientation_rows, orientation_counts) =
+        frequency_multigroup_design_from_raw_v1(dataset, &weight_column, design)?;
+    let frequency_eligibility = assess_frequency_multigroup_design_v1(&frequency_design);
+    if !frequency_eligibility.eligible {
+        return Err(MultiModRunnerErrorV1::PreparedInput(format!(
+            "frequency MGA design is ineligible: {:?}",
+            frequency_eligibility.blockers
+        )));
+    }
+    let point_plan = authority.plan();
     let blocks = ordinary_pls_scoring_blocks_v1(point_plan);
-    let projections = ordinary_pls_parameter_projections_v1(config, &point_model, point_plan)?;
+    let projections = ordinary_pls_parameter_projections_with_technical_v1(
+        config,
+        authority.point_model(),
+        point_plan,
+        authority.technical_construct_ids(),
+    )?;
     let parameters = projections
         .iter()
         .map(|projection| projection.identity.clone())
         .collect::<Vec<_>>();
     let mut source_columns = ordinary_pls_source_columns_v1(dataset, &blocks)?;
-    if !source_columns.contains(weight_column) {
+    if !source_columns.contains(&weight_column) {
         source_columns.push(weight_column.clone());
     }
     let raw_scores = OrdinaryPlsRawScoreCacheV1::build(
@@ -6537,10 +7573,8 @@ where
         &source_columns,
         &orientation_rows,
         &orientation_counts,
-        weight_column,
-        &point_recipe,
-        &point_model,
-        &point_artifact,
+        &weight_column,
+        &authority,
         &should_cancel,
     )
     .map_err(|failure| match failure.code {
@@ -6599,9 +7633,7 @@ where
     };
     let mut refitter = FrequencyOrdinaryPlsMgaRefitterV1 {
         dataset,
-        point_recipe,
-        point_model,
-        point_artifact,
+        authority,
         source_columns,
         weight_column: weight_column.clone(),
         blocks,
@@ -6683,11 +7715,10 @@ where
     let mut micom_ledgers = Vec::new();
     let mut micom_partition_plan_receipts = BTreeMap::new();
     if config.procedures.contains(&MgaProcedureV1::MicomPairwise) {
-        let construct_ids = refitter
-            .blocks
-            .iter()
-            .map(|block| block.construct_id.clone())
-            .collect::<Vec<_>>();
+        let construct_ids = ordinary_pls_micom_construct_ids_v1(
+            &refitter.blocks,
+            refitter.authority.technical_construct_ids(),
+        );
         let receipt = MicomConfiguralReceiptV1 {
             identical_indicators_and_coding: config
                 .configural_checklist
@@ -8475,20 +9506,12 @@ where
                 "multimod.runner.mga.parametric_explicit_path_targets_required".into(),
             ));
         }
-        let (_, authoritative_model, authoritative_artifact) =
-            projected_ordinary_pls_authority_v1(recipe, model, config)?;
-        let CompiledRecipePlanV4::PlsPlanV2 {
-            plan: authoritative_plan,
-        } = authoritative_artifact.plan()
-        else {
-            return Err(MultiModRunnerErrorV1::Authority(
-                "parametric target-family authority did not compile to ordinary PLS".into(),
-            ));
-        };
-        let authoritative = ordinary_pls_parameter_projections_v1(
+        let authority = projected_ordinary_pls_authority_v1(recipe, model, config)?;
+        let authoritative = ordinary_pls_parameter_projections_with_technical_v1(
             config,
-            &authoritative_model,
-            authoritative_plan,
+            authority.point_model(),
+            authority.plan(),
+            authority.technical_construct_ids(),
         )?;
         if authoritative
             .iter()
@@ -14812,6 +15835,695 @@ mod tests {
     use super::*;
     use qpls_estimation::ConditionalLinearCoefficientV2;
 
+    fn observed_control_lowering_model_v1() -> SemModelV4 {
+        let legacy = qpls_core::ModelSpec {
+            id: uuid::Uuid::from_u128(0x4d47_415f_434f_4e54_524f_4c00_0001),
+            name: "MGA observed-control lowering".into(),
+            constructs: vec![
+                qpls_core::Construct {
+                    id: "x".into(),
+                    name: "X".into(),
+                    short_name: "X".into(),
+                    mode: qpls_core::MeasurementMode::Reflective,
+                    indicators: vec!["x1".into(), "x2".into()],
+                },
+                qpls_core::Construct {
+                    id: "y".into(),
+                    name: "Y".into(),
+                    short_name: "Y".into(),
+                    mode: qpls_core::MeasurementMode::Reflective,
+                    indicators: vec!["y1".into(), "y2".into()],
+                },
+            ],
+            paths: vec![qpls_core::StructuralPath {
+                source: "x".into(),
+                target: "y".into(),
+            }],
+            controls: Vec::new(),
+            higher_order_constructs: Vec::new(),
+            interactions: Vec::new(),
+        };
+        let mut model = qpls_core::convert_legacy_basic_model_v4(
+            &legacy,
+            qpls_core::LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        model.variables.push(SemVariableV4::Observed {
+            id: "observed:qualification_control".into(),
+            label: "Qualification control".into(),
+            source_column: "w1".into(),
+            scale: ObservedScaleV4::Continuous,
+            role: ObservedRoleV4::Control,
+            categories: Vec::new(),
+            value_labels: BTreeMap::new(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
+        model.relations.push(SemRelationV4::Structural {
+            id: "relation:qualification_control:to:y".into(),
+            source: "observed:qualification_control".into(),
+            target: "construct:y".into(),
+            parameter: "parameter:qualification_control:to:y".into(),
+            role: StructuralRelationRoleV4::Control,
+            intercept_parameter: None,
+        });
+        model.parameters.push(SemParameterV4::Free {
+            id: "parameter:qualification_control:to:y".into(),
+            label: "Qualification control -> Y".into(),
+            target: SemParameterTargetV4::Regression {
+                source: "observed:qualification_control".into(),
+                target: "construct:y".into(),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        model.ensure_valid().unwrap();
+        model
+    }
+
+    fn multimod_point_authority_fixture_v1(
+        weight: Option<qpls_core::SemWeightBindingV4>,
+        composite_control: bool,
+    ) -> (Dataset, SemModelV4, AnalysisRecipeV4) {
+        let source = include_str!("../../../validation/results/plsc_reference.csv");
+        let weighted_source = weight.as_ref().map(|_| {
+            let mut rows = String::new();
+            for (index, row) in source.lines().enumerate() {
+                rows.push_str(row);
+                rows.push_str(if index == 0 { ",w\n" } else { ",1\n" });
+            }
+            rows
+        });
+        let bytes = weighted_source.as_deref().unwrap_or(source).as_bytes();
+        let dataset = qpls_data::import_delimited_bytes(
+            bytes,
+            "multimod-point-authority.csv",
+            b',',
+            &qpls_data::ImportOptions::default(),
+        )
+        .unwrap();
+        let legacy: qpls_core::AnalysisRecipe = serde_json::from_slice(include_bytes!(
+            "../../../validation/results/plsc_reference.recipe.json"
+        ))
+        .unwrap();
+        let mut model = qpls_core::convert_legacy_basic_model_v4(
+            &legacy.model,
+            qpls_core::LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        if composite_control {
+            let relation = model
+                .relations
+                .iter_mut()
+                .find(|relation| {
+                    matches!(relation, SemRelationV4::Structural { source, target, .. }
+                        if source == "construct:z" && target == "construct:y")
+                })
+                .unwrap();
+            let SemRelationV4::Structural { role, .. } = relation else {
+                unreachable!()
+            };
+            *role = StructuralRelationRoleV4::Control;
+        }
+        if weight.is_some() {
+            model.variables.push(SemVariableV4::Observed {
+                id: "observed:weight".into(),
+                label: "Weight".into(),
+                source_column: "w".into(),
+                scale: ObservedScaleV4::Continuous,
+                role: ObservedRoleV4::Control,
+                categories: Vec::new(),
+                value_labels: BTreeMap::new(),
+                missing_markers: Vec::new(),
+                transformation_lineage: Vec::new(),
+            });
+        }
+        model.data_binding = qpls_core::SemDataBindingV4::Raw {
+            dataset_id: dataset.id.to_string(),
+            missing_data: qpls_core::MissingDataPolicyV4::ListwiseDeletion,
+            weight,
+            cluster_variable: None,
+            strata_variable: None,
+        };
+        model.ensure_valid().unwrap();
+        let scientific_sha256 = model.scientific_sha256().unwrap();
+        let weighted = matches!(
+            &model.data_binding,
+            qpls_core::SemDataBindingV4::Raw {
+                weight: Some(_),
+                ..
+            }
+        );
+        let recipe = AnalysisRecipeV4 {
+            schema_version: qpls_core::ANALYSIS_RECIPE_V4_SCHEMA_VERSION,
+            id: uuid::Uuid::from_u128(if weighted { 0x5750_4c53 } else { 0x504c_5343 }),
+            created_at: chrono::DateTime::<chrono::Utc>::from_timestamp(1_700_000_000, 0).unwrap(),
+            dataset_fingerprint: dataset.fingerprint.0.clone(),
+            model_binding: AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+                scientific_sha256,
+                model: model.clone(),
+            },
+            estimand_confirmation: qpls_core::LegacyEstimandConfirmationV4::NotLegacy,
+            settings: qpls_core::AnalysisSettings {
+                method: if weighted {
+                    AnalysisMethod::Wpls
+                } else {
+                    AnalysisMethod::PlsPm
+                },
+                case_weight_column: weighted.then(|| "w".to_owned()),
+                ..qpls_core::AnalysisSettings::default()
+            },
+            method_config: Some(if weighted {
+                MethodConfig::Wpls
+            } else {
+                MethodConfig::PlsAlgorithm
+            }),
+            general_sem_config: None,
+            mga_multigroup: None,
+            pls_heterogeneity: None,
+            general_sem_conditional_process: None,
+            interventional_causal_mediation: None,
+            metadata: BTreeMap::new(),
+            legacy_source: None,
+        };
+        recipe.ensure_valid().unwrap();
+        (dataset, model, recipe)
+    }
+
+    fn attach_two_group_mga_v1(
+        model: &mut SemModelV4,
+        recipe: &mut AnalysisRecipeV4,
+        profile: qpls_core::MgaModelProfileV1,
+        weight: Option<qpls_core::AnalysisWeightBindingV1>,
+    ) {
+        model.variables.push(SemVariableV4::Observed {
+            id: "observed:group".into(),
+            label: "Group".into(),
+            source_column: "group".into(),
+            scale: ObservedScaleV4::Nominal,
+            role: ObservedRoleV4::Control,
+            categories: vec!["a".into(), "b".into()],
+            value_labels: BTreeMap::new(),
+            missing_markers: Vec::new(),
+            transformation_lineage: Vec::new(),
+        });
+        model.group = SemGroupV4::ObservedGroups {
+            grouping_variable: "observed:group".into(),
+            levels: vec![
+                qpls_core::SemGroupLevelV4 {
+                    id: "a".into(),
+                    value: "a".into(),
+                    label: "A".into(),
+                },
+                qpls_core::SemGroupLevelV4 {
+                    id: "b".into(),
+                    value: "b".into(),
+                    label: "B".into(),
+                },
+            ],
+        };
+        model.ensure_valid().unwrap();
+        recipe.model_binding = AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 {
+            scientific_sha256: model.scientific_sha256().unwrap(),
+            model: model.clone(),
+        };
+        recipe.settings.method = AnalysisMethod::Mga;
+        recipe.method_config = None;
+        recipe.mga_multigroup = Some(MgaMultigroupV1 {
+            schema_version: qpls_core::MGA_MULTIGROUP_V1_SCHEMA_VERSION,
+            profile,
+            grouping_column: "group".into(),
+            groups: vec![
+                qpls_core::SelectedGroupV1 {
+                    group_id: "a".into(),
+                    label: "A".into(),
+                    value: qpls_core::TypedGroupValueV1::Text { value: "a".into() },
+                },
+                qpls_core::SelectedGroupV1 {
+                    group_id: "b".into(),
+                    label: "B".into(),
+                    value: qpls_core::TypedGroupValueV1::Text { value: "b".into() },
+                },
+            ],
+            comparison_plan: qpls_core::MgaComparisonPlanV1::AllPairs {
+                heavy_run_confirmed: false,
+            },
+            procedures: vec![MgaProcedureV1::PairwisePermutation],
+            permutation_samples: 5_000,
+            bootstrap_samples: 5_000,
+            seed: 42,
+            confidence_level: 0.95,
+            alpha: 0.05,
+            alternative: InferenceAlternativeV1::TwoSided,
+            multiplicity: MultiplicityAdjustmentV1::Holm,
+            configural_checklist: qpls_core::MicomConfiguralChecklistV1 {
+                identical_indicators_and_coding: true,
+                identical_data_treatment: true,
+                identical_algorithm_settings: true,
+                identical_model_specification: true,
+                deterministic_sign_orientation_reviewed: true,
+                analyst_review_confirmed: true,
+            },
+            weight,
+            selected_parameter_ids: Vec::new(),
+        });
+        recipe.ensure_valid().unwrap();
+    }
+
+    #[test]
+    fn multimod_plsc_authority_compiles_plspm_but_executes_plsc_v2_with_exact_inventories() {
+        let (dataset, mut model, mut recipe) = multimod_point_authority_fixture_v1(None, true);
+        attach_two_group_mga_v1(
+            &mut model,
+            &mut recipe,
+            qpls_core::MgaModelProfileV1::ReflectivePlsc,
+            None,
+        );
+        let authority = projected_ordinary_pls_authority_v1(
+            &recipe,
+            &model,
+            recipe.mga_multigroup.as_ref().unwrap(),
+        )
+        .unwrap();
+        let target = RecipeV4CompilerTarget::PlsPlanV2;
+        let mut forbidden_direct = authority.point_recipe().clone();
+        forbidden_direct.settings.method = AnalysisMethod::Plsc;
+        forbidden_direct.method_config = Some(MethodConfig::Plsc);
+        assert!(
+            compile_analysis_recipe_v4(
+                &forbidden_direct,
+                Some(authority.point_model()),
+                target,
+                target.capability_cell_for_recipe(&forbidden_direct),
+            )
+            .is_err()
+        );
+        assert_eq!(
+            authority.point_recipe().settings.method,
+            AnalysisMethod::PlsPm
+        );
+        assert!(matches!(
+            &authority.execution,
+            OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { .. }
+        ));
+        assert!(authority.repeats_plsc_correction());
+        assert_eq!(
+            qpls_core::sha256_serialized(authority.point_artifact().plan()),
+            authority.point_artifact().receipt().plan_sha256()
+        );
+        assert_eq!(
+            authority.point_model().scientific_sha256().unwrap(),
+            authority
+                .point_artifact()
+                .receipt()
+                .model_scientific_sha256()
+        );
+        let result = authority.execute(&dataset, &|| false).unwrap();
+        assert_eq!(result.method_version, PLSC_METHOD_VERSION);
+        assert_eq!(result.plsc.as_ref().unwrap().corrected_paths, result.paths);
+        let expected_paths = authority
+            .plan()
+            .paths()
+            .iter()
+            .map(|path| (path.source(), path.target()))
+            .collect::<BTreeSet<_>>();
+        let actual_paths = result
+            .paths
+            .iter()
+            .map(|path| (path.source.as_str(), path.target.as_str()))
+            .collect::<BTreeSet<_>>();
+        assert_eq!(actual_paths, expected_paths);
+        assert_eq!(result.control_estimates.len(), 1);
+    }
+
+    #[test]
+    fn multimod_weighted_authority_is_prepared_once_and_routes_case_and_frequency_points() {
+        for (resident_weight, requested_weight) in [
+            (
+                qpls_core::SemWeightBindingV4::Case {
+                    variable: "observed:weight".into(),
+                },
+                qpls_core::AnalysisWeightBindingV1::Case { column: "w".into() },
+            ),
+            (
+                qpls_core::SemWeightBindingV4::Case {
+                    variable: "observed:weight".into(),
+                },
+                qpls_core::AnalysisWeightBindingV1::Case {
+                    column: "observed:weight".into(),
+                },
+            ),
+            (
+                qpls_core::SemWeightBindingV4::Frequency {
+                    variable: "observed:weight".into(),
+                },
+                qpls_core::AnalysisWeightBindingV1::Frequency { column: "w".into() },
+            ),
+            (
+                qpls_core::SemWeightBindingV4::Frequency {
+                    variable: "observed:weight".into(),
+                },
+                qpls_core::AnalysisWeightBindingV1::Frequency {
+                    column: "observed:weight".into(),
+                },
+            ),
+        ] {
+            let (dataset, mut model, mut recipe) =
+                multimod_point_authority_fixture_v1(Some(resident_weight), false);
+            let profile = match &requested_weight {
+                qpls_core::AnalysisWeightBindingV1::Case { .. } => {
+                    qpls_core::MgaModelProfileV1::CaseWeightedPls
+                }
+                qpls_core::AnalysisWeightBindingV1::Frequency { .. } => {
+                    qpls_core::MgaModelProfileV1::FrequencyWeightedPls
+                }
+            };
+            attach_two_group_mga_v1(
+                &mut model,
+                &mut recipe,
+                profile,
+                Some(requested_weight.clone()),
+            );
+            let authority = projected_ordinary_pls_authority_v1(
+                &recipe,
+                &model,
+                recipe.mga_multigroup.as_ref().unwrap(),
+            )
+            .unwrap();
+            assert!(matches!(
+                &authority.execution,
+                OrdinaryPlsPointExecutionAuthorityV1::Weighted { .. }
+            ));
+            assert_eq!(
+                authority.point_recipe().settings.method,
+                AnalysisMethod::PlsPm
+            );
+            assert_eq!(
+                qpls_core::sha256_serialized(authority.point_artifact().plan()),
+                authority.point_artifact().receipt().plan_sha256()
+            );
+            assert_eq!(
+                authority.point_model().scientific_sha256().unwrap(),
+                authority
+                    .point_artifact()
+                    .receipt()
+                    .model_scientific_sha256()
+            );
+            assert!(matches!(
+                &authority.point_model().data_binding,
+                qpls_core::SemDataBindingV4::Raw { weight: None, .. }
+            ));
+            assert_eq!(authority.weight_source_column(), Some("w"));
+            let blocks = ordinary_pls_scoring_blocks_v1(authority.plan());
+            let mut source_columns = ordinary_pls_source_columns_v1(&dataset, &blocks).unwrap();
+            source_columns.push(authority.weight_source_column().unwrap().to_owned());
+            let all_rows = (0..dataset.batch.num_rows() as u64).collect::<Vec<_>>();
+            let result = match profile {
+                qpls_core::MgaModelProfileV1::CaseWeightedPls => pooled_mga_point_fit_v1(
+                    &dataset,
+                    &source_columns,
+                    &all_rows,
+                    &authority,
+                    profile,
+                    authority.weight_source_column(),
+                    &|| false,
+                )
+                .unwrap(),
+                qpls_core::MgaModelProfileV1::FrequencyWeightedPls => {
+                    let compact_rows = (0..9)
+                        .map(|index| index as u64 * (dataset.batch.num_rows() as u64 - 1) / 8)
+                        .collect::<Vec<_>>();
+                    run_frequency_pls_sample_v1(
+                        &dataset,
+                        &source_columns,
+                        &compact_rows,
+                        &vec![2; compact_rows.len()],
+                        authority.weight_source_column().unwrap(),
+                        &authority,
+                        &|| false,
+                    )
+                    .unwrap()
+                }
+                _ => unreachable!(),
+            };
+            assert_eq!(result.method_version, qpls_estimation::WPLS_METHOD_VERSION);
+            assert!(result.wpls.is_some());
+            assert!(result.plsc.is_none());
+        }
+    }
+
+    #[test]
+    fn mga_observed_control_lowering_preserves_scientific_ids_and_hides_technical_targets() {
+        let source = observed_control_lowering_model_v1();
+        let source_relation = source
+            .relations
+            .iter()
+            .find(|relation| relation.id() == "relation:qualification_control:to:y")
+            .unwrap()
+            .clone();
+        let source_parameter = source
+            .parameters
+            .iter()
+            .find(|parameter| parameter.id() == "parameter:qualification_control:to:y")
+            .unwrap()
+            .clone();
+        let mut lowered = source.clone();
+        let technical = lower_observed_controls_for_mga_pls_v1(
+            &mut lowered,
+            qpls_core::MgaModelProfileV1::GeneralSemPls,
+            "observed:group",
+            "group",
+        )
+        .unwrap();
+        assert_eq!(
+            technical,
+            BTreeSet::from(["observed:qualification_control".to_owned()])
+        );
+        assert!(matches!(
+            source
+                .variables
+                .iter()
+                .find(|variable| variable.id() == "observed:qualification_control"),
+            Some(SemVariableV4::Observed {
+                source_column,
+                role: ObservedRoleV4::Control,
+                ..
+            }) if source_column == "w1"
+        ));
+        assert!(matches!(
+            lowered
+                .variables
+                .iter()
+                .find(|variable| variable.id() == "observed:qualification_control"),
+            Some(SemVariableV4::Composite {
+                weighting: CompositeWeightingV4::Unit {
+                    normalization: CompositeWeightNormalizationV4::None,
+                },
+                ..
+            })
+        ));
+        let generated =
+            mga_observed_control_lowering_ids_v1("observed:qualification_control", "w1");
+        assert!(matches!(
+            lowered
+                .variables
+                .iter()
+                .find(|variable| variable.id() == generated.indicator_id),
+            Some(SemVariableV4::Observed {
+                source_column,
+                role: ObservedRoleV4::Indicator,
+                ..
+            }) if source_column == "w1"
+        ));
+        assert_eq!(
+            lowered
+                .relations
+                .iter()
+                .find(|relation| relation.id() == "relation:qualification_control:to:y")
+                .unwrap(),
+            &source_relation
+        );
+        assert_eq!(
+            lowered
+                .parameters
+                .iter()
+                .find(|parameter| parameter.id() == "parameter:qualification_control:to:y")
+                .unwrap(),
+            &source_parameter
+        );
+        lowered.ensure_valid().unwrap();
+        let plan = qpls_core::compile_pls_plan_v2(&lowered).unwrap();
+        let technical_block = plan
+            .blocks()
+            .iter()
+            .find(|block| block.construct_id() == "observed:qualification_control")
+            .unwrap();
+        assert_eq!(
+            technical_block.fixed_scoring(),
+            Some(&qpls_core::CompiledPlsFixedScoringV2::Unit {
+                normalization: CompositeWeightNormalizationV4::None,
+            })
+        );
+        let blocks = ordinary_pls_scoring_blocks_v1(&plan);
+        let micom_construct_ids = ordinary_pls_micom_construct_ids_v1(&blocks, &technical);
+        assert!(!micom_construct_ids.contains(&"observed:qualification_control".to_owned()));
+        assert_eq!(
+            micom_construct_ids.into_iter().collect::<BTreeSet<_>>(),
+            BTreeSet::from(["construct:x".to_owned(), "construct:y".to_owned(),])
+        );
+        let projections = synthetic_ordinary_pls_parameter_projections_v1(&plan, &technical);
+        assert!(!projections.iter().any(|projection| matches!(
+            &projection.source,
+            OrdinaryPlsParameterSourceV1::OuterLoading { construct, .. }
+                | OrdinaryPlsParameterSourceV1::OuterWeight { construct, .. }
+                if technical.contains(construct)
+        )));
+        let control = projections
+            .iter()
+            .find(|projection| {
+                projection.identity.stable_id == "parameter:qualification_control:to:y"
+            })
+            .unwrap();
+        assert_eq!(
+            control.required_constructs(),
+            BTreeSet::from(["construct:y".to_owned()])
+        );
+    }
+
+    #[test]
+    fn mga_observed_control_lowering_fails_closed_for_unsupported_semantics_and_collisions() {
+        let mut weighted = observed_control_lowering_model_v1();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut weighted,
+                qpls_core::MgaModelProfileV1::CaseWeightedPls,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code == "multimod.runner.mga.observed_control_general_sem_pls_only"
+        ));
+        let mut plsc = observed_control_lowering_model_v1();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut plsc,
+                qpls_core::MgaModelProfileV1::ReflectivePlsc,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code == "multimod.runner.mga.observed_control_general_sem_pls_only"
+        ));
+
+        let mut categorical = observed_control_lowering_model_v1();
+        let SemVariableV4::Observed {
+            scale, categories, ..
+        } = categorical
+            .variables
+            .iter_mut()
+            .find(|variable| variable.id() == "observed:qualification_control")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *scale = ObservedScaleV4::Binary;
+        *categories = vec!["0".into(), "1".into()];
+        categorical.ensure_valid().unwrap();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut categorical,
+                qpls_core::MgaModelProfileV1::GeneralSemPls,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code.starts_with("multimod.runner.mga.observed_control_scale_or_metadata_unsupported:")
+        ));
+
+        let mut wrong_role = observed_control_lowering_model_v1();
+        let SemVariableV4::Observed { role, .. } = wrong_role
+            .variables
+            .iter_mut()
+            .find(|variable| variable.id() == "observed:qualification_control")
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *role = ObservedRoleV4::Structural;
+        wrong_role.ensure_valid().unwrap();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut wrong_role,
+                qpls_core::MgaModelProfileV1::GeneralSemPls,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code.starts_with("multimod.runner.mga.observed_control_role_or_relation_unsupported:")
+        ));
+
+        let mut mixed = observed_control_lowering_model_v1();
+        mixed.relations.push(SemRelationV4::Covariance {
+            id: "relation:qualification_control:with:x".into(),
+            left: qpls_core::SemEndpointV4::Variable("observed:qualification_control".into()),
+            right: qpls_core::SemEndpointV4::Variable("construct:x".into()),
+            parameter: "parameter:qualification_control:with:x".into(),
+        });
+        mixed.parameters.push(SemParameterV4::Free {
+            id: "parameter:qualification_control:with:x".into(),
+            label: "Qualification control with X".into(),
+            target: SemParameterTargetV4::Covariance {
+                left: qpls_core::SemEndpointV4::Variable("observed:qualification_control".into()),
+                right: qpls_core::SemEndpointV4::Variable("construct:x".into()),
+            },
+            start: None,
+            lower: None,
+            upper: None,
+            equality_label: None,
+            group_overrides: Vec::new(),
+        });
+        mixed.ensure_valid().unwrap();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut mixed,
+                qpls_core::MgaModelProfileV1::GeneralSemPls,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code.starts_with("multimod.runner.mga.observed_control_mixed_use_unsupported:")
+        ));
+
+        let mut collision = observed_control_lowering_model_v1();
+        let generated =
+            mga_observed_control_lowering_ids_v1("observed:qualification_control", "w1");
+        let SemRelationV4::MeasurementEffect { id, .. } = collision
+            .relations
+            .iter_mut()
+            .find(|relation| matches!(relation, SemRelationV4::MeasurementEffect { .. }))
+            .unwrap()
+        else {
+            unreachable!()
+        };
+        *id = generated.measurement_relation_id;
+        collision.ensure_valid().unwrap();
+        assert!(matches!(
+            lower_observed_controls_for_mga_pls_v1(
+                &mut collision,
+                qpls_core::MgaModelProfileV1::GeneralSemPls,
+                "observed:group",
+                "group",
+            ),
+            Err(MultiModRunnerErrorV1::UnsupportedProfile(code))
+                if code.starts_with("multimod.runner.mga.observed_control_generated_identity_collision:")
+        ));
+    }
+
     #[test]
     fn internal_pls_point_staging_replaces_outer_additive_method_authority() {
         let mut recipe = AnalysisRecipeV4 {
@@ -15164,6 +16876,7 @@ mod tests {
                 target: "y".into(),
                 role: StructuralRelationRoleV4::Structural,
             },
+            micom_required_constructs: BTreeSet::from(["x".into(), "y".into()]),
         };
         let authority =
             comparable_ordinary_pls_targets_v1(&[ordinary], &micom, &pairs, true).unwrap();
@@ -15315,6 +17028,7 @@ mod tests {
                 target: "y".into(),
                 role: StructuralRelationRoleV4::Structural,
             },
+            micom_required_constructs: BTreeSet::from(["hoc_x".into(), "y".into()]),
         };
         let interaction = InteractionMgaParameterProjectionV1 {
             identity: ParameterIdentityV1 {
@@ -15735,8 +17449,12 @@ mod tests {
             weight: Some(qpls_core::AnalysisWeightBindingV1::Frequency { column: "f".into() }),
             selected_parameter_ids: vec!["path:x:y".into()],
         };
+        let configured_weight = match config.weight.as_ref().unwrap() {
+            qpls_core::AnalysisWeightBindingV1::Frequency { column } => column.as_str(),
+            qpls_core::AnalysisWeightBindingV1::Case { .. } => unreachable!(),
+        };
         let (frequency_design, canonical_rows, counts) =
-            frequency_multigroup_design_from_raw_v1(&dataset, &config, &design).unwrap();
+            frequency_multigroup_design_from_raw_v1(&dataset, configured_weight, &design).unwrap();
         assert_eq!(canonical_rows.len(), 12);
         assert_eq!(counts, vec![2; 12]);
         let eligibility = assess_frequency_multigroup_design_v1(&frequency_design);
@@ -15747,6 +17465,35 @@ mod tests {
                 .iter()
                 .all(|group| group.complete_cases == 12)
         );
+        let compact_group_rows = (0..6).collect::<Vec<_>>();
+        assert_eq!(
+            checked_frequency_source_rows_v1(
+                &dataset,
+                &compact_group_rows,
+                &vec![2; compact_group_rows.len()],
+            )
+            .unwrap()
+            .len(),
+            compact_group_rows.len()
+        );
+        assert!(matches!(
+            checked_source_rows_v1(&dataset, &compact_group_rows),
+            Err(RefitFailureV1 {
+                code: RefitFailureCodeV1::InsufficientRows,
+                ..
+            })
+        ));
+        assert!(matches!(
+            checked_frequency_source_rows_v1(
+                &dataset,
+                &compact_group_rows,
+                &vec![1; compact_group_rows.len()],
+            ),
+            Err(RefitFailureV1 {
+                code: RefitFailureCodeV1::InsufficientRows,
+                ..
+            })
+        ));
     }
 
     #[test]

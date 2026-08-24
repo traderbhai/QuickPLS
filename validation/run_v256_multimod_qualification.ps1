@@ -22,6 +22,7 @@ $bindings = Get-Content -LiteralPath $bindingPath -Raw -Encoding UTF8 | ConvertF
 $planSha256 = (Get-FileHash -LiteralPath $planPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $bindingSha256 = (Get-FileHash -LiteralPath $bindingPath -Algorithm SHA256).Hash.ToLowerInvariant()
 $dependencyVerifierBasename = "verify_multimod_gate_dependency_v1.py"
+$maximumQualificationStepSeconds = 7200
 $evidenceBarrierGateIds = @(
     "performance.maximum_profiles",
     "manifests.prepackage.authority",
@@ -102,10 +103,62 @@ function Assert-CampaignPreflight {
     return [pscustomobject]@{ candidate_commit_sha = $head; main_commit_sha = $ExpectedMainCommit; free_gib = $disk }
 }
 
+function Write-TextAtomic {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Text
+    )
+    $parent = Split-Path -Parent $Path
+    if (-not [string]::IsNullOrWhiteSpace($parent)) {
+        New-Item -ItemType Directory -Path $parent -Force | Out-Null
+    }
+    $temporary = Join-Path $parent (".{0}.{1}.tmp" -f ([IO.Path]::GetFileName($Path)), [Guid]::NewGuid().ToString("N"))
+    try {
+        [IO.File]::WriteAllText($temporary, $Text, [Text.UTF8Encoding]::new($false))
+        [IO.File]::Move($temporary, $Path, $true)
+    }
+    finally {
+        if (Test-Path -LiteralPath $temporary -PathType Leaf) {
+            Remove-Item -LiteralPath $temporary -Force
+        }
+    }
+}
+
 function Write-JsonAtomic([string]$Path, $Value) {
-    $temporary = "$Path.tmp"
-    [IO.File]::WriteAllText($temporary, (($Value | ConvertTo-Json -Depth 100) + "`n"), [Text.UTF8Encoding]::new($false))
-    Move-Item -LiteralPath $temporary -Destination $Path -Force
+    Write-TextAtomic -Path $Path -Text (($Value | ConvertTo-Json -Depth 100) + "`n")
+}
+
+function Stop-VerifiedProcessTree {
+    param(
+        [Parameter(Mandatory = $true)][Diagnostics.Process]$Process,
+        [Parameter(Mandatory = $true)][string]$Stage
+    )
+    if ($Process.HasExited) { return }
+    $primaryFailure = $null
+    try { $Process.Kill($true) } catch { $primaryFailure = $_.Exception.Message }
+    if (-not $Process.WaitForExit(10000) -and $IsWindows -and -not $Process.HasExited) {
+        $taskkillInfo = [Diagnostics.ProcessStartInfo]::new()
+        $taskkillInfo.FileName = (Get-Command "taskkill.exe" -ErrorAction Stop).Source
+        $taskkillInfo.UseShellExecute = $false
+        $taskkillInfo.CreateNoWindow = $true
+        foreach ($argument in @("/PID", $Process.Id.ToString(), "/T", "/F")) {
+            [void]$taskkillInfo.ArgumentList.Add($argument)
+        }
+        $taskkill = [Diagnostics.Process]::new()
+        $taskkill.StartInfo = $taskkillInfo
+        try {
+            [void]$taskkill.Start()
+            if (-not $taskkill.WaitForExit(10000)) {
+                try { $taskkill.Kill($true) } catch { Write-Warning $_.Exception.Message }
+                [void]$taskkill.WaitForExit(5000)
+            }
+        }
+        finally { $taskkill.Dispose() }
+    }
+    if (-not $Process.HasExited -and -not $Process.WaitForExit(10000)) {
+        $detail = if ($primaryFailure) { " Primary termination error: $primaryFailure" } else { "" }
+        throw "Campaign gate $Stage retained a live process tree after verified cleanup.$detail"
+    }
 }
 
 function Relative-EvidencePath([string]$CampaignRoot, [string]$Path) {
@@ -296,6 +349,10 @@ function Test-GateReceiptPayloadIntegrity {
             -not (Test-ExactStringSequence @($Receipt.profiles) @($GateBinding.profiles) -AsSet) -or
             -not (Test-ExactStringSequence @($Receipt.covered_evidence_cells) @($GateBinding.covered_evidence_cells) -AsSet)
         ) { return Fail-GateReceiptIntegrity "top_level_binding" }
+        if (
+            [long]$Receipt.gate_maximum_seconds -ne 7080 -or
+            [long]$Receipt.cleanup_reserve_before_campaign_timeout_seconds -ne 120
+        ) { return Fail-GateReceiptIntegrity "gate_deadline_contract" }
         $receiptStatus = [string]$Receipt.status
         if (
             $receiptStatus -notin @("passed", "failed") -or
@@ -361,6 +418,27 @@ function Test-GateReceiptPayloadIntegrity {
             )
             if ([bool]$step.uses_cargo -ne [bool]$boundStep.uses_cargo) { return Fail-GateReceiptIntegrity "step_uses_cargo" }
             if ([long]$step.maximum_seconds -ne [long]$boundStep.maximum_seconds) { return Fail-GateReceiptIntegrity "step_maximum_seconds" }
+            $effectiveMaximumSeconds = [double]$step.effective_maximum_seconds
+            if (
+                $effectiveMaximumSeconds -lt 0.0 -or
+                $effectiveMaximumSeconds -gt [double]$boundStep.maximum_seconds -or
+                [bool]$step.gate_budget_limited -ne ($effectiveMaximumSeconds -lt [double]$boundStep.maximum_seconds) -or
+                [bool]$step.gate_deadline_checked_after_evidence_hashing -ne $true -or
+                [string]$step.launch_kind -notin @(
+                    "native_argument_list",
+                    "node_cli_argument_list",
+                    "not_started_gate_budget_exhausted"
+                ) -or
+                -not ([string]$step.effective_executable)
+            ) { return Fail-GateReceiptIntegrity "step_execution_deadline_contract" }
+            if ([string]$step.launch_kind -ceq "not_started_gate_budget_exhausted" -and (
+                -not $failedStep -or
+                [int]$step.exit_code -ne -1 -or
+                $effectiveMaximumSeconds -ne 0.0 -or
+                [bool]$step.gate_budget_limited -ne $true -or
+                [bool]$step.budget_exceeded -ne $true -or
+                [bool]$step.timeout_terminated -ne $false
+            )) { return Fail-GateReceiptIntegrity "step_not_started_contract" }
             if (-not (Test-ExactStringSequence -Left @($step.required_test_identities) -Right @($requiredTestIdentities))) {
                 return Fail-GateReceiptIntegrity "step_required_test_identity"
             }
@@ -592,6 +670,22 @@ function Assert-CampaignDependencyGraph {
         @($bindingGateIds | Sort-Object -Unique).Count -ne $ExpectedGateCount -or
         @(Compare-Object $planGateIds $bindingGateIds).Count -ne 0
     ) { $errors += "plan and binding catalogs must contain the same $ExpectedGateCount unique gates" }
+
+    foreach ($gateBinding in @($GateBindings.gates)) {
+        foreach ($step in @($gateBinding.steps)) {
+            if ($null -eq $step.PSObject.Properties["maximum_seconds"] -or
+                [long]$step.maximum_seconds -lt 1 -or
+                [long]$step.maximum_seconds -gt $maximumQualificationStepSeconds) {
+                $observed = if ($null -eq $step.PSObject.Properties["maximum_seconds"]) {
+                    "missing"
+                }
+                else {
+                    [string]$step.maximum_seconds
+                }
+                $errors += "$($gateBinding.gate_id)/$($step.step_id): maximum_seconds must be between 1 and $maximumQualificationStepSeconds; found $observed"
+            }
+        }
+    }
 
     $planOrder = @{}
     for ($index = 0; $index -lt $planGateIds.Count; $index++) { $planOrder[$planGateIds[$index]] = $index }
@@ -858,6 +952,7 @@ function Invoke-SchedulerGraphSelfTest {
     ) }
     $dependencyStep = [pscustomobject]@{
         step_id = "fimix_boundary_dependency"
+        maximum_seconds = 120
         arguments = @(
             $dependencyVerifierBasename,
             "--producer-gate", "fimix.recovery",
@@ -914,6 +1009,16 @@ function Invoke-SchedulerGraphSelfTest {
         $missingPathRejected = $_.Exception.Message.Contains("fimix.recovery -> fimix.collapse.boundaries")
     }
     if (-not $missingPathRejected) { throw "Scheduler graph self-test did not reject a missing producer path." }
+
+    $overlongBindings = ($syntheticBindings | ConvertTo-Json -Depth 20 | ConvertFrom-Json -Depth 20)
+    @($overlongBindings.gates | Where-Object { $_.gate_id -ceq "fimix.collapse.boundaries" })[0].steps[0].maximum_seconds = 7201
+    $overlongStepRejected = $false
+    try {
+        Assert-CampaignDependencyGraph $syntheticPlan $overlongBindings 11 $evidenceBarrierGateIds $syntheticArtifacts
+    } catch {
+        $overlongStepRejected = $_.Exception.Message.Contains("maximum_seconds must be between 1 and 7200")
+    }
+    if (-not $overlongStepRejected) { throw "Scheduler graph self-test did not reject a qualification step above two hours." }
 
     $blockedProducerState = [pscustomobject]@{ gates = @(
         New-SyntheticState "estimation.point.kernels" "failed" $false @()
@@ -1135,6 +1240,8 @@ function Invoke-SchedulerGraphSelfTest {
             profiles = @("fixture")
             covered_evidence_cells = @("fixture::receipt")
             probable_root_component = "runner"
+            gate_maximum_seconds = 7080
+            cleanup_reserve_before_campaign_timeout_seconds = 120
             steps = @([ordered]@{
                 step_id = "fixture_step"
                 status = "passed"
@@ -1143,6 +1250,8 @@ function Invoke-SchedulerGraphSelfTest {
                 uses_cargo = $false
                 exit_code = 0
                 maximum_seconds = 60
+                effective_maximum_seconds = 60
+                gate_budget_limited = $false
                 budget_exceeded = $false
                 timeout_terminated = $false
                 empty_cargo_test_rejected = $false
@@ -1151,6 +1260,10 @@ function Invoke-SchedulerGraphSelfTest {
                 rust_tests_passed = $null
                 rust_tests_failed = $null
                 rust_tests_executed = $null
+                launch_kind = "native_argument_list"
+                effective_executable = (Get-Command python -ErrorAction Stop).Source
+                effective_arguments = @("--version")
+                gate_deadline_checked_after_evidence_hashing = $true
                 missing_outputs = @()
                 stdout_path = $fixtureStdout
                 stdout_sha256 = Get-LowerSha256 $fixtureStdout
@@ -1201,6 +1314,61 @@ function Invoke-SchedulerGraphSelfTest {
             $failedReceipt $receiptFixtureRoot $fixtureGateId $fixtureBinding `
             $fixtureCandidate "2.56.0" $fixturePlanSha $fixtureBindingSha ([UInt64]42) "passed") {
             throw "Failed receipt fixture was accepted as passed evidence."
+        }
+        $prestartBinding = ($fixtureBinding | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100)
+        $prestartMissingOutput = Join-Path $fixtureGateDirectory "not-produced.json"
+        $prestartBinding.steps[0].expected_outputs = @(
+            @($prestartBinding.steps[0].expected_outputs) + "{gate_output}/not-produced.json"
+        )
+        $prestartInputDigest = Get-ExpectedGateInputDigest `
+            $fixtureGateId $prestartBinding $fixtureCandidate "2.56.0" `
+            $fixturePlanSha $fixtureBindingSha ([UInt64]42)
+        $prestartStdout = Join-Path $fixtureGateDirectory "prestart.stdout.log"
+        $prestartStderr = Join-Path $fixtureGateDirectory "prestart.stderr.log"
+        [IO.File]::WriteAllText($prestartStdout, "", [Text.UTF8Encoding]::new($false))
+        [IO.File]::WriteAllText($prestartStderr, "", [Text.UTF8Encoding]::new($false))
+        $prestartReceipt = ($fixtureReceipt | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100)
+        $prestartReceipt.status = "failed"
+        $prestartReceipt.failure_step = "fixture_step"
+        $prestartReceipt.failure_signature = "fixture_step:gate_budget_before_start:$(Get-TextSha256 '')"
+        $prestartReceipt.input_digest = $prestartInputDigest
+        $prestartReceipt.steps[0].status = "failed"
+        $prestartReceipt.steps[0].exit_code = -1
+        $prestartReceipt.steps[0].effective_maximum_seconds = 0
+        $prestartReceipt.steps[0].gate_budget_limited = $true
+        $prestartReceipt.steps[0].budget_exceeded = $true
+        $prestartReceipt.steps[0].timeout_terminated = $false
+        $prestartReceipt.steps[0].launch_kind = "not_started_gate_budget_exhausted"
+        $prestartReceipt.steps[0].stdout_path = $prestartStdout
+        $prestartReceipt.steps[0].stdout_sha256 = Get-LowerSha256 $prestartStdout
+        $prestartReceipt.steps[0].stdout_size = 0
+        $prestartReceipt.steps[0].stderr_path = $prestartStderr
+        $prestartReceipt.steps[0].stderr_sha256 = Get-LowerSha256 $prestartStderr
+        $prestartReceipt.steps[0].stderr_size = 0
+        $prestartReceipt.steps[0].missing_outputs = @($prestartMissingOutput)
+        foreach ($expectedFailedStatus in @("failed", "either")) {
+            if (-not (Test-GateReceiptPayloadIntegrity `
+                $prestartReceipt $receiptFixtureRoot $fixtureGateId $prestartBinding `
+                $fixtureCandidate "2.56.0" $fixturePlanSha $fixtureBindingSha ([UInt64]42) `
+                $expectedFailedStatus)) {
+                throw "Synthetic not-started receipt fixture was rejected under $expectedFailedStatus`: $script:lastGateReceiptIntegrityFailure"
+            }
+        }
+        if (Test-GateReceiptPayloadIntegrity `
+            $prestartReceipt $receiptFixtureRoot $fixtureGateId $prestartBinding `
+            $fixtureCandidate "2.56.0" $fixturePlanSha $fixtureBindingSha ([UInt64]42) "passed") {
+            throw "Synthetic not-started receipt fixture was accepted as passed evidence."
+        }
+        $prestartPartitionTamper = ($prestartReceipt | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100)
+        $existingOutput = $prestartPartitionTamper.steps[0].expected_outputs[0]
+        $prestartPartitionTamper.steps[0].expected_outputs = @($prestartPartitionTamper.steps[0].expected_outputs | Select-Object -Skip 1)
+        $prestartPartitionTamper.steps[0].missing_outputs = @(
+            @($prestartPartitionTamper.steps[0].missing_outputs) + [string]$existingOutput.path
+        )
+        if (Test-GateReceiptPayloadIntegrity `
+            $prestartPartitionTamper $receiptFixtureRoot $fixtureGateId $prestartBinding `
+            $fixtureCandidate "2.56.0" $fixturePlanSha $fixtureBindingSha ([UInt64]42) "failed") {
+            throw "Synthetic not-started receipt accepted an existing output as missing."
         }
         $semanticTamper = ($fixtureReceipt | ConvertTo-Json -Depth 100 | ConvertFrom-Json -Depth 100)
         $semanticTamper.input_digest = ("e" * 64) -join ""
@@ -1295,6 +1463,7 @@ function Invoke-SchedulerGraphSelfTest {
             "new_root_attempt_invalidates_old_descendant_coverage",
             "resume_rejects_prior_inventory_substitution",
             "coherent_failed_receipt_retains_diagnostics_but_not_passed_evidence",
+            "synthetic_not_started_receipt_partitions_existing_and_missing_outputs",
             "passed_gate_state_rejects_seed_and_root_tampering",
             "passed_receipt_integrity_rejects_hash_and_semantic_tampering",
             "rerun_rotates_gate_and_shared_outputs",
@@ -1488,6 +1657,8 @@ Write-JsonAtomic $issuePath $inventory
 $environmentNames = @("QPLS_MULTIMOD_CAMPAIGN_ID", "QPLS_MULTIMOD_CAMPAIGN_ROOT", "QPLS_MULTIMOD_CAMPAIGN_PASS", "QPLS_MULTIMOD_CANDIDATE_COMMIT", "QPLS_MULTIMOD_CANDIDATE_VERSION", "QPLS_MULTIMOD_PLAN_SHA256", "QPLS_MULTIMOD_BINDING_SHA256", "QPLS_MULTIMOD_GATE_ID", "QPLS_MULTIMOD_GATE_OUTPUT_DIRECTORY", "QPLS_MULTIMOD_SEED")
 $savedEnvironment = @{}; foreach ($name in $environmentNames) { $savedEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, "Process") }
 $successfulResumeRerunRoots = @($state.successful_resume_rerun_roots | Sort-Object -Unique)
+$activeCampaignProcess = $null
+$activeCampaignGateId = $null
 try {
     for ($gateIndex = 0; $gateIndex -lt @($plan.gates).Count; $gateIndex++) {
         $gate = $plan.gates[$gateIndex]
@@ -1582,20 +1753,87 @@ try {
         $started = (Get-Date).ToUniversalTime()
         $stepBudgetSeconds = [long]0
         foreach ($boundStep in @($gateBinding.steps)) { $stepBudgetSeconds += [long]$boundStep.maximum_seconds }
-        $outerBudgetSeconds = $stepBudgetSeconds + [math]::Max(120, 30 * @($gateBinding.steps).Count)
+        $outerBudgetSeconds = [math]::Min(
+            $maximumQualificationStepSeconds,
+            $stepBudgetSeconds + [math]::Max(120, 30 * @($gateBinding.steps).Count)
+        )
         $outerBudgetMilliseconds = [long]$outerBudgetSeconds * 1000L
         if ($outerBudgetMilliseconds -gt [int]::MaxValue) { throw "Gate $($gate.gate_id) outer timeout exceeds WaitForExit limits." }
-        $process = Start-Process -FilePath $gate.command.executable -ArgumentList @($gate.command.arguments) -WorkingDirectory $repositoryRoot -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -NoNewWindow -PassThru
-        $campaignGateTimedOut = -not $process.WaitForExit([int]$outerBudgetMilliseconds)
-        if ($campaignGateTimedOut) {
-            & taskkill.exe /PID $process.Id /T /F *> $null
-            if (-not $process.WaitForExit(30000)) { throw "Timed-out gate $($gate.gate_id) did not terminate its exact wrapper-owned process tree." }
+        $campaignCleanupReserveMilliseconds = 60000L
+        $processWaitMilliseconds = [Math]::Max(1L, $outerBudgetMilliseconds - $campaignCleanupReserveMilliseconds)
+        $gateLaunchExecutable = (Get-Command ([string]$gate.command.executable) -ErrorAction Stop).Source
+        $gateLaunchArguments = @($gate.command.arguments | ForEach-Object { [string]$_ })
+        $startInfo = [Diagnostics.ProcessStartInfo]::new()
+        $startInfo.FileName = $gateLaunchExecutable
+        $startInfo.WorkingDirectory = $repositoryRoot
+        $startInfo.UseShellExecute = $false
+        $startInfo.CreateNoWindow = $true
+        $startInfo.RedirectStandardOutput = $true
+        $startInfo.RedirectStandardError = $true
+        foreach ($argument in $gateLaunchArguments) {
+            [void]$startInfo.ArgumentList.Add($argument)
         }
-        $process.WaitForExit()
-        $processExitCode = if ($campaignGateTimedOut) { -1 } else { $process.ExitCode }
-        $completed = (Get-Date).ToUniversalTime()
+        $process = [Diagnostics.Process]::new()
+        $process.StartInfo = $startInfo
+        $activeCampaignProcess = $process
+        $activeCampaignGateId = [string]$gate.gate_id
+        $processStarted = $false
+        $stdoutCopy = $null
+        $stderrCopy = $null
+        $campaignGateTimedOut = $false
+        $processExitCode = -1
+        $campaignGateClock = [Diagnostics.Stopwatch]::StartNew()
+        try {
+            [void]$process.Start()
+            $processStarted = $true
+            $stdoutCopy = $process.StandardOutput.ReadToEndAsync()
+            $stderrCopy = $process.StandardError.ReadToEndAsync()
+            $campaignGateTimedOut = -not $process.WaitForExit([int]$processWaitMilliseconds)
+            if ($campaignGateTimedOut) {
+                Stop-VerifiedProcessTree -Process $process -Stage ([string]$gate.gate_id)
+            }
+            if (-not $process.WaitForExit(10000)) {
+                Stop-VerifiedProcessTree -Process $process -Stage ([string]$gate.gate_id)
+                throw "Campaign gate $($gate.gate_id) did not finalize after exit."
+            }
+            if (-not $campaignGateTimedOut) { $processExitCode = [int]$process.ExitCode }
+        }
+        catch {
+            if ($processStarted -and -not $process.HasExited) {
+                Stop-VerifiedProcessTree -Process $process -Stage ([string]$gate.gate_id)
+            }
+            throw
+        }
+        finally {
+            if ($null -ne $stdoutCopy -and $null -ne $stderrCopy) {
+                $remainingDrainMilliseconds = [long][Math]::Floor(
+                    $outerBudgetMilliseconds - $campaignGateClock.Elapsed.TotalMilliseconds
+                )
+                $drainMilliseconds = [int][Math]::Max(1L, [Math]::Min(30000L, $remainingDrainMilliseconds))
+                $tasks = [Threading.Tasks.Task[]]@($stdoutCopy, $stderrCopy)
+                if (-not [Threading.Tasks.Task]::WaitAll($tasks, $drainMilliseconds)) {
+                    if ($processStarted -and -not $process.HasExited) {
+                        Stop-VerifiedProcessTree -Process $process -Stage ([string]$gate.gate_id)
+                    }
+                    throw "Timed out draining redirected logs for campaign gate $($gate.gate_id)."
+                }
+                Write-TextAtomic -Path $stdoutPath -Text ([string]$stdoutCopy.Result)
+                Write-TextAtomic -Path $stderrPath -Text ([string]$stderrCopy.Result)
+            }
+            else {
+                Write-TextAtomic -Path $stdoutPath -Text ""
+                Write-TextAtomic -Path $stderrPath -Text ""
+            }
+            $process.Dispose()
+            $activeCampaignProcess = $null
+            $activeCampaignGateId = $null
+        }
+        if ($campaignGateClock.Elapsed.TotalMilliseconds -ge $outerBudgetMilliseconds) {
+            $campaignGateTimedOut = $true
+            $processExitCode = -1
+        }
         Assert-CandidateUnchanged $preflight.candidate_commit_sha
-        $receipt = $null; $receiptValid = $false
+        $receipt = $null; $receiptValid = $false; $receiptFileSha256 = $null
         if (Test-Path -LiteralPath $receiptPath -PathType Leaf) {
             try {
                 $receipt = Get-Content -LiteralPath $receiptPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
@@ -1603,12 +1841,18 @@ try {
                     $receipt $campaignRoot $gate.gate_id $gateBinding `
                     $preflight.candidate_commit_sha ([string]$plan.candidate.final_version) `
                     $planSha256 $bindingSha256 ([UInt64]$bindings.campaign_seed) "either"
+                if ($receiptValid) { $receiptFileSha256 = Get-LowerSha256 $receiptPath }
             } catch { $receiptValid = $false }
         }
+        if ($campaignGateClock.Elapsed.TotalMilliseconds -ge $outerBudgetMilliseconds) {
+            $campaignGateTimedOut = $true
+            $processExitCode = -1
+        }
+        $completed = (Get-Date).ToUniversalTime()
         $passed = -not $campaignGateTimedOut -and $processExitCode -eq 0 -and $receiptValid -and $receipt.status -ceq "passed"
         $gateState.exit_code = $processExitCode; $gateState.completed_at_utc = $completed.ToString("o"); $gateState.duration_ms = [long][math]::Round(($completed - $started).TotalMilliseconds)
         $gateState.stdout = Relative-EvidencePath $campaignRoot $stdoutPath; $gateState.stderr = Relative-EvidencePath $campaignRoot $stderrPath
-        if ($receiptValid) { $gateState.input_digest = [string]$receipt.input_digest; $gateState.receipt = Relative-EvidencePath $campaignRoot $receiptPath; $gateState.receipt_sha256 = Get-LowerSha256 $receiptPath }
+        if ($receiptValid) { $gateState.input_digest = [string]$receipt.input_digest; $gateState.receipt = Relative-EvidencePath $campaignRoot $receiptPath; $gateState.receipt_sha256 = $receiptFileSha256 }
         if ($passed) {
             $gateState.status = "passed"; $gateState.evidence_valid = $invalidatedBy.Count -eq 0
             $inventory.issues = @($inventory.issues | Where-Object { $_.gate -cne $gate.gate_id })
@@ -1631,7 +1875,22 @@ try {
         }
         $inventory.generated_at_utc = (Get-Date).ToUniversalTime().ToString("o"); Write-JsonAtomic $statePath $state; Write-JsonAtomic $issuePath $inventory
     }
-} finally { foreach ($name in $environmentNames) { [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], "Process") } }
+} finally {
+    if ($null -ne $activeCampaignProcess) {
+        try {
+            if (-not $activeCampaignProcess.HasExited) {
+                Stop-VerifiedProcessTree -Process $activeCampaignProcess -Stage ([string]$activeCampaignGateId)
+            }
+        }
+        finally {
+            $activeCampaignProcess.Dispose()
+            $activeCampaignProcess = $null
+        }
+    }
+    foreach ($name in $environmentNames) {
+        [Environment]::SetEnvironmentVariable($name, $savedEnvironment[$name], "Process")
+    }
+}
 
 $failed = @($state.gates | Where-Object status -eq "failed"); $blocked = @($state.gates | Where-Object status -eq "blocked"); $pending = @($state.gates | Where-Object status -notin @("passed", "failed", "blocked", "not_executed_targeted"))
 if ($pending.Count) {

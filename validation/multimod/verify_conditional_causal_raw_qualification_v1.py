@@ -18,6 +18,8 @@ from pathlib import Path
 from statistics import NormalDist
 from typing import Any, Callable, Iterable
 
+import conditional_causal_shards_v1 as shard_contract
+
 
 CONDITIONAL_CELLS = {
     "conditional.multi_two_way_percentile.v2::explicit_path_target_math",
@@ -63,6 +65,10 @@ CAUSAL_CELLS = {
 
 HEX = set("0123456789abcdef")
 ALTERNATIVES = {"two_sided", "less", "greater"}
+SHARD_IDS = {
+    family: [row["shard_id"] for row in shard_contract.expected_specs(family)]
+    for family in ("conditional", "causal")
+}
 
 
 def canonical_json(value: Any) -> bytes:
@@ -71,6 +77,14 @@ def canonical_json(value: Any) -> bytes:
 
 def is_sha256(value: Any) -> bool:
     return isinstance(value, str) and len(value) == 64 and set(value.lower()) <= HEX
+
+
+def is_lower_hex(value: Any, length: int) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == length
+        and set(value) <= HEX
+    )
 
 
 def close(left: float, right: float, tolerance: float = 5.0e-8) -> bool:
@@ -139,6 +153,110 @@ def collect_cell_ids(value: Any) -> set[str]:
         for child in value:
             cells.update(collect_cell_ids(child))
     return cells
+
+
+def verify_shard_execution_receipt(
+    report: dict[str, Any],
+    family: str,
+    required: bool,
+    plan_path: Path | None = None,
+    shard_dir: Path | None = None,
+    producer_executable: Path | None = None,
+    expected_source_commit: str | None = None,
+) -> tuple[bool, Any]:
+    receipt = report.get("shard_execution_receipt")
+    if receipt is None:
+        return (not required), {
+            "required": required,
+            "status": "missing" if required else "legacy_monolithic_not_required",
+        }
+    expected_ids = SHARD_IDS[family]
+    rows = receipt.get("shards") if isinstance(receipt, dict) else None
+    actual_ids = (
+        [row.get("shard_id") for row in rows if isinstance(row, dict)]
+        if isinstance(rows, list)
+        else []
+    )
+    row_shape_is_exact = isinstance(rows, list) and all(
+        isinstance(row, dict)
+        and set(row) == {"shard_id", "receipt_sha256", "result_sha256"}
+        and is_lower_hex(row.get("receipt_sha256"), 64)
+        and is_lower_hex(row.get("result_sha256"), 64)
+        for row in rows
+    )
+    valid = (
+        isinstance(receipt, dict)
+        and receipt.get("schema_version") == 1
+        and receipt.get("family") == family
+        and is_lower_hex(receipt.get("plan_sha256"), 64)
+        and is_lower_hex(receipt.get("producer_executable_sha256"), 64)
+        and is_lower_hex(receipt.get("source_commit"), 40)
+        and row_shape_is_exact
+        and actual_ids == expected_ids
+        and len(set(actual_ids)) == len(actual_ids)
+    )
+    binding_status = "not_required"
+    binding_error = None
+    if required:
+        missing_inputs = [
+            name
+            for name, value in (
+                ("plan_path", plan_path),
+                ("shard_dir", shard_dir),
+                ("producer_executable", producer_executable),
+                ("expected_source_commit", expected_source_commit),
+            )
+            if value is None
+        ]
+        if missing_inputs:
+            valid = False
+            binding_status = "missing_inputs"
+            binding_error = f"missing portable receipt inputs: {', '.join(missing_inputs)}"
+        elif valid:
+            try:
+                assert plan_path is not None
+                assert shard_dir is not None
+                assert producer_executable is not None
+                assert expected_source_commit is not None
+                executable_sha256 = shard_contract.sha256_file(producer_executable)
+                expected_report = shard_contract.build_aggregate_report(
+                    family,
+                    plan_path,
+                    shard_dir,
+                    executable_sha256,
+                    expected_source_commit,
+                )
+                valid = report == expected_report
+                binding_status = "exact" if valid else "aggregate_mismatch"
+                if not valid:
+                    binding_error = (
+                        "report does not exactly match the receipt-verified deterministic aggregate"
+                    )
+            except (
+                OSError,
+                KeyError,
+                TypeError,
+                ValueError,
+                json.JSONDecodeError,
+                shard_contract.ContractError,
+            ) as error:
+                valid = False
+                binding_status = "recomputation_failed"
+                binding_error = f"{type(error).__name__}: {error}"
+    return valid, {
+        "required": required,
+        "expected_shard_ids": expected_ids,
+        "actual_shard_ids": actual_ids,
+        "plan_sha256": receipt.get("plan_sha256") if isinstance(receipt, dict) else None,
+        "producer_executable_sha256": (
+            receipt.get("producer_executable_sha256")
+            if isinstance(receipt, dict)
+            else None
+        ),
+        "source_commit": receipt.get("source_commit") if isinstance(receipt, dict) else None,
+        "binding_status": binding_status,
+        "binding_error": binding_error,
+    }
 
 
 def conditional_leaf_cases(report: dict[str, Any]) -> list[dict[str, Any]]:
@@ -1422,6 +1540,11 @@ def main() -> int:
     parser.add_argument("--family", choices=("conditional", "causal"), required=True)
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--expected-scale", choices=("development", "qualification"), required=True)
+    parser.add_argument("--require-shard-receipts", action="store_true")
+    parser.add_argument("--shard-plan", type=Path)
+    parser.add_argument("--shard-dir", type=Path)
+    parser.add_argument("--producer-executable", type=Path)
+    parser.add_argument("--expected-source-commit")
     parser.add_argument("--output", type=Path, required=True)
     arguments = parser.parse_args()
 
@@ -1431,6 +1554,37 @@ def main() -> int:
     audit.add("receipt.scale", report.get("scale") == arguments.expected_scale, report.get("scale"))
     audit.add("receipt.seed", report.get("seed") == 42, report.get("seed"))
     audit.add("receipt.no_self_qualification", report.get("qualification_claim") == "none", report.get("qualification_claim"))
+    audit.add(
+        "receipt.baseline_shard_execution",
+        (
+            not arguments.require_shard_receipts
+            or (
+                report.get("metamorphism") == "baseline"
+                and report.get("sign_columns") is None
+                and report.get("workers") == 1
+            )
+        ),
+        {
+            "required": arguments.require_shard_receipts,
+            "metamorphism": report.get("metamorphism"),
+            "sign_columns": report.get("sign_columns"),
+            "workers": report.get("workers"),
+        },
+    )
+    shard_receipt = verify_shard_execution_receipt(
+        report,
+        arguments.family,
+        arguments.require_shard_receipts,
+        arguments.shard_plan,
+        arguments.shard_dir,
+        arguments.producer_executable,
+        arguments.expected_source_commit,
+    )
+    audit.add(
+        f"{arguments.family}.raw.complete_atomic_shard_inventory",
+        shard_receipt[0],
+        shard_receipt[1],
+    )
     if arguments.family == "conditional":
         covered = verify_conditional(report, audit)
         expected = CONDITIONAL_CELLS

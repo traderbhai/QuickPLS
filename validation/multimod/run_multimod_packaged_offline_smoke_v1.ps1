@@ -9,11 +9,23 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 if (-not $IsWindows) { throw "Packaged MultiMod smoke is Windows-only." }
+$wrapperStartedAtUtc = [DateTimeOffset]::UtcNow
+$wrapperClock = [Diagnostics.Stopwatch]::StartNew()
+$wrapperMaximumSeconds = 6480
+$minimumCleanupReserveSeconds = 1020
+$finalizationReserveSeconds = 120
+$postScienceReserveSeconds = $minimumCleanupReserveSeconds + $finalizationReserveSeconds
+$scientificMaximumSeconds = $wrapperMaximumSeconds - $postScienceReserveSeconds
+$cleanupDeadlineSeconds = $wrapperMaximumSeconds - $finalizationReserveSeconds
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "../..")).Path
 $receiptPath = [IO.Path]::GetFullPath($PackageReceipt)
 $outputPath = [IO.Path]::GetFullPath($Output)
 $outputDirectory = Split-Path -Parent $outputPath
 $driver = Join-Path $PSScriptRoot "multimod_packaged_smoke_driver_v1.mjs"
+$driverOutputPath = Join-Path $outputDirectory `
+    (".packaged-{0}-driver.{1}.tmp.json" -f $Kind, [Guid]::NewGuid().ToString("N"))
+$driverStdoutPath = Join-Path $outputDirectory "packaged-$Kind-driver.stdout.log"
+$driverStderrPath = Join-Path $outputDirectory "packaged-$Kind-driver.stderr.log"
 foreach ($required in @($receiptPath, $driver)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Packaged smoke input is missing: $required" }
 }
@@ -48,6 +60,136 @@ function Write-JsonAtomic([string]$Path, $Value) {
     Move-Item -LiteralPath $temporary -Destination $Path -Force
 }
 
+function Get-RemainingPhaseMilliseconds {
+    param([Parameter(Mandatory = $true)][ValidateSet("science", "cleanup", "wrapper")][string]$Phase)
+    $deadlineSeconds = switch ($Phase) {
+        "science" { $scientificMaximumSeconds }
+        "cleanup" { $cleanupDeadlineSeconds }
+        "wrapper" { $wrapperMaximumSeconds }
+    }
+    $remaining = [Math]::Floor(($deadlineSeconds - $wrapperClock.Elapsed.TotalSeconds) * 1000.0)
+    if ($remaining -lt 1) {
+        throw "Packaged $Kind smoke exhausted its $Phase deadline after $([Math]::Round($wrapperClock.Elapsed.TotalSeconds, 3)) seconds."
+    }
+    return [int64]$remaining
+}
+
+function Assert-PhaseBudget {
+    param([Parameter(Mandatory = $true)][ValidateSet("science", "cleanup", "wrapper")][string]$Phase)
+    [void](Get-RemainingPhaseMilliseconds -Phase $Phase)
+}
+
+function Stop-ExactProcessTree {
+    param(
+        [Parameter(Mandatory = $true)][Diagnostics.Process]$Process,
+        [Parameter(Mandatory = $true)][string]$Operation,
+        [ValidateSet("cleanup", "wrapper")][string]$Phase = "cleanup",
+        [ValidateRange(1, 60)][int]$MaximumSeconds = 60
+    )
+    $maximumMilliseconds = [Math]::Min(
+        [int64]$MaximumSeconds * 1000L,
+        (Get-RemainingPhaseMilliseconds -Phase $Phase)
+    )
+    if (-not $Process.HasExited) {
+        try { $Process.Kill($true) } catch { throw "$Operation process-tree termination failed: $($_.Exception.Message)" }
+    }
+    if (-not $Process.WaitForExit([int][Math]::Min($maximumMilliseconds, [int]::MaxValue))) {
+        throw "$Operation process tree did not terminate inside its bounded cleanup window."
+    }
+    $Process.Refresh()
+    if (-not $Process.HasExited) { throw "$Operation process root remains active after process-tree termination." }
+}
+
+function Start-SupervisedProcess {
+    param(
+        [Parameter(Mandatory = $true)][string]$FileName,
+        [Parameter(Mandatory = $true)][string[]]$Arguments,
+        [Parameter(Mandatory = $true)][string]$StdoutPath,
+        [Parameter(Mandatory = $true)][string]$StderrPath
+    )
+    $startInfo = [Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = $FileName
+    $startInfo.UseShellExecute = $false
+    $startInfo.CreateNoWindow = $true
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    foreach ($argument in $Arguments) { [void]$startInfo.ArgumentList.Add([string]$argument) }
+    $child = [Diagnostics.Process]::new()
+    $child.StartInfo = $startInfo
+    [void]$child.Start()
+    return [pscustomobject]@{
+        Process = $child
+        StdoutPath = $StdoutPath
+        StderrPath = $StderrPath
+        StdoutCopy = $child.StandardOutput.ReadToEndAsync()
+        StderrCopy = $child.StandardError.ReadToEndAsync()
+        LogsSaved = $false
+        ForcedTermination = $false
+        ExitEpochMilliseconds = $null
+    }
+}
+
+function Save-SupervisedProcessLogs {
+    param(
+        [Parameter(Mandatory = $true)]$Job,
+        [Parameter(Mandatory = $true)][ValidateSet("science", "cleanup")][string]$Phase
+    )
+    if ($Job.LogsSaved) { return }
+    $tasks = [Threading.Tasks.Task[]]@($Job.StdoutCopy, $Job.StderrCopy)
+    $maximumMilliseconds = [int][Math]::Min(
+        10000L,
+        (Get-RemainingPhaseMilliseconds -Phase $Phase)
+    )
+    if (-not [Threading.Tasks.Task]::WaitAll($tasks, $maximumMilliseconds)) {
+        throw "Packaged smoke driver logs did not drain inside the $Phase deadline."
+    }
+    [IO.File]::WriteAllText($Job.StdoutPath, $Job.StdoutCopy.Result, [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText($Job.StderrPath, $Job.StderrCopy.Result, [Text.UTF8Encoding]::new($false))
+    $Job.LogsSaved = $true
+}
+
+function Stop-SupervisedDriver {
+    param(
+        [Parameter(Mandatory = $true)]$Job,
+        [Parameter(Mandatory = $true)][string]$Reason,
+        [ValidateRange(1, 60)][int]$MaximumSeconds = 60
+    )
+    if (-not $Job.Process.HasExited) {
+        $Job.ForcedTermination = $true
+        Stop-ExactProcessTree -Process $Job.Process -Operation "Node packaged-smoke driver ($Reason)" `
+            -Phase wrapper -MaximumSeconds $MaximumSeconds
+    }
+    if ($Job.Process.HasExited) {
+        $Job.ExitEpochMilliseconds = ([DateTimeOffset]$Job.Process.ExitTime.ToUniversalTime()).ToUnixTimeMilliseconds()
+    }
+    Save-SupervisedProcessLogs -Job $Job -Phase "cleanup"
+}
+
+function Wait-SupervisedDriver {
+    param(
+        [Parameter(Mandatory = $true)]$Job,
+        [Parameter(Mandatory = $true)][int64]$ScientificDeadlineEpochMilliseconds
+    )
+    while (-not $Job.Process.HasExited) {
+        $remaining = Get-RemainingPhaseMilliseconds -Phase "science"
+        $wallRemaining = $ScientificDeadlineEpochMilliseconds - [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+        if ($wallRemaining -lt 1) {
+            throw "Packaged smoke driver reached its shared scientific deadline; the wrapper cleanup path will terminate Node before the candidate."
+        }
+        [Threading.Thread]::Sleep([int][Math]::Min(250L, [Math]::Min($remaining, $wallRemaining)))
+        $Job.Process.Refresh()
+    }
+    $Job.ExitEpochMilliseconds = ([DateTimeOffset]$Job.Process.ExitTime.ToUniversalTime()).ToUnixTimeMilliseconds()
+    if ([int64]$Job.ExitEpochMilliseconds -gt $ScientificDeadlineEpochMilliseconds -or
+        $wrapperClock.Elapsed.TotalSeconds -gt $scientificMaximumSeconds) {
+        throw "Packaged smoke driver exited after its shared scientific deadline; late success is rejected."
+    }
+    Save-SupervisedProcessLogs -Job $Job -Phase "science"
+    if ($Job.Process.ExitCode -ne 0) {
+        throw "Packaged smoke driver exited with code $($Job.Process.ExitCode). Check $($Job.StderrPath)."
+    }
+}
+
 function Get-DiskSnapshot([string]$Label) {
     $drives = [ordered]@{}
     foreach ($driveName in @("C", "D")) {
@@ -59,12 +201,23 @@ function Get-DiskSnapshot([string]$Label) {
     return [ordered]@{ label = $Label; captured_at_utc = (Get-Date).ToUniversalTime().ToString("o"); free_gib = $drives }
 }
 
-function Wait-ExactProcess([Diagnostics.Process]$Process, [int]$MaximumSeconds, [string]$Operation) {
-    if (-not $Process.WaitForExit($MaximumSeconds * 1000)) {
-        & taskkill.exe /PID $Process.Id /T /F *> $null
-        $null = $Process.WaitForExit(30000)
-        throw "$Operation exceeded its $MaximumSeconds-second wall-clock budget and its exact process tree was terminated."
+function Wait-ExactProcess(
+    [Diagnostics.Process]$Process,
+    [int]$MaximumSeconds,
+    [string]$Operation,
+    [ValidateSet("science", "cleanup")][string]$Phase = "science"
+) {
+    $maximumMilliseconds = [Math]::Min(
+        [int64]$MaximumSeconds * 1000L,
+        (Get-RemainingPhaseMilliseconds -Phase $Phase)
+    )
+    if (-not $Process.WaitForExit([int][Math]::Min($maximumMilliseconds, [int]::MaxValue))) {
+        Stop-ExactProcessTree -Process $Process -Operation $Operation `
+            -Phase $(if ($Phase -eq "science") { "cleanup" } else { "wrapper" }) `
+            -MaximumSeconds 60
+        throw "$Operation exceeded its bounded $Phase budget and its exact process tree was terminated."
     }
+    if ($Phase -eq "science") { Assert-PhaseBudget -Phase "science" } else { Assert-PhaseBudget -Phase "cleanup" }
     if ($Process.ExitCode -ne 0) { throw "$Operation exited with code $($Process.ExitCode)." }
 }
 
@@ -151,6 +304,7 @@ $installWasCreated = $false
 $installCleaned = $Kind -eq "portable"
 $diskSnapshots = [System.Collections.Generic.List[object]]::new()
 $diskSnapshots.Add((Get-DiskSnapshot "before packaged $Kind smoke"))
+Assert-PhaseBudget -Phase "science"
 if ($Kind -eq "installed") {
     if (Test-Path -LiteralPath $installRoot) { throw "Fresh NSIS destination already exists: $installRoot" }
     if (@(Get-CimInstance Win32_Process -ErrorAction Stop | Where-Object { $_.Name -in @("QuickPLS.exe", "quickpls-desktop.exe") }).Count -ne 0) {
@@ -164,7 +318,7 @@ if ($Kind -eq "installed") {
     try {
         $installerArguments = @("/S", "/D=$installRoot")
         $installer = Start-Process -FilePath $setup -ArgumentList $installerArguments -WorkingDirectory $installParent -WindowStyle Hidden -PassThru
-        Wait-ExactProcess $installer 900 "isolated NSIS installation"
+        Wait-ExactProcess $installer 900 "isolated NSIS installation" -Phase "science"
         $installWasCreated = Test-Path -LiteralPath $installRoot -PathType Container
         if (-not $installWasCreated) { throw "NSIS reported success without creating its fresh destination." }
         $candidates = @(Get-ChildItem -LiteralPath $installRoot -Recurse -File -Filter "*.exe" | Where-Object { $_.Name -notmatch '^(unins|uninstall)' -and $_.VersionInfo.ProductVersion -and $_.VersionInfo.ProductVersion.StartsWith("2.56.0", [StringComparison]::Ordinal) })
@@ -204,7 +358,7 @@ if ($Kind -eq "installed") {
                 $cleanupUninstallers = @(Get-ChildItem -LiteralPath $installRoot -Recurse -File -Filter "*.exe" | Where-Object { $_.Name -match '^(unins|uninstall)' })
                 if ($cleanupUninstallers.Count -ne 1) { throw "Setup failure left no unique NSIS uninstaller." }
                 $cleanupUninstall = Start-Process -FilePath $cleanupUninstallers[0].FullName -ArgumentList @("/S") -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
-                Wait-ExactProcess $cleanupUninstall 900 "failed-setup NSIS cleanup"
+                Wait-ExactProcess $cleanupUninstall 900 "failed-setup NSIS cleanup" -Phase "cleanup"
             }
         } catch { $setupCleanupError = $_ }
         if ($setupCleanupError) { throw "$($setupError.Exception.Message); failed-setup cleanup also failed: $($setupCleanupError.Exception.Message)" }
@@ -224,9 +378,16 @@ New-Item -ItemType Directory -Path $profile | Out-Null
 function Test-Cdp {
     try { $null = Invoke-RestMethod -Uri "$endpoint/json/version" -TimeoutSec 1; return $true } catch { return $false }
 }
-function Wait-Cdp([bool]$Open) {
-    $deadline = [DateTime]::UtcNow.AddSeconds(45)
-    while ([DateTime]::UtcNow -lt $deadline) {
+function Wait-Cdp(
+    [bool]$Open,
+    [ValidateSet("science", "cleanup")][string]$Phase,
+    [ValidateRange(1, 60)][int]$MaximumSeconds = 45
+) {
+    $phaseMilliseconds = Get-RemainingPhaseMilliseconds -Phase $Phase
+    $deadline = [DateTimeOffset]::UtcNow.AddMilliseconds(
+        [Math]::Min([int64]$MaximumSeconds * 1000L, $phaseMilliseconds)
+    )
+    while ([DateTimeOffset]::UtcNow -lt $deadline) {
         if ((Test-Cdp) -eq $Open) { return }
         Start-Sleep -Milliseconds 250
     }
@@ -241,51 +402,167 @@ $oldBrowserArguments = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
 $oldUserData = $env:WEBVIEW2_USER_DATA_FOLDER
 $oldCdp = $env:QUICKPLS_CDP_ENDPOINT
 $process = $null
-$cleanup = [ordered]@{ exact_root_started = $false; exact_root_terminated = $false; endpoint_closed = $false; nsis_uninstall_exit_code = $null; install_root_removed = $installCleaned; registration_removed = $installCleaned }
+$nodeJob = $null
+$driverScientificDeadlineEpochMilliseconds = $null
+$driverStartedAtUtc = $null
+$cleanupSequence = [Collections.Generic.List[string]]::new()
+$cleanup = [ordered]@{
+    contract_id = "qpls.v256.multimod.packaged-process-cleanup.v1"
+    cleanup_started_at_utc = $null
+    cleanup_completed_at_utc = $null
+    cleanup_elapsed_milliseconds = $null
+    node_root_started = $false
+    node_pid = $null
+    node_process_tree_supervised = $true
+    node_forced_termination = $false
+    node_process_tree_terminated = $false
+    exact_root_started = $false
+    exact_root_terminated = $false
+    candidate_process_tree_termination_requested = $false
+    active_work_cancelled_via_candidate_termination = $false
+    endpoint_closed = $false
+    candidate_termination_before_uninstall = $false
+    exact_nsis_uninstall_attempted = $false
+    nsis_uninstall_exit_code = $null
+    install_root_removed = $installCleaned
+    registration_removed = $installCleaned
+    cleanup_sequence = $cleanupSequence
+}
 $operationError = $null
 $cleanupError = $null
 try {
+    Assert-PhaseBudget -Phase "science"
     $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$port --disable-background-networking --disable-component-update --disable-sync --metrics-recording-only --disable-quic --proxy-server=http://127.0.0.1:9"
     $env:WEBVIEW2_USER_DATA_FOLDER = $profile
     $env:QUICKPLS_CDP_ENDPOINT = $endpoint
     $process = Start-Process -FilePath $candidate -WorkingDirectory (Split-Path -Parent $candidate) -WindowStyle Hidden -PassThru
     $cleanup.exact_root_started = $true
-    Wait-Cdp $true
+    Wait-Cdp $true -Phase "science" -MaximumSeconds 45
     $node = (Get-Command node -ErrorAction Stop).Source
-    & $node $driver --endpoint $endpoint --kind $Kind --candidate-path $candidate --candidate-sha256 $candidateSha --candidate-pid ([string]$process.Id) --candidate-commit ([string]$package.candidate_commit_sha) --candidate-version ([string]$package.version) --plan-sha256 ([string]$package.plan_sha256) --binding-sha256 ([string]$package.binding_sha256) --authority-document-sha256 ([string]$package.prepackage_authority_sha256) --authority-binding-sha256 ([string]$package.authority_binding_sha256) --prepackage-manifest-set-sha256 ([string]$package.prepackage_manifest_set_sha256) --package-receipt-sha256 $packageReceiptSha256 --seed ([string]$Seed) --output $outputPath
-    if ($LASTEXITCODE -ne 0) { throw "Packaged smoke driver failed with exit code $LASTEXITCODE." }
+    $remainingScienceMilliseconds = Get-RemainingPhaseMilliseconds -Phase "science"
+    $driverScientificDeadlineEpochMilliseconds = `
+        [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() + $remainingScienceMilliseconds
+    $driverArguments = @(
+        $driver,
+        "--endpoint", $endpoint,
+        "--kind", $Kind,
+        "--candidate-path", $candidate,
+        "--candidate-sha256", $candidateSha,
+        "--candidate-pid", ([string]$process.Id),
+        "--candidate-commit", ([string]$package.candidate_commit_sha),
+        "--candidate-version", ([string]$package.version),
+        "--plan-sha256", ([string]$package.plan_sha256),
+        "--binding-sha256", ([string]$package.binding_sha256),
+        "--authority-document-sha256", ([string]$package.prepackage_authority_sha256),
+        "--authority-binding-sha256", ([string]$package.authority_binding_sha256),
+        "--prepackage-manifest-set-sha256", ([string]$package.prepackage_manifest_set_sha256),
+        "--package-receipt-sha256", $packageReceiptSha256,
+        "--scientific-deadline-epoch-ms", ([string]$driverScientificDeadlineEpochMilliseconds),
+        "--seed", ([string]$Seed),
+        "--output", $driverOutputPath
+    )
+    $driverStartedAtUtc = [DateTimeOffset]::UtcNow
+    $nodeJob = Start-SupervisedProcess -FileName $node -Arguments $driverArguments `
+        -StdoutPath $driverStdoutPath -StderrPath $driverStderrPath
+    $cleanup.node_root_started = $true
+    $cleanup.node_pid = $nodeJob.Process.Id
+    Wait-SupervisedDriver -Job $nodeJob `
+        -ScientificDeadlineEpochMilliseconds $driverScientificDeadlineEpochMilliseconds
 } catch { $operationError = $_ }
 finally {
     $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $oldBrowserArguments
     $env:WEBVIEW2_USER_DATA_FOLDER = $oldUserData
     $env:QUICKPLS_CDP_ENDPOINT = $oldCdp
+    $cleanupClock = [Diagnostics.Stopwatch]::StartNew()
+    $terminationClock = [Diagnostics.Stopwatch]::StartNew()
+    $cleanupFailures = [Collections.Generic.List[string]]::new()
+    $cleanup.cleanup_started_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
     try {
-        if ($process -and -not $process.HasExited) {
-            & taskkill.exe /PID $process.Id /T /F *> $null
-            $null = $process.WaitForExit(30000)
+        if ($nodeJob) {
+            $terminationSeconds = 60 - [int][Math]::Ceiling($terminationClock.Elapsed.TotalSeconds)
+            if ($terminationSeconds -lt 1) { throw "Cleanup left no time for mandatory Node process-tree termination." }
+            Stop-SupervisedDriver -Job $nodeJob -Reason "wrapper_finalization" `
+                -MaximumSeconds ([Math]::Min(30, $terminationSeconds))
         }
-        if ($process) { $cleanup.exact_root_terminated = $process.HasExited }
-        try { Wait-Cdp $false; $cleanup.endpoint_closed = $true } catch { $cleanup.endpoint_closed = $false }
-        if ($Kind -eq "installed" -and $installWasCreated) {
-            if (-not $uninstaller -or -not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) { throw "Exact NSIS uninstaller is unavailable for cleanup." }
-            $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @("/S") -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
-            Wait-ExactProcess $uninstall 900 "isolated NSIS uninstall"
-            $cleanup.nsis_uninstall_exit_code = $uninstall.ExitCode
-            $deadline = [DateTime]::UtcNow.AddSeconds(60)
-            while ((Test-Path -LiteralPath $installRoot) -and [DateTime]::UtcNow -lt $deadline) { Start-Sleep -Milliseconds 250 }
+    } catch { [void]$cleanupFailures.Add("Node driver cleanup: $($_.Exception.Message)") }
+    if ($nodeJob) {
+        $cleanup.node_forced_termination = [bool]$nodeJob.ForcedTermination
+        $cleanup.node_process_tree_terminated = $nodeJob.Process.HasExited
+        if ($cleanup.node_process_tree_terminated) { [void]$cleanupSequence.Add("node_driver_process_tree_closed") }
+    }
+    try {
+        $cleanup.candidate_process_tree_termination_requested = $true
+        if ($process) {
+            $terminationSeconds = 60 - [int][Math]::Ceiling($terminationClock.Elapsed.TotalSeconds)
+            if ($terminationSeconds -lt 1) { throw "Node cleanup left no time for mandatory candidate process-tree termination." }
+            Stop-ExactProcessTree -Process $process -Operation "exact packaged QuickPLS candidate" `
+                -Phase wrapper -MaximumSeconds $terminationSeconds
+        }
+        else {
+            $cleanup.exact_root_terminated = $true
+            $cleanup.active_work_cancelled_via_candidate_termination = $true
+            [void]$cleanupSequence.Add("candidate_process_tree_absent")
+        }
+    } catch { [void]$cleanupFailures.Add("Candidate process-tree cleanup: $($_.Exception.Message)") }
+    if ($process) {
+        $cleanup.exact_root_terminated = $process.HasExited
+        $cleanup.active_work_cancelled_via_candidate_termination = $cleanup.exact_root_terminated
+        if ($cleanup.exact_root_terminated) { [void]$cleanupSequence.Add("candidate_process_tree_terminated") }
+    }
+    try {
+        $terminationSeconds = 60 - [int][Math]::Ceiling($terminationClock.Elapsed.TotalSeconds)
+        if ($terminationSeconds -lt 1) { throw "Process-tree cleanup left no time to verify candidate endpoint closure." }
+        Wait-Cdp $false -Phase "cleanup" -MaximumSeconds ([Math]::Min(45, $terminationSeconds))
+        $cleanup.endpoint_closed = $true
+        [void]$cleanupSequence.Add("candidate_endpoint_closed")
+    } catch { [void]$cleanupFailures.Add("Candidate endpoint cleanup: $($_.Exception.Message)") }
+    $cleanup.candidate_termination_before_uninstall = `
+        $cleanup.exact_root_terminated -and $cleanup.endpoint_closed
+    if ($Kind -eq "installed" -and $installWasCreated) {
+        if (-not $cleanup.candidate_termination_before_uninstall -or
+            ($nodeJob -and -not $cleanup.node_process_tree_terminated)) {
+            [void]$cleanupFailures.Add("Candidate and Node process trees must terminate before NSIS uninstall.")
+        }
+        elseif (-not $uninstaller -or -not (Test-Path -LiteralPath $uninstaller -PathType Leaf)) {
+            [void]$cleanupFailures.Add("Exact NSIS uninstaller is unavailable for cleanup.")
+        }
+        else {
+            try {
+                $cleanup.exact_nsis_uninstall_attempted = $true
+                $uninstall = Start-Process -FilePath $uninstaller -ArgumentList @("/S") -WorkingDirectory $installRoot -WindowStyle Hidden -PassThru
+                Wait-ExactProcess $uninstall 900 "isolated NSIS uninstall" -Phase "cleanup"
+                $cleanup.nsis_uninstall_exit_code = $uninstall.ExitCode
+                [void]$cleanupSequence.Add("exact_nsis_uninstall_completed")
+            } catch { [void]$cleanupFailures.Add("Exact NSIS uninstall: $($_.Exception.Message)") }
+        }
+        try {
+            $verificationDeadline = [DateTimeOffset]::UtcNow.AddMilliseconds(
+                [Math]::Min(60000L, (Get-RemainingPhaseMilliseconds -Phase "cleanup"))
+            )
+            while ((Test-Path -LiteralPath $installRoot) -and [DateTimeOffset]::UtcNow -lt $verificationDeadline) { Start-Sleep -Milliseconds 250 }
             $cleanup.install_root_removed = -not (Test-Path -LiteralPath $installRoot)
             $cleanup.registration_removed = @(Get-QuickPlsRegistrations).Count -eq 0
             if (-not $cleanup.install_root_removed -or -not $cleanup.registration_removed) { throw "Isolated NSIS uninstall did not remove its destination and registration." }
-        }
-    } catch { $cleanupError = $_ }
+            [void]$cleanupSequence.Add("nsis_install_root_and_registration_removed")
+        } catch { [void]$cleanupFailures.Add("NSIS cleanup verification: $($_.Exception.Message)") }
+    }
+    if ($cleanupFailures.Count -gt 0) {
+        $cleanupError = [Exception]::new(($cleanupFailures -join " | "))
+    }
+    try {
+        $cleanupClock.Stop()
+        $cleanup.cleanup_completed_at_utc = [DateTimeOffset]::UtcNow.ToString("o")
+        $cleanup.cleanup_elapsed_milliseconds = [int64]$cleanupClock.ElapsedMilliseconds
+    } catch { if (-not $cleanupError) { $cleanupError = $_.Exception } }
 }
 
 $diskSnapshots.Add((Get-DiskSnapshot "after packaged $Kind cleanup"))
-if ($operationError -and $cleanupError) { throw "$($operationError.Exception.Message); cleanup also failed: $($cleanupError.Exception.Message)" }
+if ($operationError -and $cleanupError) { throw "$($operationError.Exception.Message); cleanup also failed: $($cleanupError.Message)" }
 if ($operationError) { throw $operationError }
 if ($cleanupError) { throw $cleanupError }
-if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf)) { throw "Packaged smoke driver did not create its report." }
-$report = Get-Content -LiteralPath $outputPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 60
+Assert-PhaseBudget -Phase "wrapper"
+if (-not (Test-Path -LiteralPath $driverOutputPath -PathType Leaf)) { throw "Packaged smoke driver did not create its report." }
+$report = Get-Content -LiteralPath $driverOutputPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 60
 if (
     $report.passed -ne $true -or
     $report.report_id -cne "qpls.v256.multimod.packaged-offline-production-smoke.v1" -or
@@ -300,6 +577,11 @@ if (
     $report.manifest_set_sha256 -cne [string]$package.prepackage_manifest_set_sha256 -or
     $report.package_receipt_sha256 -cne $packageReceiptSha256 -or
     [UInt64]$report.seed -ne $Seed -or
+    [int64]$report.timing.scientific_deadline_epoch_ms -ne $driverScientificDeadlineEpochMilliseconds -or
+    $report.timing.poll_deadlines_clamped_to_family_and_driver -ne $true -or
+    $report.timing.late_exit_rejection_enabled -ne $true -or
+    [int64]$report.timing.completed_epoch_ms -gt $driverScientificDeadlineEpochMilliseconds -or
+    [int64]$nodeJob.ExitEpochMilliseconds -gt $driverScientificDeadlineEpochMilliseconds -or
     $report.candidate.sha256 -cne $candidateSha -or
     [int]$report.candidate.pid -ne $process.Id -or
     $report.offline.passed -ne $true -or
@@ -320,12 +602,42 @@ if (
         @($_.exports | Where-Object { $_.format -in @("csv", "xlsx", "json", "html", "pdf") }).Count -lt 5 -or
         -not $_.raw_sidecar_export.strictReopenValidated
     }).Count -ne 0 -or
+    $cleanup.node_process_tree_supervised -ne $true -or
+    $cleanup.node_process_tree_terminated -ne $true -or
+    $cleanup.candidate_process_tree_termination_requested -ne $true -or
+    $cleanup.active_work_cancelled_via_candidate_termination -ne $true -or
     $cleanup.exact_root_terminated -ne $true -or
     $cleanup.endpoint_closed -ne $true -or
+    $cleanup.candidate_termination_before_uninstall -ne $true -or
     $cleanup.install_root_removed -ne $true -or
     $cleanup.registration_removed -ne $true
 ) { throw "Packaged smoke report, isolated install, or exact-process cleanup is invalid." }
+if ($Kind -eq "installed" -and
+    ($cleanup.exact_nsis_uninstall_attempted -ne $true -or
+     $null -eq $cleanup.nsis_uninstall_exit_code -or
+     [int]$cleanup.nsis_uninstall_exit_code -ne 0)) {
+    throw "Installed packaged smoke lacks a successful exact NSIS uninstall receipt."
+}
+if ($Kind -eq "portable" -and
+    ($cleanup.exact_nsis_uninstall_attempted -ne $false -or $null -ne $cleanup.nsis_uninstall_exit_code)) {
+    throw "Portable packaged smoke must not claim an NSIS uninstall."
+}
+$timingProvenance = [ordered]@{
+    contract_id = "qpls.v256.multimod.packaged-hard-time-budget.v1"
+    wrapper_started_at_utc = $wrapperStartedAtUtc.ToString("o")
+    driver_started_at_utc = $driverStartedAtUtc.ToString("o")
+    driver_exit_epoch_ms = [int64]$nodeJob.ExitEpochMilliseconds
+    scientific_deadline_epoch_ms = [int64]$driverScientificDeadlineEpochMilliseconds
+    wrapper_maximum_seconds = $wrapperMaximumSeconds
+    scientific_maximum_seconds = $scientificMaximumSeconds
+    minimum_cleanup_reserve_seconds = $minimumCleanupReserveSeconds
+    finalization_reserve_seconds = $finalizationReserveSeconds
+    poll_deadlines_clamped_to_family_and_driver = $true
+    late_exit_rejection_enabled = $true
+    wrapper_elapsed_milliseconds = [int64]$wrapperClock.ElapsedMilliseconds
+}
 $report | Add-Member -NotePropertyName process_cleanup -NotePropertyValue $cleanup -Force
+$report | Add-Member -NotePropertyName timing_provenance -NotePropertyValue $timingProvenance -Force
 $report | Add-Member -NotePropertyName package_receipt_sha256 -NotePropertyValue $packageReceiptSha256 -Force
 $report | Add-Member -NotePropertyName isolated_install -NotePropertyValue $installReceipt -Force
 $report | Add-Member -NotePropertyName disk_snapshots -NotePropertyValue @($diskSnapshots) -Force
@@ -333,7 +645,7 @@ $report | Add-Member -NotePropertyName pe_subsystem -NotePropertyValue $peSubsys
 $productionEvidencePath = Join-Path $outputDirectory "packaged-production-workflow-evidence.json"
 if (Test-Path -LiteralPath $productionEvidencePath) { throw "Packaged production evidence already exists: $productionEvidencePath" }
 Write-JsonAtomic $productionEvidencePath $report
-Remove-Item -LiteralPath $outputPath
+Remove-Item -LiteralPath $driverOutputPath
 
 $familyReceipts = @(
     foreach ($family in $report.families) {
@@ -376,6 +688,14 @@ $runtimeReceipt = [ordered]@{
     cancellation_recovery_verified = $true
     isolated_nsis_install_verified = ($Kind -eq "installed" -and $installWasCreated -and $installReceipt.installed_portable_equivalence.passed)
     uninstall_cleanup_verified = ($Kind -eq "installed" -and $cleanup.install_root_removed -and $cleanup.registration_removed)
+    timing_provenance = $timingProvenance
+    cleanup_provenance = $cleanup
 }
-Write-JsonAtomic $outputPath $runtimeReceipt
+Assert-PhaseBudget -Phase "wrapper"
+$runtimeStagingPath = Join-Path $outputDirectory `
+    (".runtime-promotion-{0}.{1}.staged.json" -f $Kind, [Guid]::NewGuid().ToString("N"))
+Write-JsonAtomic $runtimeStagingPath $runtimeReceipt
+Assert-PhaseBudget -Phase "wrapper"
+Move-Item -LiteralPath $runtimeStagingPath -Destination $outputPath
+Assert-PhaseBudget -Phase "wrapper"
 $runtimeReceipt | ConvertTo-Json -Depth 30

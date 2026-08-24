@@ -62,15 +62,32 @@ references to actual QuickPLS raw-data runner commands. A producer is reusable
 by downstream gates only through the campaign's hash-bound dependency verifier.
 No successful qualification is implied until the whole campaign passes.
 
-Conditional-process and interventional-causal coverage now uses one production
-raw-runner campaign per family, with downstream gates consuming its hash-bound
-receipt instead of rerunning the expensive matrix. The exact cases, independent
-all-target point/percentile/BCa/studentized checks, analytic-DGP plus independent
+Conditional-process and interventional-causal coverage now uses one logical
+production raw-runner campaign per family. After one Cargo build, a two-minute
+diagnostic-only production sentinel gates deterministic exact-case shards;
+dedicated sealed evidence shards own all boundary and assumption checks. Atomic
+SHA-256 receipts make completed cases safely resumable, and aggregation in
+frozen plan order precedes an independent verifier that recomputes the plan,
+executable, commit, result, receipt, dependency, and exact case bindings.
+Qualification draw counts and within-case shared-ledger semantics are unchanged. Downstream
+gates consume the hash-bound aggregate receipt instead of rerunning the
+expensive matrix. The exact cases, timeout/concurrency boundaries, narrow
+studentized atomic-case limitation, independent all-target
+point/percentile/BCa/studentized checks, analytic-DGP plus independent
 g-computation recovery checks, retained ledgers, and explicit API boundaries
 are documented in `conditional_causal_raw_qualification_v1.md`.
 
-MGA and heterogeneity coverage likewise uses one production run per heavy
-family. Exact 2/3/5/20-group and non-Cartesian MGA cells, independent raw-null
+MGA remains one logical producer artifact, but after one build its exact 15
+scientific executions and boundary receipt run as at most four independent
+cells. Each scientific cell resumes only at an existing production MGA shard
+boundary from immutable identity-bound cache entries. A two-minute
+diagnostic-only sentinel compiles the exact two-group root authority and
+prepares its production plan before any science starts; it publishes no
+estimate. Thirty-minute cell slices are retried only after verified cache
+progress, and a 110-minute wrapper cap retains cleanup time. Aggregation
+requires the exact plan before the existing comparator can publish
+`mga-production-science.json`. Heterogeneity likewise executes after one build
+as a fail-fast, resumable shard graph. Exact 2/3/5/20-group and non-Cartesian MGA cells, independent raw-null
 probability reconstruction, multi-scenario FIMIX recovery, P0/P2/P23 PLS-POS,
 independent likelihood/posterior/R-squared/objective checks, common-metric
 suppression, exact P0 PLS-POS K=2 through K=5 candidate/bootstrap coverage, and
@@ -97,21 +114,47 @@ equals uninterrupted execution without a publishable partial result. Shard
 topology is additionally receipt-bound to the production full-refit ledger
 tests rather than inferred from a fixture helper.
 
-The maximum-profile performance gate now executes the production 20-group/190-
-pair MGA and locked P23 FIMIX/POS producers plus a dedicated production raw
-conditional 512-cell/1,024-target run. It measures process-tree working set,
-wall time and output size against explicit budgets, exercises exact sidecar
-warning/cap boundaries, proves the ordinal MICOM Arrow stream remains within
-its conservative physical-byte prediction, and proves serialized-cache
-cancellation/resume equals uninterrupted MGA. Missing metrics or exceeded
-budgets fail the gate.
+The gate builds the four producers once, runs the exact 25-cell matrix through
+at most four direct executable processes, and requires all four successful
+family baselines before their dependent axes. Cell, scientific and wrapper
+limits are 1,800, 6,480 and 6,600 seconds respectively; process-tree cleanup,
+atomic SHA-256 receipts and a stable campaign work root make completed cells
+safely resumable without reducing any scientific setting. See
+`metamorphic_qualification_v1.md` for the frozen transport contract.
+
+The V2 maximum-profile performance gate records its single three-example release
+build as a SHA-256-bound resumable topology stage and then invokes the binaries
+directly. A completed build stage is reused without another Cargo invocation;
+an interrupted build attempt fails closed rather than silently becoming a
+second build. The gate runs only the exact 20-group/190-pair MGA cell,
+the heterogeneity sentinel and P23 discovery followed by the parallel fixed-K
+FIMIX/POS P23 bootstrap pair, and the unchanged dedicated conditional
+512-cell/1,024-target producer. MGA retains 5,000 permutations and 5,000
+bootstraps; each heterogeneity branch retains 500 bootstraps. Portable atomic
+receipts bind every result, dependency, executable, plan, log and measurement,
+so a rerun resumes only verified stages. An interrupted heterogeneity
+result/receipt pair is quarantined before its shard reruns. The wrapper reports
+the conservative maximum of sampled concurrent working set and the sum of every
+root process's `PeakWorkingSet64`, limits every atomic producer to 1,800 seconds,
+reserves the final 120 seconds of its 6,480-second internal cap for verified V2
+report publication, and remains beneath the gate's 6,600-second cap. The public
+evidence identities are `qpls.v256.multimod.maximum-profile-performance.v2` and
+`qpls.v256.multimod.performance-output-verification.v2`. It also exercises exact
+sidecar warning/cap boundaries, proves the ordinal MICOM Arrow stream remains
+within its conservative physical-byte prediction, and proves serialized-cache
+cancellation/resume equals uninterrupted MGA. Missing metrics, stale receipts,
+or exceeded budgets fail the gate.
 
 The installed and portable gates now drive all four typed result families in
 the exact package through ordinary production preflight, runner, archive,
 canonical export and raw-sidecar commands. They require strict save/reopen,
 missing/tampered-sidecar rejection, MGA cancellation/resume, semantic readback,
 offline/error-free execution and accessibility; the installed lane additionally
-requires a fresh isolated NSIS install and complete uninstall cleanup.
+requires a fresh isolated NSIS install and complete uninstall cleanup. Each
+packaged wrapper is internally capped at 6,480 seconds beneath its 6,600-second
+gate cap. Its driver receives one shared scientific deadline, while at least
+1,020 seconds remain reserved for supervised Node/candidate process-tree
+termination and, for the installed lane, exact NSIS uninstall and cleanup.
 
 ## Required non-circular promotion cycle
 

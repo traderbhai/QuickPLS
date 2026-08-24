@@ -32,7 +32,9 @@
     "families",
     "cancellation_recovery_verified",
     "isolated_nsis_install_verified",
-    "uninstall_cleanup_verified"
+    "uninstall_cleanup_verified",
+    "timing_provenance",
+    "cleanup_provenance"
   ],
   "properties": {
     "schema_version": { "const": 1 },
@@ -93,9 +95,96 @@
     },
     "cancellation_recovery_verified": { "const": true },
     "isolated_nsis_install_verified": { "type": "boolean" },
-    "uninstall_cleanup_verified": { "type": "boolean" }
+    "uninstall_cleanup_verified": { "type": "boolean" },
+    "timing_provenance": { "$ref": "#/$defs/timingProvenance" },
+    "cleanup_provenance": { "$ref": "#/$defs/cleanupProvenance" }
   },
   "$defs": {
-    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "timingProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_id",
+        "wrapper_started_at_utc",
+        "driver_started_at_utc",
+        "driver_exit_epoch_ms",
+        "scientific_deadline_epoch_ms",
+        "wrapper_maximum_seconds",
+        "scientific_maximum_seconds",
+        "minimum_cleanup_reserve_seconds",
+        "finalization_reserve_seconds",
+        "poll_deadlines_clamped_to_family_and_driver",
+        "late_exit_rejection_enabled",
+        "wrapper_elapsed_milliseconds"
+      ],
+      "properties": {
+        "contract_id": { "const": "qpls.v256.multimod.packaged-hard-time-budget.v1" },
+        "wrapper_started_at_utc": { "type": "string", "minLength": 1 },
+        "driver_started_at_utc": { "type": "string", "minLength": 1 },
+        "driver_exit_epoch_ms": { "type": "integer", "minimum": 1 },
+        "scientific_deadline_epoch_ms": { "type": "integer", "minimum": 1 },
+        "wrapper_maximum_seconds": { "const": 6480 },
+        "scientific_maximum_seconds": { "const": 5340 },
+        "minimum_cleanup_reserve_seconds": { "const": 1020 },
+        "finalization_reserve_seconds": { "const": 120 },
+        "poll_deadlines_clamped_to_family_and_driver": { "const": true },
+        "late_exit_rejection_enabled": { "const": true },
+        "wrapper_elapsed_milliseconds": { "type": "integer", "minimum": 0, "maximum": 6480000 }
+      }
+    },
+    "cleanupProvenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract_id",
+        "cleanup_started_at_utc",
+        "cleanup_completed_at_utc",
+        "cleanup_elapsed_milliseconds",
+        "node_root_started",
+        "node_pid",
+        "node_process_tree_supervised",
+        "node_forced_termination",
+        "node_process_tree_terminated",
+        "exact_root_started",
+        "exact_root_terminated",
+        "candidate_process_tree_termination_requested",
+        "active_work_cancelled_via_candidate_termination",
+        "endpoint_closed",
+        "candidate_termination_before_uninstall",
+        "exact_nsis_uninstall_attempted",
+        "nsis_uninstall_exit_code",
+        "install_root_removed",
+        "registration_removed",
+        "cleanup_sequence"
+      ],
+      "properties": {
+        "contract_id": { "const": "qpls.v256.multimod.packaged-process-cleanup.v1" },
+        "cleanup_started_at_utc": { "type": "string", "minLength": 1 },
+        "cleanup_completed_at_utc": { "type": "string", "minLength": 1 },
+        "cleanup_elapsed_milliseconds": { "type": "integer", "minimum": 0, "maximum": 6480000 },
+        "node_root_started": { "const": true },
+        "node_pid": { "type": "integer", "minimum": 1 },
+        "node_process_tree_supervised": { "const": true },
+        "node_forced_termination": { "type": "boolean" },
+        "node_process_tree_terminated": { "const": true },
+        "exact_root_started": { "const": true },
+        "exact_root_terminated": { "const": true },
+        "candidate_process_tree_termination_requested": { "const": true },
+        "active_work_cancelled_via_candidate_termination": { "const": true },
+        "endpoint_closed": { "const": true },
+        "candidate_termination_before_uninstall": { "const": true },
+        "exact_nsis_uninstall_attempted": { "type": "boolean" },
+        "nsis_uninstall_exit_code": { "type": ["integer", "null"] },
+        "install_root_removed": { "const": true },
+        "registration_removed": { "const": true },
+        "cleanup_sequence": {
+          "type": "array",
+          "minItems": 3,
+          "uniqueItems": true,
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    }
   }
 }

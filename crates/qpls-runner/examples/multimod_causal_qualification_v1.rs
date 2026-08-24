@@ -61,11 +61,22 @@ impl Scale {
 struct Arguments {
     scale: Scale,
     output: PathBuf,
+    mode: ExecutionMode,
+    dependencies: Vec<PathBuf>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+enum ExecutionMode {
+    Monolithic,
+    Plan,
+    Shard(String),
 }
 
 fn arguments() -> Result<Arguments, DynError> {
     let mut scale = Scale::Qualification;
     let mut output = None;
+    let mut mode = ExecutionMode::Monolithic;
+    let mut dependencies = Vec::new();
     let mut values = env::args().skip(1);
     while let Some(argument) = values.next() {
         match argument.as_str() {
@@ -83,12 +94,38 @@ fn arguments() -> Result<Arguments, DynError> {
                         .ok_or_else(|| invalid("--output requires a path"))?,
                 ));
             }
+            "--plan" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("--plan and --shard are mutually exclusive"));
+                }
+                mode = ExecutionMode::Plan;
+            }
+            "--shard" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("--plan and --shard are mutually exclusive"));
+                }
+                mode = ExecutionMode::Shard(
+                    values
+                        .next()
+                        .ok_or_else(|| invalid("--shard requires an exact shard id"))?,
+                );
+            }
+            "--dependency" => dependencies.push(PathBuf::from(
+                values
+                    .next()
+                    .ok_or_else(|| invalid("--dependency requires a shard result path"))?,
+            )),
             _ => return Err(invalid(format!("unknown argument {argument}"))),
         }
+    }
+    if !dependencies.is_empty() && !matches!(&mode, ExecutionMode::Shard(_)) {
+        return Err(invalid("--dependency is valid only with --shard"));
     }
     Ok(Arguments {
         scale,
         output: output.ok_or_else(|| invalid("--output is required"))?,
+        mode,
+        dependencies,
     })
 }
 
@@ -101,6 +138,14 @@ fn main() {
 
 fn execute() -> Result<(), DynError> {
     let arguments = arguments()?;
+    match &arguments.mode {
+        ExecutionMode::Monolithic => execute_monolithic(&arguments),
+        ExecutionMode::Plan => write_causal_shard_plan(&arguments),
+        ExecutionMode::Shard(shard_id) => run_causal_shard(&arguments, shard_id),
+    }
+}
+
+fn execute_monolithic(arguments: &Arguments) -> Result<(), DynError> {
     let binary_two = binary_two_fixture(arguments.scale, false)?;
     let binary_four = binary_four_fixture(arguments.scale)?;
     let continuous = continuous_fixture(arguments.scale)?;
@@ -157,7 +202,266 @@ fn execute() -> Result<(), DynError> {
     if let Some(parent) = arguments.output.parent() {
         fs::create_dir_all(parent)?;
     }
-    fs::write(arguments.output, serde_json::to_vec_pretty(&report)?)?;
+    fs::write(&arguments.output, serde_json::to_vec_pretty(&report)?)?;
+    Ok(())
+}
+
+const SHARD_SCHEMA_VERSION: u32 = 1;
+const SHARD_SUITE_ID: &str = "qpls.multimod.raw-qualification.shard.v1";
+const SHARD_PLAN_SUITE_ID: &str = "qpls.multimod.raw-qualification.shard-plan.v1";
+
+fn sign_columns_identity() -> Result<Option<String>, DynError> {
+    if metamorphic::metamorphism_v1() != "sign_reverse" {
+        return Ok(None);
+    }
+    let value = env::var(metamorphic::SIGN_COLUMNS_ENV_V1)
+        .map_err(|_| invalid("sign_reverse requires QPLS_MULTIMOD_SIGN_COLUMNS_V1"))?;
+    if value.trim().is_empty() {
+        return Err(invalid(
+            "sign_reverse requires at least one exact sign-column identity",
+        ));
+    }
+    Ok(Some(value))
+}
+
+fn causal_shard_specs() -> Vec<Value> {
+    let mut rows = vec![
+        json!({
+            "shard_id": "sentinel",
+            "payload_kind": "sentinel",
+            "dependencies": [],
+            "resource_class": "sentinel",
+            "parallel_safe_after_build": true,
+            "scientific_identity": {
+                "identity_kind": "sentinel",
+                "identity_id": "fast-root-development",
+            },
+        }),
+        json!({
+            "shard_id": "assumption-scope-guards",
+            "payload_kind": "evidence",
+            "dependencies": ["sentinel"],
+            "resource_class": "light",
+            "parallel_safe_after_build": true,
+            "scientific_identity": {
+                "identity_kind": "evidence",
+                "identity_id": "causal-assumption-scope-guards-v1",
+            },
+        }),
+    ];
+    for (shard_id, case_id) in [
+        ("binary-two-edge", "binary_two_edge_path"),
+        ("binary-four-edge", "binary_four_edge_path"),
+        ("continuous-three-edge", "continuous_three_edge_path"),
+    ] {
+        rows.push(json!({
+            "shard_id": shard_id,
+            "payload_kind": "case",
+            "dependencies": ["sentinel"],
+            "resource_class": "heavy",
+            "parallel_safe_after_build": true,
+            "scientific_identity": {
+                "identity_kind": "case",
+                "case_id": case_id,
+            },
+        }));
+    }
+    rows
+}
+
+fn causal_shard_plan(arguments: &Arguments) -> Result<Value, DynError> {
+    if metamorphic::compact_matrix_v1() {
+        return Err(invalid(
+            "the resumable qualification plan is unavailable for compact metamorphic fixtures; use monolithic metamorphic execution",
+        ));
+    }
+    Ok(json!({
+        "schema_version": SHARD_SCHEMA_VERSION,
+        "suite_id": SHARD_PLAN_SUITE_ID,
+        "family": "causal",
+        "producer_id": PRODUCER_ID,
+        "scale": arguments.scale.as_str(),
+        "seed": FIXTURE_SEED,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "execution_contract": "one_cargo_build_then_exact_resumable_case_shards",
+        "sentinel_shard_id": "sentinel",
+        "aggregation_order": "plan_order",
+        "shards": causal_shard_specs(),
+    }))
+}
+
+fn causal_header(arguments: &Arguments) -> Result<Value, DynError> {
+    Ok(json!({
+        "schema_version": 1,
+        "producer_id": PRODUCER_ID,
+        "family": "interventional_causal_mediation_v1",
+        "scale": arguments.scale.as_str(),
+        "seed": FIXTURE_SEED,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "qualification_claim": "none",
+        "execution_contract": "public_recipe_v4_compiler_plus_raw_observed_g_computation_runner",
+        "required_cell_ids": required_cells(),
+        "api_boundaries": {
+            "recipe_v4_natural_or_cross_world_request": "not_representable_by_design; estimator guard exercised explicitly",
+            "recipe_v4_recanting_witness_request": "represented only by required negative identification declaration; estimator guard also exercised explicitly",
+            "recipe_v4_exposure_induced_confounding_request": "represented only by required negative identification declaration; estimator guard also exercised explicitly"
+        },
+    }))
+}
+
+fn write_causal_shard_plan(arguments: &Arguments) -> Result<(), DynError> {
+    if let Some(parent) = arguments.output.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(
+        &arguments.output,
+        serde_json::to_vec_pretty(&causal_shard_plan(arguments)?)?,
+    )?;
+    Ok(())
+}
+
+fn validate_causal_dependencies(
+    arguments: &Arguments,
+    shard_id: &str,
+) -> Result<Vec<String>, DynError> {
+    let expected = if shard_id == "sentinel" {
+        Vec::new()
+    } else if causal_shard_specs()
+        .iter()
+        .any(|row| row["shard_id"] == shard_id)
+    {
+        vec!["sentinel".to_owned()]
+    } else {
+        return Err(invalid(format!("unknown causal shard {shard_id}")));
+    };
+    let mut actual = Vec::new();
+    let expected_sign_columns = serde_json::to_value(sign_columns_identity()?)?;
+    let expected_workers = metamorphic::configured_workers_v1(1).map_err(invalid)? as u64;
+    for path in &arguments.dependencies {
+        let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+        if value["schema_version"].as_u64() != Some(u64::from(SHARD_SCHEMA_VERSION))
+            || value["suite_id"] != SHARD_SUITE_ID
+            || value["family"] != "causal"
+            || value["producer_id"] != PRODUCER_ID
+            || value["scale"] != arguments.scale.as_str()
+            || value["seed"].as_u64() != Some(FIXTURE_SEED)
+            || value["metamorphism"] != metamorphic::metamorphism_v1()
+            || value.get("sign_columns") != Some(&expected_sign_columns)
+            || value["workers"].as_u64() != Some(expected_workers)
+        {
+            return Err(invalid(format!(
+                "causal dependency {} has the wrong identity",
+                path.display()
+            )));
+        }
+        actual.push(
+            value["shard_id"]
+                .as_str()
+                .ok_or_else(|| invalid("causal dependency shard id is absent"))?
+                .to_owned(),
+        );
+    }
+    actual.sort();
+    if actual != expected {
+        return Err(invalid(format!(
+            "causal shard {shard_id} requires dependencies {expected:?}, received {actual:?}"
+        )));
+    }
+    Ok(actual)
+}
+
+fn causal_case_cell_ids() -> [&'static str; 4] {
+    [
+        "interventional.observed_gcomp.v1::observed_equation_point_fit",
+        "interventional.observed_gcomp.v1::parametric_g_computation",
+        "interventional.observed_gcomp.v1::known_target_simulation",
+        "interventional.observed_gcomp.v1::causal_wording_guard",
+    ]
+}
+
+fn causal_sentinel(arguments: &Arguments) -> Result<Value, DynError> {
+    let diagnostic = run_case(
+        &[],
+        "causal_fast_root_sentinel",
+        binary_two_fixture(Scale::Development, false)?,
+    )?;
+    Ok(json!({
+        "sentinel_id": "fast-root-development",
+        "header": causal_header(arguments)?,
+        "diagnostic_production_case": diagnostic,
+        "claim": "development-sized fail-fast production sentinel; excluded from qualification cases",
+    }))
+}
+
+fn causal_evidence_shard(arguments: &Arguments, shard_id: &str) -> Result<Value, DynError> {
+    match shard_id {
+        "assumption-scope-guards" => Ok(json!({
+            "evidence_id": "causal-assumption-scope-guards-v1",
+            "assumption_and_scope_blockers": assumption_and_scope_blockers(arguments.scale)?,
+        })),
+        _ => Err(invalid(format!("unknown causal evidence shard {shard_id}"))),
+    }
+}
+
+fn causal_case_shard(arguments: &Arguments, shard_id: &str) -> Result<Value, DynError> {
+    let cell_ids = causal_case_cell_ids();
+    match shard_id {
+        "binary-two-edge" => run_case(
+            &cell_ids,
+            "binary_two_edge_path",
+            binary_two_fixture(arguments.scale, false)?,
+        ),
+        "binary-four-edge" => run_case(
+            &cell_ids,
+            "binary_four_edge_path",
+            binary_four_fixture(arguments.scale)?,
+        ),
+        "continuous-three-edge" => run_case(
+            &cell_ids,
+            "continuous_three_edge_path",
+            continuous_fixture(arguments.scale)?,
+        ),
+        _ => Err(invalid(format!("unknown causal case shard {shard_id}"))),
+    }
+}
+
+fn run_causal_shard(arguments: &Arguments, shard_id: &str) -> Result<(), DynError> {
+    let dependency_shard_ids = validate_causal_dependencies(arguments, shard_id)?;
+    let scientific_identity = causal_shard_specs()
+        .into_iter()
+        .find(|row| row["shard_id"] == shard_id)
+        .ok_or_else(|| invalid(format!("unknown causal shard {shard_id}")))?["scientific_identity"]
+        .clone();
+    let payload = if shard_id == "sentinel" {
+        json!({"kind": "sentinel", "value": causal_sentinel(arguments)?})
+    } else if shard_id == "assumption-scope-guards" {
+        json!({"kind": "evidence", "value": causal_evidence_shard(arguments, shard_id)?})
+    } else {
+        json!({"kind": "case", "value": causal_case_shard(arguments, shard_id)?})
+    };
+    let report = json!({
+        "schema_version": SHARD_SCHEMA_VERSION,
+        "suite_id": SHARD_SUITE_ID,
+        "family": "causal",
+        "producer_id": PRODUCER_ID,
+        "shard_id": shard_id,
+        "scale": arguments.scale.as_str(),
+        "seed": FIXTURE_SEED,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "dependency_shard_ids": dependency_shard_ids,
+        "scientific_identity": scientific_identity,
+        "payload": payload,
+    });
+    if let Some(parent) = arguments.output.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(&arguments.output, serde_json::to_vec_pretty(&report)?)?;
     Ok(())
 }
 

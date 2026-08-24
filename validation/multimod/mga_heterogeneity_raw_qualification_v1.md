@@ -12,8 +12,21 @@ candidate commit.
 
 ## MGA producer
 
-`run_multimod_mga_qualification_v1.ps1` runs the Rust producer once and then
-the independent Python comparator. The qualification-scale receipt contains:
+`run_multimod_mga_qualification_v1.ps1` performs one Cargo build and then runs
+the frozen MGA matrix as 15 independent production cells plus one boundary
+cell. Before any scientific cell starts, a diagnostic-only two-minute sentinel
+must compile the exact two-group General SEM authority and prepare its full
+production execution plan. It publishes no estimate and does not run or reduce
+a scientific ledger. The normal pool then runs at most four cells concurrently.
+Every scientific cell calls the production resumable MGA runner and atomically
+retains one immutable, SHA-bound cache entry after each completed production MGA
+shard. An interrupted 30-minute cell slice is retried only after QuickPLS
+reopens and validates an increased cache against the exact compiled production
+plan. Completed ledgers are reused unchanged; any uncommitted current shard is
+restarted deterministically as one full 5,000-draw ledger, never shortened or
+split. Only the complete exact inventory is aggregated and passed to the
+unchanged independent Python comparator. The qualification-scale receipt
+contains:
 
 - ordinary recursive General SEM PLS at exactly 2, 3, 5, and 20 groups, with
   all 190 comparisons explicitly confirmed in the 20-group cell;
@@ -37,6 +50,24 @@ representative Henseler probability from the shared group-bootstrap bank. All
 other targets retain stable identities and summaries without duplicating large
 raw vectors.
 
+The wrapper rejects a dirty tracked or untracked tree, non-baseline metamorphic
+environment, non-seed-42 qualification, stale cell identity, or altered cache
+checkpoint. Plan, commit, executable, seed, scale, environment, production
+cache, and completed result SHA identities travel together. Build, sentinel,
+cell slices, aggregation, and comparison are bounded child processes whose
+Windows process trees are terminated on timeout. The family cap is 6,600
+seconds; completed cells and production-shard caches remain external and can be
+resumed by the same exact candidate. A partial scientific result is never
+published. The final gate artifact remains `mga-production-science.json`.
+
+The built producer also exposes the same resumable authority directly through
+`--cell mga-general-20-groups` for the maximum-profile performance gate. This
+mode requires the exact plan, commit, executable, environment, seed, scale, and
+cache identities and emits one
+`qpls.multimod.mga.qualification-cell-result.v1` envelope whose `payload` is
+the ordinary 20-group matrix entry; it does not execute the other 14 scientific
+cells or the boundary cell.
+
 The Arrow cost preflight charges these audit distributions using their trusted
 physical representation. Repeated target IDs are dictionary encoded, while
 MICOM uses construct ordinals plus a statistic-kind code tied to its construct
@@ -53,9 +84,32 @@ pwsh -NoProfile -File validation/multimod/run_multimod_mga_qualification_v1.ps1 
 
 ## FIMIX-PLS and PLS-POS producer
 
-`run_multimod_heterogeneity_qualification_v2.ps1` performs one shared heavy
-production run. Downstream POS, common-metric, and bootstrap gates verify this
-producer's immutable artifact rather than rerunning segmentation.
+`run_multimod_heterogeneity_qualification_v2.ps1` performs one Cargo build,
+runs a small raw-runner sentinel, and then executes the production matrix as a
+dependency-aware set of deterministic executable shards. Recovery seeds,
+simulation scenarios, candidate-K cells, POS discoveries, failure boundaries,
+and fixed-K bootstrap cells each publish an atomic SHA-256 receipt. A bootstrap
+shard consumes the exact retained discovery identity instead of rerunning its
+discovery. Independent point shards may run concurrently; bootstrap concurrency
+is bounded separately. No Cargo build or test process runs concurrently.
+
+The wrapper refuses a dirty tracked or untracked source tree and any inherited
+non-baseline metamorphism, compact fixture, sign transform, or worker count
+other than one. The comparator independently requires the baseline 400-row,
+seed-42 qualification identity. The default wall-clock budget is 110 minutes,
+no scientific shard may run for more than 30 minutes, and the sentinel is
+capped at two minutes. Cargo build, plan generation, every shard, aggregation,
+and comparison all run as supervised child processes bounded by the remaining
+family budget; termination kills the process tree and waits for it before the
+wrapper exits. A failed sentinel stops before expensive work. Any later failure or
+timeout stops the active batch immediately while preserving verified shard
+receipts; rerunning the same exact commit, seed, scale, plan, and executable
+resumes only missing or invalid shards. Missing, altered, stale, substituted,
+or dependency-mismatched receipts are rotated into `_attempt_history` and
+recomputed. Only a complete, deterministically aggregated matrix is passed to
+the independent comparator and published as the gate artifact. Downstream POS,
+common-metric, and bootstrap gates continue to verify that single immutable
+artifact rather than rerunning segmentation.
 
 FIMIX coverage includes five distinct strong-separation data seeds, ten
 moderate-power runs, five overlap runs, five 75/25 imbalance runs, five
@@ -91,6 +145,12 @@ Standalone command, intentionally not executed during implementation:
 pwsh -NoProfile -File validation/multimod/run_multimod_heterogeneity_qualification_v2.ps1 `
   -Scale qualification -Seed 42 -Output <external-evidence>\heterogeneity-production-science.json
 ```
+
+The resumable checkpoint directory defaults to
+`<Output>.heterogeneity-shards`. `-WorkRoot` may place it on a larger evidence
+volume. `-MaxParallelShards` and `-MaxParallelBootstrapShards` tune only
+independent post-build executable work; they do not broaden the scientific
+contract or alter seeds, ledgers, estimator settings, or aggregation order.
 
 ## FIMIX failure-boundary binding
 

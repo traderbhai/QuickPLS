@@ -58,12 +58,23 @@ struct Arguments {
     output: PathBuf,
     seed: u64,
     scale: Scale,
+    mode: ExecutionMode,
+    dependencies: Vec<PathBuf>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ExecutionMode {
+    Monolithic,
+    Plan,
+    Shard(String),
 }
 
 fn arguments() -> Result<Arguments, DynError> {
     let mut output = None;
     let mut seed = 42_u64;
     let mut scale = Scale::Qualification;
+    let mut mode = ExecutionMode::Monolithic;
+    let mut dependencies = Vec::new();
     let mut values = env::args().skip(1);
     while let Some(argument) = values.next() {
         match argument.as_str() {
@@ -81,14 +92,61 @@ fn arguments() -> Result<Arguments, DynError> {
                         .ok_or_else(|| invalid("--scale requires a value"))?,
                 )?
             }
+            "--plan" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("--plan and --shard are mutually exclusive"));
+                }
+                mode = ExecutionMode::Plan;
+            }
+            "--shard" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("--plan and --shard are mutually exclusive"));
+                }
+                mode = ExecutionMode::Shard(
+                    values
+                        .next()
+                        .ok_or_else(|| invalid("--shard requires an exact shard id"))?,
+                );
+            }
+            "--dependency" => dependencies.push(PathBuf::from(
+                values
+                    .next()
+                    .ok_or_else(|| invalid("--dependency requires a shard result path"))?,
+            )),
             _ => return Err(invalid(format!("unknown argument {argument}"))),
         }
+    }
+    if !dependencies.is_empty() && !matches!(&mode, ExecutionMode::Shard(_)) {
+        return Err(invalid("--dependency is valid only with --shard"));
     }
     Ok(Arguments {
         output: output.ok_or_else(|| invalid("--output is required"))?,
         seed,
         scale,
+        mode,
+        dependencies,
     })
+}
+
+fn scale_id(scale: Scale) -> &'static str {
+    match scale {
+        Scale::Development => "development",
+        Scale::Qualification => "qualification",
+    }
+}
+
+fn sign_columns_identity() -> Result<Option<String>, DynError> {
+    if metamorphic::metamorphism_v1() != "sign_reverse" {
+        return Ok(None);
+    }
+    let value = env::var(metamorphic::SIGN_COLUMNS_ENV_V1)
+        .map_err(|_| invalid("sign_reverse requires QPLS_MULTIMOD_SIGN_COLUMNS_V1"))?;
+    if value.trim().is_empty() {
+        return Err(invalid(
+            "sign_reverse requires at least one exact sign-column identity",
+        ));
+    }
+    Ok(Some(value))
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -186,6 +244,24 @@ fn make_fixture_with_classes(
     data_seed: u64,
     classes: usize,
 ) -> Result<HeterogeneityFixture, DynError> {
+    make_fixture_with_classes_and_observations(
+        fixture_id,
+        profile,
+        scenario,
+        data_seed,
+        classes,
+        fixture_observations(),
+    )
+}
+
+fn make_fixture_with_classes_and_observations(
+    fixture_id: &str,
+    profile: HeterogeneityInteractionProfileV2,
+    scenario: Scenario,
+    data_seed: u64,
+    classes: usize,
+    observations: usize,
+) -> Result<HeterogeneityFixture, DynError> {
     if !(2..=5).contains(&classes)
         || (classes != 2
             && !matches!(
@@ -198,7 +274,6 @@ fn make_fixture_with_classes(
         ));
     }
     let mut random = SplitMixNormal::new(data_seed);
-    let observations = fixture_observations();
     let mut truth = Vec::with_capacity(observations);
     let mut latent_x = Vec::with_capacity(observations);
     let mut latent_z = Vec::with_capacity(observations);
@@ -809,8 +884,796 @@ fn fimix_p0_simulation_series(
         .collect()
 }
 
-fn main() -> Result<(), DynError> {
-    let args = arguments()?;
+const SHARD_SCHEMA_VERSION: u32 = 1;
+const SHARD_SUITE_ID: &str = "qpls.multimod.heterogeneity.qualification-shard.v1";
+const SHARD_PLAN_SUITE_ID: &str = "qpls.multimod.heterogeneity.qualification-shard-plan.v1";
+
+fn shard_spec(
+    shard_id: &str,
+    payload_kind: &str,
+    index: Option<usize>,
+    dependencies: &[&str],
+    resource_class: &str,
+) -> Value {
+    json!({
+        "shard_id": shard_id,
+        "payload_kind": payload_kind,
+        "index": index,
+        "dependencies": dependencies,
+        "resource_class": resource_class,
+        "parallel_safe_after_build": true,
+    })
+}
+
+fn qualification_shard_specs(scale: Scale) -> Vec<Value> {
+    let mut shards = vec![shard_spec("sentinel", "sentinel", None, &[], "sentinel")];
+    let recovery_count = match scale {
+        Scale::Development => 2,
+        Scale::Qualification => 5,
+    };
+    let scenario_count = match scale {
+        Scale::Development => 2,
+        Scale::Qualification => 5,
+    };
+    let power_count = match scale {
+        Scale::Development => 2,
+        Scale::Qualification => 10,
+    };
+    for (prefix, payload_kind, count) in [
+        ("fimix-recovery", "fimix_recovery", recovery_count),
+        ("fimix-power", "fimix_power", power_count),
+        ("fimix-overlap", "fimix_overlap", scenario_count),
+        ("fimix-imbalance", "fimix_imbalance", scenario_count),
+        ("fimix-nonnormal", "fimix_nonnormal", scenario_count),
+    ] {
+        for index in 0..count {
+            shards.push(shard_spec(
+                &format!("{prefix}-{index:02}"),
+                payload_kind,
+                Some(index),
+                &["sentinel"],
+                "point",
+            ));
+        }
+    }
+    for (shard_id, payload_kind) in [
+        ("fimix-candidate-k", "fimix_candidate_k"),
+        ("fimix-homogeneous-null", "fimix_homogeneous_null"),
+        ("pos-published-p0-discovery", "pos_published_p0_discovery"),
+        (
+            "pos-destination-p2-discovery",
+            "pos_destination_p2_discovery",
+        ),
+        (
+            "pos-destination-p23-discovery",
+            "pos_destination_p23_discovery",
+        ),
+        (
+            "pos-common-metric-failure-discovery",
+            "pos_common_metric_failure_discovery",
+        ),
+        (
+            "pos-homogeneous-null-discovery",
+            "pos_homogeneous_null_discovery",
+        ),
+        ("pos-overlap-discovery", "pos_overlap_discovery"),
+        ("boundary-rank", "boundary_rank"),
+        ("boundary-variance", "boundary_variance"),
+        ("boundary-rare", "boundary_rare"),
+    ] {
+        shards.push(shard_spec(
+            shard_id,
+            payload_kind,
+            None,
+            &["sentinel"],
+            "point",
+        ));
+    }
+    if scale == Scale::Qualification {
+        for selected_k in 3..=5 {
+            let discovery_id = format!("pos-published-k{selected_k}-discovery");
+            shards.push(shard_spec(
+                &discovery_id,
+                "pos_published_k_discovery",
+                Some(selected_k),
+                &["sentinel"],
+                "point",
+            ));
+            shards.push(shard_spec(
+                &format!("pos-published-k{selected_k}-bootstrap"),
+                "bootstrap",
+                Some(selected_k),
+                &["sentinel", discovery_id.as_str()],
+                "bootstrap",
+            ));
+        }
+        for (shard_id, dependency) in [
+            ("bootstrap-fimix-p0", "fimix-recovery-00"),
+            ("bootstrap-pos-published-p0", "pos-published-p0-discovery"),
+            ("bootstrap-fimix-p2", "pos-destination-p2-discovery"),
+            (
+                "bootstrap-pos-destination-p2",
+                "pos-destination-p2-discovery",
+            ),
+            ("bootstrap-fimix-p23", "pos-destination-p23-discovery"),
+            (
+                "bootstrap-pos-destination-p23",
+                "pos-destination-p23-discovery",
+            ),
+            (
+                "bootstrap-pos-common-metric-failure",
+                "pos-common-metric-failure-discovery",
+            ),
+        ] {
+            shards.push(shard_spec(
+                shard_id,
+                "bootstrap",
+                None,
+                &["sentinel", dependency],
+                "bootstrap",
+            ));
+        }
+    }
+    shards
+}
+
+fn shard_plan(args: &Arguments) -> Result<Value, DynError> {
+    Ok(json!({
+        "schema_version": SHARD_SCHEMA_VERSION,
+        "suite_id": SHARD_PLAN_SUITE_ID,
+        "producer_suite_id": SUITE_ID,
+        "scale": scale_id(args.scale),
+        "campaign_seed": args.seed,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "fixture_observations": fixture_observations(),
+        "execution_contract": "one_cargo_build_then_dependency_aware_non_cargo_shards",
+        "sentinel_shard_id": "sentinel",
+        "aggregation_order": "plan_order",
+        "shards": qualification_shard_specs(args.scale),
+    }))
+}
+
+fn multistart_reproducibility_contract() -> Value {
+    json!({
+        "schema_version": HETEROGENEITY_MULTISTART_EVIDENCE_SCHEMA_VERSION_V2,
+        "partition_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_PARTITION_DIGEST_DOMAIN_V2),
+        "coefficient_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_COEFFICIENT_DIGEST_DOMAIN_V2),
+        "posterior_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_POSTERIOR_DIGEST_DOMAIN_V2),
+        "parameter_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_PARAMETER_DIGEST_DOMAIN_V2),
+        "fit_statistic_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_FIT_STATISTIC_DIGEST_DOMAIN_V2),
+        "partition_encoding": "u64_length_then_u64_labels_little_endian",
+        "matrix_encoding": "u64_row_count_then_per_row_u64_length_and_f64_bits_little_endian",
+        "completed_start_cardinality": "exactly_one_receipt_per_completed_start",
+        "verification": "independent_exhaustive_alignment_and_tolerance_replay"
+    })
+}
+
+fn shard_report_header(args: &Arguments) -> Result<Value, DynError> {
+    Ok(json!({
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": SUITE_ID,
+        "scale": scale_id(args.scale),
+        "campaign_seed": args.seed,
+        "seed": args.seed,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "fixture_observations": fixture_observations(),
+        "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
+        "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
+        "multistart_reproducibility_contract": multistart_reproducibility_contract(),
+        "label_alignment_decision_contract": "qpls_estimation::align_labels_exhaustive_v2",
+        "required_profile_ids": [
+            "fimix.p0_structural.v2",
+            "fimix.p2_multi_two_way.v2",
+            "fimix.p23_all_current.v2",
+            "pos.published.p0_structural.v2",
+            "pos.destination_scored.p2_multi_two_way.v2",
+            "pos.destination_scored.p23_all_current.v2",
+            "pos.common_metric.p2_multi_two_way.v1",
+            "pos.common_metric.p23_all_current.v1"
+        ],
+    }))
+}
+
+fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, DynError> {
+    let plan = shard_plan(args)?;
+    let spec = plan["shards"]
+        .as_array()
+        .and_then(|rows| rows.iter().find(|row| row["shard_id"] == shard_id))
+        .ok_or_else(|| {
+            invalid(format!(
+                "unknown heterogeneity qualification shard {shard_id}"
+            ))
+        })?;
+    let mut expected = spec["dependencies"]
+        .as_array()
+        .ok_or_else(|| invalid("shard plan dependencies are malformed"))?
+        .iter()
+        .map(|value| {
+            value
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("shard dependency id is not a string"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    expected.sort();
+    let mut envelopes = Vec::new();
+    let expected_metamorphism = metamorphic::metamorphism_v1();
+    let expected_sign_columns = serde_json::to_value(sign_columns_identity()?)?;
+    let expected_workers = metamorphic::configured_workers_v1(1).map_err(invalid)? as u64;
+    for path in &args.dependencies {
+        let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+        if value["schema_version"].as_u64() != Some(u64::from(SHARD_SCHEMA_VERSION))
+            || value["suite_id"] != SHARD_SUITE_ID
+            || value["scale"] != scale_id(args.scale)
+            || value["campaign_seed"].as_u64() != Some(args.seed)
+            || value["metamorphism"] != expected_metamorphism
+            || value.get("sign_columns") != Some(&expected_sign_columns)
+            || value["workers"].as_u64() != Some(expected_workers)
+            || value["fixture_observations"].as_u64() != Some(fixture_observations() as u64)
+        {
+            return Err(invalid(format!(
+                "dependency {} has the wrong shard identity",
+                path.display()
+            )));
+        }
+        envelopes.push(value);
+    }
+    envelopes.sort_by(|left, right| left["shard_id"].as_str().cmp(&right["shard_id"].as_str()));
+    let actual = envelopes
+        .iter()
+        .map(|value| {
+            value["shard_id"]
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("dependency shard id is absent"))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    if actual != expected {
+        return Err(invalid(format!(
+            "shard {shard_id} requires exact dependencies {expected:?}, received {actual:?}"
+        )));
+    }
+    Ok(envelopes)
+}
+
+fn dependency_value<'a>(dependencies: &'a [Value], shard_id: &str) -> Result<&'a Value, DynError> {
+    dependencies
+        .iter()
+        .find(|value| value["shard_id"] == shard_id)
+        .and_then(|value| {
+            value["payload"]["value"]
+                .as_object()
+                .map(|_| &value["payload"]["value"])
+        })
+        .ok_or_else(|| invalid(format!("dependency {shard_id} has no cell value")))
+}
+
+fn dependency_discovery_identity(
+    dependencies: &[Value],
+    shard_id: &str,
+) -> Result<String, DynError> {
+    dependency_value(dependencies, shard_id)?["analysis"]["discovery_result_identity_sha256"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| invalid(format!("dependency {shard_id} has no discovery identity")))
+}
+
+fn indexed_shard(shard_id: &str, prefix: &str, count: usize) -> Option<usize> {
+    shard_id
+        .strip_prefix(prefix)
+        .and_then(|value| value.parse::<usize>().ok())
+        .filter(|index| *index < count)
+}
+
+fn run_sentinel(args: &Arguments) -> Result<Value, DynError> {
+    let fixture = make_fixture_with_classes_and_observations(
+        "heterogeneity-fast-root-sentinel",
+        HeterogeneityInteractionProfileV2::P0Structural,
+        Scenario::StrongSeparation,
+        0x5345_4e54_494e_454c_u64.wrapping_add(args.seed),
+        2,
+        80,
+    )?;
+    let mut config = discovery_config(
+        &fixture,
+        args.seed,
+        vec![2],
+        vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+    );
+    config.fimix.max_iterations = 500;
+    let (_, engine_probe) = run_config("heterogeneity-fast-root-sentinel", &fixture, config)?;
+    Ok(json!({
+        "header": shard_report_header(args)?,
+        "label_alignment_decision_matrix": label_alignment_decision_matrix()?,
+        "engine_probe": engine_probe,
+        "claim": "fail_fast_pipeline_sentinel_not_scientific_acceptance_evidence",
+    }))
+}
+
+fn shard_payload(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+) -> Result<Value, DynError> {
+    let recovery_count = match args.scale {
+        Scale::Development => 2,
+        Scale::Qualification => 5,
+    };
+    let scenario_count = match args.scale {
+        Scale::Development => 2,
+        Scale::Qualification => 5,
+    };
+    let power_count = match args.scale {
+        Scale::Development => 2,
+        Scale::Qualification => 10,
+    };
+    if shard_id == "sentinel" {
+        return Ok(json!({ "kind": "sentinel", "value": run_sentinel(args)? }));
+    }
+    if let Some(index) = indexed_shard(shard_id, "fimix-recovery-", recovery_count) {
+        let seed = args.seed.wrapping_add(index as u64);
+        let fixture = make_fixture(
+            &if index == 0 {
+                "heterogeneity-p0-strong".to_owned()
+            } else {
+                format!("heterogeneity-p0-strong-data-seed-{seed}")
+            },
+            HeterogeneityInteractionProfileV2::P0Structural,
+            Scenario::StrongSeparation,
+            0x5000_u64.wrapping_add(seed),
+        )?;
+        let (_, value) = run_discovery(
+            &format!("fimix-p0-strong-seed-{seed}"),
+            &fixture,
+            seed,
+            vec![2],
+            vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+        )?;
+        return Ok(json!({ "kind": "fimix_recovery", "index": index, "value": value }));
+    }
+    for (prefix, cell_prefix, kind, scenario, count, data_seed_domain) in [
+        (
+            "fimix-power-",
+            "fimix-p0-power-moderate",
+            "fimix_power",
+            Scenario::PowerModerate,
+            power_count,
+            0x504f_5745_5200_u64,
+        ),
+        (
+            "fimix-overlap-",
+            "fimix-p0-overlap",
+            "fimix_overlap",
+            Scenario::Overlap,
+            scenario_count,
+            0x4f56_4552_0000_u64,
+        ),
+        (
+            "fimix-imbalance-",
+            "fimix-p0-imbalanced",
+            "fimix_imbalance",
+            Scenario::Imbalanced,
+            scenario_count,
+            0x494d_4241_0000_u64,
+        ),
+        (
+            "fimix-nonnormal-",
+            "fimix-p0-nonnormal",
+            "fimix_nonnormal",
+            Scenario::NonNormal,
+            scenario_count,
+            0x4e4f_4e4e_0000_u64,
+        ),
+    ] {
+        if let Some(index) = indexed_shard(shard_id, prefix, count) {
+            let seed = args.seed.wrapping_add(index as u64);
+            let fixture = make_fixture(
+                &format!("{cell_prefix}-data-seed-{seed}"),
+                HeterogeneityInteractionProfileV2::P0Structural,
+                scenario,
+                data_seed_domain.wrapping_add(seed),
+            )?;
+            let (_, value) = run_discovery(
+                &format!("{cell_prefix}-seed-{seed}"),
+                &fixture,
+                seed,
+                vec![2],
+                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+            )?;
+            return Ok(json!({ "kind": kind, "index": index, "value": value }));
+        }
+    }
+    let tandem_p0 = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+    ];
+    let tandem_interactions = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+    ];
+    match shard_id {
+        "fimix-candidate-k" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "fimix-p0-candidate-k-2-through-5",
+                &fixture,
+                args.seed,
+                vec![2, 3, 4, 5],
+                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+            )?;
+            Ok(json!({ "kind": "fimix_candidate_k", "value": value }))
+        }
+        "fimix-homogeneous-null" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-homogeneous-null",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::HomogeneousNull,
+                0x4e55_4c4c_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "fimix-p0-homogeneous-null",
+                &fixture,
+                args.seed,
+                vec![2, 3],
+                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+            )?;
+            Ok(json!({ "kind": "fimix_homogeneous_null", "value": value }))
+        }
+        "pos-published-p0-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "pos-published-p0-discovery",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_p0,
+            )?;
+            Ok(json!({ "kind": "pos_published_p0_discovery", "value": value }))
+        }
+        "pos-destination-p2-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p2-strong",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::StrongSeparation,
+                0x5200_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "heterogeneity-p2-tandem-discovery",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+            )?;
+            Ok(json!({ "kind": "pos_destination_p2_discovery", "value": value }))
+        }
+        "pos-destination-p23-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p23-strong",
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+                Scenario::StrongSeparation,
+                0x5230_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "heterogeneity-p23-tandem-discovery",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+            )?;
+            Ok(json!({ "kind": "pos_destination_p23_discovery", "value": value }))
+        }
+        "pos-common-metric-failure-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p2-common-metric-failure",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::CommonMetricFailure,
+                0x4641_494c_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "pos-p2-common-metric-failure-discovery",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+            )?;
+            Ok(json!({ "kind": "pos_common_metric_failure_discovery", "value": value }))
+        }
+        "pos-homogeneous-null-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-homogeneous-null",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::HomogeneousNull,
+                0x4e55_4c4c_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "pos-published-p0-homogeneous-null",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_p0,
+            )?;
+            Ok(json!({ "kind": "pos_homogeneous_null_discovery", "value": value }))
+        }
+        "pos-overlap-discovery" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-overlap-pos",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::Overlap,
+                0x4f56_4552_u64.wrapping_add(args.seed),
+            )?;
+            let (_, value) = run_discovery(
+                "pos-published-p0-overlap",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_p0,
+            )?;
+            Ok(json!({ "kind": "pos_overlap_discovery", "value": value }))
+        }
+        "boundary-rank" | "boundary-variance" | "boundary-rare" => {
+            let (kind, fixture_id, profile, scenario, data_seed, cell_id) = match shard_id {
+                "boundary-rank" => (
+                    "boundary_rank",
+                    "heterogeneity-rank-deficient",
+                    HeterogeneityInteractionProfileV2::P0Structural,
+                    Scenario::RankDeficient,
+                    0x5241_4e4b_u64,
+                    "fimix-rank-deficient",
+                ),
+                "boundary-variance" => (
+                    "boundary_variance",
+                    "heterogeneity-variance-collapse",
+                    HeterogeneityInteractionProfileV2::P0Structural,
+                    Scenario::VarianceCollapse,
+                    0x5641_5249_u64,
+                    "fimix-variance-collapse",
+                ),
+                _ => (
+                    "boundary_rare",
+                    "heterogeneity-rare-class",
+                    HeterogeneityInteractionProfileV2::P0Structural,
+                    Scenario::RareClass,
+                    0x5241_5245_u64,
+                    "fimix-rare-class",
+                ),
+            };
+            let fixture = make_fixture(
+                fixture_id,
+                profile,
+                scenario,
+                data_seed.wrapping_add(args.seed),
+            )?;
+            Ok(json!({
+                "kind": kind,
+                "value": attempted_boundary(cell_id, &fixture, args.seed),
+            }))
+        }
+        _ if shard_id.starts_with("pos-published-k") && shard_id.ends_with("-discovery") => {
+            let selected_k = shard_id
+                .strip_prefix("pos-published-k")
+                .and_then(|value| value.strip_suffix("-discovery"))
+                .and_then(|value| value.parse::<u8>().ok())
+                .filter(|value| (3..=5).contains(value))
+                .ok_or_else(|| invalid(format!("invalid POS K discovery shard {shard_id}")))?;
+            let fixture = make_fixture_with_classes(
+                &format!("heterogeneity-p0-strong-k{selected_k}"),
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x4b00_0000_u64
+                    .wrapping_add(u64::from(selected_k) << 16)
+                    .wrapping_add(args.seed),
+                usize::from(selected_k),
+            )?;
+            let (_, value) = run_discovery(
+                &format!("pos-published-p0-k{selected_k}-discovery"),
+                &fixture,
+                args.seed,
+                vec![selected_k],
+                vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
+            )?;
+            Ok(json!({
+                "kind": "pos_published_k_discovery",
+                "index": selected_k,
+                "value": value,
+            }))
+        }
+        _ if shard_id.starts_with("pos-published-k") && shard_id.ends_with("-bootstrap") => {
+            let selected_k = shard_id
+                .strip_prefix("pos-published-k")
+                .and_then(|value| value.strip_suffix("-bootstrap"))
+                .and_then(|value| value.parse::<u8>().ok())
+                .filter(|value| (3..=5).contains(value))
+                .ok_or_else(|| invalid(format!("invalid POS K bootstrap shard {shard_id}")))?;
+            let dependency_id = format!("pos-published-k{selected_k}-discovery");
+            let fixture = make_fixture_with_classes(
+                &format!("heterogeneity-p0-strong-k{selected_k}"),
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x4b00_0000_u64
+                    .wrapping_add(u64::from(selected_k) << 16)
+                    .wrapping_add(args.seed),
+                usize::from(selected_k),
+            )?;
+            let value = run_inference_at_k(
+                &format!("pos-published-p0-k{selected_k}-fixed-k-bootstrap"),
+                &fixture,
+                args.seed,
+                vec![selected_k],
+                vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
+                dependency_discovery_identity(dependencies, &dependency_id)?,
+                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+                selected_k,
+                false,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "index": selected_k, "value": value }))
+        }
+        "bootstrap-fimix-p0" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?;
+            let value = run_inference(
+                "fimix-p0-fixed-k-bootstrap",
+                &fixture,
+                args.seed,
+                vec![2],
+                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+                dependency_discovery_identity(dependencies, "fimix-recovery-00")?,
+                HeterogeneityAlgorithmV2::FimixPlsV2,
+                false,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "value": value }))
+        }
+        "bootstrap-pos-published-p0" => {
+            let fixture = make_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?;
+            let value = run_inference(
+                "pos-published-p0-fixed-k-bootstrap",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_p0,
+                dependency_discovery_identity(dependencies, "pos-published-p0-discovery")?,
+                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+                true,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "value": value }))
+        }
+        "bootstrap-fimix-p2" | "bootstrap-pos-destination-p2" => {
+            let fixture = make_fixture(
+                "heterogeneity-p2-strong",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::StrongSeparation,
+                0x5200_u64.wrapping_add(args.seed),
+            )?;
+            let (cell_id, algorithm, common_metric) = if shard_id == "bootstrap-fimix-p2" {
+                (
+                    "fimix-p2-fixed-k-bootstrap",
+                    HeterogeneityAlgorithmV2::FimixPlsV2,
+                    false,
+                )
+            } else {
+                (
+                    "pos-destination-p2-fixed-k-bootstrap",
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    true,
+                )
+            };
+            let value = run_inference(
+                cell_id,
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+                dependency_discovery_identity(dependencies, "pos-destination-p2-discovery")?,
+                algorithm,
+                common_metric,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "value": value }))
+        }
+        "bootstrap-fimix-p23" | "bootstrap-pos-destination-p23" => {
+            let fixture = make_fixture(
+                "heterogeneity-p23-strong",
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+                Scenario::StrongSeparation,
+                0x5230_u64.wrapping_add(args.seed),
+            )?;
+            let (cell_id, algorithm, common_metric) = if shard_id == "bootstrap-fimix-p23" {
+                (
+                    "fimix-p23-fixed-k-bootstrap",
+                    HeterogeneityAlgorithmV2::FimixPlsV2,
+                    false,
+                )
+            } else {
+                (
+                    "pos-destination-p23-fixed-k-bootstrap",
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    true,
+                )
+            };
+            let value = run_inference(
+                cell_id,
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+                dependency_discovery_identity(dependencies, "pos-destination-p23-discovery")?,
+                algorithm,
+                common_metric,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "value": value }))
+        }
+        "bootstrap-pos-common-metric-failure" => {
+            let fixture = make_fixture(
+                "heterogeneity-p2-common-metric-failure",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::CommonMetricFailure,
+                0x4641_494c_u64.wrapping_add(args.seed),
+            )?;
+            let value = run_inference(
+                "pos-p2-common-metric-failure-fixed-k-bootstrap",
+                &fixture,
+                args.seed,
+                vec![2],
+                tandem_interactions,
+                dependency_discovery_identity(dependencies, "pos-common-metric-failure-discovery")?,
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                true,
+            )?;
+            Ok(json!({ "kind": "bootstrap", "value": value }))
+        }
+        _ => Err(invalid(format!(
+            "unknown heterogeneity qualification shard {shard_id}"
+        ))),
+    }
+}
+
+fn run_shard(args: &Arguments, shard_id: &str) -> Result<(), DynError> {
+    let dependencies = dependency_envelopes(args, shard_id)?;
+    let payload = shard_payload(args, shard_id, &dependencies)?;
+    let dependency_ids = dependencies
+        .iter()
+        .filter_map(|value| value["shard_id"].as_str())
+        .collect::<Vec<_>>();
+    let report = json!({
+        "schema_version": SHARD_SCHEMA_VERSION,
+        "suite_id": SHARD_SUITE_ID,
+        "producer_suite_id": SUITE_ID,
+        "shard_id": shard_id,
+        "scale": scale_id(args.scale),
+        "campaign_seed": args.seed,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "fixture_observations": fixture_observations(),
+        "dependency_shard_ids": dependency_ids,
+        "payload": payload,
+    });
+    fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
+    Ok(())
+}
+
+fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     let p0 = make_fixture(
         "heterogeneity-p0-strong",
         HeterogeneityInteractionProfileV2::P0Structural,
@@ -1241,6 +2104,21 @@ fn main() -> Result<(), DynError> {
         },
         "fixed_k_bootstrap": bootstrap_cells,
     });
-    fs::write(args.output, serde_json::to_vec_pretty(&report)?)?;
+    fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
     Ok(())
+}
+
+fn main() -> Result<(), DynError> {
+    let args = arguments()?;
+    match &args.mode {
+        ExecutionMode::Monolithic => run_monolithic(&args),
+        ExecutionMode::Plan => {
+            fs::write(
+                &args.output,
+                serde_json::to_vec_pretty(&shard_plan(&args)?)?,
+            )?;
+            Ok(())
+        }
+        ExecutionMode::Shard(shard_id) => run_shard(&args, shard_id),
+    }
 }

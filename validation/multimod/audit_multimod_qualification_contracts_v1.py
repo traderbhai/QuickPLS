@@ -867,7 +867,7 @@ def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:
         HERE / "package_multimod_candidate_v1.ps1",
         HERE / "run_multimod_packaged_offline_smoke_v1.ps1",
         HERE / "multimod_packaged_smoke_driver_v1.mjs",
-        HERE / "run_multimod_performance_profiles_v1.ps1",
+        HERE / "run_multimod_performance_profiles_v2.ps1",
         HERE / "verify_multimod_gate_dependency_v1.py",
         HERE / "scientific_slice_command_bindings_v1.json",
         HERE / "multimod_runtime_promotion_smoke_v1.schema.json",

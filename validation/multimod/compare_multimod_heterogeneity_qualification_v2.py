@@ -89,6 +89,66 @@ def is_sha256(value: Any) -> bool:
     )
 
 
+def is_git_commit(value: Any) -> bool:
+    return isinstance(value, str) and len(value) == 40 and all(
+        character in "0123456789abcdef" for character in value
+    )
+
+
+def is_baseline_qualification_matrix(report: dict[str, Any]) -> bool:
+    return (
+        report.get("scale") == "qualification"
+        and report.get("metamorphism") == "baseline"
+        and report.get("sign_columns") is None
+        and report.get("workers") == 1
+        and report.get("fixture_observations") == 400
+        and report.get("campaign_seed") == 42
+        and report.get("seed") == 42
+    )
+
+
+def expected_qualification_shard_ids() -> list[str]:
+    values = ["sentinel"]
+    values.extend(f"fimix-recovery-{index:02}" for index in range(5))
+    values.extend(f"fimix-power-{index:02}" for index in range(10))
+    for prefix in ("fimix-overlap", "fimix-imbalance", "fimix-nonnormal"):
+        values.extend(f"{prefix}-{index:02}" for index in range(5))
+    values.extend(
+        [
+            "fimix-candidate-k",
+            "fimix-homogeneous-null",
+            "pos-published-p0-discovery",
+            "pos-destination-p2-discovery",
+            "pos-destination-p23-discovery",
+            "pos-common-metric-failure-discovery",
+            "pos-homogeneous-null-discovery",
+            "pos-overlap-discovery",
+            "boundary-rank",
+            "boundary-variance",
+            "boundary-rare",
+        ]
+    )
+    for selected_k in range(3, 6):
+        values.extend(
+            [
+                f"pos-published-k{selected_k}-discovery",
+                f"pos-published-k{selected_k}-bootstrap",
+            ]
+        )
+    values.extend(
+        [
+            "bootstrap-fimix-p0",
+            "bootstrap-pos-published-p0",
+            "bootstrap-fimix-p2",
+            "bootstrap-pos-destination-p2",
+            "bootstrap-fimix-p23",
+            "bootstrap-pos-destination-p23",
+            "bootstrap-pos-common-metric-failure",
+        ]
+    )
+    return values
+
+
 def is_dataset_fingerprint(value: Any) -> bool:
     return is_sha256(value[3:]) if isinstance(value, str) and value.startswith("v2:") else is_sha256(value)
 
@@ -1988,7 +2048,9 @@ def validate_boundaries(report: dict[str, Any], checks: Checks) -> None:
     )
 
 
-def validate_report(report: dict[str, Any], checks: Checks) -> None:
+def validate_report(
+    report: dict[str, Any], checks: Checks, require_shard_receipts: bool = False
+) -> None:
     checks.require(
         "heterogeneity.receipt.identity",
         report.get("schema_version") == 1
@@ -1998,6 +2060,46 @@ def validate_report(report: dict[str, Any], checks: Checks) -> None:
         observed={key: report.get(key) for key in ("schema_version", "suite_id", "scale", "qualification_claim")},
         expected="qualification-scale raw-SUT receipt",
     )
+    checks.require(
+        "heterogeneity.receipt.baseline_400_row_matrix",
+        is_baseline_qualification_matrix(report),
+        observed={
+            key: report.get(key)
+            for key in (
+                "metamorphism",
+                "sign_columns",
+                "workers",
+                "fixture_observations",
+                "campaign_seed",
+                "seed",
+            )
+        },
+        expected="baseline metamorphism, no sign transform, one worker, 400 rows, seed 42",
+    )
+    shard_receipt = report.get("shard_execution_receipt")
+    if require_shard_receipts or shard_receipt is not None:
+        shard_receipt = shard_receipt if isinstance(shard_receipt, dict) else {}
+        shard_rows = shard_receipt.get("shards", [])
+        expected_shards = expected_qualification_shard_ids()
+        checks.require(
+            "heterogeneity.shards.complete_atomic_inventory",
+            shard_receipt.get("schema_version") == 1
+            and is_sha256(shard_receipt.get("plan_sha256"))
+            and is_sha256(shard_receipt.get("producer_executable_sha256"))
+            and is_git_commit(shard_receipt.get("source_commit"))
+            and isinstance(shard_rows, list)
+            and [row.get("shard_id") for row in shard_rows] == expected_shards
+            and all(is_sha256(row.get("receipt_sha256")) for row in shard_rows),
+            observed={
+                "shard_count": len(shard_rows) if isinstance(shard_rows, list) else None,
+                "shard_ids": (
+                    [row.get("shard_id") for row in shard_rows]
+                    if isinstance(shard_rows, list)
+                    else None
+                ),
+            },
+            expected="all 55 exact commit/executable/plan-bound atomic shard receipts in deterministic plan order",
+        )
     contract = report.get("multistart_reproducibility_contract", {})
     checks.require(
         "heterogeneity.multistart.digest_contract_identity",
@@ -2054,6 +2156,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
+    parser.add_argument("--require-shard-receipts", action="store_true")
     return parser.parse_args()
 
 
@@ -2062,7 +2165,7 @@ def main() -> int:
     report = json.loads(arguments.input.read_text(encoding="utf-8"))
     checks = Checks()
     try:
-        validate_report(report, checks)
+        validate_report(report, checks, arguments.require_shard_receipts)
     except Exception as error:
         checks.require(
             "heterogeneity.comparator.unhandled_exception",
@@ -2075,6 +2178,10 @@ def main() -> int:
         "suite_id": "qpls.multimod.heterogeneity.independent-comparison.v2",
         "status": "passed" if checks.passed else "failed",
         "input_sha256": file_sha256(arguments.input),
+        # Retain the exact execution identity in the promoted artifact. The
+        # input digest binds this summary to the independently checked raw
+        # aggregate; the receipt hashes bind every atomic shard.
+        "producer_execution_receipt": report.get("shard_execution_receipt"),
         "scope_status": {
             "covered_checks": "passed" if checks.passed else "failed",
             "full_heterogeneity_qualification": (

@@ -12,19 +12,55 @@ mod support;
 use qpls_core::*;
 use qpls_estimation::*;
 use qpls_runner::*;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 use std::env;
-use std::fs;
-use std::path::PathBuf;
+use std::fs::{self, OpenOptions};
+use std::io::Write;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use support::*;
 
 const SCHEMA_VERSION: u32 = 1;
 const SUITE_ID: &str = "qpls.multimod.mga.production-qualification.v1";
+const SHARD_PLAN_SUITE_ID: &str = "qpls.multimod.mga.qualification-cell-plan.v1";
+const CELL_RESULT_SUITE_ID: &str = "qpls.multimod.mga.qualification-cell-result.v1";
+const CACHE_CHECKPOINT_SUITE_ID: &str = "qpls.multimod.mga.production-shard-cache-checkpoint.v1";
+const BASELINE_ENVIRONMENT_CONTRACT: &str = concat!(
+    "qpls.multimod.mga.baseline-environment.v1\n",
+    "QPLS_MULTIMOD_METAMORPHISM_V1=baseline\n",
+    "QPLS_MULTIMOD_WORKERS_V1=1\n",
+    "QPLS_MULTIMOD_METAMORPHIC_COMPACT_V1=unset\n",
+    "QPLS_MULTIMOD_SIGN_COLUMNS_V1=unset\n",
+);
 const PERMUTATIONS: u32 = 5_000;
 const BOOTSTRAPS: u32 = 5_000;
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    let mut digest = Sha256::new();
+    digest.update(bytes);
+    format!("{:x}", digest.finalize())
+}
+
+fn sha256_file(path: &Path) -> Result<String, DynError> {
+    Ok(sha256_bytes(&fs::read(path)?))
+}
+
+fn is_sha256(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+fn is_git_commit(value: &str) -> bool {
+    value.len() == 40
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
 
 fn sha256_f64_series(values: &[f64]) -> String {
     let mut digest = Sha256::new();
@@ -48,6 +84,13 @@ impl Scale {
             "development" => Ok(Self::Development),
             "qualification" => Ok(Self::Qualification),
             _ => Err(invalid(format!("unknown scale {value}"))),
+        }
+    }
+
+    fn id(self) -> &'static str {
+        match self {
+            Self::Development => "development",
+            Self::Qualification => "qualification",
         }
     }
 }
@@ -110,12 +153,32 @@ struct Arguments {
     output: PathBuf,
     seed: u64,
     scale: Scale,
+    plan: bool,
+    sentinel: bool,
+    cache_status: bool,
+    cell_id: Option<String>,
+    cache_root: Option<PathBuf>,
+    plan_path: Option<PathBuf>,
+    plan_sha256: Option<String>,
+    source_commit: Option<String>,
+    executable_sha256: Option<String>,
+    environment_sha256: Option<String>,
 }
 
 fn arguments() -> Result<Arguments, DynError> {
     let mut output = None;
     let mut seed = 42_u64;
     let mut scale = Scale::Qualification;
+    let mut plan = false;
+    let mut sentinel = false;
+    let mut cache_status = false;
+    let mut cell_id = None;
+    let mut cache_root = None;
+    let mut plan_path = None;
+    let mut plan_sha256 = None;
+    let mut source_commit = None;
+    let mut executable_sha256 = None;
+    let mut environment_sha256 = None;
     let mut values = env::args().skip(1);
     while let Some(argument) = values.next() {
         match argument.as_str() {
@@ -133,14 +196,491 @@ fn arguments() -> Result<Arguments, DynError> {
                         .ok_or_else(|| invalid("--scale requires a value"))?,
                 )?
             }
+            "--plan" => plan = true,
+            "--sentinel" => sentinel = true,
+            "--cache-status" => cache_status = true,
+            "--cell" => {
+                cell_id = Some(
+                    values
+                        .next()
+                        .ok_or_else(|| invalid("--cell requires a value"))?,
+                )
+            }
+            "--cache-root" => cache_root = values.next().map(PathBuf::from),
+            "--plan-path" => plan_path = values.next().map(PathBuf::from),
+            "--plan-sha256" => plan_sha256 = values.next(),
+            "--source-commit" => source_commit = values.next(),
+            "--executable-sha256" => executable_sha256 = values.next(),
+            "--environment-sha256" => environment_sha256 = values.next(),
             _ => return Err(invalid(format!("unknown argument {argument}"))),
         }
+    }
+    if (plan as u8) + (sentinel as u8) + (cell_id.is_some() as u8) > 1 {
+        return Err(invalid(
+            "--plan, --sentinel, and --cell are mutually exclusive",
+        ));
+    }
+    if cache_status && cell_id.is_none() {
+        return Err(invalid("--cache-status requires --cell"));
     }
     Ok(Arguments {
         output: output.ok_or_else(|| invalid("--output is required"))?,
         seed,
         scale,
+        plan,
+        sentinel,
+        cache_status,
+        cell_id,
+        cache_root,
+        plan_path,
+        plan_sha256,
+        source_commit,
+        executable_sha256,
+        environment_sha256,
     })
+}
+
+#[derive(Clone, Copy, Debug, Serialize, PartialEq, Eq)]
+struct QualificationCellSpecV1 {
+    cell_id: &'static str,
+    payload_kind: &'static str,
+    production_cache_required: bool,
+}
+
+fn qualification_cell_specs(scale: Scale) -> Vec<QualificationCellSpecV1> {
+    let mut cells = vec![
+        QualificationCellSpecV1 {
+            cell_id: "mga-general-2-groups",
+            payload_kind: "group_matrix_cell",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-general-3-groups",
+            payload_kind: "group_matrix_cell",
+            production_cache_required: true,
+        },
+    ];
+    if scale == Scale::Qualification {
+        cells.extend([
+            QualificationCellSpecV1 {
+                cell_id: "mga-general-5-groups",
+                payload_kind: "group_matrix_cell",
+                production_cache_required: true,
+            },
+            QualificationCellSpecV1 {
+                cell_id: "mga-general-20-groups",
+                payload_kind: "group_matrix_cell",
+                production_cache_required: true,
+            },
+        ]);
+    }
+    cells.push(QualificationCellSpecV1 {
+        cell_id: "mga-profile-multiple_two_way",
+        payload_kind: "profile_matrix_cell",
+        production_cache_required: true,
+    });
+    if scale == Scale::Qualification {
+        cells.extend([
+            QualificationCellSpecV1 {
+                cell_id: "mga-profile-bounded_three_way",
+                payload_kind: "profile_matrix_cell",
+                production_cache_required: true,
+            },
+            QualificationCellSpecV1 {
+                cell_id: "mga-profile-bounded_two_way_moderated_mediation",
+                payload_kind: "profile_matrix_cell",
+                production_cache_required: true,
+            },
+            QualificationCellSpecV1 {
+                cell_id: "mga-profile-multiple_nonnested_hoc",
+                payload_kind: "profile_matrix_cell",
+                production_cache_required: true,
+            },
+            QualificationCellSpecV1 {
+                cell_id: "mga-profile-case_weighted_pls",
+                payload_kind: "profile_matrix_cell",
+                production_cache_required: true,
+            },
+        ]);
+    }
+    cells.extend([
+        QualificationCellSpecV1 {
+            cell_id: "mga-profile-reflective_plsc",
+            payload_kind: "profile_matrix_cell",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-general-parametric-3-groups",
+            payload_kind: "parametric_sensitivity",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-frequency-compact",
+            payload_kind: "frequency_compact",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-frequency-physically-expanded",
+            payload_kind: "frequency_expanded",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-label-forward",
+            payload_kind: "label_forward",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-label-reverse",
+            payload_kind: "label_reverse",
+            production_cache_required: true,
+        },
+        QualificationCellSpecV1 {
+            cell_id: "mga-boundaries",
+            payload_kind: "boundaries",
+            production_cache_required: false,
+        },
+    ]);
+    cells
+}
+
+fn qualification_shard_plan(scale: Scale, seed: u64) -> Value {
+    json!({
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": SHARD_PLAN_SUITE_ID,
+        "producer_suite_id": SUITE_ID,
+        "scale": scale.id(),
+        "seed": seed,
+        "metamorphism": "baseline",
+        "workers": 1,
+        "permutation_samples": PERMUTATIONS,
+        "bootstrap_samples": BOOTSTRAPS,
+        "baseline_environment_sha256": sha256_bytes(BASELINE_ENVIRONMENT_CONTRACT.as_bytes()),
+        "execution_contract": "one_build_then_parallel_resumable_cells_over_production_mga_shards",
+        "root_sentinel_cell_id": "mga-general-2-groups",
+        "aggregation_order": "exact_plan_order",
+        "cells": qualification_cell_specs(scale),
+    })
+}
+
+#[derive(Clone, Debug)]
+struct CellExecutionContext {
+    orchestration_cell_id: String,
+    cache_root: PathBuf,
+    source_commit: String,
+    executable_sha256: String,
+    qualification_plan_sha256: String,
+    environment_sha256: String,
+    scale: Scale,
+    seed: u64,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ExternalMgaCacheCheckpointV1 {
+    schema_version: u32,
+    suite_id: String,
+    orchestration_cell_id: String,
+    subfit_id: String,
+    source_commit: String,
+    executable_sha256: String,
+    qualification_plan_sha256: String,
+    environment_sha256: String,
+    scale: String,
+    seed: u64,
+    production_plan_sha256: String,
+    cache_prefix_sha256: String,
+    completed_shards: usize,
+    shard_ordinal: u32,
+    entry: MgaExecutionCacheEntryV1,
+}
+
+fn cache_index_sha256(cache: &MgaExecutionCacheV1) -> String {
+    sha256_serialized(&(
+        cache.contract.as_str(),
+        cache.plan_sha256.as_str(),
+        cache
+            .entries
+            .iter()
+            .map(|entry| {
+                (
+                    entry.shard_identity_sha256.as_str(),
+                    entry.payload_sha256.as_str(),
+                )
+            })
+            .collect::<Vec<_>>(),
+    ))
+}
+
+impl CellExecutionContext {
+    fn checkpoint_directory(&self, subfit_id: &str) -> PathBuf {
+        self.cache_root
+            .join(&self.orchestration_cell_id)
+            .join(subfit_id)
+    }
+
+    fn ensure_identity(&self) -> Result<(), DynError> {
+        if self.orchestration_cell_id.trim().is_empty()
+            || !is_git_commit(&self.source_commit)
+            || !is_sha256(&self.executable_sha256)
+            || !is_sha256(&self.qualification_plan_sha256)
+            || !is_sha256(&self.environment_sha256)
+            || self.environment_sha256 != sha256_bytes(BASELINE_ENVIRONMENT_CONTRACT.as_bytes())
+        {
+            return Err(invalid(
+                "qualification cell commit, executable, plan, and baseline-environment identities are required",
+            ));
+        }
+        Ok(())
+    }
+
+    fn checkpoint_envelope(
+        &self,
+        subfit_id: &str,
+        plan: &MgaExecutionPlanV1,
+        cache: &MgaExecutionCacheV1,
+        persisted_shards: &std::collections::BTreeSet<String>,
+    ) -> Result<ExternalMgaCacheCheckpointV1, DynError> {
+        self.ensure_identity()?;
+        cache.ensure_valid(plan)?;
+        let new_entries = cache
+            .entries
+            .iter()
+            .filter(|entry| !persisted_shards.contains(&entry.shard_identity_sha256))
+            .cloned()
+            .collect::<Vec<_>>();
+        let [entry] = new_entries.as_slice() else {
+            return Err(invalid(
+                "each MGA production callback must add exactly one immutable shard",
+            ));
+        };
+        let entry = entry.clone();
+        let shard_ordinal = plan
+            .shards
+            .iter()
+            .find(|shard| shard.shard_identity_sha256 == entry.shard_identity_sha256)
+            .map(|shard| shard.ordinal)
+            .ok_or_else(|| invalid("new MGA cache entry is outside the production plan"))?;
+        Ok(ExternalMgaCacheCheckpointV1 {
+            schema_version: SCHEMA_VERSION,
+            suite_id: CACHE_CHECKPOINT_SUITE_ID.into(),
+            orchestration_cell_id: self.orchestration_cell_id.clone(),
+            subfit_id: subfit_id.into(),
+            source_commit: self.source_commit.clone(),
+            executable_sha256: self.executable_sha256.clone(),
+            qualification_plan_sha256: self.qualification_plan_sha256.clone(),
+            environment_sha256: self.environment_sha256.clone(),
+            scale: self.scale.id().into(),
+            seed: self.seed,
+            production_plan_sha256: plan.plan_sha256.clone(),
+            cache_prefix_sha256: cache_index_sha256(cache),
+            completed_shards: cache.entries.len(),
+            shard_ordinal,
+            entry,
+        })
+    }
+
+    fn validate_checkpoint(
+        &self,
+        subfit_id: &str,
+        plan: &MgaExecutionPlanV1,
+        checkpoint: &ExternalMgaCacheCheckpointV1,
+        expected_completed_shards: usize,
+    ) -> Result<(), DynError> {
+        self.ensure_identity()?;
+        if checkpoint.schema_version != SCHEMA_VERSION
+            || checkpoint.suite_id != CACHE_CHECKPOINT_SUITE_ID
+            || checkpoint.orchestration_cell_id != self.orchestration_cell_id
+            || checkpoint.subfit_id != subfit_id
+            || checkpoint.source_commit != self.source_commit
+            || checkpoint.executable_sha256 != self.executable_sha256
+            || checkpoint.qualification_plan_sha256 != self.qualification_plan_sha256
+            || checkpoint.environment_sha256 != self.environment_sha256
+            || checkpoint.scale != self.scale.id()
+            || checkpoint.seed != self.seed
+            || checkpoint.production_plan_sha256 != plan.plan_sha256
+            || checkpoint.completed_shards != expected_completed_shards
+            || !is_sha256(&checkpoint.cache_prefix_sha256)
+        {
+            return Err(invalid(format!(
+                "MGA cache checkpoint identity mismatch for {subfit_id} shard {expected_completed_shards}"
+            )));
+        }
+        let expected_shard = plan
+            .shards
+            .get(checkpoint.shard_ordinal as usize)
+            .ok_or_else(|| {
+                invalid("MGA cache checkpoint ordinal is outside the production plan")
+            })?;
+        if checkpoint.entry.shard_identity_sha256 != expected_shard.shard_identity_sha256 {
+            return Err(invalid(format!(
+                "MGA cache checkpoint entry does not match production shard {expected_completed_shards}"
+            )));
+        }
+        Ok(())
+    }
+
+    fn load_cache(
+        &self,
+        subfit_id: &str,
+        plan: &MgaExecutionPlanV1,
+    ) -> Result<(MgaExecutionCacheV1, usize), DynError> {
+        self.ensure_identity()?;
+        let directory = self.checkpoint_directory(subfit_id);
+        if !directory.exists() {
+            return Ok((MgaExecutionCacheV1::empty(plan)?, 0));
+        }
+        if !directory.is_dir() {
+            return Err(invalid(format!(
+                "MGA cache checkpoint path is not a directory: {}",
+                directory.display()
+            )));
+        }
+        let mut checkpoints = BTreeMap::<usize, ExternalMgaCacheCheckpointV1>::new();
+        for item in fs::read_dir(&directory)? {
+            let item = item?;
+            let path = item.path();
+            if !item.file_type()?.is_file() {
+                return Err(invalid(format!(
+                    "unexpected non-file in MGA cache directory: {}",
+                    path.display()
+                )));
+            }
+            let file_name = item.file_name().to_string_lossy().into_owned();
+            if file_name.starts_with('.') && file_name.ends_with(".tmp") {
+                continue;
+            }
+            if !file_name.starts_with("checkpoint-") || !file_name.ends_with(".json") {
+                return Err(invalid(format!(
+                    "unexpected file in MGA cache directory: {file_name}"
+                )));
+            }
+            let checkpoint: ExternalMgaCacheCheckpointV1 =
+                serde_json::from_slice(&fs::read(&path)?)?;
+            let expected_name = format!(
+                "checkpoint-{:06}-{:06}-{}.json",
+                checkpoint.completed_shards,
+                checkpoint.shard_ordinal,
+                checkpoint.cache_prefix_sha256
+            );
+            if file_name != expected_name
+                || checkpoint.completed_shards == 0
+                || checkpoint.completed_shards > plan.shards.len()
+            {
+                return Err(invalid(format!(
+                    "MGA cache checkpoint filename or ordinal is invalid: {file_name}"
+                )));
+            }
+            self.validate_checkpoint(subfit_id, plan, &checkpoint, checkpoint.completed_shards)?;
+            if checkpoints
+                .insert(checkpoint.completed_shards, checkpoint)
+                .is_some()
+            {
+                return Err(invalid(format!(
+                    "duplicate MGA cache checkpoint ordinal in {}",
+                    directory.display()
+                )));
+            }
+        }
+        let mut cache = MgaExecutionCacheV1::empty(plan)?;
+        for expected in 1..=checkpoints.len() {
+            let checkpoint = checkpoints.get(&expected).ok_or_else(|| {
+                invalid(format!(
+                    "MGA cache checkpoint sequence is missing ordinal {expected}"
+                ))
+            })?;
+            cache.entries.push(checkpoint.entry.clone());
+            cache.entries.sort_by_key(|entry| {
+                plan.shards
+                    .iter()
+                    .position(|shard| shard.shard_identity_sha256 == entry.shard_identity_sha256)
+                    .expect("checkpoint entry identity validated above")
+            });
+            cache.ensure_valid(plan)?;
+            if cache_index_sha256(&cache) != checkpoint.cache_prefix_sha256 {
+                return Err(invalid(format!(
+                    "MGA cache prefix digest mismatch at ordinal {expected}"
+                )));
+            }
+        }
+        Ok((cache, checkpoints.len()))
+    }
+
+    fn persist_cache(
+        &self,
+        subfit_id: &str,
+        plan: &MgaExecutionPlanV1,
+        cache: &MgaExecutionCacheV1,
+        persisted_shards: &mut std::collections::BTreeSet<String>,
+    ) -> Result<(), DynError> {
+        let checkpoint = self.checkpoint_envelope(subfit_id, plan, cache, persisted_shards)?;
+        let directory = self.checkpoint_directory(subfit_id);
+        fs::create_dir_all(&directory)?;
+        let file_name = format!(
+            "checkpoint-{:06}-{:06}-{}.json",
+            checkpoint.completed_shards, checkpoint.shard_ordinal, checkpoint.cache_prefix_sha256
+        );
+        let destination = directory.join(file_name);
+        if destination.exists() {
+            return Err(invalid(format!(
+                "duplicate MGA cache checkpoint publication rejected: {}",
+                destination.display()
+            )));
+        }
+        let temporary_nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)?
+            .as_nanos();
+        let temporary = directory.join(format!(
+            ".checkpoint-{:06}-{}-{}-{temporary_nonce}.tmp",
+            checkpoint.completed_shards,
+            checkpoint.cache_prefix_sha256,
+            std::process::id()
+        ));
+        let bytes = serde_json::to_vec_pretty(&checkpoint)?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&temporary)?;
+        file.write_all(&bytes)?;
+        file.write_all(b"\n")?;
+        file.sync_all()?;
+        drop(file);
+        fs::rename(&temporary, &destination)?;
+        persisted_shards.insert(checkpoint.entry.shard_identity_sha256);
+        Ok(())
+    }
+
+    fn completed_binding(
+        &self,
+        subfit_id: &str,
+        plan: &MgaExecutionPlanV1,
+        cache: &MgaExecutionCacheV1,
+        loaded_completed_shards: usize,
+        finalized_cache_sha256: &str,
+    ) -> Result<Value, DynError> {
+        cache.ensure_valid(plan)?;
+        if cache.entries.len() != plan.shards.len() || !is_sha256(finalized_cache_sha256) {
+            return Err(invalid(
+                "a complete identity-bound production cache is required before cell publication",
+            ));
+        }
+        Ok(json!({
+            "suite_id": CACHE_CHECKPOINT_SUITE_ID,
+            "orchestration_cell_id": self.orchestration_cell_id,
+            "subfit_id": subfit_id,
+            "source_commit": self.source_commit,
+            "executable_sha256": self.executable_sha256,
+            "qualification_plan_sha256": self.qualification_plan_sha256,
+            "environment_sha256": self.environment_sha256,
+            "scale": self.scale.id(),
+            "seed": self.seed,
+            "production_plan_sha256": plan.plan_sha256,
+            "cache_sha256": cache_index_sha256(cache),
+            "finalized_cache_sha256": finalized_cache_sha256,
+            "loaded_completed_shards": loaded_completed_shards,
+            "completed_shards": cache.entries.len(),
+            "planned_shards": plan.shards.len(),
+        }))
+    }
 }
 
 struct MgaFixture {
@@ -818,6 +1358,31 @@ fn run_cell(
     comparison_plan: MgaComparisonPlanV1,
     retain_bootstrap: bool,
 ) -> Result<Value, DynError> {
+    run_cell_with_checkpoint(
+        cell_id,
+        profile,
+        group_count,
+        rows_per_group,
+        encoding,
+        seed,
+        comparison_plan,
+        retain_bootstrap,
+        None,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_cell_with_checkpoint(
+    cell_id: &str,
+    profile: ProfileFixture,
+    group_count: usize,
+    rows_per_group: usize,
+    encoding: GroupEncoding,
+    seed: u64,
+    comparison_plan: MgaComparisonPlanV1,
+    retain_bootstrap: bool,
+    checkpoint: Option<&CellExecutionContext>,
+) -> Result<Value, DynError> {
     let fixture = make_mga_fixture(
         cell_id,
         group_count,
@@ -825,7 +1390,7 @@ fn run_cell(
         encoding,
         profile == ProfileFixture::FrequencyWeighted,
     )?;
-    run_fixture_cell(
+    run_fixture_cell_with_checkpoint(
         cell_id,
         profile,
         group_count,
@@ -835,21 +1400,24 @@ fn run_cell(
         comparison_plan,
         retain_bootstrap,
         &fixture,
+        checkpoint,
     )
 }
 
-#[allow(clippy::too_many_arguments)]
-fn run_fixture_cell(
-    cell_id: &str,
+struct PreparedFixtureCellAuthority {
+    recipe: AnalysisRecipeV4,
+    model: SemModelV4,
+    artifact: CompiledMultiModRecipeV1,
+    execution_plan: MgaExecutionPlanV1,
+}
+
+fn prepare_fixture_cell_authority(
+    fixture: &MgaFixture,
     profile: ProfileFixture,
     group_count: usize,
-    rows_per_group: usize,
-    encoding: GroupEncoding,
     seed: u64,
     comparison_plan: MgaComparisonPlanV1,
-    retain_bootstrap: bool,
-    fixture: &MgaFixture,
-) -> Result<Value, DynError> {
+) -> Result<PreparedFixtureCellAuthority, DynError> {
     let (mut recipe, mut model, selected_parameter_ids) =
         build_profile_recipe(fixture, profile, seed)?;
     recipe.settings.workers =
@@ -903,8 +1471,43 @@ fn run_fixture_cell(
         &artifact,
         &fixture.design,
     )?;
-    let mut cache = MgaExecutionCacheV1::empty(&execution_plan)?;
-    let run = run_compiled_raw_mga_resumable_v1(
+    Ok(PreparedFixtureCellAuthority {
+        recipe,
+        model,
+        artifact,
+        execution_plan,
+    })
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_fixture_cell_with_checkpoint(
+    cell_id: &str,
+    profile: ProfileFixture,
+    group_count: usize,
+    rows_per_group: usize,
+    encoding: GroupEncoding,
+    seed: u64,
+    comparison_plan: MgaComparisonPlanV1,
+    retain_bootstrap: bool,
+    fixture: &MgaFixture,
+    checkpoint: Option<&CellExecutionContext>,
+) -> Result<Value, DynError> {
+    let PreparedFixtureCellAuthority {
+        recipe,
+        model,
+        artifact,
+        execution_plan,
+    } = prepare_fixture_cell_authority(fixture, profile, group_count, seed, comparison_plan)?;
+    let (mut cache, loaded_completed_shards) = match checkpoint {
+        Some(context) => context.load_cache(cell_id, &execution_plan)?,
+        None => (MgaExecutionCacheV1::empty(&execution_plan)?, 0),
+    };
+    let mut persisted_shards = cache
+        .entries
+        .iter()
+        .map(|entry| entry.shard_identity_sha256.clone())
+        .collect::<std::collections::BTreeSet<_>>();
+    let run = run_compiled_raw_mga_resumable_with_checkpoint_v1(
         &fixture.dataset,
         &recipe,
         &model,
@@ -914,11 +1517,23 @@ fn run_fixture_cell(
         &mut cache,
         || false,
         |_| {},
+        |checkpoint_plan, checkpoint_cache| match checkpoint {
+            Some(context) => context
+                .persist_cache(
+                    cell_id,
+                    checkpoint_plan,
+                    checkpoint_cache,
+                    &mut persisted_shards,
+                )
+                .map_err(|error| error.to_string()),
+            None => Ok(()),
+        },
     )?;
     let MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(analysis) = &run.output.result else {
         return Err(invalid("raw MGA runner returned the wrong result family"));
     };
-    let cancel_resume = if metamorphic::compact_matrix_v1()
+    let cancel_resume = if checkpoint.is_none()
+        && metamorphic::compact_matrix_v1()
         && metamorphic::metamorphism_v1() == "baseline"
         && cell_id == "mga-general-2-groups"
     {
@@ -934,6 +1549,17 @@ fn run_fixture_cell(
     } else {
         None
     };
+    let external_cache_binding = checkpoint
+        .map(|context| {
+            context.completed_binding(
+                cell_id,
+                &execution_plan,
+                &cache,
+                loaded_completed_shards,
+                &run.finalized_cache_sha256,
+            )
+        })
+        .transpose()?;
     let expected_pairs = group_count * (group_count - 1) / 2;
     Ok(json!({
         "cell_id": cell_id,
@@ -951,6 +1577,7 @@ fn run_fixture_cell(
         "sem_model_authority": &model,
         "execution_plan": &run.execution_plan,
         "finalized_cache_sha256": &run.finalized_cache_sha256,
+        "external_cache_binding": external_cache_binding,
         "cancel_resume": cancel_resume,
         "analysis": analysis,
         "evidence": summarize_mga_evidence(&run.output.evidence, retain_bootstrap),
@@ -1165,13 +1792,16 @@ fn label_reversal(seed: u64) -> Result<Value, DynError> {
     Ok(json!({"forward": forward, "reverse": actual_reverse}))
 }
 
-fn frequency_expansion(seed: u64) -> Result<Value, DynError> {
+fn frequency_compact_cell(
+    seed: u64,
+    checkpoint: Option<&CellExecutionContext>,
+) -> Result<Value, DynError> {
     let compact_fixture =
         make_mga_fixture("mga-frequency-compact", 2, 15, GroupEncoding::Text, true)?;
     let comparison = MgaComparisonPlanV1::AllPairs {
         heavy_run_confirmed: false,
     };
-    let compact = run_fixture_cell(
+    run_fixture_cell_with_checkpoint(
         "mga-frequency-compact",
         ProfileFixture::FrequencyWeighted,
         2,
@@ -1181,8 +1811,13 @@ fn frequency_expansion(seed: u64) -> Result<Value, DynError> {
         comparison.clone(),
         true,
         &compact_fixture,
-    )?;
+        checkpoint,
+    )
+}
 
+fn expanded_frequency_fixture() -> Result<MgaFixture, DynError> {
+    let compact_fixture =
+        make_mga_fixture("mga-frequency-compact", 2, 15, GroupEncoding::Text, true)?;
     let source_rows = qpls_data::preview_page(
         &compact_fixture.dataset,
         0,
@@ -1229,7 +1864,7 @@ fn frequency_expansion(seed: u64) -> Result<Value, DynError> {
         &headers,
         &expanded_columns,
     )?;
-    let expanded_fixture = MgaFixture {
+    Ok(MgaFixture {
         dataset: expanded_dataset,
         groups: compact_fixture.groups.clone(),
         design: MultigroupDesignV1 {
@@ -1241,29 +1876,599 @@ fn frequency_expansion(seed: u64) -> Result<Value, DynError> {
         y1: expanded_y,
         weights: vec![1.0; next_row as usize],
         source_weights: vec![1.0; next_row as usize],
-    };
-    let expanded = run_fixture_cell(
+    })
+}
+
+fn frequency_expanded_cell(
+    seed: u64,
+    checkpoint: Option<&CellExecutionContext>,
+) -> Result<Value, DynError> {
+    let expanded_fixture = expanded_frequency_fixture()?;
+    run_fixture_cell_with_checkpoint(
         "mga-frequency-physically-expanded",
         ProfileFixture::FrequencyExpansionUnweighted,
         2,
         30,
         GroupEncoding::Text,
         seed,
-        comparison,
+        MgaComparisonPlanV1::AllPairs {
+            heavy_run_confirmed: false,
+        },
         true,
         &expanded_fixture,
-    )?;
+        checkpoint,
+    )
+}
+
+fn frequency_expansion(seed: u64) -> Result<Value, DynError> {
+    let compact = frequency_compact_cell(seed, None)?;
+    let expanded = frequency_expanded_cell(seed, None)?;
+    let represented_rows = expanded
+        .get("dataset_rows")
+        .and_then(Value::as_u64)
+        .ok_or_else(|| invalid("expanded frequency fixture omitted dataset_rows"))?;
     Ok(json!({
         "compact_frequency_run": compact,
         "physically_expanded_unweighted_run": expanded,
         "compact_source_rows": 30,
-        "represented_rows": next_row,
+        "represented_rows": represented_rows,
         "equivalence_oracle": "production_count_space_vs_physical_expansion_v1",
     }))
 }
 
-fn main() -> Result<(), DynError> {
-    let args = arguments()?;
+fn ensure_baseline_cell_environment(scale: Scale, seed: u64) -> Result<(), DynError> {
+    let configured_metamorphism = env::var_os(metamorphic::METAMORPHISM_ENV_V1);
+    let configured_workers = env::var_os(metamorphic::WORKERS_ENV_V1);
+    if configured_metamorphism
+        .as_ref()
+        .is_some_and(|value| value.to_str() != Some("baseline"))
+        || metamorphic::metamorphism_v1() != "baseline"
+        || configured_workers
+            .as_ref()
+            .is_some_and(|value| value.to_str() != Some("1"))
+        || metamorphic::configured_workers_v1(1).map_err(invalid)? != 1
+        || env::var_os("QPLS_MULTIMOD_METAMORPHIC_COMPACT_V1").is_some()
+        || env::var_os(metamorphic::SIGN_COLUMNS_ENV_V1).is_some()
+    {
+        return Err(invalid(
+            "MGA qualification cells require the frozen baseline metamorphic environment",
+        ));
+    }
+    if scale == Scale::Qualification && seed != 42 {
+        return Err(invalid(
+            "qualification-scale MGA cells require the frozen campaign seed 42",
+        ));
+    }
+    Ok(())
+}
+
+fn required_string(value: &Option<String>, argument: &str) -> Result<String, DynError> {
+    value
+        .clone()
+        .ok_or_else(|| invalid(format!("{argument} is required with --cell")))
+}
+
+fn cell_execution_context(
+    args: &Arguments,
+    cell_id: &str,
+) -> Result<CellExecutionContext, DynError> {
+    ensure_baseline_cell_environment(args.scale, args.seed)?;
+    let cache_root = args
+        .cache_root
+        .clone()
+        .ok_or_else(|| invalid("--cache-root is required with --cell"))?;
+    let plan_path = args
+        .plan_path
+        .as_ref()
+        .ok_or_else(|| invalid("--plan-path is required with --cell"))?;
+    let expected_plan_sha256 = required_string(&args.plan_sha256, "--plan-sha256")?;
+    let source_commit = required_string(&args.source_commit, "--source-commit")?;
+    let executable_sha256 = required_string(&args.executable_sha256, "--executable-sha256")?;
+    let environment_sha256 = required_string(&args.environment_sha256, "--environment-sha256")?;
+    if !is_sha256(&expected_plan_sha256)
+        || !is_git_commit(&source_commit)
+        || !is_sha256(&executable_sha256)
+        || !is_sha256(&environment_sha256)
+    {
+        return Err(invalid(
+            "cell identity arguments must be lowercase SHA-256 values and a lowercase Git commit",
+        ));
+    }
+    let plan_bytes = fs::read(plan_path)?;
+    if sha256_bytes(&plan_bytes) != expected_plan_sha256 {
+        return Err(invalid(
+            "qualification plan bytes do not match --plan-sha256",
+        ));
+    }
+    let actual_plan: Value = serde_json::from_slice(&plan_bytes)?;
+    if actual_plan != qualification_shard_plan(args.scale, args.seed) {
+        return Err(invalid(
+            "qualification plan does not match the producer's exact cell inventory",
+        ));
+    }
+    if !qualification_cell_specs(args.scale)
+        .iter()
+        .any(|spec| spec.cell_id == cell_id)
+    {
+        return Err(invalid(format!(
+            "cell {cell_id} is outside the exact qualification inventory"
+        )));
+    }
+    let current_executable = env::current_exe()?;
+    if sha256_file(&current_executable)? != executable_sha256 {
+        return Err(invalid(
+            "running MGA producer does not match --executable-sha256",
+        ));
+    }
+    let context = CellExecutionContext {
+        orchestration_cell_id: cell_id.into(),
+        cache_root,
+        source_commit,
+        executable_sha256,
+        qualification_plan_sha256: expected_plan_sha256,
+        environment_sha256,
+        scale: args.scale,
+        seed: args.seed,
+    };
+    context.ensure_identity()?;
+    Ok(context)
+}
+
+fn all_pairs(group_count: usize) -> MgaComparisonPlanV1 {
+    MgaComparisonPlanV1::AllPairs {
+        heavy_run_confirmed: group_count == 20,
+    }
+}
+
+fn write_root_sentinel(args: &Arguments) -> Result<(), DynError> {
+    let cell_id = "mga-general-2-groups";
+    let context = cell_execution_context(args, cell_id)?;
+    let fixture = make_mga_fixture(cell_id, 2, 30, GroupEncoding::Text, false)?;
+    let PreparedFixtureCellAuthority {
+        artifact,
+        execution_plan,
+        ..
+    } = prepare_fixture_cell_authority(
+        &fixture,
+        ProfileFixture::General,
+        2,
+        args.seed,
+        all_pairs(2),
+    )?;
+    let cache = MgaExecutionCacheV1::empty(&execution_plan)?;
+    cache.ensure_valid(&execution_plan)?;
+    let pending = cache.pending_kinds(&execution_plan)?;
+    if pending.len() != execution_plan.shards.len() || pending.is_empty() {
+        return Err(invalid(
+            "root sentinel did not prepare the exact nonempty production MGA shard plan",
+        ));
+    }
+    let receipt = json!({
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": "qpls.multimod.mga.root-compiler-sentinel.v1",
+        "producer_suite_id": SUITE_ID,
+        "cell_id": cell_id,
+        "diagnostic_only": true,
+        "scientific_result_published": false,
+        "source_commit": context.source_commit,
+        "executable_sha256": context.executable_sha256,
+        "qualification_plan_sha256": context.qualification_plan_sha256,
+        "environment_sha256": context.environment_sha256,
+        "scale": args.scale.id(),
+        "seed": args.seed,
+        "permutation_samples": PERMUTATIONS,
+        "bootstrap_samples": BOOTSTRAPS,
+        "dataset_fingerprint": fixture.dataset.fingerprint.0,
+        "compilation_receipt": artifact.receipt(),
+        "production_plan_sha256": execution_plan.plan_sha256,
+        "planned_production_shards": execution_plan.shards.len(),
+        "pending_production_shards": pending.len(),
+    });
+    fs::write(&args.output, serde_json::to_vec_pretty(&receipt)?)?;
+    Ok(())
+}
+
+fn prepare_standard_cell_execution_plan(
+    cell_id: &str,
+    profile: ProfileFixture,
+    group_count: usize,
+    rows_per_group: usize,
+    encoding: GroupEncoding,
+    seed: u64,
+    comparison_plan: MgaComparisonPlanV1,
+) -> Result<MgaExecutionPlanV1, DynError> {
+    let fixture = make_mga_fixture(
+        cell_id,
+        group_count,
+        rows_per_group,
+        encoding,
+        profile == ProfileFixture::FrequencyWeighted,
+    )?;
+    Ok(
+        prepare_fixture_cell_authority(&fixture, profile, group_count, seed, comparison_plan)?
+            .execution_plan,
+    )
+}
+
+fn prepare_cell_execution_plan(cell_id: &str, seed: u64) -> Result<MgaExecutionPlanV1, DynError> {
+    match cell_id {
+        "mga-general-2-groups" | "mga-label-forward" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::General,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-general-3-groups" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::General,
+            3,
+            30,
+            GroupEncoding::Integer,
+            seed,
+            all_pairs(3),
+        ),
+        "mga-general-5-groups" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::General,
+            5,
+            30,
+            GroupEncoding::Number,
+            seed,
+            all_pairs(5),
+        ),
+        "mga-general-20-groups" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::General,
+            20,
+            10,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(20),
+        ),
+        "mga-profile-multiple_two_way" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::MultipleTwoWay,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-profile-bounded_three_way" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::ThreeWay,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-profile-bounded_two_way_moderated_mediation" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::ModeratedMediation,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-profile-multiple_nonnested_hoc" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::MultipleHoc,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-profile-case_weighted_pls" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::CaseWeighted,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-profile-reflective_plsc" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::ReflectivePlsc,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-general-parametric-3-groups" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::GeneralParametric,
+            3,
+            30,
+            GroupEncoding::Integer,
+            seed,
+            all_pairs(3),
+        ),
+        "mga-frequency-compact" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::FrequencyWeighted,
+            2,
+            15,
+            GroupEncoding::Text,
+            seed,
+            all_pairs(2),
+        ),
+        "mga-frequency-physically-expanded" => {
+            let fixture = expanded_frequency_fixture()?;
+            Ok(prepare_fixture_cell_authority(
+                &fixture,
+                ProfileFixture::FrequencyExpansionUnweighted,
+                2,
+                seed,
+                all_pairs(2),
+            )?
+            .execution_plan)
+        }
+        "mga-label-reverse" => prepare_standard_cell_execution_plan(
+            cell_id,
+            ProfileFixture::General,
+            2,
+            30,
+            GroupEncoding::Text,
+            seed,
+            MgaComparisonPlanV1::SelectedPairs {
+                pairs: vec![GroupPairV1 {
+                    left_group_id: "group_02".into(),
+                    right_group_id: "group_01".into(),
+                }],
+            },
+        ),
+        _ => Err(invalid(format!(
+            "cell {cell_id} has no resumable production MGA cache"
+        ))),
+    }
+}
+
+fn write_cache_status(args: &Arguments, cell_id: &str) -> Result<(), DynError> {
+    let context = cell_execution_context(args, cell_id)?;
+    let execution_plan = prepare_cell_execution_plan(cell_id, args.seed)?;
+    let (cache, completed_shards) = context.load_cache(cell_id, &execution_plan)?;
+    cache.ensure_valid(&execution_plan)?;
+    let pending_shards = cache.pending_kinds(&execution_plan)?.len();
+    if completed_shards + pending_shards != execution_plan.shards.len() {
+        return Err(invalid(
+            "verified MGA cache progress does not partition the exact production plan",
+        ));
+    }
+    let receipt = json!({
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": "qpls.multimod.mga.verified-cache-progress.v1",
+        "producer_suite_id": SUITE_ID,
+        "cell_id": cell_id,
+        "source_commit": context.source_commit,
+        "executable_sha256": context.executable_sha256,
+        "qualification_plan_sha256": context.qualification_plan_sha256,
+        "environment_sha256": context.environment_sha256,
+        "scale": args.scale.id(),
+        "seed": args.seed,
+        "production_plan_sha256": execution_plan.plan_sha256,
+        "cache_sha256": cache_index_sha256(&cache),
+        "completed_shards": completed_shards,
+        "pending_shards": pending_shards,
+        "planned_shards": execution_plan.shards.len(),
+    });
+    fs::write(&args.output, serde_json::to_vec_pretty(&receipt)?)?;
+    Ok(())
+}
+
+fn run_qualification_cell(
+    args: &Arguments,
+    cell_id: &str,
+    context: &CellExecutionContext,
+) -> Result<Value, DynError> {
+    let retain_full_bootstrap = args.scale == Scale::Qualification;
+    match cell_id {
+        "mga-general-2-groups" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            true,
+            Some(context),
+        ),
+        "mga-general-3-groups" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            3,
+            30,
+            GroupEncoding::Integer,
+            args.seed,
+            all_pairs(3),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-general-5-groups" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            5,
+            30,
+            GroupEncoding::Number,
+            args.seed,
+            all_pairs(5),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-general-20-groups" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            20,
+            10,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(20),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-multiple_two_way" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::MultipleTwoWay,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-bounded_three_way" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::ThreeWay,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-bounded_two_way_moderated_mediation" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::ModeratedMediation,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-multiple_nonnested_hoc" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::MultipleHoc,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-case_weighted_pls" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::CaseWeighted,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-profile-reflective_plsc" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::ReflectivePlsc,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-general-parametric-3-groups" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::GeneralParametric,
+            3,
+            30,
+            GroupEncoding::Integer,
+            args.seed,
+            all_pairs(3),
+            retain_full_bootstrap,
+            Some(context),
+        ),
+        "mga-frequency-compact" => frequency_compact_cell(args.seed, Some(context)),
+        "mga-frequency-physically-expanded" => frequency_expanded_cell(args.seed, Some(context)),
+        "mga-label-forward" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            all_pairs(2),
+            true,
+            Some(context),
+        ),
+        "mga-label-reverse" => run_cell_with_checkpoint(
+            cell_id,
+            ProfileFixture::General,
+            2,
+            30,
+            GroupEncoding::Text,
+            args.seed,
+            MgaComparisonPlanV1::SelectedPairs {
+                pairs: vec![GroupPairV1 {
+                    left_group_id: "group_02".into(),
+                    right_group_id: "group_01".into(),
+                }],
+            },
+            true,
+            Some(context),
+        ),
+        "mga-boundaries" => boundary_receipts(args.seed),
+        _ => Err(invalid(format!(
+            "cell {cell_id} is outside the executable MGA qualification inventory"
+        ))),
+    }
+}
+
+fn write_qualification_cell(args: &Arguments, cell_id: &str) -> Result<(), DynError> {
+    let context = cell_execution_context(args, cell_id)?;
+    let spec = qualification_cell_specs(args.scale)
+        .into_iter()
+        .find(|spec| spec.cell_id == cell_id)
+        .ok_or_else(|| invalid(format!("unknown MGA qualification cell {cell_id}")))?;
+    let payload = run_qualification_cell(args, cell_id, &context)?;
+    let cache_bindings = payload
+        .get("external_cache_binding")
+        .filter(|value| !value.is_null())
+        .cloned()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if spec.production_cache_required != (cache_bindings.len() == 1) {
+        return Err(invalid(format!(
+            "cell {cell_id} did not publish its exact completed production-cache binding"
+        )));
+    }
+    let result = json!({
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": CELL_RESULT_SUITE_ID,
+        "producer_suite_id": SUITE_ID,
+        "cell_id": cell_id,
+        "payload_kind": spec.payload_kind,
+        "scale": args.scale.id(),
+        "seed": args.seed,
+        "metamorphism": "baseline",
+        "workers": 1,
+        "source_commit": context.source_commit,
+        "executable_sha256": context.executable_sha256,
+        "qualification_plan_sha256": context.qualification_plan_sha256,
+        "environment_sha256": context.environment_sha256,
+        "permutation_samples": PERMUTATIONS,
+        "bootstrap_samples": BOOTSTRAPS,
+        "cache_bindings": cache_bindings,
+        "payload": payload,
+    });
+    fs::write(&args.output, serde_json::to_vec_pretty(&result)?)?;
+    Ok(())
+}
+
+fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     let compact = metamorphic::compact_matrix_v1();
     let retain_full_bootstrap = args.scale == Scale::Qualification && !compact;
     let mut group_matrix = Vec::new();
@@ -1373,6 +2578,40 @@ fn main() -> Result<(), DynError> {
         "label_reversal": label_reversal,
         "boundaries": boundary_receipts(args.seed)?,
     });
-    fs::write(args.output, serde_json::to_vec_pretty(&report)?)?;
+    fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
+    Ok(())
+}
+
+fn main() -> Result<(), DynError> {
+    let args = arguments()?;
+    if args.plan {
+        ensure_baseline_cell_environment(args.scale, args.seed)?;
+        fs::write(
+            &args.output,
+            serde_json::to_vec_pretty(&qualification_shard_plan(args.scale, args.seed))?,
+        )?;
+        return Ok(());
+    }
+    if args.sentinel {
+        return write_root_sentinel(&args);
+    }
+    if let Some(cell_id) = &args.cell_id {
+        if args.cache_status {
+            return write_cache_status(&args, cell_id);
+        }
+        return write_qualification_cell(&args, cell_id);
+    }
+    if args.cache_root.is_some()
+        || args.plan_path.is_some()
+        || args.plan_sha256.is_some()
+        || args.source_commit.is_some()
+        || args.executable_sha256.is_some()
+        || args.environment_sha256.is_some()
+    {
+        return Err(invalid(
+            "cell identity arguments are only valid with --sentinel or --cell",
+        ));
+    }
+    run_monolithic(&args)?;
     Ok(())
 }
