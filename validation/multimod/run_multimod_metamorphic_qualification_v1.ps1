@@ -52,7 +52,7 @@ $families = @(
 )
 $binaries = [ordered]@{}
 foreach ($family in $families) {
-    $binaries[$family.Id] = Join-Path $repositoryRoot ("target/debug/examples/{0}.exe" -f $family.Example)
+    $binaries[$family.Id] = Join-Path $repositoryRoot ("target/release/examples/{0}.exe" -f $family.Example)
 }
 
 function Get-Sha256 {
@@ -601,7 +601,7 @@ try {
     }
 
     $buildArguments = @(
-        "build", "--quiet", "--locked", "-p", "qpls-runner",
+        "build", "--release", "--quiet", "--locked", "-p", "qpls-runner",
         "--example", "multimod_mga_qualification_v1",
         "--example", "multimod_heterogeneity_qualification_v2",
         "--example", "multimod_conditional_qualification_v1",

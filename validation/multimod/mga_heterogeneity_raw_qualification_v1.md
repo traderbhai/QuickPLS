@@ -12,7 +12,8 @@ candidate commit.
 
 ## MGA producer
 
-`run_multimod_mga_qualification_v1.ps1` performs one Cargo build and then runs
+`run_multimod_mga_qualification_v1.ps1` performs one optimized release Cargo
+build and then runs
 the frozen MGA matrix as 15 independent production cells plus one boundary
 cell. Before any scientific cell starts, a diagnostic-only two-minute sentinel
 must compile the exact two-group General SEM authority and prepare its full
@@ -84,7 +85,8 @@ pwsh -NoProfile -File validation/multimod/run_multimod_mga_qualification_v1.ps1 
 
 ## FIMIX-PLS and PLS-POS producer
 
-`run_multimod_heterogeneity_qualification_v2.ps1` performs one Cargo build,
+`run_multimod_heterogeneity_qualification_v2.ps1` performs one optimized
+release Cargo build,
 runs a small raw-runner sentinel, and then executes the production matrix as a
 dependency-aware set of deterministic executable shards. Recovery seeds,
 simulation scenarios, candidate-K cells, POS discoveries, failure boundaries,

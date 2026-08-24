@@ -39,7 +39,7 @@ $planPath = Join-Path $resolvedWorkRoot "cell-plan.json"
 $rawAggregate = Join-Path $resolvedWorkRoot "mga-production-science.raw.json"
 $checkpointTool = Join-Path $repositoryRoot "validation/multimod/multimod_mga_shards_v1.py"
 $comparator = Join-Path $repositoryRoot "validation/multimod/compare_multimod_mga_qualification_v1.py"
-$binary = Join-Path $repositoryRoot "target/debug/examples/multimod_mga_qualification_v1.exe"
+$binary = Join-Path $repositoryRoot "target/release/examples/multimod_mga_qualification_v1.exe"
 $campaignClock = [System.Diagnostics.Stopwatch]::StartNew()
 $sentinelTimeoutSeconds = 120
 $cleanupReserveSeconds = 120
@@ -370,7 +370,7 @@ try {
         New-Item -ItemType Directory -Path $resolvedWorkRoot, $cellDirectory, $cacheDirectory, $logDirectory, $historyDirectory -Force | Out-Null
         Write-Host "[mga] one Cargo build; exact cells then run directly with durable production-shard caches"
         $buildExit = Invoke-BoundedStage -Stage "cargo-build" -FileName "cargo" -Arguments @(
-            "build", "--quiet", "--locked", "-p", "qpls-runner", "--example",
+            "build", "--release", "--quiet", "--locked", "-p", "qpls-runner", "--example",
             "multimod_mga_qualification_v1"
         ) -TimeoutSeconds ([Math]::Min(1800, (Get-RemainingBudgetSeconds)))
         if ($buildExit -ne 0) { throw "The single MGA producer build failed." }

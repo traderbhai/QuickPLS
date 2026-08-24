@@ -7,7 +7,7 @@ matrix from becoming one unbounded all-or-nothing invocation.
 
 ## Frozen execution graph
 
-One bounded Cargo command builds these four examples together:
+One bounded optimized release Cargo command builds these four examples together:
 
 - `multimod_mga_qualification_v1`
 - `multimod_heterogeneity_qualification_v2`

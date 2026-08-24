@@ -52,7 +52,7 @@ $historyDirectory = Join-Path $resolvedWorkRoot "_attempt_history"
 $planPath = Join-Path $resolvedWorkRoot "shard-plan.json"
 $checkpointTool = Join-Path $repositoryRoot "validation/multimod/conditional_causal_shards_v1.py"
 $verifier = Join-Path $repositoryRoot "validation/multimod/verify_conditional_causal_raw_qualification_v1.py"
-$binary = Join-Path $repositoryRoot "target/debug/examples/$example.exe"
+$binary = Join-Path $repositoryRoot "target/release/examples/$example.exe"
 $campaignClock = [System.Diagnostics.Stopwatch]::StartNew()
 $sentinelTimeoutSeconds = [Math]::Min(120, $PerShardTimeoutSeconds)
 $active = @{}
@@ -351,7 +351,7 @@ try {
         New-Item -ItemType Directory -Path $outputDirectory, $resolvedWorkRoot, $shardDirectory, $logDirectory, $historyDirectory -Force | Out-Null
         Write-Host "[$Family] one Cargo build; exact qualification cases run afterward as resumable executable shards"
         $buildExit = Invoke-BoundedStage -Stage "cargo-build" -FileName "cargo" -Arguments @(
-            "build", "--quiet", "--locked", "-p", "qpls-runner", "--example", $example
+            "build", "--release", "--quiet", "--locked", "-p", "qpls-runner", "--example", $example
         ) -TimeoutSeconds (Get-RemainingBudgetSeconds)
         if ($buildExit -ne 0) {
             throw "The single $Family producer build failed."

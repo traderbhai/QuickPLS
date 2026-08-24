@@ -9,8 +9,9 @@ dependency gates.
 ## One logical producer per family
 
 `run_conditional_causal_raw_qualification_v1.ps1` builds the selected Rust
-example exactly once, then invokes that executable directly. A development-
-sized production sentinel must finish within two minutes before any expensive
+example exactly once with the optimized release profile, then invokes that
+executable directly. A development-sized production sentinel must finish
+within two minutes before any expensive
 case starts. The sentinel is diagnostic only: it is never included in the
 qualification case inventory and can never replace a requested qualification-
 scale case.

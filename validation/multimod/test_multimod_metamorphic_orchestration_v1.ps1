@@ -31,6 +31,12 @@ Assert-Contract ($parseErrors.Count -eq 0) (
 $wrapper = Get-Content -LiteralPath $wrapperPath -Raw -Encoding UTF8
 Assert-Contract (-not $wrapper.ToLowerInvariant().Contains("cargo run")) `
     "Metamorphic cells must launch built executables directly."
+Assert-Contract ($wrapper.Contains("target/release/examples")) `
+    "Metamorphic qualification must execute optimized release producers."
+Assert-Contract (-not $wrapper.Contains("target/debug/examples")) `
+    "Metamorphic qualification must not execute unoptimized debug producers."
+Assert-Contract ($wrapper.Contains('"build", "--release"')) `
+    "Metamorphic qualification must build its producers with Cargo's release profile."
 Assert-Contract ([regex]::Matches($wrapper, '-FileName\s+"cargo"').Count -eq 1) `
     "Metamorphic orchestration must contain exactly one bounded Cargo invocation."
 Assert-Contract ($wrapper.Contains('$Job.Process.Kill($true)')) `
@@ -47,6 +53,21 @@ $rootCall = $wrapper.IndexOf('Invoke-CellPhase -Name "baseline-root"', [StringCo
 $dependentCall = $wrapper.IndexOf('Invoke-CellPhase -Name "dependent-axis"', [StringComparison]::Ordinal)
 Assert-Contract ($rootCall -ge 0 -and $dependentCall -gt $rootCall) `
     "All family baseline roots must complete before dependent axes start."
+
+foreach ($producerWrapperName in @(
+    "run_multimod_mga_qualification_v1.ps1",
+    "run_multimod_heterogeneity_qualification_v2.ps1",
+    "run_conditional_causal_raw_qualification_v1.ps1"
+)) {
+    $producerWrapperPath = Join-Path $PSScriptRoot $producerWrapperName
+    $producerWrapper = Get-Content -LiteralPath $producerWrapperPath -Raw -Encoding UTF8
+    Assert-Contract ($producerWrapper.Contains("target/release/examples")) `
+        "$producerWrapperName must execute an optimized release producer."
+    Assert-Contract (-not $producerWrapper.Contains("target/debug/examples")) `
+        "$producerWrapperName must not execute an unoptimized debug producer."
+    Assert-Contract ($producerWrapper.Contains('"build", "--release"')) `
+        "$producerWrapperName must build its producer with Cargo's release profile."
+}
 
 $bindings = Get-Content -LiteralPath $bindingPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
 function Get-GateStep {

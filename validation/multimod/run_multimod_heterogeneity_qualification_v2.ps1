@@ -41,7 +41,7 @@ $planPath = Join-Path $resolvedWorkRoot "shard-plan.json"
 $rawAggregate = Join-Path $resolvedWorkRoot "heterogeneity-production-science.raw.json"
 $checkpointTool = Join-Path $repositoryRoot "validation/multimod/multimod_heterogeneity_shards_v2.py"
 $comparator = Join-Path $repositoryRoot "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py"
-$binary = Join-Path $repositoryRoot "target/debug/examples/multimod_heterogeneity_qualification_v2.exe"
+$binary = Join-Path $repositoryRoot "target/release/examples/multimod_heterogeneity_qualification_v2.exe"
 $campaignClock = [System.Diagnostics.Stopwatch]::StartNew()
 $sentinelTimeoutSeconds = [Math]::Min(120, $PerShardTimeoutSeconds)
 $active = @{}
@@ -318,7 +318,7 @@ try {
         New-Item -ItemType Directory -Path $resolvedWorkRoot, $shardDirectory, $logDirectory, $historyDirectory -Force | Out-Null
         Write-Host "[heterogeneity] one Cargo build; all scientific cells run afterward as resumable executable shards"
         $buildExit = Invoke-BoundedStage -Stage "cargo-build" -FileName "cargo" -Arguments @(
-            "build", "--quiet", "--locked", "-p", "qpls-runner", "--example",
+            "build", "--release", "--quiet", "--locked", "-p", "qpls-runner", "--example",
             "multimod_heterogeneity_qualification_v2"
         ) -TimeoutSeconds (Get-RemainingBudgetSeconds)
         if ($buildExit -ne 0) {

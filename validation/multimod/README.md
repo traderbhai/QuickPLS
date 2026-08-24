@@ -57,7 +57,8 @@ standard-library-only validation references over the immutable small inputs in
 - a two-class Gaussian FIMIX log-sum-exp likelihood, posterior normalization,
   full parameter count, information criteria, and entropy identity.
 
-The production MGA/FIMIX/POS and conditional/causal producers bind independent
+The production MGA/FIMIX/POS and conditional/causal producers are built once
+per family with Cargo's optimized release profile and bind independent
 references to actual QuickPLS raw-data runner commands. A producer is reusable
 by downstream gates only through the campaign's hash-bound dependency verifier.
 No successful qualification is implied until the whole campaign passes.
