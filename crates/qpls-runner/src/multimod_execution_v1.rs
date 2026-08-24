@@ -7,8 +7,8 @@
 
 use crate::{
     MgaExecutionCacheErrorV1, MgaExecutionCacheV1, MgaExecutionPlanV1, MgaExecutionShardKindV1,
-    MgaExecutionShardPayloadV1, RunnerProgress, build_mga_execution_plan_v1,
-    execute_or_reuse_mga_shard_with_checkpoint_v1,
+    MgaExecutionShardPayloadV1, RunnerProgress, ValidatedMgaExecutionCacheSessionV1,
+    build_mga_execution_plan_v1,
     multimod_weighted_pls_point_v1::{
         PreparedMultimodWeightedPlsPointV1, prepare_compiled_multimod_weighted_pls_point_v1,
         run_prepared_multimod_weighted_pls_point_v1,
@@ -650,8 +650,7 @@ type MgaShardCheckpointCallbackV1<'a> =
     dyn FnMut(&MgaExecutionPlanV1, &MgaExecutionCacheV1) -> Result<(), String> + 'a;
 
 fn execute_or_reuse_mga_shard_checkpointed_v1<F, C>(
-    plan: &MgaExecutionPlanV1,
-    cache: &mut MgaExecutionCacheV1,
+    session: &mut ValidatedMgaExecutionCacheSessionV1<'_>,
     kind: &MgaExecutionShardKindV1,
     should_cancel: C,
     execute: F,
@@ -661,26 +660,22 @@ where
     F: FnOnce() -> Result<MgaExecutionShardPayloadV1, MgaExecutionCacheErrorV1>,
     C: Fn() -> bool,
 {
-    if let Some(checkpoint) = checkpoint {
-        execute_or_reuse_mga_shard_with_checkpoint_v1(
-            plan,
-            cache,
-            kind,
-            should_cancel,
-            execute,
-            checkpoint,
-        )
-    } else {
-        let mut no_checkpoint = |_: &MgaExecutionPlanV1, _: &MgaExecutionCacheV1| Ok(());
-        execute_or_reuse_mga_shard_with_checkpoint_v1(
-            plan,
-            cache,
-            kind,
-            should_cancel,
-            execute,
-            &mut no_checkpoint,
-        )
+    if should_cancel() {
+        return Err(MgaExecutionCacheErrorV1::Cancelled);
     }
+    if let Some(payload) = session.payload(kind)? {
+        return Ok(payload.clone());
+    }
+    let payload = execute()?;
+    session.insert(kind, payload.clone())?;
+    if let Some(checkpoint) = checkpoint {
+        checkpoint(session.plan(), session.cache())
+            .map_err(MgaExecutionCacheErrorV1::CheckpointFailed)?;
+    }
+    if should_cancel() {
+        return Err(MgaExecutionCacheErrorV1::Cancelled);
+    }
+    Ok(payload)
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1132,8 +1127,7 @@ where
 {
     let execution_plan =
         prepare_compiled_raw_mga_execution_plan_v1(dataset, recipe, model, artifact, design)?;
-    cache
-        .ensure_valid(&execution_plan)
+    let mut execution_session = ValidatedMgaExecutionCacheSessionV1::open(&execution_plan, cache)
         .map_err(map_mga_execution_cache_error_v1)?;
     let config = recipe.mga_multigroup.as_ref().ok_or_else(|| {
         MultiModRunnerErrorV1::Authority("MGA configuration disappeared after compilation".into())
@@ -1149,7 +1143,7 @@ where
                 artifact,
                 design,
                 excluded_rows,
-                Some(&mut *cache),
+                Some(&mut execution_session),
                 Some(&mut checkpoint),
                 &should_cancel,
                 &progress,
@@ -1163,7 +1157,7 @@ where
                 artifact,
                 design,
                 excluded_rows,
-                Some(&mut *cache),
+                Some(&mut execution_session),
                 Some(&mut checkpoint),
                 &should_cancel,
                 &progress,
@@ -1179,7 +1173,7 @@ where
                 artifact,
                 design,
                 excluded_rows,
-                Some(&mut *cache),
+                Some(&mut execution_session),
                 Some(&mut checkpoint),
                 &should_cancel,
                 &progress,
@@ -1192,15 +1186,16 @@ where
             artifact,
             design,
             excluded_rows,
-            Some(&mut *cache),
+            Some(&mut execution_session),
             Some(&mut checkpoint),
             &should_cancel,
             &progress,
         ),
     }?;
-    let finalized_cache_sha256 = cache
-        .finalized_identity_sha256(&execution_plan)
+    let finalized_cache_sha256 = execution_session
+        .finalized_identity_sha256()
         .map_err(map_mga_execution_cache_error_v1)?;
+    drop(execution_session);
     Ok(ResumableMgaRunV1 {
         output,
         execution_plan,
@@ -5379,7 +5374,7 @@ fn run_compiled_hoc_pls_mga_internal_v1<C, P>(
     artifact: &CompiledMultiModRecipeV1,
     design: &MultigroupDesignV1,
     excluded_rows: &[ExcludedRowReceiptV1],
-    mut execution_cache: Option<&mut MgaExecutionCacheV1>,
+    mut execution_cache: Option<&mut ValidatedMgaExecutionCacheSessionV1<'_>>,
     mut checkpoint: Option<&mut MgaShardCheckpointCallbackV1<'_>>,
     should_cancel: C,
     progress: P,
@@ -5516,11 +5511,17 @@ where
             &pairs,
         )
         .map_err(map_mga_execution_cache_error_v1)?;
-        execution_cache
+        if execution_cache
             .as_deref()
             .expect("raw HOC cache presence checked above")
-            .ensure_valid(&plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
+            .plan()
+            .plan_sha256
+            != plan.plan_sha256
+        {
+            return Err(MultiModRunnerErrorV1::ExecutionCache(
+                "validated session plan differs from the reconstructed HOC plan".into(),
+            ));
+        }
         Some(plan)
     } else {
         None
@@ -5601,9 +5602,8 @@ where
             })
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::PointFit { group: group.index },
                     || should_cancel(),
@@ -5691,11 +5691,10 @@ where
                     rows,
                 })
             };
-            let payload = if let (Some(plan), Some(cache)) =
+            let payload = if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::MicomPair { pair: *pair },
                     || should_cancel(),
@@ -6825,7 +6824,7 @@ fn run_compiled_ordinary_pls_mga_internal_v1<C, P>(
     artifact: &CompiledMultiModRecipeV1,
     design: &MultigroupDesignV1,
     excluded_rows: &[ExcludedRowReceiptV1],
-    mut execution_cache: Option<&mut MgaExecutionCacheV1>,
+    mut execution_cache: Option<&mut ValidatedMgaExecutionCacheSessionV1<'_>>,
     mut checkpoint: Option<&mut MgaShardCheckpointCallbackV1<'_>>,
     should_cancel: C,
     progress: P,
@@ -7026,11 +7025,17 @@ where
             &pairs,
         )
         .map_err(map_mga_execution_cache_error_v1)?;
-        execution_cache
+        if execution_cache
             .as_deref()
             .expect("raw ordinary cache presence checked above")
-            .ensure_valid(&plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
+            .plan()
+            .plan_sha256
+            != plan.plan_sha256
+        {
+            return Err(MultiModRunnerErrorV1::ExecutionCache(
+                "validated session plan differs from the reconstructed ordinary plan".into(),
+            ));
+        }
         Some(plan)
     } else {
         None
@@ -7147,9 +7152,8 @@ where
             })
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::PointFit { group: group.index },
                     || should_cancel(),
@@ -7315,11 +7319,10 @@ where
                     rows,
                 })
             };
-            let payload = if let (Some(plan), Some(cache)) =
+            let payload = if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::MicomPair { pair: *pair },
                     || should_cancel(),
@@ -7475,7 +7478,7 @@ fn run_compiled_frequency_weighted_pls_mga_internal_v1<C, P>(
     artifact: &CompiledMultiModRecipeV1,
     design: &MultigroupDesignV1,
     excluded_rows: &[ExcludedRowReceiptV1],
-    mut execution_cache: Option<&mut MgaExecutionCacheV1>,
+    mut execution_cache: Option<&mut ValidatedMgaExecutionCacheSessionV1<'_>>,
     mut checkpoint: Option<&mut MgaShardCheckpointCallbackV1<'_>>,
     should_cancel: C,
     progress: P,
@@ -7604,11 +7607,17 @@ where
             &pairs,
         )
         .map_err(map_mga_execution_cache_error_v1)?;
-        execution_cache
+        if execution_cache
             .as_deref()
             .expect("raw frequency cache presence checked above")
-            .ensure_valid(&plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
+            .plan()
+            .plan_sha256
+            != plan.plan_sha256
+        {
+            return Err(MultiModRunnerErrorV1::ExecutionCache(
+                "validated session plan differs from the reconstructed frequency plan".into(),
+            ));
+        }
         Some(plan)
     } else {
         None
@@ -7695,9 +7704,8 @@ where
             })
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::PointFit { group: group.index },
                     || should_cancel(),
@@ -7786,11 +7794,10 @@ where
                     rows,
                 })
             };
-            let payload = if let (Some(execution_plan), Some(cache)) =
+            let payload = if let (Some(_execution_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    execution_plan,
                     cache,
                     &MgaExecutionShardKindV1::MicomPair { pair: *pair },
                     || should_cancel(),
@@ -7890,11 +7897,10 @@ where
                 }
                 Ok(MgaExecutionShardPayloadV1::PairwisePermutation { value: result })
             };
-            let payload = if let (Some(execution_plan), Some(cache)) =
+            let payload = if let (Some(_execution_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    execution_plan,
                     cache,
                     &MgaExecutionShardKindV1::PairwisePermutation { pair: *pair },
                     || should_cancel(),
@@ -7931,9 +7937,8 @@ where
             .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::OmnibusPermutation,
                     || should_cancel(),
@@ -7977,9 +7982,8 @@ where
             .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::SharedGroupBootstrapBanks,
                     || should_cancel(),
@@ -8126,7 +8130,7 @@ fn run_compiled_interaction_pls_mga_internal_v1<C, P>(
     artifact: &CompiledMultiModRecipeV1,
     design: &MultigroupDesignV1,
     excluded_rows: &[ExcludedRowReceiptV1],
-    mut execution_cache: Option<&mut MgaExecutionCacheV1>,
+    mut execution_cache: Option<&mut ValidatedMgaExecutionCacheSessionV1<'_>>,
     mut checkpoint: Option<&mut MgaShardCheckpointCallbackV1<'_>>,
     should_cancel: C,
     progress: P,
@@ -8245,11 +8249,17 @@ where
             &pairs,
         )
         .map_err(map_mga_execution_cache_error_v1)?;
-        execution_cache
+        if execution_cache
             .as_deref()
             .expect("raw interaction cache presence checked above")
-            .ensure_valid(&plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
+            .plan()
+            .plan_sha256
+            != plan.plan_sha256
+        {
+            return Err(MultiModRunnerErrorV1::ExecutionCache(
+                "validated session plan differs from the reconstructed interaction plan".into(),
+            ));
+        }
         Some(plan)
     } else {
         None
@@ -8330,9 +8340,8 @@ where
             })
         };
         let payload =
-            if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+            if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::PointFit { group: group.index },
                     || should_cancel(),
@@ -8419,11 +8428,10 @@ where
                     rows,
                 })
             };
-            let payload = if let (Some(plan), Some(cache)) =
+            let payload = if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &MgaExecutionShardKindV1::MicomPair { pair: *pair },
                     || should_cancel(),
@@ -9391,8 +9399,7 @@ where
     P: Fn(MultiModRunnerProgressV1) + Sync,
 {
     let execution_plan = prepare_compiled_mga_execution_plan_v1(recipe, artifact, prepared)?;
-    cache
-        .ensure_valid(&execution_plan)
+    let mut execution_session = ValidatedMgaExecutionCacheSessionV1::open(&execution_plan, cache)
         .map_err(map_mga_execution_cache_error_v1)?;
     let output = run_compiled_mga_multigroup_internal_v1(
         dataset,
@@ -9402,14 +9409,15 @@ where
         prepared,
         refitter,
         None,
-        Some(cache),
+        Some(&mut execution_session),
         None,
         should_cancel,
         progress,
     )?;
-    let finalized_cache_sha256 = cache
-        .finalized_identity_sha256(&execution_plan)
+    let finalized_cache_sha256 = execution_session
+        .finalized_identity_sha256()
         .map_err(map_mga_execution_cache_error_v1)?;
+    drop(execution_session);
     Ok(ResumableMgaRunV1 {
         output,
         execution_plan,
@@ -9426,7 +9434,7 @@ fn run_compiled_mga_multigroup_internal_v1<R, C, P>(
     prepared: &PreparedMgaExecutionV1,
     refitter: &mut R,
     kernel_overrides: Option<&MgaKernelOverridesV1>,
-    mut execution_cache: Option<&mut MgaExecutionCacheV1>,
+    mut execution_cache: Option<&mut ValidatedMgaExecutionCacheSessionV1<'_>>,
     mut checkpoint: Option<&mut MgaShardCheckpointCallbackV1<'_>>,
     should_cancel: C,
     progress: P,
@@ -9474,11 +9482,17 @@ where
             &pairs,
         )
         .map_err(map_mga_execution_cache_error_v1)?;
-        execution_cache
+        if execution_cache
             .as_deref()
             .expect("execution cache presence checked above")
-            .ensure_valid(&plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
+            .plan()
+            .plan_sha256
+            != plan.plan_sha256
+        {
+            return Err(MultiModRunnerErrorV1::ExecutionCache(
+                "validated session plan differs from the reconstructed prepared plan".into(),
+            ));
+        }
         Some(plan)
     } else {
         None
@@ -9590,7 +9604,7 @@ where
                 .map(MultiModRunnerEvidenceV1::MgaFrequencyPairwisePartitionPlan),
         );
     }
-    if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+    if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
         for group in &prepared.design.groups {
             let expected = prepared
                 .observed_group_parameters
@@ -9599,7 +9613,6 @@ where
                 .cloned();
             let kind = MgaExecutionShardKindV1::PointFit { group: group.index };
             let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                plan,
                 cache,
                 &kind,
                 || should_cancel(),
@@ -9663,14 +9676,13 @@ where
                         pairwise_plan_key_v1(*pair)
                     ))
                 })?
-            } else if let (Some(plan), Some(cache)) =
+            } else if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 let kind = MgaExecutionShardKindV1::PairwisePermutation { pair: *pair };
                 let partition_plan = prepared_pairwise_plan_v1(prepared, *pair)
                     .expect("prepared pairwise plan inventory validated above");
                 let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &kind,
                     || should_cancel(),
@@ -9796,11 +9808,10 @@ where
                     "frequency omnibus result is missing from the kernel override".into(),
                 )
             })?
-        } else if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
+        } else if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
         {
             let kind = MgaExecutionShardKindV1::OmnibusPermutation;
             let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                plan,
                 cache,
                 &kind,
                 || should_cancel(),
@@ -9898,11 +9909,10 @@ where
                     "frequency bootstrap banks are missing from the kernel override".into(),
                 )
             })?
-        } else if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
+        } else if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
         {
             let kind = MgaExecutionShardKindV1::SharedGroupBootstrapBanks;
             let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                plan,
                 cache,
                 &kind,
                 || should_cancel(),
@@ -10033,7 +10043,7 @@ where
                             .collect::<Vec<_>>()
                     })
             };
-            let rows = if let (Some(plan), Some(cache)) =
+            let rows = if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 let kind = MgaExecutionShardKindV1::PairwiseBootstrapDerived {
@@ -10041,7 +10051,6 @@ where
                     pair: *pair,
                 };
                 let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &kind,
                     || should_cancel(),
@@ -10141,7 +10150,7 @@ where
                 }
                 Ok(rows)
             };
-            let rows = if let (Some(plan), Some(cache)) =
+            let rows = if let (Some(_plan), Some(cache)) =
                 (&execution_plan, execution_cache.as_deref_mut())
             {
                 let kind = MgaExecutionShardKindV1::PairwiseBootstrapDerived {
@@ -10149,7 +10158,6 @@ where
                     pair: *pair,
                 };
                 let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &kind,
                     || should_cancel(),
@@ -10327,7 +10335,7 @@ where
         ));
     }
     if requests_parametric
-        && let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
+        && let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut())
     {
         for pair in &pairs {
             for procedure in config.procedures.iter().copied().filter(|procedure| {
@@ -10385,7 +10393,6 @@ where
                     tests,
                 };
                 let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                    plan,
                     cache,
                     &kind,
                     || should_cancel(),
@@ -10422,7 +10429,6 @@ where
                 tests,
             };
             let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-                plan,
                 cache,
                 &MgaExecutionShardKindV1::ParametricWaldOmnibus,
                 || should_cancel(),
@@ -10440,14 +10446,14 @@ where
     }
 
     let effective_micom_pairs = if config.procedures.contains(&MgaProcedureV1::MicomPairwise) {
-        let rows = if let (Some(plan), Some(cache)) =
+        let rows = if let (Some(_plan), Some(cache)) =
             (&execution_plan, execution_cache.as_deref_mut())
         {
             let mut cached_rows = Vec::new();
             for pair in &pairs {
                 let kind = MgaExecutionShardKindV1::MicomPair { pair: *pair };
                 let payload = cache
-                    .payload(plan, &kind)
+                    .payload(&kind)
                     .map_err(map_mga_execution_cache_error_v1)?
                     .cloned()
                     .ok_or_else(|| {
@@ -10512,11 +10518,10 @@ where
         1,
         "mga:multiplicity",
     );
-    if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
+    if let (Some(_plan), Some(cache)) = (&execution_plan, execution_cache.as_deref_mut()) {
         let kind = MgaExecutionShardKindV1::MultiplicityAggregation;
         let input_rows_sha256 = sha256_serialized(&pairwise);
         let payload = execute_or_reuse_mga_shard_checkpointed_v1(
-            plan,
             cache,
             &kind,
             || should_cancel(),
@@ -10614,11 +10619,6 @@ where
     }
     if should_cancel() {
         return Err(MultiModRunnerErrorV1::Cancelled);
-    }
-    if let (Some(plan), Some(cache)) = (&execution_plan, execution_cache.as_deref()) {
-        cache
-            .finalized_identity_sha256(plan)
-            .map_err(map_mga_execution_cache_error_v1)?;
     }
     report(
         &progress,

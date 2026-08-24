@@ -187,6 +187,24 @@ pub struct MgaExecutionCacheV1 {
     pub entries: Vec<MgaExecutionCacheEntryV1>,
 }
 
+/// Exclusive, in-memory authority for a cache that has passed one complete
+/// validation against an immutable execution plan.
+///
+/// The ordinary cache methods remain deliberately defensive because callers
+/// can construct or deserialize `MgaExecutionCacheV1` directly. A runner that
+/// holds this session, however, has exclusive access to the cache: historical
+/// entries cannot change behind the validation, so cached lookups need not
+/// reserialize every prior payload. New entries are validated and hashed once
+/// before they become visible through the session.
+pub(crate) struct ValidatedMgaExecutionCacheSessionV1<'a> {
+    plan: &'a MgaExecutionPlanV1,
+    cache: &'a mut MgaExecutionCacheV1,
+    shard_identity_by_kind: BTreeMap<MgaExecutionShardKindV1, String>,
+    ordinal_by_shard_identity: BTreeMap<String, usize>,
+    entry_index_by_shard_identity: BTreeMap<String, usize>,
+    completed_shard_identities: BTreeSet<String>,
+}
+
 #[derive(Debug, Clone, thiserror::Error, PartialEq, Eq)]
 pub enum MgaExecutionCacheErrorV1 {
     #[error("MGA execution plan is invalid: {0}")]
@@ -647,6 +665,145 @@ impl MgaExecutionCacheV1 {
     }
 }
 
+impl<'a> ValidatedMgaExecutionCacheSessionV1<'a> {
+    /// Opens an exclusive fast-path session after one full payload-integrity
+    /// validation. No unchecked cache can enter the session.
+    pub(crate) fn open(
+        plan: &'a MgaExecutionPlanV1,
+        cache: &'a mut MgaExecutionCacheV1,
+    ) -> Result<Self, MgaExecutionCacheErrorV1> {
+        cache.ensure_valid(plan)?;
+        let mut shard_identity_by_kind = BTreeMap::new();
+        for shard in &plan.shards {
+            // Preserve `MgaExecutionPlanV1::shard`'s first-match semantics.
+            shard_identity_by_kind
+                .entry(shard.kind.clone())
+                .or_insert_with(|| shard.shard_identity_sha256.clone());
+        }
+        let ordinal_by_shard_identity = plan
+            .shards
+            .iter()
+            .enumerate()
+            .map(|(ordinal, shard)| (shard.shard_identity_sha256.clone(), ordinal))
+            .collect::<BTreeMap<_, _>>();
+        let entry_index_by_shard_identity = cache
+            .entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| (entry.shard_identity_sha256.clone(), index))
+            .collect::<BTreeMap<_, _>>();
+        let completed_shard_identities = entry_index_by_shard_identity
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        Ok(Self {
+            plan,
+            cache,
+            shard_identity_by_kind,
+            ordinal_by_shard_identity,
+            entry_index_by_shard_identity,
+            completed_shard_identities,
+        })
+    }
+
+    /// Returns a previously validated payload without rehashing historical
+    /// payloads. The session's exclusive borrow keeps the index authoritative.
+    pub(crate) fn payload(
+        &self,
+        kind: &MgaExecutionShardKindV1,
+    ) -> Result<Option<&MgaExecutionShardPayloadV1>, MgaExecutionCacheErrorV1> {
+        let shard_identity = self.shard_identity_by_kind.get(kind).ok_or_else(|| {
+            MgaExecutionCacheErrorV1::InvalidPlan("requested shard is not planned".into())
+        })?;
+        Ok(self
+            .entry_index_by_shard_identity
+            .get(shard_identity)
+            .map(|index| &self.cache.entries[*index].payload))
+    }
+
+    /// Inserts one new shard while validating only the new payload and its
+    /// dependency boundary. Historical payloads were authenticated by `open`
+    /// and remain immutable for the lifetime of this session.
+    pub(crate) fn insert(
+        &mut self,
+        kind: &MgaExecutionShardKindV1,
+        payload: MgaExecutionShardPayloadV1,
+    ) -> Result<(), MgaExecutionCacheErrorV1> {
+        let shard = self.plan.shard(kind).ok_or_else(|| {
+            MgaExecutionCacheErrorV1::InvalidPlan("completed shard is not planned".into())
+        })?;
+        if self
+            .completed_shard_identities
+            .contains(&shard.shard_identity_sha256)
+        {
+            return Err(MgaExecutionCacheErrorV1::InvalidCache(
+                "no-retry cache refuses to replace a completed shard".into(),
+            ));
+        }
+        if !payload.matches_kind(kind) {
+            return Err(MgaExecutionCacheErrorV1::InvalidPayload(
+                "completed payload type or identity differs from the planned shard".into(),
+            ));
+        }
+        if self
+            .plan
+            .prerequisite_shards(kind)
+            .iter()
+            .any(|dependency| {
+                !self
+                    .completed_shard_identities
+                    .contains(&dependency.shard_identity_sha256)
+            })
+        {
+            return Err(MgaExecutionCacheErrorV1::Incomplete(
+                "cannot commit a shard before every planned prerequisite is complete".into(),
+            ));
+        }
+
+        let entry = MgaExecutionCacheEntryV1 {
+            shard_identity_sha256: shard.shard_identity_sha256.clone(),
+            payload_sha256: sha256_serialized(&payload),
+            payload,
+        };
+        self.cache.entries.push(entry);
+        self.cache.entries.sort_by_key(|entry| {
+            self.ordinal_by_shard_identity
+                .get(&entry.shard_identity_sha256)
+                .copied()
+                .expect("session contains only fully planned shard identities")
+        });
+        self.completed_shard_identities
+            .insert(shard.shard_identity_sha256.clone());
+        self.rebuild_entry_index();
+        Ok(())
+    }
+
+    /// Immutable cache exposure for transactional checkpoint callbacks.
+    pub(crate) fn cache(&self) -> &MgaExecutionCacheV1 {
+        self.cache
+    }
+
+    /// Immutable plan authority paired with this validated cache session.
+    pub(crate) fn plan(&self) -> &MgaExecutionPlanV1 {
+        self.plan
+    }
+
+    /// Produces the existing finalized identity after one final full audit.
+    pub(crate) fn finalized_identity_sha256(&self) -> Result<String, MgaExecutionCacheErrorV1> {
+        self.cache.finalized_identity_sha256(self.plan)
+    }
+
+    fn rebuild_entry_index(&mut self) {
+        self.entry_index_by_shard_identity = self
+            .cache
+            .entries
+            .iter()
+            .enumerate()
+            .map(|(index, entry)| (entry.shard_identity_sha256.clone(), index))
+            .collect();
+    }
+}
+
 /// Runs one immutable shard transactionally. Completed payloads are reused;
 /// Failed or unfinished attempts are never inserted. A shard that finishes
 /// successfully while cancellation arrives is committed before cancellation
@@ -868,6 +1025,142 @@ mod tests {
             plan,
             MgaExecutionShardPayloadV1::OmnibusPermutation { value: result },
         )
+    }
+
+    #[test]
+    fn validated_session_rejects_tampered_cache_on_open() {
+        let plan = plan();
+        let kind = MgaExecutionShardKindV1::PointFit {
+            group: GroupIndexV1::new(0).unwrap(),
+        };
+        let mut cache = MgaExecutionCacheV1::empty(&plan).unwrap();
+        cache
+            .insert(
+                &plan,
+                &kind,
+                point_payload(GroupIndexV1::new(0).unwrap(), 0.25),
+            )
+            .unwrap();
+        cache.entries[0].payload_sha256 = "0".repeat(64);
+
+        assert!(matches!(
+            ValidatedMgaExecutionCacheSessionV1::open(&plan, &mut cache),
+            Err(MgaExecutionCacheErrorV1::InvalidPayload(_))
+        ));
+    }
+
+    #[test]
+    fn validated_session_indexes_reuse_and_checks_only_the_new_shard_boundary() {
+        let plan = plan();
+        let first_kind = MgaExecutionShardKindV1::PointFit {
+            group: GroupIndexV1::new(0).unwrap(),
+        };
+        let second_kind = MgaExecutionShardKindV1::PointFit {
+            group: GroupIndexV1::new(1).unwrap(),
+        };
+        let expected = point_payload(GroupIndexV1::new(0).unwrap(), 0.25);
+        let mut cache = MgaExecutionCacheV1::empty(&plan).unwrap();
+        cache.insert(&plan, &first_kind, expected.clone()).unwrap();
+
+        let mut session = ValidatedMgaExecutionCacheSessionV1::open(&plan, &mut cache).unwrap();
+        assert_eq!(session.plan().plan_sha256, plan.plan_sha256);
+        assert_eq!(session.payload(&first_kind).unwrap(), Some(&expected));
+        assert_eq!(session.cache().entries.len(), 1);
+
+        assert!(matches!(
+            session.insert(
+                &MgaExecutionShardKindV1::ParametricWaldOmnibus,
+                MgaExecutionShardPayloadV1::ParametricWaldOmnibus {
+                    output_identity_sha256: "b".repeat(64),
+                    tests: Vec::new(),
+                },
+            ),
+            Err(MgaExecutionCacheErrorV1::Incomplete(_))
+        ));
+        assert!(matches!(
+            session.insert(
+                &second_kind,
+                point_payload(GroupIndexV1::new(0).unwrap(), 0.5),
+            ),
+            Err(MgaExecutionCacheErrorV1::InvalidPayload(_))
+        ));
+
+        let second_payload = point_payload(GroupIndexV1::new(1).unwrap(), 0.5);
+        session
+            .insert(&second_kind, second_payload.clone())
+            .unwrap();
+        assert_eq!(
+            session.payload(&second_kind).unwrap(),
+            Some(&second_payload)
+        );
+        let second_entry = session
+            .cache()
+            .entries
+            .iter()
+            .find(|entry| entry.payload == second_payload)
+            .unwrap();
+        assert_eq!(
+            second_entry.payload_sha256,
+            sha256_serialized(&second_payload)
+        );
+        assert!(matches!(
+            session.insert(&second_kind, second_payload),
+            Err(MgaExecutionCacheErrorV1::InvalidCache(_))
+        ));
+        session.cache().ensure_valid(session.plan()).unwrap();
+    }
+
+    #[test]
+    fn validated_session_preserves_cache_serialization_and_final_identity() {
+        let plan = plan();
+        let payloads = plan
+            .shards
+            .iter()
+            .map(|shard| {
+                let payload = match &shard.kind {
+                    MgaExecutionShardKindV1::PointFit { group } => {
+                        point_payload(*group, group.get() as f64)
+                    }
+                    MgaExecutionShardKindV1::ParametricWaldOmnibus => {
+                        MgaExecutionShardPayloadV1::ParametricWaldOmnibus {
+                            output_identity_sha256: "b".repeat(64),
+                            tests: Vec::new(),
+                        }
+                    }
+                    MgaExecutionShardKindV1::MultiplicityAggregation => {
+                        MgaExecutionShardPayloadV1::MultiplicityAggregation {
+                            input_rows_sha256: "c".repeat(64),
+                            rows: Vec::new(),
+                        }
+                    }
+                    other => panic!("unexpected fixture shard {other:?}"),
+                };
+                (shard.kind.clone(), payload)
+            })
+            .collect::<Vec<_>>();
+
+        let mut legacy_cache = MgaExecutionCacheV1::empty(&plan).unwrap();
+        for (kind, payload) in payloads.iter().cloned() {
+            legacy_cache.insert(&plan, &kind, payload).unwrap();
+        }
+        let legacy_identity = legacy_cache.finalized_identity_sha256(&plan).unwrap();
+        let legacy_json = serde_json::to_vec(&legacy_cache).unwrap();
+
+        let mut session_cache = MgaExecutionCacheV1::empty(&plan).unwrap();
+        let session_identity;
+        {
+            let mut session =
+                ValidatedMgaExecutionCacheSessionV1::open(&plan, &mut session_cache).unwrap();
+            for (kind, payload) in payloads {
+                session.insert(&kind, payload).unwrap();
+            }
+            assert_eq!(session.cache().entries.len(), plan.shards.len());
+            session_identity = session.finalized_identity_sha256().unwrap();
+        }
+
+        assert_eq!(session_identity, legacy_identity);
+        assert_eq!(serde_json::to_vec(&session_cache).unwrap(), legacy_json);
+        assert_eq!(session_cache, legacy_cache);
     }
 
     #[test]

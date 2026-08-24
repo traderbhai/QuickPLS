@@ -277,6 +277,36 @@ class MgaShardContractTests(unittest.TestCase):
         self.assertIn("qpls.multimod.qualification-dataset-id.v1", support)
         self.assertIn("dataset.id = Uuid::from_bytes(uuid_bytes);", support)
 
+    def test_resume_hot_path_validates_retained_payloads_once(self) -> None:
+        root = Path(__file__).parents[2]
+        producer = (
+            root / "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs"
+        ).read_text(encoding="utf-8")
+        loader_start = producer.index("    fn load_cache(")
+        loader_end = producer.index("    fn persist_cache(", loader_start)
+        loader = producer[loader_start:loader_end]
+        self.assertEqual(loader.count("cache.ensure_valid(plan)?;"), 1)
+        self.assertNotIn("checkpoint.entry.clone()", loader)
+        self.assertIn("checkpoint_prerequisites_are_complete(", loader)
+        self.assertIn("cache_index_sha256_from_metadata(", loader)
+
+        envelope_start = producer.index("    fn checkpoint_envelope(")
+        envelope_end = producer.index("    fn validate_checkpoint(", envelope_start)
+        envelope = producer[envelope_start:envelope_end]
+        self.assertNotIn("cache.ensure_valid(plan)?;", envelope)
+        self.assertIn("cache.entries.len() != persisted_shards.len() + 1", envelope)
+
+        runner = (
+            root / "crates/qpls-runner/src/multimod_execution_v1.rs"
+        ).read_text(encoding="utf-8")
+        helper_start = runner.index("fn execute_or_reuse_mga_shard_checkpointed_v1")
+        helper_end = runner.index("pub struct MultiModRunOutputV1", helper_start)
+        helper = runner[helper_start:helper_end]
+        self.assertIn("ValidatedMgaExecutionCacheSessionV1", helper)
+        self.assertIn("session.payload(kind)?", helper)
+        self.assertIn("session.insert(kind, payload.clone())?", helper)
+        self.assertNotIn("execute_or_reuse_mga_shard_with_checkpoint_v1", helper)
+
     def test_multiple_hoc_mga_uses_only_the_additive_base_projection(self) -> None:
         runner = (
             Path(__file__).parents[2]

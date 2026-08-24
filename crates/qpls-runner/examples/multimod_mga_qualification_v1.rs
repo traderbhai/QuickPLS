@@ -15,7 +15,7 @@ use qpls_runner::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
@@ -395,21 +395,61 @@ struct ExternalMgaCacheCheckpointV1 {
     entry: MgaExecutionCacheEntryV1,
 }
 
-fn cache_index_sha256(cache: &MgaExecutionCacheV1) -> String {
+fn cache_index_sha256_from_metadata<'a>(
+    contract: &str,
+    plan_sha256: &str,
+    entries: impl IntoIterator<Item = (&'a str, &'a str)>,
+) -> String {
     sha256_serialized(&(
-        cache.contract.as_str(),
-        cache.plan_sha256.as_str(),
-        cache
-            .entries
-            .iter()
-            .map(|entry| {
-                (
-                    entry.shard_identity_sha256.as_str(),
-                    entry.payload_sha256.as_str(),
-                )
-            })
-            .collect::<Vec<_>>(),
+        contract,
+        plan_sha256,
+        entries.into_iter().collect::<Vec<_>>(),
     ))
+}
+
+fn cache_index_sha256(cache: &MgaExecutionCacheV1) -> String {
+    cache_index_sha256_from_metadata(
+        &cache.contract,
+        &cache.plan_sha256,
+        cache.entries.iter().map(|entry| {
+            (
+                entry.shard_identity_sha256.as_str(),
+                entry.payload_sha256.as_str(),
+            )
+        }),
+    )
+}
+
+/// Metadata-only reconstruction of the V1 prerequisite boundary. This mirrors
+/// `MgaExecutionPlanV1::prerequisite_shards` without revalidating or hashing
+/// any retained payload while each published prefix is checked.
+fn checkpoint_prerequisites_are_complete(
+    plan: &MgaExecutionPlanV1,
+    kind: &MgaExecutionShardKindV1,
+    completed_shards: &BTreeSet<String>,
+) -> bool {
+    if matches!(kind, MgaExecutionShardKindV1::PointFit { .. }) {
+        return true;
+    }
+    plan.shards
+        .iter()
+        .filter(|shard| {
+            if matches!(kind, MgaExecutionShardKindV1::MultiplicityAggregation) {
+                return !matches!(
+                    &shard.kind,
+                    MgaExecutionShardKindV1::MultiplicityAggregation
+                );
+            }
+            matches!(&shard.kind, MgaExecutionShardKindV1::PointFit { .. })
+                || (matches!(
+                    kind,
+                    MgaExecutionShardKindV1::PairwiseBootstrapDerived { .. }
+                ) && matches!(
+                    &shard.kind,
+                    MgaExecutionShardKindV1::SharedGroupBootstrapBanks
+                ))
+        })
+        .all(|shard| completed_shards.contains(&shard.shard_identity_sha256))
 }
 
 impl CellExecutionContext {
@@ -442,18 +482,51 @@ impl CellExecutionContext {
         persisted_shards: &std::collections::BTreeSet<String>,
     ) -> Result<ExternalMgaCacheCheckpointV1, DynError> {
         self.ensure_identity()?;
-        cache.ensure_valid(plan)?;
-        let new_entries = cache
+        plan.ensure_valid()?;
+        if cache.contract != MGA_EXECUTION_CACHE_CONTRACT_V1
+            || cache.plan_sha256 != plan.plan_sha256
+            || cache.entries.len() != persisted_shards.len() + 1
+        {
+            return Err(invalid(
+                "MGA production callback cache metadata differs from its validated session",
+            ));
+        }
+        let mut completed_identities = BTreeSet::new();
+        for cached_entry in &cache.entries {
+            if !completed_identities.insert(cached_entry.shard_identity_sha256.as_str())
+                || !is_sha256(&cached_entry.payload_sha256)
+                || plan
+                    .shards
+                    .iter()
+                    .all(|shard| shard.shard_identity_sha256 != cached_entry.shard_identity_sha256)
+            {
+                return Err(invalid(
+                    "MGA production callback contains invalid or duplicate shard metadata",
+                ));
+            }
+        }
+        if persisted_shards
+            .iter()
+            .any(|identity| !completed_identities.contains(identity.as_str()))
+        {
+            return Err(invalid(
+                "MGA production callback omitted a previously persisted shard",
+            ));
+        }
+        let mut new_entries = cache
             .entries
             .iter()
-            .filter(|entry| !persisted_shards.contains(&entry.shard_identity_sha256))
-            .cloned()
-            .collect::<Vec<_>>();
-        let [entry] = new_entries.as_slice() else {
+            .filter(|entry| !persisted_shards.contains(&entry.shard_identity_sha256));
+        let Some(entry) = new_entries.next() else {
             return Err(invalid(
                 "each MGA production callback must add exactly one immutable shard",
             ));
         };
+        if new_entries.next().is_some() {
+            return Err(invalid(
+                "each MGA production callback must add exactly one immutable shard",
+            ));
+        }
         let entry = entry.clone();
         let shard_ordinal = plan
             .shards
@@ -582,28 +655,68 @@ impl CellExecutionContext {
                 )));
             }
         }
+        let checkpoint_count = checkpoints.len();
         let mut cache = MgaExecutionCacheV1::empty(plan)?;
-        for expected in 1..=checkpoints.len() {
-            let checkpoint = checkpoints.get(&expected).ok_or_else(|| {
+        let mut entries_by_plan_ordinal = (0..plan.shards.len())
+            .map(|_| None)
+            .collect::<Vec<Option<MgaExecutionCacheEntryV1>>>();
+        let mut metadata_by_plan_ordinal = (0..plan.shards.len())
+            .map(|_| None)
+            .collect::<Vec<Option<(String, String)>>>();
+        let mut completed_shard_identities = BTreeSet::new();
+        for expected in 1..=checkpoint_count {
+            let checkpoint = checkpoints.remove(&expected).ok_or_else(|| {
                 invalid(format!(
                     "MGA cache checkpoint sequence is missing ordinal {expected}"
                 ))
             })?;
-            cache.entries.push(checkpoint.entry.clone());
-            cache.entries.sort_by_key(|entry| {
-                plan.shards
-                    .iter()
-                    .position(|shard| shard.shard_identity_sha256 == entry.shard_identity_sha256)
-                    .expect("checkpoint entry identity validated above")
-            });
-            cache.ensure_valid(plan)?;
-            if cache_index_sha256(&cache) != checkpoint.cache_prefix_sha256 {
+            let plan_ordinal = checkpoint.shard_ordinal as usize;
+            let planned_shard = plan
+                .shards
+                .get(plan_ordinal)
+                .expect("checkpoint ordinal validated before reconstruction");
+            if completed_shard_identities.contains(&checkpoint.entry.shard_identity_sha256)
+                || entries_by_plan_ordinal[plan_ordinal].is_some()
+            {
+                return Err(invalid(format!(
+                    "MGA cache checkpoint sequence repeats a production shard at ordinal {expected}"
+                )));
+            }
+            if !checkpoint_prerequisites_are_complete(
+                plan,
+                &planned_shard.kind,
+                &completed_shard_identities,
+            ) {
+                return Err(invalid(format!(
+                    "MGA cache checkpoint sequence violates production prerequisites at ordinal {expected}"
+                )));
+            }
+            completed_shard_identities.insert(checkpoint.entry.shard_identity_sha256.clone());
+            metadata_by_plan_ordinal[plan_ordinal] = Some((
+                checkpoint.entry.shard_identity_sha256.clone(),
+                checkpoint.entry.payload_sha256.clone(),
+            ));
+            if cache_index_sha256_from_metadata(
+                &cache.contract,
+                &cache.plan_sha256,
+                metadata_by_plan_ordinal.iter().filter_map(|entry| {
+                    entry
+                        .as_ref()
+                        .map(|(shard_identity_sha256, payload_sha256)| {
+                            (shard_identity_sha256.as_str(), payload_sha256.as_str())
+                        })
+                }),
+            ) != checkpoint.cache_prefix_sha256
+            {
                 return Err(invalid(format!(
                     "MGA cache prefix digest mismatch at ordinal {expected}"
                 )));
             }
+            entries_by_plan_ordinal[plan_ordinal] = Some(checkpoint.entry);
         }
-        Ok((cache, checkpoints.len()))
+        cache.entries = entries_by_plan_ordinal.into_iter().flatten().collect();
+        cache.ensure_valid(plan)?;
+        Ok((cache, checkpoint_count))
     }
 
     fn persist_cache(
@@ -2652,6 +2765,149 @@ fn main() -> Result<(), DynError> {
     }
     run_monolithic(&args)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod checkpoint_loader_tests {
+    use super::*;
+
+    fn digest(character: char) -> String {
+        character.to_string().repeat(64)
+    }
+
+    fn shard(
+        ordinal: u32,
+        kind: MgaExecutionShardKindV1,
+        identity_character: char,
+    ) -> MgaExecutionShardV1 {
+        MgaExecutionShardV1 {
+            ordinal,
+            kind,
+            input_identity_sha256: digest('f'),
+            shard_identity_sha256: digest(identity_character),
+        }
+    }
+
+    #[test]
+    fn metadata_cache_index_retains_the_v1_cache_digest_contract() {
+        let cache = MgaExecutionCacheV1 {
+            contract: "qpls.mga.execution_cache.v1".into(),
+            plan_sha256: digest('a'),
+            entries: vec![MgaExecutionCacheEntryV1 {
+                shard_identity_sha256: digest('b'),
+                payload_sha256: digest('c'),
+                payload: MgaExecutionShardPayloadV1::PointFit {
+                    value: GroupParameterVectorV1 {
+                        group: GroupIndexV1::new(0).expect("valid group"),
+                        values: vec![0.5],
+                    },
+                    ordinary_path_standard_errors: Vec::new(),
+                },
+            }],
+        };
+        let legacy_digest = sha256_serialized(&(
+            cache.contract.as_str(),
+            cache.plan_sha256.as_str(),
+            cache
+                .entries
+                .iter()
+                .map(|entry| {
+                    (
+                        entry.shard_identity_sha256.as_str(),
+                        entry.payload_sha256.as_str(),
+                    )
+                })
+                .collect::<Vec<_>>(),
+        ));
+        let metadata_digest = cache_index_sha256_from_metadata(
+            &cache.contract,
+            &cache.plan_sha256,
+            cache.entries.iter().map(|entry| {
+                (
+                    entry.shard_identity_sha256.as_str(),
+                    entry.payload_sha256.as_str(),
+                )
+            }),
+        );
+        assert_eq!(metadata_digest, legacy_digest);
+        assert_eq!(cache_index_sha256(&cache), legacy_digest);
+    }
+
+    #[test]
+    fn checkpoint_prerequisites_are_checked_at_each_published_prefix() {
+        let point = shard(
+            0,
+            MgaExecutionShardKindV1::PointFit {
+                group: GroupIndexV1::new(0).expect("valid group"),
+            },
+            'a',
+        );
+        let bank = shard(1, MgaExecutionShardKindV1::SharedGroupBootstrapBanks, 'b');
+        let derived = shard(
+            2,
+            MgaExecutionShardKindV1::PairwiseBootstrapDerived {
+                procedure: MgaProcedureV1::HenselerPlsMga,
+                pair: OrderedGroupPairV1 {
+                    group_a: GroupIndexV1::new(0).expect("valid group"),
+                    group_b: GroupIndexV1::new(1).expect("valid group"),
+                },
+            },
+            'c',
+        );
+        let multiplicity = shard(3, MgaExecutionShardKindV1::MultiplicityAggregation, 'd');
+        let plan = MgaExecutionPlanV1 {
+            contract: "qpls.mga.execution_plan.v1".into(),
+            execution_scope: "mga_scientific_task_graph_v1".into(),
+            analysis_identity_sha256: digest('1'),
+            dataset_fingerprint: "fixture".into(),
+            design_identity_sha256: digest('2'),
+            parameter_inventory_sha256: digest('3'),
+            seed: 42,
+            retry_policy: "none".into(),
+            shards: vec![
+                point.clone(),
+                bank.clone(),
+                derived.clone(),
+                multiplicity.clone(),
+            ],
+            plan_sha256: digest('4'),
+        };
+        let mut completed = BTreeSet::new();
+        assert!(checkpoint_prerequisites_are_complete(
+            &plan,
+            &point.kind,
+            &completed
+        ));
+        assert!(!checkpoint_prerequisites_are_complete(
+            &plan, &bank.kind, &completed
+        ));
+        completed.insert(point.shard_identity_sha256.clone());
+        assert!(checkpoint_prerequisites_are_complete(
+            &plan, &bank.kind, &completed
+        ));
+        assert!(!checkpoint_prerequisites_are_complete(
+            &plan,
+            &derived.kind,
+            &completed
+        ));
+        completed.insert(bank.shard_identity_sha256.clone());
+        assert!(checkpoint_prerequisites_are_complete(
+            &plan,
+            &derived.kind,
+            &completed
+        ));
+        assert!(!checkpoint_prerequisites_are_complete(
+            &plan,
+            &multiplicity.kind,
+            &completed
+        ));
+        completed.insert(derived.shard_identity_sha256);
+        assert!(checkpoint_prerequisites_are_complete(
+            &plan,
+            &multiplicity.kind,
+            &completed
+        ));
+    }
 }
 
 #[cfg(test)]

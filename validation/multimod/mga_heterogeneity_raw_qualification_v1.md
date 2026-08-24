@@ -34,6 +34,15 @@ split. Only the complete exact inventory is aggregated and passed to the
 unchanged independent Python comparator. The qualification-scale receipt
 contains:
 
+Resume validation is linear in retained scientific payload bytes. The loader
+checks every checkpoint envelope, filename, contiguous completion index,
+historical metadata-prefix digest, and prerequisite-at-publication boundary,
+then authenticates every retained payload once after reconstruction. The
+runner opens an exclusive validated cache session, authenticates each new
+payload once before insertion, and performs one final full audit before result
+publication. This preserves the V1 checkpoint and cache identities without
+re-hashing the entire historical payload set after every shard.
+
 - ordinary recursive General SEM PLS at exactly 2, 3, 5, and 20 groups, with
   all 190 comparisons explicitly confirmed in the 20-group cell;
 - structural paths, outer loadings, outer weights, and endogenous R-squared;
