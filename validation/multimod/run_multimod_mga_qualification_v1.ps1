@@ -424,7 +424,12 @@ try {
             [int]$sentinelReceipt.permutation_samples -ne 5000 -or
             [int]$sentinelReceipt.bootstrap_samples -ne 5000 -or
             [int]$sentinelReceipt.planned_production_shards -lt 1 -or
-            [int]$sentinelReceipt.pending_production_shards -ne [int]$sentinelReceipt.planned_production_shards) {
+            [int]$sentinelReceipt.pending_production_shards -ne [int]$sentinelReceipt.planned_production_shards -or
+            [string]$sentinelReceipt.deterministic_rebuild_preflight.cell_id -ne "mga-general-20-groups" -or
+            [int]$sentinelReceipt.deterministic_rebuild_preflight.rebuilds -ne 2 -or
+            $sentinelReceipt.deterministic_rebuild_preflight.identical -ne $true -or
+            [string]$sentinelReceipt.deterministic_rebuild_preflight.production_plan_sha256 -notmatch '^[0-9a-f]{64}$' -or
+            [int]$sentinelReceipt.deterministic_rebuild_preflight.planned_production_shards -ne 783) {
             throw "The diagnostic-only MGA root sentinel receipt is incomplete or identity-mismatched."
         }
         Move-Item -LiteralPath $temporarySentinel -Destination (Join-Path $resolvedWorkRoot "root-sentinel.json") -Force

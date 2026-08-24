@@ -49,12 +49,24 @@ pub fn dataset_from_columns(
         }
         csv.push('\n');
     }
-    Ok(import_delimited_bytes(
-        csv.as_bytes(),
+    let mut dataset =
+        import_delimited_bytes(csv.as_bytes(), source_name, b',', &ImportOptions::default())?;
+    // Production imports intentionally receive a fresh identity. Qualification
+    // fixtures are reconstructed by separate resumable processes, so bind their
+    // identity to immutable fixture content instead of process-local randomness.
+    let digest = sha256_serialized(&(
+        "qpls.multimod.qualification-dataset-id.v1",
         source_name,
-        b',',
-        &ImportOptions::default(),
-    )?)
+        ",",
+        dataset.fingerprint.0.as_str(),
+    ));
+    let mut uuid_bytes = u128::from_str_radix(&digest[..32], 16)
+        .map_err(|_| invalid("qualification dataset identity digest is invalid"))?
+        .to_be_bytes();
+    uuid_bytes[6] = (uuid_bytes[6] & 0x0f) | 0x80;
+    uuid_bytes[8] = (uuid_bytes[8] & 0x3f) | 0x80;
+    dataset.id = Uuid::from_bytes(uuid_bytes);
+    Ok(dataset)
 }
 
 pub fn numeric(values: impl IntoIterator<Item = f64>) -> Vec<Option<String>> {

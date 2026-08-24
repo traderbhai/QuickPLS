@@ -37,6 +37,7 @@ const BASELINE_ENVIRONMENT_CONTRACT: &str = concat!(
 );
 const PERMUTATIONS: u32 = 5_000;
 const BOOTSTRAPS: u32 = 5_000;
+const MAX_GROUP_PLAN_SHARDS: usize = 783;
 
 fn sha256_bytes(bytes: &[u8]) -> String {
     let mut digest = Sha256::new();
@@ -2063,6 +2064,16 @@ fn write_root_sentinel(args: &Arguments) -> Result<(), DynError> {
             "root sentinel did not prepare the exact nonempty production MGA shard plan",
         ));
     }
+    let deterministic_plan_first = prepare_cell_execution_plan("mga-general-20-groups", args.seed)?;
+    let deterministic_plan_second =
+        prepare_cell_execution_plan("mga-general-20-groups", args.seed)?;
+    if deterministic_plan_first != deterministic_plan_second
+        || deterministic_plan_first.shards.len() != MAX_GROUP_PLAN_SHARDS
+    {
+        return Err(invalid(
+            "20-group resumable MGA plan is not deterministic across independent fixture rebuilds",
+        ));
+    }
     let receipt = json!({
         "schema_version": SCHEMA_VERSION,
         "suite_id": "qpls.multimod.mga.root-compiler-sentinel.v1",
@@ -2083,6 +2094,13 @@ fn write_root_sentinel(args: &Arguments) -> Result<(), DynError> {
         "production_plan_sha256": execution_plan.plan_sha256,
         "planned_production_shards": execution_plan.shards.len(),
         "pending_production_shards": pending.len(),
+        "deterministic_rebuild_preflight": {
+            "cell_id": "mga-general-20-groups",
+            "rebuilds": 2,
+            "identical": true,
+            "production_plan_sha256": deterministic_plan_first.plan_sha256,
+            "planned_production_shards": deterministic_plan_first.shards.len(),
+        },
     });
     fs::write(&args.output, serde_json::to_vec_pretty(&receipt)?)?;
     Ok(())
@@ -2634,4 +2652,27 @@ fn main() -> Result<(), DynError> {
     }
     run_monolithic(&args)?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn qualification_dataset_and_max_group_plan_identities_are_deterministic() {
+        let headers = vec!["x".to_string()];
+        let columns = vec![numeric([1.0, 2.0, 3.0])];
+        let first_dataset = dataset_from_columns("stable-fixture.csv", &headers, &columns).unwrap();
+        let second_dataset =
+            dataset_from_columns("stable-fixture.csv", &headers, &columns).unwrap();
+        let renamed_dataset =
+            dataset_from_columns("renamed-fixture.csv", &headers, &columns).unwrap();
+        assert_eq!(first_dataset.id, second_dataset.id);
+        assert_ne!(first_dataset.id, renamed_dataset.id);
+
+        let first = prepare_cell_execution_plan("mga-general-20-groups", 42).unwrap();
+        let second = prepare_cell_execution_plan("mga-general-20-groups", 42).unwrap();
+        assert_eq!(first, second);
+        assert_eq!(first.shards.len(), MAX_GROUP_PLAN_SHARDS);
+    }
 }

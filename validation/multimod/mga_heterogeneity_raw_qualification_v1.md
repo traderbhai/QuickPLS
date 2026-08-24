@@ -17,8 +17,13 @@ build and then runs
 the frozen MGA matrix as 15 independent production cells plus one boundary
 cell. Before any scientific cell starts, a diagnostic-only two-minute sentinel
 must compile the exact two-group General SEM authority and prepare its full
-production execution plan. It publishes no estimate and does not run or reduce
-a scientific ledger. The normal pool then runs at most four cells concurrently.
+production execution plan. It also reconstructs the 783-shard 20-group plan
+twice and requires exact plan and shard identity equality. Synthetic
+qualification datasets use a domain-separated, source-and-fingerprint-bound
+UUID so the same fixture has the same analytical identity in every resumable
+process; normal product imports retain their ordinary fresh identities. The
+sentinel publishes no estimate and does not run or reduce a scientific ledger.
+The normal pool then runs at most four cells concurrently.
 Every scientific cell calls the production resumable MGA runner and atomically
 retains one immutable, SHA-bound cache entry after each completed production MGA
 shard. An interrupted 30-minute cell slice is retried only after QuickPLS

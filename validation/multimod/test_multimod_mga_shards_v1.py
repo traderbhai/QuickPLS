@@ -251,6 +251,9 @@ class MgaShardContractTests(unittest.TestCase):
             '"qpls.multimod.mga.root-compiler-sentinel.v1"',
             '"qpls.multimod.mga.verified-cache-progress.v1"',
             '"scientific_result_published": false',
+            '"deterministic_rebuild_preflight"',
+            'prepare_cell_execution_plan("mga-general-20-groups", args.seed)',
+            'MAX_GROUP_PLAN_SHARDS',
             "prepare_fixture_cell_authority(",
             "write_cache_status(&args, cell_id)",
             "let configured_metamorphism = env::var_os(metamorphic::METAMORPHISM_ENV_V1);",
@@ -266,6 +269,13 @@ class MgaShardContractTests(unittest.TestCase):
         ):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, producer)
+
+        support = (
+            Path(__file__).parents[2]
+            / "crates/qpls-runner/examples/support_multimod_qualification/mod.rs"
+        ).read_text(encoding="utf-8")
+        self.assertIn("qpls.multimod.qualification-dataset-id.v1", support)
+        self.assertIn("dataset.id = Uuid::from_bytes(uuid_bytes);", support)
 
     def test_multiple_hoc_mga_uses_only_the_additive_base_projection(self) -> None:
         runner = (
