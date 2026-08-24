@@ -31,8 +31,9 @@ use qpls_core::{
     HeterogeneityClassContrastV2, HeterogeneityClassParameterV2,
     HeterogeneityInferenceLockReceiptV2,
     HeterogeneityInteractionProfileV2 as CoreHeterogeneityProfileV2,
-    HigherOrderConstructionApproachV4, INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION,
-    InferenceAlternativeV1, InterventionalEffectResultV1,
+    HigherOrderConstructionApproachV4, INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1,
+    INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION, InferenceAlternativeV1,
+    InterventionalEffectResultV1,
     InterventionalMediationResultV1 as CoreInterventionalMediationResultV1,
     MULTIMOD_SIDECAR_MAX_BYTES_V1, MULTIMOD_SIDECAR_WARN_BYTES_V1, MethodConfig,
     MgaComparisonPlanV1, MgaGroupEligibilityV1, MgaGroupParameterV1, MgaMultigroupV1,
@@ -15818,7 +15819,7 @@ where
     let analysis = CoreInterventionalMediationResultV1 {
         schema_version: INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION,
         provenance: provenance(artifact.receipt(), config.seed),
-        interpretation_label: qpls_estimation::INTERVENTIONAL_MEDIATION_INTERPRETATION_V1.into(),
+        interpretation_label: INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1.into(),
         identification_assumptions: vec![
             "temporal order and consistency were declared".into(),
             "the adjustment set was declared sufficient for treatment-outcome, treatment-mediator, and mediator-outcome exchangeability".into(),

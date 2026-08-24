@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import json
+import re
 import sys
 import tempfile
 import types
@@ -116,6 +117,38 @@ class ConditionalCausalShardContractTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    def test_causal_public_interpretation_label_is_exact_and_runner_owned(self) -> None:
+        exact = {
+            "result": {
+                "interpretation_label": verifier.CAUSAL_INTERPRETATION_LABEL,
+            }
+        }
+        self.assertTrue(verifier.causal_interpretation_label_is_valid(exact))
+        drifted = copy.deepcopy(exact)
+        drifted["result"]["interpretation_label"] += (
+            "; causality is not established by the calculation"
+        )
+        self.assertFalse(verifier.causal_interpretation_label_is_valid(drifted))
+
+        runner_root = Path(__file__).resolve().parents[2] / "crates" / "qpls-runner" / "src"
+        for source_name in ("multimod_causal_raw_v1.rs", "multimod_execution_v1.rs"):
+            source = (runner_root / source_name).read_text(encoding="utf-8")
+            with self.subTest(source=source_name):
+                self.assertRegex(
+                    source,
+                    re.compile(
+                        r"interpretation_label:\s*"
+                        r"INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1\.into\(\)"
+                    ),
+                )
+                self.assertNotRegex(
+                    source,
+                    re.compile(
+                        r"interpretation_label:\s*"
+                        r"qpls_estimation::INTERVENTIONAL_MEDIATION_INTERPRETATION_V1\.into\(\)"
+                    ),
+                )
 
     def seal(self, family: str, row: dict[str, object]) -> None:
         shard_id = str(row["shard_id"])

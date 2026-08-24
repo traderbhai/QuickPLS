@@ -65,6 +65,7 @@ CAUSAL_CELLS = {
 
 HEX = set("0123456789abcdef")
 ALTERNATIVES = {"two_sided", "less", "greater"}
+CAUSAL_INTERPRETATION_LABEL = "assumption-dependent interventional estimate"
 SHARD_IDS = {
     family: [row["shard_id"] for row in shard_contract.expected_specs(family)]
     for family in ("conditional", "causal")
@@ -90,6 +91,14 @@ def is_lower_hex(value: Any, length: int) -> bool:
 def close(left: float, right: float, tolerance: float = 5.0e-8) -> bool:
     return math.isfinite(left) and math.isfinite(right) and abs(left - right) <= tolerance * max(
         1.0, abs(left), abs(right)
+    )
+
+
+def causal_interpretation_label_is_valid(case: dict[str, Any]) -> bool:
+    result = case.get("result")
+    return (
+        isinstance(result, dict)
+        and result.get("interpretation_label") == CAUSAL_INTERPRETATION_LABEL
     )
 
 
@@ -1382,6 +1391,8 @@ def verify_causal_case(case: dict[str, Any]) -> tuple[bool, Any]:
         and set(case["compiled_plan"].get("path_ids", []))
         == {prepared["path_id"] for prepared in case["prepared_paths"]}
         and case.get("target_ids_are_unique") is True
+        and case.get("interpretation_label_is_exact") is True
+        and causal_interpretation_label_is_valid(case)
         and case.get("interpretation_contains_assumption_dependent_interventional_estimate") is True
         and case.get("interpretation_avoids_causality_established") is True
     )
@@ -1459,7 +1470,9 @@ def verify_causal(report: dict[str, Any], audit: Audit) -> set[str]:
     audit.add(
         "causal.raw.wording",
         all(
-            case.get("interpretation_contains_assumption_dependent_interventional_estimate") is True
+            case.get("interpretation_label_is_exact") is True
+            and causal_interpretation_label_is_valid(case)
+            and case.get("interpretation_contains_assumption_dependent_interventional_estimate") is True
             and case.get("interpretation_avoids_causality_established") is True
             for case in cases
         ),

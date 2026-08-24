@@ -10,6 +10,8 @@ pub const PLS_MULTIGROUP_ANALYSIS_V1_SCHEMA_VERSION: u32 = 1;
 pub const PLS_HETEROGENEITY_ANALYSIS_V2_SCHEMA_VERSION: u32 = 2;
 pub const GENERAL_SEM_CONDITIONAL_PROCESS_RESULT_V2_SCHEMA_VERSION: u32 = 2;
 pub const INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION: u32 = 1;
+pub const INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1: &str =
+    "assumption-dependent interventional estimate";
 pub const MULTIMOD_RESULT_SIDECAR_DESCRIPTOR_V1_SCHEMA_VERSION: u32 = 1;
 pub const MULTIMOD_CANDIDATE_QUALIFICATION_RECEIPT_V1_SCHEMA_VERSION: u32 = 1;
 
@@ -1179,7 +1181,8 @@ impl MultiModAnalysisResultV1 {
             }
             Self::InterventionalMediationResultV1(result) => {
                 if result.schema_version != INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION
-                    || result.interpretation_label != "assumption-dependent interventional estimate"
+                    || result.interpretation_label
+                        != INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1
                     || result.identification_assumptions.is_empty()
                     || result.effects.is_empty()
                 {
@@ -1296,7 +1299,7 @@ mod tests {
         MultiModAnalysisResultV1::InterventionalMediationResultV1(InterventionalMediationResultV1 {
             schema_version: INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION,
             provenance: provenance(),
-            interpretation_label: "assumption-dependent interventional estimate".into(),
+            interpretation_label: INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1.into(),
             identification_assumptions: vec!["No unmeasured confounding".into()],
             positivity: vec![CausalPositivityDiagnosticV1 {
                 variable_id: "treatment".into(),
@@ -1426,6 +1429,22 @@ mod tests {
             unreachable!();
         };
         value.interpretation_label = "causality established".into();
+        assert!(matches!(
+            result.ensure_valid(),
+            Err(MultiModResultValidationErrorV1 { code, .. })
+                if code == "multimod_result.causal_schema_or_label"
+        ));
+    }
+
+    #[test]
+    fn causal_public_label_rejects_the_longer_estimator_narrative() {
+        let mut result = valid_causal_result();
+        let MultiModAnalysisResultV1::InterventionalMediationResultV1(value) = &mut result else {
+            unreachable!();
+        };
+        value.interpretation_label = format!(
+            "{INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1}; causality is not established by the calculation"
+        );
         assert!(matches!(
             result.ensure_valid(),
             Err(MultiModResultValidationErrorV1 { code, .. })

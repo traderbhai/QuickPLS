@@ -30,10 +30,11 @@ use qpls_core::{
     RecipeV4CompilerTarget, SemDataBindingV4, SemGroupV4, SemModelV4, SemRelationV4, SemVariableV4,
     StructuralRelationRoleV4, TypedGroupValueV1, compile_analysis_recipe_v4,
     compile_multimod_weighted_pls_recipe_v4_v1,
+    compile_pls_higher_order_lower_order_projection_multimod_v2,
     compile_pls_higher_order_repeated_stage_projection_multimod_v2,
     compile_pls_higher_order_score_stage_projection_multimod_v2, compile_pls_plan_v3,
-    compile_pls_plan_v3_multimod_multiple_hoc_v2, project_general_sem_pls_stage_one_recipe_v1,
-    sha256_serialized,
+    compile_pls_plan_v3_multimod_multiple_hoc_v2, project_general_sem_pls_base_recipe_v1,
+    project_general_sem_pls_stage_one_recipe_v1, sha256_serialized,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
@@ -3552,6 +3553,18 @@ fn compile_hoc_conditional_stage_v2(
     })
 }
 
+fn project_hoc_conditional_base_model_v2(
+    scientific_model: &SemModelV4,
+) -> Result<SemModelV4, MultiModRunnerErrorV1> {
+    compile_pls_higher_order_lower_order_projection_multimod_v2(scientific_model)
+        .map(|projection| projection.projected_model().clone())
+        .map_err(|error| {
+            MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                "multimod.runner.conditional.hoc_base_projection:{error}"
+            ))
+        })
+}
+
 fn built_in_hoc_conditional_authority_v2(
     recipe: &AnalysisRecipeV4,
     model: &SemModelV4,
@@ -3607,14 +3620,12 @@ fn built_in_hoc_conditional_authority_v2(
         ));
     }
 
-    let (mut base_recipe, base_model) =
-        project_general_sem_pls_stage_one_recipe_v1(recipe, &scientific_model).map_err(
-            |error| {
-                MultiModRunnerErrorV1::UnsupportedProfile(format!(
-                    "multimod.runner.conditional.hoc_base_projection:{error}"
-                ))
-            },
-        )?;
+    let base_model = project_hoc_conditional_base_model_v2(&scientific_model)?;
+    let mut base_recipe = project_general_sem_pls_base_recipe_v1(recipe).map_err(|error| {
+        MultiModRunnerErrorV1::UnsupportedProfile(format!(
+            "multimod.runner.conditional.hoc_base_recipe:{error}"
+        ))
+    })?;
     base_recipe.general_sem_conditional_process = None;
     let base_stage = compile_hoc_conditional_stage_v2(&base_recipe, base_model)?;
     if &base_stage.plan != plan.base_plan() {
@@ -6209,7 +6220,8 @@ mod tests {
     use super::*;
     use qpls_core::{
         ConditionalGroupContrastV2, ConditionalProcessEstimandsV2, ConditionalProcessInferenceV2,
-        SelectedGroupV1,
+        Construct, HigherOrderMeasurementTypeV4, LegacyBasicModelInterpretationV4, MeasurementMode,
+        ModelSpec, SelectedGroupV1, SemDerivedTermV4, convert_legacy_basic_model_v4,
     };
     use qpls_estimation::{ConditionalPolynomialTermV2, ModeratorPowerV2};
 
@@ -6287,6 +6299,87 @@ mod tests {
                 confidence_level: 0.95,
             },
         }
+    }
+
+    fn four_disjoint_hoc_projection_fixture() -> SemModelV4 {
+        let construct_ids = ["a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2"];
+        let constructs = construct_ids
+            .iter()
+            .map(|id| Construct {
+                id: (*id).into(),
+                name: (*id).to_uppercase(),
+                short_name: (*id).to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}_1"), format!("{id}_2")],
+            })
+            .collect();
+        let mut model = convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: uuid::Uuid::from_u128(0x434f_4e44_484f_435f_4241_5345_0004),
+                name: "Conditional four disjoint HOCs".into(),
+                constructs,
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        for (index, components) in [["a1", "a2"], ["b1", "b2"], ["c1", "c2"], ["d1", "d2"]]
+            .into_iter()
+            .enumerate()
+        {
+            let output = format!("derived:hoc:{index}");
+            model.variables.push(SemVariableV4::Derived {
+                id: output.clone(),
+                label: format!("HOC {index}"),
+            });
+            model.derived_terms.push(SemDerivedTermV4::HigherOrder {
+                id: format!("term:hoc:{index}"),
+                output,
+                components: components
+                    .into_iter()
+                    .map(|id| format!("construct:{id}"))
+                    .collect(),
+                approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+                measurement_type: HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            });
+        }
+        model.ensure_valid().unwrap();
+        model
+    }
+
+    #[test]
+    fn conditional_hoc_base_projection_keeps_the_four_hoc_envelope() {
+        let scientific_model = four_disjoint_hoc_projection_fixture();
+        assert_eq!(
+            scientific_model
+                .derived_terms
+                .iter()
+                .filter(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }))
+                .count(),
+            4
+        );
+
+        let base_model = project_hoc_conditional_base_model_v2(&scientific_model).unwrap();
+
+        assert!(base_model.derived_terms.is_empty());
+        assert!(
+            base_model
+                .variables
+                .iter()
+                .all(|variable| !variable.id().starts_with("derived:hoc:"))
+        );
+        assert_eq!(
+            base_model
+                .variables
+                .iter()
+                .filter(|variable| variable.id().starts_with("construct:"))
+                .count(),
+            8
+        );
     }
 
     #[test]

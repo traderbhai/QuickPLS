@@ -1235,6 +1235,7 @@ fn run_case(cell_ids: &[&str], case_id: &str, fixture: CausalFixture) -> Result<
         "bootstrap_evidence": compact_ledger(ledger, result.effects.len()),
         "target_ids_are_unique": target_ids.len() == result.effects.len(),
         "path_id_inventory": path_ids,
+        "interpretation_label_is_exact": result.interpretation_label == INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1,
         "interpretation_contains_assumption_dependent_interventional_estimate": result.interpretation_label.to_lowercase().contains("assumption-dependent interventional estimate"),
         "interpretation_avoids_causality_established": !result.interpretation_label.to_lowercase().contains("causality established"),
     }))

@@ -12,6 +12,7 @@ use crate::{
 };
 use qpls_core::{
     AnalysisRecipeV4, CausalPositivityDiagnosticV1, CompiledMultiModRecipeV1,
+    INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1,
     INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION, InferenceAlternativeV1,
     InterventionalMediationResultV1, MULTIMOD_SIDECAR_MAX_BYTES_V1, MultiModAnalysisResultV1,
     MultiModCompilerTargetV1, MultimodIntervalV1, MultimodReplicateFailureKindV1,
@@ -19,8 +20,7 @@ use qpls_core::{
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
-    ConditionalAlternativeV2, INTERVENTIONAL_MEDIATION_INTERPRETATION_V1,
-    InterventionalMediationBlockerCodeV1,
+    ConditionalAlternativeV2, InterventionalMediationBlockerCodeV1,
     InterventionalMediationResultV1 as EstimationInterventionalMediationResultV1,
     estimate_interventional_mediation_v1, percentile_interval_v2,
     prepare_interventional_causal_inputs_from_dataset_v1,
@@ -386,7 +386,7 @@ where
     let analysis = InterventionalMediationResultV1 {
         schema_version: INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION,
         provenance: provenance(artifact.receipt(), config.seed),
-        interpretation_label: INTERVENTIONAL_MEDIATION_INTERPRETATION_V1.into(),
+        interpretation_label: INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1.into(),
         identification_assumptions: vec![
             "temporal order, consistency, and the explicit linear model specification were reviewed".into(),
             "the declared adjustment set was judged sufficient for treatment-outcome, treatment-mediator, and mediator-outcome exchangeability".into(),
