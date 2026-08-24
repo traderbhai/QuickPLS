@@ -199,12 +199,14 @@ function Test-ShardCheckpoint {
 function Move-StaleShardFiles {
     param([Parameter(Mandatory = $true)][string]$ShardId)
     $paths = @(
-        (Join-Path $shardDirectory "$ShardId.json"),
-        (Join-Path $shardDirectory "$ShardId.receipt.json"),
-        (Join-Path $shardDirectory "$ShardId.failure.json"),
-        (Join-Path $logDirectory "$ShardId.stdout.log"),
-        (Join-Path $logDirectory "$ShardId.stderr.log")
-    ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+        @(
+            (Join-Path $shardDirectory "$ShardId.json"),
+            (Join-Path $shardDirectory "$ShardId.receipt.json"),
+            (Join-Path $shardDirectory "$ShardId.failure.json"),
+            (Join-Path $logDirectory "$ShardId.stdout.log"),
+            (Join-Path $logDirectory "$ShardId.stderr.log")
+        ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+    )
     if ($paths.Count -eq 0) {
         return
     }

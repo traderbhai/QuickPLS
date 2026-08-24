@@ -387,6 +387,14 @@ class ConditionalCausalShardContractTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, wrapper)
 
+        self.assertIn("$paths = @(\n        @(\n", wrapper)
+        self.assertIn(
+            ") | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }\n"
+            "    )\n"
+            "    if ($paths.Count -eq 0)",
+            wrapper,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

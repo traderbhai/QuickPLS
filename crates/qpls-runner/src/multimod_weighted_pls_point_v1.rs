@@ -80,6 +80,11 @@ impl PreparedMultimodWeightedPlsPointV1 {
     pub(crate) fn plan(&self) -> &qpls_core::CompiledPlsPlanV2 {
         self.authority.plan()
     }
+
+    #[cfg(test)]
+    pub(crate) fn compiled_authority_for_test(&self) -> &MultimodCompiledWeightedPlsRecipeV1 {
+        &self.authority
+    }
 }
 
 pub(crate) fn prepare_compiled_multimod_weighted_pls_point_v1(

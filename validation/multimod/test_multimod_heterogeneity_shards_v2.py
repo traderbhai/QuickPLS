@@ -188,6 +188,14 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, wrapper)
 
+        self.assertIn("$paths = @(\n        @(\n", wrapper)
+        self.assertIn(
+            ") | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }\n"
+            "    )\n"
+            "    if ($paths.Count -eq 0)",
+            wrapper,
+        )
+
         comparator_source = Path(comparator.__file__).read_text(encoding="utf-8")
         self.assertIn(
             '"producer_execution_receipt": report.get("shard_execution_receipt")',

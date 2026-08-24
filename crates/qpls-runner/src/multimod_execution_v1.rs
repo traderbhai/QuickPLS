@@ -6865,14 +6865,6 @@ where
                 .into(),
         ));
     }
-    let predicted_sidecar_bytes = predict_mga_sidecar_bytes_v1(
-        config,
-        &compact_group_row_counts_v1(design),
-        multimod_model_target_upper_bound_v1(&config.selected_parameter_ids, model),
-        multimod_model_target_id_maximum_bytes_v1(&config.selected_parameter_ids, model),
-        multimod_model_micom_construct_upper_bound_v1(model),
-    );
-    enforce_multimod_sidecar_cost_v1("mga", predicted_sidecar_bytes, &progress)?;
     let eligibility = assess_multigroup_design_v1(design);
     if !eligibility.eligible {
         return Err(MultiModRunnerErrorV1::PreparedInput(format!(
@@ -6897,6 +6889,23 @@ where
         point_plan,
         authority.technical_construct_ids(),
     )?;
+    // The projected ordinary-PLS authority is the source of truth for both
+    // publishable targets and MICOM constructs. Using the authored model's
+    // deliberately loose upper bound here falsely rejected the admitted
+    // 20-group/190-pair fixture even though its exact Arrow evidence remains
+    // below the 512 MiB cap.
+    let predicted_sidecar_bytes = predict_mga_sidecar_bytes_v1(
+        config,
+        &compact_group_row_counts_v1(design),
+        projections.len(),
+        projections
+            .iter()
+            .map(|projection| projection.identity.stable_id.len())
+            .max()
+            .unwrap_or(1),
+        ordinary_pls_micom_construct_ids_v1(&blocks, authority.technical_construct_ids()).len(),
+    );
+    enforce_multimod_sidecar_cost_v1("mga", predicted_sidecar_bytes, &progress)?;
     let mut equation_predecessors = BTreeMap::<String, Vec<String>>::new();
     for path in point_plan.paths() {
         equation_predecessors
@@ -16132,16 +16141,18 @@ mod tests {
             OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { .. }
         ));
         assert!(authority.repeats_plsc_correction());
+        let OrdinaryPlsPointExecutionAuthorityV1::ReflectivePlsc { point_artifact, .. } =
+            &authority.execution
+        else {
+            unreachable!("the authority variant was asserted above")
+        };
         assert_eq!(
-            qpls_core::sha256_serialized(authority.point_artifact().plan()),
-            authority.point_artifact().receipt().plan_sha256()
+            qpls_core::sha256_serialized(point_artifact.plan()),
+            point_artifact.receipt().plan_sha256()
         );
         assert_eq!(
             authority.point_model().scientific_sha256().unwrap(),
-            authority
-                .point_artifact()
-                .receipt()
-                .model_scientific_sha256()
+            point_artifact.receipt().model_scientific_sha256()
         );
         let result = authority.execute(&dataset, &|| false).unwrap();
         assert_eq!(result.method_version, PLSC_METHOD_VERSION);
@@ -16223,16 +16234,20 @@ mod tests {
                 authority.point_recipe().settings.method,
                 AnalysisMethod::PlsPm
             );
+            let OrdinaryPlsPointExecutionAuthorityV1::Weighted { prepared, .. } =
+                &authority.execution
+            else {
+                unreachable!("the authority variant was asserted above")
+            };
+            let compiled_authority = prepared.compiled_authority_for_test();
+            assert_eq!(authority.plan(), compiled_authority.plan());
             assert_eq!(
-                qpls_core::sha256_serialized(authority.point_artifact().plan()),
-                authority.point_artifact().receipt().plan_sha256()
+                qpls_core::sha256_serialized(compiled_authority.point_artifact().plan()),
+                compiled_authority.point_artifact().receipt().plan_sha256()
             );
             assert_eq!(
                 authority.point_model().scientific_sha256().unwrap(),
-                authority
-                    .point_artifact()
-                    .receipt()
-                    .model_scientific_sha256()
+                compiled_authority.receipt().point_model_scientific_sha256()
             );
             assert!(matches!(
                 &authority.point_model().data_binding,
@@ -17298,6 +17313,8 @@ mod tests {
             predict_mga_sidecar_bytes_v1(&config, &rows, 30, maximum_target_id_bytes, 2);
         let three_constructs =
             predict_mga_sidecar_bytes_v1(&config, &rows, 30, maximum_target_id_bytes, 3);
+        let exact_general_sem_inventory =
+            predict_mga_sidecar_bytes_v1(&config, &rows, 18, maximum_target_id_bytes, 3);
         let pair_draws = 190_u64 * 5_000;
         assert_eq!(two_constructs - one_construct, pair_draws * 18);
         assert_eq!(
@@ -17311,6 +17328,10 @@ mod tests {
         assert_eq!(
             multimod_sidecar_cost_state_v1(three_constructs),
             MultiModSidecarCostStateV1::Blocked
+        );
+        assert_eq!(
+            multimod_sidecar_cost_state_v1(exact_general_sem_inventory),
+            MultiModSidecarCostStateV1::Warning
         );
 
         let mut without_micom = config.clone();
