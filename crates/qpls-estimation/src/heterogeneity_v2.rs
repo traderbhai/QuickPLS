@@ -4227,7 +4227,9 @@ mod tests {
                 status: HeterogeneityBootstrapReplicateStatusV2::Usable,
                 fit_statistic: Some(-100.0),
                 label_alignment: Some(perfect_alignment()),
-                target_payload_sha256: Some(format!("digest_{replicate_index}")),
+                target_payload_sha256: Some(
+                    heterogeneity_target_payload_sha256_v2(&[replicate_index as f64]).unwrap(),
+                ),
                 failure_reason: None,
             })
             .collect::<Vec<_>>();
@@ -4251,6 +4253,44 @@ mod tests {
         );
         assert_eq!(insufficient.usable_replicates, 449);
         assert_eq!(insufficient.retry_policy, "none_one_attempt_per_index");
+    }
+
+    #[test]
+    fn bootstrap_ledger_rejects_malformed_digest_and_tampered_alignment() {
+        let mut plan = HeterogeneityBootstrapPlanV2::interactive_default(
+            HeterogeneityBootstrapAlgorithmV2::FimixPlsV2,
+            2,
+        );
+        plan.requested_replicates = 500;
+        let valid_entry = HeterogeneityBootstrapLedgerEntryV2 {
+            replicate_index: 0,
+            seed: heterogeneity_bootstrap_replicate_seed_v2(&plan, 0),
+            status: HeterogeneityBootstrapReplicateStatusV2::Usable,
+            fit_statistic: Some(-100.0),
+            label_alignment: Some(perfect_alignment()),
+            target_payload_sha256: Some(heterogeneity_target_payload_sha256_v2(&[0.0]).unwrap()),
+            failure_reason: None,
+        };
+
+        let mut malformed_digest = valid_entry.clone();
+        malformed_digest.target_payload_sha256 = Some("digest_0".to_string());
+        assert!(matches!(
+            summarize_heterogeneity_bootstrap_ledger_v2(&plan, &[malformed_digest]),
+            Err(HeterogeneityV2Error::InvalidContract(reason))
+                if reason.contains("lacks finite targets or valid label alignment")
+        ));
+
+        let mut tampered_alignment = valid_entry;
+        tampered_alignment
+            .label_alignment
+            .as_mut()
+            .unwrap()
+            .candidate_to_reference = vec![1, 0];
+        assert!(matches!(
+            summarize_heterogeneity_bootstrap_ledger_v2(&plan, &[tampered_alignment]),
+            Err(HeterogeneityV2Error::InvalidContract(reason))
+                if reason.contains("lacks finite targets or valid label alignment")
+        ));
     }
 
     fn complete_compositional_pairs(segments: usize) -> Vec<PosPairwiseCompositionalInvarianceV1> {

@@ -161,5 +161,29 @@ through the transitive dependency graph, and invalidated gates are recorded as
 blocked without being executed. Blocked gates are terminal for campaign
 accounting but force a `completed_with_issues` result and a nonzero exit; only
 `passed` gates with valid evidence can contribute to release acceptance.
+The scheduler validates every bound producer path before campaign creation.
+Performance, prepackage authority, and candidate packaging are strict evidence
+barriers: each remains blocked unless every earlier gate passed with evidence
+that is still valid. The graph and scheduler-state regressions can be exercised
+without starting a campaign:
+
+```powershell
+python validation/multimod/audit_multimod_qualification_contracts_v1.py --graph-self-test
+pwsh -NoProfile -File validation/run_v256_multimod_qualification.ps1 -SchedulerSelfTest
+```
+
+Same-commit recovery uses `-Resume`. Before reuse, every passed receipt, log,
+and declared output is rechecked against its stored digest and exact
+candidate/plan/binding identity. A rerun rotates its prior gate-local and shared
+campaign outputs into `_attempt_history`; stale files cannot satisfy a new
+attempt.
+
+`CampaignPass=targeted` is deliberately diagnostic-only when the candidate SHA
+changed. It executes prior open issue roots plus their dependency closure, marks
+all other gates `not_executed_targeted`, and never runs performance, package,
+installed/portable, live-manifest, or release-acceptance gates. Its evidence is
+not promotion eligible. After any source change, release qualification still
+requires one complete exact-current-SHA confirmation campaign.
+
 Qualification does not merge, push, tag,
 publish or replace public installer artifacts.

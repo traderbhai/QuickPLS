@@ -10,13 +10,19 @@ standardized before the final structural regression.
 import csv
 import json
 import math
+import os
 import random
 import subprocess
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RESULTS = ROOT / "validation" / "results"
+GATE_OUTPUT_DIRECTORY = os.environ.get("QPLS_MULTIMOD_GATE_OUTPUT_DIRECTORY")
+RESULTS = (
+    Path(GATE_OUTPUT_DIRECTORY).resolve()
+    if GATE_OUTPUT_DIRECTORY
+    else ROOT / "validation" / "results"
+)
 OUTPUT = RESULTS / "moderation_reference_report.json"
 TOLERANCE = 1e-10
 CLI_EXE = ROOT / "target" / "debug" / "qpls.exe"
@@ -155,8 +161,8 @@ def dataset_fingerprint(csv_path, stem):
     qpls_cli(
         [
             "import",
-            str(csv_path.relative_to(ROOT)),
-            str(project_path.relative_to(ROOT)),
+            str(csv_path),
+            str(project_path),
             "--name",
             stem,
         ],
@@ -165,7 +171,7 @@ def dataset_fingerprint(csv_path, stem):
     completed = qpls_cli(
         [
             "inspect",
-            str(project_path.relative_to(ROOT)),
+            str(project_path),
             "--json",
         ],
         capture_output=True,
@@ -183,7 +189,7 @@ def write_recipe(path, fingerprint, stem, construct_order):
         "y": {"id": "y", "name": "Y", "short_name": "Y", "mode": "reflective", "indicators": ["y"]},
     }
     recipe = {
-        "schema_version": 2,
+        "schema_version": 3,
         "id": "00000000-0000-0000-0000-000000000059",
         "created_at": "2026-07-19T00:00:00Z",
         "dataset_fingerprint": fingerprint,
@@ -221,8 +227,23 @@ def write_recipe(path, fingerprint, stem, construct_order):
             "preprocessing": "standardized",
             "missing_data": "listwise_deletion",
         },
+        "method_config": {"kind": "pls_algorithm"},
         "metadata": {"fixture": "moderation_reference"},
     }
+    if (
+        recipe["schema_version"] != 3
+        or recipe["settings"]["method"] != "pls_pm"
+        or recipe["method_config"] != {"kind": "pls_algorithm"}
+        or any(
+            recipe["settings"][key] != 0
+            for key in (
+                "bootstrap_samples",
+                "studentized_inner_samples",
+                "permutation_samples",
+            )
+        )
+    ):
+        raise ValueError("moderation reference requires the typed PLS point-estimate recipe contract")
     path.write_text(json.dumps(recipe, indent=2) + "\n", encoding="utf-8")
 
 
@@ -235,11 +256,11 @@ def run_quickpls(stem, rows, construct_order=("x", "m", "xm", "y")):
     qpls_cli(
         [
             "run",
-            str(recipe_path.relative_to(ROOT)),
+            str(recipe_path),
             "--data",
-            str(csv_path.relative_to(ROOT)),
+            str(csv_path),
             "--output",
-            str(result_path.relative_to(ROOT)),
+            str(result_path),
             "--allow-experimental",
         ],
         stdout=subprocess.DEVNULL,

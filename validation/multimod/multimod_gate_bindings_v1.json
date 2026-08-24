@@ -786,7 +786,7 @@
           "arguments": ["validation/moderation_reference.py"],
           "uses_cargo": false,
           "maximum_seconds": 900,
-          "expected_outputs": []
+          "expected_outputs": ["{gate_output}/moderation_reference_report.json"]
         },
         {
           "step_id": "legacy_continuous_moderation_cli_replay",

@@ -108,6 +108,7 @@
         "Unknown profile and result identities fail closed."
       ],
       "invalidates_on_failure": [
+        "archive.sidecar.integrity",
         "native.workflow.accessibility",
         "exports.semantic.readback",
         "package.candidate"
@@ -202,6 +203,7 @@
         "Cancellation never publishes a partial scientific result."
       ],
       "invalidates_on_failure": [
+        "conditional.profile_matrix",
         "archive.sidecar.integrity",
         "exports.semantic.readback",
         "native.workflow.accessibility",
@@ -234,6 +236,7 @@
       "invalidates_on_failure": [
         "mga.inference.matrix",
         "mga.label_reversal",
+        "metamorphic.global",
         "native.workflow.accessibility",
         "manifests.live.derivation"
       ]
@@ -291,6 +294,7 @@
         "Two-sided probabilities and decisions remain unchanged."
       ],
       "invalidates_on_failure": [
+        "performance.maximum_profiles",
         "manifests.live.derivation"
       ]
     },
@@ -320,6 +324,8 @@
         "Power, overlap, class-imbalance and non-normal recovery scenarios meet their predeclared thresholds."
       ],
       "invalidates_on_failure": [
+        "fimix.collapse.boundaries",
+        "pos.recovery",
         "heterogeneity.bootstrap",
         "archive.sidecar.integrity",
         "manifests.live.derivation"
@@ -596,6 +602,7 @@
         "Latent roles, natural effects, recanting witnesses, exposure-induced confounding, groups and weights are rejected."
       ],
       "invalidates_on_failure": [
+        "performance.maximum_profiles",
         "manifests.live.derivation"
       ]
     },
@@ -731,6 +738,7 @@
         "Suppressed and unsupported inference cannot reappear in an export."
       ],
       "invalidates_on_failure": [
+        "performance.maximum_profiles",
         "package.candidate",
         "installed.offline.smoke",
         "portable.offline.smoke",
@@ -762,6 +770,7 @@
         "The bounded serialization regression covers only this frozen V5 archive/result, absent MultiMod fields in a legacy Recipe V4 wire shape, an empty additive MultiMod inventory in a pre-MultiMod V6 document, and frozen pre-MultiMod canonical-export hashes; it does not claim the unbound legacy archive universe."
       ],
       "invalidates_on_failure": [
+        "performance.maximum_profiles",
         "package.candidate",
         "installed.offline.smoke",
         "portable.offline.smoke",
@@ -792,6 +801,7 @@
         "Cancellation and recovery pass with no partial result."
       ],
       "invalidates_on_failure": [
+        "performance.maximum_profiles",
         "package.candidate",
         "installed.offline.smoke",
         "portable.offline.smoke",

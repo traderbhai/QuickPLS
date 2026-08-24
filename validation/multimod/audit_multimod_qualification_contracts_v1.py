@@ -30,6 +30,19 @@ SHA40 = re.compile(r"^[a-f0-9]{40}$")
 SHA64 = re.compile(r"^[a-f0-9]{64}$")
 ALLOWED_EXECUTABLES = {"cargo", "npm.cmd", "npx.cmd", "python", "pwsh"}
 SCIENTIFIC_PREFIXES = ("mga.", "fimix.", "pos.", "heterogeneity.", "conditional.", "causal.")
+DEPENDENCY_VERIFIER_BASENAME = "verify_multimod_gate_dependency_v1.py"
+EVIDENCE_BARRIER_GATE_IDS = (
+    "performance.maximum_profiles",
+    "manifests.prepackage.authority",
+    "package.candidate",
+    "manifests.live.derivation",
+    "release.acceptance",
+)
+ARTIFACT_PRODUCER_DEPENDENCIES = (
+    ("manifests.prepackage.authority", "package.candidate"),
+    ("package.candidate", "installed.offline.smoke"),
+    ("package.candidate", "portable.offline.smoke"),
+)
 PENDING_BINDING_STATES = {
     "pending_full_mga_profile_matrix",
     "pending_full_mga_inference_matrix",
@@ -79,6 +92,204 @@ def argument_values(arguments: list[str], flag: str) -> list[str]:
         for index, value in enumerate(arguments[:-1])
         if value == flag
     ]
+
+
+def invokes_dependency_verifier(arguments: list[str]) -> bool:
+    return any(
+        item.replace("\\", "/").endswith(f"/{DEPENDENCY_VERIFIER_BASENAME}")
+        or item == DEPENDENCY_VERIFIER_BASENAME
+        for item in arguments
+    )
+
+
+def invalidation_adjacency(plan_gates: list[dict[str, Any]]) -> dict[str, tuple[str, ...]]:
+    adjacency: dict[str, tuple[str, ...]] = {}
+    for gate in plan_gates:
+        gate_id = gate.get("gate_id")
+        invalidated = gate.get("invalidates_on_failure")
+        if isinstance(gate_id, str):
+            adjacency[gate_id] = (
+                tuple(str(item) for item in invalidated)
+                if isinstance(invalidated, list)
+                else ()
+            )
+    return adjacency
+
+
+def invalidation_path_exists(
+    adjacency: dict[str, tuple[str, ...]], producer_gate_id: str, consumer_gate_id: str
+) -> bool:
+    frontier = list(adjacency.get(producer_gate_id, ()))
+    visited: set[str] = set()
+    while frontier:
+        candidate = frontier.pop(0)
+        if candidate == consumer_gate_id:
+            return True
+        if candidate in visited:
+            continue
+        visited.add(candidate)
+        frontier.extend(adjacency.get(candidate, ()))
+    return False
+
+
+def explicit_producer_dependencies(
+    binding_gates: list[dict[str, Any]],
+) -> list[tuple[str, str, str]]:
+    dependencies: list[tuple[str, str, str]] = []
+    for binding in binding_gates:
+        consumer_gate_id = binding.get("gate_id")
+        if not isinstance(consumer_gate_id, str):
+            continue
+        for step in binding.get("steps", []):
+            arguments = [str(item) for item in step.get("arguments", [])]
+            if not invokes_dependency_verifier(arguments):
+                continue
+            producer_gate_values = argument_values(arguments, "--producer-gate")
+            if len(producer_gate_values) == 1:
+                dependencies.append(
+                    (
+                        producer_gate_values[0],
+                        consumer_gate_id,
+                        str(step.get("step_id", "")),
+                    )
+                )
+    return dependencies
+
+
+def qualification_graph_contract(
+    plan_gates: list[dict[str, Any]],
+    binding_gates: list[dict[str, Any]],
+    barrier_gate_ids: tuple[str, ...] = EVIDENCE_BARRIER_GATE_IDS,
+    artifact_dependencies: tuple[tuple[str, str], ...] = ARTIFACT_PRODUCER_DEPENDENCIES,
+) -> tuple[list[str], int, int]:
+    errors: list[str] = []
+    plan_order = {gate.get("gate_id"): index for index, gate in enumerate(plan_gates)}
+    adjacency = invalidation_adjacency(plan_gates)
+    dependencies = explicit_producer_dependencies(binding_gates)
+    for producer_gate_id, consumer_gate_id, step_id in dependencies:
+        if producer_gate_id not in plan_order or consumer_gate_id not in plan_order:
+            continue
+        if plan_order[producer_gate_id] >= plan_order[consumer_gate_id]:
+            continue
+        if not invalidation_path_exists(adjacency, producer_gate_id, consumer_gate_id):
+            errors.append(
+                f"{consumer_gate_id}/{step_id}: producer dependency has no "
+                f"invalidation path: {producer_gate_id} -> {consumer_gate_id}"
+            )
+
+    barrier_dependency_count = 0
+    for barrier_gate_id in barrier_gate_ids:
+        barrier_index = plan_order.get(barrier_gate_id)
+        if barrier_index is None:
+            errors.append(f"required evidence barrier is missing: {barrier_gate_id}")
+            continue
+        for producer_gate in plan_gates[:barrier_index]:
+            producer_gate_id = producer_gate.get("gate_id")
+            if not isinstance(producer_gate_id, str):
+                continue
+            barrier_dependency_count += 1
+            if not invalidation_path_exists(adjacency, producer_gate_id, barrier_gate_id):
+                errors.append(
+                    f"{barrier_gate_id}: prior evidence gate has no invalidation path: "
+                    f"{producer_gate_id} -> {barrier_gate_id}"
+                )
+
+    for producer_gate_id, consumer_gate_id in artifact_dependencies:
+        if producer_gate_id not in plan_order or consumer_gate_id not in plan_order:
+            errors.append(
+                f"artifact producer dependency names an unknown gate: "
+                f"{producer_gate_id} -> {consumer_gate_id}"
+            )
+            continue
+        if not invalidation_path_exists(adjacency, producer_gate_id, consumer_gate_id):
+            errors.append(
+                f"{consumer_gate_id}: artifact producer has no invalidation path: "
+                f"{producer_gate_id} -> {consumer_gate_id}"
+            )
+    return errors, len(dependencies), barrier_dependency_count
+
+
+def run_graph_self_test() -> dict[str, Any]:
+    def gate(gate_id: str, invalidates: list[str]) -> dict[str, Any]:
+        return {"gate_id": gate_id, "invalidates_on_failure": invalidates}
+
+    producer_binding = {
+        "gate_id": "consumer",
+        "steps": [
+            {
+                "step_id": "synthetic_dependency",
+                "arguments": [
+                    DEPENDENCY_VERIFIER_BASENAME,
+                    "--producer-gate",
+                    "producer",
+                    "--producer-step",
+                    "producer_step",
+                ],
+            }
+        ],
+    }
+    transitive_plan = [
+        gate("producer", ["intermediate"]),
+        gate("intermediate", ["consumer"]),
+        gate("consumer", []),
+    ]
+    transitive_errors, dependency_count, _ = qualification_graph_contract(
+        transitive_plan, [producer_binding], (), ()
+    )
+    if transitive_errors or dependency_count != 1:
+        raise AssertionError(f"transitive producer dependency was rejected: {transitive_errors}")
+
+    missing_plan = [
+        gate("producer", []),
+        gate("intermediate", ["consumer"]),
+        gate("consumer", []),
+    ]
+    missing_errors, _, _ = qualification_graph_contract(
+        missing_plan, [producer_binding], (), ()
+    )
+    if not any("producer -> consumer" in error for error in missing_errors):
+        raise AssertionError("missing producer invalidation path was not rejected")
+
+    barrier_plan = [
+        gate("source", ["terminal"]),
+        gate("terminal", ["performance.maximum_profiles"]),
+        gate("performance.maximum_profiles", ["manifests.prepackage.authority"]),
+        gate("manifests.prepackage.authority", ["package.candidate"]),
+        gate(
+            "package.candidate",
+            [
+                "installed.offline.smoke",
+                "portable.offline.smoke",
+                "manifests.live.derivation",
+            ],
+        ),
+        gate("installed.offline.smoke", ["manifests.live.derivation"]),
+        gate("portable.offline.smoke", ["manifests.live.derivation"]),
+        gate("manifests.live.derivation", ["release.acceptance"]),
+        gate("release.acceptance", []),
+    ]
+    barrier_errors, _, barrier_dependency_count = qualification_graph_contract(barrier_plan, [])
+    if barrier_errors or barrier_dependency_count != 24:
+        raise AssertionError(f"valid evidence barriers were rejected: {barrier_errors}")
+    barrier_plan[1]["invalidates_on_failure"] = []
+    missing_barrier_errors, _, _ = qualification_graph_contract(barrier_plan, [])
+    if not any(
+        "terminal -> performance.maximum_profiles" in error
+        for error in missing_barrier_errors
+    ):
+        raise AssertionError("missing performance barrier path was not rejected")
+
+    return {
+        "schema_version": 1,
+        "report_id": "qpls.multimod.qualification-graph-self-test.v1",
+        "passed": True,
+        "checks": [
+            "transitive_producer_dependency_accepted",
+            "missing_producer_dependency_rejected",
+            "all_prior_evidence_barriers_accepted",
+            "missing_performance_barrier_rejected",
+        ],
+    }
 
 
 def executable_source_corpus(binding: dict[str, Any], step: dict[str, Any]) -> str:
@@ -289,6 +500,10 @@ def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:
         errors.append("qualification plan must contain 32 unique gates")
     if set(plan_by_id) != set(binding_by_id) or len(binding_by_id) != len(bound_gates):
         errors.append("gate binding catalog must match the 32 unique plan gates exactly")
+    graph_errors, producer_dependency_count, barrier_dependency_count = (
+        qualification_graph_contract(plan_gates, bound_gates)
+    )
+    errors.extend(graph_errors)
     if catalog.get("campaign_seed") != 42:
         errors.append("campaign seed must remain frozen at 42")
     if (
@@ -490,17 +705,13 @@ def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:
                         errors.append(f"{gate_id}/{step_id}: Cargo integration-test target is missing: {target_name}")
             if "run_scientific_sut_slice_v1.ps1" in arguments and "all" in arguments:
                 errors.append(f"{gate_id}/{step_id}: aggregate scientific rerun is forbidden")
-            invokes_dependency_verifier = any(
-                item.replace("\\", "/").endswith("/verify_multimod_gate_dependency_v1.py")
-                or item == "verify_multimod_gate_dependency_v1.py"
-                for item in arguments
-            )
-            if invokes_dependency_verifier and not any(
+            invokes_dependency_verifier_step = invokes_dependency_verifier(arguments)
+            if invokes_dependency_verifier_step and not any(
                 item in arguments
                 for item in ("--required-log-contains", "--required-scientific-check")
             ):
                 errors.append(f"{gate_id}/{step_id}: dependency binding names no executable evidence identity")
-            if invokes_dependency_verifier:
+            if invokes_dependency_verifier_step:
                 producer_gate_values = argument_values(arguments, "--producer-gate")
                 producer_step_values = argument_values(arguments, "--producer-step")
                 if len(producer_gate_values) != 1 or len(producer_step_values) != 1:
@@ -546,12 +757,8 @@ def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:
             )
             if not invokes_sut:
                 invokes_bound_sut = any(
-                    any(
-                        str(argument).replace("\\", "/").endswith(
-                            "/verify_multimod_gate_dependency_v1.py"
-                        )
-                        or argument == "verify_multimod_gate_dependency_v1.py"
-                        for argument in step.get("arguments", [])
+                    invokes_dependency_verifier(
+                        [str(argument) for argument in step.get("arguments", [])]
                     )
                     for step in steps
                 )
@@ -698,6 +905,8 @@ def audit(mode: str, candidate_commit: str | None) -> dict[str, Any]:
         "plan_sha256": sha256(PLAN),
         "binding_sha256": sha256(CATALOG),
         "gate_count": len(plan_gates),
+        "explicit_producer_dependency_count": producer_dependency_count,
+        "evidence_barrier_dependency_count": barrier_dependency_count,
         "manifest_count": len(manifests),
         "ready_gate_count": len(plan_gates) - len(pending_gates),
         "pending_gate_count": len(pending_gates),
@@ -714,10 +923,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--mode", choices=("development", "frozen"), default="development")
     parser.add_argument("--candidate-commit")
+    parser.add_argument("--graph-self-test", action="store_true")
     parser.add_argument("--output", type=Path)
     arguments = parser.parse_args()
     try:
-        report = audit(arguments.mode, arguments.candidate_commit)
+        report = (
+            run_graph_self_test()
+            if arguments.graph_self_test
+            else audit(arguments.mode, arguments.candidate_commit)
+        )
     except Exception as error:  # fail closed with a structured report
         report = {
             "schema_version": 1,
