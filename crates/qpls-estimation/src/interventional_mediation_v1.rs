@@ -1597,7 +1597,17 @@ mod tests {
         for row in 0..40 {
             let treatment = (row % 2) as f64;
             let covariate = ((row * 7) % 13) as f64 / 6.0 - 1.0;
-            let mediator = 1.0 + 2.0 * treatment + 0.5 * covariate;
+            // Rows separated by 26 have identical treatment and covariate
+            // values, so these paired disturbances are orthogonal to the
+            // mediator design while keeping it non-degenerate in y_model.
+            let mediator_disturbance = if row < 14 {
+                0.125
+            } else if row >= 26 {
+                -0.125
+            } else {
+                0.0
+            };
+            let mediator = 1.0 + 2.0 * treatment + 0.5 * covariate + mediator_disturbance;
             let outcome = 3.0 + treatment + 4.0 * mediator + 0.25 * covariate;
             x.push(treatment);
             c.push(covariate);
@@ -1699,6 +1709,40 @@ mod tests {
             .values[0] += 0.01;
         let changed = estimate_interventional_mediation_v1(&changed_input).unwrap();
         assert_ne!(first.target_id, changed.target_id);
+    }
+
+    #[test]
+    fn exactly_collinear_outcome_equation_fails_closed() {
+        let mut input = linear_fixture();
+        let treatment = input
+            .columns
+            .iter()
+            .find(|column| column.variable_id == "x")
+            .unwrap()
+            .values
+            .clone();
+        let covariate = input
+            .columns
+            .iter()
+            .find(|column| column.variable_id == "c")
+            .unwrap()
+            .values
+            .clone();
+        let mediator = &mut input
+            .columns
+            .iter_mut()
+            .find(|column| column.variable_id == "m")
+            .unwrap()
+            .values;
+        for row in 0..mediator.len() {
+            mediator[row] = 1.0 + 2.0 * treatment[row] + 0.5 * covariate[row];
+        }
+
+        let blockers = estimate_interventional_mediation_v1(&input).unwrap_err();
+        assert!(blockers.iter().any(|blocker| {
+            blocker.code == InterventionalMediationBlockerCodeV1::RankDeficientEquation
+                && blocker.detail.contains("y_model")
+        }));
     }
 
     #[test]

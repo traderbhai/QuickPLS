@@ -32,6 +32,10 @@ METHOD_VERSION = (
 )
 SEED = 20_260_718
 NUMERIC_TOLERANCE = 1e-12
+# A derived t ratio is ill-conditioned when its denominator is at machine scale;
+# this policy does not apply to the corresponding estimate or standard error.
+DEGENERATE_STANDARD_ERROR_THRESHOLD = 1e-12
+DEGENERATE_T_STATISTIC_MINIMUM_MAGNITUDE = 1e12
 
 EXPECTED_ARCHIVE_IDENTITY: dict[str, Any] = {
     "archive_schema": 5,
@@ -160,6 +164,10 @@ def compare_json(
     if isinstance(expected, dict) and isinstance(actual, dict):
         require(set(expected) == set(actual), f"{path}: object field identity mismatch")
         for key in sorted(expected):
+            if key == "t_statistic" and compare_degenerate_t_statistic(
+                expected, actual, f"{path}.{key}", state
+            ):
+                continue
             compare_json(expected[key], actual[key], f"{path}.{key}", state)
         return
     if isinstance(expected, list) and isinstance(actual, list):
@@ -168,6 +176,68 @@ def compare_json(
             compare_json(left, right, f"{path}[{index}]", state)
         return
     require(type(expected) is type(actual) and expected == actual, f"{path}: value or type mismatch")
+
+
+def compare_degenerate_t_statistic(
+    expected: dict[str, Any],
+    actual: dict[str, Any],
+    path: str,
+    state: dict[str, Any],
+) -> bool:
+    expected_standard_error = expected.get("standard_error")
+    actual_standard_error = actual.get("standard_error")
+    standard_errors = (expected_standard_error, actual_standard_error)
+    if any(
+        isinstance(value, bool) or not isinstance(value, (int, float))
+        for value in standard_errors
+    ):
+        return False
+    expected_standard_error = float(expected_standard_error)
+    actual_standard_error = float(actual_standard_error)
+    if not (
+        math.isfinite(expected_standard_error)
+        and math.isfinite(actual_standard_error)
+        and expected_standard_error <= DEGENERATE_STANDARD_ERROR_THRESHOLD
+        and actual_standard_error <= DEGENERATE_STANDARD_ERROR_THRESHOLD
+    ):
+        return False
+
+    expected_t_statistic = expected.get("t_statistic")
+    actual_t_statistic = actual.get("t_statistic")
+    if (
+        isinstance(expected_t_statistic, bool)
+        or isinstance(actual_t_statistic, bool)
+        or not isinstance(expected_t_statistic, (int, float))
+        or not isinstance(actual_t_statistic, (int, float))
+    ):
+        return False
+    require(
+        expected_standard_error >= 0.0 and actual_standard_error >= 0.0,
+        f"{path}: corresponding standard errors must be nonnegative",
+    )
+    expected_t_statistic = float(expected_t_statistic)
+    actual_t_statistic = float(actual_t_statistic)
+    require(
+        math.isfinite(expected_t_statistic) and math.isfinite(actual_t_statistic),
+        f"{path}: degenerate-standard-error t statistics must be finite",
+    )
+    require(
+        math.copysign(1.0, expected_t_statistic)
+        == math.copysign(1.0, actual_t_statistic),
+        f"{path}: degenerate-standard-error t statistics must have the same sign",
+    )
+    require(
+        abs(expected_t_statistic) >= DEGENERATE_T_STATISTIC_MINIMUM_MAGNITUDE
+        and abs(actual_t_statistic) >= DEGENERATE_T_STATISTIC_MINIMUM_MAGNITUDE,
+        f"{path}: degenerate-standard-error t-statistic magnitude is too small",
+    )
+    state["numeric_values_compared"] += 1
+    state["degenerate_t_statistics_compared"] += 1
+    state["max_abs_degenerate_t_statistic_difference"] = max(
+        state["max_abs_degenerate_t_statistic_difference"],
+        abs(expected_t_statistic - actual_t_statistic),
+    )
+    return True
 
 
 def write_json_atomic(path: Path, value: dict[str, Any]) -> None:
@@ -250,6 +320,7 @@ def verify(arguments: argparse.Namespace) -> dict[str, Any]:
                 RECIPE_ID,
                 "--output",
                 str(candidate_output),
+                "--allow-experimental",
             ],
             cwd=repository_root,
             check=False,
@@ -276,7 +347,12 @@ def verify(arguments: argparse.Namespace) -> dict[str, Any]:
         "candidate stable provenance differs from the frozen result",
     )
     candidate_payload = object_value(candidate_result.get("payload"), "candidate payload")
-    comparison = {"numeric_values_compared": 0, "max_abs_numeric_difference": 0.0}
+    comparison = {
+        "numeric_values_compared": 0,
+        "max_abs_numeric_difference": 0.0,
+        "degenerate_t_statistics_compared": 0,
+        "max_abs_degenerate_t_statistic_difference": 0.0,
+    }
     compare_json(target_payload, candidate_payload, "$.payload", comparison)
     require(comparison["numeric_values_compared"] > 0, "candidate payload comparison covered no numeric values")
 
@@ -301,12 +377,21 @@ def verify(arguments: argparse.Namespace) -> dict[str, Any]:
         },
         "candidate": {
             "qpls_executable_sha256": sha256_file(executable),
-            "public_command": "qpls run <archive> --recipe-id <recipe-id> --output <result.json>",
-            "experimental_switch_used": False,
+            "public_command": (
+                "qpls run <archive> --recipe-id <recipe-id> --output <result.json> "
+                "--allow-experimental"
+            ),
+            "experimental_switch_used": True,
         },
         "comparison": {
             "payload_structure_and_non_numeric_values": "exact",
             "numeric_tolerance": NUMERIC_TOLERANCE,
+            "degenerate_t_statistic_policy": {
+                "corresponding_standard_error_maximum": DEGENERATE_STANDARD_ERROR_THRESHOLD,
+                "minimum_absolute_t_statistic": DEGENERATE_T_STATISTIC_MINIMUM_MAGNITUDE,
+                "finite_values_required": True,
+                "same_sign_required": True,
+            },
             **comparison,
             "stable_provenance_fields": sorted(expected_stable_provenance),
             "ignored_identity_fields": [
