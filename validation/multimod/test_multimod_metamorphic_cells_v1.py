@@ -255,7 +255,11 @@ class MetamorphicWrapperStaticTests(unittest.TestCase):
         )
         lowered = wrapper.lower()
         self.assertNotIn("cargo run", lowered)
-        self.assertIn('"build", "--quiet", "--locked"', wrapper)
+        self.assertIn('"build", "--release", "--quiet", "--locked"', wrapper)
+        self.assertEqual(
+            ["cargo", "build", "--release", "--quiet", "--locked"],
+            cells.expected_build_command()[:5],
+        )
         for family in cells.FAMILIES:
             self.assertEqual(2, wrapper.count(family["example"]))
         self.assertIn("[ValidateRange(1, 4)]", wrapper)

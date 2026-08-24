@@ -218,7 +218,7 @@ class MgaShardContractTests(unittest.TestCase):
             'QPLS_MULTIMOD_WORKERS_V1',
             'QPLS_MULTIMOD_METAMORPHIC_COMPACT_V1',
             'QPLS_MULTIMOD_SIGN_COLUMNS_V1',
-            '"build", "--quiet", "--locked"',
+            '"build", "--release", "--quiet", "--locked"',
             '$Job.Process.Kill($true)',
             '-Stage "cargo-build"',
             '-Stage "plan"',

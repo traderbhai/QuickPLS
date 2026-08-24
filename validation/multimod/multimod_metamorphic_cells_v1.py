@@ -133,7 +133,15 @@ def expected_cells() -> list[dict[str, Any]]:
 
 
 def expected_build_command() -> list[str]:
-    command = ["cargo", "build", "--quiet", "--locked", "-p", "qpls-runner"]
+    command = [
+        "cargo",
+        "build",
+        "--release",
+        "--quiet",
+        "--locked",
+        "-p",
+        "qpls-runner",
+    ]
     for family in FAMILIES:
         command.extend(["--example", family["example"]])
     return command
