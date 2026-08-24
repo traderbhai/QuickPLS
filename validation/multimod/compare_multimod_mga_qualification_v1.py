@@ -30,9 +30,21 @@ HENSELER = "henseler_pls_mga_directional_probability_v1"
 BC = "bootstrap_difference_bc_zero_acceleration_v1"
 POOLED = "parametric_pooled_variance_sensitivity_v1"
 WELCH = "parametric_welch_satterthwaite_sensitivity_v1"
-OMNIBUS = "omnibus_maximum_spread_permutation_v1"
+OMNIBUS = "max_spread_omnibus_permutation_v1"
 WALD = "inverse_variance_wald_sensitivity_v1"
 TOL = 2.5e-10
+FREQUENCY_PROCEDURE_ALIASES = {
+    "frequency_count_space_pairwise_permutation_v1": PAIRWISE_PERMUTATION,
+    "frequency_count_space_henseler_pls_mga_directional_probability_v1": HENSELER,
+    "frequency_count_space_bootstrap_difference_bc_zero_acceleration_v1": BC,
+}
+KS_ALPHA_001_CRITICAL = 1.95
+QUALIFICATION_RESAMPLES = 5_000
+QUALIFICATION_MINIMUM_USABLE = 4_500
+FREQUENCY_PAIRWISE_METHOD = "qpls.mga.frequency-count-space.pairwise-permutation.v1"
+EXPANDED_PAIRWISE_METHOD = "mga_multigroup_pairwise_permutation_v1"
+FREQUENCY_BOOTSTRAP_METHOD = "qpls.mga.frequency-count-space.bootstrap-bank.v1"
+EXPANDED_BOOTSTRAP_METHOD = "mga_multigroup_group_bootstrap_bank_v1"
 
 # Exact stable identities consumed by downstream campaign gates. Keeping this
 # list in the producer comparator makes the dependency binding source-auditable
@@ -81,6 +93,66 @@ def sha256_f64_series(values: Iterable[float]) -> str:
     for value in materialized:
         digest.update(struct.pack("<d", value))
     return digest.hexdigest()
+
+
+def is_lower_sha256(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 64
+        and all(character in "0123456789abcdef" for character in value)
+    )
+
+
+def is_dataset_fingerprint(value: Any) -> bool:
+    return is_lower_sha256(value) or (
+        isinstance(value, str)
+        and value.startswith("v2:")
+        and is_lower_sha256(value.removeprefix("v2:"))
+    )
+
+
+def is_exact_weight_binding(value: Any, kind: str) -> bool:
+    return value == {
+        "kind": kind,
+        "variable": "observed:multimod_weight",
+    }
+
+
+def two_sample_ks_distance(left: list[float], right: list[float]) -> float:
+    """Return the two-sample Kolmogorov-Smirnov distance without SciPy."""
+    if not left or not right:
+        return math.inf
+    left_sorted = sorted(float(value) for value in left)
+    right_sorted = sorted(float(value) for value in right)
+    if not all(math.isfinite(value) for value in left_sorted + right_sorted):
+        return math.inf
+    left_index = 0
+    right_index = 0
+    distance = 0.0
+    while left_index < len(left_sorted) or right_index < len(right_sorted):
+        if right_index == len(right_sorted) or (
+            left_index < len(left_sorted) and left_sorted[left_index] <= right_sorted[right_index]
+        ):
+            boundary = left_sorted[left_index]
+        else:
+            boundary = right_sorted[right_index]
+        while left_index < len(left_sorted) and left_sorted[left_index] <= boundary:
+            left_index += 1
+        while right_index < len(right_sorted) and right_sorted[right_index] <= boundary:
+            right_index += 1
+        distance = max(
+            distance,
+            abs(left_index / len(left_sorted) - right_index / len(right_sorted)),
+        )
+    return distance
+
+
+def ks_alpha_001_limit(left_count: int, right_count: int) -> float:
+    if left_count <= 0 or right_count <= 0:
+        return 0.0
+    return KS_ALPHA_001_CRITICAL * math.sqrt(
+        (left_count + right_count) / (left_count * right_count)
+    )
 
 
 class Checks:
@@ -327,9 +399,10 @@ def validate_compilation(cell: dict[str, Any], checks: Checks, prefix: str) -> N
     ]
     checks.require(
         f"{prefix}.stable_hash_receipts",
-        all(isinstance(value, str) and len(value) == 64 for value in hashes),
+        is_dataset_fingerprint(hashes[3])
+        and all(is_lower_sha256(value) for index, value in enumerate(hashes) if index != 3),
         observed=hashes,
-        expected="eight lowercase SHA-256 identities",
+        expected="seven bare lowercase SHA-256 identities plus one bare/v2 dataset fingerprint",
     )
     checks.require(
         f"{prefix}.resumable_no_retry_plan",
@@ -388,7 +461,13 @@ def validate_general_model(cell: dict[str, Any], checks: Checks) -> None:
     )
 
 
-def validate_evidence_cell(cell: dict[str, Any], checks: Checks, prefix: str) -> None:
+def validate_evidence_cell(
+    cell: dict[str, Any],
+    checks: Checks,
+    prefix: str,
+    *,
+    expect_fixture_exclusions: bool = True,
+) -> None:
     group_count = int(cell["group_count"])
     expected_pairs = group_count * (group_count - 1) // 2
     evidence = cell["evidence"]
@@ -433,19 +512,26 @@ def validate_evidence_cell(cell: dict[str, Any], checks: Checks, prefix: str) ->
     )
     exclusions = Counter(row["reason"] for row in cell["analysis"]["excluded_rows"])
     tokens = [row["stable_row_token"] for row in cell["analysis"]["excluded_rows"]]
-    checks.require(
-        f"{prefix}.row_exclusion_receipts",
-        exclusions
-        == Counter(
+    expected_exclusions = (
+        Counter(
             {
                 "unselected_group_value": 1,
                 "missing_group_value": 1,
                 "missing_model_value": 1,
             }
         )
-        and len(tokens) == len(set(tokens)),
+        if expect_fixture_exclusions
+        else Counter()
+    )
+    checks.require(
+        f"{prefix}.row_exclusion_receipts",
+        exclusions == expected_exclusions and len(tokens) == len(set(tokens)),
         observed={"reasons": exclusions, "tokens": tokens},
-        expected="three unique stable exclusion receipts",
+        expected=(
+            "three unique stable exclusion receipts"
+            if expect_fixture_exclusions
+            else "no exclusions in the mechanically expanded reference"
+        ),
     )
     public_rows = cell["analysis"]["pairwise"]
     comparability_coherent = all(
@@ -959,9 +1045,12 @@ def validate_profile_matrix(report: dict[str, Any], checks: Checks) -> None:
             weight = model["data_binding"].get("weight")
             checks.require(
                 "mga.profile.case_weighted.typed_binding",
-                isinstance(weight, dict) and set(weight) == {"case"},
+                is_exact_weight_binding(weight, "case"),
                 observed=weight,
-                expected="positive case-weight authority",
+                expected={
+                    "kind": "case",
+                    "variable": "observed:multimod_weight",
+                },
             )
         if fixture == "reflective_plsc":
             constructs = [row for row in model["variables"] if row["kind"] == "composite"]
@@ -983,28 +1072,145 @@ def validate_profile_matrix(report: dict[str, Any], checks: Checks) -> None:
 
 
 def normalize_frequency_procedure(value: str) -> str:
-    return value.removeprefix("frequency_count_space_")
+    return FREQUENCY_PROCEDURE_ALIASES.get(value, value)
+
+
+def point_map_receipt(values: dict[tuple[str, str], float]) -> list[dict[str, Any]]:
+    return [
+        {"group_id": group_id, "target_id": target_id_value, "estimate": estimate}
+        for (group_id, target_id_value), estimate in sorted(values.items())
+    ]
+
+
+def bootstrap_pair_differences(
+    bank: dict[str, Any], parameter_index: int
+) -> list[float]:
+    left, right = bank["groups"][:2]
+    return [
+        float(left_draw[parameter_index]) - float(right_draw[parameter_index])
+        for left_draw, right_draw in zip(
+            left["replicate_estimates"], right["replicate_estimates"], strict=True
+        )
+        if left_draw is not None and right_draw is not None
+    ]
+
+
+def frequency_bootstrap_bank_contract(
+    banks: Any, expected_method: str
+) -> tuple[bool, dict[str, Any] | None, list[str], dict[str, Any]]:
+    receipt: dict[str, Any] = {
+        "bank_count": len(banks) if isinstance(banks, list) else None,
+        "expected_method": expected_method,
+    }
+    if not isinstance(banks, list) or len(banks) != 1 or not isinstance(banks[0], dict):
+        return False, None, [], receipt
+    bank = banks[0]
+    try:
+        parameters = bank["parameters"]
+        groups = bank["groups"]
+        parameter_ids = [target_id(parameter) for parameter in parameters]
+        group_ids = [int(group["group"]) for group in groups]
+        attempted = int(bank["attempted"])
+        minimum_usable = int(bank["minimum_usable"])
+        valid = (
+            bank["method_version"] == expected_method
+            and int(bank["seed"]) == 42
+            and int(bank["requested"]) == attempted == QUALIFICATION_RESAMPLES
+            and minimum_usable >= QUALIFICATION_MINIMUM_USABLE
+            and bank["retry_policy"] == "none"
+            and bank["availability"] == "available"
+            and bool(parameter_ids)
+            and len(parameter_ids) == len(set(parameter_ids)) == len(parameters)
+            and group_ids == [0, 1]
+        )
+        group_receipts = []
+        for group in groups:
+            replicate_estimates = group["replicate_estimates"]
+            usable = int(group["usable"])
+            failed = int(group["failed"])
+            point_estimates = group["point_estimates"]
+            present = [draw for draw in replicate_estimates if draw is not None]
+            vectors_valid = all(
+                isinstance(draw, list)
+                and len(draw) == len(parameter_ids)
+                and all(math.isfinite(float(value)) for value in draw)
+                for draw in present
+            )
+            group_valid = (
+                len(replicate_estimates) == attempted
+                and usable + failed == attempted
+                and len(present) == usable >= minimum_usable
+                and len(point_estimates) == len(parameter_ids)
+                and all(math.isfinite(float(value)) for value in point_estimates)
+                and vectors_valid
+            )
+            valid &= group_valid
+            group_receipts.append(
+                {
+                    "group": int(group["group"]),
+                    "usable": usable,
+                    "failed": failed,
+                    "ledger_rows": len(replicate_estimates),
+                    "valid": group_valid,
+                }
+            )
+        receipt.update(
+            {
+                "method_version": bank["method_version"],
+                "seed": int(bank["seed"]),
+                "attempted": attempted,
+                "minimum_usable": minimum_usable,
+                "parameter_count": len(parameter_ids),
+                "groups": group_receipts,
+            }
+        )
+        return valid, bank, parameter_ids, receipt
+    except (KeyError, TypeError, ValueError, OverflowError) as error:
+        receipt["contract_error"] = f"{type(error).__name__}: {error}"
+        return False, None, [], receipt
 
 
 def validate_frequency_expansion(report: dict[str, Any], checks: Checks) -> None:
     section = report["frequency_expansion"]
     compact = section["compact_frequency_run"]
     expanded = section["physically_expanded_unweighted_run"]
+    validate_evidence_cell(compact, checks, "mga.frequency")
+    validate_evidence_cell(
+        expanded,
+        checks,
+        "mga.frequency_expanded_reference",
+        expect_fixture_exclusions=False,
+    )
+    compact_point_rows = compact["analysis"]["group_parameters"]
+    expanded_point_rows = expanded["analysis"]["group_parameters"]
     compact_points = {
         (row["group_id"], row["parameter"]["target_id"]): row["parameter"]["estimate"]
-        for row in compact["analysis"]["group_parameters"]
+        for row in compact_point_rows
     }
     expanded_points = {
         (row["group_id"], row["parameter"]["target_id"]): row["parameter"]["estimate"]
-        for row in expanded["analysis"]["group_parameters"]
+        for row in expanded_point_rows
     }
+    compact_targets = Counter(target for _, target in compact_points)
+    expanded_targets = Counter(target for _, target in expanded_points)
+    point_inventory_matches = (
+        bool(compact_points)
+        and len(compact_points) == len(compact_point_rows)
+        and len(expanded_points) == len(expanded_point_rows)
+        and compact_points.keys() == expanded_points.keys()
+        and set(group for group, _ in compact_points) == {"group_01", "group_02"}
+        and all(count == 2 for count in compact_targets.values())
+        and compact_targets == expanded_targets
+    )
     checks.require(
         "mga.frequency.expanded_row_point_equivalence",
-        compact_points.keys() == expanded_points.keys()
+        point_inventory_matches
         and all(close(compact_points[key], expanded_points[key], 5.0e-9) for key in compact_points),
-        observed=compact_points,
-        expected=expanded_points,
+        observed=point_map_receipt(compact_points),
+        expected=point_map_receipt(expanded_points),
     )
+    compact_public_rows = compact["analysis"]["pairwise"]
+    expanded_public_rows = expanded["analysis"]["pairwise"]
     compact_rows = {
         (
             normalize_frequency_procedure(row["procedure"]),
@@ -1012,53 +1218,221 @@ def validate_frequency_expansion(report: dict[str, Any], checks: Checks) -> None
             row["right_group_id"],
             row["target_id"],
         ): row
-        for row in compact["analysis"]["pairwise"]
+        for row in compact_public_rows
     }
     expanded_rows = {
         (row["procedure"], row["left_group_id"], row["right_group_id"], row["target_id"]): row
-        for row in expanded["analysis"]["pairwise"]
+        for row in expanded_public_rows
     }
-    comparable_fields = (
-        "difference_left_minus_right",
-        "raw_p_value",
-        "adjusted_p_value",
-        "directional_probability",
+    procedure_inventory_matches = (
+        bool(compact_rows)
+        and len(compact_rows) == len(compact_public_rows)
+        and len(expanded_rows) == len(expanded_public_rows)
+        and compact_rows.keys() == expanded_rows.keys()
     )
-    equivalent = compact_rows.keys() == expanded_rows.keys()
+    point_differences_match = point_inventory_matches and procedure_inventory_matches
     for key in compact_rows.keys() & expanded_rows.keys():
-        for field in comparable_fields:
-            left = compact_rows[key].get(field)
-            right = expanded_rows[key].get(field)
-            if left is None or right is None:
-                equivalent &= left is right
-            else:
-                equivalent &= close(float(left), float(right), 5.0e-9)
-        left_interval = compact_rows[key].get("interval")
-        right_interval = expanded_rows[key].get("interval")
-        if left_interval is None or right_interval is None:
-            equivalent &= left_interval is right_interval
-        else:
-            equivalent &= close(left_interval["lower"], right_interval["lower"], 5.0e-9)
-            equivalent &= close(left_interval["upper"], right_interval["upper"], 5.0e-9)
+        _, left_group, right_group, parameter_id = key
+        compact_expected = compact_points.get((left_group, parameter_id))
+        compact_right = compact_points.get((right_group, parameter_id))
+        expanded_expected = expanded_points.get((left_group, parameter_id))
+        expanded_right = expanded_points.get((right_group, parameter_id))
+        if None in (compact_expected, compact_right, expanded_expected, expanded_right):
+            point_differences_match = False
+            continue
+        compact_difference = float(compact_expected) - float(compact_right)
+        expanded_difference = float(expanded_expected) - float(expanded_right)
+        point_differences_match &= close(
+            float(compact_rows[key]["difference_left_minus_right"]),
+            compact_difference,
+            5.0e-9,
+        ) and close(
+            float(expanded_rows[key]["difference_left_minus_right"]),
+            expanded_difference,
+            5.0e-9,
+        ) and close(
+            compact_difference,
+            expanded_difference,
+            5.0e-9,
+        )
+
+    compact_pairwise = next(
+        (
+            row
+            for row in compact["evidence"]["pairwise_permutation"]
+            if pair_indices(row) == (0, 1) and row.get("audit_null_difference")
+        ),
+        None,
+    )
+    expanded_pairwise = next(
+        (
+            row
+            for row in expanded["evidence"]["pairwise_permutation"]
+            if pair_indices(row) == (0, 1) and row.get("audit_null_difference")
+        ),
+        None,
+    )
+    permutation_receipt: dict[str, Any] = {"available": False}
+    permutation_law_matches = False
+    if compact_pairwise is not None and expanded_pairwise is not None:
+        compact_audit = compact_pairwise["audit_null_difference"]
+        expanded_audit = expanded_pairwise["audit_null_difference"]
+        compact_null = [
+            float(value)
+            for value in compact_audit["null_differences"]
+        ]
+        expanded_null = [
+            float(value)
+            for value in expanded_audit["null_differences"]
+        ]
+        distance = two_sample_ks_distance(compact_null, expanded_null)
+        limit = ks_alpha_001_limit(len(compact_null), len(expanded_null))
+        compact_parameter_id = target_id(compact_audit["parameter"])
+        expanded_parameter_id = target_id(expanded_audit["parameter"])
+        compact_observed = compact_points.get(("group_01", compact_parameter_id))
+        compact_observed_right = compact_points.get(("group_02", compact_parameter_id))
+        expanded_observed = expanded_points.get(("group_01", expanded_parameter_id))
+        expanded_observed_right = expanded_points.get(("group_02", expanded_parameter_id))
+        permutation_law_matches = (
+            compact_pairwise["method_version"] == FREQUENCY_PAIRWISE_METHOD
+            and expanded_pairwise["method_version"] == EXPANDED_PAIRWISE_METHOD
+            and compact_pairwise["seed"] == expanded_pairwise["seed"] == 42
+            and compact_pairwise["requested"]
+            == compact_pairwise["attempted"]
+            == expanded_pairwise["requested"]
+            == expanded_pairwise["attempted"]
+            == QUALIFICATION_RESAMPLES
+            and compact_parameter_id == expanded_parameter_id
+            and None
+            not in (
+                compact_observed,
+                compact_observed_right,
+                expanded_observed,
+                expanded_observed_right,
+            )
+            and close(
+                float(compact_audit["observed_difference_a_minus_b"]),
+                float(compact_observed) - float(compact_observed_right),
+                5.0e-9,
+            )
+            and close(
+                float(expanded_audit["observed_difference_a_minus_b"]),
+                float(expanded_observed) - float(expanded_observed_right),
+                5.0e-9,
+            )
+            and len(compact_null) == compact_pairwise["usable"]
+            and len(expanded_null) == expanded_pairwise["usable"]
+            and len(compact_null) >= QUALIFICATION_MINIMUM_USABLE
+            and len(expanded_null) >= QUALIFICATION_MINIMUM_USABLE
+            and distance <= limit
+        )
+        permutation_receipt = {
+            "available": True,
+            "compact_draws": len(compact_null),
+            "expanded_draws": len(expanded_null),
+            "ks_distance": distance,
+            "alpha_0_001_limit": limit,
+        }
+    checks.require(
+        "mga.frequency.expanded_row_permutation_law_equivalence",
+        permutation_law_matches,
+        observed=permutation_receipt,
+        expected="independent count-space and expanded-row null vectors pass the predeclared alpha .001 KS compatibility bound",
+    )
+
+    compact_banks = compact["evidence"]["bootstrap_banks"]
+    expanded_banks = expanded["evidence"]["bootstrap_banks"]
+    bootstrap_receipts: list[dict[str, Any]] = []
+    compact_bank_valid, compact_bank, compact_parameter_ids, compact_bank_receipt = (
+        frequency_bootstrap_bank_contract(compact_banks, FREQUENCY_BOOTSTRAP_METHOD)
+    )
+    expanded_bank_valid, expanded_bank, expanded_parameter_ids, expanded_bank_receipt = (
+        frequency_bootstrap_bank_contract(expanded_banks, EXPANDED_BOOTSTRAP_METHOD)
+    )
+    checks.require(
+        "mga.frequency.compact_bootstrap_envelope",
+        compact_bank_valid,
+        observed=compact_bank_receipt,
+        expected="one canonical 5,000-draw frequency count-space bank",
+    )
+    checks.require(
+        "mga.frequency.expanded_reference_bootstrap_envelope",
+        expanded_bank_valid,
+        observed=expanded_bank_receipt,
+        expected="one canonical 5,000-draw physical-row bootstrap bank",
+    )
+    bootstrap_law_matches = (
+        compact_bank_valid
+        and expanded_bank_valid
+        and compact_parameter_ids == expanded_parameter_ids
+        and compact_bank is not None
+        and expanded_bank is not None
+    )
+    if bootstrap_law_matches:
+        for parameter_index, parameter_id in enumerate(compact_parameter_ids):
+            compact_draws = bootstrap_pair_differences(compact_bank, parameter_index)
+            expanded_draws = bootstrap_pair_differences(expanded_bank, parameter_index)
+            distance = two_sample_ks_distance(compact_draws, expanded_draws)
+            limit = ks_alpha_001_limit(len(compact_draws), len(expanded_draws))
+            row_matches = (
+                len(compact_draws) >= QUALIFICATION_MINIMUM_USABLE
+                and len(expanded_draws) >= QUALIFICATION_MINIMUM_USABLE
+                and distance <= limit
+            )
+            bootstrap_law_matches &= row_matches
+            bootstrap_receipts.append(
+                {
+                    "target_id": parameter_id,
+                    "compact_draws": len(compact_draws),
+                    "expanded_draws": len(expanded_draws),
+                    "ks_distance": distance,
+                    "alpha_0_001_limit": limit,
+                    "matches": row_matches,
+                }
+            )
+    checks.require(
+        "mga.frequency.expanded_row_bootstrap_law_equivalence",
+        bootstrap_law_matches,
+        observed=bootstrap_receipts,
+        expected="every independent count-space and expanded-row bootstrap target passes the predeclared alpha .001 KS compatibility bound",
+    )
     checks.require(
         "mga.frequency.expanded_row_inference_equivalence",
-        equivalent,
-        observed=len(compact_rows),
-        expected="identical point, permutation, Henseler, and BC evidence after name normalization",
+        procedure_inventory_matches
+        and point_differences_match
+        and permutation_law_matches
+        and bootstrap_law_matches,
+        observed={
+            "procedure_inventory_matches": procedure_inventory_matches,
+            "point_differences_match": point_differences_match,
+            "permutation": permutation_receipt,
+            "bootstrap": bootstrap_receipts,
+        },
+        expected="exact point/refit equivalence plus compatible independent count-space and expanded-row inference laws",
     )
     weight = compact["sem_model_authority"]["data_binding"].get("weight")
     checks.require(
         "mga.profile.frequency_weighted.typed_binding",
-        isinstance(weight, dict)
-        and set(weight) == {"frequency"}
+        is_exact_weight_binding(weight, "frequency")
         and section["compact_source_rows"] == 30
         and section["represented_rows"] == 60,
         observed={"weight": weight, "represented_rows": section["represented_rows"]},
-        expected="positive integer frequency binding with count-space total 60",
+        expected={
+            "weight": {
+                "kind": "frequency",
+                "variable": "observed:multimod_weight",
+            },
+            "represented_rows": 60,
+        },
     )
     validate_bc(compact, checks, "mga.frequency")
     validate_multiplicity(compact, checks, "mga.frequency")
     validate_raw_inference_reconstruction(compact, checks, "mga.frequency")
+    validate_bc(expanded, checks, "mga.frequency_expanded_reference")
+    validate_multiplicity(expanded, checks, "mga.frequency_expanded_reference")
+    validate_raw_inference_reconstruction(
+        expanded, checks, "mga.frequency_expanded_reference"
+    )
 
 
 def validate_label_reversal(report: dict[str, Any], checks: Checks) -> None:

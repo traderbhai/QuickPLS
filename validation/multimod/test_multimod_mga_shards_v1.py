@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 import tempfile
 import unittest
@@ -11,6 +12,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import multimod_mga_shards_v1 as shards
+import compare_multimod_mga_qualification_v1 as comparator
 
 
 EXECUTABLE_SHA256 = "b" * 64
@@ -306,6 +308,144 @@ class MgaShardContractTests(unittest.TestCase):
         self.assertIn("session.payload(kind)?", helper)
         self.assertIn("session.insert(kind, payload.clone())?", helper)
         self.assertNotIn("execute_or_reuse_mga_shard_with_checkpoint_v1", helper)
+
+    def test_comparator_accepts_versioned_dataset_identity_and_public_omnibus_name(self) -> None:
+        digest = "a" * 64
+        self.assertTrue(comparator.is_lower_sha256(digest))
+        self.assertTrue(comparator.is_dataset_fingerprint(digest))
+        self.assertTrue(comparator.is_dataset_fingerprint(f"v2:{digest}"))
+        self.assertFalse(comparator.is_dataset_fingerprint(f"v3:{digest}"))
+        self.assertFalse(comparator.is_dataset_fingerprint(f"v2:{digest.upper()}"))
+        self.assertEqual(
+            comparator.OMNIBUS,
+            "max_spread_omnibus_permutation_v1",
+        )
+        self.assertEqual(
+            comparator.point_map_receipt({("group_01", "target:x"): 0.25}),
+            [{"group_id": "group_01", "target_id": "target:x", "estimate": 0.25}],
+        )
+
+    def test_comparator_uses_typed_weight_bindings_and_explicit_frequency_aliases(self) -> None:
+        source = Path(comparator.__file__).read_text(encoding="utf-8")
+        self.assertTrue(
+            comparator.is_exact_weight_binding(
+                {"kind": "case", "variable": "observed:multimod_weight"},
+                "case",
+            )
+        )
+        self.assertTrue(
+            comparator.is_exact_weight_binding(
+                {"kind": "frequency", "variable": "observed:multimod_weight"},
+                "frequency",
+            )
+        )
+        for invalid in (
+            {"case": {"variable": "observed:multimod_weight"}},
+            {"kind": "case", "variable": "observed:wrong"},
+            {
+                "kind": "case",
+                "variable": "observed:multimod_weight",
+                "extra": True,
+            },
+        ):
+            self.assertFalse(comparator.is_exact_weight_binding(invalid, "case"))
+        aliases = {
+            "frequency_count_space_pairwise_permutation_v1": comparator.PAIRWISE_PERMUTATION,
+            "frequency_count_space_henseler_pls_mga_directional_probability_v1": comparator.HENSELER,
+            "frequency_count_space_bootstrap_difference_bc_zero_acceleration_v1": comparator.BC,
+        }
+        for actual, expected in aliases.items():
+            self.assertEqual(comparator.normalize_frequency_procedure(actual), expected)
+        self.assertEqual(
+            comparator.normalize_frequency_procedure(comparator.PAIRWISE_PERMUTATION),
+            comparator.PAIRWISE_PERMUTATION,
+        )
+        self.assertEqual(
+            comparator.normalize_frequency_procedure("frequency_count_space_unknown_v1"),
+            "frequency_count_space_unknown_v1",
+        )
+        for stable_check_id in (
+            "mga.frequency.expanded_row_point_equivalence",
+            "mga.frequency.expanded_row_inference_equivalence",
+            "mga.frequency_expanded_reference",
+        ):
+            self.assertIn(stable_check_id, source)
+
+    def test_comparator_ks_oracle_distinguishes_equivalent_and_shifted_laws(self) -> None:
+        left = [float(index) for index in range(100)]
+        equivalent = [float(index) + (0.05 if index % 2 else -0.05) for index in range(100)]
+        shifted = [float(index) + 100.0 for index in range(100)]
+        limit = comparator.ks_alpha_001_limit(len(left), len(equivalent))
+        self.assertLessEqual(
+            comparator.two_sample_ks_distance(left, equivalent),
+            limit,
+        )
+        self.assertGreater(
+            comparator.two_sample_ks_distance(left, shifted),
+            limit,
+        )
+        self.assertEqual(comparator.two_sample_ks_distance([], shifted), math.inf)
+
+    def test_frequency_bootstrap_envelope_fails_closed(self) -> None:
+        def bank():
+            draws = [[0.25] for _ in range(comparator.QUALIFICATION_RESAMPLES)]
+            return {
+                "method_version": comparator.FREQUENCY_BOOTSTRAP_METHOD,
+                "seed": 42,
+                "requested": comparator.QUALIFICATION_RESAMPLES,
+                "attempted": comparator.QUALIFICATION_RESAMPLES,
+                "minimum_usable": comparator.QUALIFICATION_MINIMUM_USABLE,
+                "retry_policy": "none",
+                "availability": "available",
+                "parameters": [{"stable_id": "target:x"}],
+                "groups": [
+                    {
+                        "group": group,
+                        "usable": comparator.QUALIFICATION_RESAMPLES,
+                        "failed": 0,
+                        "point_estimates": [0.25],
+                        "replicate_estimates": draws,
+                    }
+                    for group in (0, 1)
+                ],
+            }
+
+        valid_bank = bank()
+        valid, _, parameter_ids, _ = comparator.frequency_bootstrap_bank_contract(
+            [valid_bank], comparator.FREQUENCY_BOOTSTRAP_METHOD
+        )
+        self.assertTrue(valid)
+        self.assertEqual(parameter_ids, ["target:x"])
+
+        minimum_bypass = bank()
+        minimum_bypass["minimum_usable"] = 0
+        minimum_bypass["groups"][0]["replicate_estimates"] = [[0.25]]
+        minimum_bypass["groups"][0]["usable"] = 1
+        minimum_bypass["groups"][0]["failed"] = comparator.QUALIFICATION_RESAMPLES - 1
+        self.assertFalse(
+            comparator.frequency_bootstrap_bank_contract(
+                [minimum_bypass], comparator.FREQUENCY_BOOTSTRAP_METHOD
+            )[0]
+        )
+        self.assertFalse(
+            comparator.frequency_bootstrap_bank_contract(
+                [bank(), bank()], comparator.FREQUENCY_BOOTSTRAP_METHOD
+            )[0]
+        )
+        reversed_groups = bank()
+        reversed_groups["groups"].reverse()
+        self.assertFalse(
+            comparator.frequency_bootstrap_bank_contract(
+                [reversed_groups], comparator.FREQUENCY_BOOTSTRAP_METHOD
+            )[0]
+        )
+        empty_parameters = bank()
+        empty_parameters["parameters"] = []
+        self.assertFalse(
+            comparator.frequency_bootstrap_bank_contract(
+                [empty_parameters], comparator.FREQUENCY_BOOTSTRAP_METHOD
+            )[0]
+        )
 
     def test_multiple_hoc_mga_uses_only_the_additive_base_projection(self) -> None:
         runner = (

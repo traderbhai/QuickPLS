@@ -289,6 +289,17 @@ material expansion. Case weights must retain their separately frozen positive
 weight semantics. Survey, sampling, PPS, cluster, and strata claims remain
 unsupported.
 
+Equivalence here is mathematical, not identity of unrelated Monte Carlo
+streams. The count-space kernel uses hypergeometric permutation allocations and
+multinomial bootstrap counts, while the physical reference shuffles or samples
+the expanded row list. Qualification therefore requires exact point/refit
+equivalence for a common allocation and independent reconstruction of both
+runs' published inference. A predeclared two-sample KS compatibility screen on
+their retained null and bootstrap vectors detects gross distributional drift;
+it is not itself the proof of equivalence. Qualification must not require
+independently randomized finite ledgers to have identical p-values or interval
+endpoints.
+
 ## Required qualification before promotion
 
 Qualification builds retain bounded raw audit distributions without changing

@@ -56,6 +56,17 @@ re-hashing the entire historical payload set after every shard.
 - exact label reversal, typed exclusions, small-group, imbalance, heavy-run,
   and directional-predeclaration boundaries.
 
+Frequency equivalence does not compare two unrelated deterministic random
+streams byte for byte. Compact point estimates must equal physical expansion;
+the count-space kernel checks the hypergeometric law against expanded sampling
+and checks every realized multinomial-count fit against expansion of that same
+allocation. The comparator independently reconstructs inference for both
+retained runs. Their permutation-null and bootstrap-difference vectors must
+additionally pass a predeclared two-sample Kolmogorov-Smirnov compatibility
+screen at alpha .001 (`1.95 * sqrt((n + m) / (n * m))`). The screen detects
+gross distributional drift but is not itself the equivalence proof. This avoids
+forcing the count-space engine to materialize up to `2^53 - 1` represented rows.
+
 Independent probability reconstruction uses bounded production evidence. Each
 pair retains one deterministic permutation-null target. MICOM retains every
 construct's Step-2 compositional-correlation null series and the first
