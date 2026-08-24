@@ -92,6 +92,8 @@ interface UseNativeScientificGridOptions {
   columnCount: number;
   initialColumnIndex?: number;
   controlledColumnIndex?: number;
+  /** Absolute source-row offset for announcements when the DOM is windowed. */
+  rowIndexOffset?: number;
   getClipboardText: (position: NativeGridPosition) => string;
   onActiveCellChange?: (position: NativeGridPosition) => void;
 }
@@ -124,6 +126,7 @@ export function useNativeScientificGrid({
   columnCount,
   initialColumnIndex = 0,
   controlledColumnIndex,
+  rowIndexOffset = 0,
   getClipboardText,
   onActiveCellChange,
 }: UseNativeScientificGridOptions): NativeScientificGridBinding {
@@ -188,7 +191,7 @@ export function useNativeScientificGrid({
       const text = getClipboardText(current);
       void writeNativeGridClipboard(text).then((copied) => {
         setAnnouncement(copied
-          ? `Copied row ${rowIndex + 1}, column ${columnIndex + 1}.`
+          ? `Copied row ${rowIndexOffset + rowIndex + 1}, column ${columnIndex + 1}.`
           : "The selected cell could not be copied.");
       });
       return;

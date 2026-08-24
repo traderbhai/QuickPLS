@@ -69,7 +69,7 @@ function prepared(format: CanonicalResultExportFormatV2): PreparedCanonicalResul
   const result = prepareCanonicalResultExportV2(documentFixture(), {
     format,
     tableIds: format === "svg" || format === "png" ? [] : ["effects"],
-    chartIds: format === "svg" || format === "png" || format === "html" || format === "pdf" ? ["plot"] : [],
+    chartIds: format === "svg" || format === "png" || format === "json" || format === "html" || format === "pdf" ? ["plot"] : [],
   });
   if (!result.ok) throw new Error(result.errors.join("\n"));
   return result.artifact;
@@ -110,8 +110,8 @@ describe("native canonical cross-format publication service", () => {
     mocks.invoke.mockImplementation(async (_command: string, args: { request: MockNativeRequest }) => successfulReceipt(args.request));
   });
 
-  it("publishes all six validated formats through one command with exact provenance and payload bindings", async () => {
-    for (const format of ["csv", "xlsx", "html", "pdf", "svg", "png"] as const) {
+  it("publishes all seven validated formats through one command with exact provenance and payload bindings", async () => {
+    for (const format of ["csv", "xlsx", "json", "html", "pdf", "svg", "png"] as const) {
       const artifact = prepared(format);
       const receipt = await publishNativeCanonicalResultExportV2(artifact);
       expect(receipt).toMatchObject({
@@ -130,12 +130,14 @@ describe("native canonical cross-format publication service", () => {
       });
     }
 
-    expect(mocks.invoke).toHaveBeenCalledTimes(6);
+    expect(mocks.invoke).toHaveBeenCalledTimes(7);
     for (const [command, args] of mocks.invoke.mock.calls as Array<[string, { request: MockNativeRequest }]>) {
       expect(command).toBe("publish_canonical_result_export_v2");
       expect(args.request.schemaVersion).toBe(2);
       expect(args.request.payload.sha256).toMatch(/^[a-f0-9]{64}$/u);
       expect(args.request.payload.byteLength).toBeGreaterThan(0);
+      expect(args.request.identity).not.toHaveProperty("publicationQualification");
+      expect(args.request.identity).not.toHaveProperty("candidateQualificationReceipt");
     }
     const xlsxCall = (mocks.invoke.mock.calls as Array<[string, { request: MockNativeRequest }]>).find(([, args]) => args.request.format === "xlsx");
     expect(xlsxCall?.[1].request.payload).toMatchObject({ kind: "xlsx_tables_json" });

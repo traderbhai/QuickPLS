@@ -807,6 +807,7 @@ fn section_3_1_shapes_author_serialize_and_reopen_through_standalone_schema6() {
         layouts: BTreeMap::new(),
         historical_results: Vec::new(),
         canonical_result_documents: Vec::new(),
+        multimod_results: Vec::new(),
         origin: ProjectOriginV6::NewProject,
         sem_generation: Some(ProjectSemGenerationV6::GeneralSemV1),
     };

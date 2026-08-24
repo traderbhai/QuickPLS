@@ -1,5 +1,11 @@
 #[doc(hidden)]
 pub mod internal_cbsem_general_sem_execution;
+mod multimod_canonical_result_v1;
+mod multimod_causal_raw_v1;
+mod multimod_conditional_raw_v2;
+mod multimod_execution_v1;
+mod multimod_mga_execution_cache_v1;
+mod multimod_weighted_pls_point_v1;
 mod pls_model_comparison_execution;
 mod recipe_v4_cbsem_execution;
 #[allow(dead_code)]
@@ -12,6 +18,12 @@ mod recipe_v4_general_sem_hoc_point_execution;
 mod recipe_v4_general_sem_pls_execution;
 mod recipe_v4_pls_execution;
 
+pub use multimod_canonical_result_v1::*;
+pub use multimod_causal_raw_v1::*;
+pub use multimod_conditional_raw_v2::*;
+pub use multimod_execution_v1::*;
+pub use multimod_mga_execution_cache_v1::*;
+pub use multimod_weighted_pls_point_v1::*;
 pub use pls_model_comparison_execution::*;
 pub use recipe_v4_cbsem_execution::*;
 pub use recipe_v4_cbsem_product_indicator_execution::*;

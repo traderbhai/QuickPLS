@@ -11,6 +11,20 @@ import {
   parseGeneralSemConfigV1,
   type GeneralSemConfigV1,
 } from "./generalSemConfigV1";
+import {
+  MultiModContractErrorV1,
+  parseGeneralSemConditionalProcessConfigV2,
+  parseInterventionalCausalMediationConfigV1,
+  parseMgaMultigroupV1,
+  parseMultimodCandidateQualificationReceiptV1,
+  parseMultiModResultAttachmentV1,
+  parsePlsUnobservedHeterogeneityConfigV2,
+  type GeneralSemConditionalProcessConfigV2,
+  type InterventionalCausalMediationConfigV1,
+  type MgaMultigroupV1,
+  type MultiModResultAttachmentV1,
+  type PlsUnobservedHeterogeneityConfigV2,
+} from "./multimodContractsV1";
 import type { NativeCanonicalModelSpec } from "../types";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
@@ -34,6 +48,21 @@ export class InternalProjectArchiveV6WireError extends Error {
 
 function fail(code: string, path: string, message: string): never {
   throw new InternalProjectArchiveV6WireError(code, path, message);
+}
+
+function parseMultimodConfigAt<T>(
+  parser: (value: unknown, path?: string) => T,
+  value: unknown,
+  path: string,
+): T {
+  try {
+    return parser(value, path);
+  } catch (error) {
+    if (error instanceof MultiModContractErrorV1) {
+      return fail(`project_archive_v6.${error.code}`, error.path, error.message);
+    }
+    throw error;
+  }
 }
 
 function recordAt(value: unknown, path: string): WireRecord {
@@ -570,6 +599,10 @@ export interface ProjectAnalysisRecipeV4Wire {
   settings: ProjectAnalysisSettingsV4Wire;
   method_config?: Readonly<WireRecord>;
   general_sem_config?: GeneralSemConfigV1;
+  mga_multigroup?: MgaMultigroupV1;
+  pls_heterogeneity?: PlsUnobservedHeterogeneityConfigV2;
+  general_sem_conditional_process?: GeneralSemConditionalProcessConfigV2;
+  interventional_causal_mediation?: InterventionalCausalMediationConfigV1;
   metadata: Record<string, string>;
   legacy_source?: { source_schema_version: 1 | 2 | 3; source_recipe_sha256: string };
 }
@@ -938,7 +971,16 @@ export function parseProjectAnalysisRecipeV4Wire(
     "model_binding",
     "estimand_confirmation",
     "settings",
-  ], ["method_config", "general_sem_config", "metadata", "legacy_source"], path);
+  ], [
+    "method_config",
+    "general_sem_config",
+    "mga_multigroup",
+    "pls_heterogeneity",
+    "general_sem_conditional_process",
+    "interventional_causal_mediation",
+    "metadata",
+    "legacy_source",
+  ], path);
   if (u32At(recipe.schema_version, `${path}.schema_version`) !== 4) {
     fail("project_archive_v6.recipe_schema", `${path}.schema_version`, "Current project recipes must use schema version 4.");
   }
@@ -986,13 +1028,41 @@ export function parseProjectAnalysisRecipeV4Wire(
             `${path}.general_sem_config`,
           ),
         }),
+    ...(recipe.mga_multigroup == null
+      ? {}
+      : { mga_multigroup: parseMultimodConfigAt(parseMgaMultigroupV1, recipe.mga_multigroup, `${path}.mga_multigroup`) }),
+    ...(recipe.pls_heterogeneity == null
+      ? {}
+      : { pls_heterogeneity: parseMultimodConfigAt(parsePlsUnobservedHeterogeneityConfigV2, recipe.pls_heterogeneity, `${path}.pls_heterogeneity`) }),
+    ...(recipe.general_sem_conditional_process == null
+      ? {}
+      : { general_sem_conditional_process: parseMultimodConfigAt(parseGeneralSemConditionalProcessConfigV2, recipe.general_sem_conditional_process, `${path}.general_sem_conditional_process`) }),
+    ...(recipe.interventional_causal_mediation == null
+      ? {}
+      : { interventional_causal_mediation: parseMultimodConfigAt(parseInterventionalCausalMediationConfigV1, recipe.interventional_causal_mediation, `${path}.interventional_causal_mediation`) }),
     ...(legacySource == null ? {} : {
       legacy_source: {
         source_schema_version: u32At(legacySource.source_schema_version, `${path}.legacy_source.source_schema_version`) as 1 | 2 | 3,
         source_recipe_sha256: sha256At(legacySource.source_recipe_sha256, `${path}.legacy_source.source_recipe_sha256`),
       },
-    }),
+      }),
   };
+  const multimodKinds = [
+    normalized.mga_multigroup === undefined ? null : ["mga_multigroup", "mga"] as const,
+    normalized.pls_heterogeneity === undefined ? null : ["pls_heterogeneity", "predict"] as const,
+    normalized.general_sem_conditional_process === undefined ? null : ["general_sem_conditional_process", "moderated_mediation"] as const,
+    normalized.interventional_causal_mediation === undefined ? null : ["interventional_causal_mediation", "regression"] as const,
+  ].filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+  if (multimodKinds.length > 1) {
+    fail("project_archive_v6.multimod_recipe_multiple_configs", path, "A Recipe V4 may contain exactly one MultiMod configuration family.");
+  }
+  if (multimodKinds.length && normalized.method_config !== undefined) {
+    fail("project_archive_v6.multimod_recipe_legacy_method_conflict", `${path}.method_config`, "A MultiMod configuration cannot coexist with a legacy method_config.");
+  }
+  const selectedMultiMod = multimodKinds[0];
+  if (selectedMultiMod && normalized.settings.method !== selectedMultiMod[1]) {
+    fail("project_archive_v6.multimod_recipe_method_mismatch", `${path}.settings.method`, `${selectedMultiMod[0]} requires Recipe V4 method ${selectedMultiMod[1]}.`);
+  }
   return normalized;
 }
 
@@ -1074,6 +1144,7 @@ export interface InternalProjectArchiveV6Wire {
   layouts: Record<string, unknown>;
   historical_results: ImmutableHistoricalResultV6Wire[];
   canonical_result_documents: CanonicalResultDocumentAttachmentV2Wire[];
+  multimod_results?: MultiModResultAttachmentV1[];
   origin: ProjectOriginV6Wire;
   sem_generation?: ProjectSemGenerationV6Wire;
 }
@@ -1113,6 +1184,7 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     "layouts",
     "historical_results",
     "canonical_result_documents",
+    "multimod_results",
     "origin",
     "upgrade_lineage",
     "sem_generation",
@@ -1178,6 +1250,17 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     }
     recipeIds.add(recipe.id);
     validateRecipeModelReference(recipe, scientificModels, pendingModels, `project.recipes[${index}].model_binding`);
+    const hasMultiModConfig = recipe.mga_multigroup !== undefined
+      || recipe.pls_heterogeneity !== undefined
+      || recipe.general_sem_conditional_process !== undefined
+      || recipe.interventional_causal_mediation !== undefined;
+    if (hasMultiModConfig && semGeneration !== "general_sem_v1") {
+      fail(
+        "project_archive_v6.multimod_recipe_requires_general_sem_generation",
+        `project.recipes[${index}]`,
+        "MultiMod Recipe V4 configurations require a newly created general_sem_v1 project.",
+      );
+    }
   });
 
   const historicalResults = arrayAt(hasOwn(root, "historical_results") ? root.historical_results : [], "project.historical_results")
@@ -1208,6 +1291,152 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     canonicalRunIds.add(attachment.run_id);
   });
 
+  const multimodResults = arrayAt(hasOwn(root, "multimod_results") ? root.multimod_results : [], "project.multimod_results")
+    .map((attachment, index) => parseMultimodConfigAt(
+      parseMultiModResultAttachmentV1,
+      attachment,
+      `project.multimod_results[${index}]`,
+    ));
+  const currentRecipeIds = new Set(recipes.map((recipe) => recipe.id));
+  const currentRecipeById = new Map(recipes.map((recipe) => [recipe.id, recipe] as const));
+  const multimodResultIds = new Set<string>();
+  const multimodSidecarEntries = new Set<string>();
+  multimodResults.forEach((attachment, index) => {
+    const itemPath = `project.multimod_results[${index}]`;
+    if (multimodResultIds.has(attachment.result_id)) {
+      fail("project_archive_v6.multimod_result_id_duplicate", `${itemPath}.result_id`, "MultiMod result ids must be unique.");
+    }
+    multimodResultIds.add(attachment.result_id);
+    if (!currentRecipeIds.has(attachment.recipe_id)) {
+      fail("project_archive_v6.multimod_result_recipe_unavailable", `${itemPath}.recipe_id`, "MultiMod results must reference a current Recipe V4 in the same project.");
+    }
+    const recipe = currentRecipeById.get(attachment.recipe_id);
+    const provenance = attachment.result.analysis.provenance;
+    const modelScientificSha256 = recipe?.model_binding.kind === "legacy_estimand_unspecified"
+      ? undefined
+      : recipe?.model_binding.scientific_sha256;
+    if (!recipe || modelScientificSha256 === undefined
+      || provenance.recipe_id !== attachment.recipe_id
+      || provenance.dataset_fingerprint !== recipe.dataset_fingerprint
+      || provenance.model_scientific_sha256 !== modelScientificSha256) {
+      fail("project_archive_v6.multimod_result_provenance", `${itemPath}.result.analysis.provenance`, "MultiMod result provenance must match its resident Recipe V4, dataset, and scientific model.");
+    }
+    const referencedModelId = recipe.model_binding.kind === "project_sem_model_v4_reference"
+      ? recipe.model_binding.model_id
+      : undefined;
+    const residentModel = recipe.model_binding.kind === "embedded_sem_model_v4"
+      ? recipe.model_binding.model
+      : referencedModelId !== undefined
+        ? models.find((candidate) => candidate.model_id === referencedModelId)?.payload
+        : undefined;
+    const scientificModel = residentModel && "kind" in residentModel
+      ? residentModel.kind === "sem_model_v4" ? residentModel.model : undefined
+      : residentModel;
+    const modelId = scientificModel?.id;
+    if (!scientificModel || !modelId) {
+      fail(
+        "project_archive_v6.multimod_result_model_unavailable",
+        `${itemPath}.recipe_id`,
+        "MultiMod results must bind to an exact resident scientific SemModelV4.",
+      );
+    }
+    if (
+      provenance.model_id !== modelId ||
+      provenance.dataset_id !== scientificModel.data_binding.dataset_id
+    ) {
+      fail(
+        "project_archive_v6.multimod_result_authority_ids",
+        `${itemPath}.result.analysis.provenance`,
+        "MultiMod result model and dataset ids must match the exact resident scientific authority.",
+      );
+    }
+    attachment.sidecars.forEach((sidecar, sidecarIndex) => {
+      if (multimodSidecarEntries.has(sidecar.entry_name)) {
+        fail("project_archive_v6.multimod_sidecar_duplicate", `${itemPath}.sidecars[${sidecarIndex}].entry_name`, "MultiMod sidecar entries must be unique across the archive.");
+      }
+      multimodSidecarEntries.add(sidecar.entry_name);
+    });
+    const canonical = canonicalAttachments.find(
+      (candidate) => candidate.run_id === attachment.result_id,
+    )?.canonical_document;
+    if (!canonical) {
+      fail(
+        "project_archive_v6.multimod_canonical_missing",
+        itemPath,
+        "Every resident MultiMod result requires its immutable canonical projection in the same strict archive.",
+      );
+    }
+    if (
+      canonical.provenance.recipe_id !== attachment.recipe_id ||
+      canonical.provenance.recipe_digest !== provenance.recipe_analytical_sha256 ||
+      canonical.provenance.model_id !== modelId ||
+      canonical.provenance.model_digest !== provenance.model_scientific_sha256 ||
+      canonical.provenance.dataset_id !== scientificModel.data_binding.dataset_id ||
+      canonical.provenance.dataset_fingerprint !== provenance.dataset_fingerprint ||
+      canonical.provenance.method_version !== provenance.method_version ||
+      canonical.provenance.engine_version !== provenance.engine_version ||
+      canonical.provenance.seed !== provenance.seed ||
+      canonical.provenance.workers !== Math.max(1, recipe.settings.workers) ||
+      JSON.stringify(canonical.provenance.capability_cell) !==
+        JSON.stringify(provenance.capability_cell)
+    ) {
+      fail(
+        "project_archive_v6.multimod_canonical_provenance",
+        itemPath,
+        "The resident MultiMod canonical projection differs from its scientific-result provenance.",
+      );
+    }
+    const authorityTables = canonical.tables.filter(
+      (table) => table.id === "multimod_run_provenance",
+    );
+    const authorityTable = authorityTables[0];
+    const authorityRow = authorityTable?.rows.find((row) => row.id === "run");
+    const qualificationIndex = authorityTable?.columns.findIndex(
+      (column) => column.id === "qualification",
+    ) ?? -1;
+    const receiptIndex = authorityTable?.columns.findIndex(
+      (column) => column.id === "candidate_qualification_receipt_json",
+    ) ?? -1;
+    const qualificationCell = qualificationIndex >= 0
+      ? authorityRow?.cells[qualificationIndex]
+      : undefined;
+    const receiptCell = receiptIndex >= 0
+      ? authorityRow?.cells[receiptIndex]
+      : undefined;
+    let canonicalReceipt: unknown;
+    if (receiptCell?.kind === "text") {
+      try {
+        canonicalReceipt = parseMultimodCandidateQualificationReceiptV1(
+          JSON.parse(receiptCell.value) as unknown,
+          `${itemPath}.canonical_candidate_qualification_receipt`,
+        );
+      } catch {
+        canonicalReceipt = Symbol("invalid_candidate_receipt_json");
+      }
+    }
+    const receiptMatches = provenance.candidate_qualification_receipt === undefined
+      ? receiptCell?.kind === "missing" && receiptCell.reason === "not_applicable"
+      : receiptCell?.kind === "text"
+        && JSON.stringify(canonicalReceipt) === JSON.stringify(provenance.candidate_qualification_receipt);
+    if (
+      authorityTables.length !== 1
+      || authorityTable?.rows.length !== 1
+      || authorityRow === undefined
+      || qualificationCell?.kind !== "text"
+      || qualificationCell.value !== provenance.qualification
+      || !receiptMatches
+    ) {
+      fail(
+        "project_archive_v6.multimod_canonical_qualification",
+        itemPath,
+        "The resident MultiMod canonical qualification and candidate receipt must exactly match scientific provenance.",
+      );
+    }
+  });
+  if (multimodResults.length && semGeneration !== "general_sem_v1") {
+    fail("project_archive_v6.multimod_requires_general_sem_generation", "project.multimod_results", "MultiMod results require a newly created general_sem_v1 project.");
+  }
+
   return {
     schema_version: 6,
     project_id: projectId,
@@ -1221,6 +1450,7 @@ export function parseInternalProjectArchiveV6Wire(input: unknown): InternalProje
     layouts: { ...recordAt(hasOwn(root, "layouts") ? root.layouts : {}, "project.layouts") },
     historical_results: historicalResults,
     canonical_result_documents: canonicalAttachments,
+    multimod_results: multimodResults,
     origin,
     ...(semGeneration === undefined ? {} : { sem_generation: semGeneration }),
   };

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.mga",
+  "execution_context": "recipe_v4_multimod_mga_multigroup_v1",
+  "feature": {
+    "id": "qpls3.multimod.mga_multigroup",
+    "label": "MultiMod 2-20 group MGA envelope",
+    "method_version": "mga_multigroup_v1",
+    "analytical_method_version": "qpls.multimod.mga_multigroup_v1",
+    "method_kind": "profile_qualified_multigroup_inference"
+  },
+  "coverage_state": "absent",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/MGA_MULTIGROUP_V1.md",
+  "profile_manifest": "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/multigroup-analysis/",
+  "implemented_contracts": [
+    "Additive Recipe V4 and result identities without reinterpreting two-group MGA V4",
+    "Typed 2-20 group eligibility and deterministic generic inference kernels",
+    "Independent non-Cartesian model-profile and procedure evidence identities"
+  ],
+  "remaining_qualification": [
+    "All source bindings and profile-procedure reports are pending.",
+    "Runner, native, persistence, semantic export, simulation, performance and installed-offline gates have not run.",
+    "This cell must derive absent and remain hidden from Standard surfaces."
+  ]
+}

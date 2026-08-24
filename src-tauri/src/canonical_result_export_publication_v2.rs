@@ -5,6 +5,8 @@
 //! off payload to canonical provenance, stages bytes exclusively beside a new
 //! destination, synchronizes them, and performs a no-replace atomic publish.
 
+use crate::multimod_candidate_authority_v1::verify_multimod_candidate_receipt_against_embedded_v1;
+use qpls_core::MultimodCandidateQualificationReceiptV1;
 use rust_xlsxwriter::Workbook;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
@@ -33,6 +35,7 @@ const TEMPORARY_FILE_PREFIX_V2: &str = ".quickpls-canonical-export-v2-";
 pub(crate) enum CanonicalResultExportFormatV2 {
     Csv,
     Xlsx,
+    Json,
     Html,
     Pdf,
     Svg,
@@ -44,6 +47,7 @@ impl CanonicalResultExportFormatV2 {
         match self {
             Self::Csv => "csv",
             Self::Xlsx => "xlsx",
+            Self::Json => "json",
             Self::Html => "html",
             Self::Pdf => "pdf",
             Self::Svg => "svg",
@@ -71,9 +75,21 @@ pub(crate) struct CanonicalResultExportIdentityV2 {
     capability_cell_id: String,
     method_version: String,
     engine_version: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    publication_qualification: Option<CanonicalResultPublicationQualificationV2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    candidate_qualification_receipt: Option<MultimodCandidateQualificationReceiptV1>,
     stable_table_ids: Vec<String>,
     stable_chart_ids: Vec<String>,
     semantic_sha256: String,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum CanonicalResultPublicationQualificationV2 {
+    UnqualifiedLabs,
+    ReleaseQualifiedCandidate,
+    FailedClosed,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -200,6 +216,25 @@ fn require_nonempty(label: &str, value: &str) -> Result<(), PublicationErrorV2> 
     Ok(())
 }
 
+fn candidate_receipt_matches_capability_family_v2(
+    capability_cell_id: &str,
+    receipt: &MultimodCandidateQualificationReceiptV1,
+) -> bool {
+    let allowed_prefixes: &[&str] = match capability_cell_id {
+        "qpls.multimod.mga_multigroup_v1" => &["mga."],
+        "qpls.multimod.pls_heterogeneity_v2" => &["fimix.", "pos."],
+        "qpls.multimod.general_sem_conditional_process_v2" => &["conditional."],
+        "qpls.multimod.interventional_causal_mediation_v1" => &["interventional."],
+        _ => return false,
+    };
+    !receipt.required_profile_cells.is_empty()
+        && receipt.required_profile_cells.iter().all(|cell| {
+            allowed_prefixes
+                .iter()
+                .any(|prefix| cell.starts_with(prefix))
+        })
+}
+
 fn validate_identity(
     format: CanonicalResultExportFormatV2,
     identity: &CanonicalResultExportIdentityV2,
@@ -216,6 +251,29 @@ fn validate_identity(
         ("engineVersion", identity.engine_version.as_str()),
     ] {
         require_nonempty(label, value)?;
+    }
+    let is_multimod = identity.capability_cell_id.starts_with("qpls.multimod.");
+    let qualification_valid = match (
+        is_multimod,
+        identity.publication_qualification,
+        identity.candidate_qualification_receipt.as_ref(),
+    ) {
+        (false, None, None) => true,
+        (
+            true,
+            Some(CanonicalResultPublicationQualificationV2::ReleaseQualifiedCandidate),
+            Some(receipt),
+        ) => {
+            candidate_receipt_matches_capability_family_v2(&identity.capability_cell_id, receipt)
+                && verify_multimod_candidate_receipt_against_embedded_v1(receipt).is_ok()
+        }
+        _ => false,
+    };
+    if !qualification_valid {
+        return Err(PublicationErrorV2::new(
+            "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED",
+            "Canonical publication is unavailable unless a MultiMod result carries its exact release-qualified-candidate state; legacy non-MultiMod identities must omit MultiMod authority fields.",
+        ));
     }
     for (label, digest) in [
         ("modelDigest", identity.model_digest.as_str()),
@@ -253,7 +311,9 @@ fn validate_identity(
         CanonicalResultExportFormatV2::Svg | CanonicalResultExportFormatV2::Png => {
             identity.stable_table_ids.is_empty() && identity.stable_chart_ids.len() == 1
         }
-        CanonicalResultExportFormatV2::Html | CanonicalResultExportFormatV2::Pdf => {
+        CanonicalResultExportFormatV2::Json
+        | CanonicalResultExportFormatV2::Html
+        | CanonicalResultExportFormatV2::Pdf => {
             !identity.stable_table_ids.is_empty() || !identity.stable_chart_ids.is_empty()
         }
     };
@@ -338,6 +398,26 @@ fn validate_exact_format_bytes(
                     "CSV publication requires exact UTF-8 text bytes.",
                 )
             })?;
+        }
+        CanonicalResultExportFormatV2::Json => {
+            let text = std::str::from_utf8(bytes).map_err(|_| {
+                PublicationErrorV2::new(
+                    "CANONICAL_EXPORT_PAYLOAD_INVALID",
+                    "JSON publication requires exact UTF-8 text bytes.",
+                )
+            })?;
+            let value: serde_json::Value = serde_json::from_str(text).map_err(|_| {
+                PublicationErrorV2::new(
+                    "CANONICAL_EXPORT_PAYLOAD_INVALID",
+                    "JSON publication requires one complete JSON document.",
+                )
+            })?;
+            if !value.is_object() {
+                return Err(PublicationErrorV2::new(
+                    "CANONICAL_EXPORT_PAYLOAD_INVALID",
+                    "JSON publication requires a top-level semantic object.",
+                ));
+            }
         }
         CanonicalResultExportFormatV2::Html => {
             let text = std::str::from_utf8(bytes).map_err(|_| {
@@ -1000,9 +1080,27 @@ pub(crate) fn publish_canonical_result_export_v2(
     publish(request).map_err(|error| error.to_string())
 }
 
+/// Feature-gated qualification entry point for the packaged native harness.
+///
+/// It accepts only the same strict JSON request consumed by the Tauri command,
+/// calls the same typed parser and no-replace publication implementation, and
+/// returns the ordinary typed receipt as JSON. No authority override exists in
+/// this seam: a packaged harness still needs the candidate authority embedded
+/// into the exact executable by `build.rs`.
+#[cfg(feature = "multimod-qualification-harness")]
+pub(crate) fn publish_canonical_result_export_qualification_json_v2(
+    request_json: &str,
+) -> Result<String, String> {
+    let request: CanonicalResultExportPublicationRequestV2 =
+        serde_json::from_str(request_json).map_err(|error| error.to_string())?;
+    let receipt = publish(request).map_err(|error| error.to_string())?;
+    serde_json::to_string(&receipt).map_err(|error| error.to_string())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::multimod_candidate_authority_v1::with_typed_qualification_test_authority_v1;
     use calamine::{Reader, open_workbook_auto};
     use serde_json::json;
 
@@ -1047,10 +1145,57 @@ mod tests {
             capability_cell_id: "qpls3.pls.general_sem_multiple_two_way_moderation_point".into(),
             method_version: "qpls.general-sem-pls.multiple-two-way.point.v1".into(),
             engine_version: "compiled_recipe_v4_pls_plan_v2_execution_v3".into(),
+            publication_qualification: None,
+            candidate_qualification_receipt: None,
             stable_table_ids: tables,
             stable_chart_ids: charts,
             semantic_sha256: "d".repeat(64),
         }
+    }
+
+    #[test]
+    fn legacy_identity_omits_multimod_authority_fields_on_the_v2_wire() {
+        let identity = identity(vec!["effects".into()], vec![]);
+        validate_identity(CanonicalResultExportFormatV2::Csv, &identity).unwrap();
+        let wire = serde_json::to_value(&identity).unwrap();
+        assert!(wire.get("publicationQualification").is_none());
+        assert!(wire.get("candidateQualificationReceipt").is_none());
+
+        let mut invented = identity;
+        invented.publication_qualification =
+            Some(CanonicalResultPublicationQualificationV2::UnqualifiedLabs);
+        let error = validate_identity(CanonicalResultExportFormatV2::Csv, &invented)
+            .expect_err("legacy identities must not invent MultiMod authority fields");
+        assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+    }
+
+    #[test]
+    fn multimod_publication_requires_the_typed_release_qualified_state() {
+        let mut candidate = identity(vec!["effects".into()], vec![]);
+        candidate.capability_cell_id = "qpls.multimod.mga_multigroup_v1".into();
+
+        for blocked in [
+            None,
+            Some(CanonicalResultPublicationQualificationV2::UnqualifiedLabs),
+            Some(CanonicalResultPublicationQualificationV2::FailedClosed),
+        ] {
+            candidate.publication_qualification = blocked;
+            let error = validate_identity(CanonicalResultExportFormatV2::Csv, &candidate)
+                .expect_err("non-qualified MultiMod publication must fail closed");
+            assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+        }
+
+        candidate.publication_qualification =
+            Some(CanonicalResultPublicationQualificationV2::ReleaseQualifiedCandidate);
+        let error = validate_identity(CanonicalResultExportFormatV2::Csv, &candidate)
+            .expect_err("candidate state without the embedded-authority receipt must fail closed");
+        assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+
+        candidate.capability_cell_id =
+            "qpls3.pls.general_sem_multiple_two_way_moderation_point".into();
+        let error = validate_identity(CanonicalResultExportFormatV2::Csv, &candidate)
+            .expect_err("a non-MultiMod identity cannot claim MultiMod qualification");
+        assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
     }
 
     fn exact_request(
@@ -1156,6 +1301,47 @@ mod tests {
         }
     }
 
+    fn qualified_exact_request(
+        format: CanonicalResultExportFormatV2,
+        path: PathBuf,
+        bytes: &[u8],
+        capability_cell_id: &str,
+        receipt: &MultimodCandidateQualificationReceiptV1,
+    ) -> CanonicalResultExportPublicationRequestV2 {
+        let mut request = exact_request(format, path, bytes);
+        request.identity.capability_cell_id = capability_cell_id.into();
+        request.identity.method_version = capability_cell_id.into();
+        request.identity.publication_qualification =
+            Some(CanonicalResultPublicationQualificationV2::ReleaseQualifiedCandidate);
+        request.identity.candidate_qualification_receipt = Some(receipt.clone());
+        request
+    }
+
+    fn qualified_workbook_request(
+        path: PathBuf,
+        capability_cell_id: &str,
+        receipt: &MultimodCandidateQualificationReceiptV1,
+    ) -> CanonicalResultExportPublicationRequestV2 {
+        let mut qualified = identity(vec!["effects".into()], vec![]);
+        qualified.capability_cell_id = capability_cell_id.into();
+        qualified.method_version = capability_cell_id.into();
+        qualified.publication_qualification =
+            Some(CanonicalResultPublicationQualificationV2::ReleaseQualifiedCandidate);
+        qualified.candidate_qualification_receipt = Some(receipt.clone());
+        let tables_json = serde_json::to_string(&workbook_tables(&qualified)).unwrap();
+        CanonicalResultExportPublicationRequestV2 {
+            schema_version: 2,
+            format: CanonicalResultExportFormatV2::Xlsx,
+            destination_path: path.to_string_lossy().into_owned(),
+            identity: qualified,
+            payload: CanonicalResultExportPayloadV2::XlsxTablesJson {
+                byte_length: tables_json.len() as u64,
+                sha256: sha256_hex(tables_json.as_bytes()),
+                tables_json,
+            },
+        }
+    }
+
     fn temporary_files(directory: &Path) -> Vec<PathBuf> {
         fs::read_dir(directory)
             .unwrap()
@@ -1176,6 +1362,10 @@ mod tests {
             (
                 CanonicalResultExportFormatV2::Csv,
                 b"id,value\r\neffect,0.2\r\n".as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Json,
+                b"{\"schema_version\":2,\"format\":\"quickpls.canonical-result-cross-format-export\"}\n".as_slice(),
             ),
             (
                 CanonicalResultExportFormatV2::Html,
@@ -1227,6 +1417,261 @@ mod tests {
         assert_eq!(range.get((5, 0)).unwrap().to_string(), "β interaction");
         assert_eq!(range.get((5, 1)).unwrap().to_string(), "=1+1");
         assert!(temporary_files(directory.path()).is_empty());
+    }
+
+    #[test]
+    fn qualification_matrix_publishes_every_multimod_family_and_format_only_under_exact_typed_authority()
+     {
+        let family_cells = [
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.general_sem_pls.v1::point_fit",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.multiple_two_way_moderation.v1::point_fit_path_gamma_slopes",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.bounded_three_way_moderation.v1::point_fit_path_gamma_delta_slopes",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.bounded_two_way_moderated_mediation.v1::point_fit_bounded_conditional_targets",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.multiple_nonnested_hoc.v1::point_fit_hoc_stages",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.case_weighted_pls.v1::weighted_point_fit",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.frequency_weighted_pls.v1::count_space_point_fit",
+            ),
+            (
+                "qpls.multimod.mga_multigroup_v1",
+                "mga.reflective_plsc.v1::plsc_point_fit",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "fimix.p0_structural.v2::em_multistart_point",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "fimix.p2_multi_two_way.v2::pooled_metric_products",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "fimix.p23_all_current.v2::pooled_metric_three_way_products",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "pos.published.p0_structural.v2::ten_start_full_refit_point",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "pos.destination_scored.p2_multi_two_way.v2::ten_start_full_refit_point",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "pos.destination_scored.p23_all_current.v2::ten_start_full_refit_point",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "pos.common_metric.p2_multi_two_way.v1::configural_and_pairwise_compositional_gate",
+            ),
+            (
+                "qpls.multimod.pls_heterogeneity_v2",
+                "pos.common_metric.p23_all_current.v1::configural_and_pairwise_compositional_gate",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.multi_two_way_percentile.v2::explicit_path_target_math",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.multi_two_way_bca.v2::explicit_path_target_math",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.studentized.v2::nested_studentized",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.bounded_three_way_percentile.v2::complete_lower_order_closure",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.multiple_hoc_percentile.v2::hoc_dependency_before_products",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.grouped_percentile.v2::group_stratified_shared_ledger",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.case_weighted_percentile.v2::positive_normalized_case_weights",
+            ),
+            (
+                "qpls.multimod.general_sem_conditional_process_v2",
+                "conditional.frequency_weighted_percentile.v2::count_space_point_equivalence",
+            ),
+            (
+                "qpls.multimod.interventional_causal_mediation_v1",
+                "interventional.observed_gcomp.v1::observed_equation_point_fit",
+            ),
+        ];
+        let exact_cells = family_cells.map(|(_, cell)| cell);
+        let fixtures = [
+            (
+                CanonicalResultExportFormatV2::Csv,
+                b"id,value\r\neffect,0.2\r\n".as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Json,
+                b"{\"schema_version\":2,\"format\":\"quickpls.canonical-result-cross-format-export\"}\n"
+                    .as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Html,
+                b"<!doctype html><html><body>QuickPLS</body></html>".as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Pdf,
+                b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n".as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Svg,
+                b"<svg xmlns=\"http://www.w3.org/2000/svg\"><text>QuickPLS</text></svg>"
+                    .as_slice(),
+            ),
+            (
+                CanonicalResultExportFormatV2::Png,
+                b"\x89PNG\r\n\x1a\n\x00\x00\x00\x00IEND\xaeB\x60\x82".as_slice(),
+            ),
+        ];
+
+        with_typed_qualification_test_authority_v1(&exact_cells, |receipt| {
+            let directory = tempfile::tempdir().unwrap();
+            for (family, required_cell) in family_cells {
+                let mut family_receipt = receipt.clone();
+                family_receipt.required_profile_cells = vec![required_cell.into()];
+                for (format, bytes) in fixtures {
+                    let path = directory.path().join(format!(
+                        "{}-{}-result.{}",
+                        family.replace('.', "-"),
+                        required_cell.replace('.', "-").replace(':', "-"),
+                        format.extension()
+                    ));
+                    let publication = publish(qualified_exact_request(
+                        format,
+                        path.clone(),
+                        bytes,
+                        family,
+                        &family_receipt,
+                    ))
+                    .unwrap();
+                    assert_eq!(publication.identity.capability_cell_id, family);
+                    assert_eq!(
+                        publication
+                            .identity
+                            .candidate_qualification_receipt
+                            .as_ref(),
+                        Some(&family_receipt)
+                    );
+                    assert_eq!(fs::read(path).unwrap(), bytes);
+                    assert_eq!(publication.bytes, bytes.len() as u64);
+                    assert_eq!(publication.sha256, sha256_hex(bytes));
+                }
+                let path = directory.path().join(format!(
+                    "{}-{}-result.xlsx",
+                    family.replace('.', "-"),
+                    required_cell.replace('.', "-").replace(':', "-")
+                ));
+                let publication = publish(qualified_workbook_request(
+                    path.clone(),
+                    family,
+                    &family_receipt,
+                ))
+                .unwrap();
+                assert_eq!(publication.identity.capability_cell_id, family);
+                assert_eq!(
+                    publication
+                        .identity
+                        .candidate_qualification_receipt
+                        .as_ref(),
+                    Some(&family_receipt)
+                );
+                assert_eq!(publication.sha256, sha256_hex(&fs::read(&path).unwrap()));
+                let mut workbook = open_workbook_auto(&path).unwrap();
+                let range = workbook.worksheet_range("effects").unwrap();
+                assert_eq!(range.get((5, 0)).unwrap().to_string(), "β interaction");
+                assert_eq!(range.get((5, 1)).unwrap().to_string(), "=1+1");
+            }
+            assert!(temporary_files(directory.path()).is_empty());
+        })
+        .unwrap();
+    }
+
+    #[test]
+    fn qualification_matrix_rejects_receipt_authority_and_semantic_identity_tamper() {
+        let exact_cell = "mga.general_sem_pls.v1::point_fit";
+        let other_family_cell =
+            "conditional.multi_two_way_percentile.v2::explicit_path_target_math";
+        with_typed_qualification_test_authority_v1(
+            &[exact_cell, other_family_cell],
+            |authority_receipt| {
+                let mut receipt = authority_receipt.clone();
+                receipt.required_profile_cells = vec![exact_cell.into()];
+                let directory = tempfile::tempdir().unwrap();
+                let mut wrong_authority = receipt.clone();
+                wrong_authority.authority_binding_sha256 = "0".repeat(64);
+                let path = directory.path().join("wrong-authority.csv");
+                let error = publish(qualified_exact_request(
+                    CanonicalResultExportFormatV2::Csv,
+                    path.clone(),
+                    b"id,value\r\n",
+                    "qpls.multimod.mga_multigroup_v1",
+                    &wrong_authority,
+                ))
+                .unwrap_err();
+                assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+                assert!(!path.exists());
+
+                let mut wrong_family = receipt.clone();
+                wrong_family.required_profile_cells = vec![other_family_cell.into()];
+                verify_multimod_candidate_receipt_against_embedded_v1(&wrong_family)
+                    .expect("the other-family receipt is valid for the injected typed authority");
+                let path = directory.path().join("wrong-family.csv");
+                let error = publish(qualified_exact_request(
+                    CanonicalResultExportFormatV2::Csv,
+                    path.clone(),
+                    b"id,value\r\n",
+                    "qpls.multimod.mga_multigroup_v1",
+                    &wrong_family,
+                ))
+                .unwrap_err();
+                assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+                assert!(!path.exists());
+
+                let mut semantic_tamper = qualified_exact_request(
+                    CanonicalResultExportFormatV2::Csv,
+                    directory.path().join("semantic-tamper.csv"),
+                    b"id,value\r\n",
+                    "qpls.multimod.mga_multigroup_v1",
+                    &receipt,
+                );
+                semantic_tamper.identity.semantic_sha256 = "not-a-sha".into();
+                let path = PathBuf::from(&semantic_tamper.destination_path);
+                let error = publish(semantic_tamper).unwrap_err();
+                assert_eq!(error.code, "CANONICAL_EXPORT_IDENTITY_INVALID");
+                assert!(!path.exists());
+            },
+        )
+        .unwrap();
     }
 
     #[test]

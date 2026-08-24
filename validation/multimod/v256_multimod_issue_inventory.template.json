@@ -1,0 +1,11 @@
+{
+  "$schema": "multimod_issue_inventory_v1.schema.json",
+  "schema_version": 1,
+  "inventory_id": "qpls.multimod.issues.TEMPLATE",
+  "campaign_id": "v256-multimod-TEMPLATE",
+  "candidate_commit_sha": "0000000000000000000000000000000000000000",
+  "plan_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "generated_at_utc": "2000-01-01T00:00:00Z",
+  "campaign_status": "not_started",
+  "issues": []
+}

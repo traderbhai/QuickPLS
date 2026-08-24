@@ -858,7 +858,16 @@ where
         project_bytes.len() as u64,
         MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES,
     )?;
-    let entry_count = document.datasets.len().saturating_add(2);
+    let sidecar_count = document
+        .multimod_results
+        .iter()
+        .map(|attachment| attachment.sidecars.len())
+        .sum::<usize>();
+    let entry_count = document
+        .datasets
+        .len()
+        .saturating_add(sidecar_count)
+        .saturating_add(2);
     if entry_count > DEFAULT_ARCHIVE_LIMITS.max_entries {
         return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
             "{entry_count} entries exceed the {}-entry limit",
@@ -952,7 +961,7 @@ where
     }
     validate_destination_name(destination)?;
     document.ensure_valid()?;
-    if !document.datasets.is_empty() {
+    if !document.datasets.is_empty() || !document.multimod_results.is_empty() {
         return Err(ProjectArchiveV6SaveCopyError::NewDocumentRequiresEmptyDatasets);
     }
 
@@ -997,6 +1006,9 @@ where
     }
     validate_destination_name(destination)?;
     document.ensure_valid()?;
+    if !document.multimod_results.is_empty() {
+        return Err(ProjectArchiveV6SaveCopyError::NonModelAuthorityChanged);
+    }
     if datasets.is_empty() || datasets.len() != document.datasets.len() {
         return Err(ProjectArchiveV6SaveCopyError::Project(
             ProjectError::Invalid(
@@ -1135,8 +1147,18 @@ where
                 before_write,
                 move |output, options, checksums, total_uncompressed, cancelled| {
                     let mut source_zip = source_zip;
-                    for descriptor in &document.datasets {
-                        let entry_name = format!("data/{}.arrow", descriptor.id);
+                    let entry_names = document
+                        .datasets
+                        .iter()
+                        .map(|descriptor| format!("data/{}.arrow", descriptor.id))
+                        .chain(
+                            document
+                                .multimod_results
+                                .iter()
+                                .flat_map(|attachment| attachment.sidecars.iter())
+                                .map(|descriptor| descriptor.entry_name.clone()),
+                        );
+                    for entry_name in entry_names {
                         if entry_name.len() > DEFAULT_ARCHIVE_LIMITS.max_entry_name_bytes {
                             return Err(ProjectArchiveV6SaveCopyError::ArchiveLimit(format!(
                                 "entry name {entry_name} exceeds the {}-byte limit",

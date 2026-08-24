@@ -252,7 +252,19 @@ fn general_sem_execution_authority(
     let mut authority_recipes = document
         .recipes
         .iter()
-        .filter(|recipe| recipe.general_sem_config.is_some());
+        // A completed MultiMod run is appended as an additive Recipe V4 that
+        // retains the source General SEM configuration for exact compiler
+        // provenance. It is a result recipe, not a second base execution
+        // authority. Keep strict General SEM reopen anchored to the sole
+        // sidecar-free/base recipe instead of rejecting a valid V6 archive
+        // merely because it now contains completed MultiMod analyses.
+        .filter(|recipe| {
+            recipe.general_sem_config.is_some()
+                && recipe.mga_multigroup.is_none()
+                && recipe.pls_heterogeneity.is_none()
+                && recipe.general_sem_conditional_process.is_none()
+                && recipe.interventional_causal_mediation.is_none()
+        });
     let Some(recipe) = authority_recipes.next() else {
         return Err("the bounded general_sem_v1 execution archive must contain exactly one resident GeneralSemConfigV1 RecipeV4 authority".into());
     };
@@ -371,6 +383,7 @@ fn inspect_archive_v6(request: &ProjectArchiveV6ReadRequestV1) -> ProjectArchive
         manifest,
         document,
         datasets,
+        multimod_sidecars: _,
     } = loaded;
     let resident_datasets = datasets
         .iter()

@@ -133,7 +133,6 @@ impl ArchivePreflight {
 pub(crate) struct ValidatedArchiveChecksums(BTreeMap<String, String>);
 
 impl ValidatedArchiveChecksums {
-    #[cfg(test)]
     pub(crate) fn get(&self, entry: &str) -> Option<&str> {
         self.0.get(entry).map(String::as_str)
     }
@@ -522,6 +521,21 @@ pub(crate) fn expected_project_entries<I>(
 where
     I: IntoIterator<Item = Uuid>,
 {
+    expected_project_entries_with_additional(dataset_ids, std::iter::empty::<String>())
+}
+
+/// Builds the exact non-manifest entry set for schema-6 archives that carry
+/// additive scientific sidecars. Additional entries are already validated by
+/// their owning typed contract; this seam still rejects collisions with
+/// `project.json`, dataset entries, or another declared sidecar.
+pub(crate) fn expected_project_entries_with_additional<I, J>(
+    dataset_ids: I,
+    additional_entries: J,
+) -> Result<BTreeSet<String>, ArchiveIntegrityError>
+where
+    I: IntoIterator<Item = Uuid>,
+    J: IntoIterator<Item = String>,
+{
     let mut expected = BTreeSet::from([PROJECT_ENTRY_NAME.to_owned()]);
     let mut unique_ids = BTreeSet::new();
     for dataset_id in dataset_ids {
@@ -529,6 +543,11 @@ where
             return Err(ArchiveIntegrityError::DuplicateDatasetId(dataset_id));
         }
         expected.insert(format!("data/{dataset_id}.arrow"));
+    }
+    for entry_name in additional_entries {
+        if entry_name == MANIFEST_ENTRY_NAME || !expected.insert(entry_name.clone()) {
+            return Err(ArchiveIntegrityError::DuplicateEntryName(entry_name));
+        }
     }
     Ok(expected)
 }

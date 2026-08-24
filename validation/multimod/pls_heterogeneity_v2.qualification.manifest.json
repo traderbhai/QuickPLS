@@ -1,0 +1,108 @@
+{
+  "$schema": "multimod_source_bound_manifest_v1.schema.json",
+  "schema_version": 1,
+  "contract_kind": "multimod_source_bound_qualification_manifest",
+  "manifest_id": "qpls.multimod.pls_heterogeneity_v2.qualification",
+  "family_id": "qpls.multimod.pls_heterogeneity_v2",
+  "surface": "labs",
+  "declared_evidence_state": "absent",
+  "promotion_allowed": false,
+  "method_versions": [
+    "qpls.fimix-pls.v2",
+    "qpls.pls-pos.published.v2",
+    "qpls.pls-pos.destination-scored-interactions.v2",
+    "qpls.pos-common-metric-comparability.v1",
+    "qpls.heterogeneity-bootstrap-ledger.v2"
+  ],
+  "source_binding": {
+    "status": "pending",
+    "candidate_commit_sha": null,
+    "source_artifacts": [
+      {"path":"crates/qpls-core/src/multimod_config_v1.rs","sha256":null},
+      {"path":"crates/qpls-core/src/multimod_recipe_compiler_v1.rs","sha256":null},
+      {"path":"crates/qpls-estimation/src/heterogeneity_v2.rs","sha256":null},
+      {"path":"crates/qpls-project/src/multimod_archive_v1.rs","sha256":null},
+      {"path":"docs/methods/PLS_HETEROGENEITY_V2.md","sha256":null},
+      {"path":"src/domain/multimodContractsV1.ts","sha256":null},
+      {"path":"src/native/nativeMultimodHeterogeneityV2.ts","sha256":null}
+    ]
+  },
+  "profile_matrix": [
+    {
+      "profile_id":"fimix.p0_structural.v2","method_version":"qpls.fimix-pls.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"em_multistart_point","evidence_identity_template":"fimix.p0_structural.v2::em_multistart_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"likelihood_criteria_posteriors","evidence_identity_template":"fimix.p0_structural.v2::likelihood_criteria_posteriors","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"failure_boundaries","evidence_identity_template":"fimix.p0_structural.v2::failure_boundaries","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"fimix.p0_structural.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"fimix.p2_multi_two_way.v2","method_version":"qpls.fimix-pls.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"pooled_metric_products","evidence_identity_template":"fimix.p2_multi_two_way.v2::pooled_metric_products","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"em_multistart_point","evidence_identity_template":"fimix.p2_multi_two_way.v2::em_multistart_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"gamma_and_slopes","evidence_identity_template":"fimix.p2_multi_two_way.v2::gamma_and_slopes","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"failure_boundaries","evidence_identity_template":"fimix.p2_multi_two_way.v2::failure_boundaries","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"fimix.p2_multi_two_way.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"fimix.p23_all_current.v2","method_version":"qpls.fimix-pls.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"pooled_metric_three_way_products","evidence_identity_template":"fimix.p23_all_current.v2::pooled_metric_three_way_products","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"em_multistart_point","evidence_identity_template":"fimix.p23_all_current.v2::em_multistart_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"gamma_delta_and_slopes","evidence_identity_template":"fimix.p23_all_current.v2::gamma_delta_and_slopes","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"failure_boundaries","evidence_identity_template":"fimix.p23_all_current.v2::failure_boundaries","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"fimix.p23_all_current.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"pos.published.p0_structural.v2","method_version":"qpls.pls-pos.published.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"ten_start_full_refit_point","evidence_identity_template":"pos.published.p0_structural.v2::ten_start_full_refit_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"strict_objective_monotonicity","evidence_identity_template":"pos.published.p0_structural.v2::strict_objective_monotonicity","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"pos.published.p0_structural.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"pos.destination_scored.p2_multi_two_way.v2","method_version":"qpls.pls-pos.destination-scored-interactions.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"ten_start_full_refit_point","evidence_identity_template":"pos.destination_scored.p2_multi_two_way.v2::ten_start_full_refit_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"destination_product_rescaling","evidence_identity_template":"pos.destination_scored.p2_multi_two_way.v2::destination_product_rescaling","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"common_metric_inferential_refit","evidence_identity_template":"pos.destination_scored.p2_multi_two_way.v2::common_metric_inferential_refit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"pos.destination_scored.p2_multi_two_way.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"pos.destination_scored.p23_all_current.v2","method_version":"qpls.pls-pos.destination-scored-interactions.v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"ten_start_full_refit_point","evidence_identity_template":"pos.destination_scored.p23_all_current.v2::ten_start_full_refit_point","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"destination_three_way_product_rescaling","evidence_identity_template":"pos.destination_scored.p23_all_current.v2::destination_three_way_product_rescaling","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"common_metric_inferential_refit","evidence_identity_template":"pos.destination_scored.p23_all_current.v2::common_metric_inferential_refit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"fixed_k_label_aligned_bootstrap","evidence_identity_template":"pos.destination_scored.p23_all_current.v2::fixed_k_label_aligned_bootstrap","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"pos.common_metric.p2_multi_two_way.v1","method_version":"qpls.pos-common-metric-comparability.v1","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"configural_and_pairwise_compositional_gate","evidence_identity_template":"pos.common_metric.p2_multi_two_way.v1::configural_and_pairwise_compositional_gate","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"failed_gate_descriptive_only_suppression","evidence_identity_template":"pos.common_metric.p2_multi_two_way.v1::failed_gate_descriptive_only_suppression","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"pos.common_metric.p23_all_current.v1","method_version":"qpls.pos-common-metric-comparability.v1","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"configural_and_pairwise_compositional_gate","evidence_identity_template":"pos.common_metric.p23_all_current.v1::configural_and_pairwise_compositional_gate","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"failed_gate_descriptive_only_suppression","evidence_identity_template":"pos.common_metric.p23_all_current.v1::failed_gate_descriptive_only_suppression","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    }
+  ],
+  "promotion_contract": {
+    "profile_procedure_evidence_identity": "Every algorithm, interaction profile and procedure pair has a unique report identity; tandem FIMIX and POS evidence never substitutes across algorithms. The publication-profile PLS-POS point and fixed-K bootstrap cells require the exact bound K=2, K=3, K=4 and K=5 scientific-check inventory before promotion.",
+    "required_gate_families": ["specification","compiler","independent_oracle","recovery_and_null_simulation","multi_start","bootstrap_label_alignment","common_metric","persistence","export","native_accessibility","installed_offline"],
+    "minimum_live_state": "release_qualified",
+    "stale_hash_behavior": "derive_absent",
+    "partial_result_behavior": "never_publish"
+  }
+}

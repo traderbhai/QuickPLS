@@ -8,7 +8,17 @@ license.workspace = true
 name = "quickpls_desktop_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
+[features]
+default = []
+# Compiles the isolated fixture preparation seam used only by the frozen
+# installed/portable MultiMod qualification packages.  It does not inject
+# scientific authority or alter ordinary runtime results.
+multimod-qualification-harness = []
+
 [build-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
 tauri-build = { version = "2", features = [] }
 
 [dependencies]

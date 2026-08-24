@@ -861,6 +861,24 @@ pub fn compile_pls_plan_v3(
     model: &SemModelV4,
     config: &GeneralSemConfigV1,
 ) -> Result<CompiledPlsPlanV3, CompiledPlsPlanV3Error> {
+    compile_pls_plan_v3_with_hoc_mode(model, config, false)
+}
+
+/// Additive MultiMod-only compiler for one through four pairwise-disjoint,
+/// nonnested, homogeneous-approach HOCs. The legacy `compile_pls_plan_v3`
+/// entrypoint retains its exact one-HOC V1 cardinality.
+pub fn compile_pls_plan_v3_multimod_multiple_hoc_v2(
+    model: &SemModelV4,
+    config: &GeneralSemConfigV1,
+) -> Result<CompiledPlsPlanV3, CompiledPlsPlanV3Error> {
+    compile_pls_plan_v3_with_hoc_mode(model, config, true)
+}
+
+fn compile_pls_plan_v3_with_hoc_mode(
+    model: &SemModelV4,
+    config: &GeneralSemConfigV1,
+    multimod_multiple_hoc: bool,
+) -> Result<CompiledPlsPlanV3, CompiledPlsPlanV3Error> {
     config.ensure_valid()?;
     if config.output_policy.lazy_specific_path_materialization
         || config.output_policy.when_specific_path_limit_exceeded
@@ -875,7 +893,11 @@ pub fn compile_pls_plan_v3(
     if topology.has_feedback() {
         return Err(CompiledPlsPlanV3Error::StructuralFeedback);
     }
-    let higher_order_stage_plans = compile_pls_higher_order_stage_plans_v1(model)?;
+    let higher_order_stage_plans = if multimod_multiple_hoc {
+        compile_pls_higher_order_stage_plans_multimod_v2(model)?
+    } else {
+        compile_pls_higher_order_stage_plans_v1(model)?
+    };
     let two_way_interactions = if higher_order_stage_plans.is_empty() {
         compile_pls_two_way_interactions_v3(model)?
     } else {
@@ -888,7 +910,11 @@ pub fn compile_pls_plan_v3(
     };
     let (base_plan, stage_one_projection_scientific_sha256) =
         if !higher_order_stage_plans.is_empty() {
-            let projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
+            let projection = if multimod_multiple_hoc {
+                compile_pls_higher_order_lower_order_projection_multimod_v2(model)?
+            } else {
+                compile_pls_higher_order_lower_order_projection_v1(model)?
+            };
             let base_plan = compile_pls_plan_v2(projection.projected_model())?;
             debug_assert_eq!(
                 base_plan.scientific_hash(),
@@ -1010,6 +1036,8 @@ pub fn pls_hoc_approach_type_supported_v1(
 pub fn compile_pls_higher_order_stage_plans_v1(
     model: &SemModelV4,
 ) -> Result<Vec<CompiledPlsHigherOrderStagePlanV1>, CompiledPlsHigherOrderV1Error> {
+    // Preserve the protected V1 validation and error-precedence contract before
+    // delegating construction to the additive MultiMod implementation.
     model.ensure_valid()?;
     let hoc_terms = model
         .derived_terms
@@ -1026,10 +1054,8 @@ pub fn compile_pls_higher_order_stage_plans_v1(
     }
     let SemDerivedTermV4::HigherOrder {
         id: term_id,
-        output,
-        components,
         approach,
-        measurement_type,
+        ..
     } = hoc_terms[0]
     else {
         unreachable!()
@@ -1052,6 +1078,94 @@ pub fn compile_pls_higher_order_stage_plans_v1(
             term_id: term_id.clone(),
         });
     }
+    for variable in &model.variables {
+        if let SemVariableV4::Composite {
+            id,
+            weighting: CompositeWeightingV4::Unit { .. } | CompositeWeightingV4::Custom { .. },
+            ..
+        } = variable
+        {
+            return Err(CompiledPlsHigherOrderV1Error::FixedOrCustomScoring {
+                construct_id: id.clone(),
+            });
+        }
+    }
+    compile_pls_higher_order_stage_plans_multimod_v2(model)
+}
+
+/// MultiMod V2 bounded extension. This is intentionally separate from the V1
+/// compiler so legacy one-HOC analytical identities do not widen silently.
+pub fn compile_pls_higher_order_stage_plans_multimod_v2(
+    model: &SemModelV4,
+) -> Result<Vec<CompiledPlsHigherOrderStagePlanV1>, CompiledPlsHigherOrderV1Error> {
+    model.ensure_valid()?;
+    let mut hoc_terms = model
+        .derived_terms
+        .iter()
+        .filter(|term| matches!(term, SemDerivedTermV4::HigherOrder { .. }))
+        .collect::<Vec<_>>();
+    if hoc_terms.is_empty() {
+        return Ok(Vec::new());
+    }
+    if hoc_terms.len() > 4 {
+        return Err(CompiledPlsHigherOrderV1Error::HigherOrderCardinality {
+            found: hoc_terms.len(),
+        });
+    }
+    if let Some(other) = model
+        .derived_terms
+        .iter()
+        .find(|term| !matches!(term, SemDerivedTermV4::HigherOrder { .. }))
+    {
+        let first_term_id = hoc_terms[0].id().to_string();
+        let kind = match other {
+            SemDerivedTermV4::Interaction { .. } => "interaction_v1",
+            SemDerivedTermV4::InteractionV2 { .. } => "interaction_v2",
+            SemDerivedTermV4::HigherOrder { .. } => unreachable!(),
+            SemDerivedTermV4::Polynomial { .. } => "polynomial",
+        };
+        return Err(CompiledPlsHigherOrderV1Error::DerivedTermCombination {
+            term_id: first_term_id,
+            other_term_id: other.id().to_string(),
+            kind,
+        });
+    }
+    hoc_terms.sort_by(|left, right| left.id().cmp(right.id()));
+    let mut occupied_components = BTreeSet::new();
+    let output_ids = hoc_terms
+        .iter()
+        .filter_map(|term| match term {
+            SemDerivedTermV4::HigherOrder { output, .. } => Some(output.as_str()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    let mut common_approach: Option<HigherOrderConstructionApproachV4> = None;
+    for term in hoc_terms.iter().copied() {
+        let SemDerivedTermV4::HigherOrder {
+            id,
+            components,
+            approach,
+            ..
+        } = term
+        else {
+            unreachable!()
+        };
+        if common_approach
+            .as_ref()
+            .is_some_and(|expected| expected != approach)
+            || components.iter().any(|component| {
+                output_ids.contains(component.as_str())
+                    || !occupied_components.insert(component.as_str())
+            })
+        {
+            return Err(CompiledPlsHigherOrderV1Error::DerivedTermCombination {
+                term_id: id.clone(),
+                other_term_id: "multiple_hoc_profile".into(),
+                kind: "mixed_nested_or_overlapping_higher_order",
+            });
+        }
+        common_approach.get_or_insert_with(|| approach.clone());
+    }
 
     for variable in &model.variables {
         if let SemVariableV4::Composite {
@@ -1065,132 +1179,11 @@ pub fn compile_pls_higher_order_stage_plans_v1(
             });
         }
     }
-
     let variables = model
         .variables
         .iter()
         .map(|variable| (variable.id(), variable))
         .collect::<BTreeMap<_, _>>();
-    let expected_loc_mode = hoc_loc_mode_v1(measurement_type);
-    let hoc_component_mode = hoc_component_mode_v1(measurement_type);
-    let relation_interpretation = match hoc_component_mode {
-        CompiledPlsBlockModeV2::ModeA => CompiledPlsHocComponentRelationInterpretationV1::Loading,
-        CompiledPlsBlockModeV2::ModeB => {
-            CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity
-        }
-    };
-    let mut component_ids = components.clone();
-    component_ids.sort();
-    for component_id in &component_ids {
-        let Some(SemVariableV4::Composite { weighting, .. }) =
-            variables.get(component_id.as_str()).copied()
-        else {
-            return Err(
-                CompiledPlsHigherOrderV1Error::NestedOrNonCompositeComponent {
-                    component_id: component_id.clone(),
-                },
-            );
-        };
-        let actual_mode = match weighting {
-            CompositeWeightingV4::ModeA => CompiledPlsBlockModeV2::ModeA,
-            CompositeWeightingV4::ModeB => CompiledPlsBlockModeV2::ModeB,
-            CompositeWeightingV4::Unit { .. } | CompositeWeightingV4::Custom { .. } => {
-                unreachable!("fixed/custom scoring rejected above")
-            }
-        };
-        if actual_mode != expected_loc_mode {
-            return Err(CompiledPlsHigherOrderV1Error::ComponentModeMismatch {
-                component_id: component_id.clone(),
-                expected_mode: expected_loc_mode,
-            });
-        }
-    }
-
-    let component_set = component_ids
-        .iter()
-        .map(String::as_str)
-        .collect::<BTreeSet<_>>();
-    let mut authored_hoc_relations = Vec::new();
-    let mut incoming_hoc_relations = Vec::new();
-    for relation in &model.relations {
-        match relation {
-            SemRelationV4::Structural {
-                id,
-                source,
-                target,
-                parameter,
-                intercept_parameter,
-                ..
-            } if source == output || target == output => {
-                let opposite = if source == output { target } else { source };
-                if component_set.contains(opposite.as_str()) {
-                    return Err(CompiledPlsHigherOrderV1Error::AuthoredComponentRelation {
-                        output_id: output.clone(),
-                        component_id: opposite.clone(),
-                        relation_id: id.clone(),
-                    });
-                }
-                let parameter_is_exact = intercept_parameter.is_none()
-                    && model.parameters.iter().any(|candidate| {
-                        matches!(
-                            candidate,
-                            SemParameterV4::Free {
-                                id: candidate_id,
-                                target: SemParameterTargetV4::Regression {
-                                    source: parameter_source,
-                                    target: parameter_target,
-                                },
-                                start: None,
-                                lower: None,
-                                upper: None,
-                                equality_label: None,
-                                group_overrides,
-                                ..
-                            } if candidate_id == parameter
-                                && parameter_source == source
-                                && parameter_target == target
-                                && group_overrides.is_empty()
-                        )
-                    })
-                    && !model
-                        .constraints
-                        .iter()
-                        .any(|constraint| constraint_references_parameter(constraint, parameter));
-                if !parameter_is_exact {
-                    return Err(
-                        CompiledPlsHigherOrderV1Error::UnsupportedStructuralParameter {
-                            relation_id: id.clone(),
-                        },
-                    );
-                }
-                authored_hoc_relations.push(id.clone());
-                if target == output {
-                    incoming_hoc_relations.push((id.clone(), source.clone()));
-                }
-            }
-            _ if relation_references_variable(relation, output) => {
-                return Err(CompiledPlsHigherOrderV1Error::OutputRelationUnsupported {
-                    output_id: output.clone(),
-                    relation_id: relation.id().to_string(),
-                });
-            }
-            _ => {}
-        }
-    }
-    authored_hoc_relations.sort();
-    incoming_hoc_relations.sort();
-    let hoc_is_endogenous = !incoming_hoc_relations.is_empty();
-    if !pls_hoc_approach_type_supported_v1(approach, measurement_type, hoc_is_endogenous) {
-        return Err(
-            CompiledPlsHigherOrderV1Error::UnsupportedApproachTypeTopology {
-                term_id: term_id.clone(),
-                approach: approach.clone(),
-                measurement_type: measurement_type.clone(),
-                hoc_is_endogenous,
-            },
-        );
-    }
-
     let mut occupied_identities = model
         .variables
         .iter()
@@ -1209,177 +1202,323 @@ pub fn compile_pls_higher_order_stage_plans_v1(
             _ => None,
         }))
         .collect::<BTreeSet<_>>();
-    let uses_virtual_indicators = matches!(
-        approach,
-        HigherOrderConstructionApproachV4::RepeatedIndicators
-            | HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
-            | HigherOrderConstructionApproachV4::EmbeddedTwoStage
-    );
-    let mut component_mappings = Vec::new();
-    for component_id in &component_ids {
-        let generated_score_variable_id = reserve_hoc_generated_identity_v1(
-            "score",
-            &[term_id, output, component_id],
-            &mut occupied_identities,
-        )?;
-        let generated_component_relation_id = reserve_hoc_generated_identity_v1(
-            "component_relation",
-            &[term_id, output, component_id],
-            &mut occupied_identities,
-        )?;
-        let generated_component_parameter_id = reserve_hoc_generated_identity_v1(
-            "component_parameter",
-            &[term_id, output, component_id],
-            &mut occupied_identities,
-        )?;
-        let (component_relation_source_id, component_relation_target_id) =
-            match relation_interpretation {
-                CompiledPlsHocComponentRelationInterpretationV1::Loading => {
-                    (output.clone(), component_id.clone())
-                }
-                CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity => {
-                    (component_id.clone(), output.clone())
+    let mut plans = Vec::with_capacity(hoc_terms.len());
+    for hoc_term in hoc_terms {
+        let SemDerivedTermV4::HigherOrder {
+            id: term_id,
+            output,
+            components,
+            approach,
+            measurement_type,
+        } = hoc_term
+        else {
+            unreachable!()
+        };
+        if approach == &HigherOrderConstructionApproachV4::Hybrid {
+            return Err(CompiledPlsHigherOrderV1Error::HybridCompatibilityOnly {
+                term_id: term_id.clone(),
+            });
+        }
+
+        let expected_loc_mode = hoc_loc_mode_v1(measurement_type);
+        let hoc_component_mode = hoc_component_mode_v1(measurement_type);
+        let relation_interpretation = match hoc_component_mode {
+            CompiledPlsBlockModeV2::ModeA => {
+                CompiledPlsHocComponentRelationInterpretationV1::Loading
+            }
+            CompiledPlsBlockModeV2::ModeB => {
+                CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity
+            }
+        };
+        let mut component_ids = components.clone();
+        component_ids.sort();
+        for component_id in &component_ids {
+            let Some(SemVariableV4::Composite { weighting, .. }) =
+                variables.get(component_id.as_str()).copied()
+            else {
+                return Err(
+                    CompiledPlsHigherOrderV1Error::NestedOrNonCompositeComponent {
+                        component_id: component_id.clone(),
+                    },
+                );
+            };
+            let actual_mode = match weighting {
+                CompositeWeightingV4::ModeA => CompiledPlsBlockModeV2::ModeA,
+                CompositeWeightingV4::ModeB => CompiledPlsBlockModeV2::ModeB,
+                CompositeWeightingV4::Unit { .. } | CompositeWeightingV4::Custom { .. } => {
+                    unreachable!("fixed/custom scoring rejected above")
                 }
             };
-        let mut virtual_indicators = Vec::new();
-        if uses_virtual_indicators {
-            let mut indicators = model
-                .relations
-                .iter()
-                .filter_map(|relation| match relation {
-                    SemRelationV4::MeasurementEffect {
-                        id,
-                        construct,
-                        indicator,
-                        ..
-                    } if construct == component_id => Some((id.clone(), indicator.clone())),
-                    SemRelationV4::MeasurementCausal {
-                        id,
-                        composite,
-                        indicator,
-                        ..
-                    } if composite == component_id => Some((id.clone(), indicator.clone())),
-                    _ => None,
-                })
-                .collect::<Vec<_>>();
-            indicators.sort();
-            for (source_relation_id, indicator_id) in indicators {
-                let source_column = match variables.get(indicator_id.as_str()).copied() {
-                    Some(SemVariableV4::Observed { source_column, .. }) => source_column.clone(),
-                    _ => unreachable!("validated measurement relation references observed data"),
-                };
-                let identity_parts = [
-                    term_id.as_str(),
-                    output.as_str(),
-                    component_id.as_str(),
-                    source_relation_id.as_str(),
-                    indicator_id.as_str(),
-                ];
-                let generated_variable_id = reserve_hoc_generated_identity_v1(
-                    "virtual_indicator",
-                    &identity_parts,
-                    &mut occupied_identities,
-                )?;
-                let generated_source_column_id = reserve_hoc_generated_identity_v1(
-                    "virtual_source_column",
-                    &identity_parts,
-                    &mut occupied_identities,
-                )?;
-                let generated_relation_id = reserve_hoc_generated_identity_v1(
-                    "virtual_relation",
-                    &identity_parts,
-                    &mut occupied_identities,
-                )?;
-                let generated_parameter_id = reserve_hoc_generated_identity_v1(
-                    "virtual_parameter",
-                    &identity_parts,
-                    &mut occupied_identities,
-                )?;
-                virtual_indicators.push(CompiledPlsHocVirtualIndicatorV1 {
-                    source_indicator_variable_id: indicator_id,
-                    source_column,
-                    generated_variable_id,
-                    generated_source_column_id,
-                    generated_relation_id,
-                    generated_parameter_id,
+            if actual_mode != expected_loc_mode {
+                return Err(CompiledPlsHigherOrderV1Error::ComponentModeMismatch {
+                    component_id: component_id.clone(),
+                    expected_mode: expected_loc_mode,
                 });
             }
         }
-        component_mappings.push(CompiledPlsHocComponentMappingV1 {
-            component_id: component_id.clone(),
+
+        let component_set = component_ids
+            .iter()
+            .map(String::as_str)
+            .collect::<BTreeSet<_>>();
+        let mut authored_hoc_relations = Vec::new();
+        let mut incoming_hoc_relations = Vec::new();
+        for relation in &model.relations {
+            match relation {
+                SemRelationV4::Structural {
+                    id,
+                    source,
+                    target,
+                    parameter,
+                    intercept_parameter,
+                    ..
+                } if source == output || target == output => {
+                    let opposite = if source == output { target } else { source };
+                    if component_set.contains(opposite.as_str()) {
+                        return Err(CompiledPlsHigherOrderV1Error::AuthoredComponentRelation {
+                            output_id: output.clone(),
+                            component_id: opposite.clone(),
+                            relation_id: id.clone(),
+                        });
+                    }
+                    let parameter_is_exact = intercept_parameter.is_none()
+                        && model.parameters.iter().any(|candidate| {
+                            matches!(
+                                candidate,
+                                SemParameterV4::Free {
+                                    id: candidate_id,
+                                    target: SemParameterTargetV4::Regression {
+                                        source: parameter_source,
+                                        target: parameter_target,
+                                    },
+                                    start: None,
+                                    lower: None,
+                                    upper: None,
+                                    equality_label: None,
+                                    group_overrides,
+                                    ..
+                                } if candidate_id == parameter
+                                    && parameter_source == source
+                                    && parameter_target == target
+                                    && group_overrides.is_empty()
+                            )
+                        })
+                        && !model.constraints.iter().any(|constraint| {
+                            constraint_references_parameter(constraint, parameter)
+                        });
+                    if !parameter_is_exact {
+                        return Err(
+                            CompiledPlsHigherOrderV1Error::UnsupportedStructuralParameter {
+                                relation_id: id.clone(),
+                            },
+                        );
+                    }
+                    authored_hoc_relations.push(id.clone());
+                    if target == output {
+                        incoming_hoc_relations.push((id.clone(), source.clone()));
+                    }
+                }
+                _ if relation_references_variable(relation, output) => {
+                    return Err(CompiledPlsHigherOrderV1Error::OutputRelationUnsupported {
+                        output_id: output.clone(),
+                        relation_id: relation.id().to_string(),
+                    });
+                }
+                _ => {}
+            }
+        }
+        authored_hoc_relations.sort();
+        incoming_hoc_relations.sort();
+        let hoc_is_endogenous = !incoming_hoc_relations.is_empty();
+        if !pls_hoc_approach_type_supported_v1(approach, measurement_type, hoc_is_endogenous) {
+            return Err(
+                CompiledPlsHigherOrderV1Error::UnsupportedApproachTypeTopology {
+                    term_id: term_id.clone(),
+                    approach: approach.clone(),
+                    measurement_type: measurement_type.clone(),
+                    hoc_is_endogenous,
+                },
+            );
+        }
+
+        let uses_virtual_indicators = matches!(
+            approach,
+            HigherOrderConstructionApproachV4::RepeatedIndicators
+                | HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
+                | HigherOrderConstructionApproachV4::EmbeddedTwoStage
+        );
+        let mut component_mappings = Vec::new();
+        for component_id in &component_ids {
+            let generated_score_variable_id = reserve_hoc_generated_identity_v1(
+                "score",
+                &[term_id, output, component_id],
+                &mut occupied_identities,
+            )?;
+            let generated_component_relation_id = reserve_hoc_generated_identity_v1(
+                "component_relation",
+                &[term_id, output, component_id],
+                &mut occupied_identities,
+            )?;
+            let generated_component_parameter_id = reserve_hoc_generated_identity_v1(
+                "component_parameter",
+                &[term_id, output, component_id],
+                &mut occupied_identities,
+            )?;
+            let (component_relation_source_id, component_relation_target_id) =
+                match relation_interpretation {
+                    CompiledPlsHocComponentRelationInterpretationV1::Loading => {
+                        (output.clone(), component_id.clone())
+                    }
+                    CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity => {
+                        (component_id.clone(), output.clone())
+                    }
+                };
+            let mut virtual_indicators = Vec::new();
+            if uses_virtual_indicators {
+                let mut indicators = model
+                    .relations
+                    .iter()
+                    .filter_map(|relation| match relation {
+                        SemRelationV4::MeasurementEffect {
+                            id,
+                            construct,
+                            indicator,
+                            ..
+                        } if construct == component_id => Some((id.clone(), indicator.clone())),
+                        SemRelationV4::MeasurementCausal {
+                            id,
+                            composite,
+                            indicator,
+                            ..
+                        } if composite == component_id => Some((id.clone(), indicator.clone())),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>();
+                indicators.sort();
+                for (source_relation_id, indicator_id) in indicators {
+                    let source_column = match variables.get(indicator_id.as_str()).copied() {
+                        Some(SemVariableV4::Observed { source_column, .. }) => {
+                            source_column.clone()
+                        }
+                        _ => {
+                            unreachable!("validated measurement relation references observed data")
+                        }
+                    };
+                    let identity_parts = [
+                        term_id.as_str(),
+                        output.as_str(),
+                        component_id.as_str(),
+                        source_relation_id.as_str(),
+                        indicator_id.as_str(),
+                    ];
+                    let generated_variable_id = reserve_hoc_generated_identity_v1(
+                        "virtual_indicator",
+                        &identity_parts,
+                        &mut occupied_identities,
+                    )?;
+                    let generated_source_column_id = reserve_hoc_generated_identity_v1(
+                        "virtual_source_column",
+                        &identity_parts,
+                        &mut occupied_identities,
+                    )?;
+                    let generated_relation_id = reserve_hoc_generated_identity_v1(
+                        "virtual_relation",
+                        &identity_parts,
+                        &mut occupied_identities,
+                    )?;
+                    let generated_parameter_id = reserve_hoc_generated_identity_v1(
+                        "virtual_parameter",
+                        &identity_parts,
+                        &mut occupied_identities,
+                    )?;
+                    virtual_indicators.push(CompiledPlsHocVirtualIndicatorV1 {
+                        source_indicator_variable_id: indicator_id,
+                        source_column,
+                        generated_variable_id,
+                        generated_source_column_id,
+                        generated_relation_id,
+                        generated_parameter_id,
+                    });
+                }
+            }
+            component_mappings.push(CompiledPlsHocComponentMappingV1 {
+                component_id: component_id.clone(),
+                loc_measurement_mode: expected_loc_mode,
+                generated_score_variable_id,
+                generated_component_relation_id,
+                generated_component_parameter_id,
+                component_relation_source_id,
+                component_relation_target_id,
+                relation_interpretation,
+                virtual_indicators,
+            });
+        }
+
+        let mut technical_paths = Vec::new();
+        if approach == &HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators {
+            for (antecedent_relation_id, source_id) in &incoming_hoc_relations {
+                for component_id in &component_ids {
+                    let identity_parts = [
+                        term_id.as_str(),
+                        output.as_str(),
+                        antecedent_relation_id.as_str(),
+                        source_id.as_str(),
+                        component_id.as_str(),
+                    ];
+                    technical_paths.push(CompiledPlsHocTechnicalPathV1 {
+                        authored_antecedent_relation_id: antecedent_relation_id.clone(),
+                        source_id: source_id.clone(),
+                        component_id: component_id.clone(),
+                        generated_relation_id: reserve_hoc_generated_identity_v1(
+                            "technical_relation",
+                            &identity_parts,
+                            &mut occupied_identities,
+                        )?,
+                        generated_parameter_id: reserve_hoc_generated_identity_v1(
+                            "technical_parameter",
+                            &identity_parts,
+                            &mut occupied_identities,
+                        )?,
+                    });
+                }
+            }
+        }
+        technical_paths.sort_by(|left, right| {
+            left.authored_antecedent_relation_id
+                .cmp(&right.authored_antecedent_relation_id)
+                .then_with(|| left.component_id.cmp(&right.component_id))
+        });
+
+        let stage_projections = build_hoc_stage_projections_v1(
+            model,
+            term_id,
+            output,
+            approach,
+            &component_ids,
+            &component_mappings,
+            &technical_paths,
+        );
+        plans.push(CompiledPlsHigherOrderStagePlanV1 {
+            contract_version: COMPILED_PLS_HIGHER_ORDER_STAGE_PLAN_V1_VERSION.into(),
+            authored_term_id: term_id.clone(),
+            output_variable_id: output.clone(),
+            component_ids,
+            authored_hoc_structural_relation_ids: authored_hoc_relations,
+            approach: approach.clone(),
+            measurement_type: measurement_type.clone(),
             loc_measurement_mode: expected_loc_mode,
-            generated_score_variable_id,
-            generated_component_relation_id,
-            generated_component_parameter_id,
-            component_relation_source_id,
-            component_relation_target_id,
-            relation_interpretation,
-            virtual_indicators,
+            hoc_component_mode,
+            component_relation_interpretation: relation_interpretation,
+            hoc_is_endogenous,
+            component_mappings,
+            technical_paths,
+            stage_projections,
+            point_capability_cell: pls_general_higher_order_point_capability_cell_v1(),
+            bootstrap_capability_cell: pls_general_higher_order_bootstrap_capability_cell_v1(),
         });
     }
-
-    let mut technical_paths = Vec::new();
-    if approach == &HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators {
-        for (antecedent_relation_id, source_id) in &incoming_hoc_relations {
-            for component_id in &component_ids {
-                let identity_parts = [
-                    term_id.as_str(),
-                    output.as_str(),
-                    antecedent_relation_id.as_str(),
-                    source_id.as_str(),
-                    component_id.as_str(),
-                ];
-                technical_paths.push(CompiledPlsHocTechnicalPathV1 {
-                    authored_antecedent_relation_id: antecedent_relation_id.clone(),
-                    source_id: source_id.clone(),
-                    component_id: component_id.clone(),
-                    generated_relation_id: reserve_hoc_generated_identity_v1(
-                        "technical_relation",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
-                    generated_parameter_id: reserve_hoc_generated_identity_v1(
-                        "technical_parameter",
-                        &identity_parts,
-                        &mut occupied_identities,
-                    )?,
-                });
-            }
-        }
-    }
-    technical_paths.sort_by(|left, right| {
-        left.authored_antecedent_relation_id
-            .cmp(&right.authored_antecedent_relation_id)
-            .then_with(|| left.component_id.cmp(&right.component_id))
-    });
-
-    let stage_projections = build_hoc_stage_projections_v1(
-        model,
-        term_id,
-        output,
-        approach,
-        &component_ids,
-        &component_mappings,
-        &technical_paths,
-    );
-    Ok(vec![CompiledPlsHigherOrderStagePlanV1 {
-        contract_version: COMPILED_PLS_HIGHER_ORDER_STAGE_PLAN_V1_VERSION.into(),
-        authored_term_id: term_id.clone(),
-        output_variable_id: output.clone(),
-        component_ids,
-        authored_hoc_structural_relation_ids: authored_hoc_relations,
-        approach: approach.clone(),
-        measurement_type: measurement_type.clone(),
-        loc_measurement_mode: expected_loc_mode,
-        hoc_component_mode,
-        component_relation_interpretation: relation_interpretation,
-        hoc_is_endogenous,
-        component_mappings,
-        technical_paths,
-        stage_projections,
-        point_capability_cell: pls_general_higher_order_point_capability_cell_v1(),
-        bootstrap_capability_cell: pls_general_higher_order_bootstrap_capability_cell_v1(),
-    }])
+    plans.sort_by(|left, right| left.authored_term_id.cmp(&right.authored_term_id));
+    Ok(plans)
 }
 
 /// Ordinary lower-order score authority embedded in CompiledPlsPlanV3. HOC
@@ -1388,7 +1527,14 @@ pub fn compile_pls_higher_order_stage_plans_v1(
 pub fn compile_pls_higher_order_lower_order_projection_v1(
     model: &SemModelV4,
 ) -> Result<CompiledPlsStageOneProjectionV3, CompiledPlsHigherOrderV1Error> {
-    let plans = compile_pls_higher_order_stage_plans_v1(model)?;
+    compile_pls_higher_order_stage_plans_v1(model)?;
+    compile_pls_higher_order_lower_order_projection_multimod_v2(model)
+}
+
+pub fn compile_pls_higher_order_lower_order_projection_multimod_v2(
+    model: &SemModelV4,
+) -> Result<CompiledPlsStageOneProjectionV3, CompiledPlsHigherOrderV1Error> {
+    let plans = compile_pls_higher_order_stage_plans_multimod_v2(model)?;
     if plans.is_empty() {
         let scientific_sha256 = model.scientific_sha256()?;
         return Ok(CompiledPlsStageOneProjectionV3 {
@@ -1398,11 +1544,18 @@ pub fn compile_pls_higher_order_lower_order_projection_v1(
             projected_model: model.canonicalized(),
         });
     }
-    let output_id = plans[0].output_variable_id();
+    let output_ids = plans
+        .iter()
+        .map(|plan| plan.output_variable_id())
+        .collect::<BTreeSet<_>>();
     let removed_relation_ids = model
         .relations
         .iter()
-        .filter(|relation| relation_references_variable(relation, output_id))
+        .filter(|relation| {
+            output_ids
+                .iter()
+                .any(|output_id| relation_references_variable(relation, output_id))
+        })
         .map(|relation| relation.id().to_string())
         .collect::<BTreeSet<_>>();
     let mut removed_parameter_ids = BTreeSet::new();
@@ -1423,7 +1576,7 @@ pub fn compile_pls_higher_order_lower_order_projection_v1(
     let mut projected_model = model.clone();
     projected_model
         .variables
-        .retain(|variable| variable.id() != output_id);
+        .retain(|variable| !output_ids.contains(variable.id()));
     projected_model
         .relations
         .retain(|relation| !removed_relation_ids.contains(relation.id()));
@@ -1453,105 +1606,143 @@ pub fn compile_pls_higher_order_repeated_stage_projection_v1(
     model: &SemModelV4,
     plan: &CompiledPlsPlanV3,
 ) -> Result<CompiledPlsHocExecutionProjectionV1, CompiledPlsHigherOrderV1Error> {
+    compile_pls_higher_order_stage_plans_v1(model)?;
+    compile_pls_higher_order_repeated_stage_projection_multimod_v2(model, plan)
+}
+
+pub fn compile_pls_higher_order_repeated_stage_projection_multimod_v2(
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<CompiledPlsHocExecutionProjectionV1, CompiledPlsHigherOrderV1Error> {
     let source_scientific_sha256 = model.scientific_sha256()?;
-    let expected_hoc_plans = compile_pls_higher_order_stage_plans_v1(model)?;
-    let expected_stage_one_projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
+    let expected_hoc_plans = compile_pls_higher_order_stage_plans_multimod_v2(model)?;
+    let expected_stage_one_projection =
+        compile_pls_higher_order_lower_order_projection_multimod_v2(model)?;
     let expected_base_plan = compile_pls_plan_v2(expected_stage_one_projection.projected_model())?;
     if plan.scientific_hash() != source_scientific_sha256
         || plan.higher_order_stage_plans() != expected_hoc_plans.as_slice()
         || plan.base_plan() != &expected_base_plan
         || plan.stage_one_projection_scientific_sha256()
             != Some(expected_stage_one_projection.projected_scientific_sha256())
-        || expected_hoc_plans.len() != 1
+        || !(1..=4).contains(&expected_hoc_plans.len())
     {
         return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
     }
-    let hoc = &expected_hoc_plans[0];
-    if !matches!(
-        hoc.approach(),
-        HigherOrderConstructionApproachV4::RepeatedIndicators
-            | HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
-            | HigherOrderConstructionApproachV4::EmbeddedTwoStage
-    ) {
+    if expected_hoc_plans.iter().any(|hoc| {
+        !matches!(
+            hoc.approach(),
+            HigherOrderConstructionApproachV4::RepeatedIndicators
+                | HigherOrderConstructionApproachV4::ExtendedRepeatedIndicators
+                | HigherOrderConstructionApproachV4::EmbeddedTwoStage
+        )
+    }) {
         return Err(CompiledPlsHigherOrderV1Error::RepeatedStageRequired);
     }
 
     let mut projected_model = model.clone();
-    let output_index = projected_model
-        .variables
-        .iter()
-        .position(|variable| variable.id() == hoc.output_variable_id())
-        .ok_or_else(
-            || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
-                output_id: hoc.output_variable_id().to_string(),
-            },
-        )?;
-    let (output_id, output_label) = match &projected_model.variables[output_index] {
-        SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
-        _ => {
-            return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
-                output_id: hoc.output_variable_id().to_string(),
-            });
-        }
-    };
-    projected_model.variables[output_index] = SemVariableV4::Composite {
-        id: output_id.clone(),
-        label: output_label,
-        weighting: match hoc.hoc_component_mode() {
-            CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
-            CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
-        },
-    };
     projected_model.derived_terms.clear();
-
-    for mapping in hoc.component_mappings() {
-        for indicator in mapping.virtual_indicators() {
-            projected_model.variables.push(SemVariableV4::Observed {
-                id: indicator.generated_variable_id().to_string(),
-                label: format!(
-                    "Repeated indicator for {} from {}",
-                    hoc.output_variable_id(),
-                    mapping.component_id()
-                ),
-                source_column: indicator.generated_source_column_id().to_string(),
-                scale: ObservedScaleV4::Continuous,
-                role: ObservedRoleV4::Indicator,
-                categories: Vec::new(),
-                value_labels: BTreeMap::new(),
-                missing_markers: Vec::new(),
-                transformation_lineage: Vec::new(),
+    for hoc in &expected_hoc_plans {
+        let output_index = projected_model
+            .variables
+            .iter()
+            .position(|variable| variable.id() == hoc.output_variable_id())
+            .ok_or_else(
+                || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                    output_id: hoc.output_variable_id().to_string(),
+                },
+            )?;
+        let (output_id, output_label) = match &projected_model.variables[output_index] {
+            SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
+            _ => {
+                return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                    output_id: hoc.output_variable_id().to_string(),
+                });
+            }
+        };
+        projected_model.variables[output_index] = SemVariableV4::Composite {
+            id: output_id.clone(),
+            label: output_label,
+            weighting: match hoc.hoc_component_mode() {
+                CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
+                CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
+            },
+        };
+        for mapping in hoc.component_mappings() {
+            for indicator in mapping.virtual_indicators() {
+                projected_model.variables.push(SemVariableV4::Observed {
+                    id: indicator.generated_variable_id().to_string(),
+                    label: format!(
+                        "Repeated indicator for {} from {}",
+                        hoc.output_variable_id(),
+                        mapping.component_id()
+                    ),
+                    source_column: indicator.generated_source_column_id().to_string(),
+                    scale: ObservedScaleV4::Continuous,
+                    role: ObservedRoleV4::Indicator,
+                    categories: Vec::new(),
+                    value_labels: BTreeMap::new(),
+                    missing_markers: Vec::new(),
+                    transformation_lineage: Vec::new(),
+                });
+                let (relation, target) = match hoc.hoc_component_mode() {
+                    CompiledPlsBlockModeV2::ModeA => (
+                        SemRelationV4::MeasurementEffect {
+                            id: indicator.generated_relation_id().to_string(),
+                            construct: output_id.clone(),
+                            indicator: indicator.generated_variable_id().to_string(),
+                            parameter: indicator.generated_parameter_id().to_string(),
+                        },
+                        SemParameterTargetV4::Loading {
+                            construct: output_id.clone(),
+                            indicator: indicator.generated_variable_id().to_string(),
+                        },
+                    ),
+                    CompiledPlsBlockModeV2::ModeB => (
+                        SemRelationV4::MeasurementCausal {
+                            id: indicator.generated_relation_id().to_string(),
+                            indicator: indicator.generated_variable_id().to_string(),
+                            composite: output_id.clone(),
+                            parameter: indicator.generated_parameter_id().to_string(),
+                        },
+                        SemParameterTargetV4::Weight {
+                            indicator: indicator.generated_variable_id().to_string(),
+                            composite: output_id.clone(),
+                        },
+                    ),
+                };
+                projected_model.relations.push(relation);
+                projected_model.parameters.push(SemParameterV4::Free {
+                    id: indicator.generated_parameter_id().to_string(),
+                    label: format!("Repeated HOC indicator: {}", mapping.component_id()),
+                    target,
+                    start: None,
+                    lower: None,
+                    upper: None,
+                    equality_label: None,
+                    group_overrides: Vec::new(),
+                });
+            }
+        }
+        for path in hoc.technical_paths() {
+            projected_model.relations.push(SemRelationV4::Structural {
+                id: path.generated_relation_id().to_string(),
+                source: path.source_id().to_string(),
+                target: path.component_id().to_string(),
+                parameter: path.generated_parameter_id().to_string(),
+                role: StructuralRelationRoleV4::Structural,
+                intercept_parameter: None,
             });
-            let (relation, target) = match hoc.hoc_component_mode() {
-                CompiledPlsBlockModeV2::ModeA => (
-                    SemRelationV4::MeasurementEffect {
-                        id: indicator.generated_relation_id().to_string(),
-                        construct: output_id.clone(),
-                        indicator: indicator.generated_variable_id().to_string(),
-                        parameter: indicator.generated_parameter_id().to_string(),
-                    },
-                    SemParameterTargetV4::Loading {
-                        construct: output_id.clone(),
-                        indicator: indicator.generated_variable_id().to_string(),
-                    },
-                ),
-                CompiledPlsBlockModeV2::ModeB => (
-                    SemRelationV4::MeasurementCausal {
-                        id: indicator.generated_relation_id().to_string(),
-                        indicator: indicator.generated_variable_id().to_string(),
-                        composite: output_id.clone(),
-                        parameter: indicator.generated_parameter_id().to_string(),
-                    },
-                    SemParameterTargetV4::Weight {
-                        indicator: indicator.generated_variable_id().to_string(),
-                        composite: output_id.clone(),
-                    },
-                ),
-            };
-            projected_model.relations.push(relation);
             projected_model.parameters.push(SemParameterV4::Free {
-                id: indicator.generated_parameter_id().to_string(),
-                label: format!("Repeated HOC indicator: {}", mapping.component_id()),
-                target,
+                id: path.generated_parameter_id().to_string(),
+                label: format!(
+                    "Extended repeated technical path: {} -> {}",
+                    path.source_id(),
+                    path.component_id()
+                ),
+                target: SemParameterTargetV4::Regression {
+                    source: path.source_id().to_string(),
+                    target: path.component_id().to_string(),
+                },
                 start: None,
                 lower: None,
                 upper: None,
@@ -1559,34 +1750,6 @@ pub fn compile_pls_higher_order_repeated_stage_projection_v1(
                 group_overrides: Vec::new(),
             });
         }
-    }
-
-    for path in hoc.technical_paths() {
-        projected_model.relations.push(SemRelationV4::Structural {
-            id: path.generated_relation_id().to_string(),
-            source: path.source_id().to_string(),
-            target: path.component_id().to_string(),
-            parameter: path.generated_parameter_id().to_string(),
-            role: StructuralRelationRoleV4::Structural,
-            intercept_parameter: None,
-        });
-        projected_model.parameters.push(SemParameterV4::Free {
-            id: path.generated_parameter_id().to_string(),
-            label: format!(
-                "Extended repeated technical path: {} -> {}",
-                path.source_id(),
-                path.component_id()
-            ),
-            target: SemParameterTargetV4::Regression {
-                source: path.source_id().to_string(),
-                target: path.component_id().to_string(),
-            },
-            start: None,
-            lower: None,
-            upper: None,
-            equality_label: None,
-            group_overrides: Vec::new(),
-        });
     }
     projected_model.annotations.clear();
     projected_model.presentation = SemPresentationV4::None;
@@ -1597,7 +1760,11 @@ pub fn compile_pls_higher_order_repeated_stage_projection_v1(
     Ok(CompiledPlsHocExecutionProjectionV1 {
         contract_version: COMPILED_PLS_HIGHER_ORDER_REPEATED_PROJECTION_V1_VERSION.into(),
         source_scientific_sha256,
-        hoc_stage_plan_sha256: sha256_serialized(hoc),
+        hoc_stage_plan_sha256: if expected_hoc_plans.len() == 1 {
+            sha256_serialized(&expected_hoc_plans[0])
+        } else {
+            sha256_serialized(&expected_hoc_plans)
+        },
         projected_scientific_sha256,
         projected_model,
         projected_plan,
@@ -1611,31 +1778,42 @@ pub fn compile_pls_higher_order_score_stage_projection_v1(
     model: &SemModelV4,
     plan: &CompiledPlsPlanV3,
 ) -> Result<CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHigherOrderV1Error> {
+    compile_pls_higher_order_stage_plans_v1(model)?;
+    compile_pls_higher_order_score_stage_projection_multimod_v2(model, plan)
+}
+
+pub fn compile_pls_higher_order_score_stage_projection_multimod_v2(
+    model: &SemModelV4,
+    plan: &CompiledPlsPlanV3,
+) -> Result<CompiledPlsDisjointHocStageTwoProjectionV1, CompiledPlsHigherOrderV1Error> {
     let source_scientific_sha256 = model.scientific_sha256()?;
-    let expected_hoc_plans = compile_pls_higher_order_stage_plans_v1(model)?;
-    let expected_stage_one_projection = compile_pls_higher_order_lower_order_projection_v1(model)?;
+    let expected_hoc_plans = compile_pls_higher_order_stage_plans_multimod_v2(model)?;
+    let expected_stage_one_projection =
+        compile_pls_higher_order_lower_order_projection_multimod_v2(model)?;
     let expected_base_plan = compile_pls_plan_v2(expected_stage_one_projection.projected_model())?;
     if plan.scientific_hash() != source_scientific_sha256
         || plan.higher_order_stage_plans() != expected_hoc_plans.as_slice()
         || plan.base_plan() != &expected_base_plan
         || plan.stage_one_projection_scientific_sha256()
             != Some(expected_stage_one_projection.projected_scientific_sha256())
-        || expected_hoc_plans.len() != 1
+        || !(1..=4).contains(&expected_hoc_plans.len())
     {
         return Err(CompiledPlsHigherOrderV1Error::CompiledPlanMismatch);
     }
-    let hoc = &expected_hoc_plans[0];
-    if !matches!(
-        hoc.approach(),
-        HigherOrderConstructionApproachV4::EmbeddedTwoStage
-            | HigherOrderConstructionApproachV4::DisjointTwoStage
-    ) {
+    if expected_hoc_plans.iter().any(|hoc| {
+        !matches!(
+            hoc.approach(),
+            HigherOrderConstructionApproachV4::EmbeddedTwoStage
+                | HigherOrderConstructionApproachV4::DisjointTwoStage
+        )
+    }) {
         return Err(CompiledPlsHigherOrderV1Error::ScoreStageRequired);
     }
-    let remove_components = hoc.approach() == &HigherOrderConstructionApproachV4::DisjointTwoStage;
-    let component_ids = hoc
-        .component_ids()
+    let remove_components =
+        expected_hoc_plans[0].approach() == &HigherOrderConstructionApproachV4::DisjointTwoStage;
+    let component_ids = expected_hoc_plans
         .iter()
+        .flat_map(|hoc| hoc.component_ids())
         .map(String::as_str)
         .collect::<BTreeSet<_>>();
     for relation in &model.relations {
@@ -1716,31 +1894,6 @@ pub fn compile_pls_higher_order_score_stage_projection_v1(
     projected_model
         .variables
         .retain(|variable| !removed_variable_ids.contains(variable.id()));
-    let output_index = projected_model
-        .variables
-        .iter()
-        .position(|variable| variable.id() == hoc.output_variable_id())
-        .ok_or_else(
-            || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
-                output_id: hoc.output_variable_id().to_string(),
-            },
-        )?;
-    let (output_id, output_label) = match &projected_model.variables[output_index] {
-        SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
-        _ => {
-            return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
-                output_id: hoc.output_variable_id().to_string(),
-            });
-        }
-    };
-    projected_model.variables[output_index] = SemVariableV4::Composite {
-        id: output_id.clone(),
-        label: output_label,
-        weighting: match hoc.hoc_component_mode() {
-            CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
-            CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
-        },
-    };
     projected_model
         .relations
         .retain(|relation| !removed_relation_ids.contains(relation.id()));
@@ -1749,56 +1902,83 @@ pub fn compile_pls_higher_order_score_stage_projection_v1(
         .retain(|parameter| !removed_parameter_ids.contains(parameter.id()));
     projected_model.derived_terms.clear();
 
-    for mapping in hoc.component_mappings() {
-        let generated_id = mapping.generated_score_variable_id().to_string();
-        projected_model.variables.push(SemVariableV4::Observed {
-            id: generated_id.clone(),
-            label: format!("Lower-order component score: {}", mapping.component_id()),
-            source_column: generated_id.clone(),
-            scale: ObservedScaleV4::Continuous,
-            role: ObservedRoleV4::Indicator,
-            categories: Vec::new(),
-            value_labels: BTreeMap::new(),
-            missing_markers: Vec::new(),
-            transformation_lineage: Vec::new(),
-        });
-        let (relation, target) = match mapping.relation_interpretation() {
-            CompiledPlsHocComponentRelationInterpretationV1::Loading => (
-                SemRelationV4::MeasurementEffect {
-                    id: mapping.generated_component_relation_id().to_string(),
-                    construct: output_id.clone(),
-                    indicator: generated_id.clone(),
-                    parameter: mapping.generated_component_parameter_id().to_string(),
+    for hoc in &expected_hoc_plans {
+        let output_index = projected_model
+            .variables
+            .iter()
+            .position(|variable| variable.id() == hoc.output_variable_id())
+            .ok_or_else(
+                || CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                    output_id: hoc.output_variable_id().to_string(),
                 },
-                SemParameterTargetV4::Loading {
-                    construct: output_id.clone(),
-                    indicator: generated_id.clone(),
-                },
-            ),
-            CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity => (
-                SemRelationV4::MeasurementCausal {
-                    id: mapping.generated_component_relation_id().to_string(),
-                    indicator: generated_id.clone(),
-                    composite: output_id.clone(),
-                    parameter: mapping.generated_component_parameter_id().to_string(),
-                },
-                SemParameterTargetV4::Weight {
-                    indicator: generated_id,
-                    composite: output_id.clone(),
-                },
-            ),
+            )?;
+        let (output_id, output_label) = match &projected_model.variables[output_index] {
+            SemVariableV4::Derived { id, label } => (id.clone(), label.clone()),
+            _ => {
+                return Err(CompiledPlsHigherOrderV1Error::StageTwoOutputVariableKind {
+                    output_id: hoc.output_variable_id().to_string(),
+                });
+            }
         };
-        projected_model.relations.push(relation);
-        projected_model.parameters.push(SemParameterV4::Free {
-            id: mapping.generated_component_parameter_id().to_string(),
-            label: format!("HOC component relation: {}", mapping.component_id()),
-            target,
-            start: None,
-            lower: None,
-            upper: None,
-            equality_label: None,
-            group_overrides: Vec::new(),
-        });
+        projected_model.variables[output_index] = SemVariableV4::Composite {
+            id: output_id.clone(),
+            label: output_label,
+            weighting: match hoc.hoc_component_mode() {
+                CompiledPlsBlockModeV2::ModeA => CompositeWeightingV4::ModeA,
+                CompiledPlsBlockModeV2::ModeB => CompositeWeightingV4::ModeB,
+            },
+        };
+        for mapping in hoc.component_mappings() {
+            let generated_id = mapping.generated_score_variable_id().to_string();
+            projected_model.variables.push(SemVariableV4::Observed {
+                id: generated_id.clone(),
+                label: format!("Lower-order component score: {}", mapping.component_id()),
+                source_column: generated_id.clone(),
+                scale: ObservedScaleV4::Continuous,
+                role: ObservedRoleV4::Indicator,
+                categories: Vec::new(),
+                value_labels: BTreeMap::new(),
+                missing_markers: Vec::new(),
+                transformation_lineage: Vec::new(),
+            });
+            let (relation, target) = match mapping.relation_interpretation() {
+                CompiledPlsHocComponentRelationInterpretationV1::Loading => (
+                    SemRelationV4::MeasurementEffect {
+                        id: mapping.generated_component_relation_id().to_string(),
+                        construct: output_id.clone(),
+                        indicator: generated_id.clone(),
+                        parameter: mapping.generated_component_parameter_id().to_string(),
+                    },
+                    SemParameterTargetV4::Loading {
+                        construct: output_id.clone(),
+                        indicator: generated_id.clone(),
+                    },
+                ),
+                CompiledPlsHocComponentRelationInterpretationV1::WeightAndCollinearity => (
+                    SemRelationV4::MeasurementCausal {
+                        id: mapping.generated_component_relation_id().to_string(),
+                        indicator: generated_id.clone(),
+                        composite: output_id.clone(),
+                        parameter: mapping.generated_component_parameter_id().to_string(),
+                    },
+                    SemParameterTargetV4::Weight {
+                        indicator: generated_id,
+                        composite: output_id.clone(),
+                    },
+                ),
+            };
+            projected_model.relations.push(relation);
+            projected_model.parameters.push(SemParameterV4::Free {
+                id: mapping.generated_component_parameter_id().to_string(),
+                label: format!("HOC component relation: {}", mapping.component_id()),
+                target,
+                start: None,
+                lower: None,
+                upper: None,
+                equality_label: None,
+                group_overrides: Vec::new(),
+            });
+        }
     }
     projected_model.annotations.clear();
     projected_model.presentation = SemPresentationV4::None;
@@ -1818,7 +1998,11 @@ pub fn compile_pls_higher_order_score_stage_projection_v1(
         }
         .into(),
         source_scientific_sha256,
-        hoc_stage_plan_sha256: sha256_serialized(hoc),
+        hoc_stage_plan_sha256: if expected_hoc_plans.len() == 1 {
+            sha256_serialized(&expected_hoc_plans[0])
+        } else {
+            sha256_serialized(&expected_hoc_plans)
+        },
         projected_scientific_sha256,
         projected_model,
         projected_plan,
@@ -2801,10 +2985,11 @@ fn sha256_serialized<T: Serialize>(value: &T) -> String {
 mod tests {
     use super::*;
     use crate::{
-        Construct, GeneralSemEffectEstimandV1, GeneralSemInferenceV1, InteractionHierarchyPolicyV2,
-        InteractionMethodV4, LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec,
-        SemDerivedTermV4, SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4,
-        StructuralPath, convert_legacy_basic_model_v4,
+        CompositeWeightNormalizationV4, Construct, GeneralSemEffectEstimandV1,
+        GeneralSemInferenceV1, InteractionHierarchyPolicyV2, InteractionMethodV4,
+        LegacyBasicModelInterpretationV4, MeasurementMode, ModelSpec, SemDerivedTermV4,
+        SemParameterTargetV4, SemParameterV4, SemRelationV4, SemVariableV4, StructuralPath,
+        convert_legacy_basic_model_v4,
     };
     use uuid::Uuid;
 
@@ -3007,6 +3192,56 @@ mod tests {
             HigherOrderMeasurementTypeV4::ReflectiveReflective,
             false,
         );
+        model
+    }
+
+    fn four_disjoint_hoc_model() -> SemModelV4 {
+        let construct_ids = ["a1", "a2", "b1", "b2", "c1", "c2", "d1", "d2"];
+        let constructs = construct_ids
+            .iter()
+            .map(|id| Construct {
+                id: (*id).into(),
+                name: (*id).to_uppercase(),
+                short_name: (*id).to_uppercase(),
+                mode: MeasurementMode::Reflective,
+                indicators: vec![format!("{id}_1"), format!("{id}_2")],
+            })
+            .collect();
+        let mut model = convert_legacy_basic_model_v4(
+            &ModelSpec {
+                id: Uuid::from_u128(0x5031_5304),
+                name: "Four disjoint HOCs".into(),
+                constructs,
+                paths: Vec::new(),
+                controls: Vec::new(),
+                higher_order_constructs: Vec::new(),
+                interactions: Vec::new(),
+            },
+            LegacyBasicModelInterpretationV4::PlsComposite,
+            &[],
+        )
+        .unwrap();
+        for (index, components) in [["a1", "a2"], ["b1", "b2"], ["c1", "c2"], ["d1", "d2"]]
+            .into_iter()
+            .enumerate()
+        {
+            let output = format!("derived:hoc:{index}");
+            model.variables.push(SemVariableV4::Derived {
+                id: output.clone(),
+                label: format!("HOC {index}"),
+            });
+            model.derived_terms.push(SemDerivedTermV4::HigherOrder {
+                id: format!("term:hoc:{index}"),
+                output,
+                components: components
+                    .into_iter()
+                    .map(|id| format!("construct:{id}"))
+                    .collect(),
+                approach: HigherOrderConstructionApproachV4::DisjointTwoStage,
+                measurement_type: HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            });
+        }
+        model.ensure_valid().unwrap();
         model
     }
 
@@ -3681,6 +3916,134 @@ mod tests {
         assert_eq!(
             compile_pls_plan_v3(&reordered, &GeneralSemConfigV1::default()).unwrap(),
             plan
+        );
+    }
+
+    #[test]
+    fn four_disjoint_hocs_compile_deterministically_and_reject_mixed_or_overlapping_terms() {
+        let model = four_disjoint_hoc_model();
+        assert!(matches!(
+            compile_pls_higher_order_stage_plans_v1(&model),
+            Err(CompiledPlsHigherOrderV1Error::HigherOrderCardinality { found: 4 })
+        ));
+        assert!(matches!(
+            compile_pls_plan_v3(&model, &GeneralSemConfigV1::default()),
+            Err(CompiledPlsPlanV3Error::HigherOrder(
+                CompiledPlsHigherOrderV1Error::HigherOrderCardinality { found: 4 }
+            ))
+        ));
+        assert_eq!(
+            compile_pls_plan_v3_multimod_multiple_hoc_v2(&model, &GeneralSemConfigV1::default())
+                .unwrap()
+                .higher_order_stage_plans()
+                .len(),
+            4
+        );
+        let plans = compile_pls_higher_order_stage_plans_multimod_v2(&model).unwrap();
+        assert_eq!(plans.len(), 4);
+        assert!(plans.iter().all(|plan| {
+            plan.approach() == &HigherOrderConstructionApproachV4::DisjointTwoStage
+                && plan.component_ids().len() == 2
+                && plan.stage_projections().len() == 2
+        }));
+
+        let mut reordered = model.clone();
+        reordered.variables.reverse();
+        reordered.derived_terms.reverse();
+        assert_eq!(
+            compile_pls_higher_order_stage_plans_multimod_v2(&reordered).unwrap(),
+            plans
+        );
+
+        let mut mixed = model.clone();
+        let SemDerivedTermV4::HigherOrder { approach, .. } = &mut mixed.derived_terms[1] else {
+            unreachable!()
+        };
+        *approach = HigherOrderConstructionApproachV4::EmbeddedTwoStage;
+        assert!(matches!(
+            compile_pls_higher_order_stage_plans_multimod_v2(&mixed),
+            Err(CompiledPlsHigherOrderV1Error::DerivedTermCombination {
+                kind: "mixed_nested_or_overlapping_higher_order",
+                ..
+            })
+        ));
+
+        let mut overlapping = model;
+        let first_component = match &overlapping.derived_terms[0] {
+            SemDerivedTermV4::HigherOrder { components, .. } => components[0].clone(),
+            _ => unreachable!(),
+        };
+        let SemDerivedTermV4::HigherOrder { components, .. } = &mut overlapping.derived_terms[1]
+        else {
+            unreachable!()
+        };
+        components[0] = first_component;
+        assert!(matches!(
+            compile_pls_higher_order_stage_plans_multimod_v2(&overlapping),
+            Err(CompiledPlsHigherOrderV1Error::DerivedTermCombination {
+                kind: "mixed_nested_or_overlapping_higher_order",
+                ..
+            })
+        ));
+    }
+
+    #[test]
+    fn legacy_hoc_v1_preserves_combined_invalid_error_precedence() {
+        let mut invalid_multiple_hoc = four_disjoint_hoc_model();
+        let duplicate_variable = invalid_multiple_hoc.variables[0].clone();
+        invalid_multiple_hoc.variables.push(duplicate_variable);
+        assert!(matches!(
+            compile_pls_higher_order_stage_plans_v1(&invalid_multiple_hoc),
+            Err(CompiledPlsHigherOrderV1Error::InvalidModel(_))
+        ));
+
+        let mut hybrid_with_fixed_scoring = recursive_model();
+        add_higher_order(
+            &mut hybrid_with_fixed_scoring,
+            HigherOrderConstructionApproachV4::Hybrid,
+            HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            false,
+        );
+        let weighting = hybrid_with_fixed_scoring
+            .variables
+            .iter_mut()
+            .find_map(|variable| match variable {
+                SemVariableV4::Composite { weighting, .. } => Some(weighting),
+                _ => None,
+            })
+            .unwrap();
+        *weighting = CompositeWeightingV4::Unit {
+            normalization: CompositeWeightNormalizationV4::None,
+        };
+        assert_eq!(
+            compile_pls_higher_order_stage_plans_v1(&hybrid_with_fixed_scoring),
+            Err(CompiledPlsHigherOrderV1Error::HybridCompatibilityOnly {
+                term_id: "term:hoc".into(),
+            })
+        );
+
+        let mut hybrid_with_interaction = recursive_model();
+        add_higher_order(
+            &mut hybrid_with_interaction,
+            HigherOrderConstructionApproachV4::Hybrid,
+            HigherOrderMeasurementTypeV4::ReflectiveReflective,
+            false,
+        );
+        let focal_relation_id = relation_id(&hybrid_with_interaction, "construct:x", "construct:y");
+        add_two_way_interaction(
+            &mut hybrid_with_interaction,
+            "interaction:x_by_m1",
+            "construct:m1",
+            &focal_relation_id,
+        );
+        hybrid_with_interaction.ensure_valid().unwrap();
+        assert_eq!(
+            compile_pls_higher_order_stage_plans_v1(&hybrid_with_interaction),
+            Err(CompiledPlsHigherOrderV1Error::DerivedTermCombination {
+                term_id: "term:hoc".into(),
+                other_term_id: "interaction:x_by_m1".into(),
+                kind: "interaction_v2",
+            })
         );
     }
 

@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "catalog_id": "qpls.multimod.production-science-fixtures.v1",
+  "rule": "Every listed scientific estimate is produced through the public Recipe V4 raw runner. Synthetic truth is retained only for independent comparison and is never passed to an estimator.",
+  "mga": {
+    "producer": "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs",
+    "comparator": "validation/multimod/compare_multimod_mga_qualification_v1.py",
+    "wrapper": "validation/multimod/run_multimod_mga_qualification_v1.ps1",
+    "fixed_seed": 42,
+    "permutations": 5000,
+    "bootstraps": 5000,
+    "minimum_usable": 4500,
+    "group_matrix": [
+      {"cell_id": "mga-general-2-groups", "groups": 2, "group_value_type": "text", "all_pairs": 1},
+      {"cell_id": "mga-general-3-groups", "groups": 3, "group_value_type": "integer", "all_pairs": 3},
+      {"cell_id": "mga-general-5-groups", "groups": 5, "group_value_type": "number", "all_pairs": 10},
+      {"cell_id": "mga-general-20-groups", "groups": 20, "group_value_type": "text", "all_pairs": 190, "heavy_run_confirmation": true}
+    ],
+    "ordinary_general_sem_envelope": {
+      "reflective_multi_indicator": true,
+      "formative_mode_b": true,
+      "single_indicator": true,
+      "observed_control": true
+    },
+    "parametric_sensitivity_cell": {
+      "cell_id": "mga-general-parametric-3-groups",
+      "groups": 3,
+      "selected_target_rule": "exactly the explicit construct:x to construct:y structural relation",
+      "procedures": ["pooled_variance", "welch_satterthwaite", "inverse_variance_wald"]
+    },
+    "non_cartesian_profile_cells": [
+      "mga-profile-multiple_two_way",
+      "mga-profile-bounded_three_way",
+      "mga-profile-bounded_two_way_moderated_mediation",
+      "mga-profile-multiple_nonnested_hoc",
+      "mga-profile-case_weighted_pls",
+      "mga-profile-reflective_plsc",
+      "mga-frequency-compact",
+      "mga-frequency-physically-expanded"
+    ],
+    "metamorphic_cells": ["mga-label-forward", "mga-label-reverse"],
+    "boundary_cells": [
+      "mga-boundary-minimum",
+      "mga-boundary-warning",
+      "mga-boundary-heavy-confirmation",
+      "mga-boundary-explicit-directional-alternatives"
+    ]
+  },
+  "heterogeneity": {
+    "producer": "crates/qpls-runner/examples/multimod_heterogeneity_qualification_v2.rs",
+    "comparator": "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py",
+    "wrapper": "validation/multimod/run_multimod_heterogeneity_qualification_v2.ps1",
+    "campaign_seed": 42,
+    "observations_per_fixture": 400,
+    "fimix_starts": 30,
+    "pos_starts": 10,
+    "bootstrap_replicates": 500,
+    "minimum_usable_bootstrap": 450,
+    "strong_separation_seeds": [42, 43, 44, 45, 46],
+    "strong_separation_acceptance": {"median_adjusted_rand_index_minimum": 0.8},
+    "simulation_matrix": {
+      "strong_separation": {"runs": 5, "median_adjusted_rand_index_minimum": 0.8},
+      "moderate_power": {"runs": 10, "success_adjusted_rand_index_minimum": 0.6, "minimum_success_rate": 0.8},
+      "overlap": {"runs": 5, "median_adjusted_rand_index_minimum": 0.35},
+      "class_imbalance_75_25": {"runs": 5, "median_adjusted_rand_index_minimum": 0.7},
+      "nonnormal_heavy_tail": {"runs": 5, "median_adjusted_rand_index_minimum": 0.7}
+    },
+    "discovery_cells": [
+      "fimix-p0-strong-seed-42",
+      "fimix-p0-strong-seed-43",
+      "fimix-p0-strong-seed-44",
+      "fimix-p0-strong-seed-45",
+      "fimix-p0-strong-seed-46",
+      "fimix-p0-candidate-k-2-through-5",
+      "fimix-p0-homogeneous-null",
+      "pos-published-p0-discovery",
+      "heterogeneity-p2-tandem-discovery",
+      "heterogeneity-p23-tandem-discovery",
+      "pos-p2-common-metric-failure-discovery",
+      "pos-published-p0-homogeneous-null",
+      "pos-published-p0-overlap",
+      "pos-published-p0-k3-discovery",
+      "pos-published-p0-k4-discovery",
+      "pos-published-p0-k5-discovery"
+    ],
+    "fixed_k_inference_cells": [
+      "fimix-p0-fixed-k-bootstrap",
+      "pos-published-p0-fixed-k-bootstrap",
+      "fimix-p2-fixed-k-bootstrap",
+      "pos-destination-p2-fixed-k-bootstrap",
+      "fimix-p23-fixed-k-bootstrap",
+      "pos-destination-p23-fixed-k-bootstrap",
+      "pos-p2-common-metric-failure-fixed-k-bootstrap",
+      "pos-published-p0-k3-fixed-k-bootstrap",
+      "pos-published-p0-k4-fixed-k-bootstrap",
+      "pos-published-p0-k5-fixed-k-bootstrap"
+    ],
+    "label_alignment_decision_cells": [
+      {"k": 3, "cases": ["nonidentity_mutual_majority", "ambiguous", "unique_nonmajority"], "exhaustive_mappings": 6},
+      {"k": 4, "cases": ["nonidentity_mutual_majority", "ambiguous", "unique_nonmajority"], "exhaustive_mappings": 24},
+      {"k": 5, "cases": ["nonidentity_mutual_majority", "ambiguous", "unique_nonmajority"], "exhaustive_mappings": 120}
+    ],
+    "common_metric_rule": "Passed gates publish pooled-common-metric parameters and contrasts; failed gates retain segment-local descriptive estimates and suppress contrasts.",
+    "independent_evidence": {
+      "fimix": "Pooled standardized equation design/outcomes are retained for independent log-sum-exp likelihood and posterior reconstruction.",
+      "pls_pos": "Final segment observed/fitted outcome scores are retained for independent endogenous R-squared and unweighted objective reconstruction.",
+      "common_metric": "MICOM permutation compositional-correlation series are retained for independent Type-7 Step-2 reconstruction."
+    },
+    "failure_boundary_evidence": {
+      "raw_scenarios": ["rank_deficient", "variance_collapse", "rare_class_below_five_percent"],
+      "kernel_test_filter": "fimix_failure_boundary_",
+      "typed_codes": ["likelihood_decrease", "non_finite", "collapsed_class", "variance_collapse", "rank_deficient"],
+      "fault_injection_api_shipped": false
+    }
+  }
+}

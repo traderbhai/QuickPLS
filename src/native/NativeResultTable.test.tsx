@@ -40,4 +40,19 @@ describe("NativeResultTable", () => {
     expect(html).toContain('data-native-grid-cell="true"');
     expect(html).toContain("Use the arrow keys to move between cells.");
   });
+
+  it("publishes absolute row semantics for a virtual result window", () => {
+    const html = renderToStaticMarkup(
+      <NativeResultTable
+        table={table}
+        gridKey="run:windowed-table"
+        headingId="windowed-table-heading"
+        totalRowCount={500}
+        rowIndexOffset={125}
+      />,
+    );
+
+    expect(html).toContain('aria-rowcount="501"');
+    expect(html).toContain('aria-rowindex="127"');
+  });
 });

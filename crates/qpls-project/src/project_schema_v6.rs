@@ -12,10 +12,10 @@ use super::{
     CanonicalResultCellV2, CanonicalResultDocumentAttachmentV2, CanonicalResultDocumentV2,
     CanonicalResultDocumentV2Error, CanonicalResultTableV2, MEAN_REPLACEMENT_CELLS_TABLE_ID_V1,
     MEAN_REPLACEMENT_VARIABLES_TABLE_ID_V1, MISSING_DATA_EXECUTION_TABLE_ID_V1,
-    MissingDataExecutionDocumentV1Error, PLS_SCORE_EXECUTION_SUMMARY_TABLE_ID_V2,
-    PLS_SCORE_EXECUTION_WEIGHTS_TABLE_ID_V2, PlsScoreExecutionDocumentV2Error,
-    ProjectDataLineageV1Error, validate_project_data_lineage_descriptors_v1,
-    validate_project_data_lineage_resident_v1,
+    MissingDataExecutionDocumentV1Error, MultiModResultAttachmentV1,
+    PLS_SCORE_EXECUTION_SUMMARY_TABLE_ID_V2, PLS_SCORE_EXECUTION_WEIGHTS_TABLE_ID_V2,
+    PlsScoreExecutionDocumentV2Error, ProjectDataLineageV1Error,
+    validate_project_data_lineage_descriptors_v1, validate_project_data_lineage_resident_v1,
     validate_recipe_v4_cbsem_current_execution_document_v1,
     validate_recipe_v4_cbsem_missing_data_execution_document_v1,
     validate_recipe_v4_pls_score_execution_document_v2,
@@ -39,16 +39,18 @@ use qpls_core::{
     GENERAL_SEM_PLS_THREE_WAY_MODERATION_POINT_METHOD_VERSION_V1,
     GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_BOOTSTRAP_METHOD_VERSION_V1,
     GeneralSemBootstrapIntervalV1, GeneralSemInferenceTailV1, GeneralSemInferenceV1,
+    HeterogeneityAlgorithmV2, HeterogeneityCandidateMethodV2, HeterogeneityCandidateStateV2,
     LegacyBasicModelConversionErrorV4, LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4,
-    MethodConfig, ModelSpec, PLS_ALGORITHM_CAPABILITY_ID, PLS_ALGORITHM_CAPABILITY_VERSION,
-    PLS_ALGORITHM_CELL_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_ID,
+    MethodConfig, ModelSpec, MultiModAnalysisResultV1, MultiModCompilerTargetV1,
+    MultimodCandidateQualificationReceiptV1, MultimodProvenanceV1, PLS_ALGORITHM_CAPABILITY_ID,
+    PLS_ALGORITHM_CAPABILITY_VERSION, PLS_ALGORITHM_CELL_ID, PLS_NONLINEAR_EFFECTS_CAPABILITY_ID,
     PLS_NONLINEAR_EFFECTS_CAPABILITY_VERSION, PLS_NONLINEAR_EFFECTS_CELL_ID,
-    RecipeV4CompilerTarget, SemDerivedTermV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
-    SemParameterTargetV4, SemVariableV4, StructuralRelationRoleV4,
+    RecipeV4CompilerTarget, SemDataBindingV4, SemDerivedTermV4, SemEndpointV4, SemModelV4,
+    SemModelV4ValidationError, SemParameterTargetV4, SemVariableV4, StructuralRelationRoleV4,
     canonical_cbsem_general_sem_tables_v1, cbsem_general_sem_ml_capability_cell_v1,
     cbsem_recursive_sem_bootstrap_capability_cell_v1, compile_analysis_recipe_v4,
     compile_cbsem_exact_case_bootstrap_zero_null_eligibility_v1, compile_general_sem_pls_recipe_v1,
-    compile_pls_higher_order_repeated_stage_projection_v1,
+    compile_multimod_recipe_v1, compile_pls_higher_order_repeated_stage_projection_v1,
     compile_pls_higher_order_score_stage_projection_v1, confirm_legacy_recipe_estimand_v4,
     convert_legacy_basic_model_v4, sha256_serialized,
 };
@@ -476,6 +478,11 @@ pub struct ProjectArchiveDocumentV6 {
     pub historical_results: Vec<ImmutableHistoricalResultV6>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub canonical_result_documents: Vec<CanonicalResultDocumentAttachmentV2>,
+    /// Additive MultiMod scientific results. Large replicate- and
+    /// respondent-level evidence remains in required Arrow sidecars declared
+    /// by each attachment rather than being duplicated in `project.json`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub multimod_results: Vec<MultiModResultAttachmentV1>,
     pub origin: ProjectOriginV6,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sem_generation: Option<ProjectSemGenerationV6>,
@@ -506,6 +513,8 @@ struct ProjectArchiveDocumentV6Wire {
     historical_results: Vec<ImmutableHistoricalResultV6>,
     #[serde(default)]
     canonical_result_documents: Vec<CanonicalResultDocumentAttachmentV2>,
+    #[serde(default)]
+    multimod_results: Vec<MultiModResultAttachmentV1>,
     #[serde(default)]
     origin: Option<ProjectOriginV6>,
     #[serde(default)]
@@ -545,10 +554,69 @@ impl<'de> Deserialize<'de> for ProjectArchiveDocumentV6 {
             layouts: wire.layouts,
             historical_results: wire.historical_results,
             canonical_result_documents: wire.canonical_result_documents,
+            multimod_results: wire.multimod_results,
             origin,
             sem_generation: wire.sem_generation,
         })
     }
+}
+
+fn validate_heterogeneity_multistart_sidecar_inventory_v2(
+    result: &MultiModAnalysisResultV1,
+) -> Result<(), ProjectArchiveV6Error> {
+    let MultiModAnalysisResultV1::PlsHeterogeneityAnalysisV2(result) = result else {
+        return Ok(());
+    };
+    let mut fimix_candidates = 0usize;
+    let mut pos_candidates = 0usize;
+    for candidate in &result.candidates {
+        if candidate.state != HeterogeneityCandidateStateV2::ConvergedStable {
+            continue;
+        }
+        match candidate.method {
+            HeterogeneityCandidateMethodV2::Segmentation {
+                algorithm: HeterogeneityAlgorithmV2::FimixPlsV2,
+            } => fimix_candidates += 1,
+            HeterogeneityCandidateMethodV2::Segmentation {
+                algorithm:
+                    HeterogeneityAlgorithmV2::PlsPosPublishedV2
+                    | HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+            } => pos_candidates += 1,
+            HeterogeneityCandidateMethodV2::PooledBaselineV1 => {}
+        }
+    }
+    let role_counts = result
+        .sidecars
+        .iter()
+        .fold(BTreeMap::new(), |mut counts, row| {
+            *counts.entry(row.evidence_role.as_str()).or_insert(0usize) += 1;
+            counts
+        });
+    for (role, expected) in [
+        ("fimix-candidate:posteriors", fimix_candidates),
+        ("fimix-candidate:multistart-receipts", fimix_candidates),
+        ("fimix-candidate:multistart-assignments", fimix_candidates),
+        (
+            "fimix-candidate:multistart-coefficient-signatures",
+            fimix_candidates,
+        ),
+        ("fimix-candidate:multistart-posteriors", fimix_candidates),
+        ("pls-pos-candidate:memberships", pos_candidates),
+        ("pls-pos-candidate:multistart-receipts", pos_candidates),
+        ("pls-pos-candidate:multistart-assignments", pos_candidates),
+        (
+            "pls-pos-candidate:multistart-parameter-signatures",
+            pos_candidates,
+        ),
+    ] {
+        let observed = role_counts.get(role).copied().unwrap_or(0);
+        if observed != expected {
+            return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                "heterogeneity multistart sidecar role {role} occurs {observed} times; {expected} required"
+            )));
+        }
+    }
+    Ok(())
 }
 
 impl ProjectArchiveDocumentV6 {
@@ -572,6 +640,7 @@ impl ProjectArchiveDocumentV6 {
             layouts: BTreeMap::new(),
             historical_results: Vec::new(),
             canonical_result_documents: Vec::new(),
+            multimod_results: Vec::new(),
             origin: ProjectOriginV6::NewProject,
             sem_generation: Some(ProjectSemGenerationV6::GeneralSemV1),
         }
@@ -674,7 +743,13 @@ impl ProjectArchiveDocumentV6 {
         }
         for recipe in &self.recipes {
             recipe.ensure_valid()?;
-            if recipe.general_sem_config.is_some() && !self.supports_general_sem_v1() {
+            if (recipe.general_sem_config.is_some()
+                || recipe.mga_multigroup.is_some()
+                || recipe.pls_heterogeneity.is_some()
+                || recipe.general_sem_conditional_process.is_some()
+                || recipe.interventional_causal_mediation.is_some())
+                && !self.supports_general_sem_v1()
+            {
                 return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
                     subject: format!("analysis recipe {}", recipe.id),
                 });
@@ -732,6 +807,105 @@ impl ProjectArchiveDocumentV6 {
                 return Err(ProjectArchiveV6Error::DuplicateHistoricalResultId(
                     result.result_id(),
                 ));
+            }
+        }
+        let mut multimod_result_ids = BTreeSet::new();
+        let mut multimod_sidecar_entries = BTreeSet::new();
+        for attachment in &self.multimod_results {
+            attachment
+                .ensure_valid()
+                .map_err(|error| ProjectArchiveV6Error::InvalidMultiModResult(error.to_string()))?;
+            validate_heterogeneity_multistart_sidecar_inventory_v2(&attachment.result)?;
+            if !self.supports_general_sem_v1() {
+                return Err(ProjectArchiveV6Error::GeneralSemFeatureRequiresGeneration {
+                    subject: format!("MultiMod result {}", attachment.result_id),
+                });
+            }
+            let Some(recipe) = self
+                .recipes
+                .iter()
+                .find(|recipe| recipe.id == attachment.recipe_id)
+            else {
+                return Err(ProjectArchiveV6Error::MultiModResultRecipeUnavailable {
+                    result_id: attachment.result_id.clone(),
+                    recipe_id: attachment.recipe_id,
+                });
+            };
+            let model = match &recipe.model_binding {
+                AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => model,
+                AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference { model_id, .. } => {
+                    scientific_models
+                        .get(model_id.as_str())
+                        .map(|(model, _)| *model)
+                        .ok_or_else(|| ProjectArchiveV6Error::MultiModResultRecipeUnavailable {
+                            result_id: attachment.result_id.clone(),
+                            recipe_id: attachment.recipe_id,
+                        })?
+                }
+                AnalysisRecipeModelBindingV4::LegacyEstimandUnspecified { .. } => {
+                    return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                        "result {} cannot bind a legacy estimand-unspecified model",
+                        attachment.result_id
+                    )));
+                }
+            };
+            let target = match &attachment.result {
+                MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(_) => {
+                    MultiModCompilerTargetV1::MgaMultigroupV1
+                }
+                MultiModAnalysisResultV1::PlsHeterogeneityAnalysisV2(_) => {
+                    MultiModCompilerTargetV1::PlsHeterogeneityV2
+                }
+                MultiModAnalysisResultV1::GeneralSemConditionalProcessResultV2(_) => {
+                    MultiModCompilerTargetV1::GeneralSemConditionalProcessV2
+                }
+                MultiModAnalysisResultV1::InterventionalMediationResultV1(_) => {
+                    MultiModCompilerTargetV1::InterventionalCausalMediationV1
+                }
+            };
+            let compiled = compile_multimod_recipe_v1(recipe, model, target).map_err(|error| {
+                ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                    "result {} recipe no longer compiles: {error}",
+                    attachment.result_id
+                ))
+            })?;
+            let receipt = compiled.receipt();
+            let provenance = match &attachment.result {
+                MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(value) => &value.provenance,
+                MultiModAnalysisResultV1::PlsHeterogeneityAnalysisV2(value) => &value.provenance,
+                MultiModAnalysisResultV1::GeneralSemConditionalProcessResultV2(value) => {
+                    &value.provenance
+                }
+                MultiModAnalysisResultV1::InterventionalMediationResultV1(value) => {
+                    &value.provenance
+                }
+            };
+            if provenance.recipe_id != attachment.recipe_id.to_string()
+                || provenance.recipe_analytical_sha256 != receipt.recipe_analytical_sha256
+                || provenance.config_sha256 != receipt.config_sha256
+                || provenance.model_id != receipt.model_id
+                || provenance.model_scientific_sha256 != receipt.model_scientific_sha256
+                || provenance.dataset_id != receipt.dataset_id
+                || provenance.dataset_fingerprint != receipt.dataset_fingerprint
+                || provenance.method_version != receipt.method_version
+                || provenance.capability_cell != receipt.capability_cell
+            {
+                return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                    "result {} provenance differs from deterministic Recipe V4 compilation",
+                    attachment.result_id
+                )));
+            }
+            if !multimod_result_ids.insert(attachment.result_id.as_str()) {
+                return Err(ProjectArchiveV6Error::DuplicateMultiModResultId(
+                    attachment.result_id.clone(),
+                ));
+            }
+            for sidecar in &attachment.sidecars {
+                if !multimod_sidecar_entries.insert(sidecar.entry_name.as_str()) {
+                    return Err(ProjectArchiveV6Error::DuplicateMultiModSidecarEntry(
+                        sidecar.entry_name.clone(),
+                    ));
+                }
             }
         }
         let expected_project_id = self.project_id.to_string();
@@ -1159,8 +1333,184 @@ impl ProjectArchiveDocumentV6 {
                 ));
             }
         }
+        for multimod in &self.multimod_results {
+            let canonical = self
+                .canonical_result_documents
+                .iter()
+                .find(|candidate| candidate.run_id() == multimod.result_id)
+                .ok_or_else(|| {
+                    ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                        "result {} has no immutable canonical projection",
+                        multimod.result_id
+                    ))
+                })?
+                .canonical_document();
+            let scientific = match &multimod.result {
+                MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(value) => &value.provenance,
+                MultiModAnalysisResultV1::PlsHeterogeneityAnalysisV2(value) => &value.provenance,
+                MultiModAnalysisResultV1::GeneralSemConditionalProcessResultV2(value) => {
+                    &value.provenance
+                }
+                MultiModAnalysisResultV1::InterventionalMediationResultV1(value) => {
+                    &value.provenance
+                }
+            };
+            let recipe = self
+                .recipes
+                .iter()
+                .find(|candidate| candidate.id == multimod.recipe_id)
+                .ok_or_else(|| {
+                    ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                        "result {} cannot resolve its resident recipe",
+                        multimod.result_id
+                    ))
+                })?;
+            let (model_id, model) = match &recipe.model_binding {
+                AnalysisRecipeModelBindingV4::EmbeddedSemModelV4 { model, .. } => {
+                    (model.id.as_str(), model)
+                }
+                AnalysisRecipeModelBindingV4::ProjectSemModelV4Reference { model_id, .. } => (
+                    model_id.as_str(),
+                    scientific_models
+                        .get(model_id.as_str())
+                        .map(|(model, _)| *model)
+                        .ok_or_else(|| {
+                            ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                                "result {} cannot resolve its resident scientific model",
+                                multimod.result_id
+                            ))
+                        })?,
+                ),
+                AnalysisRecipeModelBindingV4::LegacyEstimandUnspecified { .. } => {
+                    return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                        "result {} cannot bind a canonical projection to a legacy model",
+                        multimod.result_id
+                    )));
+                }
+            };
+            let dataset_id = match &model.data_binding {
+                SemDataBindingV4::Raw { dataset_id, .. }
+                | SemDataBindingV4::Covariance { dataset_id, .. }
+                | SemDataBindingV4::Correlation { dataset_id, .. } => dataset_id.as_str(),
+            };
+            let expected_seed = scientific.seed;
+            let expected_workers = u32::try_from(recipe.settings.workers).map_err(|_| {
+                ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                    "result {} worker count cannot be represented by canonical provenance",
+                    multimod.result_id
+                ))
+            })?;
+            if canonical.provenance.recipe_id != multimod.recipe_id.to_string()
+                || canonical.provenance.recipe_digest != scientific.recipe_analytical_sha256
+                || scientific.model_id != model_id
+                || canonical.provenance.model_id != model_id
+                || canonical.provenance.model_digest != scientific.model_scientific_sha256
+                || scientific.dataset_id != dataset_id
+                || canonical.provenance.dataset_id != dataset_id
+                || canonical.provenance.dataset_fingerprint != scientific.dataset_fingerprint
+                || canonical.provenance.method_version != scientific.method_version
+                || canonical.provenance.engine_version != scientific.engine_version
+                || canonical.provenance.seed != Some(expected_seed)
+                || canonical.provenance.workers != expected_workers
+                || canonical.provenance.capability_cell.registry_schema_version
+                    != scientific.capability_cell.registry_schema_version
+                || canonical.provenance.capability_cell.capability_id
+                    != scientific.capability_cell.capability_id
+                || canonical.provenance.capability_cell.cell_id
+                    != scientific.capability_cell.cell_id
+                || canonical.provenance.capability_cell.capability_version
+                    != scientific.capability_cell.capability_version
+            {
+                return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                    "result {} canonical projection differs from scientific provenance",
+                    multimod.result_id
+                )));
+            }
+            validate_multimod_canonical_qualification_v1(
+                canonical,
+                scientific,
+                &multimod.result_id,
+            )?;
+        }
         Ok(())
     }
+}
+
+fn validate_multimod_canonical_qualification_v1(
+    canonical: &CanonicalResultDocumentV2,
+    scientific: &MultimodProvenanceV1,
+    result_id: &str,
+) -> Result<(), ProjectArchiveV6Error> {
+    let tables = canonical
+        .tables
+        .iter()
+        .filter(|table| table.id == "multimod_run_provenance")
+        .collect::<Vec<_>>();
+    if tables.len() != 1 || tables[0].rows.len() != 1 || tables[0].rows[0].id != "run" {
+        return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+            "result {result_id} canonical projection lacks one exact MultiMod provenance row"
+        )));
+    }
+    let table = tables[0];
+    let qualification_index = table
+        .columns
+        .iter()
+        .position(|column| column.id == "qualification");
+    let receipt_index = table
+        .columns
+        .iter()
+        .position(|column| column.id == "candidate_qualification_receipt_json");
+    let (Some(qualification_index), Some(receipt_index)) = (qualification_index, receipt_index)
+    else {
+        return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+            "result {result_id} canonical projection omits qualification authority columns"
+        )));
+    };
+    let row = &table.rows[0];
+    if row.cells.len() != table.columns.len() {
+        return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+            "result {result_id} canonical provenance row is structurally inconsistent"
+        )));
+    }
+    let expected_qualification = serde_json::to_value(scientific.qualification)
+        .ok()
+        .and_then(|value| value.as_str().map(str::to_owned))
+        .ok_or_else(|| {
+            ProjectArchiveV6Error::InvalidMultiModResult(format!(
+                "result {result_id} qualification could not be projected"
+            ))
+        })?;
+    if !matches!(
+        row.cells.get(qualification_index),
+        Some(CanonicalResultCellV2::Text { value }) if value == &expected_qualification
+    ) {
+        return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+            "result {result_id} canonical qualification differs from scientific provenance"
+        )));
+    }
+    let receipt_matches = match (
+        scientific.candidate_qualification_receipt.as_ref(),
+        row.cells.get(receipt_index),
+    ) {
+        (
+            None,
+            Some(CanonicalResultCellV2::Missing {
+                reason: CanonicalMissingReasonV2::NotApplicable,
+                ..
+            }),
+        ) => true,
+        (Some(expected), Some(CanonicalResultCellV2::Text { value })) => {
+            serde_json::from_str::<MultimodCandidateQualificationReceiptV1>(value)
+                .is_ok_and(|observed| &observed == expected)
+        }
+        _ => false,
+    };
+    if !receipt_matches {
+        return Err(ProjectArchiveV6Error::InvalidMultiModResult(format!(
+            "result {result_id} canonical candidate receipt differs from scientific provenance"
+        )));
+    }
+    Ok(())
 }
 
 fn invalid_general_sem_authority(message: impl Into<String>) -> ProjectArchiveV6Error {
@@ -10274,18 +10624,24 @@ where
         PROJECT_ENTRY_NAME.to_owned(),
         sha256_bytes(&updated_project_bytes),
     );
-    for descriptor in &updated.datasets {
-        let entry_name = format!("data/{}.arrow", descriptor.id);
+    // Preserve every checksum-bound scientific entry, including additive
+    // MultiMod Arrow sidecars. Restricting this loop to datasets would make an
+    // otherwise unrelated canonical-result append silently drop required
+    // evidence and correctly fail the subsequent strict reopen.
+    for entry_name in source_manifest.checksums.keys() {
+        if entry_name == PROJECT_ENTRY_NAME {
+            continue;
+        }
         let mut entry = source_archive
-            .by_name(&entry_name)
+            .by_name(entry_name)
             .map_err(zip_layer_error_v6)?;
         let mut bytes = Vec::with_capacity(entry.size() as usize);
         entry.read_to_end(&mut bytes)?;
         output
-            .start_file(&entry_name, options)
+            .start_file(entry_name, options)
             .map_err(zip_layer_error_v6)?;
         output.write_all(&bytes)?;
-        checksums.insert(entry_name, sha256_bytes(&bytes));
+        checksums.insert(entry_name.clone(), sha256_bytes(&bytes));
     }
     drop(source_archive);
     let manifest = ProjectManifest {
@@ -10537,6 +10893,7 @@ pub fn plan_project_upgrade_to_v6(
         layouts: source.layouts.clone(),
         historical_results,
         canonical_result_documents: Vec::new(),
+        multimod_results: Vec::new(),
         origin: ProjectOriginV6::UpgradedCopy {
             lineage: ProjectUpgradeLineageV6 {
                 source_project_id: source.manifest.project_id,
@@ -11165,7 +11522,7 @@ fn wide_path_v6(path: &Path) -> Vec<u16> {
     path.as_os_str().encode_wide().chain(Some(0)).collect()
 }
 
-fn atomic_replace_with_rollback_v6(
+pub(crate) fn atomic_replace_with_rollback_v6(
     replacement: &Path,
     destination: &Path,
     rollback: &Path,
@@ -11202,7 +11559,10 @@ fn atomic_replace_with_rollback_v6(
     Ok(())
 }
 
-fn restore_rollback_v6(rollback: &Path, destination: &Path) -> Result<(), ProjectArchiveV6Error> {
+pub(crate) fn restore_rollback_v6(
+    rollback: &Path,
+    destination: &Path,
+) -> Result<(), ProjectArchiveV6Error> {
     #[cfg(windows)]
     {
         let destination = wide_path_v6(destination);
@@ -11419,6 +11779,14 @@ pub enum ProjectArchiveV6Error {
     HistoricalResultRecipeBinding(Uuid),
     #[error("historical result identifier {0} is duplicated")]
     DuplicateHistoricalResultId(Uuid),
+    #[error("MultiMod result contract is invalid: {0}")]
+    InvalidMultiModResult(String),
+    #[error("MultiMod result identifier {0} is duplicated")]
+    DuplicateMultiModResultId(String),
+    #[error("MultiMod sidecar entry {0} is duplicated")]
+    DuplicateMultiModSidecarEntry(String),
+    #[error("MultiMod result {result_id} references unavailable Recipe V4 {recipe_id}")]
+    MultiModResultRecipeUnavailable { result_id: String, recipe_id: Uuid },
     #[error("canonical result document identifier {0} is duplicated")]
     DuplicateCanonicalResultDocumentId(String),
     #[error("canonical result run identifier {0} is duplicated")]

@@ -103,6 +103,8 @@ pub enum GeneralSemPlsDisjointHocScoreDatasetErrorV1 {
     Cancelled,
     #[error("compiled PLS v3 plan must contain exactly one higher-order stage plan")]
     HigherOrderPlanCardinality,
+    #[error("MultiMod HOC plan must contain one through four higher-order stage plans")]
+    MultiModHigherOrderPlanCardinality,
     #[error("higher-order point-stage preparation currently requires disjoint_two_stage")]
     DisjointTwoStageRequired,
     #[error(
@@ -307,19 +309,43 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
     dataset: &Dataset,
     plan: &CompiledPlsPlanV3,
     stage_one: &PlsResult,
+    cancelled: impl FnMut() -> bool,
+) -> Result<
+    PreparedGeneralSemPlsDisjointHocScoreDatasetV1,
+    GeneralSemPlsDisjointHocScoreDatasetErrorV1,
+> {
+    if plan.higher_order_stage_plans().len() != 1 {
+        return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::HigherOrderPlanCardinality);
+    }
+    prepare_general_sem_pls_disjoint_hoc_score_dataset_multimod_v2(
+        dataset, plan, stage_one, cancelled,
+    )
+}
+
+/// Additive MultiMod V2 score-dataset preparation for one through four
+/// disjoint/nonnested HOCs. The legacy V1 entrypoint remains exactly one HOC.
+pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_multimod_v2(
+    dataset: &Dataset,
+    plan: &CompiledPlsPlanV3,
+    stage_one: &PlsResult,
     mut should_continue: impl FnMut() -> bool,
 ) -> Result<
     PreparedGeneralSemPlsDisjointHocScoreDatasetV1,
     GeneralSemPlsDisjointHocScoreDatasetErrorV1,
 > {
-    let [hoc] = plan.higher_order_stage_plans() else {
-        return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::HigherOrderPlanCardinality);
-    };
-    if !matches!(
-        hoc.approach(),
-        HigherOrderConstructionApproachV4::EmbeddedTwoStage
-            | HigherOrderConstructionApproachV4::DisjointTwoStage
-    ) {
+    let hocs = plan.higher_order_stage_plans();
+    if !(1..=4).contains(&hocs.len()) {
+        return Err(
+            GeneralSemPlsDisjointHocScoreDatasetErrorV1::MultiModHigherOrderPlanCardinality,
+        );
+    }
+    if hocs.iter().any(|hoc| {
+        !matches!(
+            hoc.approach(),
+            HigherOrderConstructionApproachV4::EmbeddedTwoStage
+                | HigherOrderConstructionApproachV4::DisjointTwoStage
+        )
+    }) {
         return Err(GeneralSemPlsDisjointHocScoreDatasetErrorV1::ScoreStageRequired);
     }
     let used_rows =
@@ -335,10 +361,14 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
             },
         );
     }
-    let specs = hoc
-        .component_mappings()
+    let specs = hocs
         .iter()
-        .map(|mapping| {
+        .flat_map(|hoc| {
+            hoc.component_mappings()
+                .iter()
+                .map(move |mapping| (hoc, mapping))
+        })
+        .map(|(hoc, mapping)| {
             let values = stage_one
                 .construct_scores
                 .get(mapping.component_id())
@@ -386,9 +416,9 @@ pub fn prepare_general_sem_pls_disjoint_hoc_score_dataset_v1(
         &specs,
     )
     .map_err(map_generated_dataset_error)?;
-    let generated_score_columns = hoc
-        .component_mappings()
+    let generated_score_columns = hocs
         .iter()
+        .flat_map(|hoc| hoc.component_mappings())
         .map(|mapping| {
             let values = &stage_one.construct_scores[mapping.component_id()];
             GeneralSemPlsHocGeneratedScoreColumnReceiptV1 {

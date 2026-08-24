@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/multimod-runtime-promotion-smoke-v1.schema.json",
+  "title": "QuickPLS MultiMod packaged runtime promotion smoke V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "receipt_kind",
+    "lane",
+    "candidate_commit_sha",
+    "candidate_version",
+    "plan_sha256",
+    "binding_sha256",
+    "authority_document_sha256",
+    "authority_binding_sha256",
+    "manifest_set_sha256",
+    "package_receipt_sha256",
+    "executable_path",
+    "executable_sha256",
+    "offline",
+    "console_window_absent",
+    "qualification_state",
+    "unqualified_authority_fails_closed",
+    "post_evidence_source_change_required",
+    "qualification_coverage_complete",
+    "qualification_harness_contract",
+    "unmerged_review_candidate",
+    "later_harness_disabled_rebuild_covered",
+    "production_workflow_evidence_path",
+    "production_workflow_evidence_sha256",
+    "families",
+    "cancellation_recovery_verified",
+    "isolated_nsis_install_verified",
+    "uninstall_cleanup_verified"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "receipt_kind": { "const": "qpls_multimod_runtime_promotion_smoke_v1" },
+    "lane": { "enum": ["installed", "portable"] },
+    "candidate_commit_sha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "candidate_version": { "const": "2.56.0" },
+    "plan_sha256": { "$ref": "#/$defs/sha256" },
+    "binding_sha256": { "$ref": "#/$defs/sha256" },
+    "authority_document_sha256": { "$ref": "#/$defs/sha256" },
+    "authority_binding_sha256": { "$ref": "#/$defs/sha256" },
+    "manifest_set_sha256": { "$ref": "#/$defs/sha256" },
+    "package_receipt_sha256": { "$ref": "#/$defs/sha256" },
+    "executable_path": { "type": "string", "minLength": 1 },
+    "executable_sha256": { "$ref": "#/$defs/sha256" },
+    "offline": { "const": true },
+    "console_window_absent": { "const": true },
+    "qualification_state": { "const": "release_qualified_candidate" },
+    "unqualified_authority_fails_closed": { "const": true },
+    "post_evidence_source_change_required": { "const": false },
+    "qualification_coverage_complete": { "const": true },
+    "qualification_harness_contract": { "const": "qpls.v256.multimod.build-only-packaged-qualification-harness.v1" },
+    "unmerged_review_candidate": { "const": true },
+    "later_harness_disabled_rebuild_covered": { "const": false },
+    "production_workflow_evidence_path": { "type": "string", "minLength": 1 },
+    "production_workflow_evidence_sha256": { "$ref": "#/$defs/sha256" },
+    "families": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "family_id",
+          "valid_run_completed",
+          "result_identity_verified",
+          "archive_reopened",
+          "semantic_export_readback",
+          "sidecar_integrity_verified"
+        ],
+        "properties": {
+          "family_id": {
+            "enum": [
+              "qpls.multimod.mga_multigroup_v1",
+              "qpls.multimod.pls_heterogeneity_v2",
+              "qpls.multimod.general_sem_conditional_process_v2",
+              "qpls.multimod.interventional_causal_mediation_v1"
+            ]
+          },
+          "valid_run_completed": { "const": true },
+          "result_identity_verified": { "const": true },
+          "archive_reopened": { "const": true },
+          "semantic_export_readback": { "const": true },
+          "sidecar_integrity_verified": { "const": true }
+        }
+      }
+    },
+    "cancellation_recovery_verified": { "const": true },
+    "isolated_nsis_install_verified": { "type": "boolean" },
+    "uninstall_cleanup_verified": { "type": "boolean" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+  }
+}

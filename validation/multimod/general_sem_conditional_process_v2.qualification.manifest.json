@@ -1,0 +1,103 @@
+{
+  "$schema": "multimod_source_bound_manifest_v1.schema.json",
+  "schema_version": 1,
+  "contract_kind": "multimod_source_bound_qualification_manifest",
+  "manifest_id": "qpls.multimod.general_sem_conditional_process_v2.qualification",
+  "family_id": "qpls.multimod.general_sem_conditional_process_v2",
+  "surface": "labs",
+  "declared_evidence_state": "absent",
+  "promotion_allowed": false,
+  "method_versions": ["general_sem_conditional_process_v2"],
+  "source_binding": {
+    "status": "pending",
+    "candidate_commit_sha": null,
+    "source_artifacts": [
+      {"path":"crates/qpls-core/src/multimod_config_v1.rs","sha256":null},
+      {"path":"crates/qpls-core/src/multimod_recipe_compiler_v1.rs","sha256":null},
+      {"path":"crates/qpls-estimation/src/conditional_process_v2.rs","sha256":null},
+      {"path":"crates/qpls-project/src/multimod_archive_v1.rs","sha256":null},
+      {"path":"docs/methods/GENERAL_SEM_CONDITIONAL_PROCESS_V2.md","sha256":null},
+      {"path":"src/domain/multimodContractsV1.ts","sha256":null},
+      {"path":"src/native/nativeMultimodConditionalProcessV2.ts","sha256":null}
+    ]
+  },
+  "profile_matrix": [
+    {
+      "profile_id":"conditional.multi_two_way_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"explicit_path_target_math","evidence_identity_template":"conditional.multi_two_way_percentile.v2::explicit_path_target_math","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"shared_ledger_percentile_type7","evidence_identity_template":"conditional.multi_two_way_percentile.v2::shared_ledger_percentile_type7","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"both_stage_multiple_long_path","evidence_identity_template":"conditional.multi_two_way_percentile.v2::both_stage_multiple_long_path","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"all_predeclared_alternatives","evidence_identity_template":"conditional.multi_two_way_percentile.v2::all_predeclared_alternatives","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.multi_two_way_bca.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"explicit_path_target_math","evidence_identity_template":"conditional.multi_two_way_bca.v2::explicit_path_target_math","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"complete_delete_one_bca","evidence_identity_template":"conditional.multi_two_way_bca.v2::complete_delete_one_bca","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"all_predeclared_alternatives","evidence_identity_template":"conditional.multi_two_way_bca.v2::all_predeclared_alternatives","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"incomplete_jackknife_fail_closed","evidence_identity_template":"conditional.multi_two_way_bca.v2::incomplete_jackknife_fail_closed","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.studentized.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"nested_studentized","evidence_identity_template":"conditional.studentized.v2::nested_studentized","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"outer_inner_budget_limits","evidence_identity_template":"conditional.studentized.v2::outer_inner_budget_limits","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"no_percentile_fallback","evidence_identity_template":"conditional.studentized.v2::no_percentile_fallback","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"all_predeclared_alternatives","evidence_identity_template":"conditional.studentized.v2::all_predeclared_alternatives","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.bounded_three_way_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"complete_lower_order_closure","evidence_identity_template":"conditional.bounded_three_way_percentile.v2::complete_lower_order_closure","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"derivatives_and_cross_derivatives","evidence_identity_template":"conditional.bounded_three_way_percentile.v2::derivatives_and_cross_derivatives","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"shared_ledger_percentile_type7","evidence_identity_template":"conditional.bounded_three_way_percentile.v2::shared_ledger_percentile_type7","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"all_predeclared_alternatives","evidence_identity_template":"conditional.bounded_three_way_percentile.v2::all_predeclared_alternatives","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.multiple_hoc_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"hoc_dependency_before_products","evidence_identity_template":"conditional.multiple_hoc_percentile.v2::hoc_dependency_before_products","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"disjoint_nonnested_single_approach","evidence_identity_template":"conditional.multiple_hoc_percentile.v2::disjoint_nonnested_single_approach","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"shared_ledger_percentile_type7_two_sided","evidence_identity_template":"conditional.multiple_hoc_percentile.v2::shared_ledger_percentile_type7_two_sided","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.grouped_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"group_stratified_shared_ledger","evidence_identity_template":"conditional.grouped_percentile.v2::group_stratified_shared_ledger","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"two_to_twenty_group_bounds","evidence_identity_template":"conditional.grouped_percentile.v2::two_to_twenty_group_bounds","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"percentile_type7_two_sided","evidence_identity_template":"conditional.grouped_percentile.v2::percentile_type7_two_sided","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.case_weighted_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"positive_normalized_case_weights","evidence_identity_template":"conditional.case_weighted_percentile.v2::positive_normalized_case_weights","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"kish_ess_and_ratio_guards","evidence_identity_template":"conditional.case_weighted_percentile.v2::kish_ess_and_ratio_guards","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"row_weight_resampling","evidence_identity_template":"conditional.case_weighted_percentile.v2::row_weight_resampling","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"percentile_type7_two_sided","evidence_identity_template":"conditional.case_weighted_percentile.v2::percentile_type7_two_sided","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id":"conditional.frequency_weighted_percentile.v2","method_version":"general_sem_conditional_process_v2","coverage_state":"absent","evidence_state":"absent","surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"count_space_point_equivalence","evidence_identity_template":"conditional.frequency_weighted_percentile.v2::count_space_point_equivalence","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multinomial_count_bootstrap_equivalence","evidence_identity_template":"conditional.frequency_weighted_percentile.v2::multinomial_count_bootstrap_equivalence","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"exact_integer_total_guard","evidence_identity_template":"conditional.frequency_weighted_percentile.v2::exact_integer_total_guard","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"percentile_type7_two_sided","evidence_identity_template":"conditional.frequency_weighted_percentile.v2::percentile_type7_two_sided","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    }
+  ],
+  "promotion_contract": {
+    "profile_procedure_evidence_identity": "Each conditional profile and inference procedure has an independent report; a passing percentile profile cannot qualify BCa, studentized, grouped, HOC or weighted behavior.",
+    "required_gate_families": ["specification","compiler","hand_identity","independent_oracle","null_and_nonnull_simulation","shared_ledger","profile_boundary","persistence","semantic_export","native_accessibility","installed_offline"],
+    "minimum_live_state": "release_qualified",
+    "stale_hash_behavior": "derive_absent",
+    "partial_result_behavior": "never_publish"
+  }
+}

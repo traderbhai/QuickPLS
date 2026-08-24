@@ -1,0 +1,152 @@
+{
+  "$schema": "multimod_source_bound_manifest_v1.schema.json",
+  "schema_version": 1,
+  "contract_kind": "multimod_source_bound_qualification_manifest",
+  "manifest_id": "qpls.multimod.mga_multigroup_v1.qualification",
+  "family_id": "qpls.multimod.mga_multigroup_v1",
+  "surface": "labs",
+  "declared_evidence_state": "absent",
+  "promotion_allowed": false,
+  "method_versions": [
+    "mga_multigroup_kernel_v1",
+    "mga_multigroup_pairwise_permutation_v1",
+    "mga_multigroup_max_spread_omnibus_v1",
+    "henseler_directional_bootstrap_probability_v1",
+    "efron_bias_corrected_zero_acceleration_type7_v1",
+    "equal_underlying_variance_pooled_t_v1",
+    "welch_satterthwaite_parameter_difference_v1",
+    "inverse_variance_k_group_wald_v1",
+    "mga_multigroup_probability_adjustment_v1"
+  ],
+  "source_binding": {
+    "status": "pending",
+    "candidate_commit_sha": null,
+    "source_artifacts": [
+      {"path":"crates/qpls-core/src/multimod_config_v1.rs","sha256":null},
+      {"path":"crates/qpls-core/src/multimod_recipe_compiler_v1.rs","sha256":null},
+      {"path":"crates/qpls-estimation/src/multigroup_v1.rs","sha256":null},
+      {"path":"crates/qpls-project/src/multimod_archive_v1.rs","sha256":null},
+      {"path":"docs/methods/MGA_MULTIGROUP_V1.md","sha256":null},
+      {"path":"src/domain/multimodContractsV1.ts","sha256":null},
+      {"path":"src/native/nativeMultimodMgaV1.ts","sha256":null}
+    ]
+  },
+  "profile_matrix": [
+    {
+      "profile_id": "mga.general_sem_pls.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"point_fit","evidence_identity_template":"mga.general_sem_pls.v1::point_fit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.general_sem_pls.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.general_sem_pls.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.general_sem_pls.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"henseler_directional_probability","evidence_identity_template":"mga.general_sem_pls.v1::henseler_directional_probability","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.general_sem_pls.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pooled_and_welch","evidence_identity_template":"mga.general_sem_pls.v1::pooled_and_welch","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"k_group_wald","evidence_identity_template":"mga.general_sem_pls.v1::k_group_wald","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.general_sem_pls.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.multiple_two_way_moderation.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"point_fit_path_gamma_slopes","evidence_identity_template":"mga.multiple_two_way_moderation.v1::point_fit_path_gamma_slopes","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.multiple_two_way_moderation.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.multiple_two_way_moderation.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.multiple_two_way_moderation.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"henseler_directional_probability","evidence_identity_template":"mga.multiple_two_way_moderation.v1::henseler_directional_probability","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.multiple_two_way_moderation.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.multiple_two_way_moderation.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.bounded_three_way_moderation.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"point_fit_path_gamma_delta_slopes","evidence_identity_template":"mga.bounded_three_way_moderation.v1::point_fit_path_gamma_delta_slopes","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.bounded_three_way_moderation.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.bounded_three_way_moderation.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.bounded_three_way_moderation.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.bounded_three_way_moderation.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.bounded_three_way_moderation.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.bounded_two_way_moderated_mediation.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"point_fit_bounded_conditional_targets","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::point_fit_bounded_conditional_targets","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.bounded_two_way_moderated_mediation.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.multiple_nonnested_hoc.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"point_fit_hoc_stages","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::point_fit_hoc_stages","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.multiple_nonnested_hoc.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.case_weighted_pls.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"weighted_point_fit","evidence_identity_template":"mga.case_weighted_pls.v1::weighted_point_fit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.case_weighted_pls.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.case_weighted_pls.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.case_weighted_pls.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.case_weighted_pls.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.case_weighted_pls.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.frequency_weighted_pls.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"count_space_point_fit","evidence_identity_template":"mga.frequency_weighted_pls.v1::count_space_point_fit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"expanded_row_equivalence","evidence_identity_template":"mga.frequency_weighted_pls.v1::expanded_row_equivalence","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"micom_pairwise_steps_2_3","evidence_identity_template":"mga.frequency_weighted_pls.v1::micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"pairwise_permutation","evidence_identity_template":"mga.frequency_weighted_pls.v1::pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"max_spread_omnibus","evidence_identity_template":"mga.frequency_weighted_pls.v1::max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"bootstrap_bc","evidence_identity_template":"mga.frequency_weighted_pls.v1::bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.frequency_weighted_pls.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    },
+    {
+      "profile_id": "mga.reflective_plsc.v1",
+      "method_version": "qpls.multimod.mga_multigroup_v1",
+      "coverage_state": "absent", "evidence_state": "absent", "surface": "labs",
+      "procedure_cells": [
+        {"procedure_id":"plsc_point_fit","evidence_identity_template":"mga.reflective_plsc.v1::plsc_point_fit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"composite_micom_pairwise_steps_2_3","evidence_identity_template":"mga.reflective_plsc.v1::composite_micom_pairwise_steps_2_3","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"consistent_pairwise_permutation","evidence_identity_template":"mga.reflective_plsc.v1::consistent_pairwise_permutation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"consistent_max_spread_omnibus","evidence_identity_template":"mga.reflective_plsc.v1::consistent_max_spread_omnibus","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"consistent_bootstrap_bc","evidence_identity_template":"mga.reflective_plsc.v1::consistent_bootstrap_bc","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"multiplicity_adjustment","evidence_identity_template":"mga.reflective_plsc.v1::multiplicity_adjustment","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    }
+  ],
+  "promotion_contract": {
+    "profile_procedure_evidence_identity": "Every profile_id and procedure_id pair requires a separate source-bound report; no Cartesian inference from another pair is allowed.",
+    "required_gate_families": ["specification","compiler","independent_oracle","simulation","metamorphic","resampling","persistence","export","native_accessibility","installed_offline"],
+    "minimum_live_state": "release_qualified",
+    "stale_hash_behavior": "derive_absent",
+    "partial_result_behavior": "never_publish"
+  }
+}

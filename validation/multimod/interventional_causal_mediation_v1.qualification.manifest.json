@@ -1,0 +1,48 @@
+{
+  "$schema": "multimod_source_bound_manifest_v1.schema.json",
+  "schema_version": 1,
+  "contract_kind": "multimod_source_bound_qualification_manifest",
+  "manifest_id": "qpls.multimod.interventional_causal_mediation_v1.qualification",
+  "family_id": "qpls.multimod.interventional_causal_mediation_v1",
+  "surface": "labs",
+  "declared_evidence_state": "absent",
+  "promotion_allowed": false,
+  "method_versions": ["interventional_causal_mediation_v1"],
+  "source_binding": {
+    "status": "pending",
+    "candidate_commit_sha": null,
+    "source_artifacts": [
+      {"path":"crates/qpls-core/src/multimod_config_v1.rs","sha256":null},
+      {"path":"crates/qpls-core/src/multimod_recipe_compiler_v1.rs","sha256":null},
+      {"path":"crates/qpls-estimation/src/interventional_mediation_v1.rs","sha256":null},
+      {"path":"crates/qpls-project/src/multimod_archive_v1.rs","sha256":null},
+      {"path":"docs/methods/INTERVENTIONAL_CAUSAL_MEDIATION_V1.md","sha256":null},
+      {"path":"src/domain/multimodContractsV1.ts","sha256":null},
+      {"path":"src/native/nativeInterventionalMediationV1.ts","sha256":null}
+    ]
+  },
+  "profile_matrix": [
+    {
+      "profile_id":"interventional.observed_gcomp.v1",
+      "method_version":"interventional_causal_mediation_v1",
+      "coverage_state":"absent",
+      "evidence_state":"absent",
+      "surface":"labs",
+      "procedure_cells":[
+        {"procedure_id":"observed_equation_point_fit","evidence_identity_template":"interventional.observed_gcomp.v1::observed_equation_point_fit","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"parametric_g_computation","evidence_identity_template":"interventional.observed_gcomp.v1::parametric_g_computation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"known_target_simulation","evidence_identity_template":"interventional.observed_gcomp.v1::known_target_simulation","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"positivity_diagnostics","evidence_identity_template":"interventional.observed_gcomp.v1::positivity_diagnostics","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"identification_failure_guards","evidence_identity_template":"interventional.observed_gcomp.v1::identification_failure_guards","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null},
+        {"procedure_id":"causal_wording_guard","evidence_identity_template":"interventional.observed_gcomp.v1::causal_wording_guard","evidence_state":"absent","gate_state":"pending","report_path":null,"report_sha256":null}
+      ]
+    }
+  ],
+  "promotion_contract": {
+    "profile_procedure_evidence_identity": "The observed-data g-computation profile is qualified separately from every PLS or SEM mediation cell and cannot borrow their evidence.",
+    "required_gate_families": ["specification","compiler","hand_identity","independent_oracle","known_target_simulation","positivity_and_assumption_failures","persistence","semantic_export","native_accessibility","installed_offline"],
+    "minimum_live_state": "release_qualified",
+    "stale_hash_behavior": "derive_absent",
+    "partial_result_behavior": "never_publish"
+  }
+}

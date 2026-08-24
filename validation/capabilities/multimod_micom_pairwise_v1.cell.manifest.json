@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.micom",
+  "execution_context": "recipe_v4_multimod_mga_multigroup_v1_pairwise_micom",
+  "feature": {
+    "id": "qpls3.multimod.micom_pairwise",
+    "label": "MultiMod pairwise MICOM for 2-20 selected groups",
+    "method_version": "multimod_pairwise_micom_v1",
+    "analytical_method_version": "qpls.multimod.micom_pairwise.v1",
+    "method_kind": "pairwise_composite_invariance_permutation"
+  },
+  "coverage_state": "absent",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/MGA_MULTIGROUP_V1.md",
+  "profile_manifest": "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/heterogeneity-and-multigroup/micom/",
+  "implemented_contracts": [
+    "Structured analyst confirmation for configural invariance Step 1",
+    "Pairwise Steps 2-3 with no invented omnibus MICOM conclusion",
+    "Partial measurement invariance gate before affected structural interpretation"
+  ],
+  "remaining_qualification": [
+    "Independent pairwise compositional-invariance and label-reversal evidence is pending for every MGA profile.",
+    "PLSc output wording must remain composite invariance rather than common-factor invariance.",
+    "This cell must derive absent and remain hidden from Standard surfaces."
+  ]
+}

@@ -238,6 +238,7 @@ mod tests {
             )]),
             historical_results: Vec::new(),
             canonical_result_documents: Vec::new(),
+            multimod_results: Vec::new(),
             origin: ProjectOriginV6::NewProject,
             sem_generation: None,
         }

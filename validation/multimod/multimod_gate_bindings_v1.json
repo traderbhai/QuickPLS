@@ -1,0 +1,990 @@
+{
+  "schema_version": 1,
+  "binding_set_id": "qpls.v256.multimod.gate-bindings.v1",
+  "binding_kind": "reviewed_executable_coverage_v1",
+  "placeholder_bindings_permitted": false,
+  "campaign_seed": 42,
+  "review_rule": "A ready gate invokes at least one real executable, binds immutable inputs, emits a gate receipt, and fails when an expected evidence artifact is absent.",
+  "gates": [
+    {
+      "gate_id": "contracts.schemas.source_identity",
+      "profiles": ["*"],
+      "probable_root_component": "schema",
+      "covered_evidence_cells": ["*::contract"],
+      "input_artifacts": [
+        "validation/multimod/v256_multimod_qualification_plan_v1.json",
+        "validation/multimod/v256_multimod_qualification_plan_v1.schema.json",
+        "validation/multimod/multimod_source_bound_manifest_v1.schema.json",
+        "validation/multimod/multimod_issue_inventory_v1.schema.json",
+        "validation/multimod/multimod_gate_bindings_v1.json",
+        "crates/qpls-core/src/multimod_config_v1.rs",
+        "crates/qpls-core/src/multimod_result_v1.rs"
+      ],
+      "steps": [
+        {
+          "step_id": "contract_audit",
+          "executable": "python",
+          "arguments": ["validation/multimod/audit_multimod_qualification_contracts_v1.py", "--mode", "frozen", "--candidate-commit", "{candidate_commit}", "--output", "{gate_output}/contract-audit.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/contract-audit.json"]
+        },
+        {
+          "step_id": "core_contract_tests",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-core", "--test", "multimod_public_contract_boundaries_v1"],
+          "uses_cargo": true,
+          "maximum_seconds": 900,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "core.project.compile",
+      "profiles": ["*"],
+      "probable_root_component": "compiler",
+      "covered_evidence_cells": ["*::compile"],
+      "input_artifacts": ["Cargo.toml", "Cargo.lock", "crates/qpls-core/Cargo.toml", "crates/qpls-project/Cargo.toml", "crates/qpls-project/src/multimod_archive_v1.rs"],
+      "steps": [
+        {
+          "step_id": "core_project_check",
+          "executable": "cargo",
+          "arguments": ["check", "--locked", "-p", "qpls-core", "-p", "qpls-project"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "typescript.contracts.typecheck",
+      "profiles": ["*"],
+      "probable_root_component": "schema",
+      "covered_evidence_cells": ["*::typescript_contract"],
+      "input_artifacts": ["package.json", "package-lock.json", "tsconfig.build.json", "src/domain/multimodContractsV1.ts", "src/domain/multimodContractsV1.test.ts", "src/domain/internalProjectArchiveV6Wire.multimod.test.ts"],
+      "steps": [
+        {
+          "step_id": "typescript_typecheck",
+          "executable": "npm.cmd",
+          "arguments": ["run", "typecheck:build"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "typescript_contract_tests",
+          "executable": "npx.cmd",
+          "arguments": ["--no-install", "vitest", "run", "src/domain/multimodContractsV1.test.ts", "src/domain/internalProjectArchiveV6Wire.multimod.test.ts"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "estimation.point.kernels",
+      "profiles": ["*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["mga.*::point*", "fimix.*::em_multistart_point", "pos.*::ten_start_full_refit_point", "conditional.*::explicit_path_target_math", "interventional.*::observed_equation_point_fit"],
+      "input_artifacts": ["crates/qpls-estimation/src/multigroup_v1.rs", "crates/qpls-estimation/src/multigroup_micom_v1.rs", "crates/qpls-estimation/src/heterogeneity_v2.rs", "crates/qpls-estimation/src/conditional_process_v2.rs", "crates/qpls-estimation/src/interventional_mediation_v1.rs", "validation/multimod/fixtures/reference_oracles_v1.json", "validation/multimod/test_reference_oracles_v1.py"],
+      "steps": [
+        {
+          "step_id": "estimation_multigroup",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "multigroup_"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "estimation_heterogeneity",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "heterogeneity_v2::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "estimation_conditional",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "conditional_process_v2::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "estimation_causal",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "interventional_mediation_v1::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "independent_oracle_identities",
+          "executable": "python",
+          "arguments": ["validation/multimod/test_reference_oracles_v1.py"],
+          "uses_cargo": false,
+          "maximum_seconds": 300,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "resampling.shared_ledgers",
+      "profiles": ["*"],
+      "probable_root_component": "resampling",
+      "covered_evidence_cells": ["*::shared_ledger*", "*::fixed_k_label_aligned_bootstrap", "*::bootstrap*"],
+      "input_artifacts": ["crates/qpls-resampling/src/multimod_full_refit_v1.rs", "crates/qpls-estimation/src/multigroup_v1.rs", "crates/qpls-estimation/src/heterogeneity_v2.rs"],
+      "steps": [
+        {
+          "step_id": "full_refit_ledgers",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-resampling", "--lib", "multimod_full_refit_v1::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "method_ledger_identities",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "minimum_usable_rule_is_ceiling_ninety_percent_with_floor_one_thousand"],
+          "uses_cargo": true,
+          "maximum_seconds": 900,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "runner.persistence.integration",
+      "profiles": ["*"],
+      "probable_root_component": "runner",
+      "covered_evidence_cells": ["*::runner_integration"],
+      "input_artifacts": ["crates/qpls-runner/src/multimod_execution_v1.rs", "crates/qpls-runner/src/multimod_conditional_raw_v2.rs", "crates/qpls-runner/src/multimod_causal_raw_v1.rs", "crates/qpls-runner/src/multimod_mga_execution_cache_v1.rs", "crates/qpls-runner/src/multimod_canonical_result_v1.rs", "src-tauri/src/multimod_jobs_v1.rs"],
+      "steps": [
+        {
+          "step_id": "runner_multimod_tests",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-runner", "--lib", "multimod_"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "mga.group_matrix",
+      "profiles": ["mga.*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["mga.*::point*", "mga.*::weighted_point_fit", "mga.*::count_space_point_fit", "mga.*::expanded_row_equivalence", "mga.*::plsc_point_fit"],
+      "input_artifacts": ["crates/qpls-core/src/multimod_config_v1.rs", "crates/qpls-estimation/src/multigroup_v1.rs", "crates/qpls-estimation/src/multigroup_frequency_v1.rs", "crates/qpls-estimation/src/multigroup_micom_v1.rs", "crates/qpls-runner/src/multimod_execution_v1.rs", "crates/qpls-runner/examples/support_multimod_qualification/mod.rs", "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs", "validation/multimod/compare_multimod_mga_qualification_v1.py", "validation/multimod/run_multimod_mga_qualification_v1.ps1", "validation/multimod/multimod_science_fixture_catalog_v1.json"],
+      "steps": [
+        {
+          "step_id": "mga_production_science",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_mga_qualification_v1.ps1", "-Output", "{gate_output}/mga-production-science.json", "-Scale", "qualification", "-Seed", "{seed}"],
+          "uses_cargo": true,
+          "maximum_seconds": 172800,
+          "expected_outputs": ["{gate_output}/mga-production-science.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "mga.inference.matrix",
+      "profiles": ["mga.*"],
+      "probable_root_component": "resampling",
+      "covered_evidence_cells": ["mga.*::micom*", "mga.*::composite_micom*", "mga.*::pairwise_permutation", "mga.*::consistent_pairwise_permutation", "mga.*::max_spread_omnibus", "mga.*::consistent_max_spread_omnibus", "mga.*::henseler_directional_probability", "mga.*::bootstrap_bc", "mga.*::consistent_bootstrap_bc", "mga.*::pooled_and_welch", "mga.*::k_group_wald", "mga.*::multiplicity_adjustment"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/compare_multimod_mga_qualification_v1.py", "validation/multimod/multimod_gate_bindings_v1.json"],
+      "steps": [
+        {
+          "step_id": "mga_inference_science_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "mga.group_matrix", "--producer-step", "mga_production_science", "--artifact-basename", "mga-production-science.json", "--required-scientific-check", "mga.group_matrix.g2.pairwise_probability_from_raw_null", "--required-scientific-check", "mga.group_matrix.g2.micom_step2_from_raw_null", "--required-scientific-check", "mga.group_matrix.g2.micom_step3_from_raw_null", "--required-scientific-check", "mga.group_matrix.g2.henseler_probability_from_raw_bootstrap", "--required-scientific-check", "mga.group_matrix.g3.omnibus_precedes_pairwise", "--required-scientific-check", "mga.group_matrix.g3.omnibus_probability_from_raw_null", "--required-scientific-check", "mga.group_matrix.g20.pair_inventory.pairwise_permutation_two_tailed_or_predeclared_direction_v1", "--required-scientific-check", "mga.group_matrix.g20.micom_permutation_shared_partition_authority", "--required-scientific-check", "mga.group_matrix.g3.multiplicity_formula.holm", "--required-scientific-check", "mga.group_matrix.g3.multiplicity_formula.bonferroni", "--required-scientific-check", "mga.group_matrix.g3.multiplicity_formula.sidak", "--required-scientific-check", "mga.group_matrix.g3.multiplicity_formula.benjamini_hochberg", "--required-scientific-check", "mga.group_matrix.g3.multiplicity_formula.none", "--required-scientific-check", "mga.group_matrix.g3.public_holm_adjusted_probabilities", "--required-scientific-check", "mga.inference.parametric_sensitivity.parametric_formula.pooled_equal_residual_variance.0_1", "--required-scientific-check", "mga.inference.parametric_sensitivity.parametric_formula.welch_satterthwaite.0_1", "--required-scientific-check", "mga.inference.parametric_sensitivity.wald_formula.0", "--output", "{gate_output}/mga-inference-science-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/mga-inference-science-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "mga.label_reversal",
+      "profiles": ["mga.*"],
+      "probable_root_component": "resampling",
+      "covered_evidence_cells": ["mga.*::label_reversal"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/compare_multimod_mga_qualification_v1.py", "validation/multimod/multimod_gate_bindings_v1.json"],
+      "steps": [
+        {
+          "step_id": "mga_label_reversal_science_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "mga.group_matrix", "--producer-step", "mga_production_science", "--artifact-basename", "mga-production-science.json", "--required-scientific-check", "mga.label_reversal.partition_sign_tail_invariance", "--required-scientific-check", "mga.label_reversal.public_result_invariance", "--output", "{gate_output}/mga-label-reversal-science-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/mga-label-reversal-science-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "fimix.recovery",
+      "profiles": ["fimix.*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["fimix.*::em_multistart_point", "fimix.*::likelihood_criteria_posteriors", "fimix.*::gamma*", "fimix.*::pooled_metric*"],
+      "input_artifacts": ["crates/qpls-core/src/multimod_config_v1.rs", "crates/qpls-estimation/src/heterogeneity_v2.rs", "crates/qpls-runner/src/multimod_execution_v1.rs", "crates/qpls-runner/examples/support_multimod_qualification/mod.rs", "crates/qpls-runner/examples/multimod_heterogeneity_qualification_v2.rs", "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py", "validation/multimod/run_multimod_heterogeneity_qualification_v2.ps1", "validation/multimod/multimod_science_fixture_catalog_v1.json"],
+      "steps": [
+        {
+          "step_id": "heterogeneity_production_science",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_heterogeneity_qualification_v2.ps1", "-Output", "{gate_output}/heterogeneity-production-science.json", "-Scale", "qualification", "-Seed", "{seed}"],
+          "uses_cargo": true,
+          "maximum_seconds": 345600,
+          "expected_outputs": ["{gate_output}/heterogeneity-production-science.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "fimix.collapse.boundaries",
+      "profiles": ["fimix.*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["fimix.*::failure_boundaries"],
+      "input_artifacts": ["crates/qpls-estimation/src/heterogeneity_v2.rs", "crates/qpls-runner/examples/multimod_heterogeneity_qualification_v2.rs", "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py", "validation/multimod/verify_multimod_gate_dependency_v1.py"],
+      "steps": [
+        {
+          "step_id": "fimix_boundary_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "fimix.recovery", "--producer-step", "heterogeneity_production_science", "--artifact-basename", "heterogeneity-production-science.json", "--required-scientific-check", "fimix.boundary.rank_deficient_fail_closed", "--required-scientific-check", "fimix.boundary.variance_collapse_fail_closed", "--required-scientific-check", "fimix.boundary.rare_class_fixture_exercised", "--output", "{gate_output}/fimix-boundary-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/fimix-boundary-dependency.json"]
+        },
+        {
+          "step_id": "fimix_failure_boundary_kernel_tests",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-estimation", "--lib", "fimix_failure_boundary_"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "pos.recovery",
+      "profiles": ["pos.*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["pos.*::ten_start_full_refit_point", "pos.*::strict_objective_monotonicity", "pos.*::destination*"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py", "validation/multimod/multimod_gate_bindings_v1.json"],
+      "steps": [
+        {
+          "step_id": "pos_recovery_science_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "fimix.recovery", "--producer-step", "heterogeneity_production_science", "--artifact-basename", "heterogeneity-production-science.json", "--required-scientific-check", "pos.published_p0.partition_recovery_ari", "--required-scientific-check", "pos.published_p0.independent_outcome_r2_objective", "--required-scientific-check", "pos.destination_p2.partition_recovery_ari", "--required-scientific-check", "pos.destination_p2.independent_outcome_r2_objective", "--required-scientific-check", "pos.destination_p23.partition_recovery_ari", "--required-scientific-check", "pos.destination_p23.independent_outcome_r2_objective", "--required-scientific-check", "pos.overlap.partition_recovery_ari", "--required-scientific-check", "pos.homogeneous_null.no_truth_recovery_claim", "--required-scientific-check", "pos.published_p0.k2_through_k5_candidate_profile_algorithm_identity", "--required-scientific-check", "pos.published_p0.k3.candidate_profile_algorithm_identity", "--required-scientific-check", "pos.published_p0.k4.candidate_profile_algorithm_identity", "--required-scientific-check", "pos.published_p0.k5.candidate_profile_algorithm_identity", "--output", "{gate_output}/pos-recovery-science-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/pos-recovery-science-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "pos.common_metric",
+      "profiles": ["pos.common_metric.*", "pos.destination_scored.*"],
+      "probable_root_component": "micom_common_metric",
+      "covered_evidence_cells": ["pos.*::common_metric_inferential_refit", "pos.common_metric.*::*"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py", "validation/multimod/multimod_gate_bindings_v1.json"],
+      "steps": [
+        {
+          "step_id": "pos_common_metric_science_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "fimix.recovery", "--producer-step", "heterogeneity_production_science", "--artifact-basename", "heterogeneity-production-science.json", "--required-scientific-check", "pos.common_metric.pos-published-p0-fixed-k-bootstrap.independent_micom_step2", "--required-scientific-check", "pos.common_metric.pos-published-p0-fixed-k-bootstrap.pass", "--required-scientific-check", "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.independent_micom_step2", "--required-scientific-check", "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.pass", "--required-scientific-check", "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.independent_micom_step2", "--required-scientific-check", "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.pass", "--required-scientific-check", "pos.common_metric.failure_fixture.independent_micom_step2", "--required-scientific-check", "pos.common_metric.failure_fixture.fail_closed", "--output", "{gate_output}/pos-common-metric-science-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/pos-common-metric-science-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "heterogeneity.bootstrap",
+      "profiles": ["fimix.*", "pos.*"],
+      "probable_root_component": "label_alignment",
+      "covered_evidence_cells": ["fimix.*::fixed_k_label_aligned_bootstrap", "pos.*::fixed_k_label_aligned_bootstrap"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py", "validation/multimod/multimod_gate_bindings_v1.json"],
+      "steps": [
+        {
+          "step_id": "heterogeneity_bootstrap_science_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "fimix.recovery", "--producer-step", "heterogeneity_production_science", "--artifact-basename", "heterogeneity-production-science.json", "--required-scientific-check", "heterogeneity.bootstrap.full_profile_matrix", "--required-scientific-check", "heterogeneity.multistart.independent_replay_present", "--required-scientific-check", "heterogeneity.bootstrap.fimix-p0-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.fimix-p0-fixed-k-bootstrap.shared_validity_bitmap_type7", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos-destination-p2-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos-destination-p23-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos_published_p0_k2_through_k5_inventory", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k3-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k3-fixed-k-bootstrap.shared_validity_bitmap_type7", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k4-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k4-fixed-k-bootstrap.shared_validity_bitmap_type7", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k5-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "heterogeneity.bootstrap.pos-published-p0-k5-fixed-k-bootstrap.shared_validity_bitmap_type7", "--required-scientific-check", "heterogeneity.label_alignment.k3.exhaustive_k_factorial_decisions", "--required-scientific-check", "heterogeneity.label_alignment.k4.exhaustive_k_factorial_decisions", "--required-scientific-check", "heterogeneity.label_alignment.k5.exhaustive_k_factorial_decisions", "--output", "{gate_output}/heterogeneity-bootstrap-science-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/heterogeneity-bootstrap-science-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "conditional.profile_matrix",
+      "profiles": ["conditional.*"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["conditional.multi_two_way_percentile.v2::explicit_path_target_math", "conditional.multi_two_way_percentile.v2::shared_ledger_percentile_type7", "conditional.multi_two_way_percentile.v2::both_stage_multiple_long_path", "conditional.multi_two_way_percentile.v2::all_predeclared_alternatives", "conditional.multi_two_way_bca.v2::explicit_path_target_math", "conditional.multi_two_way_bca.v2::complete_delete_one_bca", "conditional.multi_two_way_bca.v2::all_predeclared_alternatives", "conditional.multi_two_way_bca.v2::incomplete_jackknife_fail_closed", "conditional.studentized.v2::nested_studentized", "conditional.studentized.v2::outer_inner_budget_limits", "conditional.studentized.v2::no_percentile_fallback", "conditional.studentized.v2::all_predeclared_alternatives", "conditional.bounded_three_way_percentile.v2::complete_lower_order_closure", "conditional.bounded_three_way_percentile.v2::derivatives_and_cross_derivatives", "conditional.bounded_three_way_percentile.v2::shared_ledger_percentile_type7", "conditional.bounded_three_way_percentile.v2::all_predeclared_alternatives", "conditional.multiple_hoc_percentile.v2::hoc_dependency_before_products", "conditional.multiple_hoc_percentile.v2::disjoint_nonnested_single_approach", "conditional.multiple_hoc_percentile.v2::shared_ledger_percentile_type7_two_sided", "conditional.grouped_percentile.v2::group_stratified_shared_ledger", "conditional.grouped_percentile.v2::two_to_twenty_group_bounds", "conditional.grouped_percentile.v2::percentile_type7_two_sided", "conditional.case_weighted_percentile.v2::positive_normalized_case_weights", "conditional.case_weighted_percentile.v2::kish_ess_and_ratio_guards", "conditional.case_weighted_percentile.v2::row_weight_resampling", "conditional.case_weighted_percentile.v2::percentile_type7_two_sided", "conditional.frequency_weighted_percentile.v2::count_space_point_equivalence", "conditional.frequency_weighted_percentile.v2::multinomial_count_bootstrap_equivalence", "conditional.frequency_weighted_percentile.v2::exact_integer_total_guard", "conditional.frequency_weighted_percentile.v2::percentile_type7_two_sided"],
+      "input_artifacts": ["crates/qpls-core/src/multimod_config_v1.rs", "crates/qpls-core/src/multimod_recipe_compiler_v1.rs", "crates/qpls-estimation/src/conditional_process_v2.rs", "crates/qpls-estimation/src/multimod_weighted_pls_v1.rs", "crates/qpls-resampling/src/multimod_full_refit_v1.rs", "crates/qpls-runner/src/multimod_conditional_raw_v2.rs", "crates/qpls-runner/examples/support_multimod_qualification/mod.rs", "crates/qpls-runner/examples/multimod_conditional_qualification_v1.rs", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/run_conditional_causal_raw_qualification_v1.ps1", "validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "conditional_raw_qualification",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_conditional_causal_raw_qualification_v1.ps1", "-Family", "conditional", "-Scale", "qualification", "-Output", "{gate_output}/conditional-raw-qualification.json"],
+          "uses_cargo": true,
+          "maximum_seconds": 86400,
+          "expected_outputs": ["{gate_output}/conditional-raw-qualification.json", "{gate_output}/conditional-raw-qualification.producer.json"]
+        },
+        {
+          "step_id": "conditional_point_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "estimation.point.kernels", "--producer-step", "estimation_conditional", "--required-log-contains", "explicit_path_product_conditional_effects_and_derivatives_are_exact", "--required-log-contains", "scalar_index_is_emitted_only_for_an_affine_one_moderator_effect", "--required-log-contains", "profile_validation_fails_closed_for_cross_profile_combinations", "--output", "{gate_output}/conditional-point-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/conditional-point-dependency.json"]
+        },
+        {
+          "step_id": "conditional_runner_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "runner.persistence.integration", "--producer-step", "runner_multimod_tests", "--required-log-contains", "derivative_evaluator_keeps_requested_zero_and_cross_targets", "--required-log-contains", "totals_sum_only_selected_paths_by_endpoint_and_require_authored_direct_edge", "--output", "{gate_output}/conditional-runner-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/conditional-runner-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "conditional.bca_studentized",
+      "profiles": ["conditional.multi_two_way_bca.v2", "conditional.studentized.v2"],
+      "probable_root_component": "resampling",
+      "covered_evidence_cells": ["conditional.multi_two_way_bca.v2::explicit_path_target_math", "conditional.multi_two_way_bca.v2::complete_delete_one_bca", "conditional.multi_two_way_bca.v2::all_predeclared_alternatives", "conditional.multi_two_way_bca.v2::incomplete_jackknife_fail_closed", "conditional.studentized.v2::nested_studentized", "conditional.studentized.v2::outer_inner_budget_limits", "conditional.studentized.v2::no_percentile_fallback", "conditional.studentized.v2::all_predeclared_alternatives"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "conditional_raw_bca_studentized_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "conditional.profile_matrix", "--producer-step", "conditional_raw_qualification", "--artifact-basename", "conditional-raw-qualification.json", "--required-scientific-check", "conditional.raw.independent_point_target_math", "--required-scientific-check", "conditional.raw.bca_full_delete_one", "--required-scientific-check", "conditional.raw.studentized_nested", "--required-scientific-check", "conditional.raw.all_alternatives", "--required-scientific-check", "conditional.raw.boundary_guards", "--output", "{gate_output}/conditional-raw-bca-studentized-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/conditional-raw-bca-studentized-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "conditional.hoc_group_weight",
+      "profiles": ["conditional.multiple_hoc_percentile.v2", "conditional.grouped_percentile.v2", "conditional.case_weighted_percentile.v2", "conditional.frequency_weighted_percentile.v2"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["conditional.multiple_hoc_percentile.v2::hoc_dependency_before_products", "conditional.multiple_hoc_percentile.v2::disjoint_nonnested_single_approach", "conditional.multiple_hoc_percentile.v2::shared_ledger_percentile_type7_two_sided", "conditional.grouped_percentile.v2::group_stratified_shared_ledger", "conditional.grouped_percentile.v2::two_to_twenty_group_bounds", "conditional.grouped_percentile.v2::percentile_type7_two_sided", "conditional.case_weighted_percentile.v2::positive_normalized_case_weights", "conditional.case_weighted_percentile.v2::kish_ess_and_ratio_guards", "conditional.case_weighted_percentile.v2::row_weight_resampling", "conditional.case_weighted_percentile.v2::percentile_type7_two_sided", "conditional.frequency_weighted_percentile.v2::count_space_point_equivalence", "conditional.frequency_weighted_percentile.v2::multinomial_count_bootstrap_equivalence", "conditional.frequency_weighted_percentile.v2::exact_integer_total_guard", "conditional.frequency_weighted_percentile.v2::percentile_type7_two_sided"],
+      "input_artifacts": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "conditional_raw_hoc_group_weight_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "conditional.profile_matrix", "--producer-step", "conditional_raw_qualification", "--artifact-basename", "conditional-raw-qualification.json", "--required-scientific-check", "conditional.raw.independent_point_target_math", "--required-scientific-check", "conditional.raw.percentile_type7_all_targets", "--required-scientific-check", "conditional.raw.hoc_four_disjoint", "--required-scientific-check", "conditional.raw.grouped_stratified", "--required-scientific-check", "conditional.raw.case_weights_travel", "--required-scientific-check", "conditional.raw.frequency_compact_equals_expanded", "--required-scientific-check", "conditional.raw.boundary_guards", "--output", "{gate_output}/conditional-raw-hoc-group-weight-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/conditional-raw-hoc-group-weight-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "conditional.probes",
+      "profiles": ["conditional.*"],
+      "probable_root_component": "compiler",
+      "covered_evidence_cells": ["conditional.*::probe_contract"],
+      "input_artifacts": ["crates/qpls-core/src/multimod_config_v1.rs", "crates/qpls-estimation/src/conditional_process_v2.rs", "validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/test_reference_oracles_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "conditional_probe_raw_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "conditional.profile_matrix", "--producer-step", "conditional_raw_qualification", "--artifact-basename", "conditional-raw-qualification.json", "--required-scientific-check", "conditional.raw.independent_point_target_math", "--required-scientific-check", "conditional.raw.probes_derivatives_contrasts", "--required-scientific-check", "conditional.raw.shared_ledgers", "--required-scientific-check", "conditional.raw.unsupported_intersections", "--output", "{gate_output}/conditional-probe-raw-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/conditional-probe-raw-dependency.json"]
+        },
+        {
+          "step_id": "probe_contract_boundaries",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-core", "--lib", "probe"],
+          "uses_cargo": true,
+          "maximum_seconds": 1200,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "probe_reference",
+          "executable": "python",
+          "arguments": ["validation/multimod/test_reference_oracles_v1.py", "ConditionalPolynomialOracleTests.test_conditional_effects_derivatives_and_left_minus_right_contrasts"],
+          "uses_cargo": false,
+          "maximum_seconds": 300,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "causal.known_targets",
+      "profiles": ["interventional.observed_gcomp.v1"],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": ["interventional.observed_gcomp.v1::observed_equation_point_fit", "interventional.observed_gcomp.v1::parametric_g_computation", "interventional.observed_gcomp.v1::known_target_simulation", "interventional.observed_gcomp.v1::causal_wording_guard"],
+      "input_artifacts": ["crates/qpls-core/src/multimod_config_v1.rs", "crates/qpls-core/src/multimod_recipe_compiler_v1.rs", "crates/qpls-estimation/src/interventional_mediation_v1.rs", "crates/qpls-resampling/src/multimod_full_refit_v1.rs", "crates/qpls-runner/src/multimod_causal_raw_v1.rs", "crates/qpls-runner/examples/support_multimod_qualification/mod.rs", "crates/qpls-runner/examples/multimod_causal_qualification_v1.rs", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/run_conditional_causal_raw_qualification_v1.ps1", "validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/test_reference_oracles_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "causal_raw_qualification",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_conditional_causal_raw_qualification_v1.ps1", "-Family", "causal", "-Scale", "qualification", "-Output", "{gate_output}/causal-raw-qualification.json"],
+          "uses_cargo": true,
+          "maximum_seconds": 28800,
+          "expected_outputs": ["{gate_output}/causal-raw-qualification.json", "{gate_output}/causal-raw-qualification.producer.json"]
+        },
+        {
+          "step_id": "causal_kernel_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "estimation.point.kernels", "--producer-step", "estimation_causal", "--required-log-contains", "observed_ols_g_computation_recovers_known_linear_interventional_effects", "--required-log-contains", "target_identity_is_deterministic_and_data_bound", "--output", "{gate_output}/causal-kernel-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/causal-kernel-dependency.json"]
+        },
+        {
+          "step_id": "causal_reference",
+          "executable": "python",
+          "arguments": ["validation/multimod/test_reference_oracles_v1.py", "InterventionalGComputationOracleTests"],
+          "uses_cargo": false,
+          "maximum_seconds": 300,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "causal.assumption_failures",
+      "profiles": ["interventional.observed_gcomp.v1"],
+      "probable_root_component": "compiler",
+      "covered_evidence_cells": ["interventional.observed_gcomp.v1::positivity_diagnostics", "interventional.observed_gcomp.v1::identification_failure_guards"],
+      "input_artifacts": ["crates/qpls-core/tests/multimod_public_contract_boundaries_v1.rs", "crates/qpls-estimation/src/interventional_mediation_v1.rs", "validation/multimod/test_reference_oracles_v1.py", "validation/multimod/unsupported_intersections_v1.json", "validation/multimod/verify_multimod_gate_dependency_v1.py", "validation/multimod/verify_conditional_causal_raw_qualification_v1.py", "validation/multimod/conditional_causal_raw_qualification_v1.md"],
+      "steps": [
+        {
+          "step_id": "causal_raw_assumption_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "causal.known_targets", "--producer-step", "causal_raw_qualification", "--artifact-basename", "causal-raw-qualification.json", "--required-scientific-check", "causal.raw.positivity_blocker", "--required-scientific-check", "causal.raw.identification_blockers", "--required-scientific-check", "causal.raw.unsupported_scope", "--required-scientific-check", "causal.raw.wording", "--output", "{gate_output}/causal-raw-assumption-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/causal-raw-assumption-dependency.json"]
+        },
+        {
+          "step_id": "causal_public_contract_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "contracts.schemas.source_identity", "--producer-step", "core_contract_tests", "--required-log-contains", "causal_v1_requires_an_explicit_nonempty_adjustment_set", "--required-log-contains", "causal_v1_rejects_unknown_wire_fields", "--output", "{gate_output}/causal-public-contract-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/causal-public-contract-dependency.json"]
+        },
+        {
+          "step_id": "positivity_reference",
+          "executable": "python",
+          "arguments": ["validation/multimod/test_reference_oracles_v1.py", "PositivityOracleTests"],
+          "uses_cargo": false,
+          "maximum_seconds": 300,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "metamorphic.global",
+      "profiles": [
+        "mga.general_sem_pls.v1",
+        "mga.multiple_two_way_moderation.v1",
+        "mga.bounded_three_way_moderation.v1",
+        "mga.bounded_two_way_moderated_mediation.v1",
+        "mga.multiple_nonnested_hoc.v1",
+        "mga.case_weighted_pls.v1",
+        "mga.frequency_weighted_pls.v1",
+        "mga.reflective_plsc.v1",
+        "fimix.p0_structural.v2",
+        "fimix.p2_multi_two_way.v2",
+        "fimix.p23_all_current.v2",
+        "pos.published.p0_structural.v2",
+        "pos.destination_scored.p2_multi_two_way.v2",
+        "pos.destination_scored.p23_all_current.v2",
+        "pos.common_metric.p2_multi_two_way.v1",
+        "pos.common_metric.p23_all_current.v1",
+        "conditional.multi_two_way_percentile.v2",
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2",
+        "conditional.bounded_three_way_percentile.v2",
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2",
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "estimator",
+      "covered_evidence_cells": [
+        "mga.general_sem_pls.v1::metamorphic",
+        "mga.multiple_two_way_moderation.v1::metamorphic",
+        "mga.bounded_three_way_moderation.v1::metamorphic",
+        "mga.bounded_two_way_moderated_mediation.v1::metamorphic",
+        "mga.multiple_nonnested_hoc.v1::metamorphic",
+        "mga.case_weighted_pls.v1::metamorphic",
+        "mga.frequency_weighted_pls.v1::metamorphic",
+        "mga.reflective_plsc.v1::metamorphic",
+        "fimix.p0_structural.v2::metamorphic",
+        "fimix.p2_multi_two_way.v2::metamorphic",
+        "fimix.p23_all_current.v2::metamorphic",
+        "pos.published.p0_structural.v2::metamorphic",
+        "pos.destination_scored.p2_multi_two_way.v2::metamorphic",
+        "pos.destination_scored.p23_all_current.v2::metamorphic",
+        "pos.common_metric.p2_multi_two_way.v1::metamorphic",
+        "pos.common_metric.p23_all_current.v1::metamorphic",
+        "conditional.multi_two_way_percentile.v2::metamorphic",
+        "conditional.multi_two_way_bca.v2::metamorphic",
+        "conditional.studentized.v2::metamorphic",
+        "conditional.bounded_three_way_percentile.v2::metamorphic",
+        "conditional.multiple_hoc_percentile.v2::metamorphic",
+        "conditional.grouped_percentile.v2::metamorphic",
+        "conditional.case_weighted_percentile.v2::metamorphic",
+        "conditional.frequency_weighted_percentile.v2::metamorphic",
+        "interventional.observed_gcomp.v1::metamorphic"
+      ],
+      "input_artifacts": [
+        "Cargo.lock",
+        "crates/qpls-core/src/multimod_config_v1.rs",
+        "crates/qpls-core/src/multimod_recipe_compiler_v1.rs",
+        "crates/qpls-core/src/multimod_result_v1.rs",
+        "crates/qpls-estimation/src/multigroup_v1.rs",
+        "crates/qpls-estimation/src/heterogeneity_v2.rs",
+        "crates/qpls-estimation/src/conditional_process_v2.rs",
+        "crates/qpls-estimation/src/interventional_mediation_v1.rs",
+        "crates/qpls-resampling/src/multimod_full_refit_v1.rs",
+        "crates/qpls-runner/src/multimod_execution_v1.rs",
+        "crates/qpls-runner/src/multimod_mga_execution_cache_v1.rs",
+        "crates/qpls-runner/src/multimod_conditional_raw_v2.rs",
+        "crates/qpls-runner/src/multimod_causal_raw_v1.rs",
+        "crates/qpls-runner/examples/support_multimod_metamorphic/mod.rs",
+        "crates/qpls-runner/examples/support_multimod_qualification/mod.rs",
+        "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs",
+        "crates/qpls-runner/examples/multimod_heterogeneity_qualification_v2.rs",
+        "crates/qpls-runner/examples/multimod_conditional_qualification_v1.rs",
+        "crates/qpls-runner/examples/multimod_causal_qualification_v1.rs",
+        "validation/multimod/run_multimod_mga_qualification_v1.ps1",
+        "validation/multimod/compare_multimod_mga_qualification_v1.py",
+        "validation/multimod/run_multimod_metamorphic_qualification_v1.ps1",
+        "validation/multimod/verify_multimod_metamorphic_qualification_v1.py",
+        "validation/multimod/verify_multimod_gate_dependency_v1.py",
+        "validation/multimod/multimod_capability_index_v1.json",
+        "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+        "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json",
+        "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json",
+        "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json"
+      ],
+      "steps": [
+        {
+          "step_id": "all_profile_production_metamorphic_matrix",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_metamorphic_qualification_v1.ps1", "-Output", "{gate_output}/multimod-global-metamorphic.json"],
+          "uses_cargo": true,
+          "maximum_seconds": 43200,
+          "expected_outputs": ["{gate_output}/multimod-global-metamorphic.json"]
+        },
+        {
+          "step_id": "mga_group_label_production_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "mga.group_matrix", "--producer-step", "mga_production_science", "--artifact-basename", "mga-production-science.json", "--required-scientific-check", "mga.label_reversal.partition_sign_tail_invariance", "--required-scientific-check", "mga.label_reversal.public_result_invariance", "--output", "{gate_output}/mga-group-label-metamorphic-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/mga-group-label-metamorphic-dependency.json"]
+        },
+        {
+          "step_id": "resume_shard_metamorphic_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "resampling.shared_ledgers", "--producer-step", "full_refit_ledgers", "--required-log-contains", "case_ledger_is_shard_invariant_and_weights_follow_rows", "--required-log-contains", "cancellation_resume_and_failures_never_retry_completed_indices", "--required-log-contains", "nested_studentized_resume_only_runs_missing_outer_and_inner_refits", "--output", "{gate_output}/resume-shard-metamorphic-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/resume-shard-metamorphic-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "archive.sidecar.integrity",
+      "profiles": ["*"],
+      "probable_root_component": "archive_sidecar",
+      "covered_evidence_cells": ["*::persistence", "*::sidecar_integrity"],
+      "input_artifacts": ["crates/qpls-project/src/multimod_archive_v1.rs", "crates/qpls-project/tests/multimod_archive_v1_integration.rs", "src-tauri/src/multimod_evidence_sidecars_v1.rs", "src-tauri/src/multimod_raw_sidecar_export_v1.rs", "src-tauri/src/multimod_jobs_v1.rs", "src/domain/internalProjectArchiveV6Wire.multimod.test.ts", "validation/multimod/verify_multimod_gate_dependency_v1.py"],
+      "steps": [
+        {
+          "step_id": "archive_integration",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-project", "--test", "multimod_archive_v1_integration"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "native_sidecar_integrity",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "quickpls-desktop", "--lib", "multimod_"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "archive_wire_contract_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "typescript.contracts.typecheck", "--producer-step", "typescript_contract_tests", "--required-log-contains", "internalProjectArchiveV6Wire.multimod.test.ts", "--output", "{gate_output}/archive-wire-contract-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/archive-wire-contract-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "exports.semantic.readback",
+      "profiles": [
+        "mga.general_sem_pls.v1",
+        "mga.multiple_two_way_moderation.v1",
+        "mga.bounded_three_way_moderation.v1",
+        "mga.bounded_two_way_moderated_mediation.v1",
+        "mga.multiple_nonnested_hoc.v1",
+        "mga.case_weighted_pls.v1",
+        "mga.frequency_weighted_pls.v1",
+        "mga.reflective_plsc.v1",
+        "fimix.p0_structural.v2",
+        "fimix.p2_multi_two_way.v2",
+        "fimix.p23_all_current.v2",
+        "pos.published.p0_structural.v2",
+        "pos.destination_scored.p2_multi_two_way.v2",
+        "pos.destination_scored.p23_all_current.v2",
+        "pos.common_metric.p2_multi_two_way.v1",
+        "pos.common_metric.p23_all_current.v1",
+        "conditional.multi_two_way_percentile.v2",
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2",
+        "conditional.bounded_three_way_percentile.v2",
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2",
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "export",
+      "covered_evidence_cells": [
+        "mga.general_sem_pls.v1::semantic_export",
+        "mga.multiple_two_way_moderation.v1::semantic_export",
+        "mga.bounded_three_way_moderation.v1::semantic_export",
+        "mga.bounded_two_way_moderated_mediation.v1::semantic_export",
+        "mga.multiple_nonnested_hoc.v1::semantic_export",
+        "mga.case_weighted_pls.v1::semantic_export",
+        "mga.frequency_weighted_pls.v1::semantic_export",
+        "mga.reflective_plsc.v1::semantic_export",
+        "fimix.p0_structural.v2::semantic_export",
+        "fimix.p2_multi_two_way.v2::semantic_export",
+        "fimix.p23_all_current.v2::semantic_export",
+        "pos.published.p0_structural.v2::semantic_export",
+        "pos.destination_scored.p2_multi_two_way.v2::semantic_export",
+        "pos.destination_scored.p23_all_current.v2::semantic_export",
+        "pos.common_metric.p2_multi_two_way.v1::semantic_export",
+        "pos.common_metric.p23_all_current.v1::semantic_export",
+        "conditional.multi_two_way_percentile.v2::semantic_export",
+        "conditional.multi_two_way_bca.v2::semantic_export",
+        "conditional.studentized.v2::semantic_export",
+        "conditional.bounded_three_way_percentile.v2::semantic_export",
+        "conditional.multiple_hoc_percentile.v2::semantic_export",
+        "conditional.grouped_percentile.v2::semantic_export",
+        "conditional.case_weighted_percentile.v2::semantic_export",
+        "conditional.frequency_weighted_percentile.v2::semantic_export",
+        "interventional.observed_gcomp.v1::semantic_export"
+      ],
+      "input_artifacts": [
+        "crates/qpls-core/src/multimod_candidate_authority_v1.rs",
+        "crates/qpls-project/src/multimod_archive_v1.rs",
+        "crates/qpls-runner/src/multimod_canonical_result_v1.rs",
+        "src-tauri/build.rs",
+        "src-tauri/src/multimod_candidate_authority_v1.rs",
+        "src-tauri/src/canonical_result_export_publication_v2.rs",
+        "src-tauri/src/multimod_raw_sidecar_export_v1.rs",
+        "src/domain/canonicalResultDocumentV2.ts",
+        "src/domain/canonicalResultSemanticExportV2.ts",
+        "src/domain/canonicalResultCrossFormatExportV2.ts",
+        "src/domain/multimodContractsV1.ts",
+        "src/domain/multimodSemanticExportQualificationV1.test.ts",
+        "src/services/canonicalResultExportPublicationV2Service.ts",
+        "src/services/canonicalResultExportPublicationV2Service.test.ts",
+        "validation/multimod/run_multimod_semantic_export_qualification_v1.ps1",
+        "validation/multimod/verify_multimod_semantic_export_qualification_v1.py",
+        "validation/multimod/multimod_capability_index_v1.json",
+        "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+        "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json",
+        "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json",
+        "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json"
+      ],
+      "steps": [
+        {
+          "step_id": "canonical_multimod_projection_matrix",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-runner", "--lib", "multimod_canonical_result_v1::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "native_candidate_publication_matrix",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "quickpls-desktop", "--lib", "qualification_matrix_"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "native_optional_raw_sidecar_publication",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "quickpls-desktop", "--lib", "optional_"],
+          "uses_cargo": true,
+          "maximum_seconds": 2400,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "cross_format_semantic_matrix",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_semantic_export_qualification_v1.ps1", "-Output", "{gate_output}/multimod-semantic-export-matrix.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 1800,
+          "expected_outputs": ["{gate_output}/multimod-semantic-export-matrix.json"]
+        },
+        {
+          "step_id": "semantic_matrix_independent_verifier",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_semantic_export_qualification_v1.py", "--report", "{gate_output}/multimod-semantic-export-matrix.json", "--capability-index", "validation/multimod/multimod_capability_index_v1.json", "--repository-root", "{repository_root}", "--output", "{gate_output}/multimod-semantic-export-verification.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 300,
+          "expected_outputs": ["{gate_output}/multimod-semantic-export-verification.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "legacy.continuous_and_serialization",
+      "profiles": ["legacy"],
+      "probable_root_component": "legacy_regression",
+      "covered_evidence_cells": ["legacy::continuous_moderation_v1", "legacy::serialization"],
+      "input_artifacts": ["validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls", "validation/v255_named_case_manifest.json", "validation/v255_named_archive_identity.py", "validation/moderation_reference.py", "validation/multimod/fixtures/multimod_fixture_catalog_v1.json", "validation/multimod/verify_legacy_continuous_moderation_v1.py", "validation/multimod/legacy_continuous_moderation_v1_qualification.md", "crates/qpls-cli/src/main.rs", "crates/qpls-core/src/analysis_recipe_v4.rs", "crates/qpls-runner/src/recipe_v4_general_sem_pls_execution.rs", "crates/qpls-project/src/project_schema_v6.rs", "crates/qpls-project/src/multimod_archive_v1.rs", "crates/qpls-project/tests/schema6_sem_model_v4_authoring_shapes.rs", "crates/qpls-project/tests/multimod_archive_v1_integration.rs", "src/domain/canonicalResultCrossFormatExportV2.ts", "src/domain/canonicalResultCrossFormatExportV2.test.ts"],
+      "steps": [
+        {
+          "step_id": "legacy_candidate_cli_build",
+          "executable": "cargo",
+          "arguments": ["build", "--locked", "-p", "qpls-cli"],
+          "uses_cargo": true,
+          "maximum_seconds": 3600,
+          "expected_outputs": ["{repository_root}/target/debug/qpls.exe"]
+        },
+        {
+          "step_id": "continuous_moderation_reference",
+          "executable": "python",
+          "arguments": ["validation/moderation_reference.py"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "legacy_continuous_moderation_cli_replay",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_legacy_continuous_moderation_v1.py", "--repository-root", "{repository_root}", "--archive", "validation/fixtures/v255/archives/continuous-moderation-legacy-result.qpls", "--expected-archive-sha256", "283185ebc4f4c51fc5643c0b64c77a9099c7a5231683d07f10f3848845bc514d", "--result-id", "fa5ac33f-4b8a-458b-a889-7b005d95b403", "--recipe-id", "fd7ae1a4-fbd2-4b2a-b021-6ee590fa38a2", "--dataset-id", "103c2aea-494c-4273-b85b-33c7fbc189a3", "--table-id", "moderation_simple_slopes", "--qpls-executable", "{repository_root}/target/debug/qpls.exe", "--output", "{gate_output}/legacy-continuous-moderation-v1.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 1200,
+          "expected_outputs": ["{gate_output}/legacy-continuous-moderation-v1.json"]
+        },
+        {
+          "step_id": "legacy_moderation_runner",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-runner", "--lib", "recipe_v4_general_sem_pls_execution::tests"],
+          "uses_cargo": true,
+          "maximum_seconds": 3600,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "legacy_archive_shapes",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-project", "--test", "schema6_sem_model_v4_authoring_shapes"],
+          "uses_cargo": true,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "legacy_recipe_v4_absent_multimod_wire_shape",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-core", "analysis_recipe_v4::tests::absent_multimod_configs_do_not_change_legacy_recipe_v4_wire_shape"],
+          "uses_cargo": true,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "legacy_v6_empty_multimod_inventory",
+          "executable": "cargo",
+          "arguments": ["test", "--locked", "-p", "qpls-project", "--test", "multimod_archive_v1_integration", "v6_documents_without_the_additive_multimod_field_default_to_an_empty_inventory"],
+          "uses_cargo": true,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "legacy_canonical_export_hash",
+          "executable": "npx.cmd",
+          "arguments": ["--no-install", "vitest", "run", "src/domain/canonicalResultCrossFormatExportV2.test.ts", "-t", "preserves the frozen pre-MultiMod V2 envelope key order and hashes for legacy results"],
+          "uses_cargo": false,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        }
+      ]
+    },
+    {
+      "gate_id": "native.workflow.accessibility",
+      "profiles": ["*"],
+      "probable_root_component": "native_ui",
+      "covered_evidence_cells": ["*::native_accessibility"],
+      "input_artifacts": ["src/native/NativeMultiModLabsWorkspace.tsx", "src/native/NativeMultiModLabsWorkspace.test.tsx", "src/native/NativeMultiModResultsV1.tsx", "src/native/nativeMultiModJobV1.test.ts", "src/native/nativeMultiModRawSidecarExportV1.ts", "validation/multimod/verify_multimod_gate_dependency_v1.py"],
+      "steps": [
+        {
+          "step_id": "native_frontend_multimod",
+          "executable": "npx.cmd",
+          "arguments": ["--no-install", "vitest", "run", "src/native/NativeMultiModLabsWorkspace.test.tsx", "src/native/nativeMultiModJobV1.test.ts"],
+          "uses_cargo": false,
+          "maximum_seconds": 1800,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "native_backend_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "archive.sidecar.integrity", "--producer-step", "native_sidecar_integrity", "--required-log-contains", "scalar_receipts_are_typed_columns_not_json_envelopes", "--required-log-contains", "every_advertised_mga_profile_dispatches_to_its_exact_refitter_family", "--output", "{gate_output}/native-backend-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/native-backend-dependency.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "performance.maximum_profiles",
+      "profiles": ["*"],
+      "probable_root_component": "runner",
+      "covered_evidence_cells": ["*::maximum_profile_performance"],
+      "input_artifacts": ["Cargo.lock", "crates/qpls-runner/Cargo.toml", "validation/multimod/run_multimod_performance_profiles_v1.ps1", "validation/multimod/verify_multimod_performance_profiles_v1.py", "crates/qpls-runner/examples/multimod_maximum_profiles_performance_v1.rs", "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs", "crates/qpls-runner/examples/multimod_heterogeneity_qualification_v2.rs", "crates/qpls-estimation/src/multigroup_v1.rs", "crates/qpls-estimation/src/heterogeneity_v2.rs", "crates/qpls-runner/src/multimod_execution_v1.rs", "crates/qpls-runner/src/multimod_conditional_raw_v2.rs", "crates/qpls-project/src/multimod_archive_v1.rs"],
+      "steps": [
+        {
+          "step_id": "maximum_profile_production_performance",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_performance_profiles_v1.ps1", "-Output", "{gate_output}/performance-report.json", "-Seed", "{seed}"],
+          "uses_cargo": true,
+          "maximum_seconds": 39600,
+          "expected_outputs": ["{gate_output}/performance-report.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "manifests.prepackage.authority",
+      "profiles": ["*"],
+      "probable_root_component": "evidence_manifest",
+      "covered_evidence_cells": ["*::prepackage_candidate_authority"],
+      "input_artifacts": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "validation/multimod/multimod_source_bound_manifest_v1.schema.json", "validation/multimod/mga_multigroup_v1.qualification.manifest.json", "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json", "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json", "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json", "validation/multimod/multimod_capability_index_v1.json", "src-tauri/build.rs", "src-tauri/src/multimod_candidate_authority_v1.rs", "crates/qpls-core/src/multimod_candidate_authority_v1.rs"],
+      "steps": [
+        {
+          "step_id": "prepackage_authority_materialization",
+          "executable": "python",
+          "arguments": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "materialize-prepackage", "--campaign-root", "{campaign_root}", "--candidate-commit", "{candidate_commit}", "--plan-sha256", "{plan_sha256}", "--output", "{campaign_root}/prepackage-authority/manifest-set.json", "--authority-output", "{campaign_root}/prepackage-authority/candidate-authority.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": ["{campaign_root}/prepackage-authority/manifest-set.json", "{campaign_root}/prepackage-authority/candidate-authority.json"]
+        },
+        {
+          "step_id": "prepackage_authority_verification",
+          "executable": "python",
+          "arguments": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "verify-prepackage", "--campaign-root", "{campaign_root}", "--candidate-commit", "{candidate_commit}", "--plan-sha256", "{plan_sha256}", "--output", "{campaign_root}/prepackage-authority/manifest-set.json", "--authority-output", "{campaign_root}/prepackage-authority/candidate-authority.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": ["{campaign_root}/prepackage-authority/manifest-set.json", "{campaign_root}/prepackage-authority/candidate-authority.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "package.candidate",
+      "profiles": ["*"],
+      "probable_root_component": "packaging",
+      "covered_evidence_cells": ["*::candidate_package"],
+      "input_artifacts": ["Cargo.toml", "Cargo.lock", "package.json", "package-lock.json", "src-tauri/Cargo.toml", "src-tauri/tauri.conf.json", "src-tauri/build.rs", "src-tauri/src/multimod_candidate_authority_v1.rs", "src-tauri/src/multimod_packaged_qualification_fixtures_v1.rs", "src/native/multimodPackagedQualificationBridgeV1.ts", "src/services/canonicalResultExportPublicationV2Service.ts", "crates/qpls-core/src/multimod_candidate_authority_v1.rs", "crates/qpls-core/src/multimod_result_v1.rs", "validation/multimod/package_multimod_candidate_v1.ps1"],
+      "steps": [
+        {
+          "step_id": "candidate_package",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/package_multimod_candidate_v1.ps1", "-Output", "{campaign_root}/packages/package-artifacts.json", "-CandidateCommit", "{candidate_commit}", "-PrepackageAuthority", "{campaign_root}/prepackage-authority/candidate-authority.json", "-PrepackageManifestSet", "{campaign_root}/prepackage-authority/manifest-set.json"],
+          "uses_cargo": true,
+          "maximum_seconds": 14400,
+          "expected_outputs": ["{campaign_root}/packages/package-artifacts.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "installed.offline.smoke",
+      "profiles": ["*"],
+      "probable_root_component": "offline_boundary",
+      "covered_evidence_cells": ["*::installed_offline"],
+      "input_artifacts": ["validation/multimod/run_multimod_packaged_offline_smoke_v1.ps1", "validation/multimod/multimod_packaged_smoke_driver_v1.mjs", "validation/multimod/multimod_runtime_promotion_smoke_v1.schema.json", "validation/multimod/package_multimod_candidate_v1.ps1", "src-tauri/Cargo.toml", "src-tauri/src/multimod_packaged_qualification_fixtures_v1.rs", "src/native/multimodPackagedQualificationBridgeV1.ts", "src/services/canonicalResultExportPublicationV2Service.ts", "src/native/NativeMultiModLabsWorkspace.tsx", "src/native/NativeMultiModResultsV1.tsx"],
+      "steps": [
+        {
+          "step_id": "installed_candidate_four_family_offline_workflows",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_packaged_offline_smoke_v1.ps1", "-Kind", "installed", "-PackageReceipt", "{campaign_root}/packages/package-artifacts.json", "-Output", "{gate_output}/runtime-promotion-receipt.json", "-Seed", "{seed}"],
+          "uses_cargo": false,
+          "maximum_seconds": 21600,
+          "expected_outputs": ["{gate_output}/runtime-promotion-receipt.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "portable.offline.smoke",
+      "profiles": ["*"],
+      "probable_root_component": "offline_boundary",
+      "covered_evidence_cells": ["*::portable_offline"],
+      "input_artifacts": ["validation/multimod/run_multimod_packaged_offline_smoke_v1.ps1", "validation/multimod/multimod_packaged_smoke_driver_v1.mjs", "validation/multimod/multimod_runtime_promotion_smoke_v1.schema.json", "validation/multimod/package_multimod_candidate_v1.ps1", "src-tauri/Cargo.toml", "src-tauri/src/multimod_packaged_qualification_fixtures_v1.rs", "src/native/multimodPackagedQualificationBridgeV1.ts", "src/services/canonicalResultExportPublicationV2Service.ts", "src/native/NativeMultiModLabsWorkspace.tsx", "src/native/NativeMultiModResultsV1.tsx"],
+      "steps": [
+        {
+          "step_id": "portable_candidate_four_family_offline_workflows",
+          "executable": "pwsh",
+          "arguments": ["-NoProfile", "-File", "validation/multimod/run_multimod_packaged_offline_smoke_v1.ps1", "-Kind", "portable", "-PackageReceipt", "{campaign_root}/packages/package-artifacts.json", "-Output", "{gate_output}/runtime-promotion-receipt.json", "-Seed", "{seed}"],
+          "uses_cargo": false,
+          "maximum_seconds": 21600,
+          "expected_outputs": ["{gate_output}/runtime-promotion-receipt.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "manifests.live.derivation",
+      "profiles": ["*"],
+      "probable_root_component": "evidence_manifest",
+      "covered_evidence_cells": ["*::final_live_manifest"],
+      "input_artifacts": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "validation/multimod/multimod_source_bound_manifest_v1.schema.json", "validation/multimod/multimod_runtime_promotion_smoke_v1.schema.json", "validation/multimod/mga_multigroup_v1.qualification.manifest.json", "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json", "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json", "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json", "crates/qpls-runner/src/multimod_execution_v1.rs", "crates/qpls-runner/src/multimod_canonical_result_v1.rs", "src-tauri/build.rs", "src-tauri/src/multimod_candidate_authority_v1.rs", "src-tauri/src/canonical_result_export_publication_v2.rs"],
+      "steps": [
+        {
+          "step_id": "live_manifest_materialization",
+          "executable": "python",
+          "arguments": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "materialize-final", "--campaign-root", "{campaign_root}", "--candidate-commit", "{candidate_commit}", "--plan-sha256", "{plan_sha256}", "--output", "{campaign_root}/live-manifests/manifest-set.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": ["{campaign_root}/live-manifests/manifest-set.json"]
+        },
+        {
+          "step_id": "live_manifest_verification",
+          "executable": "python",
+          "arguments": ["validation/multimod/materialize_multimod_live_manifests_v1.py", "verify-final", "--campaign-root", "{campaign_root}", "--candidate-commit", "{candidate_commit}", "--plan-sha256", "{plan_sha256}", "--output", "{campaign_root}/live-manifests/manifest-set.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": ["{campaign_root}/live-manifests/manifest-set.json"]
+        }
+      ]
+    },
+    {
+      "gate_id": "release.acceptance",
+      "profiles": ["*"],
+      "probable_root_component": "evidence_manifest",
+      "covered_evidence_cells": ["*::release_acceptance"],
+      "input_artifacts": ["validation/multimod/verify_multimod_release_acceptance_v1.py", "validation/multimod/materialize_multimod_live_manifests_v1.py", "validation/multimod/multimod_capability_index_v1.json", "validation/multimod/multimod_issue_inventory_v1.schema.json", "validation/multimod/multimod_runtime_promotion_smoke_v1.schema.json", "crates/qpls-runner/src/multimod_execution_v1.rs", "src-tauri/src/canonical_result_export_publication_v2.rs"],
+      "steps": [
+        {
+          "step_id": "release_acceptance_verification",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_release_acceptance_v1.py", "--campaign-root", "{campaign_root}", "--candidate-commit", "{candidate_commit}", "--plan-sha256", "{plan_sha256}", "--output", "{gate_output}/release-acceptance.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 900,
+          "expected_outputs": ["{gate_output}/release-acceptance.json"]
+        }
+      ]
+    }
+  ]
+}

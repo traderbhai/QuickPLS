@@ -1082,6 +1082,10 @@ pub(crate) mod tests {
                 invariance_steps: Vec::new(),
             }),
             general_sem_config: Some(general_sem_config),
+            mga_multigroup: None,
+            pls_heterogeneity: None,
+            general_sem_conditional_process: None,
+            interventional_causal_mediation: None,
             metadata: BTreeMap::from([
                 (
                     "execution_surface".into(),

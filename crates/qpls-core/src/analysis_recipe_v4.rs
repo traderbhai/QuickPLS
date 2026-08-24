@@ -1,8 +1,11 @@
 use crate::{
-    AnalysisRecipe, AnalysisSettings, GeneralSemConfigV1, GeneralSemConfigV1ValidationError,
+    AnalysisRecipe, AnalysisSettings, GeneralSemConditionalProcessConfigV2, GeneralSemConfigV1,
+    GeneralSemConfigV1ValidationError, InterventionalCausalMediationConfigV1,
     LegacyBasicModelConversionErrorV4, LegacyBasicModelInterpretationV4, LegacyDisplayCovarianceV4,
-    MethodConfig, ModelSpec, SemAnnotationV4, SemEndpointV4, SemModelV4, SemModelV4ValidationError,
-    SemParameterTargetV4, SemParameterV4, SemRelationV4, convert_legacy_basic_model_v4,
+    MethodConfig, MgaMultigroupV1, ModelSpec, MultiModConfigErrorV1,
+    PlsUnobservedHeterogeneityConfigV2, SemAnnotationV4, SemEndpointV4, SemModelV4,
+    SemModelV4ValidationError, SemParameterTargetV4, SemParameterV4, SemRelationV4,
+    convert_legacy_basic_model_v4,
 };
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -77,6 +80,22 @@ pub struct AnalysisRecipeV4 {
     /// omit this field and retain their exact behavior.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub general_sem_config: Option<GeneralSemConfigV1>,
+    /// Additive multigroup-MGA v1 request. Legacy two-group MethodConfig::Mga
+    /// remains unchanged and is never inferred from this field.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mga_multigroup: Option<MgaMultigroupV1>,
+    /// Additive genuine FIMIX/PLS-POS v2 request. Legacy Predict segmentation
+    /// records retain their existing meaning.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pls_heterogeneity: Option<PlsUnobservedHeterogeneityConfigV2>,
+    /// Additive conditional-process v2 request. The bounded moderated-
+    /// mediation v1 execution contract is intentionally not widened.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub general_sem_conditional_process: Option<GeneralSemConditionalProcessConfigV2>,
+    /// Separate observed-data interventional mediation request. This never
+    /// upgrades a PLS association to a causal claim.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub interventional_causal_mediation: Option<InterventionalCausalMediationConfigV1>,
     #[serde(default)]
     pub metadata: BTreeMap<String, String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -122,6 +141,14 @@ pub enum AnalysisRecipeV4Error {
     InvalidSemModel(#[from] SemModelV4ValidationError),
     #[error(transparent)]
     InvalidGeneralSemConfig(#[from] GeneralSemConfigV1ValidationError),
+    #[error(transparent)]
+    InvalidMultiModConfig(#[from] MultiModConfigErrorV1),
+    #[error("analysis recipe v4 permits at most one additive MultiMod configuration")]
+    MultipleMultiModConfigurations,
+    #[error("the additive MultiMod configuration is incompatible with analysis method {0}")]
+    MultiModMethodMismatch(crate::AnalysisMethod),
+    #[error("additive MultiMod recipes cannot also carry a legacy method_config")]
+    MultiModLegacyMethodConfigConflict,
 }
 
 impl AnalysisRecipeV4 {
@@ -181,6 +208,48 @@ impl AnalysisRecipeV4 {
         if let Some(config) = &self.general_sem_config {
             config.ensure_valid()?;
         }
+        let multimod_count = usize::from(self.mga_multigroup.is_some())
+            + usize::from(self.pls_heterogeneity.is_some())
+            + usize::from(self.general_sem_conditional_process.is_some())
+            + usize::from(self.interventional_causal_mediation.is_some());
+        if multimod_count > 1 {
+            return Err(AnalysisRecipeV4Error::MultipleMultiModConfigurations);
+        }
+        if multimod_count == 1 && self.method_config.is_some() {
+            return Err(AnalysisRecipeV4Error::MultiModLegacyMethodConfigConflict);
+        }
+        if let Some(config) = &self.mga_multigroup {
+            config.ensure_valid()?;
+            if self.settings.method != crate::AnalysisMethod::Mga {
+                return Err(AnalysisRecipeV4Error::MultiModMethodMismatch(
+                    self.settings.method,
+                ));
+            }
+        }
+        if let Some(config) = &self.pls_heterogeneity {
+            config.ensure_valid()?;
+            if self.settings.method != crate::AnalysisMethod::Predict {
+                return Err(AnalysisRecipeV4Error::MultiModMethodMismatch(
+                    self.settings.method,
+                ));
+            }
+        }
+        if let Some(config) = &self.general_sem_conditional_process {
+            config.ensure_valid()?;
+            if self.settings.method != crate::AnalysisMethod::ModeratedMediation {
+                return Err(AnalysisRecipeV4Error::MultiModMethodMismatch(
+                    self.settings.method,
+                ));
+            }
+        }
+        if let Some(config) = &self.interventional_causal_mediation {
+            config.ensure_valid()?;
+            if self.settings.method != crate::AnalysisMethod::Regression {
+                return Err(AnalysisRecipeV4Error::MultiModMethodMismatch(
+                    self.settings.method,
+                ));
+            }
+        }
         Ok(())
     }
 
@@ -216,7 +285,12 @@ impl AnalysisRecipeV4 {
             }
         };
         model.ensure_valid()?;
-        if self.method_config.is_none() {
+        if self.method_config.is_none()
+            && self.mga_multigroup.is_none()
+            && self.pls_heterogeneity.is_none()
+            && self.general_sem_conditional_process.is_none()
+            && self.interventional_causal_mediation.is_none()
+        {
             return Ok(AnalysisRecipeV4ExecutionReadiness::MethodConfigurationRequired);
         }
         if !estimator_adapter_available {
@@ -249,6 +323,10 @@ pub fn migrate_analysis_recipe_to_v4_pending(
         settings: source.settings.clone(),
         method_config: source.method_config.clone(),
         general_sem_config: None,
+        mga_multigroup: None,
+        pls_heterogeneity: None,
+        general_sem_conditional_process: None,
+        interventional_causal_mediation: None,
         metadata: source.metadata.clone(),
         legacy_source: Some(LegacyRecipeSourceV4 {
             source_schema_version: source.schema_version,
@@ -609,5 +687,22 @@ mod tests {
                 GeneralSemConfigV1ValidationError::SchemaVersion { found: 2 }
             ))
         ));
+    }
+
+    #[test]
+    fn absent_multimod_configs_do_not_change_legacy_recipe_v4_wire_shape() {
+        let migrated = migrate_analysis_recipe_to_v4_pending(&legacy_recipe()).unwrap();
+        let wire = serde_json::to_value(&migrated).unwrap();
+        for field in [
+            "mga_multigroup",
+            "pls_heterogeneity",
+            "general_sem_conditional_process",
+            "interventional_causal_mediation",
+        ] {
+            assert!(
+                wire.get(field).is_none(),
+                "absent additive field {field} must not alter legacy serialization"
+            );
+        }
     }
 }

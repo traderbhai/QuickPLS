@@ -1535,6 +1535,7 @@ pub struct CanonicalResultValidation {
 #[serde(rename_all = "snake_case")]
 pub enum CanonicalResultQualificationIneligibilityV2 {
     LegacyCapabilityAttributionMissing,
+    UnqualifiedLabsCapability,
     InvalidDocument,
 }
 
@@ -5772,6 +5773,41 @@ pub fn canonical_result_use_eligibility_v2(
                 CanonicalResultQualificationIneligibilityV2::LegacyCapabilityAttributionMissing,
             ),
         };
+    }
+    let is_multimod = document.capability_cells.as_ref().is_some_and(|cells| {
+        cells
+            .iter()
+            .any(|cell| cell.cell_id.starts_with("qpls.multimod."))
+    });
+    if is_multimod {
+        let explicitly_release_qualified = document
+            .tables
+            .iter()
+            .find(|table| table.id == "multimod_run_provenance")
+            .and_then(|table| {
+                let index = table
+                    .columns
+                    .iter()
+                    .position(|column| column.id == "qualification")?;
+                let row = table.rows.iter().find(|row| row.id == "run")?;
+                match row.cells.get(index)? {
+                    CanonicalResultCell::Text { value } => {
+                        Some(value == "release_qualified_candidate")
+                    }
+                    _ => Some(false),
+                }
+            })
+            .unwrap_or(false);
+        if !explicitly_release_qualified {
+            return CanonicalResultUseEligibilityV2 {
+                readable: true,
+                comparison_eligible: false,
+                qualification_export_eligible: false,
+                ineligibility: Some(
+                    CanonicalResultQualificationIneligibilityV2::UnqualifiedLabsCapability,
+                ),
+            };
+        }
     }
     CanonicalResultUseEligibilityV2 {
         readable: true,

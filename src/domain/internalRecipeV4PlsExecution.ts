@@ -3,6 +3,12 @@ import type {
   CanonicalResultDocumentV2,
 } from "./canonicalResultDocumentV2";
 import type { GeneralSemConfigV1 } from "./generalSemConfigV1";
+import type {
+  GeneralSemConditionalProcessConfigV2,
+  InterventionalCausalMediationConfigV1,
+  MgaMultigroupV1,
+  PlsUnobservedHeterogeneityConfigV2,
+} from "./multimodContractsV1";
 import { validateCanonicalResultDocumentV2 } from "./canonicalResultDocumentV2";
 import { validateArchivedPlsScoreExecutionV2 } from "./internalProjectSchema6ResultRead";
 import { compareUtf8StringsV1, type SemModelV4 } from "./semModelV4";
@@ -129,6 +135,10 @@ export interface AnalysisRecipeV4<
   settings: AnalysisRecipeV4Settings<TMissingData>;
   method_config?: NativeAnalysisMethodConfig | null;
   general_sem_config?: GeneralSemConfigV1 | null;
+  mga_multigroup?: MgaMultigroupV1 | null;
+  pls_heterogeneity?: PlsUnobservedHeterogeneityConfigV2 | null;
+  general_sem_conditional_process?: GeneralSemConditionalProcessConfigV2 | null;
+  interventional_causal_mediation?: InterventionalCausalMediationConfigV1 | null;
   metadata: Record<string, string>;
   legacy_source?: {
     source_schema_version: 1 | 2 | 3;

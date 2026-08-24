@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.mediation",
+  "execution_context": "recipe_v4_general_sem_conditional_process_v2",
+  "feature": {
+    "id": "qpls3.multimod.conditional_process_v2",
+    "label": "General SEM conditional process V2",
+    "method_version": "general_sem_conditional_process_v2",
+    "analytical_method_version": "general_sem_conditional_process_v2",
+    "method_kind": "explicit_path_conditional_indirect_effects"
+  },
+  "coverage_state": "absent",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/GENERAL_SEM_CONDITIONAL_PROCESS_V2.md",
+  "profile_manifest": "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+  "implemented_contracts": [
+    "Eight non-Cartesian structural and inference profiles with explicit paths",
+    "Shared target ledger, derivatives and finite probes without causal wording",
+    "Fail-closed unsupported intersections without model simplification"
+  ],
+  "remaining_qualification": [
+    "Every profile, interval family, alternative and target shape requires its own source-bound evidence.",
+    "BCa, nested studentized, HOC, grouped, weighted and frequency-expanded-equivalence gates are pending.",
+    "This cell must derive absent and remain hidden from Standard surfaces."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/multimod-capability-index-v1.schema.json",
+  "title": "QuickPLS MultiMod capability index V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema_version", "registry_id", "candidate_release", "policy", "families"],
+  "properties": {
+    "$schema": { "const": "multimod_capability_index_v1.schema.json" },
+    "schema_version": { "const": 1 },
+    "registry_id": { "const": "qpls.multimod.capability_index.v1" },
+    "candidate_release": { "const": "2.56.0" },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "evidence_state", "promotion_allowed", "derivation"],
+      "properties": {
+        "surface": { "const": "labs" },
+        "evidence_state": { "const": "absent" },
+        "promotion_allowed": { "const": false },
+        "derivation": { "type": "string", "minLength": 1 }
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["family_id", "manifest", "owner_catalogue_rows", "profiles"],
+        "properties": {
+          "family_id": { "type": "string", "pattern": "^qpls\\.multimod\\.[a-z0-9_.]+$" },
+          "manifest": { "type": "string", "pattern": "^validation/multimod/.+\\.manifest\\.json$" },
+          "owner_catalogue_rows": {
+            "type": "array", "minItems": 1, "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^smartpls\\.[a-z0-9_]+$" }
+          },
+          "profiles": {
+            "type": "array", "minItems": 1, "uniqueItems": true,
+            "items": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]+$" }
+          }
+        }
+      }
+    }
+  }
+}

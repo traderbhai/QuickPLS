@@ -13,6 +13,10 @@ import type {
 import type { ResultTable } from "./resultTables";
 import { spreadsheetSafeCsvCell } from "./spreadsheetSafety";
 import { sha256HexUtf8V1 } from "./sha256V1";
+import {
+  parseMultimodCandidateQualificationReceiptV1,
+  type MultimodCandidateQualificationReceiptV1,
+} from "./multimodContractsV1";
 
 export const CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_SCHEMA_VERSION = 2 as const;
 export const CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_FORMAT = "quickpls.canonical-result-cross-format-export" as const;
@@ -21,7 +25,7 @@ export const CANONICAL_RESULT_DERIVED_SPECIFIC_INDIRECT_CHART_ID_V2 = "quickpls_
 export const CANONICAL_RESULT_DERIVED_AGGREGATE_EFFECT_CHART_ID_V2 = "quickpls_export_aggregate_effect_estimates_v2" as const;
 export const CANONICAL_RESULT_DERIVED_HIGHER_ORDER_TARGET_CHART_ID_V2 = "quickpls_export_higher_order_target_estimates_v2" as const;
 
-export type CanonicalResultExportFormatV2 = "csv" | "xlsx" | "html" | "pdf" | "svg" | "png";
+export type CanonicalResultExportFormatV2 = "csv" | "xlsx" | "json" | "html" | "pdf" | "svg" | "png";
 
 export interface CanonicalResultExportSelectionV2 {
   /** Exact canonical table IDs. Omit to select every table in document order. */
@@ -34,6 +38,11 @@ export interface CanonicalResultExportRequestV2 extends CanonicalResultExportSel
   format: CanonicalResultExportFormatV2;
 }
 
+export type CanonicalResultPublicationQualificationV2 =
+  | "unqualified_labs"
+  | "release_qualified_candidate"
+  | "failed_closed";
+
 interface CanonicalResultExportSemanticPayloadV2 {
   schema_version: typeof CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_SCHEMA_VERSION;
   format: typeof CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_FORMAT;
@@ -41,6 +50,8 @@ interface CanonicalResultExportSemanticPayloadV2 {
   title: string;
   provenance: CanonicalResultSemanticExportV2["provenance"];
   capability_cells?: CanonicalResultSemanticExportV2["capability_cells"];
+  publication_qualification?: CanonicalResultPublicationQualificationV2;
+  candidate_qualification_receipt?: MultimodCandidateQualificationReceiptV1;
   selection: {
     table_ids: string[];
     chart_ids: string[];
@@ -52,6 +63,54 @@ interface CanonicalResultExportSemanticPayloadV2 {
   exclusions: CanonicalResultSemanticExportV2["exclusions"];
   footnotes: CanonicalResultSemanticExportV2["footnotes"];
   presentation: Pick<CanonicalResultSemanticExportV2["presentation"], "precision" | "missing_value_label">;
+}
+
+function publicationAuthorityV2(
+  projection: CanonicalResultSemanticExportV2,
+): {
+  qualification?: CanonicalResultPublicationQualificationV2;
+  receipt?: MultimodCandidateQualificationReceiptV1;
+} {
+  const isMultiMod = (projection.capability_cells ?? [projection.provenance.capability_cell])
+    .some((cell) => cell.cell_id.startsWith("qpls.multimod."));
+  if (!isMultiMod) return {};
+  const table = projection.tables.find((candidate) => candidate.id === "multimod_run_provenance");
+  const qualificationIndex = table?.columns.findIndex((column) => column.id === "qualification") ?? -1;
+  const qualificationCell = qualificationIndex >= 0
+    ? table?.rows.find((row) => row.id === "run")?.cells[qualificationIndex]
+    : undefined;
+  const receiptIndex = table?.columns.findIndex(
+    (column) => column.id === "candidate_qualification_receipt_json",
+  ) ?? -1;
+  const receiptCell = receiptIndex >= 0
+    ? table?.rows.find((row) => row.id === "run")?.cells[receiptIndex]
+    : undefined;
+  let receipt: MultimodCandidateQualificationReceiptV1 | undefined;
+  if (receiptCell?.kind === "text") {
+    try {
+      receipt = parseMultimodCandidateQualificationReceiptV1(
+        JSON.parse(receiptCell.value) as unknown,
+        "canonical_export.candidate_qualification_receipt",
+      );
+    } catch {
+      return { qualification: "failed_closed" };
+    }
+  }
+  if (
+    qualificationCell?.kind === "text"
+    && qualificationCell.value === "release_qualified_candidate"
+    && receipt !== undefined
+  ) {
+    return { qualification: "release_qualified_candidate", receipt };
+  }
+  if (
+    qualificationCell?.kind === "text"
+    && qualificationCell.value === "unqualified_labs"
+    && receipt === undefined
+  ) {
+    return { qualification: "unqualified_labs" };
+  }
+  return { qualification: "failed_closed" };
 }
 
 export interface CanonicalResultExportSemanticEnvelopeV2 extends CanonicalResultExportSemanticPayloadV2 {
@@ -67,7 +126,7 @@ interface PreparedCanonicalResultExportBaseV2 {
 }
 
 export interface PreparedCanonicalResultTextExportV2 extends PreparedCanonicalResultExportBaseV2 {
-  format: "csv" | "html" | "svg";
+  format: "csv" | "json" | "html" | "svg";
   contents: string;
 }
 
@@ -301,6 +360,7 @@ function buildSemanticEnvelope(
   const tables = projection.tables.filter((table) => tableSet.has(table.id));
   const footnoteSet = new Set(tables.flatMap((table) => table.footnote_ids));
   const semanticProjectionJson = canonicalResultSemanticExportJsonV2(projection);
+  const publicationAuthority = publicationAuthorityV2(projection);
   const payload: CanonicalResultExportSemanticPayloadV2 = {
     schema_version: CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_SCHEMA_VERSION,
     format: CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_FORMAT,
@@ -312,6 +372,12 @@ function buildSemanticEnvelope(
     provenance: structuredClone(projection.provenance),
     ...(projection.capability_cells !== undefined
       ? { capability_cells: structuredClone(projection.capability_cells) }
+      : {}),
+    ...(publicationAuthority.qualification !== undefined
+      ? { publication_qualification: publicationAuthority.qualification }
+      : {}),
+    ...(publicationAuthority.receipt !== undefined
+      ? { candidate_qualification_receipt: publicationAuthority.receipt }
       : {}),
     selection: { table_ids: tableIds, chart_ids: chartIds },
     sections: structuredClone(sections),
@@ -1047,11 +1113,16 @@ function mediaTypeFor(format: CanonicalResultExportFormatV2): string {
   switch (format) {
     case "csv": return "text/csv;charset=utf-8";
     case "xlsx": return "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    case "json": return "application/json;charset=utf-8";
     case "html": return "text/html;charset=utf-8";
     case "pdf": return "application/pdf";
     case "svg": return "image/svg+xml;charset=utf-8";
     case "png": return "image/png";
   }
+}
+
+function canonicalJson(envelope: CanonicalResultExportSemanticEnvelopeV2): string {
+  return `${JSON.stringify(envelope, null, 2)}\n`;
 }
 
 export function prepareCanonicalResultExportV2(
@@ -1066,7 +1137,7 @@ export function prepareCanonicalResultExportV2(
   const availableCharts = exportCharts.map((chart) => chart.id);
   const tableDefaultAll = request.format !== "svg" && request.format !== "png";
   const tableSelection = orderedSelection(request.tableIds, availableTables, tableDefaultAll, "tableIds");
-  const chartDefaultAll = request.format === "html" || request.format === "pdf";
+  const chartDefaultAll = request.format === "json" || request.format === "html" || request.format === "pdf";
   const chartSelection = orderedSelection(request.chartIds, availableCharts, chartDefaultAll, "chartIds");
   const errors = [...tableSelection.errors, ...chartSelection.errors];
   if ((request.format === "csv" || request.format === "xlsx") && tableSelection.values.length === 0) {
@@ -1075,7 +1146,7 @@ export function prepareCanonicalResultExportV2(
   if ((request.format === "svg" || request.format === "png") && chartSelection.values.length !== 1) {
     errors.push(`${request.format.toUpperCase()} export requires exactly one selected canonical chart.`);
   }
-  if ((request.format === "html" || request.format === "pdf") && tableSelection.values.length === 0 && chartSelection.values.length === 0) {
+  if ((request.format === "json" || request.format === "html" || request.format === "pdf") && tableSelection.values.length === 0 && chartSelection.values.length === 0) {
     errors.push(`${request.format.toUpperCase()} export requires at least one selected table or chart.`);
   }
   if (errors.length) return { ok: false, code: "invalid_selection", errors };
@@ -1089,6 +1160,7 @@ export function prepareCanonicalResultExportV2(
   switch (request.format) {
     case "csv": return { ok: true, artifact: { ...base, format: "csv", contents: canonicalCsv(envelope) } };
     case "xlsx": return { ok: true, artifact: { ...base, format: "xlsx", workbookTables: workbookTables(envelope) } };
+    case "json": return { ok: true, artifact: { ...base, format: "json", contents: canonicalJson(envelope) } };
     case "html": return { ok: true, artifact: { ...base, format: "html", contents: canonicalHtml(envelope) } };
     case "pdf": {
       const visibleTextError = pdfVisibleTextError(envelope);
@@ -1207,6 +1279,7 @@ async function buildSemanticEnvelopeAsyncV2(
   const footnoteSet = new Set(tables.flatMap((table) => table.footnote_ids));
   if (!await checkpoint(1, true)) return null;
   const semanticProjectionJson = canonicalResultSemanticExportJsonV2(projection);
+  const publicationAuthority = publicationAuthorityV2(projection);
   const payload: CanonicalResultExportSemanticPayloadV2 = {
     schema_version: CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_SCHEMA_VERSION,
     format: CANONICAL_RESULT_CROSS_FORMAT_EXPORT_V2_FORMAT,
@@ -1218,6 +1291,12 @@ async function buildSemanticEnvelopeAsyncV2(
     provenance: structuredClone(projection.provenance),
     ...(projection.capability_cells !== undefined
       ? { capability_cells: structuredClone(projection.capability_cells) }
+      : {}),
+    ...(publicationAuthority.qualification !== undefined
+      ? { publication_qualification: publicationAuthority.qualification }
+      : {}),
+    ...(publicationAuthority.receipt !== undefined
+      ? { candidate_qualification_receipt: publicationAuthority.receipt }
       : {}),
     selection: { table_ids: tableIds, chart_ids: chartIds },
     sections: structuredClone(sections),
@@ -1506,11 +1585,11 @@ async function prepareCanonicalResultExportAsyncV2(
   const availableTables = projection.tables.map((table) => table.id);
   const availableCharts = exportCharts.map((chart) => chart.id);
   const tableSelection = orderedSelection(request.tableIds, availableTables, request.format !== "svg" && request.format !== "png", "tableIds");
-  const chartSelection = orderedSelection(request.chartIds, availableCharts, request.format === "html" || request.format === "pdf", "chartIds");
+  const chartSelection = orderedSelection(request.chartIds, availableCharts, request.format === "json" || request.format === "html" || request.format === "pdf", "chartIds");
   const errors = [...tableSelection.errors, ...chartSelection.errors];
   if ((request.format === "csv" || request.format === "xlsx") && tableSelection.values.length === 0) errors.push(`${request.format.toUpperCase()} export requires at least one selected canonical table.`);
   if ((request.format === "svg" || request.format === "png") && chartSelection.values.length !== 1) errors.push(`${request.format.toUpperCase()} export requires exactly one selected canonical chart.`);
-  if ((request.format === "html" || request.format === "pdf") && tableSelection.values.length === 0 && chartSelection.values.length === 0) errors.push(`${request.format.toUpperCase()} export requires at least one selected table or chart.`);
+  if ((request.format === "json" || request.format === "html" || request.format === "pdf") && tableSelection.values.length === 0 && chartSelection.values.length === 0) errors.push(`${request.format.toUpperCase()} export requires at least one selected table or chart.`);
   if (errors.length) return { ok: false, code: "invalid_selection", errors };
   const envelope = await buildSemanticEnvelopeAsyncV2(projection, tableSelection.values, chartSelection.values, exportCharts, checkpoint);
   if (!envelope) return { ok: false, code: "cancelled", errors: [] };
@@ -1524,6 +1603,7 @@ async function prepareCanonicalResultExportAsyncV2(
       const workbook = await workbookTablesAsyncV2(envelope, checkpoint);
       return workbook === null ? { ok: false, code: "cancelled", errors: [] } : { ok: true, artifact: { ...base, format: "xlsx", workbookTables: workbook } };
     }
+    case "json": return { ok: true, artifact: { ...base, format: "json", contents: canonicalJson(envelope) } };
     case "html": return { ok: true, artifact: { ...base, format: "html", contents: canonicalHtml(envelope) } };
     case "pdf": {
       const result = await canonicalPdfAsyncV2(envelope, checkpoint);
@@ -1596,6 +1676,17 @@ function envelopeFromHtmlOrSvg(contents: string): CanonicalResultExportSemanticE
   return match?.[1] ? decodeEnvelope(match[1]) : null;
 }
 
+function envelopeFromJson(contents: string): CanonicalResultExportSemanticEnvelopeV2 | null {
+  try {
+    const value: unknown = JSON.parse(contents);
+    return value && typeof value === "object" && !Array.isArray(value)
+      ? value as CanonicalResultExportSemanticEnvelopeV2
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 function envelopeFromPdf(bytes: Uint8Array): CanonicalResultExportSemanticEnvelopeV2 | null {
   const text = new TextDecoder().decode(bytes);
   const begin = text.indexOf(PDF_METADATA_BEGIN);
@@ -1652,6 +1743,7 @@ export function readPreparedCanonicalResultExportSemanticV2(
 ): CanonicalResultExportSemanticEnvelopeV2 | null {
   switch (artifact.format) {
     case "csv": return envelopeFromCsv(artifact.contents);
+    case "json": return envelopeFromJson(artifact.contents);
     case "html":
     case "svg": return envelopeFromHtmlOrSvg(artifact.contents);
     case "xlsx": return envelopeFromWorkbook(artifact.workbookTables);
@@ -1684,6 +1776,7 @@ export function verifyPreparedCanonicalResultExportV2(
   switch (artifact.format) {
     case "csv": renderedSurfaceMatch = artifact.contents === canonicalCsv(expected); break;
     case "xlsx": renderedSurfaceMatch = stableJson(artifact.workbookTables) === stableJson(workbookTables(expected)); break;
+    case "json": renderedSurfaceMatch = artifact.contents === canonicalJson(expected); break;
     case "html": renderedSurfaceMatch = artifact.contents === canonicalHtml(expected); break;
     case "pdf": renderedSurfaceMatch = bytesEqual(artifact.bytes, canonicalPdf(expected)); break;
     case "svg": renderedSurfaceMatch = Boolean(expected.charts[0]) && artifact.contents === canonicalChartSvg(expected.charts[0]!, expected); break;

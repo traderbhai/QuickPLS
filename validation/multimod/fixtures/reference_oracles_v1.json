@@ -1,0 +1,307 @@
+{
+  "schema_version": 1,
+  "fixture_id": "qpls.multimod.independent_reference_oracles.v1",
+  "status": "frozen_unexecuted",
+  "provenance": {
+    "implementation_independence": "Python standard-library equations only; no QuickPLS module or result is imported.",
+    "scope": "Small deterministic identities for reference comparison, not capability qualification by themselves.",
+    "numeric_tolerance": 1e-12
+  },
+  "mga": {
+    "pairwise_slope_permutation": {
+      "x": [0, 1, 2, 3, 0, 1, 2, 3],
+      "y": [0, 1, 2, 3, 0, 0, 0, 0],
+      "group_a_indices": [0, 1, 2, 3],
+      "group_b_indices": [4, 5, 6, 7],
+      "expected": {
+        "estimate_a": 1.0,
+        "estimate_b": 0.0,
+        "difference_a_minus_b": 1.0,
+        "usable_partitions": 70,
+        "failed_partitions": 0,
+        "absolute_extremes": 20,
+        "greater_extremes": 10,
+        "less_extremes": 64,
+        "p_value_two_sided": 0.29577464788732394,
+        "p_value_greater": 0.15492957746478872,
+        "p_value_less": 0.9154929577464789
+      },
+      "expected_after_label_reversal": {
+        "difference_a_minus_b": -1.0,
+        "p_value_two_sided": 0.29577464788732394,
+        "p_value_greater": 0.9154929577464789,
+        "p_value_less": 0.15492957746478872
+      }
+    },
+    "multiplicity": {
+      "hypotheses": [
+        {"id": "path.a", "probability": 0.01},
+        {"id": "path.b", "probability": 0.04},
+        {"id": "path.c", "probability": 0.03},
+        {"id": "path.d", "probability": 0.2}
+      ],
+      "expected": {
+        "none": {"path.a": 0.01, "path.b": 0.04, "path.c": 0.03, "path.d": 0.2},
+        "holm": {"path.a": 0.04, "path.b": 0.09, "path.c": 0.09, "path.d": 0.2},
+        "bonferroni": {"path.a": 0.04, "path.b": 0.16, "path.c": 0.12, "path.d": 0.8},
+        "sidak": {"path.a": 0.039403990000000055, "path.b": 0.15065344000000014, "path.c": 0.11470719000000007, "path.d": 0.5903999999999999},
+        "benjamini_hochberg": {"path.a": 0.04, "path.b": 0.05333333333333334, "path.c": 0.05333333333333334, "path.d": 0.2}
+      }
+    }
+  },
+  "conditional_process": {
+    "cases": [
+      {
+        "case_id": "both_stage_two_moderator_path",
+        "moderators": ["w", "v"],
+        "edges": [
+          {
+            "edge_id": "x_to_m",
+            "terms": [
+              {"coefficient": 0.5, "powers": {}},
+              {"coefficient": 0.2, "powers": {"w": 1}},
+              {"coefficient": -0.1, "powers": {"v": 1}},
+              {"coefficient": 0.05, "powers": {"w": 1, "v": 1}}
+            ]
+          },
+          {
+            "edge_id": "m_to_y",
+            "terms": [
+              {"coefficient": 0.4, "powers": {}},
+              {"coefficient": -0.15, "powers": {"w": 1}},
+              {"coefficient": 0.1, "powers": {"v": 1}}
+            ]
+          }
+        ],
+        "expected_polynomial": [
+          {"coefficient": 0.2, "powers": {}},
+          {"coefficient": 0.005, "powers": {"w": 1}},
+          {"coefficient": 0.01, "powers": {"v": 1}},
+          {"coefficient": -0.03, "powers": {"w": 2}},
+          {"coefficient": -0.01, "powers": {"v": 2}},
+          {"coefficient": 0.055, "powers": {"w": 1, "v": 1}},
+          {"coefficient": -0.0075, "powers": {"w": 2, "v": 1}},
+          {"coefficient": 0.005, "powers": {"w": 1, "v": 2}}
+        ],
+        "probes": [
+          {"id": "low_low", "values": {"w": -1, "v": -1}, "expected_effect": 0.2025},
+          {"id": "origin", "values": {"w": 0, "v": 0}, "expected_effect": 0.2},
+          {"id": "high_high", "values": {"w": 1, "v": 1}, "expected_effect": 0.2275},
+          {"id": "high_low", "values": {"w": 1, "v": -1}, "expected_effect": 0.1125},
+          {"id": "low_high", "values": {"w": -1, "v": 1}, "expected_effect": 0.0975}
+        ],
+        "derivatives": [
+          {"probe_id": "origin", "orders": {"w": 1}, "expected": 0.005},
+          {"probe_id": "origin", "orders": {"v": 1}, "expected": 0.01},
+          {"probe_id": "origin", "orders": {"w": 2}, "expected": -0.06},
+          {"probe_id": "origin", "orders": {"v": 2}, "expected": -0.02},
+          {"probe_id": "origin", "orders": {"w": 1, "v": 1}, "expected": 0.055},
+          {"probe_id": "high_high", "orders": {"w": 1}, "expected": -0.01},
+          {"probe_id": "high_high", "orders": {"v": 1}, "expected": 0.0475},
+          {"probe_id": "high_high", "orders": {"w": 1, "v": 1}, "expected": 0.05}
+        ],
+        "contrasts": [
+          {"left_probe_id": "high_high", "right_probe_id": "low_low", "expected_left_minus_right": 0.025},
+          {"left_probe_id": "high_low", "right_probe_id": "low_high", "expected_left_minus_right": 0.015}
+        ]
+      },
+      {
+        "case_id": "three_edge_single_moderator_path",
+        "moderators": ["w"],
+        "edges": [
+          {
+            "edge_id": "x_to_m1",
+            "terms": [
+              {"coefficient": 0.5, "powers": {}},
+              {"coefficient": 0.2, "powers": {"w": 1}}
+            ]
+          },
+          {
+            "edge_id": "m1_to_m2",
+            "terms": [
+              {"coefficient": 0.4, "powers": {}},
+              {"coefficient": -0.1, "powers": {"w": 1}}
+            ]
+          },
+          {
+            "edge_id": "m2_to_y",
+            "terms": [
+              {"coefficient": 0.75, "powers": {}}
+            ]
+          }
+        ],
+        "expected_polynomial": [
+          {"coefficient": 0.15, "powers": {}},
+          {"coefficient": 0.0225, "powers": {"w": 1}},
+          {"coefficient": -0.015, "powers": {"w": 2}}
+        ],
+        "probes": [
+          {"id": "low", "values": {"w": -1}, "expected_effect": 0.1125},
+          {"id": "origin", "values": {"w": 0}, "expected_effect": 0.15},
+          {"id": "high", "values": {"w": 1}, "expected_effect": 0.1575}
+        ],
+        "derivatives": [
+          {"probe_id": "origin", "orders": {"w": 1}, "expected": 0.0225},
+          {"probe_id": "origin", "orders": {"w": 2}, "expected": -0.03}
+        ],
+        "contrasts": [
+          {"left_probe_id": "high", "right_probe_id": "low", "expected_left_minus_right": 0.045}
+        ]
+      }
+    ]
+  },
+  "interventional_mediation": {
+    "known_targets": [
+      {
+        "case_id": "binary_x0_0_x1_1",
+        "treatment_id": "x",
+        "contrast": {"kind": "binary", "x0": 0, "x1": 1},
+        "baseline_rows": [{"c": 0}, {"c": 1}, {"c": 2}],
+        "mediator_equations": [
+          {
+            "outcome": "m",
+            "intercept": 1.0,
+            "terms": [
+              {"coefficient": 0.5, "factors": ["x"]},
+              {"coefficient": 0.2, "factors": ["c"]}
+            ]
+          }
+        ],
+        "outcome_equation": {
+          "outcome": "y",
+          "intercept": 0.3,
+          "terms": [
+            {"coefficient": 0.4, "factors": ["x"]},
+            {"coefficient": 0.6, "factors": ["m"]},
+            {"coefficient": 0.1, "factors": ["x", "m"]},
+            {"coefficient": 0.05, "factors": ["c"]}
+          ]
+        },
+        "expected": {
+          "outcome_mean_x0_g_x0": 1.07,
+          "outcome_mean_x1_g_x0": 1.59,
+          "outcome_mean_x1_g_x1": 1.94,
+          "interventional_direct_effect": 0.52,
+          "joint_interventional_indirect_effect": 0.35,
+          "total_interventional_contrast": 0.87,
+          "decomposition_residual": 0.0
+        }
+      },
+      {
+        "case_id": "continuous_x0_1_x1_2",
+        "treatment_id": "x",
+        "contrast": {"kind": "continuous_contrast", "x0": 1, "x1": 2},
+        "baseline_rows": [{"c": 0}, {"c": 1}, {"c": 2}],
+        "mediator_equations": [
+          {
+            "outcome": "m",
+            "intercept": 1.0,
+            "terms": [
+              {"coefficient": 0.5, "factors": ["x"]},
+              {"coefficient": 0.2, "factors": ["c"]}
+            ]
+          }
+        ],
+        "outcome_equation": {
+          "outcome": "y",
+          "intercept": 0.3,
+          "terms": [
+            {"coefficient": 0.4, "factors": ["x"]},
+            {"coefficient": 0.6, "factors": ["m"]},
+            {"coefficient": 0.1, "factors": ["x", "m"]},
+            {"coefficient": 0.05, "factors": ["c"]}
+          ]
+        },
+        "expected": {
+          "outcome_mean_x0_g_x0": 1.94,
+          "outcome_mean_x1_g_x0": 2.51,
+          "outcome_mean_x1_g_x1": 2.91,
+          "interventional_direct_effect": 0.57,
+          "joint_interventional_indirect_effect": 0.4,
+          "total_interventional_contrast": 0.97,
+          "decomposition_residual": 0.0
+        }
+      }
+    ],
+    "positivity_cases": [
+      {
+        "case_id": "binary_supported",
+        "treatment_values": [0, 0, 1, 1],
+        "contrast": {"kind": "binary", "x0": 0, "x1": 1},
+        "policy": {"minimum_binary_arm_count": 2, "maximum_binary_arm_ratio": 2},
+        "expected": {"eligible": true, "blocker_codes": [], "x0_support_count": 2, "x1_support_count": 2}
+      },
+      {
+        "case_id": "binary_arm_failure",
+        "treatment_values": [0, 0, 0, 1],
+        "contrast": {"kind": "binary", "x0": 0, "x1": 1},
+        "policy": {"minimum_binary_arm_count": 2, "maximum_binary_arm_ratio": 2},
+        "expected": {
+          "eligible": false,
+          "blocker_codes": ["positivity.binary_minimum_arm_count", "positivity.binary_arm_ratio"],
+          "x0_support_count": 3,
+          "x1_support_count": 1
+        }
+      },
+      {
+        "case_id": "continuous_supported",
+        "treatment_values": [0, 0.5, 1, 1.5, 2],
+        "contrast": {"kind": "continuous_contrast", "x0": 0.5, "x1": 1.5},
+        "policy": {"continuous_neighborhood_fraction_of_range": 0.25, "minimum_continuous_neighborhood_count": 2},
+        "expected": {"eligible": true, "blocker_codes": [], "x0_support_count": 3, "x1_support_count": 3}
+      },
+      {
+        "case_id": "continuous_support_failure",
+        "treatment_values": [0, 0.5, 1, 1.5, 2],
+        "contrast": {"kind": "continuous_contrast", "x0": 0.5, "x1": 2.5},
+        "policy": {"continuous_neighborhood_fraction_of_range": 0.25, "minimum_continuous_neighborhood_count": 2},
+        "expected": {
+          "eligible": false,
+          "blocker_codes": ["positivity.continuous_outside_support", "positivity.continuous_neighborhood_count"],
+          "x0_support_count": 3,
+          "x1_support_count": 1
+        }
+      }
+    ]
+  },
+  "fimix": {
+    "case_id": "two_class_intercept_only_gaussian",
+    "proportions": [0.5, 0.5],
+    "equations": [
+      {
+        "equation_id": "y",
+        "design": [[1], [1], [1]],
+        "outcome": [-1, 0, 1],
+        "class_coefficients": [[-1], [1]],
+        "class_variances": [1, 1]
+      }
+    ],
+    "expected": {
+      "log_joint": [
+        [-1.612085713764618, -3.612085713764618],
+        [-2.112085713764618, -2.112085713764618],
+        [-3.612085713764618, -1.612085713764618]
+      ],
+      "log_normalizers": [-1.4851577027216454, -1.4189385332046727, -1.4851577027216454],
+      "posteriors": [
+        [0.8807970779778823, 0.11920292202211753],
+        [0.5, 0.5],
+        [0.11920292202211753, 0.8807970779778823]
+      ],
+      "log_likelihood": -4.389253938647963,
+      "parameter_count": 5,
+      "criteria": {
+        "aic": 18.77850787729593,
+        "aic3": 23.77850787729593,
+        "aic4": 28.77850787729593,
+        "bic": 14.271569320636477,
+        "caic": 19.27156932063648,
+        "hq": 9.718986153462918
+      },
+      "entropy": {
+        "raw": 1.423814890734361,
+        "normalized_certainty": 0.3152897726645586
+      }
+    }
+  }
+}

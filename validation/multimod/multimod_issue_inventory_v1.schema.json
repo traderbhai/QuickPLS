@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/multimod-issue-inventory-v1.schema.json",
+  "title": "QuickPLS MultiMod qualification issue inventory V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "inventory_id",
+    "campaign_id",
+    "candidate_commit_sha",
+    "candidate_version",
+    "plan_sha256",
+    "binding_sha256",
+    "generated_at_utc",
+    "campaign_status",
+    "issues"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": 1 },
+    "inventory_id": { "type": "string", "pattern": "^qpls\\.multimod\\.issues\\.[a-zA-Z0-9_.:-]+$" },
+    "campaign_id": { "type": "string", "minLength": 1 },
+    "candidate_commit_sha": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
+    "candidate_version": { "const": "2.56.0" },
+    "plan_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "binding_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "generated_at_utc": { "type": "string", "format": "date-time" },
+    "campaign_status": {
+      "enum": ["not_started", "running", "completed_with_issues", "completed_clean", "aborted_preflight"]
+    },
+    "issues": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/issue" }
+    }
+  },
+  "$defs": {
+    "nonempty": { "type": "string", "minLength": 1 },
+    "nullableSha256": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      ]
+    },
+    "issue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "issue_id",
+        "profile",
+        "gate",
+        "seed",
+        "input_digest",
+        "failure_signature",
+        "probable_root_component",
+        "invalidated_downstream_gates",
+        "disposition",
+        "observed_at_utc",
+        "evidence_paths"
+      ],
+      "properties": {
+        "issue_id": { "type": "string", "pattern": "^MM-[0-9]{4,}$" },
+        "profile": { "$ref": "#/$defs/nonempty" },
+        "gate": { "$ref": "#/$defs/nonempty" },
+        "seed": { "type": "integer", "minimum": 0, "maximum": 18446744073709551615 },
+        "input_digest": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "failure_signature": { "$ref": "#/$defs/nonempty" },
+        "probable_root_component": {
+          "enum": [
+            "method_spec",
+            "schema",
+            "compiler",
+            "estimator",
+            "resampling",
+            "label_alignment",
+            "micom_common_metric",
+            "runner",
+            "archive_sidecar",
+            "persistence",
+            "export",
+            "native_ui",
+            "accessibility",
+            "packaging",
+            "offline_boundary",
+            "evidence_manifest",
+            "legacy_regression",
+            "environment",
+            "unknown"
+          ]
+        },
+        "invalidated_downstream_gates": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonempty" }
+        },
+        "disposition": {
+          "enum": ["open", "fixed_pending_rerun", "waived", "not_reproducible"]
+        },
+        "observed_at_utc": { "type": "string", "format": "date-time" },
+        "evidence_paths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/nonempty" }
+        }
+      }
+    }
+  }
+}

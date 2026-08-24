@@ -222,6 +222,30 @@ pub(crate) fn reserve_general_sem_pls_admission(
     )
 }
 
+/// Charges MultiMod jobs to the same single desktop analysis admission pool.
+/// The separate method identity prevents a new scheduler from bypassing the
+/// existing one-Cargo/one-analysis worker-budget rule.
+pub(crate) fn reserve_multimod_admission_v1(
+    job_id: Uuid,
+    worker_demand: usize,
+    standard_jobs: Arc<Mutex<HashMap<Uuid, DesktopJob>>>,
+    job_state: DesktopRecipeV4Jobs,
+) -> Result<PlsModelComparisonAdmissionReservationV1, InternalRecipeV4ExecutionFailureV1> {
+    let cpu_budget = std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1);
+    reserve_internal_recipe_v4_admission_with_cpu_budget(
+        job_id,
+        standard_jobs,
+        job_state,
+        cpu_budget,
+        worker_demand,
+        "multimod_v1",
+        "MultiMod analysis",
+        "Wait for another analysis to finish or reduce the MultiMod recipe worker count.",
+    )
+}
+
 /// Uses the same shared admission pool for the private CB-SEM V3 candidate.
 /// The separate name keeps diagnostics method-specific without creating a
 /// second scheduler or worker-budget authority.

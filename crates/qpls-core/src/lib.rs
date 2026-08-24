@@ -26,6 +26,11 @@ pub mod generated {
     };
 }
 mod methods;
+mod multimod_candidate_authority_v1;
+mod multimod_config_v1;
+mod multimod_recipe_compiler_v1;
+mod multimod_result_v1;
+mod multimod_weighted_pls_compiler_v1;
 mod recipe_v4_compiler;
 mod roadmap;
 mod sem_capability_decision_v1;
@@ -53,6 +58,11 @@ pub use general_sem_pls_moderated_mediation_v1::*;
 pub use general_sem_pls_three_way_v1::*;
 pub use general_sem_recipe_compiler_v1::*;
 pub use methods::*;
+pub use multimod_candidate_authority_v1::*;
+pub use multimod_config_v1::*;
+pub use multimod_recipe_compiler_v1::*;
+pub use multimod_result_v1::*;
+pub use multimod_weighted_pls_compiler_v1::*;
 pub use recipe_v4_compiler::*;
 pub use roadmap::*;
 pub use sem_capability_decision_v1::*;

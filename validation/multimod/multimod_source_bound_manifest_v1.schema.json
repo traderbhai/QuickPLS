@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/multimod-source-bound-manifest-v1.schema.json",
+  "title": "QuickPLS MultiMod source-bound qualification manifest V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "contract_kind",
+    "manifest_id",
+    "family_id",
+    "surface",
+    "declared_evidence_state",
+    "promotion_allowed",
+    "method_versions",
+    "source_binding",
+    "profile_matrix",
+    "promotion_contract"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": 1 },
+    "contract_kind": { "const": "multimod_source_bound_qualification_manifest" },
+    "manifest_id": { "$ref": "#/$defs/id" },
+    "family_id": { "$ref": "#/$defs/id" },
+    "surface": { "const": "labs" },
+    "declared_evidence_state": { "enum": ["absent", "release_qualified"] },
+    "promotion_allowed": { "const": false },
+    "method_versions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/nonempty" }
+    },
+    "source_binding": { "$ref": "#/$defs/sourceBinding" },
+    "profile_matrix": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/profile" }
+    },
+    "promotion_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_procedure_evidence_identity",
+        "required_gate_families",
+        "minimum_live_state",
+        "stale_hash_behavior",
+        "partial_result_behavior"
+      ],
+      "properties": {
+        "profile_procedure_evidence_identity": { "$ref": "#/$defs/nonempty" },
+        "required_gate_families": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/nonempty" }
+        },
+        "minimum_live_state": { "const": "release_qualified" },
+        "stale_hash_behavior": { "const": "derive_absent" },
+        "partial_result_behavior": { "const": "never_publish" }
+      }
+    }
+  },
+  "$defs": {
+    "nonempty": { "type": "string", "minLength": 1 },
+    "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$" },
+    "nullableSha256": {
+      "oneOf": [
+        { "type": "null" },
+        { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+      ]
+    },
+    "sourceArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "$ref": "#/$defs/nonempty" },
+        "sha256": { "$ref": "#/$defs/nullableSha256" }
+      }
+    },
+    "sourceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "candidate_commit_sha", "source_artifacts"],
+      "properties": {
+        "status": { "enum": ["pending", "bound"] },
+        "candidate_commit_sha": {
+          "oneOf": [
+            { "type": "null" },
+            { "type": "string", "pattern": "^[a-f0-9]{40}$" }
+          ]
+        },
+        "source_artifacts": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/sourceArtifact" }
+        }
+      }
+    },
+    "procedure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "procedure_id",
+        "evidence_identity_template",
+        "evidence_state",
+        "gate_state",
+        "report_path",
+        "report_sha256"
+      ],
+      "properties": {
+        "procedure_id": { "$ref": "#/$defs/id" },
+        "evidence_identity_template": { "$ref": "#/$defs/nonempty" },
+        "evidence_state": { "enum": ["absent", "release_qualified"] },
+        "gate_state": { "enum": ["pending", "passed"] },
+        "report_path": {
+          "oneOf": [
+            { "type": "null" },
+            { "$ref": "#/$defs/nonempty" }
+          ]
+        },
+        "report_sha256": { "$ref": "#/$defs/nullableSha256" }
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile_id",
+        "method_version",
+        "coverage_state",
+        "evidence_state",
+        "surface",
+        "procedure_cells"
+      ],
+      "properties": {
+        "profile_id": { "$ref": "#/$defs/id" },
+        "method_version": { "$ref": "#/$defs/nonempty" },
+        "coverage_state": { "enum": ["absent", "release_qualified"] },
+        "evidence_state": { "enum": ["absent", "release_qualified"] },
+        "surface": { "const": "labs" },
+        "procedure_cells": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "#/$defs/procedure" }
+        }
+      }
+    }
+  }
+}

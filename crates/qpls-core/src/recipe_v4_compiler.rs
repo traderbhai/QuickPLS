@@ -1362,6 +1362,10 @@ pub fn recipe_v4_analytical_sha256(
         settings: &recipe.settings,
         method_config: recipe.method_config.as_ref(),
         general_sem_config: recipe.general_sem_config.as_ref(),
+        mga_multigroup: recipe.mga_multigroup.as_ref(),
+        pls_heterogeneity: recipe.pls_heterogeneity.as_ref(),
+        general_sem_conditional_process: recipe.general_sem_conditional_process.as_ref(),
+        interventional_causal_mediation: recipe.interventional_causal_mediation.as_ref(),
         metadata: &recipe.metadata,
     })
 }
@@ -1378,6 +1382,14 @@ struct RecipeAnalyticalIdentityV4<'a> {
     method_config: Option<&'a MethodConfig>,
     #[serde(skip_serializing_if = "Option::is_none")]
     general_sem_config: Option<&'a crate::GeneralSemConfigV1>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mga_multigroup: Option<&'a crate::MgaMultigroupV1>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pls_heterogeneity: Option<&'a crate::PlsUnobservedHeterogeneityConfigV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    general_sem_conditional_process: Option<&'a crate::GeneralSemConditionalProcessConfigV2>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    interventional_causal_mediation: Option<&'a crate::InterventionalCausalMediationConfigV1>,
     metadata: &'a std::collections::BTreeMap<String, String>,
 }
 

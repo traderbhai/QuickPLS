@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.pls_pos",
+  "execution_context": "recipe_v4_pls_unobserved_heterogeneity_v2_pos",
+  "feature": {
+    "id": "qpls3.multimod.pls_pos_v2",
+    "label": "PLS-POS V2 publication and destination-scored profiles",
+    "method_version": "pls_pos_v2",
+    "analytical_method_version": "qpls.pls-pos.v2.profiled",
+    "method_kind": "full_refit_prediction_oriented_segmentation"
+  },
+  "coverage_state": "absent",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/PLS_HETEROGENEITY_V2.md",
+  "profile_manifest": "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/prediction-and-segmentation/pos/",
+  "implemented_contracts": [
+    "Publication-faithful P0 and separately named destination-scored P2/P23 identities",
+    "Strict full-refit objective improvement and deterministic multistart boundary",
+    "Common-metric comparability gate for inferential interaction contrasts",
+    "Production P0 candidate and 500-draw fixed-K label-aligned bootstrap qualification fixtures at K=2, 3, 4 and 5",
+    "Independent exhaustive K-factorial alignment reconstruction with nonidentity, ambiguity and non-majority decisions at K=3, 4 and 5"
+  ],
+  "remaining_qualification": [
+    "The implemented K=2 through K=5 production fixture matrix remains Labs/absent until the frozen qualification campaign produces commit-bound passing evidence.",
+    "Objective monotonicity, independent per-start stability, profile recovery and common-metric evidence remain subject to their exact campaign gates.",
+    "A failed common-metric gate must be shown to suppress every cross-segment inferential contrast.",
+    "This cell must derive absent and remain hidden from Standard surfaces."
+  ]
+}

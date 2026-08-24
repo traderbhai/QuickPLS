@@ -1271,3 +1271,616 @@ ul.nd-sem-editor-errors { padding-left: 30px; }
   .nd-three-pane,
   .nd-document { display: block; overflow: visible; }
 }
+
+/* MultiMod Labs is deliberately additive: it reuses the native desktop token
+   system while keeping its dense scientific forms keyboard and zoom friendly. */
+.nd-multimod-workspace {
+  gap: 14px;
+}
+.nd-multimod-labs-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--nd-color-warning);
+  border-radius: 999px;
+  color: var(--nd-color-text);
+  background: var(--nd-color-warning-surface);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.nd-multimod-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+  padding: 5px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-tabs button {
+  min-width: 0;
+  min-height: 52px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  text-align: left;
+}
+.nd-multimod-tabs button strong,
+.nd-multimod-tabs button span {
+  display: block;
+}
+.nd-multimod-tabs button span {
+  margin-top: 2px;
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+.nd-multimod-tabs button[aria-selected="true"] {
+  border-color: var(--nd-blue-700);
+  color: var(--nd-color-text);
+  background: var(--nd-blue-50);
+  box-shadow: inset 0 -2px 0 var(--nd-blue-700);
+}
+.nd-multimod-tabs button:focus-visible {
+  outline: 3px solid var(--nd-color-focus);
+  outline-offset: 2px;
+}
+.nd-multimod-flow {
+  display: grid;
+  gap: 12px;
+  padding-top: 2px;
+}
+.nd-multimod-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  counter-reset: multimod-step;
+  list-style: none;
+}
+.nd-multimod-steps li {
+  display: inline-flex;
+  align-items: center;
+  min-height: 32px;
+  gap: 6px;
+  padding: 4px 9px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: 999px;
+  color: var(--nd-color-text-muted);
+  background: var(--nd-color-surface);
+  font-size: 11px;
+  font-weight: 650;
+}
+.nd-multimod-steps li::before {
+  counter-increment: multimod-step;
+  content: counter(multimod-step);
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--nd-color-text);
+  background: var(--nd-gray-100);
+  font-variant-numeric: tabular-nums;
+}
+.nd-multimod-steps li.ready {
+  border-color: var(--nd-color-success);
+  color: var(--nd-color-text);
+}
+.nd-multimod-steps li.ready::before {
+  content: "✓";
+  color: var(--nd-color-success);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-steps li.blocked {
+  border-color: var(--nd-amber-700);
+  color: var(--nd-color-warning);
+}
+.nd-multimod-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.nd-multimod-flow fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-flow legend {
+  padding: 0 5px;
+  color: var(--nd-color-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+.nd-multimod-flow label {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  color: var(--nd-color-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+.nd-multimod-flow input:not([type="checkbox"]):not([type="radio"]),
+.nd-multimod-flow select,
+.nd-multimod-flow textarea {
+  width: 100%;
+  min-height: 40px;
+}
+.nd-multimod-flow textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.nd-multimod-flow label small {
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+.nd-multimod-option-list,
+.nd-multimod-checklist {
+  display: grid;
+  gap: 5px;
+  max-height: 300px;
+  overflow: auto;
+}
+.nd-multimod-option-list > label,
+.nd-multimod-checklist > label,
+.nd-multimod-flow label.nd-checkbox-row {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  min-height: 40px;
+  gap: 7px;
+  padding: 7px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-1);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-option-list > label:hover,
+.nd-multimod-checklist > label:hover {
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-option-list > label.disabled {
+  opacity: 0.55;
+}
+.nd-multimod-option-list input,
+.nd-multimod-checklist input,
+.nd-multimod-flow label.nd-checkbox-row input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+}
+.nd-multimod-option-list label span,
+.nd-multimod-option-list label small {
+  display: block;
+}
+.nd-multimod-inline-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 8px;
+}
+.nd-multimod-inline-fields legend {
+  grid-column: 1 / -1;
+}
+.nd-multimod-cost {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-left: 3px solid var(--nd-color-success);
+  color: var(--nd-color-text);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-cost.warning {
+  border-color: var(--nd-amber-700);
+  background: var(--nd-amber-50);
+}
+.nd-multimod-cost.blocked {
+  border-color: var(--nd-color-danger);
+  background: var(--nd-red-50);
+}
+.nd-multimod-cost span {
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.nd-multimod-actions {
+  display: grid;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--nd-color-border);
+}
+.nd-multimod-actions .nd-form-error {
+  display: grid;
+  gap: 3px;
+}
+.nd-multimod-actions button {
+  min-height: 44px;
+}
+.nd-multimod-causal-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  padding: 9px 10px;
+  border-left: 3px solid var(--nd-blue-700);
+  color: var(--nd-color-text);
+  background: var(--nd-blue-50);
+}
+.nd-multimod-equation-editor {
+  display: grid;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-equation-editor > h3,
+.nd-multimod-equation-editor > p {
+  margin: 0;
+}
+.nd-multimod-equation-editor > p {
+  color: var(--nd-color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.nd-multimod-flow fieldset.nd-multimod-equation-card {
+  display: grid;
+  gap: 8px;
+  background: var(--nd-color-surface);
+}
+.nd-multimod-equation-card > label,
+.nd-multimod-equation-terms > label {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
+  min-height: 38px;
+  gap: 7px;
+  padding: 6px 7px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-1);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-equation-card input {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0;
+}
+.nd-multimod-equation-terms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 5px;
+}
+.nd-multimod-equation-terms > strong {
+  grid-column: 1 / -1;
+  font-size: 12px;
+}
+.nd-multimod-equation-terms > label.disabled {
+  opacity: 0.58;
+}
+.nd-multimod-required-term {
+  border-color: var(--nd-blue-700) !important;
+  background: var(--nd-blue-50) !important;
+}
+.nd-multimod-equation-card output {
+  display: block;
+  min-width: 0;
+  padding: 8px 9px;
+  border-left: 3px solid var(--nd-blue-700);
+  color: var(--nd-color-text);
+  background: var(--nd-blue-50);
+  font-size: 12px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.nd-multimod-job-monitor {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-job-monitor > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nd-multimod-job-monitor h3,
+.nd-multimod-job-monitor p {
+  margin: 0;
+}
+.nd-multimod-job-monitor progress {
+  width: 100%;
+  min-height: 14px;
+}
+.nd-multimod-job-monitor .nd-cbsem-v4-actions {
+  justify-content: flex-start;
+}
+.nd-multimod-job-cache {
+  overflow-wrap: anywhere;
+}
+
+/* Strict MultiMod result projection. Large scientific tables are paged before
+   they reach the shared keyboard grid, keeping focus and DOM size bounded. */
+.nd-multimod-results {
+  display: grid;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-results-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.nd-multimod-results-header h2 {
+  margin: 5px 0 2px;
+  font-size: 18px;
+  line-height: 1.25;
+}
+.nd-multimod-results-header p {
+  margin: 0;
+  color: var(--nd-color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.nd-multimod-result-status {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.nd-multimod-result-status.complete {
+  border-color: var(--nd-color-success);
+  color: var(--nd-color-success);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-result-status.withheld {
+  border-color: var(--nd-color-danger);
+  color: var(--nd-color-danger);
+  background: var(--nd-red-50);
+}
+.nd-multimod-result-callout {
+  display: grid;
+  gap: 2px;
+  padding: 9px 10px;
+  border-left: 3px solid var(--nd-color-success);
+  color: var(--nd-color-text);
+  background: var(--nd-color-surface-subtle);
+}
+.nd-multimod-result-callout.withheld {
+  border-color: var(--nd-color-danger);
+  background: var(--nd-red-50);
+}
+.nd-multimod-result-callout span {
+  color: var(--nd-color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.nd-multimod-results-tabs {
+  display: flex;
+  gap: 5px;
+  padding: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface-subtle);
+  scrollbar-gutter: stable;
+}
+.nd-multimod-results-tabs button {
+  flex: 0 0 min(150px, 28vw);
+  min-height: 56px;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  text-align: left;
+}
+.nd-multimod-results-tabs button strong {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 7px;
+  color: var(--nd-color-text);
+}
+.nd-multimod-results-tabs button strong span {
+  min-width: 22px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  color: var(--nd-color-text-muted);
+  background: var(--nd-color-surface);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.nd-multimod-results-tabs button small {
+  display: block;
+  margin-top: 3px;
+  color: var(--nd-color-text-muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.nd-multimod-results-tabs button[aria-selected="true"] {
+  border-color: var(--nd-blue-700);
+  background: var(--nd-blue-50);
+  box-shadow: inset 0 -2px 0 var(--nd-blue-700);
+}
+.nd-multimod-results-tabs button:focus-visible,
+.nd-multimod-result-pagination button:focus-visible,
+.nd-multimod-result-pagebar select:focus-visible {
+  outline: 3px solid var(--nd-color-focus);
+  outline-offset: 2px;
+}
+.nd-multimod-results-tabs button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+.nd-multimod-results-panel {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+.nd-multimod-results-panel > h3 {
+  margin: 0;
+  font-size: 15px;
+}
+.nd-multimod-result-card {
+  display: grid;
+  min-width: 0;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--nd-color-border);
+  border-radius: var(--nd-radius-2);
+  background: var(--nd-color-surface);
+}
+.nd-multimod-result-card > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.nd-multimod-result-card h4 {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.3;
+}
+.nd-multimod-result-card header p {
+  max-width: 90ch;
+  margin: 3px 0 0;
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.nd-multimod-result-row-count {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: var(--nd-color-text-muted);
+  background: var(--nd-color-surface-subtle);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+.nd-multimod-result-pagebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: space-between;
+  gap: 8px;
+}
+.nd-multimod-result-pagebar p {
+  margin: 0;
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.nd-multimod-result-pagebar label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nd-color-text);
+  font-size: 11px;
+  font-weight: 650;
+}
+.nd-multimod-result-pagebar select {
+  min-width: 72px;
+  min-height: 36px;
+}
+.nd-multimod-result-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+.nd-multimod-result-pagination button {
+  min-height: 40px;
+  padding-inline: 10px;
+}
+.nd-multimod-result-pagination span {
+  min-width: 58px;
+  color: var(--nd-color-text-muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.nd-multimod-result-empty {
+  margin: 0;
+  padding: 12px;
+  border: 1px dashed var(--nd-color-border);
+  color: var(--nd-color-text-muted);
+  background: var(--nd-color-surface-subtle);
+  font-size: 12px;
+  text-align: center;
+}
+.nd-multimod-results-invalid > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.nd-multimod-results-invalid h2 {
+  margin: 0;
+  font-size: 17px;
+}
+.nd-multimod-results-invalid header p {
+  margin: 2px 0 0;
+  color: var(--nd-color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nd-multimod-results *,
+  .nd-multimod-results *::before,
+  .nd-multimod-results *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .nd-multimod-tabs {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .nd-multimod-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .nd-multimod-tabs {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nd-multimod-inline-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .nd-multimod-results {
+    padding: 9px;
+  }
+  .nd-multimod-results-tabs button {
+    flex-basis: min(145px, 64vw);
+  }
+  .nd-multimod-result-card > header,
+  .nd-multimod-result-pagebar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .nd-multimod-result-pagebar label {
+    justify-content: space-between;
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quickpls.local/schemas/v256-multimod-qualification-plan-v1.schema.json",
+  "title": "QuickPLS 2.56 MultiMod qualification plan V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "plan_id", "candidate", "disk_thresholds_gib", "manifests", "gates"],
+  "properties": {
+    "$schema": { "type": "string", "minLength": 1 },
+    "schema_version": { "const": 1 },
+    "plan_id": { "const": "qpls.v256.multimod.qualification.v1" },
+    "candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["branch", "worktree_leaf", "final_version", "main_must_remain_clean", "offline_required"],
+      "properties": {
+        "branch": { "const": "codx/multimod" },
+        "worktree_leaf": { "const": "QuickPLS-MultiMod" },
+        "final_version": { "const": "2.56.0" },
+        "main_must_remain_clean": { "const": true },
+        "offline_required": { "const": true }
+      }
+    },
+    "disk_thresholds_gib": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["C", "D"],
+      "properties": { "C": { "const": 20 }, "D": { "const": 25 } }
+    },
+    "manifests": {
+      "type": "array", "minItems": 4, "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "gates": {
+      "type": "array", "minItems": 20,
+      "items": { "$ref": "#/$defs/gate" }
+    }
+  },
+  "$defs": {
+    "stringList": { "type": "array", "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
+    "command": {
+      "oneOf": [
+        { "type": "null" },
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["executable", "arguments"],
+          "properties": {
+            "executable": { "type": "string", "minLength": 1 },
+            "arguments": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      ]
+    },
+    "gate": {
+      "type": "object", "additionalProperties": false,
+      "required": ["gate_id", "stage", "profiles", "probable_root_component", "implementation_status", "command", "acceptance", "invalidates_on_failure"],
+      "properties": {
+        "gate_id": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+        "stage": { "type": "string", "minLength": 1 },
+        "profiles": { "$ref": "#/$defs/stringList" },
+        "probable_root_component": { "type": "string", "minLength": 1 },
+        "implementation_status": { "enum": ["pending", "ready"] },
+        "command": { "$ref": "#/$defs/command" },
+        "acceptance": { "$ref": "#/$defs/stringList" },
+        "invalidates_on_failure": { "$ref": "#/$defs/stringList" }
+      }
+    }
+  }
+}

@@ -3545,7 +3545,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-assessment"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "approx",
  "arrow",
@@ -3562,7 +3562,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-cli"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "anyhow",
  "calamine",
@@ -3583,7 +3583,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-core"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "arrow",
  "chrono",
@@ -3602,7 +3602,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-data"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "ambers",
  "arrow",
@@ -3620,7 +3620,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-estimation"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "approx",
  "arrow",
@@ -3640,8 +3640,9 @@ dependencies = [
 
 [[package]]
 name = "qpls-project"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
+ "arrow",
  "chrono",
  "faer",
  "qpls-assessment",
@@ -3663,7 +3664,7 @@ dependencies = [
 
 [[package]]
 name = "qpls-resampling"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "arrow",
  "chrono",
@@ -3686,16 +3687,18 @@ dependencies = [
 
 [[package]]
 name = "qpls-runner"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "chrono",
  "qpls-assessment",
  "qpls-core",
  "qpls-data",
  "qpls-estimation",
+ "qpls-project",
  "qpls-resampling",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 2.0.19",
  "uuid",
 ]
@@ -3712,7 +3715,7 @@ dependencies = [
 
 [[package]]
 name = "quickpls-desktop"
-version = "2.55.5"
+version = "2.56.0-multimod.1"
 dependencies = [
  "arrow",
  "calamine",

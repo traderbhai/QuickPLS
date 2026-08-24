@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "contract_kind": "capability_cell_contract",
+  "owner_capability_id": "smartpls.mediation",
+  "execution_context": "recipe_v4_interventional_causal_mediation_v1",
+  "feature": {
+    "id": "qpls3.multimod.interventional_mediation_v1",
+    "label": "Observed-data interventional mediation V1",
+    "method_version": "interventional_causal_mediation_v1",
+    "analytical_method_version": "interventional_causal_mediation_v1",
+    "method_kind": "assumption_dependent_parametric_g_computation"
+  },
+  "coverage_state": "absent",
+  "evidence_state": "absent",
+  "surface": "labs",
+  "availability": "internal_labs_only",
+  "qualification_ready": false,
+  "promotion_allowed": false,
+  "method_contract": "docs/methods/INTERVENTIONAL_CAUSAL_MEDIATION_V1.md",
+  "profile_manifest": "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json",
+  "official_reference": "https://www.smartpls.com/documentation/algorithms-and-techniques/extended-relationships/mediation/",
+  "implemented_contracts": [
+    "Separate observed-data workflow that never relabels an ordinary PLS result as causal",
+    "Explicit treatment contrast, adjustment set, path and identification declarations",
+    "Mandatory assumption-dependent wording and positivity diagnostics"
+  ],
+  "remaining_qualification": [
+    "Known-target causal simulations and independent g-computation evidence are pending.",
+    "Positivity, recanting-witness, exposure-induced-confounding, role and wording blockers require product-level evidence.",
+    "This non-parity cell must derive absent and remain hidden from Standard surfaces."
+  ]
+}

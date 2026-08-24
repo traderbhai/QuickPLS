@@ -5,6 +5,7 @@ edition.workspace = true
 license.workspace = true
 
 [dependencies]
+arrow.workspace = true
 chrono.workspace = true
 faer.workspace = true
 qpls-core = { path = "../qpls-core" }

@@ -579,9 +579,6 @@ impl GeneralSemPlsHocPointExecutionContextV1 {
     }
 }
 
-pub(crate) type GeneralSemPlsDisjointHocPointExecutionContextV1 =
-    GeneralSemPlsHocPointExecutionContextV1;
-
 #[derive(Debug, Clone)]
 pub(crate) struct GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
     result: GeneralSemPlsHigherOrderPointResultV1,
@@ -591,12 +588,6 @@ pub(crate) struct GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
 impl GeneralSemPlsDisjointHocPointExecutionArtifactsV1 {
     pub(crate) fn result(&self) -> &GeneralSemPlsHigherOrderPointResultV1 {
         &self.result
-    }
-
-    pub(crate) fn stage_two_construct_scores(&self) -> &BTreeMap<String, Vec<f64>> {
-        self.stage_construct_scores
-            .last()
-            .expect("a HOC point result always contains an estimated stage")
     }
 
     pub(crate) fn stage_construct_scores(&self) -> &[BTreeMap<String, Vec<f64>>] {
@@ -924,22 +915,6 @@ pub(crate) fn compile_general_sem_pls_hoc_point_context_v1(
         repeated_stage,
         score_stage,
     })
-}
-
-pub(crate) fn compile_general_sem_pls_disjoint_hoc_point_context_v1(
-    recipe: &AnalysisRecipeV4,
-    resolved_model: &SemModelV4,
-    plan: &CompiledPlsPlanV3,
-) -> Result<GeneralSemPlsDisjointHocPointExecutionContextV1, GeneralSemPlsHigherOrderPointErrorV1> {
-    let [hoc] = plan.higher_order_stage_plans() else {
-        return Err(invalid_result("compiled plan must contain exactly one HOC"));
-    };
-    if hoc.approach() != &HigherOrderConstructionApproachV4::DisjointTwoStage {
-        return Err(invalid_result(
-            "disjoint wrapper received another HOC approach",
-        ));
-    }
-    compile_general_sem_pls_hoc_point_context_v1(recipe, resolved_model, plan)
 }
 
 pub fn run_compiled_general_sem_pls_higher_order_point_v1(

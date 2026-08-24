@@ -9,6 +9,10 @@ export interface NativeResultTableProps {
   headingId: string;
   confidenceLevel?: number | null;
   onActiveRowChange?: (rowIndex: number) => void;
+  /** Total source rows represented by a windowed table. */
+  totalRowCount?: number;
+  /** Zero-based absolute source-row offset of the first rendered body row. */
+  rowIndexOffset?: number;
 }
 
 /**
@@ -22,6 +26,8 @@ export function NativeResultTable({
   headingId,
   confidenceLevel,
   onActiveRowChange,
+  totalRowCount,
+  rowIndexOffset = 0,
 }: NativeResultTableProps) {
   const presentation = useMemo(
     () => resultTablePresentation(table, confidenceLevel),
@@ -31,8 +37,10 @@ export function NativeResultTable({
     gridKey,
     rowCount: table.rows.length,
     columnCount: table.columns.length,
+    rowIndexOffset,
     getClipboardText: ({ rowIndex, columnIndex }) => nativeGridClipboardText(table.rows[rowIndex]?.[columnIndex]),
-    onActiveCellChange: ({ rowIndex }) => onActiveRowChange?.(rowIndex),
+    onActiveCellChange: ({ rowIndex }) =>
+      onActiveRowChange?.(rowIndexOffset + rowIndex),
   });
   const instructionsId = `${headingId}-grid-instructions`;
   const overflowHintId = `${headingId}-overflow-hint`;
@@ -68,7 +76,7 @@ export function NativeResultTable({
         role="grid"
         aria-labelledby={headingId}
         aria-describedby={describedBy}
-        aria-rowcount={table.rows.length + 1}
+        aria-rowcount={(totalRowCount ?? table.rows.length) + 1}
         aria-colcount={table.columns.length}
         aria-multiselectable="false"
         aria-keyshortcuts="Control+C"
@@ -99,7 +107,7 @@ export function NativeResultTable({
           );
           return <tr
             role="row"
-            aria-rowindex={rowIndex + 2}
+            aria-rowindex={rowIndexOffset + rowIndex + 2}
             data-result-row-active={grid.activeCell.rowIndex === rowIndex ? "true" : undefined}
             data-result-row-model-focus={hasModelFocus ? "true" : undefined}
             key={rowPresentation?.key ?? rowIndex}

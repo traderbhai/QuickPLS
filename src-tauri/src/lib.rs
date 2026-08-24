@@ -1,6 +1,11 @@
 mod canonical_result_export_publication_v2;
 mod capability_registry_command;
 mod general_sem_registry_access_v1;
+mod multimod_candidate_authority_v1;
+mod multimod_evidence_sidecars_v1;
+mod multimod_jobs_v1;
+mod multimod_packaged_qualification_fixtures_v1;
+mod multimod_raw_sidecar_export_v1;
 #[cfg(test)]
 mod pls_algorithm_current_product_qualification;
 mod pls_model_comparison_jobs;
@@ -34,6 +39,19 @@ use arrow::array::{Array, BooleanArray, Float64Array, Int64Array, StringArray};
 use canonical_result_export_publication_v2::publish_canonical_result_export_v2;
 use capability_registry_command::capability_registry_v2;
 use chrono::{SecondsFormat, Utc};
+use multimod_candidate_authority_v1::multimod_candidate_authority_status_v1;
+use multimod_jobs_v1::{
+    DesktopMultiModJobsV1, cancel_internal_labs_multimod_job_v1,
+    dismiss_internal_labs_multimod_job_v1, preflight_internal_labs_multimod_v1,
+    prepare_internal_labs_multimod_raw_probe_metrics_v2,
+    profile_internal_labs_multimod_grouping_v1, result_internal_labs_multimod_job_v1,
+    start_internal_labs_multimod_job_v1, status_internal_labs_multimod_job_v1,
+};
+use multimod_packaged_qualification_fixtures_v1::{
+    prepare_multimod_packaged_integrity_variants_v1,
+    prepare_multimod_packaged_qualification_fixtures_v1,
+};
+use multimod_raw_sidecar_export_v1::publish_internal_labs_multimod_raw_sidecar_v1;
 use pls_model_comparison_jobs::{
     DesktopPlsModelComparisonJobsV1, cancel_internal_labs_pls_model_comparison_job,
     dismiss_internal_labs_pls_model_comparison_job, internal_labs_pls_model_comparison_job_result,
@@ -7359,8 +7377,21 @@ pub fn run() {
         .manage(DesktopGeneralSemPlsJobsV1::default())
         .manage(DesktopCbsemGeneralSemJobsV1::default())
         .manage(DesktopPlsModelComparisonJobsV1::default())
+        .manage(DesktopMultiModJobsV1::default())
         .invoke_handler(tauri::generate_handler![
             capability_registry_v2,
+            multimod_candidate_authority_status_v1,
+            prepare_multimod_packaged_qualification_fixtures_v1,
+            prepare_multimod_packaged_integrity_variants_v1,
+            profile_internal_labs_multimod_grouping_v1,
+            preflight_internal_labs_multimod_v1,
+            prepare_internal_labs_multimod_raw_probe_metrics_v2,
+            start_internal_labs_multimod_job_v1,
+            status_internal_labs_multimod_job_v1,
+            cancel_internal_labs_multimod_job_v1,
+            dismiss_internal_labs_multimod_job_v1,
+            result_internal_labs_multimod_job_v1,
+            publish_internal_labs_multimod_raw_sidecar_v1,
             start_internal_labs_pls_model_comparison_job,
             internal_labs_pls_model_comparison_job_status,
             cancel_internal_labs_pls_model_comparison_job,

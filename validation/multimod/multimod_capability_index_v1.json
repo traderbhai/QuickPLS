@@ -1,0 +1,65 @@
+{
+  "$schema": "multimod_capability_index_v1.schema.json",
+  "schema_version": 1,
+  "registry_id": "qpls.multimod.capability_index.v1",
+  "candidate_release": "2.56.0",
+  "policy": {
+    "surface": "labs",
+    "evidence_state": "absent",
+    "promotion_allowed": false,
+    "derivation": "A profile remains absent until its exact profile-procedure reports are live, pass, source-hash current and bound to the final candidate commit."
+  },
+  "families": [
+    {
+      "family_id": "qpls.multimod.mga_multigroup_v1",
+      "manifest": "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+      "owner_catalogue_rows": ["smartpls.mga", "smartpls.micom"],
+      "profiles": [
+        "mga.general_sem_pls.v1",
+        "mga.multiple_two_way_moderation.v1",
+        "mga.bounded_three_way_moderation.v1",
+        "mga.bounded_two_way_moderated_mediation.v1",
+        "mga.multiple_nonnested_hoc.v1",
+        "mga.case_weighted_pls.v1",
+        "mga.frequency_weighted_pls.v1",
+        "mga.reflective_plsc.v1"
+      ]
+    },
+    {
+      "family_id": "qpls.multimod.pls_heterogeneity_v2",
+      "manifest": "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json",
+      "owner_catalogue_rows": ["smartpls.fimix_pls", "smartpls.pls_pos"],
+      "profiles": [
+        "fimix.p0_structural.v2",
+        "fimix.p2_multi_two_way.v2",
+        "fimix.p23_all_current.v2",
+        "pos.published.p0_structural.v2",
+        "pos.destination_scored.p2_multi_two_way.v2",
+        "pos.destination_scored.p23_all_current.v2",
+        "pos.common_metric.p2_multi_two_way.v1",
+        "pos.common_metric.p23_all_current.v1"
+      ]
+    },
+    {
+      "family_id": "qpls.multimod.general_sem_conditional_process_v2",
+      "manifest": "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json",
+      "owner_catalogue_rows": ["smartpls.mediation"],
+      "profiles": [
+        "conditional.multi_two_way_percentile.v2",
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2",
+        "conditional.bounded_three_way_percentile.v2",
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2"
+      ]
+    },
+    {
+      "family_id": "qpls.multimod.interventional_causal_mediation_v1",
+      "manifest": "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json",
+      "owner_catalogue_rows": ["smartpls.mediation"],
+      "profiles": ["interventional.observed_gcomp.v1"]
+    }
+  ]
+}

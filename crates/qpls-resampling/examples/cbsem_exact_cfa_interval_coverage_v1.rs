@@ -170,6 +170,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             invariance_steps: Vec::new(),
         }),
         general_sem_config: None,
+        mga_multigroup: None,
+        pls_heterogeneity: None,
+        general_sem_conditional_process: None,
+        interventional_causal_mediation: None,
         metadata: BTreeMap::new(),
         legacy_source: None,
     };
@@ -919,6 +923,10 @@ fn verify_document_command(raw_args: &[String]) -> Result<(), Box<dyn std::error
                     invariance_steps: Vec::new(),
                 }),
                 general_sem_config: None,
+                mga_multigroup: None,
+                pls_heterogeneity: None,
+                general_sem_conditional_process: None,
+                interventional_causal_mediation: None,
                 metadata: BTreeMap::new(),
                 legacy_source: None,
             };

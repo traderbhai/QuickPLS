@@ -48,6 +48,7 @@ mod consistent_bootstrap;
 mod consistent_permutation;
 mod general_sem_pls_bootstrap_v1;
 mod general_sem_pls_three_way_bootstrap_v1;
+mod multimod_full_refit_v1;
 mod pls_model_fit_exact;
 mod power;
 pub use cbsem_bootstrap::*;
@@ -56,6 +57,7 @@ pub use consistent_bootstrap::*;
 pub use consistent_permutation::*;
 pub use general_sem_pls_bootstrap_v1::*;
 pub use general_sem_pls_three_way_bootstrap_v1::*;
+pub use multimod_full_refit_v1::*;
 pub use pls_model_fit_exact::*;
 pub use power::*;
 

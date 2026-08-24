@@ -44,6 +44,7 @@ import {
   GENERAL_SEM_PLS_ESTIMATOR_ID_V1,
 } from "../domain/generalSemCapabilityPreflightV1";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
+import type { MultiModResultAttachmentV1 } from "../domain/multimodContractsV1";
 import type { UnifiedSemCalculationPlanV1 } from "../domain/unifiedSemCalculationV1";
 import type { SemCapabilityDecisionV1 } from "../domain/semCapabilityDecisionV1";
 import { supportsGeneralSemV1 } from "../domain/internalProjectArchiveV6Wire";
@@ -86,6 +87,7 @@ import {
 import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
 import { NativeGeneralSemModeratedMediationPanel } from "./NativeGeneralSemModeratedMediationPanel";
+import { NativeMultiModJobWorkspaceV1 } from "./NativeMultiModJobWorkspaceV1";
 import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
@@ -965,6 +967,34 @@ export function NativeRecipeV4GeneralSemWorkspace({
     && receipt.destinationArchivePath === generalSemSession.snapshot.archivePath
     && receipt.projectId === generalSemSession.project.project_id,
   );
+  const residentMultiModResults = useMemo(() => {
+    const source = archiveSnapshot ?? generalSemSession?.snapshot ?? null;
+    const execution = rehydratedExecution?.status === "ok" ? rehydratedExecution.value.receipt : null;
+    if (!source || !execution) return [];
+    return (source.project.multimod_results ?? [])
+      .map((attachment) => {
+        const canonicalDocument = source.project.canonical_result_documents.find(
+          (candidate) => candidate.run_id === attachment.result_id,
+        )?.canonical_document;
+        return canonicalDocument ? { attachment, canonicalDocument } : null;
+      })
+      .filter(
+        (candidate): candidate is {
+          attachment: MultiModResultAttachmentV1;
+          canonicalDocument: CanonicalResultDocumentV2;
+        } =>
+          candidate !== null
+          && candidate.canonicalDocument.provenance.model_id === execution.residentModelId
+          && candidate.canonicalDocument.provenance.model_digest === execution.residentModelScientificSha256
+          && candidate.canonicalDocument.provenance.dataset_id === execution.residentDatasetId
+          && candidate.canonicalDocument.provenance.dataset_fingerprint === execution.residentDatasetFingerprint,
+      )
+      .sort((left, right) => {
+        const completed = Date.parse(right.canonicalDocument.provenance.completed_at)
+          - Date.parse(left.canonicalDocument.provenance.completed_at);
+        return completed || right.attachment.result_id.localeCompare(left.attachment.result_id);
+      });
+  }, [archiveSnapshot, generalSemSession?.snapshot, rehydratedExecution]);
   const running = Boolean(snapshot && ACTIVE_STATES.has(snapshot.state));
   const displayedDocument = selectGeneralSemDisplayedDocumentV1(
     reopenedEntry?.canonicalDocument ?? null,
@@ -2050,6 +2080,45 @@ export function NativeRecipeV4GeneralSemWorkspace({
                 detail: useInternalProjectArchiveV6Session.getState().revisionForkStatusMessage,
               });
             }
+          }}
+        />
+      : null}
+
+    {experimentalLabsEnabled
+      && !calculationPresentation
+      && markedGeneralSemProjectMode
+      && model
+      && rehydratedExecution?.status === "ok"
+      ? <NativeMultiModJobWorkspaceV1
+          model={model}
+          caseCount={dataset.rowCount ?? dataset.rows.length}
+          authority={{
+            archivePath: rehydratedExecution.value.receipt.destinationArchivePath,
+            archiveSha256: currentArchiveSha256
+              ?? rehydratedExecution.value.receipt.destinationArchiveSha256,
+            projectId: rehydratedExecution.value.receipt.projectId,
+            datasetId: rehydratedExecution.value.receipt.residentDatasetId,
+            datasetFingerprint: rehydratedExecution.value.receipt.residentDatasetFingerprint,
+            modelId: rehydratedExecution.value.receipt.residentModelId,
+            modelScientificSha256: rehydratedExecution.value.receipt.residentModelScientificSha256,
+            sourceRecipeId: rehydratedExecution.value.receipt.residentRecipeId,
+            sourceRecipeDocumentSha256: rehydratedExecution.value.receipt.residentRecipeDocumentSha256,
+          }}
+          residentResults={residentMultiModResults}
+          onArchiveUpdated={async (result) => {
+            const inspected = await services.inspectArchive(result.archivePath);
+            if (inspected.status === "blocked") {
+              throw new Error(`The committed MultiMod archive failed strict workspace refresh: ${inspected.diagnostic.message}`);
+            }
+            if (inspected.value.archiveSha256 !== result.archiveSha256) {
+              throw new Error("The committed MultiMod archive digest differs from its strict refresh receipt.");
+            }
+            const reanchored = useInternalProjectArchiveV6Session.getState().reanchorGeneralSemSnapshot(inspected.value);
+            if (reanchored !== "reanchored") {
+              throw new Error(`The committed MultiMod archive could not reanchor the active General SEM authority (${reanchored}).`);
+            }
+            setArchiveSnapshot(inspected.value);
+            setCurrentArchiveSha256(inspected.value.archiveSha256);
           }}
         />
       : null}

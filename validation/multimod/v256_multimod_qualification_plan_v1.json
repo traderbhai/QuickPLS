@@ -1,0 +1,1003 @@
+{
+  "$schema": "v256_multimod_qualification_plan_v1.schema.json",
+  "schema_version": 1,
+  "plan_id": "qpls.v256.multimod.qualification.v1",
+  "candidate": {
+    "branch": "codx/multimod",
+    "worktree_leaf": "QuickPLS-MultiMod",
+    "final_version": "2.56.0",
+    "main_must_remain_clean": true,
+    "offline_required": true
+  },
+  "disk_thresholds_gib": {
+    "C": 20,
+    "D": 25
+  },
+  "manifests": [
+    "validation/multimod/mga_multigroup_v1.qualification.manifest.json",
+    "validation/multimod/pls_heterogeneity_v2.qualification.manifest.json",
+    "validation/multimod/general_sem_conditional_process_v2.qualification.manifest.json",
+    "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json"
+  ],
+  "gates": [
+    {
+      "gate_id": "contracts.schemas.source_identity",
+      "stage": "contracts",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "schema",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "contracts.schemas.source_identity"
+        ]
+      },
+      "acceptance": [
+        "All four additive Recipe V4 configs and result families reject unknown or conflicting fields.",
+        "Every profile, estimand, contrast, ledger, failure and qualification state has a stable identity.",
+        "Manifests bind the exact candidate commit and current SHA-256 for every source artifact."
+      ],
+      "invalidates_on_failure": [
+        "core.project.compile",
+        "estimation.point.kernels",
+        "resampling.shared_ledgers",
+        "runner.persistence.integration",
+        "archive.sidecar.integrity",
+        "native.workflow.accessibility",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "core.project.compile",
+      "stage": "compile_seam",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "compiler",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "core.project.compile"
+        ]
+      },
+      "acceptance": [
+        "qpls-core and qpls-project compile together.",
+        "V5 archives read through V6 without MultiMod reinterpretation."
+      ],
+      "invalidates_on_failure": [
+        "estimation.point.kernels",
+        "resampling.shared_ledgers",
+        "runner.persistence.integration",
+        "archive.sidecar.integrity",
+        "exports.semantic.readback",
+        "native.workflow.accessibility",
+        "package.candidate"
+      ]
+    },
+    {
+      "gate_id": "typescript.contracts.typecheck",
+      "stage": "compile_seam",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "schema",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "typescript.contracts.typecheck"
+        ]
+      },
+      "acceptance": [
+        "Frontend wire contracts exactly match Rust serialization.",
+        "Unknown profile and result identities fail closed."
+      ],
+      "invalidates_on_failure": [
+        "native.workflow.accessibility",
+        "exports.semantic.readback",
+        "package.candidate"
+      ]
+    },
+    {
+      "gate_id": "estimation.point.kernels",
+      "stage": "engine",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "estimation.point.kernels"
+        ]
+      },
+      "acceptance": [
+        "Hand-calculated identities and independent Python or R point references pass.",
+        "Null, boundary, rank and nonfinite failures emit stable codes and no partial result."
+      ],
+      "invalidates_on_failure": [
+        "resampling.shared_ledgers",
+        "runner.persistence.integration",
+        "mga.group_matrix",
+        "fimix.recovery",
+        "pos.recovery",
+        "conditional.profile_matrix",
+        "causal.known_targets",
+        "metamorphic.global"
+      ]
+    },
+    {
+      "gate_id": "resampling.shared_ledgers",
+      "stage": "resampling",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "resampling",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "resampling.shared_ledgers"
+        ]
+      },
+      "acceptance": [
+        "Every method uses deterministic indexed ledgers with requested, usable and failed identities.",
+        "No failed draw is replaced and every required ledger reaches its frozen usable threshold.",
+        "Seed, worker and shard results are invariant."
+      ],
+      "invalidates_on_failure": [
+        "mga.group_matrix",
+        "fimix.recovery",
+        "pos.recovery",
+        "conditional.profile_matrix",
+        "metamorphic.global",
+        "archive.sidecar.integrity",
+        "package.candidate"
+      ]
+    },
+    {
+      "gate_id": "runner.persistence.integration",
+      "stage": "integration",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "runner",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "runner.persistence.integration"
+        ]
+      },
+      "acceptance": [
+        "Recipe compilation, execution, cancellation, result projection and atomic append are connected.",
+        "Cancellation never publishes a partial scientific result."
+      ],
+      "invalidates_on_failure": [
+        "archive.sidecar.integrity",
+        "exports.semantic.readback",
+        "native.workflow.accessibility",
+        "package.candidate"
+      ]
+    },
+    {
+      "gate_id": "mga.group_matrix",
+      "stage": "scientific",
+      "profiles": [
+        "mga.*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "mga.group_matrix"
+        ]
+      },
+      "acceptance": [
+        "Independent fixtures pass for 2, 3, 5 and 20 groups.",
+        "Minimum cases, 2:1 warning, greater-than-10:1 blocker, typed levels and excluded row receipts pass.",
+        "Twenty-group all-pairs requires explicit heavy-run confirmation."
+      ],
+      "invalidates_on_failure": [
+        "mga.inference.matrix",
+        "mga.label_reversal",
+        "native.workflow.accessibility",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "mga.inference.matrix",
+      "stage": "scientific",
+      "profiles": [
+        "mga.*"
+      ],
+      "probable_root_component": "resampling",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "mga.inference.matrix"
+        ]
+      },
+      "acceptance": [
+        "Every profile-procedure cell has independent permutation, bootstrap or parametric evidence.",
+        "Max-spread omnibus precedes pairwise follow-up for K groups.",
+        "Holm, Bonferroni, Sidak, BH and explicit-none adjustments reproduce independent references.",
+        "Directional Henseler probability and zero-acceleration BC interval labels remain exact."
+      ],
+      "invalidates_on_failure": [
+        "mga.label_reversal",
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "mga.label_reversal",
+      "stage": "metamorphic",
+      "profiles": [
+        "mga.*"
+      ],
+      "probable_root_component": "resampling",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "mga.label_reversal"
+        ]
+      },
+      "acceptance": [
+        "A-minus-B signed differences reverse under label reversal.",
+        "Two-sided probabilities and decisions remain unchanged."
+      ],
+      "invalidates_on_failure": [
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "fimix.recovery",
+      "stage": "scientific",
+      "profiles": [
+        "fimix.*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "fimix.recovery"
+        ]
+      },
+      "acceptance": [
+        "Log-likelihood is monotonically non-decreasing within tolerance.",
+        "Posterior rows sum to one and AIC, AIC3, AIC4, BIC, CAIC, HQ and entropy use the optimized likelihood and full parameter count.",
+        "At least two aligned starts reproduce the optimum.",
+        "Strong-separation median ARI is at least 0.80 and homogeneous-null behavior meets preregistered limits.",
+        "Power, overlap, class-imbalance and non-normal recovery scenarios meet their predeclared thresholds."
+      ],
+      "invalidates_on_failure": [
+        "heterogeneity.bootstrap",
+        "archive.sidecar.integrity",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "fimix.collapse.boundaries",
+      "stage": "scientific",
+      "profiles": [
+        "fimix.*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "fimix.collapse.boundaries"
+        ]
+      },
+      "acceptance": [
+        "Class collapse, variance below 1e-8, singular design, nonfinite value and material likelihood decrease fail the start.",
+        "Dynamic minimum class size and 5 percent share gates are enforced."
+      ],
+      "invalidates_on_failure": [
+        "heterogeneity.bootstrap",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "pos.recovery",
+      "stage": "scientific",
+      "profiles": [
+        "pos.*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "pos.recovery"
+        ]
+      },
+      "acceptance": [
+        "Every accepted move strictly improves the full-refit unweighted endogenous R-squared objective.",
+        "Ten deterministic starts are used and two reproduce the canonical partition and objective.",
+        "Published P0 and destination-scored P2/P23 identities never cross.",
+        "Segment R-squared values and the unweighted objective reproduce from retained observed and fitted score rows; truth recovery, overlap and homogeneous-null thresholds pass."
+      ],
+      "invalidates_on_failure": [
+        "pos.common_metric",
+        "heterogeneity.bootstrap",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "pos.common_metric",
+      "stage": "scientific",
+      "profiles": [
+        "pos.common_metric.*",
+        "pos.destination_scored.*"
+      ],
+      "probable_root_component": "micom_common_metric",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "pos.common_metric"
+        ]
+      },
+      "acceptance": [
+        "One pooled scoring metric is applied identically to aligned segments.",
+        "Configural identity and pairwise compositional invariance gate every inferential contrast.",
+        "A failed gate preserves local descriptive output and suppresses gamma, delta, slope and effect tests.",
+        "Step 3 is reported but not required for standardized path comparison."
+      ],
+      "invalidates_on_failure": [
+        "heterogeneity.bootstrap",
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "heterogeneity.bootstrap",
+      "stage": "resampling",
+      "profiles": [
+        "fimix.*",
+        "pos.*"
+      ],
+      "probable_root_component": "label_alignment",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "heterogeneity.bootstrap"
+        ]
+      },
+      "acceptance": [
+        "Algorithm and K remain fixed in every replicate.",
+        "K at most five labels use exhaustive maximum-overlap matching.",
+        "Ambiguous or non-majority matches are rejected.",
+        "At least 90 percent of one shared ledger is usable and Type-7 percentile intervals reproduce an independent reference."
+      ],
+      "invalidates_on_failure": [
+        "archive.sidecar.integrity",
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "conditional.profile_matrix",
+      "stage": "scientific",
+      "profiles": [
+        "conditional.*"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": ["-NoProfile", "-File", "validation/multimod/invoke_multimod_gate_v1.ps1", "-GateId", "conditional.profile_matrix"]
+      },
+      "acceptance": [
+        "First-stage, second-stage, both-stage, multiple, three-way and selected 2-6 edge path fixtures pass.",
+        "Specific indirect, requested total indirect and requested total effects derive from explicit path selections.",
+        "Affine one-moderator cases alone emit a scalar index; other cases emit correctly named derivatives and contrasts.",
+        "All targets use one replicate ledger."
+      ],
+      "invalidates_on_failure": [
+        "conditional.bca_studentized",
+        "conditional.hoc_group_weight",
+        "conditional.probes",
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "conditional.bca_studentized",
+      "stage": "resampling",
+      "profiles": [
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2"
+      ],
+      "probable_root_component": "resampling",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": ["-NoProfile", "-File", "validation/multimod/invoke_multimod_gate_v1.ps1", "-GateId", "conditional.bca_studentized"]
+      },
+      "acceptance": [
+        "BCa uses a complete delete-one jackknife with no fallback.",
+        "Studentized defaults and hard outer-inner limits are enforced.",
+        "Null and non-null interactions and indices reproduce independent intervals for all admitted alternatives."
+      ],
+      "invalidates_on_failure": [
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "conditional.hoc_group_weight",
+      "stage": "scientific",
+      "profiles": [
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": ["-NoProfile", "-File", "validation/multimod/invoke_multimod_gate_v1.ps1", "-GateId", "conditional.hoc_group_weight"]
+      },
+      "acceptance": [
+        "HOC dependency stages precede products and disjoint nonnested single-approach limits hold.",
+        "Grouped ledgers are stratified.",
+        "Case weights travel with rows and report Kish ESS.",
+        "Frequency point and bootstrap results equal physically expanded rows without expansion."
+      ],
+      "invalidates_on_failure": [
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "conditional.probes",
+      "stage": "scientific",
+      "profiles": [
+        "conditional.*"
+      ],
+      "probable_root_component": "compiler",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "conditional.probes"
+        ]
+      },
+      "acceptance": [
+        "Standardized minus-one, zero and plus-one defaults, Cartesian grids, joint tuples and finite contrasts pass.",
+        "Original-sample anchors remain frozen across resamples.",
+        "Raw probes are limited to observed single indicators with transformation receipts.",
+        "All moderator, tuple, cell and target caps fail closed at their exact boundaries."
+      ],
+      "invalidates_on_failure": [
+        "exports.semantic.readback",
+        "native.workflow.accessibility",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "causal.known_targets",
+      "stage": "scientific",
+      "profiles": [
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": ["-NoProfile", "-File", "validation/multimod/invoke_multimod_gate_v1.ps1", "-GateId", "causal.known_targets"]
+      },
+      "acceptance": [
+        "Binary and explicit continuous treatment contrasts recover known interventional targets.",
+        "Selected observed paths of two through four edges and adjustment terms reproduce an independent g-computation oracle.",
+        "Output always says assumption-dependent interventional estimate and never says causality established."
+      ],
+      "invalidates_on_failure": [
+        "causal.assumption_failures",
+        "exports.semantic.readback",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "causal.assumption_failures",
+      "stage": "scientific",
+      "profiles": [
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "compiler",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "causal.assumption_failures"
+        ]
+      },
+      "acceptance": [
+        "Missing adjustment, temporal-order or identification declarations fail closed.",
+        "Positivity failures are detected.",
+        "Latent roles, natural effects, recanting witnesses, exposure-induced confounding, groups and weights are rejected."
+      ],
+      "invalidates_on_failure": [
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "metamorphic.global",
+      "stage": "metamorphic",
+      "profiles": [
+        "mga.general_sem_pls.v1",
+        "mga.multiple_two_way_moderation.v1",
+        "mga.bounded_three_way_moderation.v1",
+        "mga.bounded_two_way_moderated_mediation.v1",
+        "mga.multiple_nonnested_hoc.v1",
+        "mga.case_weighted_pls.v1",
+        "mga.frequency_weighted_pls.v1",
+        "mga.reflective_plsc.v1",
+        "fimix.p0_structural.v2",
+        "fimix.p2_multi_two_way.v2",
+        "fimix.p23_all_current.v2",
+        "pos.published.p0_structural.v2",
+        "pos.destination_scored.p2_multi_two_way.v2",
+        "pos.destination_scored.p23_all_current.v2",
+        "pos.common_metric.p2_multi_two_way.v1",
+        "pos.common_metric.p23_all_current.v1",
+        "conditional.multi_two_way_percentile.v2",
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2",
+        "conditional.bounded_three_way_percentile.v2",
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2",
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "estimator",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "metamorphic.global"
+        ]
+      },
+      "acceptance": [
+        "Row, construct, group label, class label and sign transformations reproduce mapped results.",
+        "Seed, worker and shard invariance holds.",
+        "Cancel-resume equals uninterrupted execution without publishing a partial result."
+      ],
+      "invalidates_on_failure": [
+        "archive.sidecar.integrity",
+        "package.candidate",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "archive.sidecar.integrity",
+      "stage": "persistence",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "archive_sidecar",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "archive.sidecar.integrity"
+        ]
+      },
+      "acceptance": [
+        "Save/reopen preserves recipes, results, failures, exclusions, provenance and all sidecars.",
+        "Missing, altered, duplicate, schema-mismatched and identity-mismatched Arrow sidecars are rejected.",
+        "128 MiB warning and 512 MiB rejection boundaries pass.",
+        "V5 and legacy V6 archives remain readable unchanged."
+      ],
+      "invalidates_on_failure": [
+        "exports.semantic.readback",
+        "native.workflow.accessibility",
+        "package.candidate",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "exports.semantic.readback",
+      "stage": "export",
+      "profiles": [
+        "mga.general_sem_pls.v1",
+        "mga.multiple_two_way_moderation.v1",
+        "mga.bounded_three_way_moderation.v1",
+        "mga.bounded_two_way_moderated_mediation.v1",
+        "mga.multiple_nonnested_hoc.v1",
+        "mga.case_weighted_pls.v1",
+        "mga.frequency_weighted_pls.v1",
+        "mga.reflective_plsc.v1",
+        "fimix.p0_structural.v2",
+        "fimix.p2_multi_two_way.v2",
+        "fimix.p23_all_current.v2",
+        "pos.published.p0_structural.v2",
+        "pos.destination_scored.p2_multi_two_way.v2",
+        "pos.destination_scored.p23_all_current.v2",
+        "pos.common_metric.p2_multi_two_way.v1",
+        "pos.common_metric.p23_all_current.v1",
+        "conditional.multi_two_way_percentile.v2",
+        "conditional.multi_two_way_bca.v2",
+        "conditional.studentized.v2",
+        "conditional.bounded_three_way_percentile.v2",
+        "conditional.multiple_hoc_percentile.v2",
+        "conditional.grouped_percentile.v2",
+        "conditional.case_weighted_percentile.v2",
+        "conditional.frequency_weighted_percentile.v2",
+        "interventional.observed_gcomp.v1"
+      ],
+      "probable_root_component": "export",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "exports.semantic.readback"
+        ]
+      },
+      "acceptance": [
+        "CSV, XLSX, JSON, HTML, PDF and chart exports are semantically read back for every admitted table.",
+        "Optional raw posterior and replicate exports preserve row and target identity.",
+        "Suppressed and unsupported inference cannot reappear in an export."
+      ],
+      "invalidates_on_failure": [
+        "package.candidate",
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "legacy.continuous_and_serialization",
+      "stage": "regression",
+      "profiles": [
+        "legacy"
+      ],
+      "probable_root_component": "legacy_regression",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "legacy.continuous_and_serialization"
+        ]
+      },
+      "acceptance": [
+        "The immutable V5 continuous-moderation archive SHA-256 and exact result, legacy recipe, dataset and moderation_simple_slopes table identities reproduce through the named-archive identity helper.",
+        "A candidate-built public qpls CLI replays the resident legacy recipe and dataset without an Experimental or internal-qualification switch.",
+        "The replayed continuous-moderation V1 scientific payload is structure- and nonnumeric-exact with finite numeric values within 1e-12, and its stable provenance is exact.",
+        "The bounded serialization regression covers only this frozen V5 archive/result, absent MultiMod fields in a legacy Recipe V4 wire shape, an empty additive MultiMod inventory in a pre-MultiMod V6 document, and frozen pre-MultiMod canonical-export hashes; it does not claim the unbound legacy archive universe."
+      ],
+      "invalidates_on_failure": [
+        "package.candidate",
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "native.workflow.accessibility",
+      "stage": "native",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "native_ui",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "native.workflow.accessibility"
+        ]
+      },
+      "acceptance": [
+        "MGA, segmentation, conditional-process and causal setup flows require all explicit confirmations and selections.",
+        "Large tables are virtualized and keyboard accessible with equivalent textual tables for graphics.",
+        "Cancellation and recovery pass with no partial result."
+      ],
+      "invalidates_on_failure": [
+        "package.candidate",
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "manifests.live.derivation"
+      ]
+    },
+    {
+      "gate_id": "performance.maximum_profiles",
+      "stage": "performance",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "runner",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "performance.maximum_profiles"
+        ]
+      },
+      "acceptance": [
+        "Real production runners complete the 20-group all-190-pair MGA, 512-cell/1,024-target conditional grid, and locked P23 FIMIX/PLS-POS fixed-K bootstrap cells within explicit wall, peak-working-set and output budgets.",
+        "The production Archive V6 validator admits the exact 512 MiB aggregate, rejects maximum-plus-one, and the runner reports the exact 128 MiB warning boundary.",
+        "A cancelled MGA retains only complete immutable shards; serialized-cache strict reopen and resume produce the same scientific result and finalized cache identity as uninterrupted execution.",
+        "Metrics fail closed when unavailable or over budget, source/input/output digests are retained, and only one Cargo process runs at a time."
+      ],
+      "invalidates_on_failure": [
+        "manifests.prepackage.authority",
+        "package.candidate",
+        "manifests.live.derivation",
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "manifests.prepackage.authority",
+      "stage": "prepackage_authority",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "evidence_manifest",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "manifests.prepackage.authority"
+        ]
+      },
+      "acceptance": [
+        "The external prepackage set deeply binds exact profile-procedure cells, source hashes, passed gate receipts, the frozen candidate commit and package version.",
+        "The generated candidate authority contains no wildcard or family-only claim and tracked manifests remain Labs/absent.",
+        "The candidate source tree contains no generated evidence; only the package build may consume this external authority set."
+      ],
+      "invalidates_on_failure": [
+        "package.candidate",
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "manifests.live.derivation",
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "package.candidate",
+      "stage": "package",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "packaging",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "package.candidate"
+        ]
+      },
+      "acceptance": [
+        "Full Cargo workspace check and frontend production build pass before packaging.",
+        "Candidate artifacts are isolated and are not public installers.",
+        "The executable embeds only the exact external prepackage authority and manifest set after build-time Git, version, plan, binding, source, gate and tracked-index verification.",
+        "The build-only qualification fixture command and immutable frontend bridge require both the multimod-qualification-harness Cargo feature/Vite flag and valid embedded candidate authority; preview builds retain no executable fixture path."
+      ],
+      "invalidates_on_failure": [
+        "installed.offline.smoke",
+        "portable.offline.smoke",
+        "manifests.live.derivation",
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "installed.offline.smoke",
+      "stage": "packaged_windows",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "offline_boundary",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "installed.offline.smoke"
+        ]
+      },
+      "acceptance": [
+        "A fresh isolated NSIS installation launches the exact harness-enabled candidate executable bound to the package receipt and embedded authority, then uninstalls without residual registration or install root.",
+        "All four typed result families complete through production preflight/runner/publication; completed identities, strict save/reopen, semantic CSV/XLSX/JSON/HTML/PDF and available chart readback, raw Arrow publication, missing/tampered sidecar rejection, MGA cancellation/resume, accessibility and error-free fully offline execution pass.",
+        "The receipt states this is the unmerged review candidate; it does not cover any later harness-disabled rebuild and no request or runtime environment can supply promotion authority."
+      ],
+      "invalidates_on_failure": [
+        "manifests.live.derivation",
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "portable.offline.smoke",
+      "stage": "packaged_windows",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "offline_boundary",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "portable.offline.smoke"
+        ]
+      },
+      "acceptance": [
+        "The exact receipt-bound harness-enabled portable candidate completes the same four production result, persistence, export, sidecar-integrity, cancellation/recovery, accessibility and fully offline workflows as the installed lane.",
+        "The executable and authority hashes are exact, no public artifact is replaced or published, and a later harness-disabled rebuild is explicitly outside this receipt."
+      ],
+      "invalidates_on_failure": [
+        "manifests.live.derivation",
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "manifests.live.derivation",
+      "stage": "release_truth",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "evidence_manifest",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "manifests.live.derivation"
+        ]
+      },
+      "acceptance": [
+        "Every advertised profile-procedure cell has a final live release-qualified manifest bound to the exact final commit and both packaged runtime-promotion smokes.",
+        "The final live set is distinct from and generated after the prepackage authority set; it is never consumed by the already-built package.",
+        "Registry state does not exceed live derivation and no stale source or gate hash remains.",
+        "Main is clean and unchanged; the candidate remains unmerged, untagged, unpublished and unpushed."
+      ],
+      "invalidates_on_failure": [
+        "release.acceptance"
+      ]
+    },
+    {
+      "gate_id": "release.acceptance",
+      "stage": "release_truth",
+      "profiles": [
+        "*"
+      ],
+      "probable_root_component": "evidence_manifest",
+      "implementation_status": "ready",
+      "command": {
+        "executable": "pwsh",
+        "arguments": [
+          "-NoProfile",
+          "-File",
+          "validation/multimod/invoke_multimod_gate_v1.ps1",
+          "-GateId",
+          "release.acceptance"
+        ]
+      },
+      "acceptance": [
+        "All required gates pass, issue inventory is empty, C is at least 20 GiB and D is at least 25 GiB after evidence retention."
+      ],
+      "invalidates_on_failure": []
+    }
+  ]
+}

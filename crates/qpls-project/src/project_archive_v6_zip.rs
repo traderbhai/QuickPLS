@@ -8,12 +8,14 @@ use super::{
     PROJECT_ARCHIVE_SCHEMA_V6_VERSION, ProjectArchiveDocumentV6, ProjectError, ProjectManifest,
     archive_integrity::{
         DEFAULT_ARCHIVE_LIMITS, MANIFEST_ENTRY_NAME, MAX_MANIFEST_UNCOMPRESSED_BYTES,
-        MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES, PROJECT_ENTRY_NAME, expected_project_entries,
-        preflight_archive, read_preflighted_entry, validate_expected_project_entries,
-        validate_manifest_checksums, validate_raw_central_directory, verify_archive_checksums,
+        MAX_PROJECT_DOCUMENT_UNCOMPRESSED_BYTES, PROJECT_ENTRY_NAME,
+        expected_project_entries_with_additional, preflight_archive, read_preflighted_entry,
+        validate_expected_project_entries, validate_manifest_checksums,
+        validate_raw_central_directory, verify_archive_checksums,
     },
     deserialize_project_document_v6, map_archive_integrity_error,
-    reject_duplicate_json_object_keys, validate_project_data_lineage_resident_v1,
+    reject_duplicate_json_object_keys, validate_multimod_sidecar_stream_v1,
+    validate_project_data_lineage_resident_v1,
 };
 use qpls_data::{Dataset, dataset_from_descriptor};
 use serde_json::Value;
@@ -46,6 +48,10 @@ pub struct LoadedProjectArchiveV6 {
     pub manifest: ProjectManifest,
     pub document: ProjectArchiveDocumentV6,
     pub datasets: Vec<Dataset>,
+    /// Entry identities of sidecars whose manifest checksum, byte count,
+    /// evidence/schema contract, and complete Arrow stream were validated.
+    /// Payload bytes are intentionally not retained in memory.
+    pub multimod_sidecars: BTreeSet<String>,
 }
 
 /// Strictly reads one schema-6 `.qpls` ZIP without projecting it into the live
@@ -114,8 +120,17 @@ pub fn load_project_archive_v6_from_file(
     })?;
     validate_manifest_document_identity(&manifest, &document)?;
 
-    let expected_entries = expected_project_entries(document.datasets.iter().map(|item| item.id))
-        .map_err(map_archive_integrity_error)?;
+    let sidecar_entries = document
+        .multimod_results
+        .iter()
+        .flat_map(|attachment| attachment.sidecars.iter())
+        .map(|descriptor| descriptor.entry_name.clone())
+        .collect::<Vec<_>>();
+    let expected_entries = expected_project_entries_with_additional(
+        document.datasets.iter().map(|item| item.id),
+        sidecar_entries,
+    )
+    .map_err(map_archive_integrity_error)?;
     validate_expected_project_entries(&checksums, &expected_entries)
         .map_err(map_archive_integrity_error)?;
 
@@ -137,10 +152,38 @@ pub fn load_project_archive_v6_from_file(
         ))
     })?;
 
+    let mut multimod_sidecars = BTreeSet::new();
+    for attachment in &document.multimod_results {
+        for descriptor in &attachment.sidecars {
+            if checksums.get(&descriptor.entry_name) != Some(descriptor.sha256.as_str()) {
+                return Err(ProjectError::Invalid(format!(
+                    "schema-6 MultiMod sidecar descriptor checksum differs from the verified archive manifest: {}",
+                    descriptor.entry_name
+                )));
+            }
+            let entry = archive.by_name(&descriptor.entry_name)?;
+            if entry.size() != descriptor.uncompressed_bytes {
+                return Err(ProjectError::Invalid(format!(
+                    "schema-6 MultiMod sidecar descriptor size differs from the ZIP entry: {}",
+                    descriptor.entry_name
+                )));
+            }
+            validate_multimod_sidecar_stream_v1(&attachment.result_id, descriptor, entry).map_err(
+                |error| {
+                    ProjectError::Invalid(format!(
+                        "schema-6 MultiMod sidecar failed strict validation: {error}"
+                    ))
+                },
+            )?;
+            multimod_sidecars.insert(descriptor.entry_name.clone());
+        }
+    }
+
     Ok(LoadedProjectArchiveV6 {
         manifest,
         document,
         datasets,
+        multimod_sidecars,
     })
 }
 

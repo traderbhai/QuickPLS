@@ -11,6 +11,7 @@ import {
   type CanonicalResultExportRequestV2,
   type PreparedCanonicalResultExportV2,
 } from "./canonicalResultCrossFormatExportV2";
+import { sha256HexUtf8V1 } from "./sha256V1";
 
 const digest = "a".repeat(64);
 
@@ -108,6 +109,65 @@ function fixture(): CanonicalResultDocumentV2 {
   };
 }
 
+function candidateMultimodFixture(): CanonicalResultDocumentV2 {
+  const document = fixture();
+  const capability = {
+    registry_schema_version: 2 as const,
+    capability_id: "smartpls.mediation",
+    cell_id: "qpls.multimod.general_sem_conditional_process_v2",
+    capability_version: "general_sem_conditional_process_v2",
+  };
+  const receipt = {
+    schema_version: 1 as const,
+    authority_binding_sha256: "1".repeat(64),
+    candidate_commit_sha: "2".repeat(40),
+    candidate_version: "2.56.0",
+    qualification_plan_sha256: "3".repeat(64),
+    gate_binding_sha256: "4".repeat(64),
+    capability_index_sha256: "5".repeat(64),
+    prepackage_manifest_set_sha256: "6".repeat(64),
+    required_profile_cells: [
+      "conditional.multi_two_way_percentile.v2::explicit_path_target_math",
+    ],
+  };
+  document.provenance.capability_cell = capability;
+  document.provenance.method_version = "general_sem_conditional_process_v2";
+  document.capability_cells = [capability];
+  for (const section of document.sections) section.capability_cells = [capability];
+  for (const table of document.tables) table.capability_cells = [capability];
+  document.sections[0]!.table_ids.push("multimod_run_provenance");
+  document.tables.push({
+    id: "multimod_run_provenance",
+    title: "MultiMod run provenance",
+    columns: [
+      {
+        id: "qualification",
+        label: "Qualification",
+        data_type: "text",
+        description: "Typed qualification state.",
+        role: "decision",
+      },
+      {
+        id: "candidate_qualification_receipt_json",
+        label: "Candidate authority receipt",
+        data_type: "text",
+        description: "Exact build-embedded authority receipt.",
+        role: "provenance",
+      },
+    ],
+    rows: [{
+      id: "run",
+      cells: [
+        { kind: "text", value: "release_qualified_candidate" },
+        { kind: "text", value: JSON.stringify(receipt) },
+      ],
+    }],
+    footnote_ids: [],
+    capability_cells: [capability],
+  });
+  return document;
+}
+
 function higherOrderFixture(): CanonicalResultDocumentV2 {
   const document = fixture();
   const capability = {
@@ -177,6 +237,56 @@ function prepared(request: CanonicalResultExportRequestV2): PreparedCanonicalRes
 }
 
 describe("CanonicalResultDocumentV2 cross-format dispatcher", () => {
+  it("preserves the frozen pre-MultiMod V2 envelope key order and hashes for legacy results", () => {
+    const artifact = prepared({ format: "csv", tableIds: ["effects"], chartIds: [] });
+    if (artifact.format !== "csv") throw new Error("Expected CSV artifact");
+
+    expect(Object.keys(artifact.semantic)).toEqual([
+      "schema_version",
+      "format",
+      "source",
+      "title",
+      "provenance",
+      "capability_cells",
+      "selection",
+      "sections",
+      "tables",
+      "charts",
+      "notices",
+      "exclusions",
+      "footnotes",
+      "presentation",
+      "semantic_sha256",
+    ]);
+    expect(artifact.semantic).not.toHaveProperty("publication_qualification");
+    expect(artifact.semantic).not.toHaveProperty("candidate_qualification_receipt");
+    // Frozen from the identical fixture under main commit 6ed46cc422917fc9fc9c463302ca4ff1e9ea01a4.
+    expect(artifact.semantic.semantic_sha256).toBe(
+      "ec56a5b3d17a2cea1b857780adfde39ec5e779082a9de7d500e4d7487b6dc90a",
+    );
+    expect(sha256HexUtf8V1(artifact.contents)).toBe(
+      "749ce66ad38c9b38adafe05b8f5da48f28f4e857e2f4ab05fcee5214c78084f0",
+    );
+  });
+
+  it("retains candidate authority outside a table selection for native export verification", () => {
+    const result = prepareCanonicalResultExportV2(candidateMultimodFixture(), {
+      format: "json",
+      tableIds: ["effects"],
+      chartIds: [],
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error(result.errors.join("\n"));
+    expect(result.artifact.semantic.tables.map((table) => table.id)).toEqual(["effects"]);
+    expect(result.artifact.semantic.publication_qualification).toBe("release_qualified_candidate");
+    expect(result.artifact.semantic.candidate_qualification_receipt).toMatchObject({
+      candidate_commit_sha: "2".repeat(40),
+      required_profile_cells: [
+        "conditional.multi_two_way_percentile.v2::explicit_path_target_math",
+      ],
+    });
+  });
+
   it("derives the HOC SVG and PNG chart from exact canonical relation IDs and estimates", () => {
     const document = higherOrderFixture();
     const charts = canonicalResultExportChartsV2(document);
@@ -221,6 +331,23 @@ describe("CanonicalResultDocumentV2 cross-format dispatcher", () => {
       exact_semantic_match: true,
       digest_match: true,
     });
+  });
+
+  it("round-trips selected tables and charts through provenance-bound semantic JSON", () => {
+    const artifact = prepared({
+      format: "json",
+      tableIds: ["effects"],
+      chartIds: ["interaction_plot"],
+    });
+    if (artifact.format !== "json") throw new Error("Expected JSON artifact");
+
+    const decoded = JSON.parse(artifact.contents) as Record<string, unknown>;
+    expect(decoded.semantic_sha256).toMatch(/^[a-f0-9]{64}$/u);
+    expect(readPreparedCanonicalResultExportSemanticV2(artifact)?.selection).toEqual({
+      table_ids: ["effects"],
+      chart_ids: ["interaction_plot"],
+    });
+    expect(verifyPreparedCanonicalResultExportV2(fixture(), artifact).passed).toBe(true);
   });
 
   it("builds a multisheet workbook model with an exact manifest, stable sheet IDs, and provenance", () => {

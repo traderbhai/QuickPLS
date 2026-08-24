@@ -24,6 +24,8 @@ export interface CanonicalResultExportPanelV2Props {
   nativeDesktop?: boolean;
   /** Hides stable implementation identities from the ordinary researcher view. */
   researcherFacing?: boolean;
+  /** Stable fail-closed reason when this result is not eligible for publication. */
+  publicationBlockedReason?: string;
 }
 
 interface ExportFeedbackV2 {
@@ -260,6 +262,7 @@ export function CanonicalResultExportPanelV2({
   writers,
   nativeDesktop = isNativeDesktop(),
   researcherFacing = false,
+  publicationBlockedReason,
 }: CanonicalResultExportPanelV2Props) {
   const displayedDocument = researcherFacing
     && presentationDocument?.document_id === document.document_id
@@ -296,12 +299,12 @@ export function CanonicalResultExportPanelV2({
   }), [writers]);
 
   const runExport = async (format: CanonicalResultExportFormatV2) => {
-    if (busy) return;
+    if (busy || publicationBlockedReason) return;
     const controller = new AbortController();
     abortRef.current = controller;
     setBusy(format);
     setFeedback({ tone: "neutral", message: `Preparing the verified ${readableFormat(format)} export.` });
-    const reportCharts = format === "html" || format === "pdf" ? chartIds : undefined;
+    const reportCharts = format === "json" || format === "html" || format === "pdf" ? chartIds : undefined;
     const chartSelection = format === "svg" || format === "png"
       ? selectedChartId ? [selectedChartId] : []
       : reportCharts;
@@ -337,8 +340,8 @@ export function CanonicalResultExportPanelV2({
       : current.filter((id) => id !== tableId));
   };
 
-  const tableFormatsDisabled = busy !== null || selectedTableIds.length === 0;
-  const chartFormatsDisabled = busy !== null || !selectedChartId;
+  const tableFormatsDisabled = busy !== null || Boolean(publicationBlockedReason) || selectedTableIds.length === 0;
+  const chartFormatsDisabled = busy !== null || Boolean(publicationBlockedReason) || !selectedChartId;
   const xlsxUnavailable = !nativeDesktop && !writers?.workbook;
   const feedbackRole = feedback?.tone === "error" ? "alert" : "status";
 
@@ -346,7 +349,11 @@ export function CanonicalResultExportPanelV2({
     <header><div><h3 id="nd-canonical-export-v2-heading"><Download size={17} aria-hidden="true" />{researcherFacing ? "Export verified result" : "Export verified canonical result"}</h3><p>{researcherFacing
       ? "Choose result tables once, then export each format from the same saved scientific result."
       : "Choose exact canonical tables once, then export every format through the same provenance-bound semantic dispatcher."}</p></div></header>
-    <fieldset className="nd-canonical-export-v2__tables" disabled={busy !== null} aria-describedby="nd-canonical-export-v2-selection-summary">
+    {publicationBlockedReason ? <div className="nd-form-error" role="alert" data-canonical-export-blocker="CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED">
+      <strong>Canonical publication withheld.</strong>
+      <span>{publicationBlockedReason}</span>
+    </div> : null}
+    <fieldset className="nd-canonical-export-v2__tables" disabled={busy !== null || Boolean(publicationBlockedReason)} aria-describedby="nd-canonical-export-v2-selection-summary">
       <legend>Tables to include</legend>
       <div className="nd-cbsem-v4-actions">
         <button type="button" disabled={busy !== null || selectedTableIds.length === tableIds.length} onClick={() => setSelectedTableIds(tableIds)}>Select all tables</button>
@@ -361,7 +368,7 @@ export function CanonicalResultExportPanelV2({
       })}
     </fieldset>
     {exportCharts.length ? <label htmlFor="nd-canonical-export-v2-chart">Chart for SVG or PNG
-      <select id="nd-canonical-export-v2-chart" value={selectedChartId} disabled={busy !== null} onChange={(event) => setSelectedChartId(event.target.value)}>
+      <select id="nd-canonical-export-v2-chart" value={selectedChartId} disabled={busy !== null || Boolean(publicationBlockedReason)} onChange={(event) => setSelectedChartId(event.target.value)}>
         {exportCharts.map(({ chart, origin }) => <option value={chart.id} key={chart.id}>{chart.title} · {origin === "persisted"
           ? researcherFacing ? "saved" : "persisted"
           : researcherFacing ? "derived from result table" : "derived from canonical table"}{researcherFacing ? "" : ` · ${chart.id}`}</option>)}
@@ -374,11 +381,13 @@ export function CanonicalResultExportPanelV2({
     /> : null}
     <p id="nd-canonical-export-v2-selection-summary" role="status" aria-live="polite">{selectedTableIds.length} of {tableIds.length} {researcherFacing ? "result" : "canonical"} tables selected. {chartIds.length ? `${selectedChart?.origin === "derived_from_canonical_table" ? "Derived" : researcherFacing ? "Saved" : "Persisted"} chart${researcherFacing ? " selected" : ` ${selectedChartId || "not selected"}`}.` : "No exportable chart."}</p>
     <div className="nd-cbsem-v4-actions" aria-label="Canonical result export formats">
-      {(["csv", "xlsx", "html", "pdf", "svg", "png"] as const).map((format) => {
+      {(["csv", "xlsx", "json", "html", "pdf", "svg", "png"] as const).map((format) => {
         const chartFormat = format === "svg" || format === "png";
         const disabled = chartFormat ? chartFormatsDisabled : tableFormatsDisabled || (format === "xlsx" && xlsxUnavailable);
         const reason = format === "xlsx" && xlsxUnavailable
           ? "XLSX workbook publication requires the QuickPLS desktop runtime."
+          : publicationBlockedReason
+            ? publicationBlockedReason
           : chartFormat && !selectedChartId
             ? "Select a canonical export chart first."
             : !chartFormat && selectedTableIds.length === 0

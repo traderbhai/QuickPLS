@@ -2,13 +2,18 @@ import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import type {
   CanonicalResultExportFormatV2,
+  CanonicalResultPublicationQualificationV2,
   PreparedCanonicalResultExportV2,
 } from "../domain/canonicalResultCrossFormatExportV2";
 import { sha256HexBytesV1 } from "../domain/sha256V1";
+import {
+  parseMultimodCandidateQualificationReceiptV1,
+  type MultimodCandidateQualificationReceiptV1,
+} from "../domain/multimodContractsV1";
 
 const NATIVE_CANONICAL_EXPORT_PUBLICATION_SCHEMA_VERSION_V2 = 2 as const;
 const NATIVE_CANONICAL_EXPORT_PUBLICATION_COMMAND_V2 = "publish_canonical_result_export_v2";
-const CANONICAL_EXPORT_FORMATS_V2 = ["csv", "xlsx", "html", "pdf", "svg", "png"] as const;
+const CANONICAL_EXPORT_FORMATS_V2 = ["csv", "xlsx", "json", "html", "pdf", "svg", "png"] as const;
 
 interface NativeCanonicalResultExportIdentityV2 {
   documentId: string;
@@ -23,6 +28,8 @@ interface NativeCanonicalResultExportIdentityV2 {
   capabilityCellId: string;
   methodVersion: string;
   engineVersion: string;
+  publicationQualification?: CanonicalResultPublicationQualificationV2;
+  candidateQualificationReceipt?: MultimodCandidateQualificationReceiptV1;
   stableTableIds: string[];
   stableChartIds: string[];
   semanticSha256: string;
@@ -100,6 +107,7 @@ function exactArtifactBytes(artifact: PreparedCanonicalResultExportV2): Uint8Arr
     case "pdf":
     case "png": return artifact.bytes;
     case "csv":
+    case "json":
     case "html":
     case "svg": return new TextEncoder().encode(artifact.contents);
   }
@@ -109,6 +117,17 @@ function publicationIdentity(
   artifact: PreparedCanonicalResultExportV2,
 ): NativeCanonicalResultExportIdentityV2 {
   const { semantic } = artifact;
+  let candidateQualificationReceipt: MultimodCandidateQualificationReceiptV1 | undefined;
+  if (semantic.candidate_qualification_receipt !== undefined) {
+    candidateQualificationReceipt = parseMultimodCandidateQualificationReceiptV1(
+      semantic.candidate_qualification_receipt,
+      "canonical_export.candidateQualificationReceipt",
+    );
+  }
+  if ((semantic.publication_qualification === "release_qualified_candidate")
+    !== (candidateQualificationReceipt !== undefined)) {
+    throw new Error("Canonical candidate state and embedded-authority receipt are inconsistent.");
+  }
   return {
     documentId: semantic.source.document_id,
     runId: semantic.provenance.run_id,
@@ -122,6 +141,12 @@ function publicationIdentity(
     capabilityCellId: semantic.provenance.capability_cell.cell_id,
     methodVersion: semantic.provenance.method_version,
     engineVersion: semantic.provenance.engine_version,
+    ...(semantic.publication_qualification !== undefined
+      ? { publicationQualification: semantic.publication_qualification }
+      : {}),
+    ...(candidateQualificationReceipt !== undefined
+      ? { candidateQualificationReceipt }
+      : {}),
     stableTableIds: [...semantic.selection.table_ids],
     stableChartIds: [...semantic.selection.chart_ids],
     semanticSha256: semantic.semantic_sha256,
@@ -168,6 +193,9 @@ function sameIdentity(
     && actual.capabilityCellId === expected.capabilityCellId
     && actual.methodVersion === expected.methodVersion
     && actual.engineVersion === expected.engineVersion
+    && actual.publicationQualification === expected.publicationQualification
+    && JSON.stringify(actual.candidateQualificationReceipt ?? null)
+      === JSON.stringify(expected.candidateQualificationReceipt ?? null)
     && JSON.stringify(actual.stableTableIds) === JSON.stringify(expected.stableTableIds)
     && JSON.stringify(actual.stableChartIds) === JSON.stringify(expected.stableChartIds)
     && actual.semanticSha256 === expected.semanticSha256;
@@ -228,10 +256,32 @@ export async function publishNativeCanonicalResultExportV2(
   if (!selected.toLowerCase().endsWith(`.${artifact.format}`)) {
     throw new Error(`The selected destination must end in .${artifact.format}; no file was written.`);
   }
+  return publishNativeCanonicalResultExportAtV2(artifact, selected, signal);
+}
+
+/**
+ * Publishes to an already selected absolute destination. The ordinary product
+ * flow continues to use the Save-dialog wrapper above; this seam lets the
+ * build-only packaged qualification bridge exercise the identical typed
+ * handoff and native no-replace publisher without automating a system dialog.
+ */
+export async function publishNativeCanonicalResultExportAtV2(
+  artifact: PreparedCanonicalResultExportV2,
+  destinationPath: string,
+  signal?: AbortSignal,
+): Promise<NativeCanonicalResultExportPublicationReceiptV2 | null> {
+  assertPreparedArtifactFormat(artifact);
+  if (signal?.aborted) return null;
+  if (!destinationPath || destinationPath.trim() !== destinationPath) {
+    throw new Error("The canonical export destination must be nonempty exact text.");
+  }
+  if (!destinationPath.toLowerCase().endsWith(`.${artifact.format}`)) {
+    throw new Error(`The selected destination must end in .${artifact.format}; no file was written.`);
+  }
   const request: NativeCanonicalResultExportPublicationRequestV2 = {
     schemaVersion: NATIVE_CANONICAL_EXPORT_PUBLICATION_SCHEMA_VERSION_V2,
     format: artifact.format,
-    destinationPath: selected,
+    destinationPath,
     identity: publicationIdentity(artifact),
     payload: publicationPayload(artifact),
   };

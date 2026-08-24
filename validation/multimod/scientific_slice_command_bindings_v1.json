@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "binding_set_id": "qpls.multimod.scientific-sut-slice.v1",
+  "qualification_claim": "none",
+  "review_status": "reviewed_partial_diagnostic_programs_unexecuted",
+  "campaign_gate_ready": false,
+  "campaign_rule": "These commands may be retained as diagnostic_steps or reused by a narrower gate only when that narrower gate's complete acceptance is exercised. They cannot make the broader listed producer gates ready.",
+  "runner": {
+    "executable": "pwsh",
+    "common_arguments": [
+      "-NoProfile",
+      "-File",
+      "validation/multimod/run_scientific_sut_slice_v1.ps1"
+    ],
+    "development_scale": "development",
+    "qualification_scale": "qualification"
+  },
+  "bindings": [
+    {
+      "plan_gate_ids": [
+        "mga.group_matrix",
+        "mga.inference.matrix",
+        "mga.label_reversal"
+      ],
+      "gate_argument": "mga",
+      "coverage": "typed 2/3/5/20-group eligibility, minimum/imbalance blockers, 5000-draw label reversal, independent OLS point identity, and five multiplicity procedures",
+      "remaining_gate_work": "measurement, MICOM, max-spread omnibus, bootstrap-BC, Henseler, parametric/Wald, weighted, PLSc, and profile matrices"
+    },
+    {
+      "plan_gate_ids": [
+        "fimix.recovery",
+        "fimix.collapse.boundaries"
+      ],
+      "gate_argument": "fimix",
+      "coverage": "likelihood/posterior/criteria/entropy identities, monotone traces, multistart stability, one deterministic strong-separation ARI pilot, and variance-collapse failure",
+      "remaining_gate_work": "predeclared multi-seed median recovery, homogeneous null, overlap/power/non-normal/rank simulations, interaction profiles, and qualification-scale performance"
+    },
+    {
+      "plan_gate_ids": [
+        "pos.recovery"
+      ],
+      "gate_argument": "pos",
+      "coverage": "ten-start determinism, same-K tenth-start identity, strict objective history, canonical multistart reproduction, and independent full-segment OLS objective identity",
+      "remaining_gate_work": "production PLS score refits, P2/P23 interaction profiles, common-metric MICOM gate, fixed-K bootstrap, and wider recovery simulations"
+    },
+    {
+      "plan_gate_ids": [
+        "conditional.profile_matrix",
+        "conditional.probes"
+      ],
+      "gate_argument": "conditional",
+      "coverage": "first-stage, second-stage, both-stage, bounded three-way, six-edge path polynomials/effects/derivatives/contrasts plus frequency count-space expanded-row equivalence",
+      "remaining_gate_work": "raw runner fixtures for multiple interactions/HOCs/groups/case weights, percentile/BCa/studentized/one-sided ledgers, save-reopen, and exports"
+    },
+    {
+      "plan_gate_ids": [
+        "causal.known_targets",
+        "causal.assumption_failures"
+      ],
+      "gate_argument": "causal",
+      "coverage": "known binary-treatment observed linear g-computation target, wording, checklist, positivity, and unsupported natural-effect blockers",
+      "remaining_gate_work": "continuous treatment, positivity strata, multiple mediators/moderators, non-null simulations, persistence, and exports"
+    }
+  ]
+}

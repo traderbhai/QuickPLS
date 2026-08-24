@@ -416,6 +416,10 @@ mod tests {
                 invariance_steps: Vec::new(),
             }),
             general_sem_config: None,
+            mga_multigroup: None,
+            pls_heterogeneity: None,
+            general_sem_conditional_process: None,
+            interventional_causal_mediation: None,
             metadata: BTreeMap::new(),
             legacy_source: None,
         };
