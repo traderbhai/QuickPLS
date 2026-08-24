@@ -367,6 +367,14 @@ fn sha256(bytes: &[u8]) -> String {
     format!("sha256:{:x}", Sha256::digest(bytes))
 }
 
+fn micom_ledger_sha256(
+    ledger: &[MicomPermutationLedgerEntryV1],
+) -> Result<String, FrequencyMultigroupErrorV1> {
+    let bytes = serde_json::to_vec(ledger)
+        .map_err(|error| FrequencyMultigroupErrorV1::MicomContract(error.to_string()))?;
+    Ok(format!("{:x}", Sha256::digest(bytes)))
+}
+
 fn frequency_membership_digest(rows: &[FrequencySelectedGroupRowV1]) -> String {
     let mut bytes = Vec::with_capacity(rows.len() * 17);
     for row in rows {
@@ -2086,10 +2094,7 @@ where
             },
         });
     }
-    let ledger_sha256 = sha256(
-        &serde_json::to_vec(&ledger)
-            .map_err(|error| FrequencyMultigroupErrorV1::MicomContract(error.to_string()))?,
-    );
+    let ledger_sha256 = micom_ledger_sha256(&ledger)?;
     Ok(MicomPairwiseResultV1 {
         method_version: FREQUENCY_MICOM_PAIRWISE_METHOD_VERSION_V1.into(),
         pair,
@@ -2140,6 +2145,20 @@ mod tests {
             )
             .collect(),
         }
+    }
+
+    #[test]
+    fn frequency_micom_ledger_uses_canonical_bare_sha256() {
+        let ledger = vec![MicomPermutationLedgerEntryV1 {
+            replicate: 0,
+            seed: 42,
+            partition_sha256: "sha256:fixture".into(),
+            status: MicomPermutationStatusV1::Usable,
+        }];
+        assert_eq!(
+            micom_ledger_sha256(&ledger).unwrap(),
+            "22c0812dd0b6d7efcb07355f7596b30113a01acd380d0c590266ab66873b4c7a"
+        );
     }
 
     fn parameter() -> ParameterIdentityV1 {

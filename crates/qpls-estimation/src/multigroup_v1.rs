@@ -1924,7 +1924,11 @@ pub struct GroupBiasCorrectedIntervalV1 {
 
 fn validate_bootstrap_banks(banks: &GroupBootstrapBanksV1) -> Result<(), MultigroupKernelErrorV1> {
     validate_parameter_identities(&banks.parameters)?;
-    if banks.method_version != MGA_MULTIGROUP_BOOTSTRAP_BANK_VERSION_V1
+    if ![
+        MGA_MULTIGROUP_BOOTSTRAP_BANK_VERSION_V1,
+        crate::FREQUENCY_MULTIGROUP_BOOTSTRAP_BANK_VERSION_V1,
+    ]
+    .contains(&banks.method_version.as_str())
         || banks.requested != banks.attempted
         || banks.ledger.len() != banks.requested
         || banks.groups.len() < MGA_MULTIGROUP_MIN_GROUPS_V1
@@ -3159,6 +3163,21 @@ mod tests {
         assert_eq!(forward.greater_differences, 2);
         assert_eq!(forward.equal_differences, 1);
         assert_eq!(forward.less_differences, 1);
+        let ordinary_bc = group_bias_corrected_intervals_v1(&banks, 0.95).unwrap();
+
+        let mut frequency_banks = banks;
+        frequency_banks.method_version =
+            crate::FREQUENCY_MULTIGROUP_BOOTSTRAP_BANK_VERSION_V1.into();
+        assert_eq!(
+            henseler_directional_probabilities_v1(&frequency_banks, forward_pair, 0.05)
+                .unwrap()
+                .remove(0),
+            forward
+        );
+        assert_eq!(
+            group_bias_corrected_intervals_v1(&frequency_banks, 0.95).unwrap(),
+            ordinary_bc
+        );
     }
 
     #[test]
