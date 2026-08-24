@@ -267,6 +267,28 @@ class MgaShardContractTests(unittest.TestCase):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, producer)
 
+    def test_bounded_moderated_mediation_fixture_selects_exact_indirect_path(self) -> None:
+        producer = (
+            Path(__file__).parents[2]
+            / "crates/qpls-runner/examples/multimod_mga_qualification_v1.rs"
+        ).read_text(encoding="utf-8")
+        start = producer.index("ProfileFixture::ModeratedMediation => {")
+        end = producer.index("ProfileFixture::MultipleHoc => {", start)
+        branch = producer[start:end]
+        for fragment in (
+            'relation_id(&model, "construct:x", "construct:m")?',
+            'relation_id(&model, "construct:m", "construct:y")?',
+            "GeneralSemEffectEstimandV1::SpecificPath",
+            'estimand_id: "estimand:x_via_m_to_y".into()',
+            "ordered_relation_ids: vec![first_stage_relation, second_stage_relation]",
+            "GeneralSemInferenceV1::CaseBootstrap",
+            "interval: GeneralSemBootstrapIntervalV1::Percentile",
+            "tail: GeneralSemInferenceTailV1::TwoSided",
+            "recipe.settings.bootstrap_samples = BOOTSTRAPS;",
+        ):
+            with self.subTest(fragment=fragment):
+                self.assertIn(fragment, branch)
+
     def test_gate_binds_checkpoint_authority_and_wrapper_cap(self) -> None:
         bindings = json.loads(
             (Path(__file__).with_name("multimod_gate_bindings_v1.json")).read_text(

@@ -3696,6 +3696,7 @@ dependencies = [
  "qpls-estimation",
  "qpls-project",
  "qpls-resampling",
+ "rayon",
  "serde",
  "serde_json",
  "sha2",

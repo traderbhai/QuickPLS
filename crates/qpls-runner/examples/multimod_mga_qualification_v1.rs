@@ -1050,13 +1050,33 @@ fn build_profile_recipe(
                 add_interaction(&mut model, id, &operands, focal, "construct:y")?;
             }
         }
-        ProfileFixture::ModeratedMediation => add_interaction(
-            &mut model,
-            "interaction:x_by_z_to_m",
-            &["construct:x", "construct:z"],
-            "construct:x",
-            "construct:m",
-        )?,
+        ProfileFixture::ModeratedMediation => {
+            add_interaction(
+                &mut model,
+                "interaction:x_by_z_to_m",
+                &["construct:x", "construct:z"],
+                "construct:x",
+                "construct:m",
+            )?;
+            let first_stage_relation = relation_id(&model, "construct:x", "construct:m")?;
+            let second_stage_relation = relation_id(&model, "construct:m", "construct:y")?;
+            let general = recipe
+                .general_sem_config
+                .as_mut()
+                .ok_or_else(|| invalid("moderated-mediation fixture requires General SEM V1"))?;
+            general.requested_effect_estimands = vec![GeneralSemEffectEstimandV1::SpecificPath {
+                estimand_id: "estimand:x_via_m_to_y".into(),
+                ordered_relation_ids: vec![first_stage_relation, second_stage_relation],
+            }];
+            general.inference = GeneralSemInferenceV1::CaseBootstrap {
+                resamples: BOOTSTRAPS,
+                seed,
+                confidence_level: 0.95,
+                interval: GeneralSemBootstrapIntervalV1::Percentile,
+                tail: GeneralSemInferenceTailV1::TwoSided,
+            };
+            recipe.settings.bootstrap_samples = BOOTSTRAPS;
+        }
         ProfileFixture::MultipleHoc => {
             add_disjoint_hoc(
                 &mut model,

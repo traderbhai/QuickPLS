@@ -16,6 +16,7 @@ use crate::{
     recipe_v4_general_sem_hoc_point_execution::{
         GeneralSemPlsHocScoreAlignmentReferenceV1, align_general_sem_pls_hoc_result_signs_v1,
     },
+    recipe_v4_pls_execution::project_pls_plan_to_current_recipe,
     run_compiled_pls_recipe_v4, run_compiled_pls_recipe_v4_allowing_isolated,
 };
 use qpls_core::{
@@ -87,15 +88,15 @@ use qpls_estimation::{
     PosCommonMetricGateResultV1, PosCommonMetricGateStatusV1, PosConstructComparabilityEvidenceV1,
     PosFullRefitReceiptV2, PosOutcomeFitAuditV2, PosOutcomeR2V2,
     PosPairwiseCompositionalInvarianceV1, PosPairwiseStep3EqualityV1, PosScoringContractV2,
-    PosSegmentFullFitV2, RefitFailureCodeV1, RefitFailureV1, ResampleFitStatusV1,
-    SelectedGroupRowV1, StandardizedFimixInputV2, StandardizedStructuralEquationV2,
-    StudentizedOuterReplicateV2, WaldGroupEstimateV1, adjust_probabilities_v1,
-    align_labels_exhaustive_v2, append_pls_alias_columns_v1, assess_frequency_multigroup_design_v1,
-    assess_multigroup_design_v1, bca_interval_v2, bias_corrected_interval_for_alternative_v1,
-    build_frequency_pairwise_partition_plan_v1, build_pairwise_partition_plan_from_rows_v1,
-    build_pairwise_partition_plan_v1, build_pls_pos_start_plan_v2,
-    compile_explicit_conditional_path_v2, conditional_derivatives_v2, conditional_effect_v2,
-    conditional_probe_contrast_v2,
+    PosSegmentFullFitV2, PosSegmentRefitRequestV2, RefitFailureCodeV1, RefitFailureV1,
+    ResampleFitStatusV1, SelectedGroupRowV1, StandardizedFimixInputV2,
+    StandardizedStructuralEquationV2, StudentizedOuterReplicateV2, WaldGroupEstimateV1,
+    adjust_probabilities_v1, align_labels_exhaustive_v2, append_pls_alias_columns_v1,
+    assess_frequency_multigroup_design_v1, assess_multigroup_design_v1, bca_interval_v2,
+    bias_corrected_interval_for_alternative_v1, build_frequency_pairwise_partition_plan_v1,
+    build_pairwise_partition_plan_from_rows_v1, build_pairwise_partition_plan_v1,
+    build_pls_pos_start_plan_v2, compile_explicit_conditional_path_v2, conditional_derivatives_v2,
+    conditional_effect_v2, conditional_probe_contrast_v2,
     estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control,
     estimate_general_sem_pls_three_way_moderation_v1_with_control,
     estimate_interventional_mediation_v1, estimate_pls_validated_with_control,
@@ -123,8 +124,10 @@ use qpls_resampling::{
     MultiModFullRefitCallbackV1, MultiModRefitFailureV1, MultiModRefitOutcomeV1,
     MultiModShardSpecV1, resample_dataset_columns_v1, run_multimod_case_bootstrap_shard_v1,
 };
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
+use std::sync::LazyLock;
 
 pub const MULTIMOD_RUNNER_METHOD_VERSION_V1: &str = "multimod_runner_v1";
 
@@ -10754,6 +10757,7 @@ struct RawHeterogeneityAuthorityV2 {
     point_recipe: AnalysisRecipeV4,
     point_model: SemModelV4,
     point_artifact: qpls_core::CompiledAnalysisRecipeV4,
+    stage_one_execution: ValidatedExecutionRecipe,
     plan: CompiledPlsPlanV3,
     source_columns: Vec<String>,
     blocks: Vec<OrdinaryPlsScoringBlockV1>,
@@ -10859,12 +10863,28 @@ fn projected_heterogeneity_authority_v2(
             "heterogeneity stage-one artifact differs from the General SEM base plan".into(),
         ));
     }
+    let projected_point_recipe =
+        project_pls_plan_to_current_recipe(&point_recipe, &point_model, base_plan).map_err(
+            |error| {
+                MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.heterogeneity.stage_one_execution_projection_rejected:{error}"
+                ))
+            },
+        )?;
+    let stage_one_execution =
+        ValidatedExecutionRecipe::for_dataset(&projected_point_recipe, &dataset.fingerprint.0)
+            .map_err(|error| {
+                MultiModRunnerErrorV1::UnsupportedProfile(format!(
+                    "multimod.runner.heterogeneity.stage_one_execution_rejected:{error}"
+                ))
+            })?;
     let blocks = ordinary_pls_scoring_blocks_v1(base_plan);
     let source_columns = ordinary_pls_source_columns_v1(dataset, &blocks)?;
     Ok(RawHeterogeneityAuthorityV2 {
         point_recipe,
         point_model,
         point_artifact,
+        stage_one_execution,
         plan,
         source_columns,
         blocks,
@@ -11178,6 +11198,65 @@ where
     Ok(result)
 }
 
+/// Executes the already-authorized stage-one PLS recipe without repeating the
+/// immutable Recipe V4 artifact validation and projection for every POS
+/// candidate segment. `projected_heterogeneity_authority_v2` constructs this
+/// opaque execution capability once, and the sampled datasets retain its
+/// bound id/fingerprint. The numerical estimator and its convergence contract
+/// are therefore identical to `raw_heterogeneity_stage_one_fit_v2`.
+fn raw_heterogeneity_stage_one_refit_v2<C>(
+    dataset: &Dataset,
+    authority: &RawHeterogeneityAuthorityV2,
+    should_cancel: &C,
+) -> Result<PlsResult, MultiModRunnerErrorV1>
+where
+    C: Fn() -> bool + Sync,
+{
+    if should_cancel() {
+        return Err(MultiModRunnerErrorV1::Cancelled);
+    }
+    if dataset.id.to_string() != authority.plan.base_plan().dataset_id()
+        || dataset.fingerprint.0 != authority.point_recipe.dataset_fingerprint
+    {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "heterogeneity segment refit dataset differs from its prepared stage-one authority"
+                .into(),
+        ));
+    }
+    let mut report_progress = |_: qpls_estimation::EstimationProgress| !should_cancel();
+    let result = estimate_pls_validated_with_control(
+        dataset,
+        &authority.stage_one_execution,
+        &mut report_progress,
+    )
+    .map_err(|error| match error {
+        EstimationError::Cancelled => MultiModRunnerErrorV1::Cancelled,
+        other => MultiModRunnerErrorV1::Kernel(format!(
+            "heterogeneity prepared stage-one PLS refit failed: {other}"
+        )),
+    })?;
+    if !result.converged
+        || result.method_version != qpls_estimation::PLS_METHOD_VERSION
+        || result.used_observations != dataset.batch.num_rows()
+        || result.omitted_observations != 0
+        || result.wpls.is_some()
+        || result.plsc.is_some()
+        || result.score_execution.is_some()
+        || result.nonlinear_effects.is_some()
+        || result.posthoc_minimum_sample_size.is_some()
+        || result.point_estimate_attribution.as_ref()
+            != Some(&PlsPointEstimateAttributionV1::for_preprocessing(
+                authority.point_recipe.settings.preprocessing.clone(),
+            ))
+    {
+        return Err(MultiModRunnerErrorV1::Kernel(
+            "heterogeneity prepared stage-one PLS refit violated its method, convergence, row, or scale contract"
+                .into(),
+        ));
+    }
+    Ok(result)
+}
+
 #[derive(Debug, Clone)]
 enum RawJointStructuralPointV2 {
     P0,
@@ -11346,87 +11425,88 @@ fn raw_joint_r_squared_v2(
     metric: &RawHeterogeneityMetricV2,
     coefficients: &BTreeMap<String, f64>,
     source_row_indices: &[usize],
+    retain_outcome_audits: bool,
 ) -> Result<(Vec<PosOutcomeR2V2>, Vec<PosOutcomeFitAuditV2>), MultiModRunnerErrorV1> {
-    let rows = metric
-        .fimix_input
-        .equations
-        .iter()
-        .map(|equation| {
-            let predictions = equation
-                .design
-                .iter()
-                .map(|row| {
-                    equation
-                        .predictor_ids
-                        .iter()
-                        .zip(row)
-                        .map(|(identity, value)| {
-                            coefficients
-                                .get(identity)
-                                .copied()
-                                .ok_or_else(|| {
-                                    MultiModRunnerErrorV1::Kernel(format!(
-                                        "joint result omitted predictor {identity}"
-                                    ))
-                                })
-                                .map(|coefficient| coefficient * value)
-                        })
-                        .sum::<Result<f64, _>>()
-                })
-                .collect::<Result<Vec<_>, _>>()?;
-            let residual_sum_of_squares = equation
-                .outcome
-                .iter()
-                .zip(&predictions)
-                .map(|(actual, predicted)| (actual - predicted).powi(2))
-                .sum::<f64>();
-            let observed_mean =
-                equation.outcome.iter().sum::<f64>() / equation.outcome.len() as f64;
-            let total_sum_of_squares = equation
-                .outcome
-                .iter()
-                .map(|value| (value - observed_mean).powi(2))
-                .sum::<f64>();
-            if !residual_sum_of_squares.is_finite()
-                || !total_sum_of_squares.is_finite()
-                || total_sum_of_squares <= f64::EPSILON
-                || observed_mean.abs() > POS_STANDARDIZED_OUTCOME_MEAN_TOLERANCE_V2
-            {
-                return Err(MultiModRunnerErrorV1::Kernel(format!(
-                    "joint equation {} lacks centered standardized outcome scores for R-squared (mean {observed_mean})",
-                    equation.equation_id,
-                )));
-            }
-            let value = 1.0 - residual_sum_of_squares / total_sum_of_squares;
-            if !(-1.0e-10..=1.0 + 1.0e-10).contains(&value) {
-                return Err(MultiModRunnerErrorV1::Kernel(format!(
-                    "joint equation {} produced out-of-range R-squared {value}",
-                    equation.equation_id
-                )));
-            }
-            if source_row_indices.len() != equation.outcome.len() {
-                return Err(MultiModRunnerErrorV1::Kernel(format!(
-                    "joint equation {} source-row audit has the wrong length",
-                    equation.equation_id
-                )));
-            }
-            Ok((
-                PosOutcomeR2V2 {
-                    outcome_id: equation.outcome_id.clone(),
-                    r_squared: value.clamp(0.0, 1.0),
-                },
-                PosOutcomeFitAuditV2 {
-                    outcome_id: equation.outcome_id.clone(),
-                    source_row_indices: source_row_indices.to_vec(),
-                    observed_scores: equation.outcome.clone(),
-                    fitted_scores: predictions,
-                    observed_mean,
-                    centered_total_sum_of_squares: total_sum_of_squares,
-                },
-            ))
-        })
-        .collect::<Result<Vec<_>, _>>()?;
-    Ok(rows.into_iter().unzip())
+    let mut r_squared = Vec::with_capacity(metric.fimix_input.equations.len());
+    let mut audits = if retain_outcome_audits {
+        Vec::with_capacity(metric.fimix_input.equations.len())
+    } else {
+        Vec::new()
+    };
+    for equation in &metric.fimix_input.equations {
+        let predictions = equation
+            .design
+            .iter()
+            .map(|row| {
+                equation
+                    .predictor_ids
+                    .iter()
+                    .zip(row)
+                    .map(|(identity, value)| {
+                        coefficients
+                            .get(identity)
+                            .copied()
+                            .ok_or_else(|| {
+                                MultiModRunnerErrorV1::Kernel(format!(
+                                    "joint result omitted predictor {identity}"
+                                ))
+                            })
+                            .map(|coefficient| coefficient * value)
+                    })
+                    .sum::<Result<f64, _>>()
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let residual_sum_of_squares = equation
+            .outcome
+            .iter()
+            .zip(&predictions)
+            .map(|(actual, predicted)| (actual - predicted).powi(2))
+            .sum::<f64>();
+        let observed_mean = equation.outcome.iter().sum::<f64>() / equation.outcome.len() as f64;
+        let total_sum_of_squares = equation
+            .outcome
+            .iter()
+            .map(|value| (value - observed_mean).powi(2))
+            .sum::<f64>();
+        if !residual_sum_of_squares.is_finite()
+            || !total_sum_of_squares.is_finite()
+            || total_sum_of_squares <= f64::EPSILON
+            || observed_mean.abs() > POS_STANDARDIZED_OUTCOME_MEAN_TOLERANCE_V2
+        {
+            return Err(MultiModRunnerErrorV1::Kernel(format!(
+                "joint equation {} lacks centered standardized outcome scores for R-squared (mean {observed_mean})",
+                equation.equation_id,
+            )));
+        }
+        let value = 1.0 - residual_sum_of_squares / total_sum_of_squares;
+        if !(-1.0e-10..=1.0 + 1.0e-10).contains(&value) {
+            return Err(MultiModRunnerErrorV1::Kernel(format!(
+                "joint equation {} produced out-of-range R-squared {value}",
+                equation.equation_id
+            )));
+        }
+        if source_row_indices.len() != equation.outcome.len() {
+            return Err(MultiModRunnerErrorV1::Kernel(format!(
+                "joint equation {} source-row audit has the wrong length",
+                equation.equation_id
+            )));
+        }
+        r_squared.push(PosOutcomeR2V2 {
+            outcome_id: equation.outcome_id.clone(),
+            r_squared: value.clamp(0.0, 1.0),
+        });
+        if retain_outcome_audits {
+            audits.push(PosOutcomeFitAuditV2 {
+                outcome_id: equation.outcome_id.clone(),
+                source_row_indices: source_row_indices.to_vec(),
+                observed_scores: equation.outcome.clone(),
+                fitted_scores: predictions,
+                observed_mean,
+                centered_total_sum_of_squares: total_sum_of_squares,
+            });
+        }
+    }
+    Ok((r_squared, audits))
 }
 
 fn scientific_parameter_signature_v2(
@@ -11574,6 +11654,23 @@ fn scientific_parameter_signature_v2(
     Ok(scientific.into_iter().unzip())
 }
 
+/// Qualification executes at most four producer shards concurrently. Giving
+/// each POS producer approximately one quarter of the machine keeps the exact
+/// candidate-refit batches parallel without oversubscribing the shared host.
+/// `IndexedParallelIterator::collect` retains request order, so this affects
+/// wall time only and cannot change the deterministic steepest-move decision.
+static POS_REFIT_POOL_V2: LazyLock<rayon::ThreadPool> = LazyLock::new(|| {
+    let logical = std::thread::available_parallelism()
+        .map(usize::from)
+        .unwrap_or(1);
+    let workers = (logical.saturating_add(3) / 4).clamp(1, 4);
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(workers)
+        .thread_name(|index| format!("qpls-pos-refit-{index}"))
+        .build()
+        .expect("bounded POS refit thread pool must initialize")
+});
+
 struct RawPlsPosRefitterV2<'a, C> {
     dataset: &'a Dataset,
     authority: &'a RawHeterogeneityAuthorityV2,
@@ -11581,6 +11678,7 @@ struct RawPlsPosRefitterV2<'a, C> {
     pooled_fit: &'a PlsResult,
     raw_scores: &'a OrdinaryPlsRawScoreCacheV1,
     orientation_rows: &'a [u64],
+    retain_outcome_audits: bool,
     should_cancel: &'a C,
 }
 
@@ -11620,7 +11718,7 @@ where
             other => RefitFailureV1::new(RefitFailureCodeV1::EngineFailure, other.to_string()),
         })?;
         let mut fit =
-            raw_heterogeneity_stage_one_fit_v2(&sampled, self.authority, self.should_cancel)
+            raw_heterogeneity_stage_one_refit_v2(&sampled, self.authority, self.should_cancel)
                 .map_err(|error| match error {
                     MultiModRunnerErrorV1::Cancelled => RefitFailureV1::new(
                         RefitFailureCodeV1::Cancelled,
@@ -11897,7 +11995,7 @@ where
         )
         .map_err(|error| format!("multimod.runner.heterogeneity.pos_resample:{error}"))?;
         let mut stage_one =
-            raw_heterogeneity_stage_one_fit_v2(&sampled, self.authority, self.should_cancel)
+            raw_heterogeneity_stage_one_refit_v2(&sampled, self.authority, self.should_cancel)
                 .map_err(|error| error.to_string())?;
         align_pls_fit_to_reference_v1(
             &self.authority.blocks,
@@ -11935,9 +12033,13 @@ where
         let coefficients =
             raw_joint_standardized_coefficients_v2(self.authority, &stage_one, &joint)
                 .map_err(|error| error.to_string())?;
-        let (r_squared, outcome_fit_audits) =
-            raw_joint_r_squared_v2(&metric, &coefficients, &canonical_rows)
-                .map_err(|error| error.to_string())?;
+        let (r_squared, outcome_fit_audits) = raw_joint_r_squared_v2(
+            &metric,
+            &coefficients,
+            &canonical_rows,
+            self.retain_outcome_audits,
+        )
+        .map_err(|error| error.to_string())?;
         if self.profile == CoreHeterogeneityProfileV2::P0Structural {
             for outcome in &r_squared {
                 let expected = stage_one
@@ -11976,6 +12078,41 @@ where
                 interaction_products_rebuilt_within_destination: interaction_profile,
                 joint_structural_equations_refit: true,
             },
+        })
+    }
+
+    fn refit_segments_batch(
+        &mut self,
+        requests: &[PosSegmentRefitRequestV2],
+    ) -> Vec<Result<PosSegmentFullFitV2, String>> {
+        let dataset = self.dataset;
+        let authority = self.authority;
+        let profile = self.profile;
+        let pooled_fit = self.pooled_fit;
+        let raw_scores = self.raw_scores;
+        let orientation_rows = self.orientation_rows;
+        let should_cancel = self.should_cancel;
+        POS_REFIT_POOL_V2.install(|| {
+            requests
+                .par_iter()
+                .map(|request| {
+                    let mut isolated = RawPlsPosRefitterV2 {
+                        dataset,
+                        authority,
+                        profile,
+                        pooled_fit,
+                        raw_scores,
+                        orientation_rows,
+                        retain_outcome_audits: false,
+                        should_cancel,
+                    };
+                    isolated.refit_segment(
+                        request.segment_index,
+                        &request.row_indices,
+                        request.scoring,
+                    )
+                })
+                .collect()
         })
     }
 }
@@ -12383,6 +12520,7 @@ where
                 pooled_fit: &pooled_fit,
                 raw_scores: &raw_scores,
                 orientation_rows: &orientation_rows,
+                retain_outcome_audits: true,
                 should_cancel,
             };
             let result = match algorithm {
@@ -12880,6 +13018,7 @@ where
             pooled_fit: &pooled_fit,
             raw_scores: &raw_scores,
             orientation_rows: &orientation_rows,
+            retain_outcome_audits: true,
             should_cancel: &should_cancel,
         };
         let evidence = prepare_raw_pos_common_metric_v1(
@@ -12921,6 +13060,7 @@ where
         pooled_fit: &pooled_fit,
         raw_scores: &raw_scores,
         orientation_rows: &orientation_rows,
+        retain_outcome_audits: true,
         should_cancel: &should_cancel,
     };
     let mut output = run_compiled_pls_heterogeneity_v2(
@@ -13377,6 +13517,39 @@ where
         self.calls = self.calls.saturating_add(1);
         self.inner
             .refit_segment(segment_index, row_indices, scoring)
+    }
+
+    fn refit_segments_batch(
+        &mut self,
+        requests: &[PosSegmentRefitRequestV2],
+    ) -> Vec<Result<PosSegmentFullFitV2, String>> {
+        if (self.should_cancel)() {
+            self.cancelled = true;
+            return requests
+                .iter()
+                .map(|_| Err("multimod.runner.cancelled".into()))
+                .collect();
+        }
+        if !requests.is_empty() {
+            report(
+                self.progress,
+                MultiModRunnerPhaseV1::PointEstimation,
+                self.calls,
+                self.calls.saturating_add(requests.len() as u64),
+                format!("pls_pos:ordered_refit_batch:{}", requests.len()),
+            );
+            self.calls = self.calls.saturating_add(requests.len() as u64);
+        }
+        let results = self.inner.refit_segments_batch(requests);
+        if results.iter().any(|result| {
+            result
+                .as_ref()
+                .err()
+                .is_some_and(|reason| reason == "multimod.runner.cancelled")
+        }) {
+            self.cancelled = true;
+        }
+        results
     }
 }
 
@@ -17233,6 +17406,51 @@ mod tests {
         let mapped_pos = pos_config(&config, 2, 100);
         assert_eq!(mapped_pos.stable_objective_tolerance, 7.0e-10);
         assert_eq!(mapped_pos.required_reproducing_starts, 2);
+    }
+
+    #[test]
+    fn prepared_heterogeneity_stage_one_refit_is_bit_exact_to_checked_recipe_v4_path() {
+        let (dataset, model, mut recipe) = multimod_point_authority_fixture_v1(None, false);
+        recipe.settings.method = AnalysisMethod::Predict;
+        recipe.method_config = None;
+        recipe.general_sem_config = Some(qpls_core::GeneralSemConfigV1::default());
+        recipe.pls_heterogeneity = Some(qpls_core::PlsUnobservedHeterogeneityConfigV2 {
+            schema_version: qpls_core::PLS_HETEROGENEITY_V2_SCHEMA_VERSION,
+            profile: CoreHeterogeneityProfileV2::P0Structural,
+            phase: qpls_core::HeterogeneityPhaseV2::Discovery {
+                candidate_k: vec![2],
+                algorithms: vec![CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2],
+            },
+            seed: 42,
+            fimix: qpls_core::FimixSettingsV2::default(),
+            pls_pos: qpls_core::PlsPosSettingsV2::default(),
+            pos_common_metric: None,
+            bootstrap: None,
+        });
+        recipe.ensure_valid().unwrap();
+        let artifact = prepare_multimod_recipe_v1(
+            &dataset,
+            &recipe,
+            &model,
+            MultiModCompilerTargetV1::PlsHeterogeneityV2,
+        )
+        .unwrap();
+        let authority =
+            projected_heterogeneity_authority_v2(&dataset, &recipe, &model, &artifact).unwrap();
+        let rows = (0..dataset.batch.num_rows().min(48)).collect::<Vec<_>>();
+        assert!(rows.len() >= 20);
+        let sampled =
+            resample_dataset_columns_v1(&dataset, &authority.source_columns, &rows, || false)
+                .unwrap();
+
+        let checked = raw_heterogeneity_stage_one_fit_v2(&sampled, &authority, &|| false).unwrap();
+        let prepared =
+            raw_heterogeneity_stage_one_refit_v2(&sampled, &authority, &|| false).unwrap();
+        assert_eq!(prepared, checked);
+        assert_eq!(
+            qpls_core::sha256_serialized(&prepared),
+            qpls_core::sha256_serialized(&checked)
+        );
     }
 
     #[test]

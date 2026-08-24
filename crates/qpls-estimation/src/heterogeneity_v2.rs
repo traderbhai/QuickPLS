@@ -2195,6 +2195,21 @@ pub struct PosSegmentFullFitV2 {
     pub receipt: PosFullRefitReceiptV2,
 }
 
+/// One exact destination-local segment refit requested by the PLS-POS search.
+///
+/// The batch boundary is deliberately additive: the default implementation
+/// below executes these requests in their declared order, while a raw-data
+/// authority may evaluate independent requests concurrently. Results must be
+/// returned in this same order, so candidate tie-breaking and failure
+/// selection remain deterministic and worker-count invariant.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
+pub struct PosSegmentRefitRequestV2 {
+    pub segment_index: usize,
+    pub row_indices: Vec<usize>,
+    pub scoring: PosScoringContractV2,
+}
+
 /// Adapter implemented by the PLS layer. Every request must execute a complete
 /// segment fit; cached approximations and partial path-only updates are outside
 /// this contract.
@@ -2205,6 +2220,18 @@ pub trait PlsPosFullRefitterV2 {
         row_indices: &[usize],
         scoring: PosScoringContractV2,
     ) -> Result<PosSegmentFullFitV2, String>;
+
+    fn refit_segments_batch(
+        &mut self,
+        requests: &[PosSegmentRefitRequestV2],
+    ) -> Vec<Result<PosSegmentFullFitV2, String>> {
+        requests
+            .iter()
+            .map(|request| {
+                self.refit_segment(request.segment_index, &request.row_indices, request.scoring)
+            })
+            .collect()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -2602,7 +2629,13 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
     let candidate_failures = Vec::new();
     while accepted_moves < config.maximum_accepted_moves {
         let counts = partition_counts(&current_assignments, config.segments);
+        let mut current_rows = vec![Vec::new(); config.segments];
+        for (row, segment) in current_assignments.iter().copied().enumerate() {
+            current_rows[segment].push(row);
+        }
         let mut best_candidate: Option<(f64, usize, usize, Vec<PosSegmentFullFitV2>)> = None;
+        let mut candidates = Vec::new();
+        let mut requests = Vec::new();
         for observation in 0..current_assignments.len() {
             let source = current_assignments[observation];
             if counts[source] <= config.minimum_segment_size {
@@ -2612,52 +2645,94 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
                 if destination == source {
                     continue;
                 }
-                let mut candidate_assignments = current_assignments.clone();
-                candidate_assignments[observation] = destination;
-                match refit_pos_partition(
-                    &candidate_assignments,
-                    config.segments,
-                    scoring,
-                    refitter,
-                ) {
-                    Ok((candidate_objective, candidate_fits)) => {
-                        let beats_current =
-                            candidate_objective > objective + config.strict_improvement_tolerance;
-                        let beats_best = best_candidate.as_ref().is_none_or(|best| {
-                            candidate_objective > best.0 + config.strict_improvement_tolerance
-                                || ((candidate_objective - best.0).abs()
-                                    <= config.strict_improvement_tolerance
-                                    && (observation, destination) < (best.1, best.2))
-                        });
-                        if beats_current && beats_best {
-                            best_candidate = Some((
-                                candidate_objective,
-                                observation,
-                                destination,
-                                candidate_fits,
-                            ));
-                        }
+                let request_offset = requests.len();
+                for segment in 0..config.segments {
+                    let mut row_indices = current_rows[segment].clone();
+                    if segment == source {
+                        let position = row_indices
+                            .binary_search(&observation)
+                            .expect("current source membership is complete");
+                        row_indices.remove(position);
+                    } else if segment == destination {
+                        let position = row_indices
+                            .binary_search(&observation)
+                            .expect_err("destination cannot already contain the moved row");
+                        row_indices.insert(position, observation);
                     }
-                    Err(reason) => {
-                        let failure = PosCandidateRefitFailureV2 {
+                    requests.push(PosSegmentRefitRequestV2 {
+                        segment_index: segment,
+                        row_indices,
+                        scoring,
+                    });
+                }
+                candidates.push((observation, source, destination, request_offset));
+            }
+        }
+        let refit_results = refitter.refit_segments_batch(&requests);
+        if refit_results.len() != requests.len() {
+            return Err(InternalPosStartFailureV2 {
+                reason: format!(
+                    "PLS-POS batch refitter returned {} results for {} ordered requests",
+                    refit_results.len(),
+                    requests.len()
+                ),
+                candidate_refit_failures: Vec::new(),
+                accepted_moves,
+                objective_history,
+            });
+        }
+        let mut refit_results = refit_results.into_iter();
+        for (observation, source, destination, request_offset) in candidates {
+            debug_assert_eq!(
+                request_offset,
+                requests.len().saturating_sub(refit_results.len())
+            );
+            let candidate = (0..config.segments)
+                .map(|_| {
+                    refit_results
+                        .next()
+                        .expect("batch cardinality checked before ordered consumption")
+                })
+                .collect::<Result<Vec<_>, _>>()
+                .and_then(|fits| summarize_pos_partition_fits(fits, scoring));
+            match candidate {
+                Ok((candidate_objective, candidate_fits)) => {
+                    let beats_current =
+                        candidate_objective > objective + config.strict_improvement_tolerance;
+                    let beats_best = best_candidate.as_ref().is_none_or(|best| {
+                        candidate_objective > best.0 + config.strict_improvement_tolerance
+                            || ((candidate_objective - best.0).abs()
+                                <= config.strict_improvement_tolerance
+                                && (observation, destination) < (best.1, best.2))
+                    });
+                    if beats_current && beats_best {
+                        best_candidate = Some((
+                            candidate_objective,
                             observation,
-                            source_segment: source,
-                            destination_segment: destination,
-                            reason,
-                        };
-                        return Err(InternalPosStartFailureV2 {
-                            reason: format!(
-                                "PLS-POS candidate full refit failed during sweep for observation {}, source segment {}, destination segment {}: {}",
-                                failure.observation,
-                                failure.source_segment,
-                                failure.destination_segment,
-                                failure.reason
-                            ),
-                            candidate_refit_failures: vec![failure],
-                            accepted_moves,
-                            objective_history,
-                        });
+                            destination,
+                            candidate_fits,
+                        ));
                     }
+                }
+                Err(reason) => {
+                    let failure = PosCandidateRefitFailureV2 {
+                        observation,
+                        source_segment: source,
+                        destination_segment: destination,
+                        reason,
+                    };
+                    return Err(InternalPosStartFailureV2 {
+                        reason: format!(
+                            "PLS-POS candidate full refit failed during sweep for observation {}, source segment {}, destination segment {}: {}",
+                            failure.observation,
+                            failure.source_segment,
+                            failure.destination_segment,
+                            failure.reason
+                        ),
+                        candidate_refit_failures: vec![failure],
+                        accepted_moves,
+                        objective_history,
+                    });
                 }
             }
         }
@@ -2682,6 +2757,36 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
             objective_history,
         });
     }
+    if accepted_moves > 0 {
+        let (retained_objective, retained_fits) =
+            refit_pos_partition(&current_assignments, config.segments, scoring, refitter).map_err(
+                |reason| InternalPosStartFailureV2 {
+                    reason: format!("PLS-POS final retained-evidence refit failed: {reason}"),
+                    candidate_refit_failures: Vec::new(),
+                    accepted_moves,
+                    objective_history: objective_history.clone(),
+                },
+            )?;
+        let exact_scientific_replay = retained_objective.to_bits() == objective.to_bits()
+            && retained_fits.len() == fits.len()
+            && retained_fits
+                .iter()
+                .zip(&fits)
+                .all(|(retained, candidate)| {
+                    retained.r_squared == candidate.r_squared
+                        && retained.parameter_signature == candidate.parameter_signature
+                        && retained.receipt == candidate.receipt
+                });
+        if !exact_scientific_replay {
+            return Err(InternalPosStartFailureV2 {
+                reason: "PLS-POS final retained-evidence refit did not exactly replay the accepted full-refit objective and parameters".into(),
+                candidate_refit_failures: Vec::new(),
+                accepted_moves,
+                objective_history,
+            });
+        }
+        fits = retained_fits;
+    }
     Ok(InternalPosRun {
         start_index,
         objective,
@@ -2700,16 +2805,25 @@ fn refit_pos_partition<R: PlsPosFullRefitterV2>(
     refitter: &mut R,
 ) -> Result<(f64, Vec<PosSegmentFullFitV2>), String> {
     let mut fits = Vec::with_capacity(segments);
-    let mut expected_outcomes: Option<BTreeSet<String>> = None;
-    let mut expected_parameter_count: Option<usize> = None;
-    let mut objective = 0.0;
     for segment in 0..segments {
         let rows = assignments
             .iter()
             .enumerate()
             .filter_map(|(row, assigned)| (*assigned == segment).then_some(row))
             .collect::<Vec<_>>();
-        let fit = refitter.refit_segment(segment, &rows, scoring)?;
+        fits.push(refitter.refit_segment(segment, &rows, scoring)?);
+    }
+    summarize_pos_partition_fits(fits, scoring)
+}
+
+fn summarize_pos_partition_fits(
+    fits: Vec<PosSegmentFullFitV2>,
+    scoring: PosScoringContractV2,
+) -> Result<(f64, Vec<PosSegmentFullFitV2>), String> {
+    let mut expected_outcomes: Option<BTreeSet<String>> = None;
+    let mut expected_parameter_count: Option<usize> = None;
+    let mut objective = 0.0;
+    for fit in &fits {
         validate_pos_fit(&fit, scoring)?;
         let outcomes = fit
             .r_squared
@@ -2733,7 +2847,6 @@ fn refit_pos_partition<R: PlsPosFullRefitterV2>(
             expected_parameter_count = Some(fit.parameter_signature.len());
         }
         objective += fit.r_squared.iter().map(|row| row.r_squared).sum::<f64>();
-        fits.push(fit);
     }
     if !objective.is_finite() {
         return Err("PLS-POS objective is non-finite".to_string());
@@ -4026,6 +4139,84 @@ mod tests {
         }
     }
 
+    struct OrderedBatchMeanSeparationRefitter {
+        values: Vec<f64>,
+        method_version: &'static str,
+        individual_calls: usize,
+        batch_sizes: Vec<usize>,
+    }
+
+    impl OrderedBatchMeanSeparationRefitter {
+        fn fit_request(
+            values: &[f64],
+            method_version: &str,
+            request: &PosSegmentRefitRequestV2,
+        ) -> Result<PosSegmentFullFitV2, String> {
+            let mean = request
+                .row_indices
+                .iter()
+                .map(|row| values[*row])
+                .sum::<f64>()
+                / request.row_indices.len() as f64;
+            let interactions = matches!(
+                request.scoring,
+                PosScoringContractV2::DestinationScoredInteractions { .. }
+            );
+            Ok(PosSegmentFullFitV2 {
+                r_squared: vec![PosOutcomeR2V2 {
+                    outcome_id: "y".to_string(),
+                    r_squared: mean * mean,
+                }],
+                outcome_fit_audits: Vec::new(),
+                parameter_signature: vec![mean],
+                receipt: PosFullRefitReceiptV2 {
+                    method_version: method_version.to_string(),
+                    full_segment_pls_refit: true,
+                    measurement_scores_reestimated: true,
+                    score_orientation_reapplied: true,
+                    interaction_stage_one_refit: interactions,
+                    interaction_operands_restandardized_within_destination: interactions,
+                    interaction_products_rebuilt_within_destination: interactions,
+                    joint_structural_equations_refit: interactions,
+                },
+            })
+        }
+    }
+
+    impl PlsPosFullRefitterV2 for OrderedBatchMeanSeparationRefitter {
+        fn refit_segment(
+            &mut self,
+            segment_index: usize,
+            row_indices: &[usize],
+            scoring: PosScoringContractV2,
+        ) -> Result<PosSegmentFullFitV2, String> {
+            self.individual_calls += 1;
+            Self::fit_request(
+                &self.values,
+                self.method_version,
+                &PosSegmentRefitRequestV2 {
+                    segment_index,
+                    row_indices: row_indices.to_vec(),
+                    scoring,
+                },
+            )
+        }
+
+        fn refit_segments_batch(
+            &mut self,
+            requests: &[PosSegmentRefitRequestV2],
+        ) -> Vec<Result<PosSegmentFullFitV2, String>> {
+            self.batch_sizes.push(requests.len());
+            let mut reversed = requests
+                .iter()
+                .rev()
+                .map(|request| Self::fit_request(&self.values, self.method_version, request))
+                .collect::<Vec<_>>();
+            reversed.reverse();
+            reversed
+        }
+    }
+
     #[test]
     fn published_pos_uses_full_refits_and_monotone_strict_hill_climb() {
         let values = (0..40)
@@ -4062,6 +4253,46 @@ mod tests {
         assert!(result.reproducing_start_indices.len() >= 2);
         assert_eq!(result.segments[0].observations, 20);
         assert_eq!(result.segments[1].observations, 20);
+    }
+
+    #[test]
+    fn pos_ordered_batch_is_bit_exact_and_keeps_the_complete_sweep() {
+        let values = (0..40)
+            .map(|row| if row < 20 { -1.0 } else { 1.0 })
+            .collect::<Vec<_>>();
+        let features = values.iter().map(|value| vec![*value]).collect::<Vec<_>>();
+        let starts = build_pls_pos_start_plan_v2(&features, 2, 42, None).unwrap();
+        let mut config = PlsPosV2Config::for_segments(2, values.len());
+        config.minimum_segment_size = 10;
+        let mut sequential = MeanSeparationRefitter {
+            values: values.clone(),
+            method_version: PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+        };
+        let expected = fit_pls_pos_published_v2(&starts, &config, &mut sequential).unwrap();
+        let mut batched = OrderedBatchMeanSeparationRefitter {
+            values,
+            method_version: PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+            individual_calls: 0,
+            batch_sizes: Vec::new(),
+        };
+        let actual = fit_pls_pos_published_v2(&starts, &config, &mut batched).unwrap();
+
+        assert_eq!(actual, expected);
+        assert!(!batched.batch_sizes.is_empty());
+        assert!(batched.batch_sizes.iter().all(|size| *size >= 2));
+        // Exactly K initial-partition refits remain serial per start. Starts
+        // that accept at least one move perform one additional K-fit replay
+        // to retain the full row-level audit evidence. Every candidate sweep
+        // itself crosses the ordered batch boundary.
+        let retained_replays = actual
+            .starts
+            .iter()
+            .filter(|start| start.completed && start.accepted_moves > 0)
+            .count();
+        assert_eq!(
+            batched.individual_calls,
+            (starts.len() + retained_replays) * config.segments
+        );
     }
 
     #[test]
