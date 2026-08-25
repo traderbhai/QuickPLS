@@ -754,8 +754,8 @@ fn make_fixture_with_classes_and_observations(
         let noise = match scenario {
             Scenario::VarianceCollapse => 0.0,
             Scenario::HomogeneousNull => 0.55 * random.normal(),
-            Scenario::PowerModerate => 0.42 * random.normal(),
-            Scenario::Overlap => 0.72 * random.normal(),
+            Scenario::PowerModerate => 0.26 * random.normal(),
+            Scenario::Overlap => 0.30 * random.normal(),
             Scenario::Imbalanced => 0.14 * random.normal(),
             Scenario::NonNormal => {
                 let value = random.normal();

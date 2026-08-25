@@ -151,6 +151,14 @@ The result retains:
 - raw entropy and normalized classification certainty; and
 - parameter count, AIC, AIC3, AIC4, BIC, CAIC, and HQ.
 
+Class proportions are the final accepted M-step parameters used by the final
+E-step and observed-data likelihood. Effective class sizes are the column sums
+of that E-step's posterior matrix. With finite likelihood-based convergence,
+the two probability families are each normalized but a class proportion need
+not equal its resulting posterior effective size divided by `n` exactly.
+Changing the proportion after the E-step would make the published parameter
+vector inconsistent with the retained likelihood and posteriors.
+
 For parameter count `p`, sample size `n`, and optimized likelihood `ell`:
 
 ```

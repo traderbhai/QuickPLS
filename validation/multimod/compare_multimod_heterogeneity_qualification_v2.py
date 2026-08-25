@@ -879,16 +879,23 @@ def validate_fimix_math(
     )
     posterior_sizes = [sum(row[index] for row in posteriors) for index in range(classes)]
     class_ok = close(sum(row["proportion"] for row in result["classes"]), 1.0)
+    # The published proportions are the final accepted EM parameters used by
+    # the E-step and likelihood. At finite convergence they need not equal the
+    # resulting posterior column means exactly; those means are exposed as the
+    # effective class sizes and are checked independently here.
     class_ok &= all(
         close(row["effective_observations"], posterior_sizes[index])
-        and close(row["proportion"], posterior_sizes[index] / observations)
         for index, row in enumerate(result["classes"])
     )
     checks.require(
         f"{prefix}.posterior_probability_contract",
         result["method_version"] == FIMIX and posterior_ok and class_ok,
         observed={"rows": len(posteriors), "classes": classes, "posterior_sizes": posterior_sizes},
-        expected="complete N-by-K posterior matrix with rows/proportions summing to one",
+        expected=(
+            "complete N-by-K posterior matrix with posterior rows and mixture "
+            "proportions separately normalized, and effective sizes equal to "
+            "posterior column sums"
+        ),
     )
     criteria = result["criteria"]
     parameter_count = int(criteria["parameter_count"])
@@ -1688,7 +1695,7 @@ def reconcile_bootstrap_failures(
         )
 
     observed_counts = analysis_ledger.get("failure_counts")
-    observed_failures = analysis_ledger.get("failures")
+    observed_failures = analysis_ledger.get("failures", [])
     counts_have_exact_shape = isinstance(observed_counts, dict) and all(
         isinstance(code, str)
         and bool(code)

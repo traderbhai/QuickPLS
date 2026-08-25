@@ -775,8 +775,13 @@ class HeterogeneityShardContractTests(unittest.TestCase):
     def test_comparator_failure_reconciliation_rejects_unknown_and_extra_rows(self) -> None:
         empty_ledger = {"failure_counts": {}, "failures": []}
         self.assertTrue(comparator.reconcile_bootstrap_failures([], empty_ledger)[0])
-        self.assertFalse(
+        self.assertTrue(
             comparator.reconcile_bootstrap_failures([], {"failure_counts": {}})[0]
+        )
+        self.assertFalse(
+            comparator.reconcile_bootstrap_failures(
+                [], {"failure_counts": {}, "failures": None}
+            )[0]
         )
 
         unknown = [
@@ -824,6 +829,8 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             'function Start-BoundedChild',
             'function Wait-BoundedChild',
             'function Stop-BoundedChild',
+            'function New-BootstrapAttemptState',
+            'function Invoke-BootstrapAttemptBatch',
             'WaitForExit(10000)',
             '-Stage "cargo-build"',
             '-Stage "plan"',
@@ -832,6 +839,8 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             '$job.TimeoutSeconds = [Math]::Min($job.TimeoutSeconds, $sentinelTimeoutSeconds)',
             '$bootstrapChunkCount = 100',
             '$active.Count -ge $MaxParallelBootstrapShards',
+            '$active[$State.AttemptKey] = $job',
+            '[AllowEmptyCollection()]',
             '"--bootstrap-prepare"',
             '"--bootstrap-chunk"',
             '"--bootstrap-finalize"',
@@ -849,6 +858,9 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             'fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification',
             'dual_endogenous_anchor_v1',
             'n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim',
+            '-BatchName "prepare"',
+            '-BatchName "chunk"',
+            '-BatchName "finalize"',
         ):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, wrapper)
@@ -862,6 +874,27 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             wait_source.index("$childElapsedSeconds -ge $Job.TimeoutSeconds"),
         )
         self.assertNotIn('"--cache"', wrapper)
+        self.assertNotIn('$active[$State.ShardId]', wrapper)
+
+        prepare_batch = wrapper.index(
+            'Invoke-BootstrapAttemptBatch -States @($bootstrapPrepareStates)'
+        )
+        chunk_enumeration = wrapper.index(
+            '$bootstrapChunkStates = [System.Collections.Generic.List[object]]::new()'
+        )
+        chunk_batch = wrapper.index(
+            'Invoke-BootstrapAttemptBatch -States @($bootstrapChunkStates)'
+        )
+        finalize_enumeration = wrapper.index(
+            '$bootstrapFinalizeStates = [System.Collections.Generic.List[object]]::new()'
+        )
+        finalize_batch = wrapper.index(
+            'Invoke-BootstrapAttemptBatch -States @($bootstrapFinalizeStates)'
+        )
+        self.assertLess(prepare_batch, chunk_enumeration)
+        self.assertLess(chunk_enumeration, chunk_batch)
+        self.assertLess(chunk_batch, finalize_enumeration)
+        self.assertLess(finalize_enumeration, finalize_batch)
 
         chunk_start = wrapper.index('elseif ($State.Phase -eq "chunk")')
         chunk_end = wrapper.index('elseif ($State.Phase -eq "finalize")', chunk_start)
@@ -1012,6 +1045,85 @@ Write-Output 'new-chunk-index-resolved'
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("new-chunk-index-resolved", completed.stdout)
+
+    def test_parallel_bootstrap_batch_uses_one_global_cap_without_duplicate_chunks(
+        self,
+    ) -> None:
+        wrapper_path = Path(__file__).with_name(
+            "run_multimod_heterogeneity_qualification_v2.ps1"
+        )
+        quote = lambda value: str(value).replace("'", "''")
+        script = f"""
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    '{quote(wrapper_path)}', [ref]$tokens, [ref]$errors
+)
+if ($errors.Count -ne 0) {{ exit 30 }}
+$names = @('New-BootstrapAttemptState', 'Invoke-BootstrapAttemptBatch')
+foreach ($name in $names) {{
+    $node = $ast.Find({{
+        param($candidate)
+        $candidate -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+            $candidate.Name -eq $name
+    }}, $true)
+    Invoke-Expression $node.Extent.Text
+}}
+$global:bootstrapChunkCount = 100
+$global:MaxParallelBootstrapShards = 4
+$global:PerShardTimeoutSeconds = 30
+$global:active = @{{}}
+$global:started = [System.Collections.Generic.List[string]]::new()
+$global:maxActive = 0
+function Assert-TimeBudget {{}}
+function Start-BootstrapStateAttempt {{
+    param($State, [string]$ExecutableSha256, [string]$SourceCommit)
+    if ($global:active.ContainsKey($State.AttemptKey)) {{ exit 31 }}
+    $job = [pscustomobject]@{{
+        Process = [pscustomobject]@{{ HasExited = $true }}
+        Clock = [System.Diagnostics.Stopwatch]::StartNew()
+        TimeoutSeconds = 30
+    }}
+    $State.Job = $job
+    $global:active[$State.AttemptKey] = $job
+    [void]$global:started.Add($State.AttemptKey)
+    $global:maxActive = [Math]::Max($global:maxActive, $global:active.Count)
+}}
+function Complete-BootstrapStateAttempt {{
+    param($State, [string]$ExecutableSha256, [string]$SourceCommit)
+    [void]$global:active.Remove($State.AttemptKey)
+    $State.Done = $true
+    $State.Job = $null
+}}
+function Stop-BoundedChild {{ exit 32 }}
+function Write-ShardFailureReceipt {{ exit 33 }}
+$spec = [pscustomobject]@{{ shard_id = 'one-scientific-cell' }}
+$states = @(
+    0..7 | ForEach-Object {{
+        New-BootstrapAttemptState -Spec $spec -Phase 'chunk' -ChunkIndex $_
+    }}
+)
+Invoke-BootstrapAttemptBatch -States $states -ExecutableSha256 ('a' * 64) `
+    -SourceCommit ('b' * 40) -BatchName 'mock-chunks'
+Invoke-BootstrapAttemptBatch -States @() -ExecutableSha256 ('a' * 64) `
+    -SourceCommit ('b' * 40) -BatchName 'empty-resume'
+if ($global:maxActive -ne 4) {{ exit 34 }}
+if ($global:active.Count -ne 0) {{ exit 35 }}
+if ($global:started.Count -ne 8) {{ exit 36 }}
+if (@($global:started | Sort-Object -Unique).Count -ne 8) {{ exit 37 }}
+if (@($states | Where-Object {{ -not $_.Done }}).Count -ne 0) {{ exit 38 }}
+if (@($states | Where-Object {{ $_.ShardId -ne 'one-scientific-cell' }}).Count -ne 0) {{ exit 39 }}
+Write-Output 'parallel-bootstrap-global-cap-ok'
+"""
+        completed = subprocess.run(
+            ["pwsh", "-NoProfile", "-Command", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("parallel-bootstrap-global-cap-ok", completed.stdout)
 
     def test_rust_producer_wires_prepare_chunk_and_global_finalize_apis(self) -> None:
         producer = (
