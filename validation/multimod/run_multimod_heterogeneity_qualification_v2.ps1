@@ -328,7 +328,7 @@ function Resolve-BootstrapGenerationPayload {
         Get-BootstrapPreparedPointerPath -ShardId $ShardId
     }
     else {
-        Get-BootstrapCachePointerPath -ShardId $ShardId -ChunkIndex $ChunkIndex.Value
+        Get-BootstrapCachePointerPath -ShardId $ShardId -ChunkIndex ([int]$ChunkIndex)
     }
     if (-not (Test-Path -LiteralPath $pointerPath -PathType Leaf)) {
         throw "Current $Kind generation pointer is absent for $ShardId."
@@ -339,7 +339,7 @@ function Resolve-BootstrapGenerationPayload {
         $null -eq $pointer.chunk_index
     }
     else {
-        $null -ne $pointer.chunk_index -and [int]$pointer.chunk_index -eq $ChunkIndex.Value
+        $null -ne $pointer.chunk_index -and [int]$pointer.chunk_index -eq [int]$ChunkIndex
     }
     if ([int]$pointer.schema_version -ne 1 -or
         [string]$pointer.suite_id -ne "qpls.multimod.heterogeneity.bootstrap-current-generation.v1" -or

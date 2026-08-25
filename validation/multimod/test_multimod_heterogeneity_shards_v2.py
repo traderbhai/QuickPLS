@@ -811,6 +811,62 @@ catch {{
         self.assertEqual(completed.returncode, 0, completed.stderr)
         self.assertIn("late-exit-rejected", completed.stdout)
 
+    def test_cache_generation_resolver_accepts_a_brand_new_chunk_index(self) -> None:
+        wrapper_path = Path(__file__).with_name(
+            "run_multimod_heterogeneity_qualification_v2.ps1"
+        )
+        quote = lambda value: str(value).replace("'", "''")
+        bootstrap_root = self.root / "bootstrap-resolver"
+        script = f"""
+$tokens = $null
+$errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseFile(
+    '{quote(wrapper_path)}', [ref]$tokens, [ref]$errors
+)
+if ($errors.Count -ne 0) {{ exit 20 }}
+$names = @(
+    'Get-BootstrapCellDirectory', 'Get-BootstrapPreparedPointerPath',
+    'Get-BootstrapCachePointerPath', 'Resolve-BootstrapGenerationPayload'
+)
+foreach ($name in $names) {{
+    $node = $ast.Find({{
+        param($candidate)
+        $candidate -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+            $candidate.Name -eq $name
+    }}, $true)
+    Invoke-Expression $node.Extent.Text
+}}
+$global:bootstrapDirectory = '{quote(bootstrap_root)}'
+$global:bootstrapChunkCount = 100
+$cell = Get-BootstrapCellDirectory -ShardId 'bootstrap-fimix-p0'
+[void](New-Item -ItemType Directory -Path $cell -Force)
+$payload = Join-Path $cell 'cache-000-of-100.g-0123456789abcdef0123456789abcdef.json'
+[IO.File]::WriteAllText($payload, '{{}}')
+$pointer = @{{
+    schema_version = 1
+    suite_id = 'qpls.multimod.heterogeneity.bootstrap-current-generation.v1'
+    scientific_shard_id = 'bootstrap-fimix-p0'
+    kind = 'cache'
+    chunk_index = 0
+    payload_file = [IO.Path]::GetFileName($payload)
+}}
+$pointer | ConvertTo-Json | Set-Content -LiteralPath `
+    (Get-BootstrapCachePointerPath -ShardId 'bootstrap-fimix-p0' -ChunkIndex 0)
+$resolved = Resolve-BootstrapGenerationPayload -ShardId 'bootstrap-fimix-p0' `
+    -Kind 'cache' -ChunkIndex 0
+if ([IO.Path]::GetFullPath($resolved) -cne [IO.Path]::GetFullPath($payload)) {{ exit 21 }}
+Write-Output 'new-chunk-index-resolved'
+"""
+        completed = subprocess.run(
+            ["pwsh", "-NoProfile", "-Command", script],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+        self.assertEqual(completed.returncode, 0, completed.stderr)
+        self.assertIn("new-chunk-index-resolved", completed.stdout)
+
     def test_rust_producer_wires_prepare_chunk_and_global_finalize_apis(self) -> None:
         producer = (
             Path(__file__).resolve().parents[2]
