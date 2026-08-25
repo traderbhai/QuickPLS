@@ -69,6 +69,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 
+use crate::multimod_row_order_v1::canonical_multimod_row_permutation_v1;
 use crate::recipe_v4_general_sem_hoc_point_execution::{
     GeneralSemPlsHocScoreAlignmentReferenceV1, align_general_sem_pls_hoc_result_signs_v1,
 };
@@ -865,6 +866,52 @@ pub fn prepare_conditional_process_analysis_frame_v2(
         analysis_row_mask_sha256,
         excluded_rows,
     })
+}
+
+fn conditional_sampling_strata_v2(
+    dataset: &Dataset,
+    frame: &ConditionalProcessAnalysisFrameV2,
+) -> Result<Vec<ConditionalProcessAnalysisStratumV2>, MultiModRunnerErrorV1> {
+    let sign_invariant = BTreeSet::new();
+    frame
+        .strata
+        .iter()
+        .map(|stratum| {
+            let permutation = canonical_multimod_row_permutation_v1(
+                dataset,
+                &stratum.source_rows,
+                &frame.required_source_columns,
+                &sign_invariant,
+            )
+            .map_err(|error| {
+                MultiModRunnerErrorV1::PreparedInput(format!(
+                    "conditional scientific row-order preparation failed: {error}"
+                ))
+            })?;
+            let source_rows = permutation
+                .iter()
+                .map(|position| stratum.source_rows[*position])
+                .collect::<Vec<_>>();
+            let case_weights = stratum.case_weights.as_ref().map(|weights| {
+                permutation
+                    .iter()
+                    .map(|position| weights[*position])
+                    .collect::<Vec<_>>()
+            });
+            let frequencies = stratum.frequencies.as_ref().map(|frequencies| {
+                permutation
+                    .iter()
+                    .map(|position| frequencies[*position])
+                    .collect::<Vec<_>>()
+            });
+            Ok(ConditionalProcessAnalysisStratumV2 {
+                group_id: stratum.group_id.clone(),
+                source_rows,
+                case_weights,
+                frequencies,
+            })
+        })
+        .collect()
 }
 
 fn validate_analysis_frame_v2(
@@ -5719,6 +5766,21 @@ where
     );
     let frame = prepare_conditional_process_analysis_frame_v2(dataset, model, config)?;
     validate_analysis_frame_v2(dataset, config, &frame)?;
+    let sampling_strata = conditional_sampling_strata_v2(dataset, &frame)?;
+    if sampling_strata.len() != frame.strata.len()
+        || sampling_strata
+            .iter()
+            .zip(&frame.strata)
+            .any(|(sampling, published)| {
+                sampling.group_id != published.group_id
+                    || sampling.source_rows.len() != published.source_rows.len()
+            })
+    {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "conditional scientific sampling strata differ from the published analysis frame"
+                .into(),
+        ));
+    }
     let mut templates_by_stratum =
         BTreeMap::<Option<String>, Vec<ConditionalTargetTemplateV2>>::new();
     let mut warning_set = BTreeSet::new();
@@ -5856,7 +5918,7 @@ where
     let (prepared, raw_evidence) = match config.profile {
         ConditionalProcessProfileV2::GroupedPercentile => {
             let mut group_ledgers = Vec::with_capacity(frame.strata.len());
-            for stratum in &frame.strata {
+            for stratum in &sampling_strata {
                 let group_id = stratum.group_id.clone().ok_or_else(|| {
                     MultiModRunnerErrorV1::PreparedInput(
                         "grouped analysis stratum lacks a group id".into(),
@@ -5899,7 +5961,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;
@@ -5921,7 +5983,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;
@@ -5931,7 +5993,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;
@@ -5957,7 +6019,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;
@@ -5967,7 +6029,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;
@@ -5993,7 +6055,7 @@ where
                 config,
                 artifact,
                 &frame,
-                &frame.strata[0],
+                &sampling_strata[0],
                 &templates,
                 &should_cancel,
             )?;

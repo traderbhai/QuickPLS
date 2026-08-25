@@ -229,6 +229,7 @@ where
         refitter,
         pair,
         rows_by_group,
+        &selected_rows,
         construct_ids,
         configural_receipt,
         config,
@@ -245,6 +246,7 @@ pub fn run_pairwise_micom_with_partition_plan_v1<R, C>(
     refitter: &mut R,
     pair: OrderedGroupPairV1,
     rows_by_group: &BTreeMap<GroupIndexV1, Vec<u64>>,
+    stable_rows: &[SelectedGroupRowV1],
     construct_ids: &[String],
     configural_receipt: MicomConfiguralReceiptV1,
     config: MicomPermutationConfigV1,
@@ -259,6 +261,7 @@ where
         refitter,
         pair,
         rows_by_group,
+        stable_rows,
         construct_ids,
         configural_receipt,
         config,
@@ -276,6 +279,7 @@ pub fn run_pairwise_case_weighted_micom_with_partition_plan_v1<R, C>(
     refitter: &mut R,
     pair: OrderedGroupPairV1,
     rows_by_group: &BTreeMap<GroupIndexV1, Vec<u64>>,
+    stable_rows: &[SelectedGroupRowV1],
     construct_ids: &[String],
     configural_receipt: MicomConfiguralReceiptV1,
     config: MicomPermutationConfigV1,
@@ -291,6 +295,7 @@ where
         refitter,
         pair,
         rows_by_group,
+        stable_rows,
         construct_ids,
         configural_receipt,
         config,
@@ -305,6 +310,7 @@ fn run_pairwise_micom_with_partition_plan_internal_v1<R, C>(
     refitter: &mut R,
     pair: OrderedGroupPairV1,
     rows_by_group: &BTreeMap<GroupIndexV1, Vec<u64>>,
+    stable_rows: &[SelectedGroupRowV1],
     construct_ids: &[String],
     configural_receipt: MicomConfiguralReceiptV1,
     config: MicomPermutationConfigV1,
@@ -323,7 +329,7 @@ where
         &configural_receipt,
         &config,
     )?;
-    let selected_rows = selected_pair_rows(rows_by_group, pair)?;
+    let selected_rows = authoritative_selected_pair_rows(stable_rows, rows_by_group, pair)?;
     validate_pairwise_partition_plan_for_rows_v1(
         &selected_rows,
         pair,
@@ -646,13 +652,47 @@ fn selected_pair_rows(
         .iter()
         .map(|source_row| SelectedGroupRowV1 {
             source_row: *source_row,
+            stable_row_token: *source_row,
             group: pair.group_a,
         })
         .chain(rows_b.iter().map(|source_row| SelectedGroupRowV1 {
             source_row: *source_row,
+            stable_row_token: *source_row,
             group: pair.group_b,
         }))
         .collect())
+}
+
+fn authoritative_selected_pair_rows(
+    stable_rows: &[SelectedGroupRowV1],
+    rows_by_group: &BTreeMap<GroupIndexV1, Vec<u64>>,
+    pair: OrderedGroupPairV1,
+) -> Result<Vec<SelectedGroupRowV1>, MicomErrorV1> {
+    let selected = stable_rows
+        .iter()
+        .copied()
+        .filter(|row| row.group == pair.group_a || row.group == pair.group_b)
+        .collect::<Vec<_>>();
+    let expected = rows_by_group
+        .iter()
+        .filter(|(group, _)| **group == pair.group_a || **group == pair.group_b)
+        .flat_map(|(group, rows)| rows.iter().map(|row| (*row, *group)))
+        .collect::<BTreeSet<_>>();
+    let actual = selected
+        .iter()
+        .map(|row| (row.source_row, row.group))
+        .collect::<BTreeSet<_>>();
+    let stable_count = selected
+        .iter()
+        .map(|row| row.stable_row_token)
+        .collect::<BTreeSet<_>>()
+        .len();
+    if actual != expected || actual.len() != selected.len() || stable_count != selected.len() {
+        return Err(MicomErrorV1::InvalidContract(
+            "MICOM stable-row authority differs from its physical pair membership".into(),
+        ));
+    }
+    Ok(selected)
 }
 
 fn validate_contract(
@@ -1190,6 +1230,54 @@ mod tests {
     }
 
     #[test]
+    fn nonfirst_pair_uses_authoritative_stable_tokens() {
+        let a = GroupIndexV1::new(0).unwrap();
+        let b = GroupIndexV1::new(1).unwrap();
+        let c = GroupIndexV1::new(2).unwrap();
+        let rows = vec![
+            SelectedGroupRowV1 {
+                source_row: 0,
+                stable_row_token: 50,
+                group: a,
+            },
+            SelectedGroupRowV1 {
+                source_row: 4,
+                stable_row_token: 10,
+                group: b,
+            },
+            SelectedGroupRowV1 {
+                source_row: 1,
+                stable_row_token: 40,
+                group: c,
+            },
+            SelectedGroupRowV1 {
+                source_row: 5,
+                stable_row_token: 30,
+                group: b,
+            },
+            SelectedGroupRowV1 {
+                source_row: 2,
+                stable_row_token: 20,
+                group: c,
+            },
+        ];
+        let rows_by_group = BTreeMap::from([(a, vec![0]), (b, vec![4, 5]), (c, vec![1, 2])]);
+        let pair = OrderedGroupPairV1::new(b, c).unwrap();
+        let selected = authoritative_selected_pair_rows(&rows, &rows_by_group, pair).unwrap();
+        assert_eq!(
+            selected
+                .iter()
+                .map(|row| (row.source_row, row.stable_row_token, row.group))
+                .collect::<BTreeSet<_>>(),
+            BTreeSet::from([(4, 10, b), (5, 30, b), (1, 40, c), (2, 20, c)])
+        );
+
+        let mut mismatched = rows_by_group.clone();
+        mismatched.get_mut(&c).unwrap()[0] = 3;
+        assert!(authoritative_selected_pair_rows(&rows, &mismatched, pair).is_err());
+    }
+
+    #[test]
     fn micom_and_mga_consume_the_same_unequal_size_partition_ledger() {
         let a = GroupIndexV1::new(0).unwrap();
         let b = GroupIndexV1::new(1).unwrap();
@@ -1210,10 +1298,12 @@ mod tests {
             rows: (0..10)
                 .map(|source_row| SelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: a,
                 })
                 .chain((10..27).map(|source_row| SelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: b,
                 }))
                 .collect(),
@@ -1259,6 +1349,7 @@ mod tests {
             &mut micom_refitter,
             pair,
             &rows_by_group,
+            &design.rows,
             &["c".into()],
             reviewed(),
             MicomPermutationConfigV1 {

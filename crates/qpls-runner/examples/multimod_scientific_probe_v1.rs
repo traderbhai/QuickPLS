@@ -180,6 +180,7 @@ fn group_design(group_count: usize, observations_per_group: usize) -> Multigroup
         .flat_map(|group| {
             (0..observations_per_group).map(move |within| SelectedGroupRowV1 {
                 source_row: (group * observations_per_group + within) as u64,
+                stable_row_token: (group * observations_per_group + within) as u64,
                 group: GroupIndexV1::new(group).expect("fixture group index"),
             })
         })
@@ -250,6 +251,7 @@ fn mga_probe() -> Result<Value, String> {
     for row in 20..111 {
         imbalance_design.rows.push(SelectedGroupRowV1 {
             source_row: row,
+            stable_row_token: row,
             group: GroupIndexV1::new(1).expect("fixture group index"),
         });
     }

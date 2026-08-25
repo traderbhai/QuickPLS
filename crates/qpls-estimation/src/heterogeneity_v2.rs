@@ -42,6 +42,46 @@ pub const POS_STANDARDIZED_OUTCOME_MEAN_TOLERANCE_V2: f64 = 1.0e-8;
 const LOG_TWO_PI: f64 = 1.8378770664093453;
 const MAX_CLASSES_OR_SEGMENTS: usize = 5;
 const MIN_CLASSES_OR_SEGMENTS: usize = 2;
+const FIMIX_SCIENTIFIC_ROW_KEY_DOMAIN_V2: &[u8] = b"quickpls:fimix-pls:scientific-row-key:v2\0";
+const PLS_POS_SCIENTIFIC_ROW_KEY_DOMAIN_V2: &[u8] = b"quickpls:pls-pos:scientific-row-key:v2\0";
+
+/// A row-order-independent identity derived only from the scientific values
+/// admitted by the point engine. The digest is used for ordering, never as an
+/// output row index: memberships and posteriors remain indexed in the caller's
+/// physical row order.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+struct ScientificContentRowKeyV2 {
+    digest: [u8; 32],
+    canonical: Vec<u8>,
+}
+
+fn update_row_key_bytes_v2(canonical: &mut Vec<u8>, bytes: &[u8]) {
+    canonical.extend_from_slice(&(bytes.len() as u64).to_le_bytes());
+    canonical.extend_from_slice(bytes);
+}
+
+fn update_row_key_f64_v2(canonical: &mut Vec<u8>, value: f64) {
+    // Positive and negative zero are the same scientific value. Non-finite
+    // values have already been rejected by the owning input contract.
+    let bits = if value == 0.0 { 0 } else { value.to_bits() };
+    canonical.extend_from_slice(&bits.to_le_bytes());
+}
+
+fn finish_scientific_row_key_v2(domain: &[u8], canonical: Vec<u8>) -> ScientificContentRowKeyV2 {
+    let mut hasher = Sha256::new();
+    hasher.update(domain);
+    hasher.update(&canonical);
+    ScientificContentRowKeyV2 {
+        digest: hasher.finalize().into(),
+        canonical,
+    }
+}
+
+fn scientific_row_order_v2(keys: &[ScientificContentRowKeyV2]) -> Vec<usize> {
+    let mut order = (0..keys.len()).collect::<Vec<_>>();
+    order.sort_by(|left, right| keys[*left].cmp(&keys[*right]));
+    order
+}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
@@ -1035,6 +1075,59 @@ fn run_fimix_start(
     })
 }
 
+fn fimix_scientific_row_keys_v2(
+    input: &StandardizedFimixInputV2,
+) -> Vec<ScientificContentRowKeyV2> {
+    let observations = input.equations[0].outcome.len();
+    let mut equation_order = (0..input.equations.len()).collect::<Vec<_>>();
+    equation_order.sort_by(|left, right| {
+        input.equations[*left]
+            .equation_id
+            .cmp(&input.equations[*right].equation_id)
+            .then(
+                input.equations[*left]
+                    .outcome_id
+                    .cmp(&input.equations[*right].outcome_id),
+            )
+    });
+    let predictor_orders = equation_order
+        .iter()
+        .map(|equation_index| {
+            let equation = &input.equations[*equation_index];
+            let mut order = (0..equation.predictor_ids.len()).collect::<Vec<_>>();
+            order.sort_by(|left, right| {
+                equation.predictor_ids[*left].cmp(&equation.predictor_ids[*right])
+            });
+            order
+        })
+        .collect::<Vec<_>>();
+
+    (0..observations)
+        .map(|row| {
+            let mut canonical = Vec::new();
+            canonical.extend_from_slice(&(equation_order.len() as u64).to_le_bytes());
+            for (ordered_equation, equation_index) in equation_order.iter().copied().enumerate() {
+                let equation = &input.equations[equation_index];
+                update_row_key_bytes_v2(&mut canonical, equation.equation_id.as_bytes());
+                update_row_key_bytes_v2(&mut canonical, equation.outcome_id.as_bytes());
+                canonical.push(u8::from(equation.include_intercept));
+                update_row_key_f64_v2(&mut canonical, equation.outcome[row]);
+                canonical.extend_from_slice(
+                    &(predictor_orders[ordered_equation].len() as u64).to_le_bytes(),
+                );
+                for column in predictor_orders[ordered_equation].iter().copied() {
+                    update_row_key_bytes_v2(
+                        &mut canonical,
+                        equation.predictor_ids[column].as_bytes(),
+                    );
+                    update_row_key_f64_v2(&mut canonical, equation.design[row][column]);
+                }
+            }
+            finish_scientific_row_key_v2(FIMIX_SCIENTIFIC_ROW_KEY_DOMAIN_V2, canonical)
+        })
+        .collect()
+}
+
 fn initial_responsibilities(
     input: &StandardizedFimixInputV2,
     classes: usize,
@@ -1042,12 +1135,13 @@ fn initial_responsibilities(
     seed: u64,
 ) -> Vec<Vec<f64>> {
     let observations = input.equations[0].outcome.len();
-    let mut order = (0..observations).collect::<Vec<_>>();
+    let row_keys = fimix_scientific_row_keys_v2(input);
+    let mut order = scientific_row_order_v2(&row_keys);
     if start_index == 0 {
         order.sort_by(|left, right| {
             initial_row_key(input, *left)
                 .total_cmp(&initial_row_key(input, *right))
-                .then(left.cmp(right))
+                .then_with(|| row_keys[*left].cmp(&row_keys[*right]))
         });
     } else {
         let mut rng = ChaCha20Rng::seed_from_u64(seed);
@@ -2378,6 +2472,20 @@ struct InternalPosStartFailureV2 {
     objective_history: Vec<f64>,
 }
 
+fn pos_scientific_row_keys_v2(features: &[Vec<f64>]) -> Vec<ScientificContentRowKeyV2> {
+    features
+        .iter()
+        .map(|row| {
+            let mut canonical = Vec::with_capacity(8 + row.len() * 8);
+            canonical.extend_from_slice(&(row.len() as u64).to_le_bytes());
+            for value in row {
+                update_row_key_f64_v2(&mut canonical, *value);
+            }
+            finish_scientific_row_key_v2(PLS_POS_SCIENTIFIC_ROW_KEY_DOMAIN_V2, canonical)
+        })
+        .collect()
+}
+
 /// Build the frozen ten-start plan. The deterministic coverage bank prioritizes
 /// one pooled projection, balanced feature-axis quantile partitions, and at
 /// least two domain-seeded balanced shuffles. Start nine is the sole same-K
@@ -2424,8 +2532,10 @@ pub fn build_pls_pos_start_plan_v2(
 
     let generated_target = START_COUNT - usize::from(fimix.is_some());
     let mut starts = Vec::with_capacity(START_COUNT);
+    let row_keys = pos_scientific_row_keys_v2(features);
+    let scientific_order = scientific_row_order_v2(&row_keys);
 
-    let mut aggregate_order = (0..features.len()).collect::<Vec<_>>();
+    let mut aggregate_order = scientific_order.clone();
     let aggregate_ascending = seed % 2 == 0;
     aggregate_order.sort_by(|left, right| {
         let projection_order = feature_projection_key(&features[*left])
@@ -2435,7 +2545,7 @@ pub fn build_pls_pos_start_plan_v2(
         } else {
             projection_order.reverse()
         })
-        .then(left.cmp(right))
+        .then_with(|| row_keys[*left].cmp(&row_keys[*right]))
     });
     push_unique_pos_presegmentation(
         &mut starts,
@@ -2452,11 +2562,11 @@ pub fn build_pls_pos_start_plan_v2(
         ChaCha20Rng::seed_from_u64(derive_domain_seed_v2(seed, "pls_pos_axis_order", 0));
     axis_order.shuffle(&mut axis_rng);
     for column in axis_order.into_iter().take(axis_capacity) {
-        let mut row_order = (0..features.len()).collect::<Vec<_>>();
+        let mut row_order = scientific_order.clone();
         row_order.sort_by(|left, right| {
             features[*left][column]
                 .total_cmp(&features[*right][column])
-                .then(left.cmp(right))
+                .then_with(|| row_keys[*left].cmp(&row_keys[*right]))
         });
         push_unique_pos_presegmentation(
             &mut starts,
@@ -2470,7 +2580,7 @@ pub fn build_pls_pos_start_plan_v2(
         if starts.len() == generated_target {
             break;
         }
-        let mut row_order = (0..features.len()).collect::<Vec<_>>();
+        let mut row_order = scientific_order.clone();
         let start_seed = derive_domain_seed_v2(seed, "pls_pos_start_shuffle", attempt as u64);
         let mut rng = ChaCha20Rng::seed_from_u64(start_seed);
         row_order.shuffle(&mut rng);
@@ -2547,13 +2657,72 @@ fn feature_projection_key(row: &[f64]) -> f64 {
         .sum()
 }
 
+fn legacy_physical_pos_row_keys_v2(observations: usize) -> Vec<ScientificContentRowKeyV2> {
+    (0..observations)
+        .map(|row| {
+            // These legacy entry points never received scientific row
+            // content. Preserve their former physical-index ordering; the
+            // additive `*_with_scientific_row_features_v2` entry points below
+            // provide the row-order-invariant behavior.
+            let mut digest = [0_u8; 32];
+            digest[24..].copy_from_slice(&(row as u64).to_be_bytes());
+            ScientificContentRowKeyV2 {
+                digest,
+                canonical: Vec::new(),
+            }
+        })
+        .collect()
+}
+
+fn validate_pos_scientific_row_features_v2(
+    features: &[Vec<f64>],
+    observations: usize,
+) -> Result<Vec<ScientificContentRowKeyV2>, HeterogeneityV2Error> {
+    if features.len() != observations
+        || features.first().is_none_or(Vec::is_empty)
+        || features
+            .iter()
+            .any(|row| row.len() != features[0].len() || row.iter().any(|value| !value.is_finite()))
+    {
+        return Err(HeterogeneityV2Error::InvalidContract(
+            "PLS-POS scientific row features must be a finite rectangular matrix with one row per assignment"
+                .to_string(),
+        ));
+    }
+    Ok(pos_scientific_row_keys_v2(features))
+}
+
 pub fn fit_pls_pos_published_v2<R: PlsPosFullRefitterV2>(
     start_assignments: &[Vec<usize>],
     config: &PlsPosV2Config,
     refitter: &mut R,
 ) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
+    let observations = validate_pos_contract(start_assignments, config)?;
+    let row_keys = legacy_physical_pos_row_keys_v2(observations);
     fit_pls_pos_internal(
         start_assignments,
+        &row_keys,
+        config,
+        PosScoringContractV2::PublishedP0FullSegmentPls,
+        PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+        refitter,
+    )
+}
+
+/// Run publication-faithful PLS-POS using full scientific row content for all
+/// deterministic candidate ordering and equal-objective tie resolution.
+/// Result assignments remain in the input's physical row order.
+pub fn fit_pls_pos_published_with_scientific_row_features_v2<R: PlsPosFullRefitterV2>(
+    start_assignments: &[Vec<usize>],
+    scientific_row_features: &[Vec<f64>],
+    config: &PlsPosV2Config,
+    refitter: &mut R,
+) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
+    let observations = validate_pos_contract(start_assignments, config)?;
+    let row_keys = validate_pos_scientific_row_features_v2(scientific_row_features, observations)?;
+    fit_pls_pos_internal(
+        start_assignments,
+        &row_keys,
         config,
         PosScoringContractV2::PublishedP0FullSegmentPls,
         PLS_POS_PUBLISHED_METHOD_VERSION_V2,
@@ -2573,8 +2742,41 @@ pub fn fit_pls_pos_destination_scored_interactions_v2<R: PlsPosFullRefitterV2>(
                 .to_string(),
         ));
     }
+    let observations = validate_pos_contract(start_assignments, config)?;
+    let row_keys = legacy_physical_pos_row_keys_v2(observations);
     fit_pls_pos_internal(
         start_assignments,
+        &row_keys,
+        config,
+        PosScoringContractV2::DestinationScoredInteractions { profile },
+        PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2,
+        refitter,
+    )
+}
+
+/// Run destination-scored interaction PLS-POS with scientific-content row
+/// identities for candidate ordering. The returned assignments retain the
+/// caller's physical row order.
+pub fn fit_pls_pos_destination_scored_interactions_with_scientific_row_features_v2<
+    R: PlsPosFullRefitterV2,
+>(
+    start_assignments: &[Vec<usize>],
+    scientific_row_features: &[Vec<f64>],
+    profile: HeterogeneityInteractionProfileV2,
+    config: &PlsPosV2Config,
+    refitter: &mut R,
+) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
+    if profile == HeterogeneityInteractionProfileV2::P0Structural {
+        return Err(HeterogeneityV2Error::InvalidContract(
+            "the destination-scored extension requires P2 or P23; P0 uses published PLS-POS"
+                .to_string(),
+        ));
+    }
+    let observations = validate_pos_contract(start_assignments, config)?;
+    let row_keys = validate_pos_scientific_row_features_v2(scientific_row_features, observations)?;
+    fit_pls_pos_internal(
+        start_assignments,
+        &row_keys,
         config,
         PosScoringContractV2::DestinationScoredInteractions { profile },
         PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2,
@@ -2584,16 +2786,29 @@ pub fn fit_pls_pos_destination_scored_interactions_v2<R: PlsPosFullRefitterV2>(
 
 fn fit_pls_pos_internal<R: PlsPosFullRefitterV2>(
     start_assignments: &[Vec<usize>],
+    row_keys: &[ScientificContentRowKeyV2],
     config: &PlsPosV2Config,
     scoring: PosScoringContractV2,
     method_version: &str,
     refitter: &mut R,
 ) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
     let observations = validate_pos_contract(start_assignments, config)?;
+    if row_keys.len() != observations {
+        return Err(HeterogeneityV2Error::InvalidContract(
+            "PLS-POS scientific row-key count disagrees with the start plan".to_string(),
+        ));
+    }
     let mut diagnostics = Vec::with_capacity(start_assignments.len());
     let mut runs = Vec::new();
     for (start_index, assignments) in start_assignments.iter().enumerate() {
-        match run_pos_start(start_index, assignments, config, scoring, refitter) {
+        match run_pos_start(
+            start_index,
+            assignments,
+            row_keys,
+            config,
+            scoring,
+            refitter,
+        ) {
             Ok(mut run) => {
                 canonicalize_internal_pos_run(&mut run)?;
                 diagnostics.push(PosStartDiagnosticV2 {
@@ -2731,27 +2946,34 @@ fn validate_pos_contract(
 fn run_pos_start<R: PlsPosFullRefitterV2>(
     start_index: usize,
     assignments: &[usize],
+    row_keys: &[ScientificContentRowKeyV2],
     config: &PlsPosV2Config,
     scoring: PosScoringContractV2,
     refitter: &mut R,
 ) -> Result<InternalPosRun, InternalPosStartFailureV2> {
     let mut current_assignments = assignments.to_vec();
-    let mut partition =
-        refit_pos_partition(&current_assignments, config.segments, scoring, refitter).map_err(
-            |reason| InternalPosStartFailureV2 {
-                reason,
-                candidate_refit_failures: Vec::new(),
-                accepted_moves: 0,
-                objective_history: Vec::new(),
-            },
-        )?;
+    let scientific_order = scientific_row_order_v2(row_keys);
+    let mut partition = refit_pos_partition(
+        &current_assignments,
+        row_keys,
+        config.segments,
+        scoring,
+        refitter,
+    )
+    .map_err(|reason| InternalPosStartFailureV2 {
+        reason,
+        candidate_refit_failures: Vec::new(),
+        accepted_moves: 0,
+        objective_history: Vec::new(),
+    })?;
     let mut objective_history = vec![partition.objective];
     let mut accepted_moves = 0usize;
     let candidate_failures = Vec::new();
     while accepted_moves < config.maximum_accepted_moves {
         let counts = partition_counts(&current_assignments, config.segments);
         let mut current_rows = vec![Vec::new(); config.segments];
-        for (row, segment) in current_assignments.iter().copied().enumerate() {
+        for row in scientific_order.iter().copied() {
+            let segment = current_assignments[row];
             current_rows[segment].push(row);
         }
         let mut best_candidate: Option<(
@@ -2765,7 +2987,7 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
         )> = None;
         let mut candidates = Vec::new();
         let mut requests = Vec::new();
-        for observation in 0..current_assignments.len() {
+        for observation in scientific_order.iter().copied() {
             let source = current_assignments[observation];
             if counts[source] <= config.minimum_segment_size {
                 continue;
@@ -2776,7 +2998,8 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
             // K-1 candidate moves.
             let mut source_rows = current_rows[source].clone();
             let source_position = source_rows
-                .binary_search(&observation)
+                .iter()
+                .position(|row| *row == observation)
                 .expect("current source membership is complete");
             source_rows.remove(source_position);
             let source_request_index = requests.len();
@@ -2790,10 +3013,9 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
                     continue;
                 }
                 let mut destination_rows = current_rows[destination].clone();
-                let destination_position = destination_rows
-                    .binary_search(&observation)
-                    .expect_err("destination cannot already contain the moved row");
-                destination_rows.insert(destination_position, observation);
+                debug_assert!(!destination_rows.contains(&observation));
+                destination_rows.push(observation);
+                destination_rows.sort_by(|left, right| row_keys[*left].cmp(&row_keys[*right]));
                 let destination_request_index = requests.len();
                 requests.push(PosSegmentRefitRequestV2 {
                     segment_index: destination,
@@ -2858,7 +3080,10 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
                         candidate_objective > best.0 + config.strict_improvement_tolerance
                             || ((candidate_objective - best.0).abs()
                                 <= config.strict_improvement_tolerance
-                                && (observation, destination) < (best.1, best.3))
+                                && row_keys[observation]
+                                    .cmp(&row_keys[best.1])
+                                    .then(destination.cmp(&best.3))
+                                    .is_lt())
                     });
                     if beats_current && beats_best {
                         best_candidate = Some((
@@ -2933,15 +3158,19 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
         });
     }
     if accepted_moves > 0 {
-        let retained =
-            refit_pos_partition(&current_assignments, config.segments, scoring, refitter).map_err(
-                |reason| InternalPosStartFailureV2 {
-                    reason: format!("PLS-POS final retained-evidence refit failed: {reason}"),
-                    candidate_refit_failures: Vec::new(),
-                    accepted_moves,
-                    objective_history: objective_history.clone(),
-                },
-            )?;
+        let retained = refit_pos_partition(
+            &current_assignments,
+            row_keys,
+            config.segments,
+            scoring,
+            refitter,
+        )
+        .map_err(|reason| InternalPosStartFailureV2 {
+            reason: format!("PLS-POS final retained-evidence refit failed: {reason}"),
+            candidate_refit_failures: Vec::new(),
+            accepted_moves,
+            objective_history: objective_history.clone(),
+        })?;
         let exact_scientific_replay = retained.objective.to_bits() == partition.objective.to_bits()
             && retained.fits.len() == partition.fits.len()
             && retained
@@ -2976,16 +3205,18 @@ fn run_pos_start<R: PlsPosFullRefitterV2>(
 
 fn refit_pos_partition<R: PlsPosFullRefitterV2>(
     assignments: &[usize],
+    row_keys: &[ScientificContentRowKeyV2],
     segments: usize,
     scoring: PosScoringContractV2,
     refitter: &mut R,
 ) -> Result<PosPartitionFitCacheV2, String> {
     let mut fits = Vec::with_capacity(segments);
+    let scientific_order = scientific_row_order_v2(row_keys);
     for segment in 0..segments {
-        let rows = assignments
+        let rows = scientific_order
             .iter()
-            .enumerate()
-            .filter_map(|(row, assigned)| (*assigned == segment).then_some(row))
+            .copied()
+            .filter(|row| assignments[*row] == segment)
             .collect::<Vec<_>>();
         fits.push(refitter.refit_segment(segment, &rows, scoring)?);
     }
@@ -4179,6 +4410,40 @@ mod tests {
     }
 
     #[test]
+    fn fimix_initial_starts_follow_scientific_rows_under_row_reversal() {
+        let observations = 18usize;
+        // Every row has the same legacy scalar projection:
+        // outcome + 0.0625 * predictor = observations - 1. Distinct complete
+        // scientific rows must therefore resolve both the deterministic and
+        // seeded starts without falling back to their physical indices.
+        let input = StandardizedFimixInputV2 {
+            interaction_profile: HeterogeneityInteractionProfileV2::P0Structural,
+            metric: fixture_metric(observations),
+            equations: vec![StandardizedStructuralEquationV2 {
+                equation_id: "projection_collision".into(),
+                outcome_id: "y".into(),
+                predictor_ids: vec!["x".into()],
+                design: (0..observations)
+                    .map(|row| vec![16.0 * (observations - 1 - row) as f64])
+                    .collect(),
+                outcome: (0..observations).map(|row| row as f64).collect(),
+                include_intercept: true,
+            }],
+        };
+        let mut reversed = input.clone();
+        reversed.equations[0].design.reverse();
+        reversed.equations[0].outcome.reverse();
+
+        for start_index in 0..5 {
+            let seed = derive_domain_seed_v2(42, "fimix_start", start_index as u64);
+            let expected = initial_responsibilities(&input, 3, start_index, seed);
+            let mut actual = initial_responsibilities(&reversed, 3, start_index, seed);
+            actual.reverse();
+            assert_eq!(actual, expected, "start {start_index} changed by reversal");
+        }
+    }
+
+    #[test]
     fn fimix_failure_boundary_likelihood_decrease_is_typed() {
         let retained = validate_fimix_likelihood_step_v2(
             -100.0,
@@ -4471,6 +4736,44 @@ mod tests {
         let repeated = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
 
         assert_eq!(first, repeated);
+    }
+
+    #[test]
+    fn pos_start_plan_follows_scientific_rows_under_row_reversal() {
+        let features = (0..41)
+            .map(|row| {
+                let first = (row % 5) as f64;
+                let second = ((row / 5) % 4) as f64;
+                let third = (row % 2) as f64;
+                let fourth = row as f64;
+                let fifth = -(first + 2.0 * second + 3.0 * third + 4.0 * fourth) / 5.0;
+                vec![first, second, third, fourth, fifth]
+            })
+            .collect::<Vec<_>>();
+        let fimix = (0..features.len())
+            .map(|row| ((row * 7) % features.len()) % 3)
+            .collect::<Vec<_>>();
+        let mut reversed_features = features.clone();
+        reversed_features.reverse();
+        let mut reversed_fimix = fimix.clone();
+        reversed_fimix.reverse();
+
+        for (expected_fimix, actual_fimix) in [
+            (None, None),
+            (Some(fimix.as_slice()), Some(reversed_fimix.as_slice())),
+        ] {
+            let expected = build_pls_pos_start_plan_v2(&features, 3, 42, expected_fimix).unwrap();
+            let actual = build_pls_pos_start_plan_v2(&reversed_features, 3, 42, actual_fimix)
+                .unwrap()
+                .into_iter()
+                .map(|mut assignments| {
+                    assignments.reverse();
+                    assignments
+                })
+                .collect::<Vec<_>>();
+
+            assert_eq!(actual, expected);
+        }
     }
 
     #[test]
@@ -4839,12 +5142,17 @@ mod tests {
             .map(|row| -0.9 + 1.8 * row as f64 / 23.0)
             .collect::<Vec<_>>();
         let assignments = (0..values.len()).map(|row| row / 6).collect::<Vec<_>>();
+        let row_keys = pos_scientific_row_keys_v2(
+            &values.iter().map(|value| vec![*value]).collect::<Vec<_>>(),
+        );
         let scoring = PosScoringContractV2::PublishedP0FullSegmentPls;
         let mut initial_refitter = MeanSeparationRefitter {
             values: values.clone(),
             method_version: PLS_POS_PUBLISHED_METHOD_VERSION_V2,
         };
-        let current = refit_pos_partition(&assignments, 4, scoring, &mut initial_refitter).unwrap();
+        let current =
+            refit_pos_partition(&assignments, &row_keys, 4, scoring, &mut initial_refitter)
+                .unwrap();
 
         for observation in 0..assignments.len() {
             let source = assignments[observation];
@@ -4858,9 +5166,14 @@ mod tests {
                     values: values.clone(),
                     method_version: PLS_POS_PUBLISHED_METHOD_VERSION_V2,
                 };
-                let full =
-                    refit_pos_partition(&candidate_assignments, 4, scoring, &mut full_refitter)
-                        .unwrap();
+                let full = refit_pos_partition(
+                    &candidate_assignments,
+                    &row_keys,
+                    4,
+                    scoring,
+                    &mut full_refitter,
+                )
+                .unwrap();
 
                 let mut changed_refitter = MeanSeparationRefitter {
                     values: values.clone(),
@@ -4871,10 +5184,9 @@ mod tests {
                     if segment != source && segment != destination {
                         continue;
                     }
-                    let rows = candidate_assignments
-                        .iter()
-                        .enumerate()
-                        .filter_map(|(row, assigned)| (*assigned == segment).then_some(row))
+                    let rows = scientific_row_order_v2(&row_keys)
+                        .into_iter()
+                        .filter(|row| candidate_assignments[*row] == segment)
                         .collect::<Vec<_>>();
                     replacements.push((
                         segment,
@@ -4915,6 +5227,7 @@ mod tests {
     fn pos_candidate_sweep_reuses_identical_source_refit_and_refits_each_destination() {
         let values = vec![0.5; 12];
         let assignments = (0..values.len()).map(|row| row / 4).collect::<Vec<_>>();
+        let row_keys = pos_scientific_row_keys_v2(&vec![vec![0.0]; assignments.len()]);
         let mut config = PlsPosV2Config::for_segments(3, values.len());
         config.minimum_segment_size = 2;
         let mut refitter = OrderedBatchMeanSeparationRefitter {
@@ -4927,6 +5240,7 @@ mod tests {
         let run = run_pos_start(
             0,
             &assignments,
+            &row_keys,
             &config,
             PosScoringContractV2::PublishedP0FullSegmentPls,
             &mut refitter,
@@ -5082,12 +5396,14 @@ mod tests {
     #[test]
     fn pos_shared_source_failure_maps_to_first_logical_candidate_once() {
         let assignments = vec![1, 1, 1, 1, 0, 0, 0, 0, 2, 2, 2, 2];
+        let row_keys = pos_scientific_row_keys_v2(&vec![vec![0.0]; assignments.len()]);
         let mut config = PlsPosV2Config::for_segments(3, assignments.len());
         config.minimum_segment_size = 2;
         let mut refitter = SharedSourceFailureRefitter { calls: Vec::new() };
         let error = run_pos_start(
             0,
             &assignments,
+            &row_keys,
             &config,
             PosScoringContractV2::PublishedP0FullSegmentPls,
             &mut refitter,
@@ -5162,6 +5478,9 @@ mod tests {
             .map(|row| if row < 20 { -1.0 } else { 1.0 })
             .collect::<Vec<_>>();
         let assignments = (0..values.len()).map(|row| row % 2).collect::<Vec<_>>();
+        let row_keys = pos_scientific_row_keys_v2(
+            &values.iter().map(|value| vec![*value]).collect::<Vec<_>>(),
+        );
         let mut config = PlsPosV2Config::for_segments(2, assignments.len());
         config.minimum_segment_size = 10;
         let mut refitter = FinalReplayMutationRefitter {
@@ -5171,6 +5490,7 @@ mod tests {
         let error = run_pos_start(
             0,
             &assignments,
+            &row_keys,
             &config,
             PosScoringContractV2::PublishedP0FullSegmentPls,
             &mut refitter,
@@ -5186,23 +5506,23 @@ mod tests {
         assert_eq!(refitter.individual_calls, 4);
     }
 
-    struct TiedCandidateRefitter;
+    struct TiedCandidateRefitter {
+        markers: [usize; 2],
+    }
 
     impl PlsPosFullRefitterV2 for TiedCandidateRefitter {
         fn refit_segment(
             &mut self,
-            segment_index: usize,
+            _segment_index: usize,
             row_indices: &[usize],
             _scoring: PosScoringContractV2,
         ) -> Result<PosSegmentFullFitV2, String> {
-            let contains_marker = row_indices.binary_search(&0).is_ok();
-            let r_squared = if (segment_index == 0 && !contains_marker)
-                || (segment_index != 0 && contains_marker)
-            {
-                0.5
-            } else {
-                0.0
-            };
+            let marker_count = self
+                .markers
+                .iter()
+                .filter(|marker| row_indices.contains(marker))
+                .count();
+            let r_squared = if marker_count == 1 { 0.5 } else { 0.0 };
             Ok(PosSegmentFullFitV2 {
                 r_squared: vec![PosOutcomeR2V2 {
                     outcome_id: "y".into(),
@@ -5225,22 +5545,48 @@ mod tests {
     }
 
     #[test]
-    fn pos_cached_candidate_ties_keep_observation_then_destination_order() {
+    fn pos_cached_candidate_ties_use_scientific_row_key_under_row_reversal() {
         let assignments = (0..12).map(|row| row / 4).collect::<Vec<_>>();
+        let features = (0..12)
+            .map(|row| vec![row as f64, ((row * 5 + 3) % 13) as f64])
+            .collect::<Vec<_>>();
+        let row_keys = pos_scientific_row_keys_v2(&features);
         let mut config = PlsPosV2Config::for_segments(3, assignments.len());
         config.minimum_segment_size = 2;
         let run = run_pos_start(
             0,
             &assignments,
+            &row_keys,
             &config,
             PosScoringContractV2::PublishedP0FullSegmentPls,
-            &mut TiedCandidateRefitter,
+            &mut TiedCandidateRefitter { markers: [0, 1] },
         )
         .unwrap();
 
         assert_eq!(run.accepted_moves, 1);
-        assert_eq!(run.assignments[0], 1);
         assert_eq!(run.objective_history, vec![0.0, 1.0]);
+        let winning_marker = if row_keys[0] < row_keys[1] { 0 } else { 1 };
+        assert_eq!(run.assignments[winning_marker], 1);
+
+        let mut reversed_assignments = assignments.clone();
+        reversed_assignments.reverse();
+        let mut reversed_features = features;
+        reversed_features.reverse();
+        let reversed_row_keys = pos_scientific_row_keys_v2(&reversed_features);
+        let mut reversed_run = run_pos_start(
+            0,
+            &reversed_assignments,
+            &reversed_row_keys,
+            &config,
+            PosScoringContractV2::PublishedP0FullSegmentPls,
+            &mut TiedCandidateRefitter { markers: [11, 10] },
+        )
+        .unwrap();
+        reversed_run.assignments.reverse();
+
+        assert_eq!(reversed_run.accepted_moves, run.accepted_moves);
+        assert_eq!(reversed_run.objective_history, run.objective_history);
+        assert_eq!(reversed_run.assignments, run.assignments);
     }
 
     #[test]
@@ -5248,11 +5594,13 @@ mod tests {
         let assignments = (0..40)
             .map(|row| usize::from(row >= 20))
             .collect::<Vec<_>>();
+        let row_keys = pos_scientific_row_keys_v2(&vec![vec![0.0]; assignments.len()]);
         let mut config = PlsPosV2Config::for_segments(2, assignments.len());
         config.minimum_segment_size = 10;
         let error = run_pos_start(
             0,
             &assignments,
+            &row_keys,
             &config,
             PosScoringContractV2::PublishedP0FullSegmentPls,
             &mut CandidateFailureRefitter,

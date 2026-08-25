@@ -9,6 +9,7 @@ use crate::{
     MgaExecutionCacheErrorV1, MgaExecutionCacheV1, MgaExecutionPlanV1, MgaExecutionShardKindV1,
     MgaExecutionShardPayloadV1, RunnerProgress, ValidatedMgaExecutionCacheSessionV1,
     build_mga_execution_plan_v1,
+    multimod_row_order_v1::canonical_multimod_row_permutation_v1,
     multimod_weighted_pls_point_v1::{
         PreparedMultimodWeightedPlsPointV1, prepare_compiled_multimod_weighted_pls_point_v1,
         run_prepared_multimod_weighted_pls_point_v1,
@@ -102,12 +103,13 @@ use qpls_estimation::{
     estimate_general_sem_pls_three_way_moderation_v1_with_control,
     estimate_interventional_mediation_v1, estimate_pls_validated_with_control,
     evaluate_pos_common_metric_gate_v1, fit_fimix_pls_v2,
-    fit_pls_pos_destination_scored_interactions_v2, fit_pls_pos_published_v2,
-    fit_pooled_metric_segment_baselines_v2, fit_pooled_structural_baseline_v2,
-    henseler_directional_probabilities_v1, heterogeneity_bootstrap_replicate_seed_v2,
-    heterogeneity_target_payload_sha256_v2, inverse_variance_wald_test_v1,
-    multimod_case_weights_for_source_rows_v1, multimod_frequency_counts_for_source_rows_v1,
-    ordinary_pls_path_standard_error_v1, percentile_interval_v2, pooled_variance_parameter_test_v1,
+    fit_pls_pos_destination_scored_interactions_with_scientific_row_features_v2,
+    fit_pls_pos_published_with_scientific_row_features_v2, fit_pooled_metric_segment_baselines_v2,
+    fit_pooled_structural_baseline_v2, henseler_directional_probabilities_v1,
+    heterogeneity_bootstrap_replicate_seed_v2, heterogeneity_target_payload_sha256_v2,
+    inverse_variance_wald_test_v1, multimod_case_weights_for_source_rows_v1,
+    multimod_frequency_counts_for_source_rows_v1, ordinary_pls_path_standard_error_v1,
+    percentile_interval_v2, pooled_variance_parameter_test_v1,
     prepare_general_sem_pls_disjoint_hoc_score_dataset_multimod_v2,
     prepare_multimod_case_weight_dataset_v1, prepare_multimod_frequency_count_dataset_v1,
     run_frequency_group_bootstrap_banks_v1, run_frequency_max_spread_omnibus_permutation_v1,
@@ -1041,6 +1043,144 @@ pub fn multimod_mga_publishable_parameter_identities_v1(
 /// analytical identity binds the full recipe/model authority, the dataset
 /// fingerprint binds indicator/group/weight values, and the design/target
 /// digests bind selected rows, typed groups, and publishable parameters.
+fn bind_mga_stable_row_tokens_v1(
+    dataset: &Dataset,
+    model: &SemModelV4,
+    config: &MgaMultigroupV1,
+    design: &MultigroupDesignV1,
+) -> Result<MultigroupDesignV1, MultiModRunnerErrorV1> {
+    let mut scientific_columns = model
+        .variables
+        .iter()
+        .filter_map(|variable| match variable {
+            SemVariableV4::Observed { source_column, .. } => Some(source_column.clone()),
+            _ => None,
+        })
+        .collect::<BTreeSet<_>>();
+    scientific_columns.insert(config.grouping_column.clone());
+    if let Some(weight) = &config.weight {
+        let column = match weight {
+            qpls_core::AnalysisWeightBindingV1::Case { column }
+            | qpls_core::AnalysisWeightBindingV1::Frequency { column } => column,
+        };
+        scientific_columns.insert(column.clone());
+    }
+    bind_mga_stable_row_tokens_for_columns_v1(
+        dataset,
+        &scientific_columns.into_iter().collect::<Vec<_>>(),
+        design,
+    )
+}
+
+fn bind_mga_stable_row_tokens_for_columns_v1(
+    dataset: &Dataset,
+    scientific_columns: &[String],
+    design: &MultigroupDesignV1,
+) -> Result<MultigroupDesignV1, MultiModRunnerErrorV1> {
+    let row_count = dataset.batch.num_rows();
+    let rows = qpls_data::preview_page(dataset, 0, row_count);
+    if rows.len() != row_count {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "the resident dataset could not provide a complete MGA row-token frame".into(),
+        ));
+    }
+    let mut scientific_columns = scientific_columns.to_vec();
+    scientific_columns.sort();
+    scientific_columns.dedup();
+    if scientific_columns.is_empty() {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "MGA stable-row binding requires at least one scientific input column".into(),
+        ));
+    }
+    let schema_by_name = dataset
+        .schema
+        .columns
+        .iter()
+        .map(|column| (column.name.clone(), column.column_type))
+        .collect::<BTreeMap<_, _>>();
+    let schema_identity = scientific_columns
+        .iter()
+        .map(|column| {
+            schema_by_name
+                .get(column)
+                .copied()
+                .map(|column_type| (column.clone(), column_type))
+                .ok_or_else(|| {
+                    MultiModRunnerErrorV1::PreparedInput(format!(
+                        "MGA scientific row-token column {column} is absent from the resident dataset"
+                    ))
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let mut physical_rows = BTreeSet::new();
+    let mut ranked = Vec::with_capacity(design.rows.len());
+    for selected in &design.rows {
+        let physical = usize::try_from(selected.source_row).map_err(|_| {
+            MultiModRunnerErrorV1::PreparedInput(
+                "an MGA source-row address exceeds the platform row range".into(),
+            )
+        })?;
+        let values = rows.get(physical).ok_or_else(|| {
+            MultiModRunnerErrorV1::PreparedInput(format!(
+                "MGA source row {} is outside the resident dataset",
+                selected.source_row
+            ))
+        })?;
+        if !physical_rows.insert(selected.source_row) {
+            return Err(MultiModRunnerErrorV1::PreparedInput(
+                "the MGA design contains a duplicate physical source-row address".into(),
+            ));
+        }
+        let scientific_values = scientific_columns
+            .iter()
+            .map(|column| {
+                values
+                    .get(column)
+                    .cloned()
+                    .map(|value| (column.clone(), value))
+                    .ok_or_else(|| {
+                        MultiModRunnerErrorV1::PreparedInput(format!(
+                            "MGA scientific row-token column {column} is absent from source row {}",
+                            selected.source_row
+                        ))
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        ranked.push((
+            selected.group,
+            sha256_serialized(&(
+                "qpls.mga.multigroup.stable-row-token.v1",
+                &schema_identity,
+                scientific_values,
+            )),
+            selected.source_row,
+        ));
+    }
+    // Group-major ordering keeps the existing MICOM pair adapter compact.
+    // Exact duplicate rows are scientifically exchangeable; physical address
+    // is used only as their deterministic within-dataset tie-breaker.
+    ranked.sort_by(|left, right| {
+        left.0
+            .cmp(&right.0)
+            .then(left.1.cmp(&right.1))
+            .then(left.2.cmp(&right.2))
+    });
+    let tokens = ranked
+        .into_iter()
+        .enumerate()
+        .map(|(token, (_, _, source_row))| (source_row, token as u64))
+        .collect::<BTreeMap<_, _>>();
+    let mut bound = design.clone();
+    for row in &mut bound.rows {
+        row.stable_row_token = *tokens.get(&row.source_row).ok_or_else(|| {
+            MultiModRunnerErrorV1::PreparedInput(
+                "the MGA stable-row binding omitted a selected physical row".into(),
+            )
+        })?;
+    }
+    Ok(bound)
+}
+
 pub fn prepare_compiled_raw_mga_execution_plan_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
@@ -1058,14 +1198,16 @@ pub fn prepare_compiled_raw_mga_execution_plan_v1(
     let config = recipe.mga_multigroup.as_ref().ok_or_else(|| {
         MultiModRunnerErrorV1::Authority("MGA configuration disappeared after compilation".into())
     })?;
-    let parameters =
-        multimod_mga_publishable_parameter_identities_v1(dataset, recipe, model, artifact, design)?;
+    let design = bind_mga_stable_row_tokens_v1(dataset, model, config, design)?;
+    let parameters = multimod_mga_publishable_parameter_identities_v1(
+        dataset, recipe, model, artifact, &design,
+    )?;
     let pairs = selected_mga_pairs(config)?;
     build_mga_execution_plan_v1(
         artifact.receipt(),
         &dataset.fingerprint.0,
         config,
-        design,
+        &design,
         &parameters,
         &pairs,
     )
@@ -1127,13 +1269,14 @@ where
     P: Fn(MultiModRunnerProgressV1) + Sync,
     Q: FnMut(&MgaExecutionPlanV1, &MgaExecutionCacheV1) -> Result<(), String>,
 {
-    let execution_plan =
-        prepare_compiled_raw_mga_execution_plan_v1(dataset, recipe, model, artifact, design)?;
-    let mut execution_session = ValidatedMgaExecutionCacheSessionV1::open(&execution_plan, cache)
-        .map_err(map_mga_execution_cache_error_v1)?;
     let config = recipe.mga_multigroup.as_ref().ok_or_else(|| {
         MultiModRunnerErrorV1::Authority("MGA configuration disappeared after compilation".into())
     })?;
+    let design = bind_mga_stable_row_tokens_v1(dataset, model, config, design)?;
+    let execution_plan =
+        prepare_compiled_raw_mga_execution_plan_v1(dataset, recipe, model, artifact, &design)?;
+    let mut execution_session = ValidatedMgaExecutionCacheSessionV1::open(&execution_plan, cache)
+        .map_err(map_mga_execution_cache_error_v1)?;
     let output = match config.profile {
         qpls_core::MgaModelProfileV1::GeneralSemPls
         | qpls_core::MgaModelProfileV1::ReflectivePlsc
@@ -1143,7 +1286,7 @@ where
                 recipe,
                 model,
                 artifact,
-                design,
+                &design,
                 excluded_rows,
                 Some(&mut execution_session),
                 Some(&mut checkpoint),
@@ -1157,7 +1300,7 @@ where
                 recipe,
                 model,
                 artifact,
-                design,
+                &design,
                 excluded_rows,
                 Some(&mut execution_session),
                 Some(&mut checkpoint),
@@ -1173,7 +1316,7 @@ where
                 recipe,
                 model,
                 artifact,
-                design,
+                &design,
                 excluded_rows,
                 Some(&mut execution_session),
                 Some(&mut checkpoint),
@@ -1186,7 +1329,7 @@ where
             recipe,
             model,
             artifact,
-            design,
+            &design,
             excluded_rows,
             Some(&mut execution_session),
             Some(&mut checkpoint),
@@ -5675,6 +5818,7 @@ where
                     &mut refitter,
                     *pair,
                     &rows_by_group,
+                    &design.rows,
                     &construct_ids,
                     receipt.clone(),
                     micom_config.clone(),
@@ -6010,13 +6154,12 @@ fn observed_rows_by_group_v1(design: &MultigroupDesignV1) -> BTreeMap<GroupIndex
         .iter()
         .map(|group| (group.index, Vec::new()))
         .collect::<BTreeMap<_, _>>();
-    for selected in &design.rows {
+    let mut selected_rows = design.rows.clone();
+    selected_rows.sort_by_key(|row| row.stable_row_token);
+    for selected in &selected_rows {
         if let Some(group_rows) = rows.get_mut(&selected.group) {
             group_rows.push(selected.source_row);
         }
-    }
-    for group_rows in rows.values_mut() {
-        group_rows.sort_unstable();
     }
     rows
 }
@@ -6339,6 +6482,7 @@ fn frequency_multigroup_design_from_raw_v1(
             .map(|row| {
                 Ok(FrequencySelectedGroupRowV1 {
                     source_row: row.source_row,
+                    stable_row_token: row.stable_row_token,
                     group: row.group,
                     frequency: *count_by_row.get(&row.source_row).ok_or_else(|| {
                         MultiModRunnerErrorV1::PreparedInput(
@@ -7287,6 +7431,7 @@ where
                         &mut refitter,
                         *pair,
                         &rows_by_group,
+                        &design.rows,
                         &construct_ids,
                         receipt.clone(),
                         permutation_config.clone(),
@@ -7299,6 +7444,7 @@ where
                         &mut refitter,
                         *pair,
                         &rows_by_group,
+                        &design.rows,
                         &construct_ids,
                         receipt.clone(),
                         permutation_config.clone(),
@@ -8412,6 +8558,7 @@ where
                     &mut refitter,
                     *pair,
                     &rows_by_group,
+                    &design.rows,
                     &construct_ids,
                     receipt.clone(),
                     micom_config.clone(),
@@ -10959,6 +11106,40 @@ where
     ))
 }
 
+fn raw_heterogeneity_scientific_row_features_v2(
+    dataset: &Dataset,
+    source_columns: &[String],
+) -> Result<Vec<Vec<f64>>, MultiModRunnerErrorV1> {
+    let mut columns = source_columns.to_vec();
+    columns.sort();
+    columns.dedup();
+    if columns.is_empty() {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "heterogeneity scientific row features require source columns".into(),
+        ));
+    }
+    qpls_data::preview_page(dataset, 0, dataset.batch.num_rows())
+        .into_iter()
+        .enumerate()
+        .map(|(row_index, row)| {
+            columns
+                .iter()
+                .map(|column| {
+                    row.get(column)
+                        .and_then(Option::as_deref)
+                        .and_then(|value| value.parse::<f64>().ok())
+                        .filter(|value| value.is_finite())
+                        .ok_or_else(|| {
+                            MultiModRunnerErrorV1::PreparedInput(format!(
+                                "heterogeneity scientific row {row_index} lacks finite source column {column}"
+                            ))
+                        })
+                })
+                .collect::<Result<Vec<_>, _>>()
+        })
+        .collect()
+}
+
 #[derive(Debug, Clone)]
 struct RawHeterogeneityMetricV2 {
     fimix_input: StandardizedFimixInputV2,
@@ -12258,6 +12439,7 @@ where
         .enumerate()
         .map(|(row, segment)| SelectedGroupRowV1 {
             source_row: row as u64,
+            stable_row_token: row as u64,
             group: GroupIndexV1::new(*segment).expect("validated segment index"),
         })
         .collect::<Vec<_>>();
@@ -12303,6 +12485,7 @@ where
                 refitter,
                 pair,
                 &rows_by_group,
+                &selected_rows,
                 &construct_ids,
                 receipt.clone(),
                 MicomPermutationConfigV1 {
@@ -12535,6 +12718,8 @@ where
             )
             .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))?;
             let settings = pos_config(config, k as usize, prepared.pos_start_features.len());
+            let scientific_row_features =
+                raw_heterogeneity_scientific_row_features_v2(dataset, &authority.source_columns)?;
             let mut refitter = RawPlsPosRefitterV2 {
                 dataset,
                 authority,
@@ -12547,11 +12732,17 @@ where
             };
             let result = match algorithm {
                 CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2 => {
-                    fit_pls_pos_published_v2(&starts, &settings, &mut refitter)
+                    fit_pls_pos_published_with_scientific_row_features_v2(
+                        &starts,
+                        &scientific_row_features,
+                        &settings,
+                        &mut refitter,
+                    )
                 }
                 CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => {
-                    fit_pls_pos_destination_scored_interactions_v2(
+                    fit_pls_pos_destination_scored_interactions_with_scientific_row_features_v2(
                         &starts,
+                        &scientific_row_features,
                         estimation_heterogeneity_profile(config.profile),
                         &settings,
                         &mut refitter,
@@ -12654,6 +12845,7 @@ fn aligned_heterogeneity_target_values_v2(
 struct RawHeterogeneityBootstrapCallbackV2<'a, C> {
     dataset: &'a Dataset,
     authority: &'a RawHeterogeneityAuthorityV2,
+    sampling_positions: &'a [usize],
     config: &'a qpls_core::PlsUnobservedHeterogeneityConfigV2,
     algorithm: CoreHeterogeneityAlgorithmV2,
     k: u8,
@@ -12702,8 +12894,17 @@ where
         let indices = draw
             .source_rows
             .iter()
-            .map(|row| *row as usize)
-            .collect::<Vec<_>>();
+            .map(|row| {
+                self.sampling_positions
+                    .get(*row as usize)
+                    .copied()
+                    .ok_or_else(|| MultiModRefitFailureV1 {
+                        code: "draw_identity".into(),
+                        message: "heterogeneity bootstrap position is outside the frozen scientific row order"
+                            .into(),
+                    })
+            })
+            .collect::<Result<Vec<_>, _>>()?;
         let sampled = resample_dataset_columns_v1(
             self.dataset,
             &self.authority.source_columns,
@@ -13124,6 +13325,8 @@ where
             config.profile,
             &should_cancel,
         )?;
+    let pos_scientific_row_features =
+        raw_heterogeneity_scientific_row_features_v2(&complete_dataset, &authority.source_columns)?;
     let mut refitter = RawPlsPosRefitterV2 {
         dataset: &complete_dataset,
         authority: &authority,
@@ -13140,6 +13343,7 @@ where
         algorithms,
         candidate_k,
         &prepared_point,
+        &pos_scientific_row_features,
         &mut refitter,
         &should_cancel,
         &progress,
@@ -13307,6 +13511,23 @@ where
     let authority = projected_heterogeneity_authority_v2(dataset, recipe, model, artifact)?;
     let (complete_dataset, source_row_tokens) =
         complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, &should_cancel)?;
+    let complete_row_count = u32::try_from(complete_dataset.batch.num_rows()).map_err(|_| {
+        MultiModRunnerErrorV1::PreparedInput(
+            "heterogeneity complete-case rows exceed the bootstrap row-index contract".into(),
+        )
+    })?;
+    let complete_source_rows = (0..complete_row_count).collect::<Vec<_>>();
+    let sampling_positions = canonical_multimod_row_permutation_v1(
+        &complete_dataset,
+        &complete_source_rows,
+        &authority.source_columns,
+        &BTreeSet::new(),
+    )
+    .map_err(|error| {
+        MultiModRunnerErrorV1::PreparedInput(format!(
+            "heterogeneity scientific row-order preparation failed: {error}"
+        ))
+    })?;
     execution
         .ensure_valid(
             dataset,
@@ -13330,6 +13551,7 @@ where
     let mut callback = RawHeterogeneityBootstrapCallbackV2 {
         dataset: &complete_dataset,
         authority: &authority,
+        sampling_positions: &sampling_positions,
         config,
         algorithm: execution.reference.algorithm,
         k: execution.reference.k,
@@ -14897,6 +15119,7 @@ fn run_pos_candidate<R: PlsPosFullRefitterV2>(
     k: usize,
     config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
     prepared: &PreparedHeterogeneityExecutionV2,
+    scientific_row_features: &[Vec<f64>],
     same_k_fimix: Option<&[usize]>,
     refitter: &mut R,
 ) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
@@ -14905,11 +15128,17 @@ fn run_pos_candidate<R: PlsPosFullRefitterV2>(
     let settings = pos_config(config, k, prepared.pos_start_features.len());
     let result = match algorithm {
         CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2 => {
-            fit_pls_pos_published_v2(&starts, &settings, refitter)
+            fit_pls_pos_published_with_scientific_row_features_v2(
+                &starts,
+                scientific_row_features,
+                &settings,
+                refitter,
+            )
         }
         CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => {
-            fit_pls_pos_destination_scored_interactions_v2(
+            fit_pls_pos_destination_scored_interactions_with_scientific_row_features_v2(
                 &starts,
+                scientific_row_features,
                 estimation_heterogeneity_profile(profile),
                 &settings,
                 refitter,
@@ -15154,6 +15383,7 @@ fn execute_heterogeneity_point_pass_v2<R, C, P>(
     algorithms: &[CoreHeterogeneityAlgorithmV2],
     candidate_k: &[u8],
     prepared: &PreparedHeterogeneityExecutionV2,
+    pos_scientific_row_features: &[Vec<f64>],
     pos_refitter: &mut R,
     should_cancel: &C,
     progress: &P,
@@ -15257,6 +15487,7 @@ where
                             *k as usize,
                             config,
                             prepared,
+                            pos_scientific_row_features,
                             same_k,
                             &mut controlled,
                         )
@@ -15866,6 +16097,7 @@ where
         algorithms,
         candidate_k,
         prepared,
+        &prepared.pos_start_features,
         pos_refitter,
         &should_cancel,
         &progress,
@@ -17021,7 +17253,122 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_estimation::ConditionalLinearCoefficientV2;
+    use qpls_estimation::{ConditionalLinearCoefficientV2, GroupIdentityV1, TypedGroupValueV1};
+
+    #[test]
+    fn raw_mga_row_tokens_are_stable_across_row_and_column_reordering() {
+        fn dataset(source: &str, name: &str) -> Dataset {
+            qpls_data::import_delimited_bytes(
+                source.as_bytes(),
+                name,
+                b',',
+                &qpls_data::ImportOptions::default(),
+            )
+            .unwrap()
+        }
+        fn design(dataset: &Dataset) -> MultigroupDesignV1 {
+            let preview = qpls_data::preview_page(dataset, 0, dataset.batch.num_rows());
+            MultigroupDesignV1 {
+                groups: ["A", "B"]
+                    .into_iter()
+                    .enumerate()
+                    .map(|(index, value)| GroupIdentityV1 {
+                        index: GroupIndexV1::new(index).unwrap(),
+                        value: TypedGroupValueV1::Text {
+                            value: value.into(),
+                        },
+                        display_label: value.into(),
+                    })
+                    .collect(),
+                rows: preview
+                    .iter()
+                    .enumerate()
+                    .map(|(source_row, values)| SelectedGroupRowV1 {
+                        source_row: source_row as u64,
+                        stable_row_token: source_row as u64,
+                        group: GroupIndexV1::new(usize::from(
+                            values["group"].as_deref() == Some("B"),
+                        ))
+                        .unwrap(),
+                    })
+                    .collect(),
+            }
+        }
+        fn tokens_by_x(
+            dataset: &Dataset,
+            design: &MultigroupDesignV1,
+        ) -> BTreeMap<String, (u64, u64)> {
+            let preview = qpls_data::preview_page(dataset, 0, dataset.batch.num_rows());
+            design
+                .rows
+                .iter()
+                .map(|row| {
+                    (
+                        preview[row.source_row as usize]["x"].clone().unwrap(),
+                        (row.stable_row_token, row.source_row),
+                    )
+                })
+                .collect()
+        }
+
+        let scientific_columns = vec!["group".into(), "x".into(), "y".into()];
+        let baseline = dataset(
+            "group,x,y,unused\nA,1,11,left\nA,2,12,left\nB,3,13,left\nB,4,14,left\n",
+            "mga-token-baseline.csv",
+        );
+        let reversed = dataset(
+            "group,x,y,unused\nB,4,14,right\nB,3,13,right\nA,2,12,right\nA,1,11,right\n",
+            "mga-token-row-reversed.csv",
+        );
+        let columns_reversed = dataset(
+            "unused,y,x,group\nchanged,11,1,A\nchanged,12,2,A\nchanged,13,3,B\nchanged,14,4,B\n",
+            "mga-token-columns-reversed.csv",
+        );
+        let baseline_bound = bind_mga_stable_row_tokens_for_columns_v1(
+            &baseline,
+            &scientific_columns,
+            &design(&baseline),
+        )
+        .unwrap();
+        let reversed_bound = bind_mga_stable_row_tokens_for_columns_v1(
+            &reversed,
+            &scientific_columns,
+            &design(&reversed),
+        )
+        .unwrap();
+        let columns_bound = bind_mga_stable_row_tokens_for_columns_v1(
+            &columns_reversed,
+            &["y".into(), "group".into(), "x".into()],
+            &design(&columns_reversed),
+        )
+        .unwrap();
+        let baseline_tokens = tokens_by_x(&baseline, &baseline_bound);
+        let reversed_tokens = tokens_by_x(&reversed, &reversed_bound);
+        let columns_tokens = tokens_by_x(&columns_reversed, &columns_bound);
+        assert_eq!(
+            baseline_tokens
+                .iter()
+                .map(|(x, (token, _))| (x, token))
+                .collect::<BTreeMap<_, _>>(),
+            reversed_tokens
+                .iter()
+                .map(|(x, (token, _))| (x, token))
+                .collect::<BTreeMap<_, _>>()
+        );
+        assert_eq!(
+            baseline_tokens
+                .iter()
+                .map(|(x, (token, _))| (x, token))
+                .collect::<BTreeMap<_, _>>(),
+            columns_tokens
+                .iter()
+                .map(|(x, (token, _))| (x, token))
+                .collect::<BTreeMap<_, _>>()
+        );
+        for (x, (_, source_row)) in &baseline_tokens {
+            assert_eq!(*source_row + reversed_tokens[x].1, 3);
+        }
+    }
 
     fn observed_control_lowering_model_v1() -> SemModelV4 {
         let legacy = qpls_core::ModelSpec {
@@ -19032,6 +19379,7 @@ mod tests {
             rows: (0..12)
                 .map(|source_row| SelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: GroupIndexV1::new(if source_row < 6 { 0 } else { 1 }).unwrap(),
                 })
                 .collect(),
@@ -19141,6 +19489,7 @@ mod tests {
             rows: (0..20)
                 .map(|source_row| SelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: GroupIndexV1::new(if source_row < 10 { 0 } else { 1 }).unwrap(),
                 })
                 .collect(),

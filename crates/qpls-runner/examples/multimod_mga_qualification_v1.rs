@@ -991,6 +991,7 @@ fn make_mga_fixture(
             Ok(SelectedGroupRowV1 {
                 source_row: metamorphic::mapped_source_row_v1(row, total_rows).map_err(invalid)?
                     as u64,
+                stable_row_token: row as u64,
                 group: GroupIndexV1::new(row / rows_per_group).expect("bounded group index"),
             })
         })
@@ -2016,6 +2017,7 @@ fn expanded_frequency_fixture() -> Result<MgaFixture, DynError> {
             }
             expanded_design_rows.push(SelectedGroupRowV1 {
                 source_row: next_row,
+                stable_row_token: next_row,
                 group: selected.group,
             });
             expanded_x.push(selected_x);

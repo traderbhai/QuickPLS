@@ -99,6 +99,32 @@ fn compact_bootstrap_shard_ids() -> Vec<&'static str> {
     vec!["bootstrap-fimix-p23"]
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct CompactCommonMetricProfileSpecV1 {
+    profile: HeterogeneityInteractionProfileV2,
+    discovery_cell_id: &'static str,
+    inference_cell_id: &'static str,
+}
+
+fn compact_common_metric_profile_specs() -> [CompactCommonMetricProfileSpecV1; 2] {
+    [
+        CompactCommonMetricProfileSpecV1 {
+            profile: HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+            discovery_cell_id: "pos-common-metric-p2-compact-discovery",
+            inference_cell_id: "pos-common-metric-p2-compact-fixed-k-bootstrap",
+        },
+        CompactCommonMetricProfileSpecV1 {
+            profile: HeterogeneityInteractionProfileV2::P23AllCurrent,
+            discovery_cell_id: "pos-common-metric-p23-compact-discovery",
+            inference_cell_id: "pos-common-metric-p23-compact-fixed-k-bootstrap",
+        },
+    ]
+}
+
+fn compact_common_metric_algorithms() -> Vec<HeterogeneityAlgorithmV2> {
+    vec![HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2]
+}
+
 fn fixture_observations() -> usize {
     if metamorphic::compact_matrix_v1() {
         80
@@ -1054,6 +1080,23 @@ fn inference_config(
     }
 }
 
+fn compact_common_metric_inference_config(
+    fixture: &HeterogeneityFixture,
+    seed: u64,
+    discovery_result_identity_sha256: String,
+) -> PlsUnobservedHeterogeneityConfigV2 {
+    inference_config(
+        fixture,
+        seed,
+        vec![2],
+        compact_common_metric_algorithms(),
+        discovery_result_identity_sha256,
+        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+        2,
+        true,
+    )
+}
+
 fn summarize_evidence(evidence: &[MultiModRunnerEvidenceV1]) -> Value {
     let mut fimix = Vec::new();
     let mut pos = Vec::new();
@@ -1285,6 +1328,36 @@ fn run_required_discovery(
         )));
     }
     Ok((identities[0].clone(), value))
+}
+
+fn run_compact_common_metric_profile_execution(
+    spec: CompactCommonMetricProfileSpecV1,
+    fixture: &HeterogeneityFixture,
+    seed: u64,
+) -> Result<Value, DynError> {
+    if fixture.profile != spec.profile {
+        return Err(invalid(format!(
+            "compact common-metric profile {:?} received fixture {:?}",
+            spec.profile, fixture.profile
+        )));
+    }
+    let algorithms = compact_common_metric_algorithms();
+    let selected_algorithm = HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2;
+    let (discovery_identity, discovery) = run_required_discovery(
+        spec.discovery_cell_id,
+        fixture,
+        seed,
+        vec![2],
+        algorithms,
+        &[(selected_algorithm, 2)],
+    )?;
+    let config = compact_common_metric_inference_config(fixture, seed, discovery_identity);
+    let (_, inference) = run_config(spec.inference_cell_id, fixture, config)?;
+    Ok(json!({
+        "profile": spec.profile,
+        "discovery": discovery,
+        "locked_inference": inference,
+    }))
 }
 
 fn run_bootstrap_discovery_lock(
@@ -3458,6 +3531,25 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
             ),
         ],
     )?;
+    let compact_common_metric_profile_executions = if metamorphic::compact_matrix_v1() {
+        compact_common_metric_profile_specs()
+            .into_iter()
+            .map(|spec| {
+                let fixture = match spec.profile {
+                    HeterogeneityInteractionProfileV2::P2MultiTwoWay => &p2,
+                    HeterogeneityInteractionProfileV2::P23AllCurrent => &p23,
+                    HeterogeneityInteractionProfileV2::P0Structural => {
+                        return Err(invalid(
+                            "compact POS common-metric coverage cannot use the P0 profile",
+                        ));
+                    }
+                };
+                run_compact_common_metric_profile_execution(spec, fixture, args.seed)
+            })
+            .collect::<Result<Vec<_>, DynError>>()?
+    } else {
+        Vec::new()
+    };
     let (_, metric_failure_discovery) = run_required_discovery(
         "pos-p2-common-metric-failure-discovery",
         &metric_failure,
@@ -3553,7 +3645,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
             })
             .collect::<Result<Vec<_>, DynError>>()?
     };
-    let report = json!({
+    let mut report = json!({
         "schema_version": SCHEMA_VERSION,
         "suite_id": SUITE_ID,
         "scale": match args.scale { Scale::Development => "development", Scale::Qualification => "qualification" },
@@ -3631,6 +3723,15 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         },
         "fixed_k_bootstrap": bootstrap_cells,
     });
+    if !compact_common_metric_profile_executions.is_empty() {
+        report
+            .as_object_mut()
+            .ok_or_else(|| invalid("heterogeneity qualification report is not an object"))?
+            .insert(
+                "compact_common_metric_profile_executions".into(),
+                serde_json::to_value(compact_common_metric_profile_executions)?,
+            );
+    }
     fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
     Ok(())
 }
@@ -4234,5 +4335,67 @@ mod tests {
     fn compact_matrix_runs_one_representative_full_draw_bootstrap_profile() {
         assert_eq!(compact_bootstrap_shard_ids(), ["bootstrap-fimix-p23"]);
         assert_eq!(bootstrap_fixture_plan().requested_replicates, 500);
+    }
+
+    #[test]
+    fn compact_common_metric_profiles_are_pos_only_locked_full_draw_runs() {
+        let specs = compact_common_metric_profile_specs();
+        assert_eq!(
+            specs.map(|spec| spec.profile),
+            [
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+            ]
+        );
+        assert_eq!(
+            specs.map(|spec| spec.inference_cell_id),
+            [
+                "pos-common-metric-p2-compact-fixed-k-bootstrap",
+                "pos-common-metric-p23-compact-fixed-k-bootstrap",
+            ]
+        );
+
+        for (index, spec) in specs.into_iter().enumerate() {
+            let fixture = make_fixture(
+                &format!("compact-common-metric-profile-{index}"),
+                spec.profile,
+                Scenario::StrongSeparation,
+                0x434f_4d50_u64 + index as u64,
+            )
+            .unwrap();
+            let discovery_identity = format!("{:064x}", index + 1);
+            let config =
+                compact_common_metric_inference_config(&fixture, 42, discovery_identity.clone());
+
+            assert_eq!(config.profile, spec.profile);
+            let HeterogeneityPhaseV2::Inference { lock } = &config.phase else {
+                panic!("compact common-metric profile must be a locked inference run");
+            };
+            assert_eq!(
+                lock.discovery_algorithms.as_slice(),
+                [HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2]
+            );
+            assert_eq!(lock.discovery_candidate_k, [2]);
+            assert_eq!(
+                lock.selected_algorithm,
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2
+            );
+            assert_eq!(lock.selected_k, 2);
+            assert_eq!(lock.discovery_result_identity_sha256, discovery_identity);
+            assert!(lock.analyst_lock_confirmed);
+            assert!(!lock.tandem_fimix_same_k_start_required);
+
+            let common_metric = config.pos_common_metric.as_ref().unwrap();
+            assert!(common_metric.request_segment_contrasts);
+            assert_eq!(common_metric.permutation_samples, 5_000);
+            assert!(common_metric.configural_checklist.complete());
+            assert!(common_metric.require_partial_compositional_invariance);
+
+            let bootstrap = config.bootstrap.as_ref().unwrap();
+            assert_eq!(bootstrap.resamples, QUALIFICATION_BOOTSTRAP_DRAWS);
+            assert_eq!(bootstrap.resamples, 500);
+            assert_eq!(bootstrap.seed, 42 ^ 0x4253_5452_4150);
+            assert_eq!(bootstrap.confidence_level.to_bits(), 0.95_f64.to_bits());
+        }
     }
 }

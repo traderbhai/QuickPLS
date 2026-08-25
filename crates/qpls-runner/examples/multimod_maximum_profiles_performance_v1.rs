@@ -355,6 +355,7 @@ fn resumable_mga(seed: u64) -> Result<serde_json::Value, DynError> {
         rows: (0..(2 * rows_per_group))
             .map(|row| SelectedGroupRowV1 {
                 source_row: row as u64,
+                stable_row_token: row as u64,
                 group: GroupIndexV1::new(row / rows_per_group).expect("bounded group"),
             })
             .collect(),

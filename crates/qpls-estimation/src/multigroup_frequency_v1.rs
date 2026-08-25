@@ -51,6 +51,7 @@ const HRUA_D2: f64 = 0.898_916_162_058_898_8; // 3 - 2 * sqrt(3 / e)
 #[serde(deny_unknown_fields)]
 pub struct FrequencySelectedGroupRowV1 {
     pub source_row: u64,
+    pub stable_row_token: u64,
     pub group: GroupIndexV1,
     pub frequency: u64,
 }
@@ -186,6 +187,7 @@ fn standard_design(design: &FrequencyMultigroupDesignV1) -> MultigroupDesignV1 {
             .iter()
             .map(|row| SelectedGroupRowV1 {
                 source_row: row.source_row,
+                stable_row_token: row.stable_row_token,
                 group: row.group,
             })
             .collect(),
@@ -344,7 +346,7 @@ fn canonical_pair(pair: OrderedGroupPairV1) -> OrderedGroupPairV1 {
 
 fn canonical_rows(design: &FrequencyMultigroupDesignV1) -> Vec<FrequencySelectedGroupRowV1> {
     let mut rows = design.rows.clone();
-    rows.sort_by_key(|row| row.source_row);
+    rows.sort_by_key(|row| row.stable_row_token);
     rows
 }
 
@@ -2139,6 +2141,7 @@ mod tests {
             .map(
                 |(source_row, group, frequency)| FrequencySelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: GroupIndexV1::new(group).unwrap(),
                     frequency,
                 },
@@ -2158,6 +2161,62 @@ mod tests {
         assert_eq!(
             micom_ledger_sha256(&ledger).unwrap(),
             "22c0812dd0b6d7efcb07355f7596b30113a01acd380d0c590266ab66873b4c7a"
+        );
+    }
+
+    #[test]
+    fn frequency_stable_tokens_preserve_count_space_draws_under_row_reversal() {
+        let baseline = design();
+        let mut reversed = baseline.clone();
+        let maximum = baseline
+            .rows
+            .iter()
+            .map(|row| row.source_row)
+            .max()
+            .unwrap();
+        for row in &mut reversed.rows {
+            row.source_row = maximum - row.source_row;
+        }
+        let pair =
+            OrderedGroupPairV1::new(GroupIndexV1::new(0).unwrap(), GroupIndexV1::new(1).unwrap())
+                .unwrap();
+        let baseline_rows = pair_rows(&baseline, pair).unwrap();
+        let reversed_rows = pair_rows(&reversed, pair).unwrap();
+        assert_eq!(
+            baseline_rows
+                .iter()
+                .map(|row| (row.stable_row_token, row.frequency))
+                .collect::<Vec<_>>(),
+            reversed_rows
+                .iter()
+                .map(|row| (row.stable_row_token, row.frequency))
+                .collect::<Vec<_>>()
+        );
+        let baseline_samples = materialize_pairwise(&baseline_rows, pair, 42, 17).unwrap();
+        let reversed_samples = materialize_pairwise(&reversed_rows, pair, 42, 17).unwrap();
+        for (baseline_sample, reversed_sample) in baseline_samples.iter().zip(&reversed_samples) {
+            assert_eq!(baseline_sample.group, reversed_sample.group);
+            assert_eq!(baseline_sample.counts, reversed_sample.counts);
+            assert_eq!(
+                baseline_sample.source_rows,
+                reversed_sample
+                    .source_rows
+                    .iter()
+                    .map(|row| maximum - row)
+                    .collect::<Vec<_>>()
+            );
+        }
+
+        let baseline_group =
+            group_sample(&canonical_rows(&baseline), GroupIndexV1::new(0).unwrap());
+        let reversed_group =
+            group_sample(&canonical_rows(&reversed), GroupIndexV1::new(0).unwrap());
+        let total = baseline_group.counts.iter().sum::<u64>();
+        let mut baseline_rng = ChaCha20Rng::from_seed(derive_seed(42, BOOTSTRAP_STREAM, 31, &[0]));
+        let mut reversed_rng = ChaCha20Rng::from_seed(derive_seed(42, BOOTSTRAP_STREAM, 31, &[0]));
+        assert_eq!(
+            multinomial_draw(&baseline_group.counts, total, &mut baseline_rng).unwrap(),
+            multinomial_draw(&reversed_group.counts, total, &mut reversed_rng).unwrap()
         );
     }
 

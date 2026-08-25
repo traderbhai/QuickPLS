@@ -1477,6 +1477,7 @@ fn prepare_mga_design_v1(
         match model_row_complete(dataset, &model_positions, row) {
             Ok(true) => rows.push(SelectedGroupRowV1 {
                 source_row: row as u64,
+                stable_row_token: row as u64,
                 group,
             }),
             Ok(false) => excluded.push(qpls_core::ExcludedRowReceiptV1 {
@@ -1548,6 +1549,7 @@ fn native_mga_group_eligibility_v1(
                 .zip(counts)
                 .map(|(row, frequency)| FrequencySelectedGroupRowV1 {
                     source_row: row.source_row,
+                    stable_row_token: row.stable_row_token,
                     group: row.group,
                     frequency,
                 })

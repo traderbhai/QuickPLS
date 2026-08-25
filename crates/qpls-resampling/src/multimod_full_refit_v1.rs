@@ -1480,15 +1480,19 @@ fn normalize_owned_weights(
 }
 
 fn coordinate_rng(
-    execution_identity: &str,
+    _execution_identity: &str,
     phase: MultiModFullRefitPhaseV1,
     master_seed: u64,
     coordinates: &[u64],
 ) -> ChaCha20Rng {
+    // The execution identity binds caches and prevents a result from being
+    // resumed against different scientific inputs. It must not perturb the
+    // declared randomisation plan: representation-only changes to a dataset,
+    // model declaration, or worker count are entitled to the same seeded draw
+    // coordinates. The runner maps those coordinates through its frozen
+    // scientific row order before each full refit.
     let mut digest = Sha256::new();
     digest.update(RNG_DOMAIN_V1);
-    digest.update((execution_identity.len() as u64).to_le_bytes());
-    digest.update(execution_identity.as_bytes());
     digest.update((phase.as_str().len() as u64).to_le_bytes());
     digest.update(phase.as_str().as_bytes());
     digest.update(master_seed.to_le_bytes());
@@ -2202,6 +2206,39 @@ mod tests {
                 assert!(raw_ratio.is_finite() && raw_ratio > 0.0);
             }
         }
+    }
+
+    #[test]
+    fn scientific_identity_binds_cache_without_perturbing_seeded_draws() {
+        let first = bootstrap_plan(10);
+        let mut second = first.clone();
+        second.scientific_refit_identity_sha256 = scientific_identity("fixture:reordered");
+        let first_ledger =
+            finalize_multimod_case_bootstrap_v1(&first, 6, None, run_case_shards(&first, 1, None))
+                .unwrap();
+        let second_ledger = finalize_multimod_case_bootstrap_v1(
+            &second,
+            6,
+            None,
+            run_case_shards(&second, 1, None),
+        )
+        .unwrap();
+        assert_ne!(
+            first_ledger.execution_identity_sha256,
+            second_ledger.execution_identity_sha256
+        );
+        assert_eq!(
+            first_ledger
+                .records
+                .iter()
+                .map(|record| &record.draw.source_rows)
+                .collect::<Vec<_>>(),
+            second_ledger
+                .records
+                .iter()
+                .map(|record| &record.draw.source_rows)
+                .collect::<Vec<_>>()
+        );
     }
 
     #[test]

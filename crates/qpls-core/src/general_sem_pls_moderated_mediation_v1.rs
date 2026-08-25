@@ -385,6 +385,10 @@ fn moderated_mediation_target_identity_v1(
 ) -> String {
     let mut identity = target.clone();
     identity.target_id.clear();
+    // The projected stage-one digest is dataset-bound provenance. It remains
+    // serialized on the compiled target, but cannot define the scientific
+    // target or the effect identities derived from that target.
+    identity.stage_one_model_scientific_sha256.clear();
     format!(
         "sem_moderated_mediation_target_v1_{:x}",
         Sha256::digest(
@@ -565,4 +569,97 @@ pub fn calculate_general_sem_pls_two_way_moderated_mediation_point_v1(
             estimate: index,
         },
     })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn target_with_stage_one_digest(
+        stage_one_model_scientific_sha256: String,
+    ) -> CompiledPlsTwoWayModeratedMediationTargetV1 {
+        let mut target = CompiledPlsTwoWayModeratedMediationTargetV1 {
+            contract_version: COMPILED_PLS_TWO_WAY_MODERATED_MEDIATION_TARGET_VERSION_V1.into(),
+            target_id: String::new(),
+            base_pls_capability_cell: pls_algorithm_capability_cell_v1(),
+            moderation_point_capability_cell:
+                pls_general_multiple_moderation_point_capability_cell_v1(),
+            bootstrap_capability_cell:
+                pls_general_two_way_moderated_mediation_bootstrap_capability_cell_v1(),
+            estimand_id: "estimand.x_m_y".into(),
+            specific_path_identity: "path.x_m_y".into(),
+            ordered_relation_ids: vec!["relation.x_m".into(), "relation.m_y".into()],
+            x_id: "x".into(),
+            mediator_id: "m".into(),
+            y_id: "y".into(),
+            moderator_id: "z".into(),
+            moderated_stage: CompiledPlsTwoWayModeratedMediationStageV1::FirstStage,
+            moderated_relation_id: "relation.x_m".into(),
+            other_stage_relation_id: "relation.m_y".into(),
+            interaction_id: "interaction.x_z".into(),
+            interaction_effect_relation_id: "relation.x_z_m".into(),
+            interaction_effect_parameter_id: "parameter.gamma.x_z_m".into(),
+            generated_product_column_id: "column.product.x_z".into(),
+            stage_one_model_scientific_sha256,
+            product_scale_version: crate::GENERAL_SEM_PLS_PRODUCT_SCALE_VERSION_V1.into(),
+            probe_policy_version:
+                GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_PROBE_POLICY_VERSION_V1.into(),
+            conditional_target_version:
+                GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_CONDITIONAL_TARGET_VERSION_V1.into(),
+            index_target_version:
+                GENERAL_SEM_PLS_TWO_WAY_MODERATED_MEDIATION_INDEX_TARGET_VERSION_V1.into(),
+        };
+        target.target_id = moderated_mediation_target_identity_v1(&target);
+        target
+    }
+
+    fn inference_effect_ids(target: &CompiledPlsTwoWayModeratedMediationTargetV1) -> Vec<String> {
+        general_sem_pls_two_way_moderated_mediation_inference_targets_v1(target)
+            .into_iter()
+            .map(|target| {
+                match target {
+                    GeneralSemPlsTwoWayModeratedMediationInferenceTargetV1::ConditionalIndirect {
+                        effect_id,
+                        ..
+                    }
+                    | GeneralSemPlsTwoWayModeratedMediationInferenceTargetV1::ModeratedMediationIndex {
+                        effect_id,
+                        ..
+                    } => effect_id,
+                }
+            })
+            .collect()
+    }
+
+    #[test]
+    fn target_and_effect_ids_ignore_stage_one_digest_but_provenance_retains_it() {
+        let first_digest = "a".repeat(64);
+        let second_digest = "b".repeat(64);
+        let first = target_with_stage_one_digest(first_digest.clone());
+        let second = target_with_stage_one_digest(second_digest.clone());
+
+        assert_eq!(first.target_id(), second.target_id());
+        assert_eq!(inference_effect_ids(&first), inference_effect_ids(&second));
+
+        assert_eq!(
+            first.stage_one_model_scientific_sha256(),
+            first_digest.as_str()
+        );
+        assert_eq!(
+            second.stage_one_model_scientific_sha256(),
+            second_digest.as_str()
+        );
+        assert_ne!(first.deterministic_sha256(), second.deterministic_sha256());
+
+        let first_receipt = serde_json::to_value(&first).unwrap();
+        let second_receipt = serde_json::to_value(&second).unwrap();
+        assert_eq!(
+            first_receipt["stage_one_model_scientific_sha256"].as_str(),
+            Some(first_digest.as_str())
+        );
+        assert_eq!(
+            second_receipt["stage_one_model_scientific_sha256"].as_str(),
+            Some(second_digest.as_str())
+        );
+    }
 }

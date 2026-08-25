@@ -5,6 +5,7 @@ mod multimod_causal_raw_v1;
 mod multimod_conditional_raw_v2;
 mod multimod_execution_v1;
 mod multimod_mga_execution_cache_v1;
+mod multimod_row_order_v1;
 mod multimod_weighted_pls_point_v1;
 mod pls_model_comparison_execution;
 mod recipe_v4_cbsem_execution;

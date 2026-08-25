@@ -983,6 +983,7 @@ mod tests {
         design.rows = (0..30)
             .map(|source_row| SelectedGroupRowV1 {
                 source_row,
+                stable_row_token: source_row,
                 group: GroupIndexV1::new((source_row / 10) as usize).unwrap(),
             })
             .collect();

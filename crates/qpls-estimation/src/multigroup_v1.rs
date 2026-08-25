@@ -143,8 +143,13 @@ pub struct GroupIdentityV1 {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SelectedGroupRowV1 {
-    /// Stable identity supplied by upstream complete-case selection.
+    /// Physical row address in the resident dataset. Refit callbacks use this
+    /// value to retrieve the selected observation.
     pub source_row: u64,
+    /// Row-order-independent sampling identity supplied by the raw-data
+    /// adapter. Deterministic resampling is ordered by this token, while
+    /// `source_row` remains the auditable physical lookup address.
+    pub stable_row_token: u64,
     pub group: GroupIndexV1,
 }
 
@@ -522,6 +527,7 @@ pub fn assess_multigroup_design_v1(design: &MultigroupDesignV1) -> MultigroupEli
     }
 
     let mut seen_rows = BTreeSet::new();
+    let mut seen_stable_tokens = BTreeSet::new();
     let mut counts = vec![0usize; design.groups.len()];
     for row in &design.rows {
         if !seen_rows.insert(row.source_row) {
@@ -530,7 +536,16 @@ pub fn assess_multigroup_design_v1(design: &MultigroupDesignV1) -> MultigroupEli
                 group: Some(row.group),
                 observed: Some(row.source_row as f64),
                 required: None,
-                detail: "each upstream source-row token must occur exactly once".into(),
+                detail: "each physical source-row address must occur exactly once".into(),
+            });
+        }
+        if !seen_stable_tokens.insert(row.stable_row_token) {
+            blockers.push(EligibilityBlockerV1 {
+                code: EligibilityBlockerCodeV1::DuplicateSourceRow,
+                group: Some(row.group),
+                observed: Some(row.stable_row_token as f64),
+                required: None,
+                detail: "each stable sampling-row token must occur exactly once".into(),
             });
         }
         if let Some(count) = counts.get_mut(row.group.get()) {
@@ -648,7 +663,7 @@ fn validate_parameter_identities(
 
 fn canonical_rows(design: &MultigroupDesignV1) -> Vec<SelectedGroupRowV1> {
     let mut rows = design.rows.clone();
-    rows.sort_by_key(|row| row.source_row);
+    rows.sort_by_key(|row| row.stable_row_token);
     rows
 }
 
@@ -811,14 +826,14 @@ fn canonical_pair_rows(
         .copied()
         .filter(|row| row.group == pair.group_a || row.group == pair.group_b)
         .collect::<Vec<_>>();
-    selected.sort_by_key(|row| row.source_row);
+    selected.sort_by_key(|row| row.stable_row_token);
     let mut identities = BTreeSet::new();
     if selected
         .iter()
-        .any(|row| !identities.insert(row.source_row))
+        .any(|row| !identities.insert(row.stable_row_token))
     {
         return Err(MultigroupKernelErrorV1::InvalidPairwisePartitionPlan(
-            "the pairwise source-row universe contains a duplicate stable row token".into(),
+            "the pairwise sampling universe contains a duplicate stable row token".into(),
         ));
     }
     let low_count = selected
@@ -1013,13 +1028,26 @@ pub fn materialize_pairwise_partition_v1(
             format!("replicate {replicate} partition digest does not reproduce"),
         ));
     }
+    let stable_token_by_source = rows
+        .iter()
+        .map(|row| (row.source_row, row.stable_row_token))
+        .collect::<BTreeMap<_, _>>();
     Ok(PairwisePartitionMaterializationV1 {
         replicate,
         partition_sha256: partition.digest,
         assignments: partition
             .assignments
             .into_iter()
-            .map(|(source_row, group)| SelectedGroupRowV1 { source_row, group })
+            .map(|(source_row, group)| {
+                let stable_row_token = stable_token_by_source
+                    .get(&source_row)
+                    .expect("partition source row belongs to the validated universe");
+                SelectedGroupRowV1 {
+                    source_row,
+                    stable_row_token: *stable_row_token,
+                    group,
+                }
+            })
             .collect(),
     })
 }
@@ -2781,6 +2809,7 @@ mod tests {
             for _ in 0..*size {
                 rows.push(SelectedGroupRowV1 {
                     source_row,
+                    stable_row_token: source_row,
                     group: GroupIndexV1::new(index).unwrap(),
                 });
                 source_row += 3;
@@ -2815,6 +2844,58 @@ mod tests {
         ]);
         assert_eq!(values.len(), 4);
         assert!(TypedGroupValueV1::finite_number(f64::NAN).is_err());
+    }
+
+    #[test]
+    fn stable_sampling_tokens_couple_row_reversal_without_changing_physical_lookup() {
+        let baseline = design_with_sizes(&[10, 10]);
+        let mut reversed = baseline.clone();
+        let maximum = baseline
+            .rows
+            .iter()
+            .map(|row| row.source_row)
+            .max()
+            .unwrap();
+        let minimum = baseline
+            .rows
+            .iter()
+            .map(|row| row.source_row)
+            .min()
+            .unwrap();
+        for row in &mut reversed.rows {
+            row.source_row = maximum + minimum - row.source_row;
+        }
+
+        let baseline_rows = canonical_rows(&baseline);
+        let reversed_rows = canonical_rows(&reversed);
+        assert_eq!(
+            baseline_rows
+                .iter()
+                .map(|row| row.stable_row_token)
+                .collect::<Vec<_>>(),
+            reversed_rows
+                .iter()
+                .map(|row| row.stable_row_token)
+                .collect::<Vec<_>>()
+        );
+
+        let group = GroupIndexV1::new(0).unwrap();
+        let baseline_sample = bootstrap_rows(&rows_for_group(&baseline_rows, group), group, 42, 17);
+        let reversed_sample = bootstrap_rows(&rows_for_group(&reversed_rows, group), group, 42, 17)
+            .into_iter()
+            .map(|row| maximum + minimum - row)
+            .collect::<Vec<_>>();
+        assert_eq!(baseline_sample, reversed_sample);
+
+        let pair = OrderedGroupPairV1::new(group, GroupIndexV1::new(1).unwrap()).unwrap();
+        let baseline_partition = pairwise_partition(&baseline_rows, pair, 42, 23);
+        let reversed_partition = pairwise_partition(&reversed_rows, pair, 42, 23);
+        let mapped_reversed = reversed_partition
+            .assignments
+            .into_iter()
+            .map(|(row, assigned)| (maximum + minimum - row, assigned))
+            .collect::<Vec<_>>();
+        assert_eq!(baseline_partition.assignments, mapped_reversed);
     }
 
     #[test]

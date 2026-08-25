@@ -8,7 +8,9 @@
 
 use crate::{
     MultiModRunOutputV1, MultiModRunnerErrorV1, MultiModRunnerEvidenceV1, MultiModRunnerPhaseV1,
-    MultiModRunnerProgressV1, causal_effects, provenance, report, validate_authority,
+    MultiModRunnerProgressV1, causal_effects,
+    multimod_row_order_v1::canonical_multimod_row_permutation_v1, provenance, report,
+    validate_authority,
 };
 use qpls_core::{
     AnalysisRecipeV4, CausalPositivityDiagnosticV1, CompiledMultiModRecipeV1,
@@ -16,9 +18,10 @@ use qpls_core::{
     INTERVENTIONAL_MEDIATION_RESULT_V1_SCHEMA_VERSION, InferenceAlternativeV1,
     InterventionalMediationResultV1, MULTIMOD_SIDECAR_MAX_BYTES_V1, MultiModAnalysisResultV1,
     MultiModCompilerTargetV1, MultimodIntervalV1, MultimodReplicateFailureKindV1,
-    MultimodReplicateFailureV1, MultimodReplicateLedgerSummaryV1, SemModelV4, sha256_serialized,
+    MultimodReplicateFailureV1, MultimodReplicateLedgerSummaryV1, SemModelV4, SemVariableV4,
+    sha256_serialized,
 };
-use qpls_data::Dataset;
+use qpls_data::{ColumnType, Dataset};
 use qpls_estimation::{
     ConditionalAlternativeV2, InterventionalMediationBlockerCodeV1,
     InterventionalMediationResultV1 as EstimationInterventionalMediationResultV1,
@@ -30,10 +33,98 @@ use qpls_resampling::{
     MultiModFinalLedgerV1, MultiModRefitFailureV1, MultiModRefitOutcomeV1, MultiModShardSpecV1,
     finalize_multimod_case_bootstrap_v1, run_multimod_case_bootstrap_shard_v1,
 };
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 pub type InterventionalFullRefitLedgerV1 =
     MultiModFinalLedgerV1<MultiModCaseBootstrapDrawV1, Vec<f64>>;
+
+fn causal_sampling_source_rows_v1(
+    dataset: &Dataset,
+    model: &SemModelV4,
+    config: &qpls_core::InterventionalCausalMediationConfigV1,
+    base_source_rows: &[usize],
+) -> Result<Vec<usize>, MultiModRunnerErrorV1> {
+    let mut used_variable_ids =
+        BTreeSet::from([config.treatment.as_str(), config.outcome.as_str()]);
+    used_variable_ids.extend(config.mediators.iter().map(String::as_str));
+    used_variable_ids.extend(config.baseline_moderators.iter().map(String::as_str));
+    used_variable_ids.extend(config.adjustment_covariates.iter().map(String::as_str));
+    used_variable_ids.extend(
+        config
+            .positivity_policy
+            .positivity_strata_variable_ids
+            .iter()
+            .map(String::as_str),
+    );
+    for path in &config.paths {
+        used_variable_ids.extend(path.ordered_variable_ids.iter().map(String::as_str));
+        for equation in &path.equations {
+            used_variable_ids.insert(equation.outcome_variable_id.as_str());
+            for term in &equation.terms {
+                used_variable_ids.extend(term.factor_variable_ids.iter().map(String::as_str));
+            }
+        }
+    }
+
+    let observed_columns = model
+        .variables
+        .iter()
+        .filter_map(|variable| match variable {
+            SemVariableV4::Observed {
+                id, source_column, ..
+            } => Some((id.as_str(), source_column.as_str())),
+            _ => None,
+        })
+        .collect::<BTreeMap<_, _>>();
+    let columns = used_variable_ids
+        .iter()
+        .map(|variable_id| {
+            observed_columns
+                .get(variable_id)
+                .map(|column| (*column).to_owned())
+                .ok_or_else(|| {
+                    MultiModRunnerErrorV1::PreparedInput(format!(
+                        "causal scientific row order cannot bind observed variable {variable_id}"
+                    ))
+                })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let numeric_columns = dataset
+        .schema
+        .columns
+        .iter()
+        .filter(|column| column.column_type == ColumnType::Numeric)
+        .map(|column| column.name.as_str())
+        .collect::<BTreeSet<_>>();
+    let sign_invariant_numeric_columns = config
+        .adjustment_covariates
+        .iter()
+        .filter_map(|variable_id| observed_columns.get(variable_id.as_str()))
+        .filter(|column| numeric_columns.contains(**column))
+        .map(|column| (*column).to_owned())
+        .collect::<BTreeSet<_>>();
+    let canonical_source_rows = base_source_rows
+        .iter()
+        .map(|source_row| {
+            u32::try_from(*source_row).map_err(|_| {
+                MultiModRunnerErrorV1::PreparedInput(
+                    "causal complete-case row exceeds the bootstrap row-index contract".into(),
+                )
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let permutation = canonical_multimod_row_permutation_v1(
+        dataset,
+        &canonical_source_rows,
+        &columns,
+        &sign_invariant_numeric_columns,
+    )
+    .map_err(MultiModRunnerErrorV1::PreparedInput)?;
+    Ok(permutation
+        .into_iter()
+        .map(|position| base_source_rows[position])
+        .collect())
+}
 
 fn predicted_causal_sidecar_bytes_v1(rows: usize, replicates: u32, targets: usize) -> u64 {
     let per_draw = (rows as u64)
@@ -234,6 +325,8 @@ where
             "causal paths did not share one complete-case frame".into(),
         ));
     }
+    let sampling_source_rows =
+        causal_sampling_source_rows_v1(dataset, model, config, &base_source_rows)?;
     report(
         &progress,
         MultiModRunnerPhaseV1::PointEstimation,
@@ -302,7 +395,7 @@ where
             .source_rows
             .iter()
             .map(|position| {
-                base_source_rows
+                sampling_source_rows
                     .get(*position as usize)
                     .copied()
                     .ok_or_else(|| MultiModRefitFailureV1 {
