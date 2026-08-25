@@ -174,8 +174,9 @@ target digest and overlap decision, requires at least 450 usable draws, and
 reproduces every Type-7 interval. A separate publication-profile P0 PLS-POS
 point-discovery matrix retains exact K=3, K=4, and K=5 evidence. Those three
 cells use the typed
-`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1` plan,
-balanced 120-row fixtures (40, 30, and 24 rows per class respectively), and a
+`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2` plan.
+K=3 and K=4 use balanced 120-row fixtures (40 and 30 rows per class), K=5 uses
+a balanced 200-row fixture (40 rows per class), and all three retain a
 POS-only ten-seeded-start plan; they make no bootstrap claim. Production-
 function decision probes separately enumerate all K! mappings and require
 nonidentity-majority acceptance plus ambiguous/non-majority rejection at K=3,

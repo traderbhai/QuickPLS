@@ -27,11 +27,27 @@ MULTISTART_POSTERIOR_DOMAIN = b"quickpls:heterogeneity:multistart-posteriors:v2\
 MULTISTART_PARAMETER_DOMAIN = b"quickpls:heterogeneity:multistart-parameters:v2\0"
 MULTISTART_FIT_STATISTIC_DOMAIN = b"quickpls:heterogeneity:multistart-fit-statistic:v2\0"
 MULTICLASS_POINT_FIXTURE_PLAN = {
-    "schema_version": 1,
-    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+    "schema_version": 2,
+    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2",
     "purpose": "published_p0_pos_candidate_point_discovery_only",
     "selected_k": [3, 4, 5],
-    "observations_per_fixture": 120,
+    "fixture_shapes": [
+        {
+            "selected_k": 3,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 40,
+        },
+        {
+            "selected_k": 4,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 30,
+        },
+        {
+            "selected_k": 5,
+            "observations_per_fixture": 200,
+            "expected_cases_per_true_class": 40,
+        },
+    ],
     "allocation": "row_mod_k_exactly_balanced",
     "bootstrap_evidence": "not_requested",
 }
@@ -1502,6 +1518,13 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
     matrix_ok = len(cells) == 3 and set(by_id) == expected_ids
     observed = []
     for classes in range(3, 6):
+        fixture_shape = next(
+            row
+            for row in MULTICLASS_POINT_FIXTURE_PLAN["fixture_shapes"]
+            if row["selected_k"] == classes
+        )
+        expected_observations = fixture_shape["observations_per_fixture"]
+        expected_count = fixture_shape["expected_cases_per_true_class"]
         cell_id = f"pos-published-p0-k{classes}-discovery"
         cell = by_id.get(cell_id)
         if cell is None:
@@ -1517,9 +1540,7 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             cell,
             checks,
             f"pos.published_p0.k{classes}",
-            expected_observations=MULTICLASS_POINT_FIXTURE_PLAN[
-                "observations_per_fixture"
-            ],
+            expected_observations=expected_observations,
         )
         phase = cell["config"]["phase"]
         plan = cell["compiled_plan"]
@@ -1535,7 +1556,6 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             if row["method"].get("kind") == "segmentation"
         ]
         truth_counts = Counter(int(value) for value in cell["true_classes"])
-        expected_count = MULTICLASS_POINT_FIXTURE_PLAN["observations_per_fixture"] // classes
         identity_ok = (
             cell["profile"] == "p0_structural"
             and cell["fixture_id"] == f"heterogeneity-p0-strong-k{classes}"
@@ -1557,8 +1577,7 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             and len(result["segments"]) == classes
             and len(truth_counts) == classes
             and set(truth_counts) == set(range(classes))
-            and len(cell["true_classes"])
-            == MULTICLASS_POINT_FIXTURE_PLAN["observations_per_fixture"]
+            and len(cell["true_classes"]) == expected_observations
             and all(truth_counts[class_id] == expected_count for class_id in range(classes))
         )
         checks.require(
@@ -1576,7 +1595,8 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             },
             expected=(
                 "exact production P0/qpls.pls-pos.published.v2 point candidate "
-                f"at K={classes} with n=120 and {expected_count} rows per class"
+                f"at K={classes} with n={expected_observations} and "
+                f"{expected_count} rows per class"
             ),
         )
         matrix_ok &= identity_ok
@@ -1611,7 +1631,7 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
         },
         expected=(
             "completed production qpls.pls-pos.published.v2 P0 point candidates at "
-            "K=2,3,4,5 plus the exact n=120 balanced K=3..5 fixture-plan identity"
+            "K=2,3,4,5 plus the exact per-K balanced K=3..5 fixture-plan identity"
         ),
     )
 
@@ -2321,7 +2341,7 @@ def validate_report(
         },
         expected=(
             "baseline metamorphism, no sign transform, one worker, the 400-row "
-            "point/recovery matrix only, the typed n=120 K3-K5 point-fixture plan, "
+            "point/recovery matrix only, the typed per-K K3-K5 point-fixture plan, "
             "and seed 42"
         ),
     )

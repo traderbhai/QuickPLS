@@ -681,6 +681,77 @@ try {
             [int]$plan.workers -ne 1 -or [int]$plan.fixture_observations -ne 400) {
             throw "The shard plan did not preserve the baseline 400-row qualification identity with the fast root sentinel first."
         }
+        $multiclassPointFixturePlanProperty = $plan.PSObject.Properties["multiclass_point_fixture_plan"]
+        if ($null -eq $multiclassPointFixturePlanProperty -or $null -eq $multiclassPointFixturePlanProperty.Value) {
+            throw "The shard plan did not declare the required typed per-K multiclass point fixture plan."
+        }
+        $multiclassPointFixturePlan = $multiclassPointFixturePlanProperty.Value
+        $expectedMulticlassPointFixturePlanProperties = @(
+            "schema_version",
+            "plan_id",
+            "purpose",
+            "selected_k",
+            "fixture_shapes",
+            "allocation",
+            "bootstrap_evidence"
+        ) | Sort-Object
+        $actualMulticlassPointFixturePlanProperties = @(
+            $multiclassPointFixturePlan.PSObject.Properties.Name | Sort-Object
+        )
+        $multiclassPointFixturePlanPropertyDifference = @(
+            Compare-Object -ReferenceObject $expectedMulticlassPointFixturePlanProperties `
+                -DifferenceObject $actualMulticlassPointFixturePlanProperties
+        )
+        $expectedMulticlassPointFixtureShapes = @(
+            [pscustomobject]@{ selected_k = 3; observations_per_fixture = 120; expected_cases_per_true_class = 40 },
+            [pscustomobject]@{ selected_k = 4; observations_per_fixture = 120; expected_cases_per_true_class = 30 },
+            [pscustomobject]@{ selected_k = 5; observations_per_fixture = 200; expected_cases_per_true_class = 40 }
+        )
+        $selectedK = @($multiclassPointFixturePlan.selected_k)
+        $fixtureShapes = @($multiclassPointFixturePlan.fixture_shapes)
+        $multiclassPointFixtureShapesValid = $fixtureShapes.Count -eq 3
+        if ($multiclassPointFixtureShapesValid) {
+            for ($index = 0; $index -lt $expectedMulticlassPointFixtureShapes.Count; $index++) {
+                $actualShape = $fixtureShapes[$index]
+                $expectedShape = $expectedMulticlassPointFixtureShapes[$index]
+                $expectedShapeProperties = @(
+                    "selected_k", "observations_per_fixture", "expected_cases_per_true_class"
+                ) | Sort-Object
+                $actualShapeProperties = @($actualShape.PSObject.Properties.Name | Sort-Object)
+                $shapePropertyDifference = @(
+                    Compare-Object -ReferenceObject $expectedShapeProperties `
+                        -DifferenceObject $actualShapeProperties
+                )
+                if ($shapePropertyDifference.Count -ne 0 -or
+                    $actualShape.selected_k -isnot [System.Int64] -or
+                    [int]$actualShape.selected_k -ne [int]$expectedShape.selected_k -or
+                    $actualShape.observations_per_fixture -isnot [System.Int64] -or
+                    [int]$actualShape.observations_per_fixture -ne [int]$expectedShape.observations_per_fixture -or
+                    $actualShape.expected_cases_per_true_class -isnot [System.Int64] -or
+                    [int]$actualShape.expected_cases_per_true_class -ne [int]$expectedShape.expected_cases_per_true_class) {
+                    $multiclassPointFixtureShapesValid = $false
+                    break
+                }
+            }
+        }
+        if ($multiclassPointFixturePlanPropertyDifference.Count -ne 0 -or
+            $multiclassPointFixturePlan.schema_version -isnot [System.Int64] -or
+            [int]$multiclassPointFixturePlan.schema_version -ne 2 -or
+            $multiclassPointFixturePlan.plan_id -isnot [string] -or
+            [string]$multiclassPointFixturePlan.plan_id -cne "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2" -or
+            $multiclassPointFixturePlan.purpose -isnot [string] -or
+            [string]$multiclassPointFixturePlan.purpose -cne "published_p0_pos_candidate_point_discovery_only" -or
+            $selectedK.Count -ne 3 -or
+            $selectedK[0] -isnot [System.Int64] -or [int]$selectedK[0] -ne 3 -or
+            $selectedK[1] -isnot [System.Int64] -or [int]$selectedK[1] -ne 4 -or
+            $selectedK[2] -isnot [System.Int64] -or [int]$selectedK[2] -ne 5 -or
+            -not $multiclassPointFixtureShapesValid -or
+            $multiclassPointFixturePlan.allocation -isnot [string] -or
+            [string]$multiclassPointFixturePlan.allocation -cne "row_mod_k_exactly_balanced" -or
+            $multiclassPointFixturePlan.bootstrap_evidence -isnot [string] -or
+            [string]$multiclassPointFixturePlan.bootstrap_evidence -cne "not_requested") {
+            throw "The shard plan multiclass_point_fixture_plan differs from the exact typed K3/K4 n=120 and K5 n=200 point-only qualification contract."
+        }
         $bootstrapFixturePlanProperty = $plan.PSObject.Properties["bootstrap_fixture_plan"]
         if ($null -eq $bootstrapFixturePlanProperty -or $null -eq $bootstrapFixturePlanProperty.Value) {
             throw "The shard plan did not declare the required typed n=80 dual-outcome fixed-K bootstrap fixture plan."

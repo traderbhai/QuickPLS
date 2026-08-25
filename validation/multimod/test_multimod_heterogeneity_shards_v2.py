@@ -270,6 +270,40 @@ class HeterogeneityShardContractTests(unittest.TestCase):
         with self.assertRaises(shards.ContractError):
             shards.validated_plan(self.plan_path)
 
+    def test_plan_requires_the_exact_per_k_multiclass_point_fixture_plan(self) -> None:
+        rows = shards.expected_shard_specs("qualification")
+        baseline = plan(rows)
+        for label, mutate in (
+            (
+                "missing",
+                lambda value: value.pop("multiclass_point_fixture_plan"),
+            ),
+            (
+                "k5_reuses_n120",
+                lambda value: value["multiclass_point_fixture_plan"][
+                    "fixture_shapes"
+                ][2].update({"observations_per_fixture": 120}),
+            ),
+            (
+                "k5_reuses_24_cases",
+                lambda value: value["multiclass_point_fixture_plan"][
+                    "fixture_shapes"
+                ][2].update({"expected_cases_per_true_class": 24}),
+            ),
+            (
+                "bootstrap_claim",
+                lambda value: value["multiclass_point_fixture_plan"].update(
+                    {"bootstrap_evidence": "requested"}
+                ),
+            ),
+        ):
+            with self.subTest(label=label):
+                altered = json.loads(json.dumps(baseline))
+                mutate(altered)
+                shards.atomic_json(self.plan_path, altered)
+                with self.assertRaises(shards.ContractError):
+                    shards.validated_plan(self.plan_path)
+
     def test_plan_requires_the_exact_typed_n80_dual_outcome_bootstrap_fixture_plan(self) -> None:
         rows = shards.expected_shard_specs("qualification")
         baseline = plan(rows)
@@ -587,11 +621,27 @@ class HeterogeneityShardContractTests(unittest.TestCase):
         self.assertEqual(
             value["multiclass_point_fixture_plan"],
             {
-                "schema_version": 1,
-                "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+                "schema_version": 2,
+                "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2",
                 "purpose": "published_p0_pos_candidate_point_discovery_only",
                 "selected_k": [3, 4, 5],
-                "observations_per_fixture": 120,
+                "fixture_shapes": [
+                    {
+                        "selected_k": 3,
+                        "observations_per_fixture": 120,
+                        "expected_cases_per_true_class": 40,
+                    },
+                    {
+                        "selected_k": 4,
+                        "observations_per_fixture": 120,
+                        "expected_cases_per_true_class": 30,
+                    },
+                    {
+                        "selected_k": 5,
+                        "observations_per_fixture": 200,
+                        "expected_cases_per_true_class": 40,
+                    },
+                ],
                 "allocation": "row_mod_k_exactly_balanced",
                 "bootstrap_evidence": "not_requested",
             },
@@ -788,6 +838,8 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             '"--cache-inventory"',
             '"write-bootstrap-inventory"',
             '"seal-bootstrap-prepared"',
+            'qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2',
+            '$multiclassPointFixturePlan.fixture_shapes',
             '"seal-bootstrap-cache"',
             '$childElapsedSeconds -ge $Job.TimeoutSeconds',
             '$campaignElapsedAtExitSeconds -ge $workCutoffSeconds',

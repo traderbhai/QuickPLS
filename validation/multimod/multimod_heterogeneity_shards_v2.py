@@ -54,11 +54,27 @@ BOOTSTRAP_FIXTURE_PLAN = {
     "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
 }
 MULTICLASS_POINT_FIXTURE_PLAN = {
-    "schema_version": 1,
-    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+    "schema_version": 2,
+    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2",
     "purpose": "published_p0_pos_candidate_point_discovery_only",
     "selected_k": [3, 4, 5],
-    "observations_per_fixture": 120,
+    "fixture_shapes": [
+        {
+            "selected_k": 3,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 40,
+        },
+        {
+            "selected_k": 4,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 30,
+        },
+        {
+            "selected_k": 5,
+            "observations_per_fixture": 200,
+            "expected_cases_per_true_class": 40,
+        },
+    ],
     "allocation": "row_mod_k_exactly_balanced",
     "bootstrap_evidence": "not_requested",
 }

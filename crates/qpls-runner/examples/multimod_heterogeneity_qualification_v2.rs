@@ -35,9 +35,10 @@ use support::*;
 const SCHEMA_VERSION: u32 = 1;
 const SUITE_ID: &str = "qpls.multimod.heterogeneity.production-qualification.v2";
 const OBSERVATIONS: usize = 400;
-const MULTICLASS_POINT_OBSERVATIONS: usize = 120;
+const MULTICLASS_POINT_OBSERVATIONS_K3_K4: usize = 120;
+const MULTICLASS_POINT_OBSERVATIONS_K5: usize = 200;
 const MULTICLASS_POINT_FIXTURE_PLAN_ID: &str =
-    "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1";
+    "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2";
 const BOOTSTRAP_FIXTURE_PLAN_ID: &str =
     "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1";
 const BOOTSTRAP_FIXTURE_OBSERVATIONS: usize = 80;
@@ -104,14 +105,38 @@ fn fixture_observations() -> usize {
 
 fn multiclass_point_fixture_plan() -> Value {
     json!({
-        "schema_version": 1,
+        "schema_version": 2,
         "plan_id": MULTICLASS_POINT_FIXTURE_PLAN_ID,
         "purpose": "published_p0_pos_candidate_point_discovery_only",
         "selected_k": [3, 4, 5],
-        "observations_per_fixture": MULTICLASS_POINT_OBSERVATIONS,
+        "fixture_shapes": [
+            {
+                "selected_k": 3,
+                "observations_per_fixture": MULTICLASS_POINT_OBSERVATIONS_K3_K4,
+                "expected_cases_per_true_class": 40,
+            },
+            {
+                "selected_k": 4,
+                "observations_per_fixture": MULTICLASS_POINT_OBSERVATIONS_K3_K4,
+                "expected_cases_per_true_class": 30,
+            },
+            {
+                "selected_k": 5,
+                "observations_per_fixture": MULTICLASS_POINT_OBSERVATIONS_K5,
+                "expected_cases_per_true_class": 40,
+            },
+        ],
         "allocation": "row_mod_k_exactly_balanced",
         "bootstrap_evidence": "not_requested",
     })
+}
+
+fn multiclass_point_observations(classes: usize) -> Option<usize> {
+    match classes {
+        3 | 4 => Some(MULTICLASS_POINT_OBSERVATIONS_K3_K4),
+        5 => Some(MULTICLASS_POINT_OBSERVATIONS_K5),
+        _ => None,
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -581,15 +606,17 @@ fn validate_multiclass_point_balance(
     classes: usize,
     true_classes: &[usize],
 ) -> Result<(), DynError> {
-    if !(3..=5).contains(&classes)
-        || true_classes.len() != MULTICLASS_POINT_OBSERVATIONS
-        || MULTICLASS_POINT_OBSERVATIONS % classes != 0
-    {
+    let Some(observations) = multiclass_point_observations(classes) else {
         return Err(invalid(format!(
-            "{fixture_id} does not match the typed K=3 through K=5 n=120 point-fixture plan"
+            "{fixture_id} requests K={classes}, outside the typed K=3 through K=5 point-fixture plan"
+        )));
+    };
+    if true_classes.len() != observations || observations % classes != 0 {
+        return Err(invalid(format!(
+            "{fixture_id} does not match the typed K={classes} n={observations} point-fixture plan"
         )));
     }
-    let expected = MULTICLASS_POINT_OBSERVATIONS / classes;
+    let expected = observations / classes;
     let counts = (0..classes)
         .map(|class| true_classes.iter().filter(|value| **value == class).count())
         .collect::<Vec<_>>();
@@ -609,13 +636,18 @@ fn make_multiclass_point_fixture(
     selected_k: u8,
 ) -> Result<HeterogeneityFixture, DynError> {
     let classes = usize::from(selected_k);
+    let observations = multiclass_point_observations(classes).ok_or_else(|| {
+        invalid(format!(
+            "{fixture_id} requests K={classes}, outside the typed K=3 through K=5 point-fixture plan"
+        ))
+    })?;
     let fixture = make_fixture_with_classes_and_observations(
         fixture_id,
         HeterogeneityInteractionProfileV2::P0Structural,
         Scenario::StrongSeparation,
         data_seed,
         classes,
-        MULTICLASS_POINT_OBSERVATIONS,
+        observations,
         BootstrapInteractionFixtureDesignV1::BaselineSingleEndogenousV1,
     )?;
     validate_multiclass_point_balance(fixture_id, classes, &fixture.true_classes)?;
@@ -625,11 +657,11 @@ fn make_multiclass_point_fixture(
 fn strong_multiclass_p0_equation(class: usize, classes: usize) -> ([f64; 3], f64) {
     debug_assert!(classes > 2 && class < classes);
     const COEFFICIENTS: [[f64; 3]; 5] = [
-        [2.2, 0.2, 0.2],
-        [-2.0, 0.3, 0.3],
-        [0.3, 2.2, 0.3],
-        [0.3, -2.0, 0.3],
-        [0.3, 0.3, 2.2],
+        [2.2, 0.0, 0.0],
+        [-2.2, 0.0, 0.0],
+        [0.0, 2.2, 0.0],
+        [0.0, -2.2, 0.0],
+        [0.0, 0.0, 2.2],
     ];
     let centered_class = class as f64 - (classes - 1) as f64 / 2.0;
     (COEFFICIENTS[class], 0.35 * centered_class)
@@ -819,8 +851,7 @@ fn make_fixture_with_classes_and_observations(
                     };
                     Some(format!(
                         "{:.17}",
-                        metric_multiplier * value * (0.84 + indicator as f64 * 0.08)
-                            + perturbation
+                        metric_multiplier * value * (0.84 + indicator as f64 * 0.08) + perturbation
                     ))
                 })
                 .collect::<Vec<_>>();
@@ -3913,10 +3944,29 @@ mod tests {
     #[test]
     fn lean_multiclass_point_plan_keeps_discovery_and_seven_bootstrap_profiles_distinct() {
         let plan = multiclass_point_fixture_plan();
-        assert_eq!(plan["schema_version"], 1);
+        assert_eq!(plan["schema_version"], 2);
         assert_eq!(plan["plan_id"], MULTICLASS_POINT_FIXTURE_PLAN_ID);
         assert_eq!(plan["selected_k"], json!([3, 4, 5]));
-        assert_eq!(plan["observations_per_fixture"], 120);
+        assert_eq!(
+            plan["fixture_shapes"],
+            json!([
+                {
+                    "selected_k": 3,
+                    "observations_per_fixture": 120,
+                    "expected_cases_per_true_class": 40,
+                },
+                {
+                    "selected_k": 4,
+                    "observations_per_fixture": 120,
+                    "expected_cases_per_true_class": 30,
+                },
+                {
+                    "selected_k": 5,
+                    "observations_per_fixture": 200,
+                    "expected_cases_per_true_class": 40,
+                },
+            ])
+        );
         assert_eq!(plan["bootstrap_evidence"], "not_requested");
 
         let specs = qualification_shard_specs(Scale::Qualification);
@@ -4130,17 +4180,53 @@ mod tests {
     }
 
     #[test]
-    fn multiclass_point_balance_requires_exact_n120_equal_allocation() {
-        for classes in 3..=5 {
-            let balanced = (0..MULTICLASS_POINT_OBSERVATIONS)
+    fn multiclass_point_balance_requires_the_exact_per_k_equal_allocation() {
+        for (classes, observations, expected_per_class) in
+            [(3, 120, 40), (4, 120, 30), (5, 200, 40)]
+        {
+            assert_eq!(multiclass_point_observations(classes), Some(observations));
+            let balanced = (0..observations)
                 .map(|row| row % classes)
                 .collect::<Vec<_>>();
             validate_multiclass_point_balance("balanced", classes, &balanced).unwrap();
+            assert_eq!(
+                (0..classes)
+                    .map(|class| balanced.iter().filter(|value| **value == class).count())
+                    .collect::<Vec<_>>(),
+                vec![expected_per_class; classes]
+            );
 
             let mut altered = balanced;
             altered[0] = 1;
             assert!(validate_multiclass_point_balance("altered", classes, &altered).is_err());
         }
         assert!(validate_multiclass_point_balance("short", 3, &[0, 1, 2]).is_err());
+        assert!(validate_multiclass_point_balance("unsupported", 2, &[0, 1]).is_err());
+    }
+
+    #[test]
+    fn multiclass_point_fixtures_keep_k3_k4_n120_and_give_k5_n200_headroom() {
+        for (selected_k, observations, expected_per_class) in
+            [(3_u8, 120, 40), (4, 120, 30), (5, 200, 40)]
+        {
+            let fixture = make_multiclass_point_fixture(
+                &format!("heterogeneity-p0-strong-k{selected_k}"),
+                0x4b00_0000_u64 + (u64::from(selected_k) << 16) + 42,
+                selected_k,
+            )
+            .unwrap();
+            assert_eq!(fixture.dataset.batch.num_rows(), observations);
+            assert_eq!(fixture.true_classes.len(), observations);
+            assert_eq!(
+                (0..usize::from(selected_k))
+                    .map(|class| fixture
+                        .true_classes
+                        .iter()
+                        .filter(|value| **value == class)
+                        .count())
+                    .collect::<Vec<_>>(),
+                vec![expected_per_class; usize::from(selected_k)]
+            );
+        }
     }
 }

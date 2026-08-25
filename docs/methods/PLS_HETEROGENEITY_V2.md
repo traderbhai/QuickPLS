@@ -476,9 +476,9 @@ adds the modeled `v` outcome with ordinary `x/z/w -> v` anchor paths while all
 interactions continue to target `y` only. Publication-profile PLS-POS point discovery is
 additionally exercised at each exact K from 3 through 5.
 Those point-only cells use the typed
-`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1` plan,
-balanced n=120 strong-separation fixtures (40, 30, and 24 rows per class at
-K=3, K=4, and K=5), the exact `p0_structural` /
+`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2` plan.
+K=3 and K=4 retain balanced n=120 strong-separation fixtures (40 and 30 rows
+per class); K=5 uses balanced n=200 (40 rows per class). They retain the exact `p0_structural` /
 `qpls.pls-pos.published.v2` identity, and POS-only ten-seeded-start discovery.
 They do not claim or execute K=3 through K=5 bootstrap inference. Their
 ordinary P0 models use three structural paths with distinct class-specific

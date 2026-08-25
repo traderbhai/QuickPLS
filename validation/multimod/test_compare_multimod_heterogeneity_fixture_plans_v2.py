@@ -27,9 +27,44 @@ EXPECTED_BOOTSTRAP_FIXTURE_PLAN = {
     "requested_replicates": 500,
     "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
 }
+EXPECTED_MULTICLASS_POINT_FIXTURE_PLAN = {
+    "schema_version": 2,
+    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v2",
+    "purpose": "published_p0_pos_candidate_point_discovery_only",
+    "selected_k": [3, 4, 5],
+    "fixture_shapes": [
+        {
+            "selected_k": 3,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 40,
+        },
+        {
+            "selected_k": 4,
+            "observations_per_fixture": 120,
+            "expected_cases_per_true_class": 30,
+        },
+        {
+            "selected_k": 5,
+            "observations_per_fixture": 200,
+            "expected_cases_per_true_class": 40,
+        },
+    ],
+    "allocation": "row_mod_k_exactly_balanced",
+    "bootstrap_evidence": "not_requested",
+}
 
 
 class HeterogeneityFixturePlanTests(unittest.TestCase):
+    def test_multiclass_point_plan_is_typed_per_k_and_point_only(self) -> None:
+        self.assertEqual(
+            comparator.MULTICLASS_POINT_FIXTURE_PLAN,
+            EXPECTED_MULTICLASS_POINT_FIXTURE_PLAN,
+        )
+        self.assertEqual(
+            comparator.MULTICLASS_POINT_FIXTURE_PLAN["bootstrap_evidence"],
+            "not_requested",
+        )
+
     def test_point_recovery_and_bootstrap_fixture_identities_are_separate(self) -> None:
         report = {
             "scale": "qualification",
@@ -169,6 +204,10 @@ class HeterogeneityFixturePlanTests(unittest.TestCase):
             "point_and_recovery_matrix_only",
         )
         self.assertEqual(
+            catalog["multiclass_point_fixture_plan"],
+            EXPECTED_MULTICLASS_POINT_FIXTURE_PLAN,
+        )
+        self.assertEqual(
             catalog["bootstrap_fixture_plan"], EXPECTED_BOOTSTRAP_FIXTURE_PLAN
         )
         self.assertEqual(
@@ -189,6 +228,8 @@ class HeterogeneityFixturePlanTests(unittest.TestCase):
             REPOSITORY / "docs" / "methods" / "PLS_HETEROGENEITY_V2.md"
         ).read_text(encoding="utf-8")
         self.assertIn(EXPECTED_BOOTSTRAP_FIXTURE_PLAN["plan_id"], method_spec)
+        self.assertIn(EXPECTED_MULTICLASS_POINT_FIXTURE_PLAN["plan_id"], method_spec)
+        self.assertIn("K=5 uses balanced n=200 (40 rows per class)", method_spec)
         self.assertIn(EXPECTED_BOOTSTRAP_FIXTURE_PLAN["purpose"], method_spec)
         self.assertIn(
             EXPECTED_BOOTSTRAP_FIXTURE_PLAN["performance_scope"], method_spec

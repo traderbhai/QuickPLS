@@ -92,7 +92,7 @@ as a fail-fast, resumable shard graph. Exact 2/3/5/20-group and non-Cartesian MG
 probability reconstruction, multi-scenario FIMIX recovery, P0/P2/P23 PLS-POS,
 independent likelihood/posterior/R-squared/objective checks, common-metric
 suppression, seven distinct K=2 fixed-K bootstrap profile cells, typed balanced
-n=120 P0 PLS-POS point-discovery evidence at K=3 through K=5, and independent
+typed P0 PLS-POS point-discovery evidence at K=3/K=4 n=120 and K=5 n=200, and independent
 K! ambiguity/majority decisions are documented in
 `mga_heterogeneity_raw_qualification_v1.md`. Each 500-draw heterogeneity
 bootstrap cell uses one frozen prepared execution and 100 SHA-256-bound modulo
