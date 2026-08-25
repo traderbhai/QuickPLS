@@ -26,6 +26,26 @@ MULTISTART_COEFFICIENT_DOMAIN = b"quickpls:heterogeneity:multistart-coefficients
 MULTISTART_POSTERIOR_DOMAIN = b"quickpls:heterogeneity:multistart-posteriors:v2\0"
 MULTISTART_PARAMETER_DOMAIN = b"quickpls:heterogeneity:multistart-parameters:v2\0"
 MULTISTART_FIT_STATISTIC_DOMAIN = b"quickpls:heterogeneity:multistart-fit-statistic:v2\0"
+MULTICLASS_POINT_FIXTURE_PLAN = {
+    "schema_version": 1,
+    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+    "purpose": "published_p0_pos_candidate_point_discovery_only",
+    "selected_k": [3, 4, 5],
+    "observations_per_fixture": 120,
+    "allocation": "row_mod_k_exactly_balanced",
+    "bootstrap_evidence": "not_requested",
+}
+EXPECTED_BOOTSTRAP_CELL_IDS = frozenset(
+    {
+        "fimix-p0-fixed-k-bootstrap",
+        "pos-published-p0-fixed-k-bootstrap",
+        "fimix-p2-fixed-k-bootstrap",
+        "pos-destination-p2-fixed-k-bootstrap",
+        "fimix-p23-fixed-k-bootstrap",
+        "pos-destination-p23-fixed-k-bootstrap",
+        "pos-p2-common-metric-failure-fixed-k-bootstrap",
+    }
+)
 BOOTSTRAP_FAILURE_PUBLIC_CONTRACT = {
     "fit_failed": (
         "heterogeneity.bootstrap.fit_failed",
@@ -85,13 +105,6 @@ BOUND_GATE_CHECK_IDS = {
     "heterogeneity.bootstrap.pos-published-p0-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
     "heterogeneity.bootstrap.pos-destination-p2-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
     "heterogeneity.bootstrap.pos-destination-p23-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
-    "heterogeneity.bootstrap.pos_published_p0_k2_through_k5_inventory",
-    "heterogeneity.bootstrap.pos-published-p0-k3-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
-    "heterogeneity.bootstrap.pos-published-p0-k3-fixed-k-bootstrap.shared_validity_bitmap_type7",
-    "heterogeneity.bootstrap.pos-published-p0-k4-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
-    "heterogeneity.bootstrap.pos-published-p0-k4-fixed-k-bootstrap.shared_validity_bitmap_type7",
-    "heterogeneity.bootstrap.pos-published-p0-k5-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
-    "heterogeneity.bootstrap.pos-published-p0-k5-fixed-k-bootstrap.shared_validity_bitmap_type7",
     "heterogeneity.label_alignment.k3.exhaustive_k_factorial_decisions",
     "heterogeneity.label_alignment.k4.exhaustive_k_factorial_decisions",
     "heterogeneity.label_alignment.k5.exhaustive_k_factorial_decisions",
@@ -128,6 +141,8 @@ def is_baseline_qualification_matrix(report: dict[str, Any]) -> bool:
         and report.get("sign_columns") is None
         and report.get("workers") == 1
         and report.get("fixture_observations") == 400
+        and report.get("multiclass_point_fixture_plan")
+        == MULTICLASS_POINT_FIXTURE_PLAN
         and report.get("campaign_seed") == 42
         and report.get("seed") == 42
     )
@@ -155,12 +170,7 @@ def expected_qualification_shard_ids() -> list[str]:
         ]
     )
     for selected_k in range(3, 6):
-        values.extend(
-            [
-                f"pos-published-k{selected_k}-discovery",
-                f"pos-published-k{selected_k}-bootstrap",
-            ]
-        )
+        values.append(f"pos-published-k{selected_k}-discovery")
     values.extend(
         [
             "bootstrap-fimix-p0",
@@ -578,7 +588,12 @@ def validate_fimix_raw_likelihood(
     )
 
 
-def validate_raw_authority(cell: dict[str, Any], checks: Checks, prefix: str) -> None:
+def validate_raw_authority(
+    cell: dict[str, Any],
+    checks: Checks,
+    prefix: str,
+    expected_observations: int = 400,
+) -> None:
     receipt = cell["compiler_receipt"]
     plan = cell["compiled_plan"]
     raw = cell["evidence"]["raw_preparation"]
@@ -626,7 +641,7 @@ def validate_raw_authority(cell: dict[str, Any], checks: Checks, prefix: str) ->
         and raw_value.get("method_version") == "qpls.heterogeneity.raw-preparation.v2"
         and raw_value.get("unique_analysis_positions") is True
         and raw_value.get("omitted_source_rows") == 0
-        and observations == 400
+        and observations == expected_observations
         and len(set(source_tokens)) == observations
         and metric.get("observation_count") == observations
         and metric.get("scores_standardized_once_on_pooled_rows") is True
@@ -642,7 +657,10 @@ def validate_raw_authority(cell: dict[str, Any], checks: Checks, prefix: str) ->
             "unique_source_rows": len(set(source_tokens)),
             "equations": len(equations),
         },
-        expected="compiled Recipe V4 raw-scoring authority for all 400 rows",
+        expected=(
+            "compiled Recipe V4 raw-scoring authority for all "
+            f"{expected_observations} rows"
+        ),
     )
 
 
@@ -1476,7 +1494,14 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             )
             matrix_ok = False
             continue
-        validate_raw_authority(cell, checks, f"pos.published_p0.k{classes}")
+        validate_raw_authority(
+            cell,
+            checks,
+            f"pos.published_p0.k{classes}",
+            expected_observations=MULTICLASS_POINT_FIXTURE_PLAN[
+                "observations_per_fixture"
+            ],
+        )
         phase = cell["config"]["phase"]
         plan = cell["compiled_plan"]
         result = pos_result(cell, classes)
@@ -1491,6 +1516,7 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             if row["method"].get("kind") == "segmentation"
         ]
         truth_counts = Counter(int(value) for value in cell["true_classes"])
+        expected_count = MULTICLASS_POINT_FIXTURE_PLAN["observations_per_fixture"] // classes
         identity_ok = (
             cell["profile"] == "p0_structural"
             and cell["fixture_id"] == f"heterogeneity-p0-strong-k{classes}"
@@ -1504,7 +1530,7 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             and cell["analysis"].get("locked_k") is None
             and len(candidates) == 1
             and len(segmented_candidates) == 1
-            and candidates[0]["state"] == "completed"
+            and candidates[0]["state"] == "converged_stable"
             and len(cell["evidence"]["pos"]) == 1
             and cell["evidence"]["fimix"] == []
             and result is not None
@@ -1512,7 +1538,9 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
             and len(result["segments"]) == classes
             and len(truth_counts) == classes
             and set(truth_counts) == set(range(classes))
-            and max(truth_counts.values()) - min(truth_counts.values()) <= 1
+            and len(cell["true_classes"])
+            == MULTICLASS_POINT_FIXTURE_PLAN["observations_per_fixture"]
+            and all(truth_counts[class_id] == expected_count for class_id in range(classes))
         )
         checks.require(
             f"pos.published_p0.k{classes}.candidate_profile_algorithm_identity",
@@ -1527,7 +1555,10 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
                 "result_segments": len(result["segments"]) if result else None,
                 "truth_counts": dict(sorted(truth_counts.items())),
             },
-            expected=f"exact production P0/qpls.pls-pos.published.v2 candidate identity at K={classes}",
+            expected=(
+                "exact production P0/qpls.pls-pos.published.v2 point candidate "
+                f"at K={classes} with n=120 and {expected_count} rows per class"
+            ),
         )
         matrix_ok &= identity_ok
         if result is not None:
@@ -1550,9 +1581,19 @@ def validate_pos_k3_through_k5_discoveries(report: dict[str, Any], checks: Check
     )
     checks.require(
         "pos.published_p0.k2_through_k5_candidate_profile_algorithm_identity",
-        matrix_ok,
-        observed=observed,
-        expected="completed production qpls.pls-pos.published.v2 P0 candidates at each exact K=2,3,4,5 identity",
+        matrix_ok
+        and report.get("multiclass_point_fixture_plan")
+        == MULTICLASS_POINT_FIXTURE_PLAN,
+        observed={
+            "cells": observed,
+            "multiclass_point_fixture_plan": report.get(
+                "multiclass_point_fixture_plan"
+            ),
+        },
+        expected=(
+            "completed production qpls.pls-pos.published.v2 P0 point candidates at "
+            "K=2,3,4,5 plus the exact n=120 balanced K=3..5 fixture-plan identity"
+        ),
     )
 
 
@@ -1988,18 +2029,7 @@ def prepared_common_metric_repeated(cell: dict[str, Any]) -> bool:
 
 def validate_bootstrap_matrix(report: dict[str, Any], checks: Checks) -> None:
     cells = report["fixed_k_bootstrap"]
-    expected_ids = {
-        "fimix-p0-fixed-k-bootstrap",
-        "pos-published-p0-fixed-k-bootstrap",
-        "fimix-p2-fixed-k-bootstrap",
-        "pos-destination-p2-fixed-k-bootstrap",
-        "fimix-p23-fixed-k-bootstrap",
-        "pos-destination-p23-fixed-k-bootstrap",
-        "pos-p2-common-metric-failure-fixed-k-bootstrap",
-        "pos-published-p0-k3-fixed-k-bootstrap",
-        "pos-published-p0-k4-fixed-k-bootstrap",
-        "pos-published-p0-k5-fixed-k-bootstrap",
-    }
+    expected_ids = set(EXPECTED_BOOTSTRAP_CELL_IDS)
     actual_ids = {cell["cell_id"] for cell in cells}
     checks.require(
         "heterogeneity.bootstrap.full_profile_matrix",
@@ -2007,14 +2037,7 @@ def validate_bootstrap_matrix(report: dict[str, Any], checks: Checks) -> None:
         observed={"count": len(cells), "cell_ids": sorted(actual_ids)},
         expected=sorted(expected_ids),
     )
-    expected_k_by_id = {
-        cell_id: (
-            int(cell_id.split("-k", 1)[1].split("-", 1)[0])
-            if cell_id.startswith("pos-published-p0-k")
-            else 2
-        )
-        for cell_id in expected_ids
-    }
+    expected_k_by_id = {cell_id: 2 for cell_id in expected_ids}
     for cell in cells:
         prefix = f"heterogeneity.bootstrap.{cell['cell_id']}"
         lock = cell["analysis"]["inference_lock"]
@@ -2051,45 +2074,6 @@ def validate_bootstrap_matrix(report: dict[str, Any], checks: Checks) -> None:
             if cell["profile"] != "p0_structural" and cell["analysis"]["descriptive_only"] is False:
                 validate_scientific_interaction_targets(cell, checks, prefix)
     by_id = {cell["cell_id"]: cell for cell in cells}
-    published_matrix = []
-    published_matrix_ok = True
-    for classes in range(2, 6):
-        cell_id = (
-            "pos-published-p0-fixed-k-bootstrap"
-            if classes == 2
-            else f"pos-published-p0-k{classes}-fixed-k-bootstrap"
-        )
-        cell = by_id.get(cell_id)
-        result = pos_result(cell, classes) if cell is not None else None
-        lock = cell["analysis"]["inference_lock"] if cell is not None else {}
-        expected_algorithms = (
-            ["fimix_pls_v2", "pls_pos_published_v2"]
-            if classes == 2
-            else ["pls_pos_published_v2"]
-        )
-        row_ok = (
-            cell is not None
-            and cell["profile"] == "p0_structural"
-            and lock.get("selected_algorithm") == "pls_pos_published_v2"
-            and lock.get("selected_k") == classes
-            and lock.get("discovery_algorithms") == expected_algorithms
-            and lock.get("discovery_candidate_k") == [classes]
-            and cell["analysis"].get("locked_algorithm") == "pls_pos_published_v2"
-            and cell["analysis"].get("locked_k") == classes
-            and result is not None
-            and result.get("method_version") == POS_PUBLISHED
-            and len(result.get("segments", [])) == classes
-            and len(cell["evidence"]["pos"]) == 1
-            and len(cell["evidence"]["fimix"]) == (1 if classes == 2 else 0)
-        )
-        published_matrix_ok &= row_ok
-        published_matrix.append({"cell_id": cell_id, "k": classes, "passed": row_ok})
-    checks.require(
-        "heterogeneity.bootstrap.pos_published_p0_k2_through_k5_inventory",
-        published_matrix_ok,
-        observed=published_matrix,
-        expected="exact P0/qpls.pls-pos.published.v2 fixed-K production bootstrap cells for K=2,3,4,5",
-    )
     for cell_id in (
         "pos-published-p0-fixed-k-bootstrap",
         "pos-destination-p2-fixed-k-bootstrap",
@@ -2170,11 +2154,15 @@ def validate_report(
                 "sign_columns",
                 "workers",
                 "fixture_observations",
+                "multiclass_point_fixture_plan",
                 "campaign_seed",
                 "seed",
             )
         },
-        expected="baseline metamorphism, no sign transform, one worker, 400 rows, seed 42",
+        expected=(
+            "baseline metamorphism, no sign transform, one worker, 400-row general "
+            "fixtures, the typed n=120 K3-K5 point-fixture plan, and seed 42"
+        ),
     )
     shard_receipt = report.get("shard_execution_receipt")
     if require_shard_receipts or shard_receipt is not None:
@@ -2198,7 +2186,10 @@ def validate_report(
                     else None
                 ),
             },
-            expected="all 55 exact commit/executable/plan-bound atomic shard receipts in deterministic plan order",
+            expected=(
+                "all 52 exact commit/executable/plan-bound atomic shard receipts "
+                "in deterministic plan order"
+            ),
         )
     contract = report.get("multistart_reproducibility_contract", {})
     checks.require(

@@ -122,8 +122,10 @@ use qpls_estimation::{
 };
 use qpls_resampling::{
     MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1, MultiModBootstrapPlanV1, MultiModCaseBootstrapDrawV1,
-    MultiModFullRefitCallbackV1, MultiModRefitFailureV1, MultiModRefitOutcomeV1,
-    MultiModShardSpecV1, resample_dataset_columns_v1, run_multimod_case_bootstrap_shard_v1,
+    MultiModFinalLedgerV1, MultiModInterruptibleFullRefitCallbackV1, MultiModRefitAttemptV1,
+    MultiModRefitFailureV1, MultiModRefitOutcomeV1, MultiModShardCacheV1, MultiModShardSpecV1,
+    finalize_multimod_case_bootstrap_v1, resample_dataset_columns_v1,
+    run_multimod_case_bootstrap_shard_interruptible_v1,
 };
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -10746,6 +10748,30 @@ impl RawHeterogeneityPreparationReceiptV2 {
         }
         Ok(())
     }
+
+    fn ensure_matches_live_authority(
+        &self,
+        dataset_observations: usize,
+        source_row_tokens: &[u64],
+        general_sem_plan_sha256: &str,
+    ) -> Result<(), String> {
+        let omitted_source_rows = dataset_observations
+            .checked_sub(source_row_tokens.len())
+            .ok_or_else(|| {
+                "raw heterogeneity receipt contains more source rows than the live dataset"
+                    .to_string()
+            })?;
+        if self.general_sem_plan_sha256 != general_sem_plan_sha256
+            || self.source_row_tokens != source_row_tokens
+            || self.omitted_source_rows != omitted_source_rows
+        {
+            return Err(
+                "raw heterogeneity receipt differs from the live plan or row-exclusion authority"
+                    .into(),
+            );
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -12555,11 +12581,14 @@ where
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(deny_unknown_fields)]
-struct RawHeterogeneityBootstrapEstimateV2 {
+pub struct RawHeterogeneityBootstrapEstimateV2 {
     fit_statistic: f64,
     alignment: LabelAlignmentV2,
     target_values: Vec<f64>,
 }
+
+pub type RawHeterogeneityBootstrapShardCacheV2 =
+    MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, RawHeterogeneityBootstrapEstimateV2>;
 
 fn target_suffix_v2(target_id: &str) -> Option<&str> {
     target_id.split_once(':').map(|(_, suffix)| suffix)
@@ -12636,21 +12665,40 @@ struct RawHeterogeneityBootstrapCallbackV2<'a, C> {
 }
 
 impl<C>
-    MultiModFullRefitCallbackV1<MultiModCaseBootstrapDrawV1, RawHeterogeneityBootstrapEstimateV2>
-    for RawHeterogeneityBootstrapCallbackV2<'_, C>
+    MultiModInterruptibleFullRefitCallbackV1<
+        MultiModCaseBootstrapDrawV1,
+        RawHeterogeneityBootstrapEstimateV2,
+    > for RawHeterogeneityBootstrapCallbackV2<'_, C>
 where
     C: Fn() -> bool + Sync,
 {
-    fn full_refit(
+    fn full_refit_attempt(
+        &mut self,
+        draw: &MultiModCaseBootstrapDrawV1,
+    ) -> MultiModRefitAttemptV1<RawHeterogeneityBootstrapEstimateV2> {
+        if (self.should_cancel)() {
+            return MultiModRefitAttemptV1::Interrupted;
+        }
+        let result = self.full_refit_scientific(draw);
+        if result
+            .as_ref()
+            .is_err_and(|failure| failure.code == "cancelled")
+        {
+            MultiModRefitAttemptV1::Interrupted
+        } else {
+            MultiModRefitAttemptV1::Completed(result)
+        }
+    }
+}
+
+impl<C> RawHeterogeneityBootstrapCallbackV2<'_, C>
+where
+    C: Fn() -> bool + Sync,
+{
+    fn full_refit_scientific(
         &mut self,
         draw: &MultiModCaseBootstrapDrawV1,
     ) -> Result<RawHeterogeneityBootstrapEstimateV2, MultiModRefitFailureV1> {
-        if (self.should_cancel)() {
-            return Err(MultiModRefitFailureV1 {
-                code: "cancelled".into(),
-                message: "heterogeneity bootstrap was cancelled".into(),
-            });
-        }
         let indices = draw
             .source_rows
             .iter()
@@ -12663,7 +12711,11 @@ where
             || (self.should_cancel)(),
         )
         .map_err(|error| MultiModRefitFailureV1 {
-            code: "fit_failed".into(),
+            code: if matches!(&error, EstimationError::Cancelled) {
+                "cancelled".into()
+            } else {
+                "fit_failed".into()
+            },
             message: format!("bootstrap dataset projection failed: {error}"),
         })?;
         let seed = heterogeneity_bootstrap_replicate_seed_v2(
@@ -12681,7 +12733,7 @@ where
             self.should_cancel,
         )
         .map_err(|error| MultiModRefitFailureV1 {
-            code: if matches!(&error, MultiModRunnerErrorV1::Cancelled) {
+            code: if matches!(&error, MultiModRunnerErrorV1::Cancelled) || (self.should_cancel)() {
                 "cancelled".into()
             } else {
                 "fit_failed".into()
@@ -12723,22 +12775,414 @@ where
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn raw_heterogeneity_bootstrap_v2<C, P>(
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedRawHeterogeneityBootstrapReferenceV2 {
+    pub method_version: String,
+    pub dataset_fingerprint: String,
+    pub compilation_identity_sha256: String,
+    pub config_identity_sha256: String,
+    pub point_pass_identity_sha256: String,
+    pub pooled_metric_sha256: String,
+    pub complete_source_row_tokens: Vec<u64>,
+    pub algorithm: CoreHeterogeneityAlgorithmV2,
+    pub k: u8,
+    pub use_pooled_common_metric: bool,
+    pub heterogeneity_plan: HeterogeneityBootstrapPlanV2,
+    pub orchestrator_plan: MultiModBootstrapPlanV1,
+    pub reference_assignments: Vec<usize>,
+    pub reference_target_ids: Vec<String>,
+    pub reference_parameter_identity_sha256: String,
+    pub reference_fit_statistic: f64,
+    pub reference_identity_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedRawHeterogeneityBootstrapExecutionV2 {
+    pub method_version: String,
+    pub dataset_fingerprint: String,
+    pub compilation_identity_sha256: String,
+    pub raw_preparation_receipt: RawHeterogeneityPreparationReceiptV2,
+    pub prepared_point: PreparedHeterogeneityExecutionV2,
+    pub point_pass: PreparedHeterogeneityPointPassV2,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub common_metric_evidence: Option<PreparedPosCommonMetricEvidenceV1>,
+    pub reference: PreparedRawHeterogeneityBootstrapReferenceV2,
+    pub execution_identity_sha256: String,
+}
+
+fn raw_heterogeneity_reference_scientific_identity_v2(
+    reference: &PreparedRawHeterogeneityBootstrapReferenceV2,
+) -> String {
+    sha256_serialized(&(
+        reference.method_version.as_str(),
+        reference.dataset_fingerprint.as_str(),
+        reference.compilation_identity_sha256.as_str(),
+        reference.config_identity_sha256.as_str(),
+        reference.point_pass_identity_sha256.as_str(),
+        reference.pooled_metric_sha256.as_str(),
+        reference.complete_source_row_tokens.as_slice(),
+        reference.algorithm,
+        reference.k,
+        reference.use_pooled_common_metric,
+        reference.reference_assignments.as_slice(),
+        reference.reference_target_ids.as_slice(),
+        reference.reference_parameter_identity_sha256.as_str(),
+        reference.reference_fit_statistic.to_bits(),
+    ))
+}
+
+fn raw_heterogeneity_reference_identity_v2(
+    reference: &PreparedRawHeterogeneityBootstrapReferenceV2,
+) -> String {
+    sha256_serialized(&(
+        raw_heterogeneity_reference_scientific_identity_v2(reference),
+        &reference.heterogeneity_plan,
+        &reference.orchestrator_plan,
+    ))
+}
+
+impl PreparedRawHeterogeneityBootstrapReferenceV2 {
+    fn ensure_valid(
+        &self,
+        dataset: &Dataset,
+        artifact: &CompiledMultiModRecipeV1,
+        config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
+        source_row_tokens: &[u64],
+    ) -> Result<(), String> {
+        let bootstrap = config.bootstrap.as_ref().ok_or_else(|| {
+            "resumable heterogeneity reference requires bootstrap settings".to_string()
+        })?;
+        let lock = match &config.phase {
+            qpls_core::HeterogeneityPhaseV2::Inference { lock } => lock,
+            qpls_core::HeterogeneityPhaseV2::Discovery { .. } => {
+                return Err(
+                    "resumable heterogeneity reference requires a locked inference phase".into(),
+                );
+            }
+        };
+        if self.method_version != "qpls.heterogeneity.bootstrap-reference.v2"
+            || self.dataset_fingerprint != dataset.fingerprint.0
+            || self.compilation_identity_sha256 != artifact.receipt().analytical_identity_sha256
+            || self.config_identity_sha256 != sha256_serialized(config)
+            || !is_lower_hex_sha256_v1(&self.point_pass_identity_sha256)
+            || !is_lower_hex_sha256_v1(&self.pooled_metric_sha256)
+            || !is_lower_hex_sha256_v1(&self.reference_parameter_identity_sha256)
+            || self.complete_source_row_tokens != source_row_tokens
+            || self.algorithm != lock.selected_algorithm
+            || self.k != lock.selected_k
+            || self.reference_assignments.len() != source_row_tokens.len()
+            || self
+                .reference_assignments
+                .iter()
+                .any(|class| *class >= usize::from(self.k))
+            || (0..usize::from(self.k)).any(|class| !self.reference_assignments.contains(&class))
+            || !self.reference_fit_statistic.is_finite()
+            || self.reference_target_ids.is_empty()
+            || self
+                .reference_target_ids
+                .iter()
+                .collect::<BTreeSet<_>>()
+                .len()
+                != self.reference_target_ids.len()
+            || self.reference_target_ids.iter().any(|target| {
+                target_suffix_v2(target).is_none()
+                    || target
+                        .split_once(':')
+                        .and_then(|(prefix, _)| prefix.rsplit_once('_'))
+                        .and_then(|(_, class)| class.parse::<u8>().ok())
+                        .is_none_or(|class| class == 0 || class > self.k)
+            })
+        {
+            return Err("resumable heterogeneity reference differs from its compiler, data, lock, row, or target authority".into());
+        }
+        let expected_plan = HeterogeneityBootstrapPlanV2 {
+            algorithm: heterogeneity_bootstrap_algorithm(self.algorithm),
+            fixed_classes_or_segments: usize::from(self.k),
+            requested_replicates: bootstrap.resamples as usize,
+            master_seed: bootstrap.seed,
+            confidence_level: bootstrap.confidence_level,
+            minimum_usable_share: 0.90,
+        };
+        if self.heterogeneity_plan != expected_plan
+            || self.orchestrator_plan.schema_version != MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1
+            || self.orchestrator_plan.requested_replicates != bootstrap.resamples
+            || self.orchestrator_plan.master_seed != bootstrap.seed
+            || self.orchestrator_plan.minimum_usable_fraction.to_bits() != 0.90f64.to_bits()
+            || self.orchestrator_plan.scientific_refit_identity_sha256
+                != raw_heterogeneity_reference_scientific_identity_v2(self)
+            || self.orchestrator_plan.ensure_valid().is_err()
+            || !is_lower_hex_sha256_v1(&self.reference_identity_sha256)
+            || self.reference_identity_sha256 != raw_heterogeneity_reference_identity_v2(self)
+        {
+            return Err(
+                "resumable heterogeneity reference has an invalid bootstrap plan or identity"
+                    .into(),
+            );
+        }
+        Ok(())
+    }
+}
+
+fn raw_heterogeneity_execution_identity_v2(
+    execution: &PreparedRawHeterogeneityBootstrapExecutionV2,
+) -> String {
+    sha256_serialized(&(
+        execution.method_version.as_str(),
+        execution.dataset_fingerprint.as_str(),
+        execution.compilation_identity_sha256.as_str(),
+        &execution.raw_preparation_receipt,
+        &execution.prepared_point,
+        &execution.point_pass,
+        execution.common_metric_evidence.as_ref(),
+        &execution.reference,
+    ))
+}
+
+impl PreparedRawHeterogeneityBootstrapExecutionV2 {
+    pub fn ensure_valid(
+        &self,
+        dataset: &Dataset,
+        artifact: &CompiledMultiModRecipeV1,
+        config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
+        source_row_tokens: &[u64],
+        general_sem_plan_sha256: &str,
+    ) -> Result<(), String> {
+        if self.method_version != "qpls.heterogeneity.raw-bootstrap-execution.v2"
+            || self.dataset_fingerprint != dataset.fingerprint.0
+            || self.compilation_identity_sha256 != artifact.receipt().analytical_identity_sha256
+            || !is_lower_hex_sha256_v1(&self.execution_identity_sha256)
+            || self.execution_identity_sha256 != raw_heterogeneity_execution_identity_v2(self)
+            || self.raw_preparation_receipt.pooled_metric_sha256
+                != self.prepared_point.fimix_input.metric.source_sha256
+            || self.raw_preparation_receipt.fimix_input != self.prepared_point.fimix_input
+        {
+            return Err("prepared raw heterogeneity bootstrap execution differs from its data, compiler, metric, or identity".into());
+        }
+        self.raw_preparation_receipt.ensure_valid()?;
+        self.raw_preparation_receipt.ensure_matches_live_authority(
+            dataset.batch.num_rows(),
+            source_row_tokens,
+            general_sem_plan_sha256,
+        )?;
+        self.point_pass
+            .ensure_valid(artifact, config, &self.prepared_point)?;
+        self.reference
+            .ensure_valid(dataset, artifact, config, source_row_tokens)?;
+        let locked = self.point_pass.locked.as_ref().ok_or_else(|| {
+            "prepared raw bootstrap execution omitted its locked point".to_string()
+        })?;
+        let expected_common = self
+            .common_metric_evidence
+            .as_ref()
+            .map(|evidence| {
+                evidence.ensure_valid()?;
+                Ok::<_, String>((
+                    evidence.gate_input.clone(),
+                    evidence.common_metric_parameters.clone(),
+                    evidence.micom_pairs.clone(),
+                ))
+            })
+            .transpose()?;
+        let prepared_common = self
+            .prepared_point
+            .pos_common_metric_gate
+            .clone()
+            .map(|gate| {
+                (
+                    gate,
+                    self.prepared_point.pos_common_metric_parameters.clone(),
+                    self.prepared_point.pos_common_metric_micom_pairs.clone(),
+                )
+            });
+        if expected_common != prepared_common
+            || self.reference.point_pass_identity_sha256
+                != self.point_pass.point_pass_identity_sha256
+            || self.reference.pooled_metric_sha256
+                != self.prepared_point.fimix_input.metric.source_sha256
+            || self.reference.algorithm != locked.algorithm
+            || self.reference.k != locked.k
+            || self.reference.reference_assignments != locked.assignments
+            || self.reference.reference_fit_statistic.to_bits() != locked.fit_statistic.to_bits()
+        {
+            return Err("prepared raw bootstrap reference is not owned by the retained point/common-metric pass".into());
+        }
+        let use_common = self
+            .prepared_point
+            .pos_common_metric_gate
+            .as_ref()
+            .is_some_and(|gate| {
+                evaluate_pos_common_metric_gate_v1(gate).status
+                    == PosCommonMetricGateStatusV1::Passed
+            });
+        let expected_targets = if use_common {
+            &self.prepared_point.pos_common_metric_parameters
+        } else {
+            &locked.local_parameters
+        }
+        .iter()
+        .map(|row| row.parameter.target_id.clone())
+        .collect::<Vec<_>>();
+        if self.reference.use_pooled_common_metric != use_common
+            || self.reference.reference_target_ids != expected_targets
+            || self.reference.reference_parameter_identity_sha256
+                != sha256_serialized(if use_common {
+                    &self.prepared_point.pos_common_metric_parameters
+                } else {
+                    &locked.local_parameters
+                })
+        {
+            return Err("prepared raw bootstrap reference target metric differs from the common-metric gate".into());
+        }
+        Ok(())
+    }
+}
+
+/// Executes and freezes the single point pass used by common-metric evidence,
+/// every bootstrap shard, and final result assembly. No bootstrap draw is run
+/// by this preparation step.
+pub fn prepare_compiled_raw_pls_heterogeneity_bootstrap_v2<C, P>(
     dataset: &Dataset,
-    authority: &RawHeterogeneityAuthorityV2,
-    config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
-    algorithm: CoreHeterogeneityAlgorithmV2,
-    k: u8,
-    bootstrap: &qpls_core::SegmentationBootstrapV2,
-    prepared_point: &PreparedHeterogeneityExecutionV2,
-    should_cancel: &C,
-    progress: &P,
-) -> Result<PreparedHeterogeneityBootstrapV2, MultiModRunnerErrorV1>
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    should_cancel: C,
+    progress: P,
+) -> Result<PreparedRawHeterogeneityBootstrapExecutionV2, MultiModRunnerErrorV1>
 where
     C: Fn() -> bool + Sync,
     P: Fn(MultiModRunnerProgressV1) + Sync,
 {
+    if should_cancel() {
+        return Err(MultiModRunnerErrorV1::Cancelled);
+    }
+    validate_authority(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    let config = recipe.pls_heterogeneity.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::Authority(
+            "heterogeneity configuration disappeared after compilation".into(),
+        )
+    })?;
+    let bootstrap = config.bootstrap.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::Authority(
+            "resumable heterogeneity preparation requires bootstrap settings".into(),
+        )
+    })?;
+    let lock = match &config.phase {
+        qpls_core::HeterogeneityPhaseV2::Inference { lock } => lock,
+        qpls_core::HeterogeneityPhaseV2::Discovery { .. } => {
+            return Err(MultiModRunnerErrorV1::Authority(
+                "resumable heterogeneity preparation requires a locked inference phase".into(),
+            ));
+        }
+    };
+    let CompiledMultiModPlanV1::PlsHeterogeneityV2 {
+        profile,
+        algorithms,
+        candidate_k,
+        ..
+    } = artifact.plan()
+    else {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "compiled plan is not PLS heterogeneity V2".into(),
+        ));
+    };
+    if profile != &config.profile
+        || algorithms != &lock.discovery_algorithms
+        || candidate_k != &lock.discovery_candidate_k
+    {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "multimod.runner.heterogeneity.lock_compiler_inventory_mismatch".into(),
+        ));
+    }
+    let predicted_sidecar_bytes = predict_heterogeneity_sidecar_bytes_v2(
+        config,
+        dataset.batch.num_rows(),
+        multimod_model_target_upper_bound_v1(&[], model),
+    );
+    enforce_multimod_sidecar_cost_v1("heterogeneity", predicted_sidecar_bytes, &progress)?;
+    report(
+        &progress,
+        MultiModRunnerPhaseV1::PreparingPointInputs,
+        0,
+        1,
+        "heterogeneity:raw_projection",
+    );
+    let authority = projected_heterogeneity_authority_v2(dataset, recipe, model, artifact)?;
+    let (complete_dataset, source_row_tokens) =
+        complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, &should_cancel)?;
+    let (mut prepared_point, pooled_fit, raw_scores, orientation_rows) =
+        prepare_raw_heterogeneity_execution_v2(
+            &complete_dataset,
+            &authority,
+            config.profile,
+            &should_cancel,
+        )?;
+    let mut refitter = RawPlsPosRefitterV2 {
+        dataset: &complete_dataset,
+        authority: &authority,
+        profile: config.profile,
+        pooled_fit: &pooled_fit,
+        raw_scores: &raw_scores,
+        orientation_rows: &orientation_rows,
+        retain_outcome_audits: true,
+        should_cancel: &should_cancel,
+    };
+    let point_pass = execute_heterogeneity_point_pass_v2(
+        artifact,
+        config,
+        algorithms,
+        candidate_k,
+        &prepared_point,
+        &mut refitter,
+        &should_cancel,
+        &progress,
+    )?;
+    let locked = point_pass.locked.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::ResultContract(
+            "locked heterogeneity point pass did not retain its selected candidate".into(),
+        )
+    })?;
+
+    let common_metric_evidence = if config
+        .pos_common_metric
+        .as_ref()
+        .is_some_and(|gate| gate.request_segment_contrasts)
+    {
+        if matches!(locked.algorithm, CoreHeterogeneityAlgorithmV2::FimixPlsV2) {
+            return Err(MultiModRunnerErrorV1::Authority(
+                "POS common-metric contrasts cannot use a FIMIX lock".into(),
+            ));
+        }
+        let mut common_refitter = RawPlsPosRefitterV2 {
+            dataset: &complete_dataset,
+            authority: &authority,
+            profile: config.profile,
+            pooled_fit: &pooled_fit,
+            raw_scores: &raw_scores,
+            orientation_rows: &orientation_rows,
+            retain_outcome_audits: true,
+            should_cancel: &should_cancel,
+        };
+        let evidence = prepare_raw_pos_common_metric_v1(
+            &locked.assignments,
+            config,
+            &prepared_point,
+            &mut common_refitter,
+        )?;
+        prepared_point.pos_common_metric_gate = Some(evidence.gate_input.clone());
+        prepared_point.pos_common_metric_parameters = evidence.common_metric_parameters.clone();
+        prepared_point.pos_common_metric_micom_pairs = evidence.micom_pairs.clone();
+        Some(evidence)
+    } else {
+        None
+    };
     let use_pooled_common_metric =
         prepared_point
             .pos_common_metric_gate
@@ -12747,101 +13191,205 @@ where
                 evaluate_pos_common_metric_gate_v1(gate).status
                     == PosCommonMetricGateStatusV1::Passed
             });
-    let (reference_fit, reference_parameters) = fit_raw_locked_heterogeneity_v2(
-        dataset,
-        authority,
-        config,
-        algorithm,
-        k,
-        config.seed,
-        use_pooled_common_metric,
-        should_cancel,
-    )?;
+    let reference_parameters = if use_pooled_common_metric {
+        &prepared_point.pos_common_metric_parameters
+    } else {
+        &locked.local_parameters
+    };
     let reference_target_ids = reference_parameters
         .iter()
         .map(|row| row.parameter.target_id.clone())
         .collect::<Vec<_>>();
-    if reference_target_ids.iter().collect::<BTreeSet<_>>().len() != reference_target_ids.len() {
-        return Err(MultiModRunnerErrorV1::ResultContract(
-            "locked heterogeneity target identities are duplicated".into(),
-        ));
-    }
     let heterogeneity_plan = HeterogeneityBootstrapPlanV2 {
-        algorithm: heterogeneity_bootstrap_algorithm(algorithm),
-        fixed_classes_or_segments: k as usize,
+        algorithm: heterogeneity_bootstrap_algorithm(locked.algorithm),
+        fixed_classes_or_segments: usize::from(locked.k),
         requested_replicates: bootstrap.resamples as usize,
         master_seed: bootstrap.seed,
         confidence_level: bootstrap.confidence_level,
         minimum_usable_share: 0.90,
     };
-    let scientific_refit_identity_sha256 = sha256_serialized(&(
-        authority.plan.deterministic_sha256(),
-        config.profile,
-        algorithm,
-        k,
-        &prepared_point.fimix_input.metric.source_sha256,
-        &reference_target_ids,
-        match &config.phase {
-            qpls_core::HeterogeneityPhaseV2::Inference { lock } => Some((
-                lock.discovery_result_identity_sha256.as_str(),
-                lock.tandem_fimix_same_k_start_required,
-            )),
-            qpls_core::HeterogeneityPhaseV2::Discovery { .. } => None,
-        },
-    ));
-    let orchestrator_plan = MultiModBootstrapPlanV1 {
-        schema_version: MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1,
-        scientific_refit_identity_sha256,
-        requested_replicates: bootstrap.resamples,
-        master_seed: bootstrap.seed,
-        minimum_usable_fraction: 0.90,
-    };
-    let mut callback = RawHeterogeneityBootstrapCallbackV2 {
-        dataset,
-        authority,
-        config,
-        algorithm,
-        k,
-        bootstrap_plan: &heterogeneity_plan,
-        reference_assignments: reference_fit.assignments(),
-        reference_target_ids: &reference_target_ids,
+    let mut reference = PreparedRawHeterogeneityBootstrapReferenceV2 {
+        method_version: "qpls.heterogeneity.bootstrap-reference.v2".into(),
+        dataset_fingerprint: dataset.fingerprint.0.clone(),
+        compilation_identity_sha256: artifact.receipt().analytical_identity_sha256.clone(),
+        config_identity_sha256: sha256_serialized(config),
+        point_pass_identity_sha256: point_pass.point_pass_identity_sha256.clone(),
+        pooled_metric_sha256: prepared_point.fimix_input.metric.source_sha256.clone(),
+        complete_source_row_tokens: source_row_tokens.clone(),
+        algorithm: locked.algorithm,
+        k: locked.k,
         use_pooled_common_metric,
-        should_cancel,
-    };
-    report(
-        progress,
-        MultiModRunnerPhaseV1::Resampling,
-        0,
-        u64::from(bootstrap.resamples),
-        "heterogeneity:fixed_k_bootstrap",
-    );
-    let cache = run_multimod_case_bootstrap_shard_v1(
-        &orchestrator_plan,
-        dataset.batch.num_rows(),
-        None,
-        MultiModShardSpecV1 {
-            shard_index: 0,
-            shard_count: 1,
+        heterogeneity_plan,
+        orchestrator_plan: MultiModBootstrapPlanV1 {
+            schema_version: MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1,
+            scientific_refit_identity_sha256: "0".repeat(64),
+            requested_replicates: bootstrap.resamples,
+            master_seed: bootstrap.seed,
+            minimum_usable_fraction: 0.90,
         },
+        reference_assignments: locked.assignments.clone(),
+        reference_target_ids,
+        reference_parameter_identity_sha256: sha256_serialized(reference_parameters),
+        reference_fit_statistic: locked.fit_statistic,
+        reference_identity_sha256: String::new(),
+    };
+    reference.orchestrator_plan.scientific_refit_identity_sha256 =
+        raw_heterogeneity_reference_scientific_identity_v2(&reference);
+    reference.reference_identity_sha256 = raw_heterogeneity_reference_identity_v2(&reference);
+    let raw_preparation_receipt = RawHeterogeneityPreparationReceiptV2 {
+        method_version: "qpls.heterogeneity.raw-preparation.v2".into(),
+        general_sem_plan_sha256: authority.plan.deterministic_sha256(),
+        pooled_metric_sha256: prepared_point.fimix_input.metric.source_sha256.clone(),
+        omitted_source_rows: dataset
+            .batch
+            .num_rows()
+            .saturating_sub(source_row_tokens.len()),
+        source_row_tokens,
+        unique_analysis_positions: true,
+        fimix_input: prepared_point.fimix_input.clone(),
+    };
+    let mut execution = PreparedRawHeterogeneityBootstrapExecutionV2 {
+        method_version: "qpls.heterogeneity.raw-bootstrap-execution.v2".into(),
+        dataset_fingerprint: dataset.fingerprint.0.clone(),
+        compilation_identity_sha256: artifact.receipt().analytical_identity_sha256.clone(),
+        raw_preparation_receipt,
+        prepared_point,
+        point_pass,
+        common_metric_evidence,
+        reference,
+        execution_identity_sha256: String::new(),
+    };
+    execution.execution_identity_sha256 = raw_heterogeneity_execution_identity_v2(&execution);
+    execution
+        .ensure_valid(
+            dataset,
+            artifact,
+            config,
+            &execution.reference.complete_source_row_tokens,
+            &authority.plan.deterministic_sha256(),
+        )
+        .map_err(MultiModRunnerErrorV1::ResultContract)?;
+    Ok(execution)
+}
+
+/// Executes or resumes one exact modulo-owned bootstrap shard. The returned
+/// cache is always app-owned and serializable; the runner performs no durable
+/// writes. `cancelled=true` means an in-flight attempt was interrupted and no
+/// record was committed for that replicate.
+#[allow(clippy::too_many_arguments)]
+pub fn run_prepared_raw_pls_heterogeneity_bootstrap_shard_v2<C, P>(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    execution: &PreparedRawHeterogeneityBootstrapExecutionV2,
+    shard: MultiModShardSpecV1,
+    resume: Option<RawHeterogeneityBootstrapShardCacheV2>,
+    should_cancel: C,
+    progress: P,
+) -> Result<RawHeterogeneityBootstrapShardCacheV2, MultiModRunnerErrorV1>
+where
+    C: Fn() -> bool + Sync,
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
+    validate_authority(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    let config = recipe.pls_heterogeneity.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::Authority(
+            "heterogeneity configuration disappeared after compilation".into(),
+        )
+    })?;
+    let authority = projected_heterogeneity_authority_v2(dataset, recipe, model, artifact)?;
+    let (complete_dataset, source_row_tokens) =
+        complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, &should_cancel)?;
+    execution
+        .ensure_valid(
+            dataset,
+            artifact,
+            config,
+            &source_row_tokens,
+            &authority.plan.deterministic_sha256(),
+        )
+        .map_err(MultiModRunnerErrorV1::PreparedInput)?;
+    let initial_completed = resume.as_ref().map_or(0, |cache| cache.records.len()) as u64;
+    report(
+        &progress,
+        MultiModRunnerPhaseV1::Resampling,
+        initial_completed,
+        u64::from(execution.reference.orchestrator_plan.requested_replicates),
+        format!(
+            "heterogeneity:fixed_k_bootstrap:shard_{}/{}",
+            shard.shard_index, shard.shard_count
+        ),
+    );
+    let mut callback = RawHeterogeneityBootstrapCallbackV2 {
+        dataset: &complete_dataset,
+        authority: &authority,
+        config,
+        algorithm: execution.reference.algorithm,
+        k: execution.reference.k,
+        bootstrap_plan: &execution.reference.heterogeneity_plan,
+        reference_assignments: &execution.reference.reference_assignments,
+        reference_target_ids: &execution.reference.reference_target_ids,
+        use_pooled_common_metric: execution.reference.use_pooled_common_metric,
+        should_cancel: &should_cancel,
+    };
+    let cache = run_multimod_case_bootstrap_shard_interruptible_v1(
+        &execution.reference.orchestrator_plan,
+        complete_dataset.batch.num_rows(),
         None,
+        shard,
+        resume,
         &mut callback,
         || should_cancel(),
     )
     .map_err(|error| MultiModRunnerErrorV1::InvalidLedger(error.to_string()))?;
-    if cache.cancelled || should_cancel() {
-        return Err(MultiModRunnerErrorV1::Cancelled);
+    report(
+        &progress,
+        MultiModRunnerPhaseV1::Resampling,
+        cache.records.len() as u64,
+        u64::from(execution.reference.orchestrator_plan.requested_replicates),
+        format!(
+            "heterogeneity:fixed_k_bootstrap:shard_{}/{}",
+            shard.shard_index, shard.shard_count
+        ),
+    );
+    Ok(cache)
+}
+
+fn prepared_heterogeneity_bootstrap_from_final_ledger_v2(
+    reference: &PreparedRawHeterogeneityBootstrapReferenceV2,
+    ledger: MultiModFinalLedgerV1<MultiModCaseBootstrapDrawV1, RawHeterogeneityBootstrapEstimateV2>,
+) -> Result<PreparedHeterogeneityBootstrapV2, MultiModRunnerErrorV1> {
+    let requested = reference.orchestrator_plan.requested_replicates as usize;
+    if !ledger.complete
+        || ledger.requested as usize != requested
+        || ledger.records.len() != requested
+    {
+        return Err(MultiModRunnerErrorV1::InvalidLedger(
+            "global heterogeneity bootstrap ledger is incomplete".into(),
+        ));
     }
-    let mut targets = reference_target_ids
+    let mut targets = reference
+        .reference_target_ids
         .iter()
         .map(|target_id| PreparedHeterogeneityBootstrapTargetV2 {
             target_id: target_id.clone(),
-            estimates: vec![None; bootstrap.resamples as usize],
+            estimates: vec![None; requested],
         })
         .collect::<Vec<_>>();
-    let mut entries = Vec::with_capacity(cache.records.len());
-    for record in cache.records {
+    let mut entries = Vec::with_capacity(requested);
+    for record in ledger.records {
         let replicate_index = record.index as usize;
-        let seed = heterogeneity_bootstrap_replicate_seed_v2(&heterogeneity_plan, replicate_index);
+        let seed = heterogeneity_bootstrap_replicate_seed_v2(
+            &reference.heterogeneity_plan,
+            replicate_index,
+        );
         match record.outcome {
             MultiModRefitOutcomeV1::Success { value, .. } => {
                 if value.target_values.len() != targets.len()
@@ -12880,7 +13428,9 @@ where
             }
             MultiModRefitOutcomeV1::Failed { failure, .. } => {
                 let status = match failure.code.as_str() {
-                    "label_ambiguous" => qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::LabelAmbiguous,
+                    "label_ambiguous" => {
+                        qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::LabelAmbiguous
+                    }
                     "label_not_mutual_majority" => qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::LabelNotMutualMajority,
                     "nonfinite_target" | "target_identity" => qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::NonFiniteTarget,
                     "cancelled" => qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::Cancelled,
@@ -12899,42 +13449,110 @@ where
         }
     }
     entries.sort_by_key(|entry| entry.replicate_index);
-    report(
-        progress,
-        MultiModRunnerPhaseV1::Resampling,
-        u64::from(bootstrap.resamples),
-        u64::from(bootstrap.resamples),
-        "heterogeneity:fixed_k_bootstrap",
-    );
     let prepared = PreparedHeterogeneityBootstrapV2 {
         entries,
         targets,
         complete_stage_one_and_segmentation_rerun: true,
-        pooled_common_metric_refit_repeated: use_pooled_common_metric,
+        pooled_common_metric_refit_repeated: reference.use_pooled_common_metric,
         exhaustive_label_alignment_applied: true,
     };
     let retained_k = prepared
         .ensure_valid()
         .map_err(MultiModRunnerErrorV1::InvalidLedger)?;
-    if retained_k != usize::from(k) {
+    if retained_k != usize::from(reference.k) {
         return Err(MultiModRunnerErrorV1::InvalidLedger(format!(
-            "heterogeneity bootstrap retained K={retained_k}, expected K={k}"
+            "heterogeneity bootstrap retained K={retained_k}, expected K={}",
+            reference.k
         )));
     }
     Ok(prepared)
+}
+
+/// Finalizes all exact shards through the global V1 ledger gate, then assembles
+/// the existing public V2 result from retained point/common-metric evidence.
+/// This function performs no FIMIX, PLS-POS, MICOM, or bootstrap estimator fit.
+#[allow(clippy::too_many_arguments)]
+pub fn finalize_prepared_raw_pls_heterogeneity_bootstrap_v2<P>(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    execution: &PreparedRawHeterogeneityBootstrapExecutionV2,
+    shards: Vec<RawHeterogeneityBootstrapShardCacheV2>,
+    progress: P,
+) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
+where
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
+    validate_authority(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    let config = recipe.pls_heterogeneity.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::Authority(
+            "heterogeneity configuration disappeared after compilation".into(),
+        )
+    })?;
+    let authority = projected_heterogeneity_authority_v2(dataset, recipe, model, artifact)?;
+    let (complete_dataset, source_row_tokens) =
+        complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, &|| false)?;
+    execution
+        .ensure_valid(
+            dataset,
+            artifact,
+            config,
+            &source_row_tokens,
+            &authority.plan.deterministic_sha256(),
+        )
+        .map_err(MultiModRunnerErrorV1::PreparedInput)?;
+    let ledger = finalize_multimod_case_bootstrap_v1(
+        &execution.reference.orchestrator_plan,
+        complete_dataset.batch.num_rows(),
+        None,
+        shards,
+    )
+    .map_err(|error| MultiModRunnerErrorV1::InvalidLedger(error.to_string()))?;
+    let prepared_bootstrap =
+        prepared_heterogeneity_bootstrap_from_final_ledger_v2(&execution.reference, ledger)?;
+    let mut prepared_point = execution.prepared_point.clone();
+    prepared_point.bootstrap = Some(prepared_bootstrap);
+    let mut output = assemble_heterogeneity_result_from_point_pass_v2(
+        artifact,
+        config,
+        &prepared_point,
+        &execution.point_pass,
+        &progress,
+    )?;
+    output.evidence.insert(
+        0,
+        MultiModRunnerEvidenceV1::HeterogeneityRawPreparation(
+            execution.raw_preparation_receipt.clone(),
+        ),
+    );
+    if let Some(evidence) = &execution.common_metric_evidence {
+        output
+            .evidence
+            .push(MultiModRunnerEvidenceV1::HeterogeneityPosCommonMetric(
+                evidence.clone(),
+            ));
+    }
+    Ok(output)
 }
 
 /// Executes the complete raw-data FIMIX/PLS-POS V2 point pipeline. The
 /// lower-level prepared entry point remains available for independent oracle
 /// adapters, while this path derives every score, product, signature, and
 /// fixed-K resample from the compiled Recipe V4 authority itself.
-pub fn run_compiled_raw_pls_heterogeneity_v2<C, P>(
+fn run_compiled_raw_pls_heterogeneity_point_only_v2<C, P>(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
     model: &SemModelV4,
     artifact: &CompiledMultiModRecipeV1,
-    should_cancel: C,
-    progress: P,
+    should_cancel: &C,
+    progress: &P,
 ) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
 where
     C: Fn() -> bool + Sync,
@@ -12960,9 +13578,9 @@ where
         dataset.batch.num_rows(),
         multimod_model_target_upper_bound_v1(&[], model),
     );
-    enforce_multimod_sidecar_cost_v1("heterogeneity", predicted_sidecar_bytes, &progress)?;
+    enforce_multimod_sidecar_cost_v1("heterogeneity", predicted_sidecar_bytes, progress)?;
     report(
-        &progress,
+        progress,
         MultiModRunnerPhaseV1::PreparingPointInputs,
         0,
         1,
@@ -12970,85 +13588,14 @@ where
     );
     let authority = projected_heterogeneity_authority_v2(dataset, recipe, model, artifact)?;
     let (complete_dataset, source_row_tokens) =
-        complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, &should_cancel)?;
-    let (mut prepared, pooled_fit, raw_scores, orientation_rows) =
+        complete_heterogeneity_dataset_v2(dataset, &authority.source_columns, should_cancel)?;
+    let (prepared, pooled_fit, raw_scores, orientation_rows) =
         prepare_raw_heterogeneity_execution_v2(
             &complete_dataset,
             &authority,
             config.profile,
-            &should_cancel,
+            should_cancel,
         )?;
-    let mut common_metric_evidence = None;
-    if config
-        .pos_common_metric
-        .as_ref()
-        .is_some_and(|gate| gate.request_segment_contrasts)
-    {
-        let lock = match &config.phase {
-            qpls_core::HeterogeneityPhaseV2::Inference { lock } => lock,
-            qpls_core::HeterogeneityPhaseV2::Discovery { .. } => {
-                return Err(MultiModRunnerErrorV1::Authority(
-                    "POS common-metric contrasts require a locked inference phase".into(),
-                ));
-            }
-        };
-        let (locked_fit, _) = fit_raw_locked_heterogeneity_v2(
-            &complete_dataset,
-            &authority,
-            config,
-            lock.selected_algorithm,
-            lock.selected_k,
-            config.seed,
-            false,
-            &should_cancel,
-        )?;
-        let RawLockedHeterogeneityFitV2::Pos(locked_pos) = locked_fit else {
-            return Err(MultiModRunnerErrorV1::Authority(
-                "POS common-metric contrasts cannot use a FIMIX lock".into(),
-            ));
-        };
-        let mut common_refitter = RawPlsPosRefitterV2 {
-            dataset: &complete_dataset,
-            authority: &authority,
-            profile: config.profile,
-            pooled_fit: &pooled_fit,
-            raw_scores: &raw_scores,
-            orientation_rows: &orientation_rows,
-            retain_outcome_audits: true,
-            should_cancel: &should_cancel,
-        };
-        let evidence = prepare_raw_pos_common_metric_v1(
-            &locked_pos.assignments,
-            config,
-            &prepared,
-            &mut common_refitter,
-        )?;
-        prepared.pos_common_metric_gate = Some(evidence.gate_input.clone());
-        prepared.pos_common_metric_parameters = evidence.common_metric_parameters.clone();
-        prepared.pos_common_metric_micom_pairs = evidence.micom_pairs.clone();
-        common_metric_evidence = Some(evidence);
-    }
-    if let Some(bootstrap) = &config.bootstrap {
-        let lock = match &config.phase {
-            qpls_core::HeterogeneityPhaseV2::Inference { lock } => lock,
-            qpls_core::HeterogeneityPhaseV2::Discovery { .. } => {
-                return Err(MultiModRunnerErrorV1::Authority(
-                    "heterogeneity bootstrap requires a locked algorithm and K".into(),
-                ));
-            }
-        };
-        prepared.bootstrap = Some(raw_heterogeneity_bootstrap_v2(
-            &complete_dataset,
-            &authority,
-            config,
-            lock.selected_algorithm,
-            lock.selected_k,
-            bootstrap,
-            &prepared,
-            &should_cancel,
-            &progress,
-        )?);
-    }
     let mut refitter = RawPlsPosRefitterV2 {
         dataset: &complete_dataset,
         authority: &authority,
@@ -13057,7 +13604,7 @@ where
         raw_scores: &raw_scores,
         orientation_rows: &orientation_rows,
         retain_outcome_audits: true,
-        should_cancel: &should_cancel,
+        should_cancel,
     };
     let mut output = run_compiled_pls_heterogeneity_v2(
         dataset,
@@ -13066,16 +13613,9 @@ where
         artifact,
         &prepared,
         &mut refitter,
-        &should_cancel,
-        &progress,
+        should_cancel,
+        progress,
     )?;
-    if let Some(evidence) = common_metric_evidence {
-        output
-            .evidence
-            .push(MultiModRunnerEvidenceV1::HeterogeneityPosCommonMetric(
-                evidence,
-            ));
-    }
     let raw_receipt = RawHeterogeneityPreparationReceiptV2 {
         method_version: "qpls.heterogeneity.raw-preparation.v2".into(),
         general_sem_plan_sha256: authority.plan.deterministic_sha256(),
@@ -13096,6 +13636,69 @@ where
         MultiModRunnerEvidenceV1::HeterogeneityRawPreparation(raw_receipt),
     );
     Ok(output)
+}
+
+pub fn run_compiled_raw_pls_heterogeneity_v2<C, P>(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    should_cancel: C,
+    progress: P,
+) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
+where
+    C: Fn() -> bool + Sync,
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
+    if recipe
+        .pls_heterogeneity
+        .as_ref()
+        .is_some_and(|config| config.bootstrap.is_none())
+    {
+        return run_compiled_raw_pls_heterogeneity_point_only_v2(
+            dataset,
+            recipe,
+            model,
+            artifact,
+            &should_cancel,
+            &progress,
+        );
+    }
+    let execution = prepare_compiled_raw_pls_heterogeneity_bootstrap_v2(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        &should_cancel,
+        &progress,
+    )?;
+    let cache = run_prepared_raw_pls_heterogeneity_bootstrap_shard_v2(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        &execution,
+        MultiModShardSpecV1 {
+            shard_index: 0,
+            shard_count: 1,
+        },
+        None,
+        &should_cancel,
+        &progress,
+    );
+    let cache = cache?;
+    if cache.cancelled || should_cancel() {
+        return Err(MultiModRunnerErrorV1::Cancelled);
+    }
+    finalize_prepared_raw_pls_heterogeneity_bootstrap_v2(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        &execution,
+        vec![cache],
+        progress,
+    )
 }
 
 #[derive(Debug, Default)]
@@ -14236,9 +14839,56 @@ fn pos_parameters(
         .collect())
 }
 
-enum LockedHeterogeneityPointV2 {
-    Fimix(FimixPlsV2Result),
-    Pos(PlsPosV2Result),
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedFimixPointCandidateV2 {
+    pub k: u8,
+    pub result: FimixPlsV2Result,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedPosPointCandidateV2 {
+    pub algorithm: CoreHeterogeneityAlgorithmV2,
+    pub k: u8,
+    pub result: PlsPosV2Result,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
+pub enum PreparedHeterogeneityPointEvidenceOrderV2 {
+    Fimix {
+        k: u8,
+    },
+    PlsPos {
+        algorithm: CoreHeterogeneityAlgorithmV2,
+        k: u8,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedLockedHeterogeneityPointV2 {
+    pub algorithm: CoreHeterogeneityAlgorithmV2,
+    pub k: u8,
+    pub assignments: Vec<usize>,
+    pub fit_statistic: f64,
+    pub local_parameters: Vec<HeterogeneityClassParameterV2>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(deny_unknown_fields)]
+pub struct PreparedHeterogeneityPointPassV2 {
+    pub method_version: String,
+    pub candidates: Vec<HeterogeneityCandidateV2>,
+    pub discovery_result_identity_sha256: String,
+    pub pooled_baseline: PooledStructuralBaselineV2,
+    pub fimix_candidates: Vec<PreparedFimixPointCandidateV2>,
+    pub pos_candidates: Vec<PreparedPosPointCandidateV2>,
+    pub evidence_order: Vec<PreparedHeterogeneityPointEvidenceOrderV2>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<PreparedLockedHeterogeneityPointV2>,
+    pub point_pass_identity_sha256: String,
 }
 
 fn run_pos_candidate<R: PlsPosFullRefitterV2>(
@@ -14271,6 +14921,459 @@ fn run_pos_candidate<R: PlsPosFullRefitterV2>(
     }?;
     validate_pos_multistart_evidence_v2(&result)?;
     Ok(result)
+}
+
+fn heterogeneity_point_pass_identity_v2(point: &PreparedHeterogeneityPointPassV2) -> String {
+    sha256_serialized(&(
+        point.method_version.as_str(),
+        point.candidates.as_slice(),
+        point.discovery_result_identity_sha256.as_str(),
+        &point.pooled_baseline,
+        point.fimix_candidates.as_slice(),
+        point.pos_candidates.as_slice(),
+        point.evidence_order.as_slice(),
+        point.locked.as_ref(),
+    ))
+}
+
+impl PreparedHeterogeneityPointPassV2 {
+    fn evidence(&self) -> Vec<MultiModRunnerEvidenceV1> {
+        let mut evidence = vec![MultiModRunnerEvidenceV1::HeterogeneityPooledBaseline(
+            self.pooled_baseline.clone(),
+        )];
+        evidence.extend(self.evidence_order.iter().map(|identity| match identity {
+            PreparedHeterogeneityPointEvidenceOrderV2::Fimix { k } => {
+                let candidate = self
+                    .fimix_candidates
+                    .iter()
+                    .find(|candidate| candidate.k == *k)
+                    .expect("validated point evidence order");
+                MultiModRunnerEvidenceV1::FimixCandidate {
+                    k: *k,
+                    result: candidate.result.clone(),
+                }
+            }
+            PreparedHeterogeneityPointEvidenceOrderV2::PlsPos { algorithm, k } => {
+                let candidate = self
+                    .pos_candidates
+                    .iter()
+                    .find(|candidate| candidate.algorithm == *algorithm && candidate.k == *k)
+                    .expect("validated point evidence order");
+                MultiModRunnerEvidenceV1::PlsPosCandidate {
+                    k: *k,
+                    result: candidate.result.clone(),
+                }
+            }
+        }));
+        evidence
+    }
+
+    pub fn ensure_valid(
+        &self,
+        artifact: &CompiledMultiModRecipeV1,
+        config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
+        prepared: &PreparedHeterogeneityExecutionV2,
+    ) -> Result<(), String> {
+        if self.method_version != "qpls.heterogeneity.point-pass.v2"
+            || !is_lower_hex_sha256_v1(&self.discovery_result_identity_sha256)
+            || !is_lower_hex_sha256_v1(&self.point_pass_identity_sha256)
+            || self.point_pass_identity_sha256 != heterogeneity_point_pass_identity_v2(self)
+            || self.candidates.is_empty()
+        {
+            return Err("heterogeneity point pass has an invalid method or identity".into());
+        }
+        let CompiledMultiModPlanV1::PlsHeterogeneityV2 {
+            algorithms,
+            candidate_k,
+            ..
+        } = artifact.plan()
+        else {
+            return Err("heterogeneity point pass requires a heterogeneity artifact".into());
+        };
+        if self.candidates.len() != 1 + algorithms.len() * candidate_k.len()
+            || self.discovery_result_identity_sha256
+                != heterogeneity_discovery_result_identity_v2(
+                    artifact.receipt(),
+                    config,
+                    &self.candidates,
+                )
+        {
+            return Err("heterogeneity point pass candidate inventory or discovery identity differs from the compiled authority".into());
+        }
+        let expected_pooled =
+            pooled_baseline_candidate_v2(&self.pooled_baseline, &prepared.fimix_scientific_targets)
+                .map_err(|error| error.to_string())?;
+        if self.candidates.first() != Some(&expected_pooled) {
+            return Err("heterogeneity point pass pooled baseline evidence is inconsistent".into());
+        }
+
+        let requested = algorithms
+            .iter()
+            .flat_map(|algorithm| candidate_k.iter().map(move |k| (*algorithm, *k)))
+            .collect::<BTreeSet<_>>();
+        let mut evidenced = BTreeSet::new();
+        for candidate in &self.fimix_candidates {
+            let key = (CoreHeterogeneityAlgorithmV2::FimixPlsV2, candidate.k);
+            if !requested.contains(&key)
+                || !evidenced.insert(key)
+                || validate_fimix_multistart_evidence_v2(&candidate.result).is_err()
+                || !self.candidates.contains(&fimix_candidate(
+                    CoreHeterogeneityAlgorithmV2::FimixPlsV2,
+                    candidate.k,
+                    &candidate.result,
+                ))
+            {
+                return Err(
+                    "heterogeneity point pass has invalid or duplicate FIMIX evidence".into(),
+                );
+            }
+        }
+        for candidate in &self.pos_candidates {
+            let key = (candidate.algorithm, candidate.k);
+            if matches!(
+                candidate.algorithm,
+                CoreHeterogeneityAlgorithmV2::FimixPlsV2
+            ) || !requested.contains(&key)
+                || !evidenced.insert(key)
+                || validate_pos_multistart_evidence_v2(&candidate.result).is_err()
+                || !self.candidates.contains(&pos_candidate(
+                    candidate.algorithm,
+                    candidate.k,
+                    &candidate.result,
+                ))
+            {
+                return Err(
+                    "heterogeneity point pass has invalid or duplicate PLS-POS evidence".into(),
+                );
+            }
+        }
+        let stable = self
+            .candidates
+            .iter()
+            .filter_map(|candidate| match candidate.method {
+                HeterogeneityCandidateMethodV2::Segmentation { algorithm }
+                    if candidate.state == HeterogeneityCandidateStateV2::ConvergedStable =>
+                {
+                    Some((algorithm, candidate.k))
+                }
+                _ => None,
+            })
+            .collect::<BTreeSet<_>>();
+        let ordered_evidence = self
+            .evidence_order
+            .iter()
+            .map(|identity| match identity {
+                PreparedHeterogeneityPointEvidenceOrderV2::Fimix { k } => {
+                    (CoreHeterogeneityAlgorithmV2::FimixPlsV2, *k)
+                }
+                PreparedHeterogeneityPointEvidenceOrderV2::PlsPos { algorithm, k } => {
+                    (*algorithm, *k)
+                }
+            })
+            .collect::<Vec<_>>();
+        if stable != evidenced
+            || ordered_evidence.len() != evidenced.len()
+            || ordered_evidence.iter().copied().collect::<BTreeSet<_>>() != evidenced
+        {
+            return Err(
+                "heterogeneity point pass stable candidates and point evidence differ".into(),
+            );
+        }
+
+        match (&config.phase, &self.locked) {
+            (qpls_core::HeterogeneityPhaseV2::Discovery { .. }, None) => {}
+            (qpls_core::HeterogeneityPhaseV2::Inference { lock }, Some(locked)) => {
+                if locked.algorithm != lock.selected_algorithm
+                    || locked.k != lock.selected_k
+                    || locked.assignments.len() != prepared.fimix_input.metric.observation_count
+                    || locked
+                        .assignments
+                        .iter()
+                        .any(|class| *class >= usize::from(locked.k))
+                    || !locked.fit_statistic.is_finite()
+                    || locked.local_parameters.is_empty()
+                {
+                    return Err(
+                        "heterogeneity locked point receipt differs from its inference lock".into(),
+                    );
+                }
+                let (assignments, fit_statistic, parameters) = match locked.algorithm {
+                    CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
+                        let point = self
+                            .fimix_candidates
+                            .iter()
+                            .find(|candidate| candidate.k == locked.k)
+                            .ok_or_else(|| "locked FIMIX point evidence is missing".to_string())?;
+                        (
+                            point.result.hard_assignments.as_slice(),
+                            point.result.log_likelihood,
+                            fimix_parameters(&point.result, &prepared.fimix_scientific_targets)
+                                .map_err(|error| error.to_string())?,
+                        )
+                    }
+                    algorithm => {
+                        let point = self
+                            .pos_candidates
+                            .iter()
+                            .find(|candidate| {
+                                candidate.algorithm == algorithm && candidate.k == locked.k
+                            })
+                            .ok_or_else(|| {
+                                "locked PLS-POS point evidence is missing".to_string()
+                            })?;
+                        (
+                            point.result.assignments.as_slice(),
+                            point.result.objective,
+                            pos_parameters(&point.result, &prepared.pos_parameter_ids)
+                                .map_err(|error| error.to_string())?,
+                        )
+                    }
+                };
+                if locked.assignments != assignments
+                    || locked.fit_statistic.to_bits() != fit_statistic.to_bits()
+                    || locked.local_parameters != parameters
+                {
+                    return Err("heterogeneity locked point receipt is not reproduced by retained point evidence".into());
+                }
+            }
+            _ => {
+                return Err(
+                    "heterogeneity point pass lock presence differs from the configured phase"
+                        .into(),
+                );
+            }
+        }
+        Ok(())
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn execute_heterogeneity_point_pass_v2<R, C, P>(
+    artifact: &CompiledMultiModRecipeV1,
+    config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
+    algorithms: &[CoreHeterogeneityAlgorithmV2],
+    candidate_k: &[u8],
+    prepared: &PreparedHeterogeneityExecutionV2,
+    pos_refitter: &mut R,
+    should_cancel: &C,
+    progress: &P,
+) -> Result<PreparedHeterogeneityPointPassV2, MultiModRunnerErrorV1>
+where
+    R: PlsPosFullRefitterV2,
+    C: Fn() -> bool + Sync,
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
+    let inference_lock = match &config.phase {
+        qpls_core::HeterogeneityPhaseV2::Discovery { .. } => None,
+        qpls_core::HeterogeneityPhaseV2::Inference { lock } => Some(lock),
+    };
+    let mut controlled = ControlledPosRefitter {
+        inner: pos_refitter,
+        should_cancel,
+        progress,
+        calls: 0,
+        cancelled: false,
+    };
+    let mut ordered_algorithms = algorithms.to_vec();
+    ordered_algorithms.sort_by_key(|algorithm| match algorithm {
+        CoreHeterogeneityAlgorithmV2::FimixPlsV2 => 0,
+        CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2 => 1,
+        CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => 2,
+    });
+    let pooled_baseline =
+        fit_pooled_structural_baseline_v2(&prepared.fimix_input, config.fimix.rank_tolerance)
+            .map_err(|error| {
+                MultiModRunnerErrorV1::Kernel(format!(
+                    "multimod.runner.heterogeneity.pooled_baseline_failed: {error}"
+                ))
+            })?;
+    let mut candidates = vec![pooled_baseline_candidate_v2(
+        &pooled_baseline,
+        &prepared.fimix_scientific_targets,
+    )?];
+    let mut fimix_by_k = BTreeMap::<u8, FimixPlsV2Result>::new();
+    let mut fimix_candidates = Vec::new();
+    let mut pos_candidates = Vec::new();
+    let mut evidence_order = Vec::new();
+    for k in candidate_k {
+        for algorithm in &ordered_algorithms {
+            if should_cancel() || controlled.cancelled {
+                return Err(MultiModRunnerErrorV1::Cancelled);
+            }
+            report(
+                progress,
+                MultiModRunnerPhaseV1::PointEstimation,
+                candidates.len().saturating_sub(1) as u64,
+                (candidate_k.len() * ordered_algorithms.len()) as u64,
+                format!("heterogeneity:{algorithm:?}:k{k}"),
+            );
+            match algorithm {
+                CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
+                    let point =
+                        fit_fimix_pls_v2(&prepared.fimix_input, &fimix_config(config, *k as usize));
+                    match point {
+                        Ok(point) => {
+                            validate_fimix_multistart_evidence_v2(&point).map_err(|error| {
+                                MultiModRunnerErrorV1::ResultContract(error.to_string())
+                            })?;
+                            candidates.push(fimix_candidate(*algorithm, *k, &point));
+                            fimix_candidates.push(PreparedFimixPointCandidateV2 {
+                                k: *k,
+                                result: point.clone(),
+                            });
+                            evidence_order
+                                .push(PreparedHeterogeneityPointEvidenceOrderV2::Fimix { k: *k });
+                            fimix_by_k.insert(*k, point);
+                        }
+                        Err(error) => {
+                            if controlled.cancelled || should_cancel() {
+                                return Err(MultiModRunnerErrorV1::Cancelled);
+                            }
+                            candidates
+                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
+                            if inference_lock.is_some_and(|lock| {
+                                lock.selected_algorithm == *algorithm && lock.selected_k == *k
+                            }) {
+                                return Err(MultiModRunnerErrorV1::Kernel(error.to_string()));
+                            }
+                        }
+                    }
+                }
+                CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2
+                | CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => {
+                    let tandem_fimix_requested =
+                        ordered_algorithms.contains(&CoreHeterogeneityAlgorithmV2::FimixPlsV2);
+                    let same_k = fimix_by_k
+                        .get(k)
+                        .map(|result| result.hard_assignments.as_slice());
+                    let point = if tandem_fimix_requested && same_k.is_none() {
+                        Err(HeterogeneityV2Error::InvalidContract(format!(
+                            "same-K FIMIX start is unavailable for tandem POS candidate K={k}"
+                        )))
+                    } else {
+                        run_pos_candidate(
+                            *algorithm,
+                            config.profile,
+                            *k as usize,
+                            config,
+                            prepared,
+                            same_k,
+                            &mut controlled,
+                        )
+                    };
+                    match point {
+                        Ok(point) => {
+                            validate_pos_multistart_evidence_v2(&point).map_err(|error| {
+                                MultiModRunnerErrorV1::ResultContract(error.to_string())
+                            })?;
+                            candidates.push(pos_candidate(*algorithm, *k, &point));
+                            pos_candidates.push(PreparedPosPointCandidateV2 {
+                                algorithm: *algorithm,
+                                k: *k,
+                                result: point,
+                            });
+                            evidence_order.push(
+                                PreparedHeterogeneityPointEvidenceOrderV2::PlsPos {
+                                    algorithm: *algorithm,
+                                    k: *k,
+                                },
+                            );
+                        }
+                        Err(error) => {
+                            if controlled.cancelled || should_cancel() {
+                                return Err(MultiModRunnerErrorV1::Cancelled);
+                            }
+                            candidates
+                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
+                            if inference_lock.is_some_and(|lock| {
+                                lock.selected_algorithm == *algorithm && lock.selected_k == *k
+                            }) {
+                                return Err(MultiModRunnerErrorV1::Kernel(error.to_string()));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    if should_cancel() || controlled.cancelled {
+        return Err(MultiModRunnerErrorV1::Cancelled);
+    }
+    let discovery_result_identity_sha256 =
+        heterogeneity_discovery_result_identity_v2(artifact.receipt(), config, &candidates);
+    if inference_lock.is_some_and(|lock| {
+        discovery_result_identity_sha256 != lock.discovery_result_identity_sha256
+    }) {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "multimod.runner.heterogeneity.discovery_lock_identity_mismatch".into(),
+        ));
+    }
+    let locked = inference_lock
+        .map(
+            |lock| -> Result<PreparedLockedHeterogeneityPointV2, MultiModRunnerErrorV1> {
+                match lock.selected_algorithm {
+                    CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
+                        let point = fimix_candidates
+                            .iter()
+                            .find(|candidate| candidate.k == lock.selected_k)
+                            .ok_or_else(|| {
+                                MultiModRunnerErrorV1::Kernel(
+                                    "locked FIMIX candidate did not complete".into(),
+                                )
+                            })?;
+                        Ok(PreparedLockedHeterogeneityPointV2 {
+                            algorithm: lock.selected_algorithm,
+                            k: lock.selected_k,
+                            assignments: point.result.hard_assignments.clone(),
+                            fit_statistic: point.result.log_likelihood,
+                            local_parameters: fimix_parameters(
+                                &point.result,
+                                &prepared.fimix_scientific_targets,
+                            )?,
+                        })
+                    }
+                    algorithm => {
+                        let point = pos_candidates
+                            .iter()
+                            .find(|candidate| {
+                                candidate.algorithm == algorithm && candidate.k == lock.selected_k
+                            })
+                            .ok_or_else(|| {
+                                MultiModRunnerErrorV1::Kernel(
+                                    "locked PLS-POS candidate did not complete".into(),
+                                )
+                            })?;
+                        Ok(PreparedLockedHeterogeneityPointV2 {
+                            algorithm,
+                            k: lock.selected_k,
+                            assignments: point.result.assignments.clone(),
+                            fit_statistic: point.result.objective,
+                            local_parameters: pos_parameters(
+                                &point.result,
+                                &prepared.pos_parameter_ids,
+                            )?,
+                        })
+                    }
+                }
+            },
+        )
+        .transpose()?;
+    let mut point = PreparedHeterogeneityPointPassV2 {
+        method_version: "qpls.heterogeneity.point-pass.v2".into(),
+        candidates,
+        discovery_result_identity_sha256,
+        pooled_baseline,
+        fimix_candidates,
+        pos_candidates,
+        evidence_order,
+        locked,
+        point_pass_identity_sha256: String::new(),
+    };
+    point.point_pass_identity_sha256 = heterogeneity_point_pass_identity_v2(&point);
+    point
+        .ensure_valid(artifact, config, prepared)
+        .map_err(MultiModRunnerErrorV1::ResultContract)?;
+    Ok(point)
 }
 
 fn apply_heterogeneity_bootstrap(
@@ -14500,257 +15603,35 @@ fn apply_heterogeneity_bootstrap(
     })
 }
 
-pub fn run_compiled_pls_heterogeneity_v2<R, C, P>(
-    dataset: &Dataset,
-    recipe: &AnalysisRecipeV4,
-    model: &SemModelV4,
+fn assemble_heterogeneity_result_from_point_pass_v2<P>(
     artifact: &CompiledMultiModRecipeV1,
+    config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
     prepared: &PreparedHeterogeneityExecutionV2,
-    pos_refitter: &mut R,
-    should_cancel: C,
-    progress: P,
+    point_pass: &PreparedHeterogeneityPointPassV2,
+    progress: &P,
 ) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
 where
-    R: PlsPosFullRefitterV2,
-    C: Fn() -> bool + Sync,
     P: Fn(MultiModRunnerProgressV1) + Sync,
 {
-    if should_cancel() {
-        return Err(MultiModRunnerErrorV1::Cancelled);
-    }
-    report(
-        &progress,
-        MultiModRunnerPhaseV1::ValidatingAuthority,
-        0,
-        1,
-        "heterogeneity:authority",
-    );
-    validate_authority(
-        dataset,
-        recipe,
-        model,
-        artifact,
-        MultiModCompilerTargetV1::PlsHeterogeneityV2,
-    )?;
-    let config = recipe.pls_heterogeneity.as_ref().ok_or_else(|| {
-        MultiModRunnerErrorV1::Authority(
-            "heterogeneity configuration disappeared after compilation".into(),
-        )
-    })?;
-    let CompiledMultiModPlanV1::PlsHeterogeneityV2 {
-        profile,
-        algorithms,
-        candidate_k,
-        ..
-    } = artifact.plan()
-    else {
-        return Err(MultiModRunnerErrorV1::Authority(
-            "compiled plan is not PLS heterogeneity V2".into(),
-        ));
-    };
-    let inference_lock: Option<&HeterogeneityInferenceLockReceiptV2> = match &config.phase {
+    point_pass
+        .ensure_valid(artifact, config, prepared)
+        .map_err(MultiModRunnerErrorV1::PreparedInput)?;
+    let inference_lock = match &config.phase {
         qpls_core::HeterogeneityPhaseV2::Discovery { .. } => None,
         qpls_core::HeterogeneityPhaseV2::Inference { lock } => Some(lock),
     };
-    if let Some(lock) = inference_lock {
-        if algorithms != &lock.discovery_algorithms || candidate_k != &lock.discovery_candidate_k {
-            return Err(MultiModRunnerErrorV1::Authority(
-                "multimod.runner.heterogeneity.lock_compiler_inventory_mismatch".into(),
-            ));
-        }
-    }
-    if profile != &config.profile
-        || prepared.fimix_input.interaction_profile
-            != estimation_heterogeneity_profile(config.profile)
-    {
-        return Err(MultiModRunnerErrorV1::PreparedInput(
-            "prepared standardized input has the wrong interaction profile".into(),
-        ));
-    }
-    if config.profile != CoreHeterogeneityProfileV2::P0Structural
-        && prepared.fimix_scientific_targets.is_empty()
-    {
-        return Err(MultiModRunnerErrorV1::PreparedInput(
-            "interaction FIMIX requires explicit product-scale gamma/delta and fixed-slope projections"
-                .into(),
-        ));
-    }
-    let uses_pos = algorithms
-        .iter()
-        .any(|algorithm| !matches!(algorithm, CoreHeterogeneityAlgorithmV2::FimixPlsV2));
-    if prepared.fimix_input.metric.observation_count > dataset.batch.num_rows()
-        || (uses_pos
-            && (prepared.pos_start_features.len() != prepared.fimix_input.metric.observation_count
-                || prepared.pos_start_features.is_empty()))
-    {
-        return Err(MultiModRunnerErrorV1::PreparedInput(
-            "PLS-POS requires one finite start-feature row per source observation".into(),
-        ));
-    }
-    let mut controlled = ControlledPosRefitter {
-        inner: pos_refitter,
-        should_cancel: &should_cancel,
-        progress: &progress,
-        calls: 0,
-        cancelled: false,
-    };
-    let mut ordered_algorithms = algorithms.clone();
-    ordered_algorithms.sort_by_key(|algorithm| match algorithm {
-        CoreHeterogeneityAlgorithmV2::FimixPlsV2 => 0,
-        CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2 => 1,
-        CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => 2,
-    });
-    let pooled_baseline =
-        fit_pooled_structural_baseline_v2(&prepared.fimix_input, config.fimix.rank_tolerance)
-            .map_err(|error| {
-                MultiModRunnerErrorV1::Kernel(format!(
-                    "multimod.runner.heterogeneity.pooled_baseline_failed: {error}"
-                ))
-            })?;
-    let mut candidates = vec![pooled_baseline_candidate_v2(
-        &pooled_baseline,
-        &prepared.fimix_scientific_targets,
-    )?];
-    let mut fimix_by_k = BTreeMap::<u8, FimixPlsV2Result>::new();
-    let mut evidence = vec![MultiModRunnerEvidenceV1::HeterogeneityPooledBaseline(
-        pooled_baseline,
-    )];
-    let mut locked = None::<(CoreHeterogeneityAlgorithmV2, u8, LockedHeterogeneityPointV2)>;
-    for k in candidate_k {
-        for algorithm in &ordered_algorithms {
-            if should_cancel() || controlled.cancelled {
-                return Err(MultiModRunnerErrorV1::Cancelled);
-            }
-            report(
-                &progress,
-                MultiModRunnerPhaseV1::PointEstimation,
-                candidates.len().saturating_sub(1) as u64,
-                (candidate_k.len() * ordered_algorithms.len()) as u64,
-                format!("heterogeneity:{algorithm:?}:k{k}"),
-            );
-            match algorithm {
-                CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
-                    let point =
-                        fit_fimix_pls_v2(&prepared.fimix_input, &fimix_config(config, *k as usize));
-                    match point {
-                        Ok(point) => {
-                            validate_fimix_multistart_evidence_v2(&point).map_err(|error| {
-                                MultiModRunnerErrorV1::ResultContract(error.to_string())
-                            })?;
-                            candidates.push(fimix_candidate(*algorithm, *k, &point));
-                            evidence.push(MultiModRunnerEvidenceV1::FimixCandidate {
-                                k: *k,
-                                result: point.clone(),
-                            });
-                            fimix_by_k.insert(*k, point);
-                        }
-                        Err(error) => {
-                            if controlled.cancelled || should_cancel() {
-                                return Err(MultiModRunnerErrorV1::Cancelled);
-                            }
-                            candidates
-                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
-                            if inference_lock.is_some_and(|lock| {
-                                lock.selected_algorithm == *algorithm && lock.selected_k == *k
-                            }) {
-                                return Err(MultiModRunnerErrorV1::Kernel(error.to_string()));
-                            }
-                        }
-                    }
-                }
-                CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2
-                | CoreHeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => {
-                    let tandem_fimix_requested =
-                        ordered_algorithms.contains(&CoreHeterogeneityAlgorithmV2::FimixPlsV2);
-                    let same_k = fimix_by_k
-                        .get(k)
-                        .map(|result| result.hard_assignments.as_slice());
-                    let point = if tandem_fimix_requested && same_k.is_none() {
-                        Err(HeterogeneityV2Error::InvalidContract(format!(
-                            "same-K FIMIX start is unavailable for tandem POS candidate K={k}"
-                        )))
-                    } else {
-                        run_pos_candidate(
-                            *algorithm,
-                            config.profile,
-                            *k as usize,
-                            config,
-                            prepared,
-                            same_k,
-                            &mut controlled,
-                        )
-                    };
-                    match point {
-                        Ok(point) => {
-                            validate_pos_multistart_evidence_v2(&point).map_err(|error| {
-                                MultiModRunnerErrorV1::ResultContract(error.to_string())
-                            })?;
-                            candidates.push(pos_candidate(*algorithm, *k, &point));
-                            evidence.push(MultiModRunnerEvidenceV1::PlsPosCandidate {
-                                k: *k,
-                                result: point.clone(),
-                            });
-                            if inference_lock.is_some_and(|lock| {
-                                lock.selected_algorithm == *algorithm && lock.selected_k == *k
-                            }) {
-                                locked =
-                                    Some((*algorithm, *k, LockedHeterogeneityPointV2::Pos(point)));
-                            }
-                        }
-                        Err(error) => {
-                            if controlled.cancelled || should_cancel() {
-                                return Err(MultiModRunnerErrorV1::Cancelled);
-                            }
-                            candidates
-                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
-                            if inference_lock.is_some_and(|lock| {
-                                lock.selected_algorithm == *algorithm && lock.selected_k == *k
-                            }) {
-                                return Err(MultiModRunnerErrorV1::Kernel(error.to_string()));
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    let discovery_result_identity_sha256 =
-        heterogeneity_discovery_result_identity_v2(artifact.receipt(), config, &candidates);
-    if let Some(lock) = inference_lock {
-        if discovery_result_identity_sha256 != lock.discovery_result_identity_sha256 {
-            return Err(MultiModRunnerErrorV1::Authority(
-                "multimod.runner.heterogeneity.discovery_lock_identity_mismatch".into(),
-            ));
-        }
-    }
-    if let Some(lock) = inference_lock {
-        if lock.selected_algorithm == CoreHeterogeneityAlgorithmV2::FimixPlsV2 {
-            let point = fimix_by_k.remove(&lock.selected_k).ok_or_else(|| {
-                MultiModRunnerErrorV1::Kernel("locked FIMIX candidate did not complete".into())
-            })?;
-            locked = Some((
-                lock.selected_algorithm,
-                lock.selected_k,
-                LockedHeterogeneityPointV2::Fimix(point),
-            ));
-        }
-    }
-    if should_cancel() || controlled.cancelled {
-        return Err(MultiModRunnerErrorV1::Cancelled);
-    }
-    let (locked_algorithm, locked_k, mut parameters) = match locked.as_ref() {
-        None => (None, None, Vec::new()),
-        Some((algorithm, k, LockedHeterogeneityPointV2::Fimix(result))) => (
-            Some(*algorithm),
-            Some(*k),
-            fimix_parameters(result, &prepared.fimix_scientific_targets)?,
-        ),
-        Some((algorithm, k, LockedHeterogeneityPointV2::Pos(result))) => (
-            Some(*algorithm),
-            Some(*k),
-            pos_parameters(result, &prepared.pos_parameter_ids)?,
-        ),
-    };
+    let (locked_algorithm, locked_k, mut parameters) =
+        point_pass
+            .locked
+            .as_ref()
+            .map_or((None, None, Vec::new()), |locked| {
+                (
+                    Some(locked.algorithm),
+                    Some(locked.k),
+                    locked.local_parameters.clone(),
+                )
+            });
+    let mut evidence = point_pass.evidence();
     let mut descriptive_only = locked_algorithm.is_none_or(|algorithm| {
         matches!(
             algorithm,
@@ -14860,7 +15741,7 @@ where
         (None, None) => None,
     };
     report(
-        &progress,
+        progress,
         MultiModRunnerPhaseV1::Completed,
         1,
         1,
@@ -14870,8 +15751,8 @@ where
         schema_version: PLS_HETEROGENEITY_ANALYSIS_V2_SCHEMA_VERSION,
         provenance: provenance(artifact.receipt(), config.seed),
         profile: config.profile,
-        candidates,
-        discovery_result_identity_sha256,
+        candidates: point_pass.candidates.clone(),
+        discovery_result_identity_sha256: point_pass.discovery_result_identity_sha256.clone(),
         inference_lock: inference_lock.cloned(),
         locked_algorithm,
         locked_k,
@@ -14892,6 +15773,111 @@ where
     })
 }
 
+pub fn run_compiled_pls_heterogeneity_v2<R, C, P>(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    prepared: &PreparedHeterogeneityExecutionV2,
+    pos_refitter: &mut R,
+    should_cancel: C,
+    progress: P,
+) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
+where
+    R: PlsPosFullRefitterV2,
+    C: Fn() -> bool + Sync,
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
+    if should_cancel() {
+        return Err(MultiModRunnerErrorV1::Cancelled);
+    }
+    report(
+        &progress,
+        MultiModRunnerPhaseV1::ValidatingAuthority,
+        0,
+        1,
+        "heterogeneity:authority",
+    );
+    validate_authority(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    let config = recipe.pls_heterogeneity.as_ref().ok_or_else(|| {
+        MultiModRunnerErrorV1::Authority(
+            "heterogeneity configuration disappeared after compilation".into(),
+        )
+    })?;
+    let CompiledMultiModPlanV1::PlsHeterogeneityV2 {
+        profile,
+        algorithms,
+        candidate_k,
+        ..
+    } = artifact.plan()
+    else {
+        return Err(MultiModRunnerErrorV1::Authority(
+            "compiled plan is not PLS heterogeneity V2".into(),
+        ));
+    };
+    let inference_lock: Option<&HeterogeneityInferenceLockReceiptV2> = match &config.phase {
+        qpls_core::HeterogeneityPhaseV2::Discovery { .. } => None,
+        qpls_core::HeterogeneityPhaseV2::Inference { lock } => Some(lock),
+    };
+    if let Some(lock) = inference_lock {
+        if algorithms != &lock.discovery_algorithms || candidate_k != &lock.discovery_candidate_k {
+            return Err(MultiModRunnerErrorV1::Authority(
+                "multimod.runner.heterogeneity.lock_compiler_inventory_mismatch".into(),
+            ));
+        }
+    }
+    if profile != &config.profile
+        || prepared.fimix_input.interaction_profile
+            != estimation_heterogeneity_profile(config.profile)
+    {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "prepared standardized input has the wrong interaction profile".into(),
+        ));
+    }
+    if config.profile != CoreHeterogeneityProfileV2::P0Structural
+        && prepared.fimix_scientific_targets.is_empty()
+    {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "interaction FIMIX requires explicit product-scale gamma/delta and fixed-slope projections"
+                .into(),
+        ));
+    }
+    let uses_pos = algorithms
+        .iter()
+        .any(|algorithm| !matches!(algorithm, CoreHeterogeneityAlgorithmV2::FimixPlsV2));
+    if prepared.fimix_input.metric.observation_count > dataset.batch.num_rows()
+        || (uses_pos
+            && (prepared.pos_start_features.len() != prepared.fimix_input.metric.observation_count
+                || prepared.pos_start_features.is_empty()))
+    {
+        return Err(MultiModRunnerErrorV1::PreparedInput(
+            "PLS-POS requires one finite start-feature row per source observation".into(),
+        ));
+    }
+    let point_pass = execute_heterogeneity_point_pass_v2(
+        artifact,
+        config,
+        algorithms,
+        candidate_k,
+        prepared,
+        pos_refitter,
+        &should_cancel,
+        &progress,
+    )?;
+    assemble_heterogeneity_result_from_point_pass_v2(
+        artifact,
+        config,
+        prepared,
+        &point_pass,
+        &progress,
+    )
+}
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(deny_unknown_fields)]
 pub struct PreparedConditionalProbeContrastBindingV2 {
@@ -16909,6 +17895,19 @@ mod tests {
     fn raw_heterogeneity_receipt_rejects_identity_cardinality_and_finite_tampering() {
         let fixture = raw_heterogeneity_receipt_fixture();
         fixture.ensure_valid().unwrap();
+        fixture
+            .ensure_matches_live_authority(4, &[10, 11, 12, 13], &"a".repeat(64))
+            .unwrap();
+        assert!(
+            fixture
+                .ensure_matches_live_authority(4, &[10, 11, 12, 13], &"c".repeat(64))
+                .is_err()
+        );
+        assert!(
+            fixture
+                .ensure_matches_live_authority(5, &[10, 11, 12, 13], &"a".repeat(64))
+                .is_err()
+        );
 
         let mut duplicate_row = fixture.clone();
         duplicate_row.source_row_tokens[3] = 12;
@@ -16923,14 +17922,295 @@ mod tests {
         assert!(nonfinite.ensure_valid().is_err());
     }
 
-    fn retained_alignment_fixture() -> LabelAlignmentV2 {
+    fn retained_alignment_for_mapping(mapping: Vec<usize>) -> LabelAlignmentV2 {
+        let k = mapping.len();
+        let mut overlap = vec![vec![0; k]; k];
+        for (candidate, reference) in mapping.iter().copied().enumerate() {
+            overlap[reference][candidate] = 2;
+        }
         LabelAlignmentV2 {
-            candidate_to_reference: vec![1, 0],
-            matched_observations: 4,
+            candidate_to_reference: mapping,
+            matched_observations: k * 2,
             match_share: 1.0,
             ambiguous: false,
             mutual_majority: true,
-            overlap: vec![vec![0, 2], vec![2, 0]],
+            overlap,
+        }
+    }
+
+    fn retained_alignment_fixture() -> LabelAlignmentV2 {
+        retained_alignment_for_mapping(vec![1, 0])
+    }
+
+    fn raw_bootstrap_reference_fixture() -> PreparedRawHeterogeneityBootstrapReferenceV2 {
+        let mut reference = PreparedRawHeterogeneityBootstrapReferenceV2 {
+            method_version: "qpls.heterogeneity.bootstrap-reference.v2".into(),
+            dataset_fingerprint: "fixture-dataset".into(),
+            compilation_identity_sha256: "a".repeat(64),
+            config_identity_sha256: "b".repeat(64),
+            point_pass_identity_sha256: "c".repeat(64),
+            pooled_metric_sha256: "d".repeat(64),
+            complete_source_row_tokens: (0..6).collect(),
+            algorithm: CoreHeterogeneityAlgorithmV2::FimixPlsV2,
+            k: 2,
+            use_pooled_common_metric: false,
+            heterogeneity_plan: HeterogeneityBootstrapPlanV2 {
+                algorithm: HeterogeneityBootstrapAlgorithmV2::FimixPlsV2,
+                fixed_classes_or_segments: 2,
+                requested_replicates: 10,
+                master_seed: 42,
+                confidence_level: 0.95,
+                minimum_usable_share: 0.90,
+            },
+            orchestrator_plan: MultiModBootstrapPlanV1 {
+                schema_version: MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1,
+                scientific_refit_identity_sha256: "0".repeat(64),
+                requested_replicates: 10,
+                master_seed: 42,
+                minimum_usable_fraction: 0.90,
+            },
+            reference_assignments: vec![0, 0, 0, 1, 1, 1],
+            reference_target_ids: vec!["class_1:path:x->y".into(), "class_2:path:x->y".into()],
+            reference_parameter_identity_sha256: "e".repeat(64),
+            reference_fit_statistic: -10.0,
+            reference_identity_sha256: String::new(),
+        };
+        reference.orchestrator_plan.scientific_refit_identity_sha256 =
+            raw_heterogeneity_reference_scientific_identity_v2(&reference);
+        reference.reference_identity_sha256 = raw_heterogeneity_reference_identity_v2(&reference);
+        reference
+    }
+
+    #[test]
+    fn raw_bootstrap_reference_identity_binds_point_rows_targets_and_plans() {
+        let reference = raw_bootstrap_reference_fixture();
+        assert_eq!(
+            reference.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&reference)
+        );
+
+        let mut point_tamper = reference.clone();
+        point_tamper.point_pass_identity_sha256 = "f".repeat(64);
+        assert_ne!(
+            reference.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&point_tamper)
+        );
+
+        let mut target_tamper = reference.clone();
+        target_tamper.reference_target_ids[0] = "class_1:path:z->y".into();
+        assert_ne!(
+            reference.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&target_tamper)
+        );
+
+        let mut row_tamper = reference.clone();
+        row_tamper.reference_assignments.swap(0, 5);
+        assert_ne!(
+            reference.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&row_tamper)
+        );
+
+        let mut parameter_tamper = reference.clone();
+        parameter_tamper.reference_parameter_identity_sha256 = "0".repeat(64);
+        assert_ne!(
+            reference.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&parameter_tamper)
+        );
+
+        let mut plan_tamper = reference;
+        plan_tamper.heterogeneity_plan.master_seed ^= 1;
+        assert_ne!(
+            plan_tamper.reference_identity_sha256,
+            raw_heterogeneity_reference_identity_v2(&plan_tamper)
+        );
+    }
+
+    #[test]
+    fn heterogeneity_shards_publish_only_through_the_global_final_ledger() {
+        let reference = raw_bootstrap_reference_fixture();
+        let mut callback = |draw: &MultiModCaseBootstrapDrawV1| {
+            MultiModRefitAttemptV1::Completed(Ok(RawHeterogeneityBootstrapEstimateV2 {
+                fit_statistic: -10.0 - f64::from(draw.replicate_index),
+                alignment: retained_alignment_fixture(),
+                target_values: vec![
+                    f64::from(draw.replicate_index),
+                    -f64::from(draw.replicate_index),
+                ],
+            }))
+        };
+        let cache = run_multimod_case_bootstrap_shard_interruptible_v1(
+            &reference.orchestrator_plan,
+            reference.reference_assignments.len(),
+            None,
+            MultiModShardSpecV1 {
+                shard_index: 0,
+                shard_count: 1,
+            },
+            None,
+            &mut callback,
+            || false,
+        )
+        .unwrap();
+        let ledger = finalize_multimod_case_bootstrap_v1(
+            &reference.orchestrator_plan,
+            reference.reference_assignments.len(),
+            None,
+            vec![cache],
+        )
+        .unwrap();
+        assert_eq!(ledger.usable, 10);
+        let prepared =
+            prepared_heterogeneity_bootstrap_from_final_ledger_v2(&reference, ledger).unwrap();
+        assert_eq!(prepared.entries.len(), 10);
+        assert_eq!(prepared.targets.len(), 2);
+        assert!(prepared.entries.iter().all(|entry| {
+            entry.status == qpls_estimation::HeterogeneityBootstrapReplicateStatusV2::Usable
+        }));
+    }
+
+    #[test]
+    fn k3_through_k5_relabeling_survives_global_ledger_and_interval_assembly() {
+        for k in 3usize..=5 {
+            let mapping = (0..k)
+                .map(|candidate| (candidate + 1) % k)
+                .collect::<Vec<_>>();
+            let alignment = retained_alignment_for_mapping(mapping.clone());
+            validate_retained_label_alignment_v2(&alignment).unwrap();
+            let reference_target_ids = (1..=k)
+                .map(|class_id| format!("class_{class_id}:path:x->y"))
+                .collect::<Vec<_>>();
+            let candidate_parameters = (0..k)
+                .map(|candidate| HeterogeneityClassParameterV2 {
+                    class_id: (candidate + 1) as u8,
+                    parameter: MultimodParameterEstimateV1 {
+                        target_id: format!("class_{}:path:x->y", candidate + 1),
+                        target_kind: "class_specific_path".into(),
+                        estimate: 10.0 + candidate as f64,
+                        standard_error: None,
+                        p_value: None,
+                        interval: None,
+                    },
+                    metric: "pooled".into(),
+                })
+                .collect::<Vec<_>>();
+            let aligned = aligned_heterogeneity_target_values_v2(
+                &reference_target_ids,
+                &candidate_parameters,
+                &alignment,
+            )
+            .unwrap();
+            let expected = (0..k)
+                .map(|reference| {
+                    let candidate = mapping
+                        .iter()
+                        .position(|mapped| *mapped == reference)
+                        .unwrap();
+                    10.0 + candidate as f64
+                })
+                .collect::<Vec<_>>();
+            assert_eq!(aligned, expected);
+
+            let mut reference = raw_bootstrap_reference_fixture();
+            reference.k = k as u8;
+            reference.reference_assignments = (0..k).collect();
+            reference.reference_target_ids = reference_target_ids.clone();
+            reference.reference_parameter_identity_sha256 =
+                sha256_serialized(&candidate_parameters);
+            reference.heterogeneity_plan.fixed_classes_or_segments = k;
+            reference.heterogeneity_plan.requested_replicates = 500;
+            reference.orchestrator_plan.requested_replicates = 500;
+            reference.orchestrator_plan.scientific_refit_identity_sha256 =
+                raw_heterogeneity_reference_scientific_identity_v2(&reference);
+            reference.reference_identity_sha256 =
+                raw_heterogeneity_reference_identity_v2(&reference);
+
+            let mut callback = |draw: &MultiModCaseBootstrapDrawV1| {
+                let offset = f64::from(draw.replicate_index) / 1_000.0;
+                MultiModRefitAttemptV1::Completed(Ok(RawHeterogeneityBootstrapEstimateV2 {
+                    fit_statistic: -10.0 - offset,
+                    alignment: alignment.clone(),
+                    target_values: aligned.iter().map(|value| value + offset).collect(),
+                }))
+            };
+            let cache = run_multimod_case_bootstrap_shard_interruptible_v1(
+                &reference.orchestrator_plan,
+                k,
+                None,
+                MultiModShardSpecV1 {
+                    shard_index: 0,
+                    shard_count: 1,
+                },
+                None,
+                &mut callback,
+                || false,
+            )
+            .unwrap();
+            let ledger = finalize_multimod_case_bootstrap_v1(
+                &reference.orchestrator_plan,
+                k,
+                None,
+                vec![cache],
+            )
+            .unwrap();
+            let prepared =
+                prepared_heterogeneity_bootstrap_from_final_ledger_v2(&reference, ledger).unwrap();
+            assert_eq!(prepared.ensure_valid(), Ok(k));
+
+            let config = qpls_core::PlsUnobservedHeterogeneityConfigV2 {
+                schema_version: qpls_core::PLS_HETEROGENEITY_V2_SCHEMA_VERSION,
+                profile: CoreHeterogeneityProfileV2::P0Structural,
+                phase: qpls_core::HeterogeneityPhaseV2::Inference {
+                    lock: qpls_core::HeterogeneityInferenceLockReceiptV2 {
+                        schema_version: qpls_core::HETEROGENEITY_INFERENCE_LOCK_V2_SCHEMA_VERSION,
+                        discovery_result_identity_sha256: "a".repeat(64),
+                        discovery_candidate_k: vec![k as u8],
+                        discovery_algorithms: vec![CoreHeterogeneityAlgorithmV2::FimixPlsV2],
+                        selected_algorithm: CoreHeterogeneityAlgorithmV2::FimixPlsV2,
+                        selected_k: k as u8,
+                        analyst_lock_confirmed: true,
+                        tandem_fimix_same_k_start_required: false,
+                    },
+                },
+                seed: 42,
+                fimix: qpls_core::FimixSettingsV2::default(),
+                pls_pos: qpls_core::PlsPosSettingsV2::default(),
+                pos_common_metric: None,
+                bootstrap: Some(qpls_core::SegmentationBootstrapV2 {
+                    resamples: 500,
+                    seed: 42,
+                    confidence_level: 0.95,
+                }),
+            };
+            config.ensure_valid().unwrap();
+            let mut parameters = (1..=k)
+                .map(|class_id| HeterogeneityClassParameterV2 {
+                    class_id: class_id as u8,
+                    parameter: MultimodParameterEstimateV1 {
+                        target_id: format!("class_{class_id}:path:x->y"),
+                        target_kind: "class_specific_path".into(),
+                        estimate: expected[class_id - 1],
+                        standard_error: None,
+                        p_value: None,
+                        interval: None,
+                    },
+                    metric: "pooled".into(),
+                })
+                .collect::<Vec<_>>();
+            let summary = apply_heterogeneity_bootstrap(
+                &config,
+                CoreHeterogeneityAlgorithmV2::FimixPlsV2,
+                k as u8,
+                &prepared,
+                &mut parameters,
+                &mut [],
+            )
+            .unwrap();
+            assert_eq!(summary.usable, 500);
+            assert!(
+                parameters
+                    .iter()
+                    .all(|row| row.parameter.interval.is_some())
+            );
         }
     }
 

@@ -366,6 +366,30 @@ where
     }
 }
 
+/// Additive control result for refits whose estimator can observe cancellation
+/// while one draw is in flight. An interruption is execution state, not a
+/// scientific outcome, so it never becomes an immutable ledger record.
+#[derive(Debug, Clone, PartialEq)]
+pub enum MultiModRefitAttemptV1<Estimate> {
+    Completed(Result<Estimate, MultiModRefitFailureV1>),
+    Interrupted,
+}
+
+/// Interruptible counterpart to `MultiModFullRefitCallbackV1`. Existing V1
+/// callbacks retain their exact signature and no-retry behavior.
+pub trait MultiModInterruptibleFullRefitCallbackV1<Draw, Estimate> {
+    fn full_refit_attempt(&mut self, draw: &Draw) -> MultiModRefitAttemptV1<Estimate>;
+}
+
+impl<Draw, Estimate, F> MultiModInterruptibleFullRefitCallbackV1<Draw, Estimate> for F
+where
+    F: FnMut(&Draw) -> MultiModRefitAttemptV1<Estimate>,
+{
+    fn full_refit_attempt(&mut self, draw: &Draw) -> MultiModRefitAttemptV1<Estimate> {
+        self(draw)
+    }
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum MultiModFullRefitErrorV1 {
     #[error("invalid MultiMod full-refit plan: {0}")]
@@ -421,11 +445,66 @@ pub fn run_multimod_case_bootstrap_shard_v1<Estimate, Callback, Cancelled>(
     shard: MultiModShardSpecV1,
     resume: Option<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>>,
     callback: &mut Callback,
-    mut is_cancelled: Cancelled,
+    is_cancelled: Cancelled,
 ) -> Result<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>, MultiModFullRefitErrorV1>
 where
     Estimate: Serialize,
     Callback: MultiModFullRefitCallbackV1<MultiModCaseBootstrapDrawV1, Estimate>,
+    Cancelled: FnMut() -> bool,
+{
+    run_multimod_case_bootstrap_shard_with_attempt_v1(
+        plan,
+        case_count,
+        case_weights,
+        shard,
+        resume,
+        |draw| MultiModRefitAttemptV1::Completed(callback.full_refit(draw)),
+        is_cancelled,
+    )
+}
+
+/// Runs one deterministic case-bootstrap shard with in-flight interruption.
+///
+/// `Interrupted` returns a resumable cache with `cancelled=true` and omits the
+/// interrupted index entirely. A completed stable failure is retained exactly
+/// once and is never retried, matching the ordinary V1 callback contract.
+pub fn run_multimod_case_bootstrap_shard_interruptible_v1<Estimate, Callback, Cancelled>(
+    plan: &MultiModBootstrapPlanV1,
+    case_count: usize,
+    case_weights: Option<&[f64]>,
+    shard: MultiModShardSpecV1,
+    resume: Option<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>>,
+    callback: &mut Callback,
+    is_cancelled: Cancelled,
+) -> Result<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>, MultiModFullRefitErrorV1>
+where
+    Estimate: Serialize,
+    Callback: MultiModInterruptibleFullRefitCallbackV1<MultiModCaseBootstrapDrawV1, Estimate>,
+    Cancelled: FnMut() -> bool,
+{
+    run_multimod_case_bootstrap_shard_with_attempt_v1(
+        plan,
+        case_count,
+        case_weights,
+        shard,
+        resume,
+        |draw| callback.full_refit_attempt(draw),
+        is_cancelled,
+    )
+}
+
+fn run_multimod_case_bootstrap_shard_with_attempt_v1<Estimate, Attempt, Cancelled>(
+    plan: &MultiModBootstrapPlanV1,
+    case_count: usize,
+    case_weights: Option<&[f64]>,
+    shard: MultiModShardSpecV1,
+    resume: Option<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>>,
+    mut attempt: Attempt,
+    mut is_cancelled: Cancelled,
+) -> Result<MultiModShardCacheV1<MultiModCaseBootstrapDrawV1, Estimate>, MultiModFullRefitErrorV1>
+where
+    Estimate: Serialize,
+    Attempt: FnMut(&MultiModCaseBootstrapDrawV1) -> MultiModRefitAttemptV1<Estimate>,
     Cancelled: FnMut() -> bool,
 {
     plan.ensure_valid()?;
@@ -468,8 +547,14 @@ where
             replicate_index,
             MultiModFullRefitPhaseV1::CaseBootstrap,
         )?;
-        let result = callback.full_refit(&draw);
-        records.insert(replicate_index, make_record(replicate_index, draw, result)?);
+        match attempt(&draw) {
+            MultiModRefitAttemptV1::Completed(result) => {
+                records.insert(replicate_index, make_record(replicate_index, draw, result)?);
+            }
+            MultiModRefitAttemptV1::Interrupted => {
+                return Ok(shard_cache(shard_identity, true, records));
+            }
+        }
     }
     Ok(shard_cache(shard_identity, false, records))
 }
@@ -1660,6 +1745,9 @@ where
             shard_count: cache.shard.shard_count,
         };
         spec.ensure_valid(requested)?;
+        if spec.shard_count != shard_count {
+            return Err(MultiModFullRefitErrorV1::ResumeIdentityMismatch);
+        }
         let expected_shard = make_shard_identity(phase, execution_identity, spec)?;
         if cache.schema_version != MULTIMOD_FULL_REFIT_SCHEMA_VERSION_V1
             || cache.shard != expected_shard
@@ -1922,6 +2010,9 @@ where
             shard_count: cache.shard.shard_count,
         };
         shard.ensure_valid(plan.outer_replicates)?;
+        if shard.shard_count != shard_count {
+            return Err(MultiModFullRefitErrorV1::ResumeIdentityMismatch);
+        }
         let expected_shard = make_shard_identity(
             MultiModFullRefitPhaseV1::StudentizedOuter,
             execution_identity,
@@ -2090,6 +2181,22 @@ mod tests {
     }
 
     #[test]
+    fn finalizer_rejects_mixed_shard_partitions_even_when_indices_cover_the_ledger() {
+        let plan = bootstrap_plan(3);
+        let shard_zero_of_two = run_case_shards(&plan, 2, None).remove(0);
+        let shard_one_of_three = run_case_shards(&plan, 3, None).remove(1);
+        assert!(matches!(
+            finalize_multimod_case_bootstrap_v1(
+                &plan,
+                6,
+                None,
+                vec![shard_zero_of_two, shard_one_of_three],
+            ),
+            Err(MultiModFullRefitErrorV1::ResumeIdentityMismatch)
+        ));
+    }
+
+    #[test]
     fn cancellation_resume_and_failures_never_retry_completed_indices() {
         let plan = bootstrap_plan(10);
         let calls = std::cell::Cell::new(0u32);
@@ -2150,6 +2257,70 @@ mod tests {
         assert_eq!(ledger.usable, 9);
         assert!(!ledger.usable_indices.contains(&1));
         assert_eq!(ledger.minimum_required, 9);
+    }
+
+    #[test]
+    fn in_flight_interruption_is_resumable_and_never_becomes_a_failure_record() {
+        let plan = bootstrap_plan(10);
+        let interrupted_once = std::cell::Cell::new(false);
+        let calls = std::cell::Cell::new(0u32);
+        let mut callback = |draw: &MultiModCaseBootstrapDrawV1| {
+            calls.set(calls.get() + 1);
+            if draw.replicate_index == 3 && !interrupted_once.replace(true) {
+                MultiModRefitAttemptV1::Interrupted
+            } else if draw.replicate_index == 1 {
+                MultiModRefitAttemptV1::Completed(Err(failure("rank_deficient")))
+            } else {
+                MultiModRefitAttemptV1::Completed(Ok(draw.replicate_index))
+            }
+        };
+        let cache = run_multimod_case_bootstrap_shard_interruptible_v1(
+            &plan,
+            6,
+            None,
+            MultiModShardSpecV1 {
+                shard_index: 0,
+                shard_count: 1,
+            },
+            None,
+            &mut callback,
+            || false,
+        )
+        .unwrap();
+        assert!(cache.cancelled);
+        assert_eq!(cache.records.len(), 3);
+        assert!(cache.records.iter().all(|record| record.index != 3));
+        assert!(matches!(
+            cache.records[1].outcome,
+            MultiModRefitOutcomeV1::Failed { .. }
+        ));
+
+        let resumed = run_multimod_case_bootstrap_shard_interruptible_v1(
+            &plan,
+            6,
+            None,
+            MultiModShardSpecV1 {
+                shard_index: 0,
+                shard_count: 1,
+            },
+            Some(cache),
+            &mut callback,
+            || false,
+        )
+        .unwrap();
+        assert!(!resumed.cancelled);
+        assert_eq!(calls.get(), 11);
+        let ledger = finalize_multimod_case_bootstrap_v1(&plan, 6, None, vec![resumed]).unwrap();
+        assert_eq!(ledger.records.len(), 10);
+        assert_eq!(ledger.usable, 9);
+        assert_eq!(
+            ledger
+                .records
+                .iter()
+                .filter(|record| matches!(record.outcome, MultiModRefitOutcomeV1::Failed { .. }))
+                .count(),
+            1
+        );
     }
 
     #[test]
