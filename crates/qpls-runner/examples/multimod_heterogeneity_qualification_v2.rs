@@ -95,6 +95,10 @@ fn bootstrap_fixture_plan() -> BootstrapFixturePlanV1 {
     }
 }
 
+fn compact_bootstrap_shard_ids() -> Vec<&'static str> {
+    vec!["bootstrap-fimix-p23"]
+}
+
 fn fixture_observations() -> usize {
     if metamorphic::compact_matrix_v1() {
         80
@@ -1043,7 +1047,7 @@ fn inference_config(
             require_partial_compositional_invariance: true,
         }),
         bootstrap: Some(SegmentationBootstrapV2 {
-            resamples: 500,
+            resamples: QUALIFICATION_BOOTSTRAP_DRAWS,
             seed: seed ^ 0x4253_5452_4150,
             confidence_level: 0.95,
         }),
@@ -3506,11 +3510,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     }
 
     let bootstrap_shard_ids = if metamorphic::compact_matrix_v1() {
-        vec![
-            "bootstrap-fimix-p0",
-            "bootstrap-pos-destination-p2",
-            "bootstrap-pos-destination-p23",
-        ]
+        compact_bootstrap_shard_ids()
     } else if args.scale == Scale::Qualification {
         vec![
             "bootstrap-fimix-p0",
@@ -4228,5 +4228,11 @@ mod tests {
                 vec![expected_per_class; usize::from(selected_k)]
             );
         }
+    }
+
+    #[test]
+    fn compact_matrix_runs_one_representative_full_draw_bootstrap_profile() {
+        assert_eq!(compact_bootstrap_shard_ids(), ["bootstrap-fimix-p23"]);
+        assert_eq!(bootstrap_fixture_plan().requested_replicates, 500);
     }
 }

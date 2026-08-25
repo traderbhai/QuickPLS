@@ -22,6 +22,63 @@ assert SPEC and SPEC.loader
 cells = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(cells)
 
+VERIFIER_MODULE_PATH = HERE / "verify_multimod_metamorphic_qualification_v1.py"
+VERIFIER_SPEC = importlib.util.spec_from_file_location(
+    "metamorphic_verifier", VERIFIER_MODULE_PATH
+)
+assert VERIFIER_SPEC and VERIFIER_SPEC.loader
+verifier = importlib.util.module_from_spec(VERIFIER_SPEC)
+VERIFIER_SPEC.loader.exec_module(verifier)
+
+
+class HeterogeneityMetamorphicVerifierTests(unittest.TestCase):
+    @staticmethod
+    def report(cell_id: str) -> dict:
+        return {
+            "fixed_k_bootstrap": [
+                {
+                    "cell_id": cell_id,
+                    "evidence": {
+                        "bootstrap": [
+                            {
+                                "exhaustive_label_alignment_applied": True,
+                                "targets": [
+                                    {"target_id": "path:x->y", "estimates": [0.25]}
+                                ],
+                                "entries": [
+                                    {
+                                        "status": "usable",
+                                        "replicate_index": 0,
+                                        "target_payload_sha256": "a" * 64,
+                                        "label_alignment": {
+                                            "ambiguous": False,
+                                            "mutual_majority": True,
+                                            "candidate_to_reference": [1, 0],
+                                        },
+                                    }
+                                ],
+                            }
+                        ]
+                    },
+                }
+            ]
+        }
+
+    def test_one_fimix_p23_ledger_exercises_label_remapping(self) -> None:
+        result = verifier.verify_heterogeneity_class_label_mapping(
+            self.report("fimix-p23-fixed-k-bootstrap")
+        )
+        self.assertEqual("passed", result["status"])
+        self.assertEqual(1, result["prepared_ledger_count"])
+        self.assertEqual(1, result["nonidentity_mapping_count"])
+
+    def test_other_compact_profile_is_rejected(self) -> None:
+        result = verifier.verify_heterogeneity_class_label_mapping(
+            self.report("fimix-p0-fixed-k-bootstrap")
+        )
+        self.assertEqual("failed", result["status"])
+        self.assertIn("unexpected_fixed_k_profile", result["failures"])
+
 
 class MetamorphicPlanContractTests(unittest.TestCase):
     def test_plan_is_exact_and_baseline_rooted(self) -> None:

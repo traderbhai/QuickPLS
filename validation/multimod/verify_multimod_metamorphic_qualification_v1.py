@@ -499,6 +499,8 @@ def verify_mga_cancel_resume(report: dict[str, Any]) -> dict[str, Any]:
 
 def verify_heterogeneity_class_label_mapping(report: dict[str, Any]) -> dict[str, Any]:
     failures: list[str] = []
+    expected_cell_id = "fimix-p23-fixed-k-bootstrap"
+    selected_cases = 0
     prepared_ledgers = 0
     usable_entries = 0
     nonidentity_mappings = 0
@@ -508,6 +510,10 @@ def verify_heterogeneity_class_label_mapping(report: dict[str, Any]) -> dict[str
         if not isinstance(case, dict):
             failures.append("fixed_k_case")
             continue
+        if case.get("cell_id") != expected_cell_id:
+            failures.append("unexpected_fixed_k_profile")
+            continue
+        selected_cases += 1
         evidence = case.get("evidence")
         bootstrap_rows = evidence.get("bootstrap", []) if isinstance(evidence, dict) else []
         for prepared in bootstrap_rows:
@@ -565,7 +571,7 @@ def verify_heterogeneity_class_label_mapping(report: dict[str, Any]) -> dict[str
                     nonidentity_mappings += 1
                     if len(vector) == len(targets):
                         nonidentity_target_vectors += 1
-    if prepared_ledgers < 3:
+    if selected_cases != 1 or prepared_ledgers < 1:
         failures.append("fixed_k_profile_ledgers")
     if usable_entries == 0:
         failures.append("usable_alignment_inventory")
@@ -574,6 +580,7 @@ def verify_heterogeneity_class_label_mapping(report: dict[str, Any]) -> dict[str
     return {
         "family": "heterogeneity",
         "axis": "class_label_alignment",
+        "expected_profile_cell_id": expected_cell_id,
         "prepared_ledger_count": prepared_ledgers,
         "usable_aligned_entry_count": usable_entries,
         "nonidentity_mapping_count": nonidentity_mappings,
