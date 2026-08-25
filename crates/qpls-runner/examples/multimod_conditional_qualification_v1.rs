@@ -984,7 +984,12 @@ fn multi_path_data(null_interactions: bool) -> (Vec<String>, Vec<Vec<Option<Stri
         let ms = 0.71 * xs + 0.19 * z - 0.2 * noise;
         let ys = 0.77 * ms + 0.18 * z + interaction_scale * -0.31 * ms * z + 0.3 * noise;
         let mb = 0.58 * xb + 0.16 * z + interaction_scale * 0.29 * xb * z + 0.4 * noise;
-        let yb = 0.69 * mb + 0.15 * w + interaction_scale * 0.27 * mb * w + 0.12 * xb - noise;
+        let yb = 0.69 * mb
+            + 0.15 * w
+            + 0.13 * z
+            + interaction_scale * (0.27 * mb * w + 0.21 * mb * z)
+            + 0.12 * xb
+            - noise;
         let l1 = 0.66 * xl + 0.14 * z + interaction_scale * 0.23 * xl * z + noise;
         let l2 = 0.73 * l1 + 0.7 * noise;
         let l3 = 0.68 * l2 - 0.5 * noise;
@@ -1066,6 +1071,7 @@ fn multi_path_fixture(
         ("z", "mb"),
         ("mb", "yb"),
         ("w", "yb"),
+        ("z", "yb"),
         ("xb", "yb"),
         ("xl", "l1"),
         ("z", "l1"),
@@ -1089,6 +1095,7 @@ fn multi_path_fixture(
         ("int:ms:z:ys", vec!["ms", "z"], "ms", "ys"),
         ("int:xb:z:mb", vec!["xb", "z"], "xb", "mb"),
         ("int:mb:w:yb", vec!["mb", "w"], "mb", "yb"),
+        ("int:mb:z:yb", vec!["mb", "z"], "mb", "yb"),
         ("int:xl:z:l1", vec!["xl", "z"], "xl", "l1"),
     ] {
         add_interaction_by_construct(&mut model, id, &operands, focal, outcome)?;
@@ -1114,6 +1121,7 @@ fn multi_path_fixture(
             "int:ms:z:ys".into(),
             "int:xb:z:mb".into(),
             "int:mb:w:yb".into(),
+            "int:mb:z:yb".into(),
             "int:xl:z:l1".into(),
         ],
         three_way_interaction_id: None,
@@ -1813,7 +1821,8 @@ fn run_physically_expanded_frequency_reference(scale: Scale) -> Result<Value, Dy
         let local_x = ((row * 7 + 1) % 29) as f64 / 6.0 - 2.2;
         let local_z = ((row * 11 + 2) % 23) as f64 / 5.0 - 2.0;
         let noise = ((row * 13 + 3) % 19) as f64 / 150.0 - 0.06;
-        let mediator = 0.64 * local_x + 0.2 * local_z + 0.27 * local_x * local_z + noise;
+        let gamma = if row < 36 { 0.27 } else { 0.42 };
+        let mediator = 0.64 * local_x + 0.2 * local_z + gamma * local_x * local_z + noise;
         let outcome = 0.81 * mediator + 0.14 * local_x - 0.3 * noise;
         for _ in 0..(row % 4 + 1) {
             x.push(local_x);

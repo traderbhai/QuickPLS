@@ -1007,7 +1007,7 @@ def verify_conditional(report: dict[str, Any], audit: Audit) -> set[str]:
         and required_kinds <= kinds
         and all(case["compiled_plan"].get("profile") == "multi_two_way_percentile" for case in multi)
         and all(len(case["compiled_plan"].get("paths", [])) == 4 for case in multi)
-        and all(len(case["compiled_plan"].get("interactions", [])) == 5 for case in multi),
+        and all(len(case["compiled_plan"].get("interactions", [])) == 6 for case in multi),
         {
             "paths": sorted(path_ids),
             "target_kinds": sorted(kinds),
