@@ -473,6 +473,7 @@ pub fn estimate_multimod_conditional_interactions_v2_with_control(
             &outcome_id,
             &should_continue,
         )?;
+        let mut pending_interaction_estimates = Vec::new();
         for (predictor, estimate) in predictors.into_iter().zip(estimates) {
             match predictor.kind {
                 PredictorKindV2::Ordinary {
@@ -495,21 +496,32 @@ pub fn estimate_multimod_conditional_interactions_v2_with_control(
                     interaction,
                     product_standard_deviation,
                 } => {
-                    let edge = edge_map
-                        .get_mut(&interaction.focal_relation_id)
-                        .ok_or_else(|| {
-                            MultimodConditionalInteractionPointErrorV2::InvalidResult(format!(
-                                "joint equation omitted focal relation {}",
-                                interaction.focal_relation_id
-                            ))
-                        })?;
-                    edge.linear_coefficients
-                        .push(ConditionalLinearCoefficientV2 {
-                            moderator_id: interaction.moderator_id.clone(),
-                            estimate: estimate / product_standard_deviation,
-                        });
+                    pending_interaction_estimates.push((
+                        interaction,
+                        product_standard_deviation,
+                        estimate,
+                    ));
                 }
             }
+        }
+        // QR columns retain canonical stable-id order, but result assembly must
+        // not depend on an interaction relation sorting after its focal edge.
+        // Attach scientific gammas only after every ordinary edge for this
+        // joint outcome equation has been materialized.
+        for (interaction, product_standard_deviation, estimate) in pending_interaction_estimates {
+            let edge = edge_map
+                .get_mut(&interaction.focal_relation_id)
+                .ok_or_else(|| {
+                    MultimodConditionalInteractionPointErrorV2::InvalidResult(format!(
+                        "joint equation omitted focal relation {}",
+                        interaction.focal_relation_id
+                    ))
+                })?;
+            edge.linear_coefficients
+                .push(ConditionalLinearCoefficientV2 {
+                    moderator_id: interaction.moderator_id.clone(),
+                    estimate: estimate / product_standard_deviation,
+                });
         }
     }
     let mut edges = edge_map.into_values().collect::<Vec<_>>();
@@ -832,5 +844,80 @@ mod tests {
         for (left, right) in left.iter().zip(right) {
             assert!((left - right).abs() < 1.0e-14);
         }
+    }
+
+    #[test]
+    fn interaction_estimates_attach_after_ordinary_edges_regardless_of_stable_id_order() {
+        let plan: CompiledPlsPlanV2 = serde_json::from_value(serde_json::json!({
+            "model_id": "identifier-order-fixture",
+            "scientific_hash": "f".repeat(64),
+            "dataset_id": "identifier-order-data",
+            "blocks": [
+                {"construct_id": "x", "mode": "mode_a", "indicators": []},
+                {"construct_id": "y", "mode": "mode_a", "indicators": []},
+                {"construct_id": "z", "mode": "mode_a", "indicators": []}
+            ],
+            "paths": [
+                {
+                    "relation_id": "m_moderator_main",
+                    "source": "z",
+                    "target": "y",
+                    "parameter_id": "parameter:z:y"
+                },
+                {
+                    "relation_id": "z_focal",
+                    "source": "x",
+                    "target": "y",
+                    "parameter_id": "parameter:x:y"
+                }
+            ]
+        }))
+        .unwrap();
+        let interaction = MultimodConditionalTwoWayInteractionV2 {
+            interaction_id: "interaction:x:z:y".into(),
+            output_id: "derived:interaction:x:z:y".into(),
+            focal_relation_id: "z_focal".into(),
+            interaction_effect_relation_id: "a_interaction_effect".into(),
+            interaction_effect_parameter_id: "parameter:interaction:x:z:y".into(),
+            focal_predictor_id: "x".into(),
+            moderator_id: "z".into(),
+            outcome_id: "y".into(),
+        };
+        assert!(interaction.interaction_effect_relation_id < interaction.focal_relation_id);
+
+        let x = [-2.0, -1.4, -0.9, -0.2, 0.4, 1.1, 1.6, 2.3];
+        let z = [-1.2, 0.8, -0.4, 1.5, -1.6, 0.3, 1.2, -0.7];
+        let y = x
+            .iter()
+            .zip(z)
+            .map(|(x, z)| 0.55 * x + 0.21 * z + 0.34 * x * z)
+            .collect::<Vec<_>>();
+        let scores = BTreeMap::from([
+            ("x".into(), x.to_vec()),
+            ("y".into(), y),
+            ("z".into(), z.to_vec()),
+        ]);
+        let weights = [0.7, 1.0, 1.4, 0.9, 1.8, 1.1, 0.8, 1.3];
+        let result = estimate_multimod_conditional_interactions_v2_with_control(
+            &plan,
+            &[interaction],
+            &scores,
+            MultimodConditionalRowMassV2::PositiveCase(&weights),
+            || true,
+        )
+        .unwrap();
+
+        let focal = result
+            .edges
+            .iter()
+            .find(|edge| edge.relation_id == "z_focal")
+            .unwrap();
+        assert_eq!(focal.linear_coefficients.len(), 1);
+        assert_eq!(focal.linear_coefficients[0].moderator_id, "z");
+        assert!(focal.linear_coefficients[0].estimate.is_finite());
+        assert_eq!(
+            result.receipt.semantics,
+            MultimodConditionalMomentSemanticsV2::PositiveCaseReliability
+        );
     }
 }

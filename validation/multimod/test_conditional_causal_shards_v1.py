@@ -150,6 +150,49 @@ class ConditionalCausalShardContractTests(unittest.TestCase):
                     ),
                 )
 
+    def test_dataset_fingerprint_accepts_only_lowercase_bare_or_v2_sha256(self) -> None:
+        digest = "a" * 64
+        self.assertTrue(verifier.is_dataset_fingerprint(digest))
+        self.assertTrue(verifier.is_dataset_fingerprint(f"v2:{digest}"))
+        for invalid in (
+            "A" * 64,
+            f"v2:{'A' * 64}",
+            f"v3:{digest}",
+            f"v2:{digest[:-1]}",
+            f"v2:{digest[:-1]}g",
+            None,
+        ):
+            with self.subTest(invalid=invalid):
+                self.assertFalse(verifier.is_dataset_fingerprint(invalid))
+
+    def test_causal_compiler_scope_blockers_have_distinct_stable_semantics(self) -> None:
+        blockers = {
+            "group_request_compile": {
+                "status": "blocked",
+                "error": verifier.CAUSAL_GROUP_SCOPE_ERROR,
+            },
+            "weight_request_compile": {
+                "status": "blocked",
+                "error": verifier.CAUSAL_WEIGHT_SCOPE_ERROR,
+            },
+        }
+        self.assertTrue(verifier.causal_compiler_scope_blockers_are_valid(blockers))
+
+        for name, replacement in (
+            ("group_request_compile", verifier.CAUSAL_WEIGHT_SCOPE_ERROR),
+            ("weight_request_compile", verifier.CAUSAL_GROUP_SCOPE_ERROR),
+        ):
+            with self.subTest(name=name):
+                altered = copy.deepcopy(blockers)
+                altered[name]["error"] = replacement
+                self.assertFalse(
+                    verifier.causal_compiler_scope_blockers_are_valid(altered)
+                )
+
+        altered = copy.deepcopy(blockers)
+        altered["weight_request_compile"]["status"] = "unexpectedly_admitted"
+        self.assertFalse(verifier.causal_compiler_scope_blockers_are_valid(altered))
+
     def seal(self, family: str, row: dict[str, object]) -> None:
         shard_id = str(row["shard_id"])
         temporary_result = self.root / f"{shard_id}.tmp.json"

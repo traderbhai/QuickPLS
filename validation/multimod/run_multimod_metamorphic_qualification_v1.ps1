@@ -304,13 +304,15 @@ function Invoke-CheckpointTool {
 function Move-StaleCellFiles {
     param([Parameter(Mandatory = $true)][string]$CellId)
     $paths = @(
-        (Join-Path $cellDirectory "$CellId.json"),
-        (Join-Path $cellDirectory "$CellId.result.tmp.json"),
-        (Join-Path $cellDirectory "$CellId.receipt.json"),
-        (Join-Path $cellDirectory "$CellId.failure.json"),
-        (Join-Path $logDirectory "$CellId.stdout.log"),
-        (Join-Path $logDirectory "$CellId.stderr.log")
-    ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+        @(
+            (Join-Path $cellDirectory "$CellId.json"),
+            (Join-Path $cellDirectory "$CellId.result.tmp.json"),
+            (Join-Path $cellDirectory "$CellId.receipt.json"),
+            (Join-Path $cellDirectory "$CellId.failure.json"),
+            (Join-Path $logDirectory "$CellId.stdout.log"),
+            (Join-Path $logDirectory "$CellId.stderr.log")
+        ) | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }
+    )
     if ($paths.Count -eq 0) { return }
     $attemptRoot = Join-Path $historyDirectory (
         "{0}-{1}-{2}" -f $CellId, [DateTime]::UtcNow.ToString("yyyyMMddTHHmmssfffZ"), [Guid]::NewGuid().ToString("N")

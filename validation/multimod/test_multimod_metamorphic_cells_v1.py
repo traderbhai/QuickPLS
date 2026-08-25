@@ -268,6 +268,13 @@ class MetamorphicWrapperStaticTests(unittest.TestCase):
         self.assertIn("[ValidateRange(600, 6600)]", wrapper)
         self.assertIn("$Job.Process.Kill($true)", wrapper)
         self.assertIn("[System.Diagnostics.ProcessStartInfo]::new()", wrapper)
+        self.assertIn("$paths = @(\n        @(\n", wrapper)
+        self.assertIn(
+            ") | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf }\n"
+            "    )\n"
+            "    if ($paths.Count -eq 0)",
+            wrapper,
+        )
         self.assertLess(
             wrapper.index('Invoke-CellPhase -Name "baseline-root"'),
             wrapper.index('Invoke-CellPhase -Name "dependent-axis"'),

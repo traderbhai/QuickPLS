@@ -66,6 +66,13 @@ CAUSAL_CELLS = {
 HEX = set("0123456789abcdef")
 ALTERNATIVES = {"two_sided", "less", "greater"}
 CAUSAL_INTERPRETATION_LABEL = "assumption-dependent interventional estimate"
+CAUSAL_GROUP_SCOPE_ERROR = (
+    "the model has latent, composite, derived, grouped, or weighted features outside causal V1"
+)
+CAUSAL_WEIGHT_SCOPE_ERROR = (
+    "the selected MultiMod profile is incompatible with the model: "
+    "recipe and SemModelV4 weight declarations differ"
+)
 SHARD_IDS = {
     family: [row["shard_id"] for row in shard_contract.expected_specs(family)]
     for family in ("conditional", "causal")
@@ -78,6 +85,13 @@ def canonical_json(value: Any) -> bytes:
 
 def is_sha256(value: Any) -> bool:
     return isinstance(value, str) and len(value) == 64 and set(value.lower()) <= HEX
+
+
+def is_dataset_fingerprint(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    digest = value.removeprefix("v2:") if value.startswith("v2:") else value
+    return len(digest) == 64 and all(character in "0123456789abcdef" for character in digest)
 
 
 def is_lower_hex(value: Any, length: int) -> bool:
@@ -290,25 +304,29 @@ def verify_compiler_and_ledger(case: dict[str, Any]) -> tuple[bool, Any]:
         receipt.get("recipe_analytical_sha256"),
         receipt.get("config_sha256"),
         receipt.get("model_scientific_sha256"),
-        receipt.get("dataset_fingerprint"),
         receipt.get("plan_sha256"),
         receipt.get("analytical_identity_sha256"),
     ]
+    receipt_digests_valid = all(is_sha256(value) for value in digests) and is_dataset_fingerprint(
+        receipt.get("dataset_fingerprint")
+    )
     provenance = case.get("result", {}).get("provenance", {})
     identity_ok = (
         case.get("deterministic_recompile_equal") is True
-        and all(is_sha256(value) for value in digests)
+        and receipt_digests_valid
         and isinstance(case.get("compiled_plan"), dict)
         and receipt.get("recipe_id") == case.get("recipe_id")
         and receipt.get("model_id") == case.get("model_id")
         and provenance.get("recipe_analytical_sha256") == receipt.get("recipe_analytical_sha256")
         and provenance.get("model_scientific_sha256") == receipt.get("model_scientific_sha256")
-        and provenance.get("dataset_fingerprint") == case.get("dataset_fingerprint")
+        and provenance.get("dataset_fingerprint")
+        == receipt.get("dataset_fingerprint")
+        == case.get("dataset_fingerprint")
     )
     return identity_ok, {
         "case_id": case.get("case_id"),
         "deterministic_recompile_equal": case.get("deterministic_recompile_equal"),
-        "receipt_digests_valid": all(is_sha256(value) for value in digests),
+        "receipt_digests_valid": receipt_digests_valid,
     }
 
 
@@ -1365,6 +1383,17 @@ def causal_bootstrap_type7(case: dict[str, Any]) -> tuple[bool, Any]:
     return valid, {"case_id": case["case_id"], "targets": details}
 
 
+def causal_compiler_scope_blockers_are_valid(blockers: dict[str, Any]) -> bool:
+    group = blockers.get("group_request_compile", {})
+    weight = blockers.get("weight_request_compile", {})
+    return (
+        group.get("status") == "blocked"
+        and group.get("error") == CAUSAL_GROUP_SCOPE_ERROR
+        and weight.get("status") == "blocked"
+        and weight.get("error") == CAUSAL_WEIGHT_SCOPE_ERROR
+    )
+
+
 def verify_causal_case(case: dict[str, Any]) -> tuple[bool, Any]:
     basic = verify_compiler_and_ledger(case)[0]
     ordered_effects = case["result"]["effects"]
@@ -1530,10 +1559,7 @@ def verify_causal(report: dict[str, Any], audit: Audit) -> set[str]:
                 "latent_composite_or_hoc_role_request",
             }
         )
-        and all(
-            "causal" in blockers[name].get("error", "").lower()
-            for name in {"group_request_compile", "weight_request_compile"}
-        )
+        and causal_compiler_scope_blockers_are_valid(blockers)
         and report.get("api_boundaries", {}).get("recipe_v4_natural_or_cross_world_request", "").startswith(
             "not_representable_by_design"
         ),
