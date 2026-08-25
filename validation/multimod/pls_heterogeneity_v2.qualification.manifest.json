@@ -99,7 +99,7 @@
     }
   ],
   "promotion_contract": {
-    "profile_procedure_evidence_identity": "Every algorithm, interaction profile and procedure pair has a unique report identity; tandem FIMIX and POS evidence never substitutes across algorithms. The publication-profile PLS-POS point and fixed-K bootstrap cells require the exact bound K=2, K=3, K=4 and K=5 scientific-check inventory before promotion.",
+    "profile_procedure_evidence_identity": "Every algorithm, interaction profile and procedure pair has a unique report identity; tandem FIMIX and POS evidence never substitutes across algorithms. Promotion requires the seven exact K=2 fixed-K bootstrap profile cells, typed balanced n=120 publication-profile PLS-POS point discoveries at K=3, K=4 and K=5, and exhaustive K-factorial decision evidence without treating the point cells as bootstrap inference.",
     "required_gate_families": ["specification","compiler","independent_oracle","recovery_and_null_simulation","multi_start","bootstrap_label_alignment","common_metric","persistence","export","native_accessibility","installed_offline"],
     "minimum_live_state": "release_qualified",
     "stale_hash_behavior": "derive_absent",

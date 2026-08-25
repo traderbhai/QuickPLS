@@ -91,9 +91,16 @@ requires the exact plan before the existing comparator can publish
 as a fail-fast, resumable shard graph. Exact 2/3/5/20-group and non-Cartesian MGA cells, independent raw-null
 probability reconstruction, multi-scenario FIMIX recovery, P0/P2/P23 PLS-POS,
 independent likelihood/posterior/R-squared/objective checks, common-metric
-suppression, exact P0 PLS-POS K=2 through K=5 candidate/bootstrap coverage, and
-independent K! ambiguity/majority decisions are documented in
-`mga_heterogeneity_raw_qualification_v1.md`.
+suppression, seven distinct K=2 fixed-K bootstrap profile cells, typed balanced
+n=120 P0 PLS-POS point-discovery evidence at K=3 through K=5, and independent
+K! ambiguity/majority decisions are documented in
+`mga_heterogeneity_raw_qualification_v1.md`. Each 500-draw heterogeneity
+bootstrap cell uses one frozen prepared execution and 100 SHA-256-bound modulo
+caches; up to two cells advance concurrently. Immutable payload/receipt
+generations switch through one atomic current pointer, and a single
+relative-path, identity-bound 100-cache inventory feeds finalization, so long
+Windows paths do not expand into 100 command-line arguments. Only an exact
+complete inventory can produce the unchanged scientific shard payload.
 
 `exports.semantic.readback` now has an executable 25-profile matrix. It binds
 canonical production projections to the native no-replace publication path for

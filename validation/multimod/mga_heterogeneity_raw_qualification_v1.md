@@ -115,25 +115,39 @@ release Cargo build,
 runs a small raw-runner sentinel, and then executes the production matrix as a
 dependency-aware set of deterministic executable shards. Recovery seeds,
 simulation scenarios, candidate-K cells, POS discoveries, failure boundaries,
-and fixed-K bootstrap cells each publish an atomic SHA-256 receipt. A bootstrap
-shard consumes the exact retained discovery identity instead of rerunning its
-discovery. Independent point shards may run concurrently; bootstrap concurrency
-is bounded separately. No Cargo build or test process runs concurrently.
+and fixed-K bootstrap cells each publish an atomic SHA-256 receipt. Each of the
+seven bootstrap cells consumes its exact retained discovery identity, performs
+one prepared point/common-metric pass, and freezes that prepared execution for
+all resamples. Its 500 draws are partitioned into 100 deterministic modulo
+caches of five owned draws. A cache process may run for at most 25 minutes
+inside the estimator and 30 minutes externally; an interrupted cache resumes
+without retrying completed or failed draws. Up to
+`MaxParallelBootstrapShards` scientific cells run concurrently, while each cell
+has only one active cache attempt. No Cargo build or test process runs
+concurrently.
 
 The wrapper refuses a dirty tracked or untracked source tree and any inherited
 non-baseline metamorphism, compact fixture, sign transform, or worker count
 other than one. The comparator independently requires the baseline 400-row,
-seed-42 qualification identity. The default wall-clock budget is 110 minutes,
-no scientific shard may run for more than 30 minutes, and the sentinel is
+seed-42 qualification identity. The wrapper stops new scientific work at 108
+minutes while its outer gate remains 110 minutes, reserving two minutes for
+bounded cleanup. No scientific shard may run for more than 30 minutes, and the sentinel is
 capped at two minutes. Cargo build, plan generation, every shard, aggregation,
 and comparison all run as supervised child processes bounded by the remaining
 family budget; termination kills the process tree and waits for it before the
 wrapper exits. A failed sentinel stops before expensive work. Any later failure or
 timeout stops the active batch immediately while preserving verified shard
-receipts; rerunning the same exact commit, seed, scale, plan, and executable
-resumes only missing or invalid shards. Missing, altered, stale, substituted,
-or dependency-mismatched receipts are rotated into `_attempt_history` and
-recomputed. Only a complete, deterministically aggregated matrix is passed to
+and bootstrap-cache receipts; rerunning the same exact commit, seed, scale,
+plan, and executable resumes only unfinished work. Prepared executions and
+caches use immutable payload/receipt generations and one atomically replaced
+current pointer. A crash before the pointer switch retains the prior verified
+pair; orphan generations are harmless. The current generations bind the source
+commit, executable SHA-256, plan, dependency receipts, prepared-execution
+digest, modulo identity, and record count. A missing or altered current file,
+tampering, mixed execution identity, or zero-progress attempt fails closed. Only the ordinary final scientific checkpoint is rotated
+into `_attempt_history` before deterministic regeneration. Only a complete,
+exact 100-cache relative-path manifest is passed as one bounded command-line
+argument, globally finalized, and passed to
 the independent comparator and published as the gate artifact. Downstream POS,
 common-metric, and bootstrap gates continue to verify that single immutable
 artifact rather than rerunning segmentation.
@@ -153,15 +167,19 @@ fitted endogenous scores. The comparator independently recomputes each
 segment/outcome R-squared and the unweighted total objective, then checks
 partition recovery, overlap, and homogeneous-null thresholds.
 
-The fixed-K matrix contains FIMIX P0/P2/P23, PLS-POS P0/P2/P23, a common-metric
-failure fixture, and exact publication-profile P0 PLS-POS cells at K=3, K=4,
-and K=5 in addition to K=2. Each K=3 through K=5 cell uses a balanced 400-row
-strong-separation fixture, a POS-only ten-seeded-start plan, and one
-500-replicate no-retry ledger. The comparator independently enumerates all K!
-label mappings, validates every retained target digest and overlap decision,
-requires at least 450 usable draws, and reproduces every Type-7 interval.
-Production-function decision probes separately require nonidentity-majority
-acceptance and ambiguous/non-majority rejection at K=3, K=4, and K=5.
+The fixed-K bootstrap matrix contains seven distinct cells: FIMIX P0/P2/P23,
+PLS-POS P0/P2/P23, and the common-metric failure fixture. Each retains one
+500-replicate no-retry ledger at K=2; the comparator validates every retained
+target digest and overlap decision, requires at least 450 usable draws, and
+reproduces every Type-7 interval. A separate publication-profile P0 PLS-POS
+point-discovery matrix retains exact K=3, K=4, and K=5 evidence. Those three
+cells use the typed
+`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1` plan,
+balanced 120-row fixtures (40, 30, and 24 rows per class respectively), and a
+POS-only ten-seeded-start plan; they make no bootstrap claim. Production-
+function decision probes separately enumerate all K! mappings and require
+nonidentity-majority acceptance plus ambiguous/non-majority rejection at K=3,
+K=4, and K=5.
 Common-metric pass and suppression decisions remain independently rebuilt from
 the retained MICOM Step-2 null-correlation series in their separately qualified
 K=2 cells.

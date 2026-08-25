@@ -21,16 +21,37 @@ use qpls_estimation::{
     PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2, PLS_POS_PUBLISHED_METHOD_VERSION_V2,
     align_labels_exhaustive_v2,
 };
+use qpls_resampling::MultiModShardSpecV1;
 use qpls_runner::*;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
+use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Component, Path, PathBuf};
+use std::time::{Duration, Instant};
 use support::*;
 
 const SCHEMA_VERSION: u32 = 1;
 const SUITE_ID: &str = "qpls.multimod.heterogeneity.production-qualification.v2";
 const OBSERVATIONS: usize = 400;
+const MULTICLASS_POINT_OBSERVATIONS: usize = 120;
+const MULTICLASS_POINT_FIXTURE_PLAN_ID: &str =
+    "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1";
+const BOOTSTRAP_PREPARED_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-prepared-execution.v1";
+const BOOTSTRAP_PREPARED_RECEIPT_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-prepared-execution-receipt.v1";
+const BOOTSTRAP_CACHE_SUITE_ID: &str = "qpls.multimod.heterogeneity.bootstrap-shard-cache.v1";
+const BOOTSTRAP_CACHE_RECEIPT_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-shard-cache-receipt.v1";
+const BOOTSTRAP_CURRENT_POINTER_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-current-generation.v1";
+const BOOTSTRAP_CACHE_INVENTORY_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-cache-inventory.v1";
+const QUALIFICATION_BOOTSTRAP_DRAWS: u32 = 500;
+const DEFAULT_BOOTSTRAP_CHUNK_COUNT: u32 = 100;
+const DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS: u64 = 1_500;
 
 fn fixture_observations() -> usize {
     if metamorphic::compact_matrix_v1() {
@@ -38,6 +59,18 @@ fn fixture_observations() -> usize {
     } else {
         OBSERVATIONS
     }
+}
+
+fn multiclass_point_fixture_plan() -> Value {
+    json!({
+        "schema_version": 1,
+        "plan_id": MULTICLASS_POINT_FIXTURE_PLAN_ID,
+        "purpose": "published_p0_pos_candidate_point_discovery_only",
+        "selected_k": [3, 4, 5],
+        "observations_per_fixture": MULTICLASS_POINT_OBSERVATIONS,
+        "allocation": "row_mod_k_exactly_balanced",
+        "bootstrap_evidence": "not_requested",
+    })
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -69,6 +102,23 @@ enum ExecutionMode {
     Monolithic,
     Plan,
     Shard(String),
+    BootstrapPrepare {
+        shard_id: String,
+        budget_seconds: u64,
+    },
+    BootstrapChunk {
+        shard_id: String,
+        prepared_execution: PathBuf,
+        resume_cache: Option<PathBuf>,
+        chunk_index: u32,
+        chunk_count: u32,
+        budget_seconds: u64,
+    },
+    BootstrapFinalize {
+        shard_id: String,
+        prepared_execution: PathBuf,
+        cache_inventory: PathBuf,
+    },
 }
 
 fn arguments() -> Result<Arguments, DynError> {
@@ -77,6 +127,12 @@ fn arguments() -> Result<Arguments, DynError> {
     let mut scale = Scale::Qualification;
     let mut mode = ExecutionMode::Monolithic;
     let mut dependencies = Vec::new();
+    let mut prepared_execution = None;
+    let mut resume_cache = None;
+    let mut cache_inventory = None;
+    let mut chunk_index = None;
+    let mut chunk_count = DEFAULT_BOOTSTRAP_CHUNK_COUNT;
+    let mut budget_seconds = DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS;
     let mut values = env::args().skip(1);
     while let Some(argument) = values.next() {
         match argument.as_str() {
@@ -110,6 +166,86 @@ fn arguments() -> Result<Arguments, DynError> {
                         .ok_or_else(|| invalid("--shard requires an exact shard id"))?,
                 );
             }
+            "--bootstrap-prepare" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("execution modes are mutually exclusive"));
+                }
+                mode = ExecutionMode::BootstrapPrepare {
+                    shard_id: values
+                        .next()
+                        .ok_or_else(|| invalid("--bootstrap-prepare requires a shard id"))?,
+                    budget_seconds: DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS,
+                };
+            }
+            "--bootstrap-chunk" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("execution modes are mutually exclusive"));
+                }
+                mode = ExecutionMode::BootstrapChunk {
+                    shard_id: values
+                        .next()
+                        .ok_or_else(|| invalid("--bootstrap-chunk requires a shard id"))?,
+                    prepared_execution: PathBuf::new(),
+                    resume_cache: None,
+                    chunk_index: 0,
+                    chunk_count: DEFAULT_BOOTSTRAP_CHUNK_COUNT,
+                    budget_seconds: DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS,
+                };
+            }
+            "--bootstrap-finalize" => {
+                if mode != ExecutionMode::Monolithic {
+                    return Err(invalid("execution modes are mutually exclusive"));
+                }
+                mode = ExecutionMode::BootstrapFinalize {
+                    shard_id: values
+                        .next()
+                        .ok_or_else(|| invalid("--bootstrap-finalize requires a shard id"))?,
+                    prepared_execution: PathBuf::new(),
+                    cache_inventory: PathBuf::new(),
+                };
+            }
+            "--prepared-execution" => {
+                prepared_execution =
+                    Some(PathBuf::from(values.next().ok_or_else(|| {
+                        invalid("--prepared-execution requires a path")
+                    })?));
+            }
+            "--resume-cache" => {
+                resume_cache = Some(PathBuf::from(
+                    values
+                        .next()
+                        .ok_or_else(|| invalid("--resume-cache requires a path"))?,
+                ));
+            }
+            "--cache-inventory" => {
+                if cache_inventory.is_some() {
+                    return Err(invalid("--cache-inventory may be supplied only once"));
+                }
+                cache_inventory =
+                    Some(PathBuf::from(values.next().ok_or_else(|| {
+                        invalid("--cache-inventory requires a path")
+                    })?));
+            }
+            "--chunk-index" => {
+                chunk_index = Some(
+                    values
+                        .next()
+                        .ok_or_else(|| invalid("--chunk-index requires a value"))?
+                        .parse()?,
+                )
+            }
+            "--chunk-count" => {
+                chunk_count = values
+                    .next()
+                    .ok_or_else(|| invalid("--chunk-count requires a value"))?
+                    .parse()?
+            }
+            "--budget-seconds" => {
+                budget_seconds = values
+                    .next()
+                    .ok_or_else(|| invalid("--budget-seconds requires a value"))?
+                    .parse()?
+            }
             "--dependency" => dependencies.push(PathBuf::from(
                 values
                     .next()
@@ -118,8 +254,89 @@ fn arguments() -> Result<Arguments, DynError> {
             _ => return Err(invalid(format!("unknown argument {argument}"))),
         }
     }
-    if !dependencies.is_empty() && !matches!(&mode, ExecutionMode::Shard(_)) {
-        return Err(invalid("--dependency is valid only with --shard"));
+    mode = match mode {
+        ExecutionMode::BootstrapChunk { shard_id, .. } => {
+            if !(1..=DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS).contains(&budget_seconds)
+                || chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+                || chunk_index.is_none_or(|index| index >= chunk_count)
+                || prepared_execution.is_none()
+                || cache_inventory.is_some()
+            {
+                return Err(invalid(
+                    "bootstrap chunk requires one prepared execution, an index in the frozen 100-chunk plan, no final cache inventory, and a 1 through 1500 second budget",
+                ));
+            }
+            ExecutionMode::BootstrapChunk {
+                shard_id,
+                prepared_execution: prepared_execution.expect("validated prepared path"),
+                resume_cache,
+                chunk_index: chunk_index.expect("validated chunk index"),
+                chunk_count,
+                budget_seconds,
+            }
+        }
+        ExecutionMode::BootstrapFinalize { shard_id, .. } => {
+            if prepared_execution.is_none()
+                || resume_cache.is_some()
+                || chunk_index.is_some()
+                || chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+                || budget_seconds != DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS
+                || cache_inventory.is_none()
+            {
+                return Err(invalid(
+                    "bootstrap finalization requires one prepared execution and one --cache-inventory manifest",
+                ));
+            }
+            ExecutionMode::BootstrapFinalize {
+                shard_id,
+                prepared_execution: prepared_execution.expect("validated prepared path"),
+                cache_inventory: cache_inventory.expect("validated cache inventory"),
+            }
+        }
+        ExecutionMode::BootstrapPrepare { shard_id, .. } => {
+            if prepared_execution.is_some()
+                || resume_cache.is_some()
+                || cache_inventory.is_some()
+                || chunk_index.is_some()
+                || chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+                || !(1..=DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS).contains(&budget_seconds)
+            {
+                return Err(invalid(
+                    "bootstrap preparation does not accept cache or prepared-execution arguments",
+                ));
+            }
+            ExecutionMode::BootstrapPrepare {
+                shard_id,
+                budget_seconds,
+            }
+        }
+        other => {
+            if prepared_execution.is_some()
+                || resume_cache.is_some()
+                || cache_inventory.is_some()
+                || chunk_index.is_some()
+                || chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+                || budget_seconds != DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS
+            {
+                return Err(invalid(
+                    "bootstrap execution arguments require a bootstrap execution mode",
+                ));
+            }
+            other
+        }
+    };
+    if !dependencies.is_empty()
+        && !matches!(
+            &mode,
+            ExecutionMode::Shard(_)
+                | ExecutionMode::BootstrapPrepare { .. }
+                | ExecutionMode::BootstrapChunk { .. }
+                | ExecutionMode::BootstrapFinalize { .. }
+        )
+    {
+        return Err(invalid(
+            "--dependency is valid only with a scientific or bootstrap shard mode",
+        ));
     }
     Ok(Arguments {
         output: output.ok_or_else(|| invalid("--output is required"))?,
@@ -254,6 +471,51 @@ fn make_fixture_with_classes(
         classes,
         fixture_observations(),
     )
+}
+
+fn validate_multiclass_point_balance(
+    fixture_id: &str,
+    classes: usize,
+    true_classes: &[usize],
+) -> Result<(), DynError> {
+    if !(3..=5).contains(&classes)
+        || true_classes.len() != MULTICLASS_POINT_OBSERVATIONS
+        || MULTICLASS_POINT_OBSERVATIONS % classes != 0
+    {
+        return Err(invalid(format!(
+            "{fixture_id} does not match the typed K=3 through K=5 n=120 point-fixture plan"
+        )));
+    }
+    let expected = MULTICLASS_POINT_OBSERVATIONS / classes;
+    let counts = (0..classes)
+        .map(|class| true_classes.iter().filter(|value| **value == class).count())
+        .collect::<Vec<_>>();
+    if counts.iter().any(|count| *count != expected)
+        || true_classes.iter().any(|class| *class >= classes)
+    {
+        return Err(invalid(format!(
+            "{fixture_id} must contain exactly {expected} rows in each of {classes} classes; observed {counts:?}"
+        )));
+    }
+    Ok(())
+}
+
+fn make_multiclass_point_fixture(
+    fixture_id: &str,
+    data_seed: u64,
+    selected_k: u8,
+) -> Result<HeterogeneityFixture, DynError> {
+    let classes = usize::from(selected_k);
+    let fixture = make_fixture_with_classes_and_observations(
+        fixture_id,
+        HeterogeneityInteractionProfileV2::P0Structural,
+        Scenario::StrongSeparation,
+        data_seed,
+        classes,
+        MULTICLASS_POINT_OBSERVATIONS,
+    )?;
+    validate_multiclass_point_balance(fixture_id, classes, &fixture.true_classes)?;
+    Ok(fixture)
 }
 
 fn strong_multiclass_p0_equation(class: usize, classes: usize) -> ([f64; 3], f64) {
@@ -1048,13 +1310,6 @@ fn qualification_shard_specs(scale: Scale) -> Vec<Value> {
                 &["sentinel"],
                 "point",
             ));
-            shards.push(shard_spec(
-                &format!("pos-published-k{selected_k}-bootstrap"),
-                "bootstrap",
-                Some(selected_k),
-                &["sentinel", discovery_id.as_str()],
-                "bootstrap",
-            ));
         }
         for (shard_id, dependency) in [
             ("bootstrap-fimix-p0", "fimix-recovery-00"),
@@ -1097,6 +1352,7 @@ fn shard_plan(args: &Arguments) -> Result<Value, DynError> {
         "sign_columns": sign_columns_identity()?,
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
+        "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "execution_contract": "one_cargo_build_then_dependency_aware_non_cargo_shards",
         "sentinel_shard_id": "sentinel",
         "aggregation_order": "plan_order",
@@ -1130,6 +1386,7 @@ fn shard_report_header(args: &Arguments) -> Result<Value, DynError> {
         "sign_columns": sign_columns_identity()?,
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
+        "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
         "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
         "multistart_reproducibility_contract": multistart_reproducibility_contract(),
@@ -1173,6 +1430,7 @@ fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, 
     let expected_metamorphism = metamorphic::metamorphism_v1();
     let expected_sign_columns = serde_json::to_value(sign_columns_identity()?)?;
     let expected_workers = metamorphic::configured_workers_v1(1).map_err(invalid)? as u64;
+    let expected_multiclass_point_fixture_plan = multiclass_point_fixture_plan();
     for path in &args.dependencies {
         let value: Value = serde_json::from_slice(&fs::read(path)?)?;
         if value["schema_version"].as_u64() != Some(u64::from(SHARD_SCHEMA_VERSION))
@@ -1183,6 +1441,8 @@ fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, 
             || value.get("sign_columns") != Some(&expected_sign_columns)
             || value["workers"].as_u64() != Some(expected_workers)
             || value["fixture_observations"].as_u64() != Some(fixture_observations() as u64)
+            || value.get("multiclass_point_fixture_plan")
+                != Some(&expected_multiclass_point_fixture_plan)
         {
             return Err(invalid(format!(
                 "dependency {} has the wrong shard identity",
@@ -1318,6 +1578,561 @@ fn dependency_discovery_identity(
         algorithm,
         k,
     )
+}
+
+struct CompiledBootstrapCell {
+    cell_id: String,
+    fixture: HeterogeneityFixture,
+    config: PlsUnobservedHeterogeneityConfigV2,
+    recipe: AnalysisRecipeV4,
+    model: SemModelV4,
+    artifact: CompiledMultiModRecipeV1,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapPreparedEnvelopeV1 {
+    schema_version: u32,
+    suite_id: String,
+    producer_suite_id: String,
+    scientific_shard_id: String,
+    scale: String,
+    campaign_seed: u64,
+    metamorphism: String,
+    sign_columns: Option<String>,
+    workers: usize,
+    fixture_observations: usize,
+    multiclass_point_fixture_plan: Value,
+    dependency_shard_ids: Vec<String>,
+    cell_id: String,
+    chunk_count: u32,
+    requested_replicates: u32,
+    execution: PreparedRawHeterogeneityBootstrapExecutionV2,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapCacheEnvelopeV1 {
+    schema_version: u32,
+    suite_id: String,
+    producer_suite_id: String,
+    scientific_shard_id: String,
+    scale: String,
+    campaign_seed: u64,
+    metamorphism: String,
+    sign_columns: Option<String>,
+    workers: usize,
+    fixture_observations: usize,
+    multiclass_point_fixture_plan: Value,
+    dependency_shard_ids: Vec<String>,
+    cell_id: String,
+    prepared_execution_identity_sha256: String,
+    chunk_index: u32,
+    chunk_count: u32,
+    requested_replicates: u32,
+    prior_record_count: usize,
+    record_count: usize,
+    expected_record_count: usize,
+    completed: bool,
+    cache: RawHeterogeneityBootstrapShardCacheV2,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapGenerationPointerV1 {
+    schema_version: u32,
+    suite_id: String,
+    scientific_shard_id: String,
+    kind: String,
+    chunk_index: Option<u32>,
+    generation_id: String,
+    payload_file: String,
+    payload_sha256: String,
+    receipt_file: String,
+    receipt_sha256: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapDependencyReceiptInventoryV1 {
+    shard_id: String,
+    receipt_sha256: String,
+    result_sha256: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapCacheInventoryEntryV1 {
+    chunk_index: u32,
+    record_count: usize,
+    cache_file: String,
+    cache_sha256: String,
+    receipt_file: String,
+    receipt_sha256: String,
+    pointer_file: String,
+    pointer_sha256: String,
+    cache_shard_identity_sha256: String,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapCacheInventoryV1 {
+    schema_version: u32,
+    suite_id: String,
+    producer_suite_id: String,
+    scientific_shard_id: String,
+    scale: String,
+    campaign_seed: u64,
+    metamorphism: String,
+    sign_columns: Option<String>,
+    workers: usize,
+    fixture_observations: usize,
+    multiclass_point_fixture_plan: Value,
+    dependency_shard_ids: Vec<String>,
+    dependency_receipts: Vec<BootstrapDependencyReceiptInventoryV1>,
+    cell_id: String,
+    plan_sha256: String,
+    producer_executable_sha256: String,
+    source_commit: String,
+    chunk_count: u32,
+    requested_replicates: u32,
+    prepared_execution_file: String,
+    prepared_execution_sha256: String,
+    prepared_receipt_file: String,
+    prepared_receipt_sha256: String,
+    prepared_pointer_file: String,
+    prepared_pointer_sha256: String,
+    execution_identity_sha256: String,
+    caches: Vec<BootstrapCacheInventoryEntryV1>,
+}
+
+fn sha256_bytes(bytes: &[u8]) -> String {
+    let mut digest = Sha256::new();
+    digest.update(bytes);
+    format!("{:x}", digest.finalize())
+}
+
+fn sha256_file(path: &Path) -> Result<String, DynError> {
+    Ok(sha256_bytes(&fs::read(path)?))
+}
+
+fn is_lower_hex(value: &str, length: usize) -> bool {
+    value.len() == length
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
+}
+
+fn resolve_inventory_file(directory: &Path, name: &str, label: &str) -> Result<PathBuf, DynError> {
+    let relative = Path::new(name);
+    let mut components = relative.components();
+    if !matches!(components.next(), Some(Component::Normal(_))) || components.next().is_some() {
+        return Err(invalid(format!(
+            "bootstrap cache inventory {label} must be one relative file name"
+        )));
+    }
+    Ok(directory.join(relative))
+}
+
+fn inventory_file_with_digest(
+    directory: &Path,
+    name: &str,
+    digest: &str,
+    label: &str,
+) -> Result<PathBuf, DynError> {
+    if !is_lower_hex(digest, 64) {
+        return Err(invalid(format!(
+            "bootstrap cache inventory {label} digest is invalid"
+        )));
+    }
+    let path = resolve_inventory_file(directory, name, label)?;
+    if sha256_file(&path)? != digest {
+        return Err(invalid(format!(
+            "bootstrap cache inventory {label} is missing or altered"
+        )));
+    }
+    Ok(path)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn validate_generation_pointer(
+    directory: &Path,
+    pointer_name: &str,
+    pointer_sha256: &str,
+    shard_id: &str,
+    kind: &str,
+    chunk_index: Option<u32>,
+    payload_name: &str,
+    payload_sha256: &str,
+    receipt_name: &str,
+    receipt_sha256: &str,
+) -> Result<BootstrapGenerationPointerV1, DynError> {
+    let pointer_path = inventory_file_with_digest(
+        directory,
+        pointer_name,
+        pointer_sha256,
+        "generation pointer",
+    )?;
+    let pointer: BootstrapGenerationPointerV1 = serde_json::from_slice(&fs::read(pointer_path)?)?;
+    if pointer.schema_version != SCHEMA_VERSION
+        || pointer.suite_id != BOOTSTRAP_CURRENT_POINTER_SUITE_ID
+        || pointer.scientific_shard_id != shard_id
+        || pointer.kind != kind
+        || pointer.chunk_index != chunk_index
+        || !is_lower_hex(&pointer.generation_id, 32)
+        || pointer.payload_file != payload_name
+        || pointer.payload_sha256 != payload_sha256
+        || pointer.receipt_file != receipt_name
+        || pointer.receipt_sha256 != receipt_sha256
+    {
+        return Err(invalid(format!(
+            "bootstrap cache inventory {kind} generation pointer identity is invalid"
+        )));
+    }
+    Ok(pointer)
+}
+
+fn validate_prepared_transport_receipt(
+    receipt_path: &Path,
+    pointer: &BootstrapGenerationPointerV1,
+    inventory: &BootstrapCacheInventoryV1,
+) -> Result<(), DynError> {
+    let receipt: Value = serde_json::from_slice(&fs::read(receipt_path)?)?;
+    let dependency_receipts = serde_json::to_value(&inventory.dependency_receipts)?;
+    if receipt["schema_version"].as_u64() != Some(u64::from(SCHEMA_VERSION))
+        || receipt["suite_id"].as_str() != Some(BOOTSTRAP_PREPARED_RECEIPT_SUITE_ID)
+        || receipt["status"].as_str() != Some("passed")
+        || receipt["generation_id"].as_str() != Some(pointer.generation_id.as_str())
+        || receipt["scientific_shard_id"].as_str() != Some(inventory.scientific_shard_id.as_str())
+        || receipt["scale"].as_str() != Some(inventory.scale.as_str())
+        || receipt["campaign_seed"].as_u64() != Some(inventory.campaign_seed)
+        || receipt["plan_sha256"].as_str() != Some(inventory.plan_sha256.as_str())
+        || receipt["producer_executable_sha256"].as_str()
+            != Some(inventory.producer_executable_sha256.as_str())
+        || receipt["source_commit"].as_str() != Some(inventory.source_commit.as_str())
+        || receipt["prepared_execution_sha256"].as_str()
+            != Some(inventory.prepared_execution_sha256.as_str())
+        || receipt["execution_identity_sha256"].as_str()
+            != Some(inventory.execution_identity_sha256.as_str())
+        || receipt.get("dependency_receipts") != Some(&dependency_receipts)
+    {
+        return Err(invalid(
+            "bootstrap prepared transport receipt is stale or mixed",
+        ));
+    }
+    Ok(())
+}
+
+fn validate_cache_transport_receipt(
+    receipt_path: &Path,
+    pointer: &BootstrapGenerationPointerV1,
+    inventory: &BootstrapCacheInventoryV1,
+    entry: &BootstrapCacheInventoryEntryV1,
+) -> Result<(), DynError> {
+    let receipt: Value = serde_json::from_slice(&fs::read(receipt_path)?)?;
+    let dependency_receipts = serde_json::to_value(&inventory.dependency_receipts)?;
+    let expected_records =
+        expected_owned_bootstrap_records(entry.chunk_index, inventory.chunk_count);
+    if receipt["schema_version"].as_u64() != Some(u64::from(SCHEMA_VERSION))
+        || receipt["suite_id"].as_str() != Some(BOOTSTRAP_CACHE_RECEIPT_SUITE_ID)
+        || receipt["status"].as_str() != Some("complete")
+        || receipt["generation_id"].as_str() != Some(pointer.generation_id.as_str())
+        || receipt["scientific_shard_id"].as_str() != Some(inventory.scientific_shard_id.as_str())
+        || receipt["chunk_index"].as_u64() != Some(u64::from(entry.chunk_index))
+        || receipt["chunk_count"].as_u64() != Some(u64::from(inventory.chunk_count))
+        || receipt["scale"].as_str() != Some(inventory.scale.as_str())
+        || receipt["campaign_seed"].as_u64() != Some(inventory.campaign_seed)
+        || receipt["plan_sha256"].as_str() != Some(inventory.plan_sha256.as_str())
+        || receipt["producer_executable_sha256"].as_str()
+            != Some(inventory.producer_executable_sha256.as_str())
+        || receipt["source_commit"].as_str() != Some(inventory.source_commit.as_str())
+        || receipt["prepared_execution_sha256"].as_str()
+            != Some(inventory.prepared_execution_sha256.as_str())
+        || receipt["prepared_receipt_sha256"].as_str()
+            != Some(inventory.prepared_receipt_sha256.as_str())
+        || receipt["execution_identity_sha256"].as_str()
+            != Some(inventory.execution_identity_sha256.as_str())
+        || receipt["cache_sha256"].as_str() != Some(entry.cache_sha256.as_str())
+        || receipt["cache_shard_identity_sha256"].as_str()
+            != Some(entry.cache_shard_identity_sha256.as_str())
+        || receipt["record_count"].as_u64() != Some(entry.record_count as u64)
+        || receipt["expected_record_count"].as_u64() != Some(expected_records as u64)
+        || receipt.get("dependency_receipts") != Some(&dependency_receipts)
+    {
+        return Err(invalid(format!(
+            "bootstrap cache transport receipt is stale or mixed for chunk {}",
+            entry.chunk_index
+        )));
+    }
+    Ok(())
+}
+
+fn bootstrap_dependency_ids(dependencies: &[Value]) -> Result<Vec<String>, DynError> {
+    dependencies
+        .iter()
+        .map(|value| {
+            value["shard_id"]
+                .as_str()
+                .map(str::to_owned)
+                .ok_or_else(|| invalid("bootstrap dependency shard identity is absent"))
+        })
+        .collect()
+}
+
+fn bootstrap_cell_definition(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+) -> Result<
+    (
+        String,
+        HeterogeneityFixture,
+        PlsUnobservedHeterogeneityConfigV2,
+    ),
+    DynError,
+> {
+    let tandem_p0 = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+    ];
+    let tandem_interactions = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+    ];
+    let (cell_id, fixture, algorithms, dependency_id, selected_algorithm, common_metric) =
+        match shard_id {
+            "bootstrap-fimix-p0" => (
+                "fimix-p0-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p0-strong",
+                    HeterogeneityInteractionProfileV2::P0Structural,
+                    Scenario::StrongSeparation,
+                    0x5000_u64.wrapping_add(args.seed),
+                )?,
+                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+                "fimix-recovery-00",
+                HeterogeneityAlgorithmV2::FimixPlsV2,
+                false,
+            ),
+            "bootstrap-pos-published-p0" => (
+                "pos-published-p0-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p0-strong",
+                    HeterogeneityInteractionProfileV2::P0Structural,
+                    Scenario::StrongSeparation,
+                    0x5000_u64.wrapping_add(args.seed),
+                )?,
+                tandem_p0,
+                "pos-published-p0-discovery",
+                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+                true,
+            ),
+            "bootstrap-fimix-p2" => (
+                "fimix-p2-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p2-strong",
+                    HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                    Scenario::StrongSeparation,
+                    0x5200_u64.wrapping_add(args.seed),
+                )?,
+                tandem_interactions,
+                "pos-destination-p2-discovery",
+                HeterogeneityAlgorithmV2::FimixPlsV2,
+                false,
+            ),
+            "bootstrap-pos-destination-p2" => (
+                "pos-destination-p2-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p2-strong",
+                    HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                    Scenario::StrongSeparation,
+                    0x5200_u64.wrapping_add(args.seed),
+                )?,
+                tandem_interactions,
+                "pos-destination-p2-discovery",
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                true,
+            ),
+            "bootstrap-fimix-p23" => (
+                "fimix-p23-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p23-strong",
+                    HeterogeneityInteractionProfileV2::P23AllCurrent,
+                    Scenario::StrongSeparation,
+                    0x5230_u64.wrapping_add(args.seed),
+                )?,
+                tandem_interactions,
+                "pos-destination-p23-discovery",
+                HeterogeneityAlgorithmV2::FimixPlsV2,
+                false,
+            ),
+            "bootstrap-pos-destination-p23" => (
+                "pos-destination-p23-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p23-strong",
+                    HeterogeneityInteractionProfileV2::P23AllCurrent,
+                    Scenario::StrongSeparation,
+                    0x5230_u64.wrapping_add(args.seed),
+                )?,
+                tandem_interactions,
+                "pos-destination-p23-discovery",
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                true,
+            ),
+            "bootstrap-pos-common-metric-failure" => (
+                "pos-p2-common-metric-failure-fixed-k-bootstrap",
+                make_fixture(
+                    "heterogeneity-p2-common-metric-failure",
+                    HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                    Scenario::CommonMetricFailure,
+                    0x4641_494c_u64.wrapping_add(args.seed),
+                )?,
+                tandem_interactions,
+                "pos-common-metric-failure-discovery",
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                true,
+            ),
+            _ => {
+                return Err(invalid(format!(
+                    "{shard_id} is not one of the seven retained bootstrap scientific cells"
+                )));
+            }
+        };
+    let discovery_identity =
+        dependency_discovery_identity(dependencies, dependency_id, selected_algorithm, 2)?;
+    let config = inference_config(
+        &fixture,
+        args.seed,
+        vec![2],
+        algorithms,
+        discovery_identity,
+        selected_algorithm,
+        2,
+        common_metric,
+    );
+    Ok((cell_id.into(), fixture, config))
+}
+
+fn compile_bootstrap_cell(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+) -> Result<CompiledBootstrapCell, DynError> {
+    let (cell_id, fixture, config) = bootstrap_cell_definition(args, shard_id, dependencies)?;
+    let mut recipe = fixture.recipe.clone();
+    let mut model = fixture.model.clone();
+    recipe.settings.workers =
+        metamorphic::configured_workers_v1(recipe.settings.workers).map_err(invalid)?;
+    metamorphic::transform_model_declaration_order_v1(&mut model);
+    stage_additive_multimod_recipe(&mut recipe, AnalysisMethod::Predict);
+    recipe.pls_heterogeneity = Some(config.clone());
+    finalize_recipe(&mut recipe, &model)?;
+    let artifact = prepare_multimod_recipe_v1(
+        &fixture.dataset,
+        &recipe,
+        &model,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    Ok(CompiledBootstrapCell {
+        cell_id,
+        fixture,
+        config,
+        recipe,
+        model,
+        artifact,
+    })
+}
+
+fn validate_prepared_envelope(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+    cell: &CompiledBootstrapCell,
+    envelope: &BootstrapPreparedEnvelopeV1,
+) -> Result<(), DynError> {
+    if envelope.schema_version != 1
+        || envelope.suite_id != BOOTSTRAP_PREPARED_SUITE_ID
+        || envelope.producer_suite_id != SUITE_ID
+        || envelope.scientific_shard_id != shard_id
+        || envelope.scale != scale_id(args.scale)
+        || envelope.campaign_seed != args.seed
+        || envelope.metamorphism != metamorphic::metamorphism_v1()
+        || envelope.sign_columns != sign_columns_identity()?
+        || envelope.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
+        || envelope.fixture_observations != fixture_observations()
+        || envelope.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || envelope.dependency_shard_ids != bootstrap_dependency_ids(dependencies)?
+        || envelope.cell_id != cell.cell_id
+        || envelope.chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+        || envelope.requested_replicates != QUALIFICATION_BOOTSTRAP_DRAWS
+        || envelope
+            .execution
+            .reference
+            .orchestrator_plan
+            .requested_replicates
+            != QUALIFICATION_BOOTSTRAP_DRAWS
+    {
+        return Err(invalid(format!(
+            "prepared bootstrap execution identity is invalid for {shard_id}"
+        )));
+    }
+    Ok(())
+}
+
+fn expected_owned_bootstrap_records(chunk_index: u32, chunk_count: u32) -> usize {
+    (0..QUALIFICATION_BOOTSTRAP_DRAWS)
+        .filter(|index| index % chunk_count == chunk_index)
+        .count()
+}
+
+fn validate_cache_envelope(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+    cell: &CompiledBootstrapCell,
+    prepared: &BootstrapPreparedEnvelopeV1,
+    envelope: &BootstrapCacheEnvelopeV1,
+) -> Result<(), DynError> {
+    let expected_records =
+        expected_owned_bootstrap_records(envelope.chunk_index, envelope.chunk_count);
+    let indices_are_owned = envelope.cache.records.iter().all(|record| {
+        record.index < QUALIFICATION_BOOTSTRAP_DRAWS
+            && record.index % envelope.chunk_count == envelope.chunk_index
+    });
+    if envelope.schema_version != 1
+        || envelope.suite_id != BOOTSTRAP_CACHE_SUITE_ID
+        || envelope.producer_suite_id != SUITE_ID
+        || envelope.scientific_shard_id != shard_id
+        || envelope.scale != scale_id(args.scale)
+        || envelope.campaign_seed != args.seed
+        || envelope.metamorphism != metamorphic::metamorphism_v1()
+        || envelope.sign_columns != sign_columns_identity()?
+        || envelope.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
+        || envelope.fixture_observations != fixture_observations()
+        || envelope.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || envelope.dependency_shard_ids != bootstrap_dependency_ids(dependencies)?
+        || envelope.cell_id != cell.cell_id
+        || envelope.prepared_execution_identity_sha256
+            != prepared.execution.execution_identity_sha256
+        || envelope.chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+        || envelope.chunk_index >= envelope.chunk_count
+        || envelope.requested_replicates != QUALIFICATION_BOOTSTRAP_DRAWS
+        || envelope.expected_record_count != expected_records
+        || envelope.record_count != envelope.cache.records.len()
+        || envelope.record_count > expected_records
+        || envelope.cache.shard.shard_index != envelope.chunk_index
+        || envelope.cache.shard.shard_count != envelope.chunk_count
+        || !indices_are_owned
+        || envelope.completed
+            != (!envelope.cache.cancelled && envelope.record_count == expected_records)
+        || (!envelope.cache.cancelled && envelope.record_count != expected_records)
+    {
+        return Err(invalid(format!(
+            "bootstrap cache envelope is invalid for {shard_id} chunk {}",
+            envelope.chunk_index
+        )));
+    }
+    Ok(())
 }
 
 fn indexed_shard(shard_id: &str, prefix: &str, count: usize) -> Option<usize> {
@@ -1653,14 +2468,12 @@ fn shard_payload(
                 .and_then(|value| value.parse::<u8>().ok())
                 .filter(|value| (3..=5).contains(value))
                 .ok_or_else(|| invalid(format!("invalid POS K discovery shard {shard_id}")))?;
-            let fixture = make_fixture_with_classes(
+            let fixture = make_multiclass_point_fixture(
                 &format!("heterogeneity-p0-strong-k{selected_k}"),
-                HeterogeneityInteractionProfileV2::P0Structural,
-                Scenario::StrongSeparation,
                 0x4b00_0000_u64
                     .wrapping_add(u64::from(selected_k) << 16)
                     .wrapping_add(args.seed),
-                usize::from(selected_k),
+                selected_k,
             )?;
             let (_, value) = run_required_discovery(
                 &format!("pos-published-p0-k{selected_k}-discovery"),
@@ -1675,41 +2488,6 @@ fn shard_payload(
                 "index": selected_k,
                 "value": value,
             }))
-        }
-        _ if shard_id.starts_with("pos-published-k") && shard_id.ends_with("-bootstrap") => {
-            let selected_k = shard_id
-                .strip_prefix("pos-published-k")
-                .and_then(|value| value.strip_suffix("-bootstrap"))
-                .and_then(|value| value.parse::<u8>().ok())
-                .filter(|value| (3..=5).contains(value))
-                .ok_or_else(|| invalid(format!("invalid POS K bootstrap shard {shard_id}")))?;
-            let dependency_id = format!("pos-published-k{selected_k}-discovery");
-            let fixture = make_fixture_with_classes(
-                &format!("heterogeneity-p0-strong-k{selected_k}"),
-                HeterogeneityInteractionProfileV2::P0Structural,
-                Scenario::StrongSeparation,
-                0x4b00_0000_u64
-                    .wrapping_add(u64::from(selected_k) << 16)
-                    .wrapping_add(args.seed),
-                usize::from(selected_k),
-            )?;
-            let value = run_inference_at_k(
-                &format!("pos-published-p0-k{selected_k}-fixed-k-bootstrap"),
-                &fixture,
-                args.seed,
-                vec![selected_k],
-                vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
-                dependency_discovery_identity(
-                    dependencies,
-                    &dependency_id,
-                    HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                    selected_k,
-                )?,
-                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                selected_k,
-                false,
-            )?;
-            Ok(json!({ "kind": "bootstrap", "index": selected_k, "value": value }))
         }
         "bootstrap-fimix-p0" => {
             let fixture = make_fixture(
@@ -1881,7 +2659,374 @@ fn run_shard(args: &Arguments, shard_id: &str) -> Result<(), DynError> {
         "sign_columns": sign_columns_identity()?,
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
+        "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "dependency_shard_ids": dependency_ids,
+        "payload": payload,
+    });
+    fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
+    Ok(())
+}
+
+fn bootstrap_prepared_envelope(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+    cell: &CompiledBootstrapCell,
+    execution: PreparedRawHeterogeneityBootstrapExecutionV2,
+) -> Result<BootstrapPreparedEnvelopeV1, DynError> {
+    let envelope = BootstrapPreparedEnvelopeV1 {
+        schema_version: 1,
+        suite_id: BOOTSTRAP_PREPARED_SUITE_ID.into(),
+        producer_suite_id: SUITE_ID.into(),
+        scientific_shard_id: shard_id.into(),
+        scale: scale_id(args.scale).into(),
+        campaign_seed: args.seed,
+        metamorphism: metamorphic::metamorphism_v1().into(),
+        sign_columns: sign_columns_identity()?,
+        workers: metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        fixture_observations: fixture_observations(),
+        multiclass_point_fixture_plan: multiclass_point_fixture_plan(),
+        dependency_shard_ids: bootstrap_dependency_ids(dependencies)?,
+        cell_id: cell.cell_id.clone(),
+        chunk_count: DEFAULT_BOOTSTRAP_CHUNK_COUNT,
+        requested_replicates: QUALIFICATION_BOOTSTRAP_DRAWS,
+        execution,
+    };
+    validate_prepared_envelope(args, shard_id, dependencies, cell, &envelope)?;
+    Ok(envelope)
+}
+
+fn run_bootstrap_prepare(
+    args: &Arguments,
+    shard_id: &str,
+    budget_seconds: u64,
+) -> Result<(), DynError> {
+    let started = Instant::now();
+    let budget = Duration::from_secs(budget_seconds);
+    let dependencies = dependency_envelopes(args, shard_id)?;
+    let cell = compile_bootstrap_cell(args, shard_id, &dependencies)?;
+    let execution = prepare_compiled_raw_pls_heterogeneity_bootstrap_v2(
+        &cell.fixture.dataset,
+        &cell.recipe,
+        &cell.model,
+        &cell.artifact,
+        || started.elapsed() >= budget,
+        |_| {},
+    )?;
+    let envelope = bootstrap_prepared_envelope(args, shard_id, &dependencies, &cell, execution)?;
+    fs::write(&args.output, serde_json::to_vec_pretty(&envelope)?)?;
+    Ok(())
+}
+
+fn read_prepared_envelope(
+    args: &Arguments,
+    shard_id: &str,
+    dependencies: &[Value],
+    cell: &CompiledBootstrapCell,
+    path: &PathBuf,
+) -> Result<BootstrapPreparedEnvelopeV1, DynError> {
+    let envelope: BootstrapPreparedEnvelopeV1 = serde_json::from_slice(&fs::read(path)?)?;
+    validate_prepared_envelope(args, shard_id, dependencies, cell, &envelope)?;
+    Ok(envelope)
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_bootstrap_chunk(
+    args: &Arguments,
+    shard_id: &str,
+    prepared_execution: &PathBuf,
+    resume_cache: Option<&PathBuf>,
+    chunk_index: u32,
+    chunk_count: u32,
+    budget_seconds: u64,
+) -> Result<(), DynError> {
+    let started = Instant::now();
+    let budget = Duration::from_secs(budget_seconds);
+    let dependencies = dependency_envelopes(args, shard_id)?;
+    let cell = compile_bootstrap_cell(args, shard_id, &dependencies)?;
+    let prepared =
+        read_prepared_envelope(args, shard_id, &dependencies, &cell, prepared_execution)?;
+    let resume = resume_cache
+        .map(|path| {
+            let envelope: BootstrapCacheEnvelopeV1 = serde_json::from_slice(&fs::read(path)?)?;
+            validate_cache_envelope(args, shard_id, &dependencies, &cell, &prepared, &envelope)?;
+            if envelope.chunk_index != chunk_index || envelope.chunk_count != chunk_count {
+                return Err(invalid(
+                    "resume cache belongs to a different deterministic modulo chunk",
+                ));
+            }
+            Ok(envelope.cache)
+        })
+        .transpose()?;
+    let prior_record_count = resume.as_ref().map_or(0, |cache| cache.records.len());
+    let cache = run_prepared_raw_pls_heterogeneity_bootstrap_shard_v2(
+        &cell.fixture.dataset,
+        &cell.recipe,
+        &cell.model,
+        &cell.artifact,
+        &prepared.execution,
+        MultiModShardSpecV1 {
+            shard_index: chunk_index,
+            shard_count: chunk_count,
+        },
+        resume,
+        || started.elapsed() >= budget,
+        |_| {},
+    )?;
+    let record_count = cache.records.len();
+    let expected_record_count = expected_owned_bootstrap_records(chunk_index, chunk_count);
+    if record_count <= prior_record_count {
+        return Err(invalid(format!(
+            "bootstrap chunk {chunk_index}/{chunk_count} made zero verified record progress"
+        )));
+    }
+    let completed = !cache.cancelled && record_count == expected_record_count;
+    let envelope = BootstrapCacheEnvelopeV1 {
+        schema_version: 1,
+        suite_id: BOOTSTRAP_CACHE_SUITE_ID.into(),
+        producer_suite_id: SUITE_ID.into(),
+        scientific_shard_id: shard_id.into(),
+        scale: scale_id(args.scale).into(),
+        campaign_seed: args.seed,
+        metamorphism: metamorphic::metamorphism_v1().into(),
+        sign_columns: sign_columns_identity()?,
+        workers: metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        fixture_observations: fixture_observations(),
+        multiclass_point_fixture_plan: multiclass_point_fixture_plan(),
+        dependency_shard_ids: bootstrap_dependency_ids(&dependencies)?,
+        cell_id: cell.cell_id.clone(),
+        prepared_execution_identity_sha256: prepared.execution.execution_identity_sha256.clone(),
+        chunk_index,
+        chunk_count,
+        requested_replicates: QUALIFICATION_BOOTSTRAP_DRAWS,
+        prior_record_count,
+        record_count,
+        expected_record_count,
+        completed,
+        cache,
+    };
+    validate_cache_envelope(args, shard_id, &dependencies, &cell, &prepared, &envelope)?;
+    fs::write(&args.output, serde_json::to_vec_pretty(&envelope)?)?;
+    Ok(())
+}
+
+fn bootstrap_scientific_value(
+    cell: &CompiledBootstrapCell,
+    output: &MultiModRunOutputV1,
+) -> Result<Value, DynError> {
+    let MultiModAnalysisResultV1::PlsHeterogeneityAnalysisV2(analysis) = &output.result else {
+        return Err(invalid(
+            "resumable heterogeneity finalizer returned the wrong result family",
+        ));
+    };
+    Ok(json!({
+        "cell_id": cell.cell_id,
+        "fixture_id": cell.fixture.fixture_id,
+        "scenario": format!("{:?}", cell.fixture.scenario).to_lowercase(),
+        "profile": cell.fixture.profile,
+        "dataset_rows": cell.fixture.dataset.batch.num_rows(),
+        "dataset_fingerprint": cell.fixture.dataset.fingerprint.0,
+        "config": cell.config,
+        "compiler_receipt": output.compilation_receipt,
+        "compiled_plan": cell.artifact.plan(),
+        "sem_model_authority": cell.model,
+        "analysis": analysis,
+        "evidence": summarize_evidence(&output.evidence),
+        "true_classes": cell.fixture.true_classes,
+    }))
+}
+
+fn run_bootstrap_finalize(
+    args: &Arguments,
+    shard_id: &str,
+    prepared_execution: &PathBuf,
+    cache_inventory: &PathBuf,
+) -> Result<(), DynError> {
+    let dependencies = dependency_envelopes(args, shard_id)?;
+    let cell = compile_bootstrap_cell(args, shard_id, &dependencies)?;
+    let prepared =
+        read_prepared_envelope(args, shard_id, &dependencies, &cell, prepared_execution)?;
+    let inventory: BootstrapCacheInventoryV1 = serde_json::from_slice(&fs::read(cache_inventory)?)?;
+    let inventory_directory = cache_inventory
+        .parent()
+        .ok_or_else(|| invalid("bootstrap cache inventory has no parent directory"))?;
+    let dependency_ids = bootstrap_dependency_ids(&dependencies)?;
+    if inventory.schema_version != SCHEMA_VERSION
+        || inventory.suite_id != BOOTSTRAP_CACHE_INVENTORY_SUITE_ID
+        || inventory.producer_suite_id != SUITE_ID
+        || inventory.scientific_shard_id != shard_id
+        || inventory.scale != scale_id(args.scale)
+        || inventory.campaign_seed != args.seed
+        || inventory.metamorphism != metamorphic::metamorphism_v1()
+        || inventory.sign_columns != sign_columns_identity()?
+        || inventory.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
+        || inventory.fixture_observations != fixture_observations()
+        || inventory.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || inventory.dependency_shard_ids != dependency_ids
+        || inventory.cell_id != cell.cell_id
+        || !is_lower_hex(&inventory.plan_sha256, 64)
+        || !is_lower_hex(&inventory.producer_executable_sha256, 64)
+        || !is_lower_hex(&inventory.source_commit, 40)
+        || inventory.chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
+        || inventory.requested_replicates != QUALIFICATION_BOOTSTRAP_DRAWS
+        || inventory.execution_identity_sha256 != prepared.execution.execution_identity_sha256
+    {
+        return Err(invalid(
+            "bootstrap cache inventory scientific identity is invalid",
+        ));
+    }
+    if sha256_file(&env::current_exe()?)? != inventory.producer_executable_sha256 {
+        return Err(invalid(
+            "bootstrap cache inventory executable identity is stale or mixed",
+        ));
+    }
+
+    let inventory_prepared = inventory_file_with_digest(
+        inventory_directory,
+        &inventory.prepared_execution_file,
+        &inventory.prepared_execution_sha256,
+        "prepared execution",
+    )?;
+    if fs::canonicalize(&inventory_prepared)? != fs::canonicalize(prepared_execution)? {
+        return Err(invalid(
+            "bootstrap cache inventory names a different prepared execution",
+        ));
+    }
+    let prepared_receipt_path = inventory_file_with_digest(
+        inventory_directory,
+        &inventory.prepared_receipt_file,
+        &inventory.prepared_receipt_sha256,
+        "prepared receipt",
+    )?;
+    let prepared_pointer = validate_generation_pointer(
+        inventory_directory,
+        &inventory.prepared_pointer_file,
+        &inventory.prepared_pointer_sha256,
+        shard_id,
+        "prepared",
+        None,
+        &inventory.prepared_execution_file,
+        &inventory.prepared_execution_sha256,
+        &inventory.prepared_receipt_file,
+        &inventory.prepared_receipt_sha256,
+    )?;
+    validate_prepared_transport_receipt(&prepared_receipt_path, &prepared_pointer, &inventory)?;
+
+    let mut dependency_paths = args
+        .dependencies
+        .iter()
+        .map(|path| {
+            let value: Value = serde_json::from_slice(&fs::read(path)?)?;
+            let dependency_id = value["shard_id"]
+                .as_str()
+                .ok_or_else(|| invalid("bootstrap dependency result has no shard id"))?;
+            Ok((dependency_id.to_owned(), path))
+        })
+        .collect::<Result<Vec<_>, DynError>>()?;
+    dependency_paths.sort_by(|left, right| left.0.cmp(&right.0));
+    let mut dependency_receipts = inventory.dependency_receipts.iter().collect::<Vec<_>>();
+    dependency_receipts.sort_by(|left, right| left.shard_id.cmp(&right.shard_id));
+    if dependency_receipts.len() != dependency_paths.len() {
+        return Err(invalid(
+            "bootstrap cache inventory dependency receipt inventory is incomplete",
+        ));
+    }
+    for (receipt, (dependency_id, dependency_path)) in
+        dependency_receipts.into_iter().zip(dependency_paths)
+    {
+        let receipt_path = dependency_path
+            .parent()
+            .ok_or_else(|| invalid("bootstrap dependency result has no parent directory"))?
+            .join(format!("{dependency_id}.receipt.json"));
+        if receipt.shard_id != dependency_id
+            || !is_lower_hex(&receipt.receipt_sha256, 64)
+            || !is_lower_hex(&receipt.result_sha256, 64)
+            || sha256_file(dependency_path)? != receipt.result_sha256
+            || sha256_file(&receipt_path)? != receipt.receipt_sha256
+        {
+            return Err(invalid(
+                "bootstrap cache inventory dependency receipt identity is stale or mixed",
+            ));
+        }
+    }
+
+    if inventory.caches.len() != DEFAULT_BOOTSTRAP_CHUNK_COUNT as usize {
+        return Err(invalid(
+            "bootstrap cache inventory is missing, duplicate, or mixed",
+        ));
+    }
+    let mut caches = Vec::with_capacity(inventory.caches.len());
+    for (expected_chunk, entry) in inventory.caches.iter().enumerate() {
+        if entry.chunk_index as usize != expected_chunk {
+            return Err(invalid(
+                "bootstrap cache inventory is missing, duplicate, or mixed",
+            ));
+        }
+        let cache_path = inventory_file_with_digest(
+            inventory_directory,
+            &entry.cache_file,
+            &entry.cache_sha256,
+            "cache payload",
+        )?;
+        let cache_receipt_path = inventory_file_with_digest(
+            inventory_directory,
+            &entry.receipt_file,
+            &entry.receipt_sha256,
+            "cache receipt",
+        )?;
+        let cache_pointer = validate_generation_pointer(
+            inventory_directory,
+            &entry.pointer_file,
+            &entry.pointer_sha256,
+            shard_id,
+            "cache",
+            Some(entry.chunk_index),
+            &entry.cache_file,
+            &entry.cache_sha256,
+            &entry.receipt_file,
+            &entry.receipt_sha256,
+        )?;
+        validate_cache_transport_receipt(&cache_receipt_path, &cache_pointer, &inventory, entry)?;
+        let envelope: BootstrapCacheEnvelopeV1 = serde_json::from_slice(&fs::read(cache_path)?)?;
+        validate_cache_envelope(args, shard_id, &dependencies, &cell, &prepared, &envelope)?;
+        if !envelope.completed
+            || envelope.chunk_index != entry.chunk_index
+            || envelope.record_count != entry.record_count
+            || envelope.cache.shard.shard_identity_sha256 != entry.cache_shard_identity_sha256
+        {
+            return Err(invalid(format!(
+                "bootstrap cache inventory chunk {} is incomplete or mixed",
+                entry.chunk_index
+            )));
+        }
+        caches.push(envelope.cache);
+    }
+    let output = finalize_prepared_raw_pls_heterogeneity_bootstrap_v2(
+        &cell.fixture.dataset,
+        &cell.recipe,
+        &cell.model,
+        &cell.artifact,
+        &prepared.execution,
+        caches,
+        |_| {},
+    )?;
+    let payload = json!({
+        "kind": "bootstrap",
+        "value": bootstrap_scientific_value(&cell, &output)?,
+    });
+    let report = json!({
+        "schema_version": SHARD_SCHEMA_VERSION,
+        "suite_id": SHARD_SUITE_ID,
+        "producer_suite_id": SUITE_ID,
+        "shard_id": shard_id,
+        "scale": scale_id(args.scale),
+        "campaign_seed": args.seed,
+        "metamorphism": metamorphic::metamorphism_v1(),
+        "sign_columns": sign_columns_identity()?,
+        "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
+        "fixture_observations": fixture_observations(),
+        "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "dependency_shard_ids": bootstrap_dependency_ids(&dependencies)?,
         "payload": payload,
     });
     fs::write(&args.output, serde_json::to_vec_pretty(&report)?)?;
@@ -2116,44 +3261,28 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     )?;
 
     let mut pos_published_k3_through_k5_discovery = Vec::new();
-    let mut pos_published_k3_through_k5_bootstrap = Vec::new();
     if args.scale == Scale::Qualification && !metamorphic::compact_matrix_v1() {
         for selected_k in 3_u8..=5 {
-            let fixture = make_fixture_with_classes(
+            let fixture = make_multiclass_point_fixture(
                 &format!("heterogeneity-p0-strong-k{selected_k}"),
-                HeterogeneityInteractionProfileV2::P0Structural,
-                Scenario::StrongSeparation,
                 0x4b00_0000_u64
                     .wrapping_add(u64::from(selected_k) << 16)
                     .wrapping_add(args.seed),
-                usize::from(selected_k),
+                selected_k,
             )?;
-            let algorithms = vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2];
-            let (discovery_identity, discovery) = run_required_discovery(
+            let (_, discovery) = run_required_discovery(
                 &format!("pos-published-p0-k{selected_k}-discovery"),
                 &fixture,
                 args.seed,
                 vec![selected_k],
-                algorithms.clone(),
+                vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
                 &[(HeterogeneityAlgorithmV2::PlsPosPublishedV2, selected_k)],
             )?;
-            let bootstrap = run_inference_at_k(
-                &format!("pos-published-p0-k{selected_k}-fixed-k-bootstrap"),
-                &fixture,
-                args.seed,
-                vec![selected_k],
-                algorithms,
-                discovery_identity,
-                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                selected_k,
-                false,
-            )?;
             pos_published_k3_through_k5_discovery.push(discovery);
-            pos_published_k3_through_k5_bootstrap.push(bootstrap);
         }
     }
 
-    let mut bootstrap_cells = if metamorphic::compact_matrix_v1() {
+    let bootstrap_cells = if metamorphic::compact_matrix_v1() {
         vec![
             run_inference(
                 "fimix-p0-fixed-k-bootstrap",
@@ -2268,8 +3397,6 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     } else {
         Vec::new()
     };
-    bootstrap_cells.extend(pos_published_k3_through_k5_bootstrap);
-
     let report = json!({
         "schema_version": SCHEMA_VERSION,
         "suite_id": SUITE_ID,
@@ -2279,6 +3406,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         "metamorphism": metamorphic::metamorphism_v1(),
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
+        "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
         "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
         "multistart_reproducibility_contract": {
@@ -2362,6 +3490,31 @@ fn main() -> Result<(), DynError> {
             Ok(())
         }
         ExecutionMode::Shard(shard_id) => run_shard(&args, shard_id),
+        ExecutionMode::BootstrapPrepare {
+            shard_id,
+            budget_seconds,
+        } => run_bootstrap_prepare(&args, shard_id, *budget_seconds),
+        ExecutionMode::BootstrapChunk {
+            shard_id,
+            prepared_execution,
+            resume_cache,
+            chunk_index,
+            chunk_count,
+            budget_seconds,
+        } => run_bootstrap_chunk(
+            &args,
+            shard_id,
+            prepared_execution,
+            resume_cache.as_ref(),
+            *chunk_index,
+            *chunk_count,
+            *budget_seconds,
+        ),
+        ExecutionMode::BootstrapFinalize {
+            shard_id,
+            prepared_execution,
+            cache_inventory,
+        } => run_bootstrap_finalize(&args, shard_id, prepared_execution, cache_inventory),
     }
 }
 
@@ -2471,5 +3624,47 @@ mod tests {
                     .any(|(coefficients, _)| { coefficients.iter().any(|value| *value > 0.0) })
             );
         }
+    }
+
+    #[test]
+    fn lean_multiclass_point_plan_keeps_discovery_and_seven_bootstrap_profiles_distinct() {
+        let plan = multiclass_point_fixture_plan();
+        assert_eq!(plan["schema_version"], 1);
+        assert_eq!(plan["plan_id"], MULTICLASS_POINT_FIXTURE_PLAN_ID);
+        assert_eq!(plan["selected_k"], json!([3, 4, 5]));
+        assert_eq!(plan["observations_per_fixture"], 120);
+        assert_eq!(plan["bootstrap_evidence"], "not_requested");
+
+        let specs = qualification_shard_specs(Scale::Qualification);
+        let shard_ids = specs
+            .iter()
+            .filter_map(|row| row["shard_id"].as_str())
+            .collect::<BTreeSet<_>>();
+        for selected_k in 3..=5 {
+            assert!(shard_ids.contains(format!("pos-published-k{selected_k}-discovery").as_str()));
+            assert!(!shard_ids.contains(format!("pos-published-k{selected_k}-bootstrap").as_str()));
+        }
+        assert_eq!(
+            specs
+                .iter()
+                .filter(|row| row["resource_class"] == "bootstrap")
+                .count(),
+            7
+        );
+    }
+
+    #[test]
+    fn multiclass_point_balance_requires_exact_n120_equal_allocation() {
+        for classes in 3..=5 {
+            let balanced = (0..MULTICLASS_POINT_OBSERVATIONS)
+                .map(|row| row % classes)
+                .collect::<Vec<_>>();
+            validate_multiclass_point_balance("balanced", classes, &balanced).unwrap();
+
+            let mut altered = balanced;
+            altered[0] = 1;
+            assert!(validate_multiclass_point_balance("altered", classes, &altered).is_err());
+        }
+        assert!(validate_multiclass_point_balance("short", 3, &[0, 1, 2]).is_err());
     }
 }

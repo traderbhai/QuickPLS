@@ -70,6 +70,15 @@
     "checkpoint_contract": "atomic_sha256_receipt_bound_to_plan_commit_executable_seed_scale_and_dependencies",
     "campaign_seed": 42,
     "observations_per_fixture": 400,
+    "multiclass_point_fixture_plan": {
+      "schema_version": 1,
+      "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+      "purpose": "published_p0_pos_candidate_point_discovery_only",
+      "selected_k": [3, 4, 5],
+      "observations_per_fixture": 120,
+      "allocation": "row_mod_k_exactly_balanced",
+      "bootstrap_evidence": "not_requested"
+    },
     "fimix_starts": 30,
     "pos_starts": 10,
     "bootstrap_replicates": 500,
@@ -108,10 +117,7 @@
       "pos-destination-p2-fixed-k-bootstrap",
       "fimix-p23-fixed-k-bootstrap",
       "pos-destination-p23-fixed-k-bootstrap",
-      "pos-p2-common-metric-failure-fixed-k-bootstrap",
-      "pos-published-p0-k3-fixed-k-bootstrap",
-      "pos-published-p0-k4-fixed-k-bootstrap",
-      "pos-published-p0-k5-fixed-k-bootstrap"
+      "pos-p2-common-metric-failure-fixed-k-bootstrap"
     ],
     "label_alignment_decision_cells": [
       {"k": 3, "cases": ["nonidentity_mutual_majority", "ambiguous", "unique_nonmajority"], "exhaustive_mappings": 6},

@@ -13,6 +13,7 @@ import argparse
 import hashlib
 import json
 import os
+import secrets
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -21,8 +22,35 @@ from typing import Any
 PLAN_SUITE_ID = "qpls.multimod.heterogeneity.qualification-shard-plan.v1"
 SHARD_SUITE_ID = "qpls.multimod.heterogeneity.qualification-shard.v1"
 RECEIPT_SUITE_ID = "qpls.multimod.heterogeneity.qualification-shard-receipt.v1"
+BOOTSTRAP_PREPARED_SUITE_ID = (
+    "qpls.multimod.heterogeneity.bootstrap-prepared-execution.v1"
+)
+BOOTSTRAP_PREPARED_RECEIPT_SUITE_ID = (
+    "qpls.multimod.heterogeneity.bootstrap-prepared-execution-receipt.v1"
+)
+BOOTSTRAP_CACHE_SUITE_ID = "qpls.multimod.heterogeneity.bootstrap-shard-cache.v1"
+BOOTSTRAP_CACHE_RECEIPT_SUITE_ID = (
+    "qpls.multimod.heterogeneity.bootstrap-shard-cache-receipt.v1"
+)
+BOOTSTRAP_CURRENT_POINTER_SUITE_ID = (
+    "qpls.multimod.heterogeneity.bootstrap-current-generation.v1"
+)
+BOOTSTRAP_CACHE_INVENTORY_SUITE_ID = (
+    "qpls.multimod.heterogeneity.bootstrap-cache-inventory.v1"
+)
 PRODUCER_SUITE_ID = "qpls.multimod.heterogeneity.production-qualification.v2"
 SCHEMA_VERSION = 1
+BOOTSTRAP_CHUNK_COUNT = 100
+BOOTSTRAP_REQUESTED_REPLICATES = 500
+MULTICLASS_POINT_FIXTURE_PLAN = {
+    "schema_version": 1,
+    "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
+    "purpose": "published_p0_pos_candidate_point_discovery_only",
+    "selected_k": [3, 4, 5],
+    "observations_per_fixture": 120,
+    "allocation": "row_mod_k_exactly_balanced",
+    "bootstrap_evidence": "not_requested",
+}
 
 
 class ContractError(ValueError):
@@ -88,15 +116,6 @@ def expected_shard_specs(scale: str) -> list[dict[str, Any]]:
                     selected_k,
                     ["sentinel"],
                     "point",
-                )
-            )
-            rows.append(
-                row(
-                    f"pos-published-k{selected_k}-bootstrap",
-                    "bootstrap",
-                    selected_k,
-                    ["sentinel", discovery_id],
-                    "bootstrap",
                 )
             )
         for shard_id, dependency in (
@@ -200,6 +219,8 @@ def validated_plan(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]
         or not 1 <= plan["workers"] <= 64
         or not isinstance(plan.get("fixture_observations"), int)
         or plan["fixture_observations"] <= 0
+        or plan.get("multiclass_point_fixture_plan")
+        != MULTICLASS_POINT_FIXTURE_PLAN
         or plan.get("execution_contract")
         != "one_cargo_build_then_dependency_aware_non_cargo_shards"
         or plan.get("sentinel_shard_id") != "sentinel"
@@ -261,6 +282,109 @@ def receipt_path(shard_dir: Path, shard_id: str) -> Path:
     return shard_dir / f"{shard_id}.receipt.json"
 
 
+def bootstrap_cell_dir(shard_dir: Path, shard_id: str) -> Path:
+    return shard_dir.parent / "bootstrap" / shard_id
+
+
+def bootstrap_prepared_pointer_path(shard_dir: Path, shard_id: str) -> Path:
+    return bootstrap_cell_dir(shard_dir, shard_id) / "prepared.current.json"
+
+
+def bootstrap_cache_pointer_path(
+    shard_dir: Path, shard_id: str, chunk_index: int
+) -> Path:
+    return bootstrap_cell_dir(shard_dir, shard_id) / (
+        f"cache-{chunk_index:03d}-of-{BOOTSTRAP_CHUNK_COUNT:03d}.current.json"
+    )
+
+
+def bootstrap_cache_inventory_path(shard_dir: Path, shard_id: str) -> Path:
+    return bootstrap_cell_dir(shard_dir, shard_id) / "cache-inventory.json"
+
+
+def _resolve_current_generation(
+    pointer_file: Path,
+    shard_id: str,
+    kind: str,
+    chunk_index: int | None,
+) -> tuple[Path, Path, dict[str, Any]]:
+    if not pointer_file.is_file():
+        raise ContractError(f"current {kind} generation pointer is absent for {shard_id}")
+    pointer = read_json(pointer_file)
+    generation = pointer.get("generation_id")
+    payload_name = pointer.get("payload_file")
+    receipt_name = pointer.get("receipt_file")
+    if (
+        pointer.get("schema_version") != SCHEMA_VERSION
+        or pointer.get("suite_id") != BOOTSTRAP_CURRENT_POINTER_SUITE_ID
+        or pointer.get("scientific_shard_id") != shard_id
+        or pointer.get("kind") != kind
+        or pointer.get("chunk_index") != chunk_index
+        or not isinstance(generation, str)
+        or len(generation) != 32
+        or any(character not in "0123456789abcdef" for character in generation)
+        or not isinstance(payload_name, str)
+        or not payload_name
+        or Path(payload_name).name != payload_name
+        or not isinstance(receipt_name, str)
+        or not receipt_name
+        or Path(receipt_name).name != receipt_name
+        or not is_sha256(pointer.get("payload_sha256"))
+        or not is_sha256(pointer.get("receipt_sha256"))
+    ):
+        raise ContractError(f"current {kind} generation pointer is invalid for {shard_id}")
+    payload = pointer_file.parent / payload_name
+    receipt = pointer_file.parent / receipt_name
+    if (
+        not payload.is_file()
+        or not receipt.is_file()
+        or sha256_file(payload) != pointer["payload_sha256"]
+        or sha256_file(receipt) != pointer["receipt_sha256"]
+    ):
+        raise ContractError(
+            f"current {kind} generation payload/receipt is incomplete or altered for {shard_id}"
+        )
+    return payload, receipt, pointer
+
+
+def bootstrap_prepared_path(shard_dir: Path, shard_id: str) -> Path:
+    return _resolve_current_generation(
+        bootstrap_prepared_pointer_path(shard_dir, shard_id),
+        shard_id,
+        "prepared",
+        None,
+    )[0]
+
+
+def bootstrap_prepared_receipt_path(shard_dir: Path, shard_id: str) -> Path:
+    return _resolve_current_generation(
+        bootstrap_prepared_pointer_path(shard_dir, shard_id),
+        shard_id,
+        "prepared",
+        None,
+    )[1]
+
+
+def bootstrap_cache_path(shard_dir: Path, shard_id: str, chunk_index: int) -> Path:
+    return _resolve_current_generation(
+        bootstrap_cache_pointer_path(shard_dir, shard_id, chunk_index),
+        shard_id,
+        "cache",
+        chunk_index,
+    )[0]
+
+
+def bootstrap_cache_receipt_path(
+    shard_dir: Path, shard_id: str, chunk_index: int
+) -> Path:
+    return _resolve_current_generation(
+        bootstrap_cache_pointer_path(shard_dir, shard_id, chunk_index),
+        shard_id,
+        "cache",
+        chunk_index,
+    )[1]
+
+
 def validate_shard_result(
     result: dict[str, Any], plan: dict[str, Any], spec: dict[str, Any]
 ) -> None:
@@ -276,6 +400,8 @@ def validate_shard_result(
         or result.get("sign_columns") != plan.get("sign_columns")
         or result.get("workers") != plan["workers"]
         or result.get("fixture_observations") != plan["fixture_observations"]
+        or result.get("multiclass_point_fixture_plan")
+        != plan["multiclass_point_fixture_plan"]
         or result.get("dependency_shard_ids") != sorted(spec["dependencies"])
         or not isinstance(payload, dict)
         or payload.get("kind") != spec["payload_kind"]
@@ -316,6 +442,513 @@ def dependency_inventory(
     return rows
 
 
+def require_bootstrap_spec(
+    plan: dict[str, Any], by_id: dict[str, dict[str, Any]], shard_id: str
+) -> dict[str, Any]:
+    spec = by_id.get(shard_id)
+    if spec is None or spec.get("resource_class") != "bootstrap":
+        raise ContractError(f"{shard_id} is not a retained bootstrap scientific shard")
+    if plan.get("scale") != "qualification":
+        raise ContractError("resumable bootstrap cells exist only in qualification scale")
+    return spec
+
+
+def validate_bootstrap_prepared(
+    value: dict[str, Any],
+    plan: dict[str, Any],
+    spec: dict[str, Any],
+) -> None:
+    execution = value.get("execution")
+    reference = execution.get("reference") if isinstance(execution, dict) else None
+    orchestrator = (
+        reference.get("orchestrator_plan") if isinstance(reference, dict) else None
+    )
+    heterogeneity = (
+        reference.get("heterogeneity_plan") if isinstance(reference, dict) else None
+    )
+    if (
+        value.get("schema_version") != SCHEMA_VERSION
+        or value.get("suite_id") != BOOTSTRAP_PREPARED_SUITE_ID
+        or value.get("producer_suite_id") != PRODUCER_SUITE_ID
+        or value.get("scientific_shard_id") != spec["shard_id"]
+        or value.get("scale") != plan["scale"]
+        or value.get("campaign_seed") != plan["campaign_seed"]
+        or value.get("metamorphism") != plan["metamorphism"]
+        or value.get("sign_columns") != plan.get("sign_columns")
+        or value.get("workers") != plan["workers"]
+        or value.get("fixture_observations") != plan["fixture_observations"]
+        or value.get("multiclass_point_fixture_plan")
+        != plan["multiclass_point_fixture_plan"]
+        or value.get("dependency_shard_ids") != sorted(spec["dependencies"])
+        or not isinstance(value.get("cell_id"), str)
+        or not value["cell_id"]
+        or value.get("chunk_count") != BOOTSTRAP_CHUNK_COUNT
+        or value.get("requested_replicates") != BOOTSTRAP_REQUESTED_REPLICATES
+        or not isinstance(execution, dict)
+        or execution.get("method_version")
+        != "qpls.heterogeneity.raw-bootstrap-execution.v2"
+        or not is_sha256(execution.get("execution_identity_sha256"))
+        or not isinstance(reference, dict)
+        or not is_sha256(reference.get("reference_identity_sha256"))
+        or not isinstance(orchestrator, dict)
+        or orchestrator.get("requested_replicates")
+        != BOOTSTRAP_REQUESTED_REPLICATES
+        or orchestrator.get("minimum_usable_fraction") != 0.9
+        or not isinstance(heterogeneity, dict)
+        or heterogeneity.get("requested_replicates")
+        != BOOTSTRAP_REQUESTED_REPLICATES
+        or heterogeneity.get("minimum_usable_share") != 0.9
+    ):
+        raise ContractError(
+            f"prepared bootstrap execution is invalid for {spec['shard_id']}"
+        )
+
+
+def expected_bootstrap_prepared_receipt(
+    plan_path: Path,
+    shard_dir: Path,
+    spec: dict[str, Any],
+    executable_sha256: str,
+    source_commit: str,
+    prepared_sha256: str,
+    execution_identity_sha256: str,
+    generation_id: str,
+) -> dict[str, Any]:
+    plan = read_json(plan_path)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": BOOTSTRAP_PREPARED_RECEIPT_SUITE_ID,
+        "status": "passed",
+        "generation_id": generation_id,
+        "scientific_shard_id": spec["shard_id"],
+        "scale": plan["scale"],
+        "campaign_seed": plan["campaign_seed"],
+        "plan_sha256": sha256_file(plan_path),
+        "producer_executable_sha256": executable_sha256,
+        "source_commit": source_commit,
+        "prepared_execution_sha256": prepared_sha256,
+        "execution_identity_sha256": execution_identity_sha256,
+        "dependency_receipts": dependency_inventory(
+            plan_path, shard_dir, spec, executable_sha256, source_commit
+        ),
+    }
+
+
+def verify_bootstrap_prepared(
+    plan_path: Path,
+    shard_dir: Path,
+    shard_id: str,
+    executable_sha256: str,
+    source_commit: str,
+) -> dict[str, Any]:
+    plan, by_id = validated_plan(plan_path)
+    spec = require_bootstrap_spec(plan, by_id, shard_id)
+    if not is_sha256(executable_sha256) or not is_git_commit(source_commit):
+        raise ContractError("executable SHA-256 and 40-character source commit are required")
+    prepared_file, receipt_file, pointer = _resolve_current_generation(
+        bootstrap_prepared_pointer_path(shard_dir, shard_id),
+        shard_id,
+        "prepared",
+        None,
+    )
+    prepared = read_json(prepared_file)
+    validate_bootstrap_prepared(prepared, plan, spec)
+    execution = prepared["execution"]
+    expected = expected_bootstrap_prepared_receipt(
+        plan_path,
+        shard_dir,
+        spec,
+        executable_sha256,
+        source_commit,
+        sha256_file(prepared_file),
+        execution["execution_identity_sha256"],
+        pointer["generation_id"],
+    )
+    if read_json(receipt_file) != expected:
+        raise ContractError(f"prepared bootstrap receipt is stale or altered for {shard_id}")
+    return prepared
+
+
+def seal_bootstrap_prepared(arguments: argparse.Namespace) -> None:
+    plan, by_id = validated_plan(arguments.plan)
+    spec = require_bootstrap_spec(plan, by_id, arguments.shard_id)
+    if not is_sha256(arguments.executable_sha256) or not is_git_commit(
+        arguments.source_commit
+    ):
+        raise ContractError("executable SHA-256 and 40-character source commit are required")
+    prepared = read_json(arguments.temporary_prepared)
+    validate_bootstrap_prepared(prepared, plan, spec)
+    cell_dir = bootstrap_cell_dir(arguments.shard_dir, arguments.shard_id)
+    cell_dir.mkdir(parents=True, exist_ok=True)
+    pointer_file = bootstrap_prepared_pointer_path(
+        arguments.shard_dir, arguments.shard_id
+    )
+    if pointer_file.exists():
+        raise ContractError(
+            f"prepared bootstrap checkpoint already exists for {arguments.shard_id}"
+        )
+    generation_id = secrets.token_hex(16)
+    destination = cell_dir / f"prepared.g-{generation_id}.json"
+    receipt_file = cell_dir / f"prepared.g-{generation_id}.receipt.json"
+    if destination.exists() or receipt_file.exists():  # pragma: no cover - random collision
+        raise ContractError("prepared generation identity collision")
+    os.replace(arguments.temporary_prepared, destination)
+    receipt = expected_bootstrap_prepared_receipt(
+        arguments.plan,
+        arguments.shard_dir,
+        spec,
+        arguments.executable_sha256,
+        arguments.source_commit,
+        sha256_file(destination),
+        prepared["execution"]["execution_identity_sha256"],
+        generation_id,
+    )
+    atomic_json(receipt_file, receipt)
+    atomic_json(
+        pointer_file,
+        {
+            "schema_version": SCHEMA_VERSION,
+            "suite_id": BOOTSTRAP_CURRENT_POINTER_SUITE_ID,
+            "scientific_shard_id": arguments.shard_id,
+            "kind": "prepared",
+            "chunk_index": None,
+            "generation_id": generation_id,
+            "payload_file": destination.name,
+            "payload_sha256": sha256_file(destination),
+            "receipt_file": receipt_file.name,
+            "receipt_sha256": sha256_file(receipt_file),
+        },
+    )
+
+
+def validate_bootstrap_cache(
+    value: dict[str, Any],
+    plan: dict[str, Any],
+    spec: dict[str, Any],
+    prepared: dict[str, Any],
+    chunk_index: int,
+) -> None:
+    cache = value.get("cache")
+    shard = cache.get("shard") if isinstance(cache, dict) else None
+    records = cache.get("records") if isinstance(cache, dict) else None
+    expected_indices = list(
+        range(chunk_index, BOOTSTRAP_REQUESTED_REPLICATES, BOOTSTRAP_CHUNK_COUNT)
+    )
+    record_indices = (
+        [record.get("index") for record in records]
+        if isinstance(records, list) and all(isinstance(record, dict) for record in records)
+        else None
+    )
+    record_count = value.get("record_count")
+    expected_count = len(expected_indices)
+    completed = value.get("completed")
+    cancelled = cache.get("cancelled") if isinstance(cache, dict) else None
+    if (
+        value.get("schema_version") != SCHEMA_VERSION
+        or value.get("suite_id") != BOOTSTRAP_CACHE_SUITE_ID
+        or value.get("producer_suite_id") != PRODUCER_SUITE_ID
+        or value.get("scientific_shard_id") != spec["shard_id"]
+        or value.get("scale") != plan["scale"]
+        or value.get("campaign_seed") != plan["campaign_seed"]
+        or value.get("metamorphism") != plan["metamorphism"]
+        or value.get("sign_columns") != plan.get("sign_columns")
+        or value.get("workers") != plan["workers"]
+        or value.get("fixture_observations") != plan["fixture_observations"]
+        or value.get("multiclass_point_fixture_plan")
+        != plan["multiclass_point_fixture_plan"]
+        or value.get("dependency_shard_ids") != sorted(spec["dependencies"])
+        or value.get("cell_id") != prepared.get("cell_id")
+        or value.get("prepared_execution_identity_sha256")
+        != prepared["execution"]["execution_identity_sha256"]
+        or value.get("chunk_index") != chunk_index
+        or value.get("chunk_count") != BOOTSTRAP_CHUNK_COUNT
+        or value.get("requested_replicates") != BOOTSTRAP_REQUESTED_REPLICATES
+        or type(value.get("prior_record_count")) is not int
+        or value["prior_record_count"] < 0
+        or type(record_count) is not int
+        or not 0 <= record_count <= expected_count
+        or value.get("expected_record_count") != expected_count
+        or not isinstance(cache, dict)
+        or not isinstance(shard, dict)
+        or shard.get("shard_index") != chunk_index
+        or shard.get("shard_count") != BOOTSTRAP_CHUNK_COUNT
+        or not is_sha256(shard.get("execution_identity_sha256"))
+        or not is_sha256(shard.get("shard_identity_sha256"))
+        or not isinstance(records, list)
+        or len(records) != record_count
+        or record_indices != expected_indices[:record_count]
+        or not isinstance(completed, bool)
+        or not isinstance(cancelled, bool)
+        or completed != (record_count == expected_count and cancelled is False)
+        or (not completed and cancelled is not True)
+        or (cancelled and record_count == expected_count)
+    ):
+        raise ContractError(
+            f"bootstrap cache is invalid for {spec['shard_id']} chunk {chunk_index}"
+        )
+
+
+def expected_bootstrap_cache_receipt(
+    plan_path: Path,
+    shard_dir: Path,
+    spec: dict[str, Any],
+    chunk_index: int,
+    executable_sha256: str,
+    source_commit: str,
+    cache_sha256: str,
+    cache_value: dict[str, Any],
+    generation_id: str,
+) -> dict[str, Any]:
+    plan = read_json(plan_path)
+    prepared_file = bootstrap_prepared_path(shard_dir, spec["shard_id"])
+    prepared_receipt = bootstrap_prepared_receipt_path(shard_dir, spec["shard_id"])
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": BOOTSTRAP_CACHE_RECEIPT_SUITE_ID,
+        "status": "complete" if cache_value["completed"] else "resumable",
+        "generation_id": generation_id,
+        "scientific_shard_id": spec["shard_id"],
+        "chunk_index": chunk_index,
+        "chunk_count": BOOTSTRAP_CHUNK_COUNT,
+        "scale": plan["scale"],
+        "campaign_seed": plan["campaign_seed"],
+        "plan_sha256": sha256_file(plan_path),
+        "producer_executable_sha256": executable_sha256,
+        "source_commit": source_commit,
+        "prepared_execution_sha256": sha256_file(prepared_file),
+        "prepared_receipt_sha256": sha256_file(prepared_receipt),
+        "execution_identity_sha256": cache_value[
+            "prepared_execution_identity_sha256"
+        ],
+        "cache_sha256": cache_sha256,
+        "cache_shard_identity_sha256": cache_value["cache"]["shard"][
+            "shard_identity_sha256"
+        ],
+        "record_count": cache_value["record_count"],
+        "expected_record_count": cache_value["expected_record_count"],
+        "dependency_receipts": dependency_inventory(
+            plan_path, shard_dir, spec, executable_sha256, source_commit
+        ),
+    }
+
+
+def verify_bootstrap_cache(
+    plan_path: Path,
+    shard_dir: Path,
+    shard_id: str,
+    chunk_index: int,
+    executable_sha256: str,
+    source_commit: str,
+    require_complete: bool = False,
+) -> dict[str, Any]:
+    plan, by_id = validated_plan(plan_path)
+    spec = require_bootstrap_spec(plan, by_id, shard_id)
+    if not 0 <= chunk_index < BOOTSTRAP_CHUNK_COUNT:
+        raise ContractError("bootstrap chunk index is outside the frozen 100-chunk plan")
+    prepared = verify_bootstrap_prepared(
+        plan_path, shard_dir, shard_id, executable_sha256, source_commit
+    )
+    cache_file, receipt_file, pointer = _resolve_current_generation(
+        bootstrap_cache_pointer_path(shard_dir, shard_id, chunk_index),
+        shard_id,
+        "cache",
+        chunk_index,
+    )
+    cache_value = read_json(cache_file)
+    validate_bootstrap_cache(cache_value, plan, spec, prepared, chunk_index)
+    expected = expected_bootstrap_cache_receipt(
+        plan_path,
+        shard_dir,
+        spec,
+        chunk_index,
+        executable_sha256,
+        source_commit,
+        sha256_file(cache_file),
+        cache_value,
+        pointer["generation_id"],
+    )
+    if read_json(receipt_file) != expected:
+        raise ContractError(
+            f"bootstrap cache receipt is stale or altered for {shard_id} chunk {chunk_index}"
+        )
+    if require_complete and not cache_value["completed"]:
+        raise ContractError(
+            f"bootstrap cache remains resumable for {shard_id} chunk {chunk_index}"
+        )
+    return cache_value
+
+
+def seal_bootstrap_cache(arguments: argparse.Namespace) -> None:
+    plan, by_id = validated_plan(arguments.plan)
+    spec = require_bootstrap_spec(plan, by_id, arguments.shard_id)
+    if not 0 <= arguments.chunk_index < BOOTSTRAP_CHUNK_COUNT:
+        raise ContractError("bootstrap chunk index is outside the frozen 100-chunk plan")
+    prepared = verify_bootstrap_prepared(
+        arguments.plan,
+        arguments.shard_dir,
+        arguments.shard_id,
+        arguments.executable_sha256,
+        arguments.source_commit,
+    )
+    incoming = read_json(arguments.temporary_cache)
+    validate_bootstrap_cache(incoming, plan, spec, prepared, arguments.chunk_index)
+    pointer_file = bootstrap_cache_pointer_path(
+        arguments.shard_dir, arguments.shard_id, arguments.chunk_index
+    )
+    previous_count = 0
+    if pointer_file.exists():
+        previous = verify_bootstrap_cache(
+            arguments.plan,
+            arguments.shard_dir,
+            arguments.shard_id,
+            arguments.chunk_index,
+            arguments.executable_sha256,
+            arguments.source_commit,
+        )
+        if previous["completed"]:
+            raise ContractError("a completed bootstrap cache cannot be replaced")
+        previous_count = previous["record_count"]
+    if incoming["prior_record_count"] != previous_count:
+        raise ContractError("bootstrap cache resume did not start from the verified prior cache")
+    if incoming["record_count"] <= previous_count:
+        raise ContractError("bootstrap cache attempt made zero verified record progress")
+    cell_dir = bootstrap_cell_dir(arguments.shard_dir, arguments.shard_id)
+    cell_dir.mkdir(parents=True, exist_ok=True)
+    generation_id = secrets.token_hex(16)
+    prefix = f"cache-{arguments.chunk_index:03d}-of-{BOOTSTRAP_CHUNK_COUNT:03d}"
+    destination = cell_dir / f"{prefix}.g-{generation_id}.json"
+    receipt_file = cell_dir / f"{prefix}.g-{generation_id}.receipt.json"
+    if destination.exists() or receipt_file.exists():  # pragma: no cover - random collision
+        raise ContractError("bootstrap cache generation identity collision")
+    os.replace(arguments.temporary_cache, destination)
+    receipt = expected_bootstrap_cache_receipt(
+        arguments.plan,
+        arguments.shard_dir,
+        spec,
+        arguments.chunk_index,
+        arguments.executable_sha256,
+        arguments.source_commit,
+        sha256_file(destination),
+        incoming,
+        generation_id,
+    )
+    atomic_json(receipt_file, receipt)
+    atomic_json(
+        pointer_file,
+        {
+            "schema_version": SCHEMA_VERSION,
+            "suite_id": BOOTSTRAP_CURRENT_POINTER_SUITE_ID,
+            "scientific_shard_id": arguments.shard_id,
+            "kind": "cache",
+            "chunk_index": arguments.chunk_index,
+            "generation_id": generation_id,
+            "payload_file": destination.name,
+            "payload_sha256": sha256_file(destination),
+            "receipt_file": receipt_file.name,
+            "receipt_sha256": sha256_file(receipt_file),
+        },
+    )
+
+
+def complete_bootstrap_inventory(
+    plan_path: Path,
+    shard_dir: Path,
+    spec: dict[str, Any],
+    executable_sha256: str,
+    source_commit: str,
+) -> dict[str, Any]:
+    shard_id = spec["shard_id"]
+    prepared = verify_bootstrap_prepared(
+        plan_path, shard_dir, shard_id, executable_sha256, source_commit
+    )
+    caches = []
+    for chunk_index in range(BOOTSTRAP_CHUNK_COUNT):
+        value = verify_bootstrap_cache(
+            plan_path,
+            shard_dir,
+            shard_id,
+            chunk_index,
+            executable_sha256,
+            source_commit,
+            require_complete=True,
+        )
+        cache_file = bootstrap_cache_path(shard_dir, shard_id, chunk_index)
+        cache_receipt = bootstrap_cache_receipt_path(
+            shard_dir, shard_id, chunk_index
+        )
+        cache_pointer = bootstrap_cache_pointer_path(
+            shard_dir, shard_id, chunk_index
+        )
+        caches.append(
+            {
+                "chunk_index": chunk_index,
+                "record_count": value["record_count"],
+                "cache_file": cache_file.name,
+                "cache_sha256": sha256_file(cache_file),
+                "receipt_file": cache_receipt.name,
+                "receipt_sha256": sha256_file(cache_receipt),
+                "pointer_file": cache_pointer.name,
+                "pointer_sha256": sha256_file(cache_pointer),
+                "cache_shard_identity_sha256": value["cache"]["shard"][
+                    "shard_identity_sha256"
+                ],
+            }
+        )
+    prepared_file = bootstrap_prepared_path(shard_dir, shard_id)
+    prepared_receipt = bootstrap_prepared_receipt_path(shard_dir, shard_id)
+    prepared_pointer = bootstrap_prepared_pointer_path(shard_dir, shard_id)
+    plan = read_json(plan_path)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "suite_id": BOOTSTRAP_CACHE_INVENTORY_SUITE_ID,
+        "producer_suite_id": PRODUCER_SUITE_ID,
+        "scientific_shard_id": shard_id,
+        "scale": plan["scale"],
+        "campaign_seed": plan["campaign_seed"],
+        "metamorphism": plan["metamorphism"],
+        "sign_columns": plan.get("sign_columns"),
+        "workers": plan["workers"],
+        "fixture_observations": plan["fixture_observations"],
+        "multiclass_point_fixture_plan": plan["multiclass_point_fixture_plan"],
+        "dependency_shard_ids": sorted(spec["dependencies"]),
+        "dependency_receipts": dependency_inventory(
+            plan_path, shard_dir, spec, executable_sha256, source_commit
+        ),
+        "cell_id": prepared["cell_id"],
+        "plan_sha256": sha256_file(plan_path),
+        "producer_executable_sha256": executable_sha256,
+        "source_commit": source_commit,
+        "chunk_count": BOOTSTRAP_CHUNK_COUNT,
+        "requested_replicates": BOOTSTRAP_REQUESTED_REPLICATES,
+        "prepared_execution_file": prepared_file.name,
+        "prepared_execution_sha256": sha256_file(prepared_file),
+        "prepared_receipt_file": prepared_receipt.name,
+        "prepared_receipt_sha256": sha256_file(prepared_receipt),
+        "prepared_pointer_file": prepared_pointer.name,
+        "prepared_pointer_sha256": sha256_file(prepared_pointer),
+        "execution_identity_sha256": prepared["execution"][
+            "execution_identity_sha256"
+        ],
+        "caches": caches,
+    }
+
+
+def write_bootstrap_inventory(arguments: argparse.Namespace) -> None:
+    plan, by_id = validated_plan(arguments.plan)
+    spec = require_bootstrap_spec(plan, by_id, arguments.shard_id)
+    cell_dir = bootstrap_cell_dir(arguments.shard_dir, arguments.shard_id)
+    if arguments.output.parent.resolve() != cell_dir.resolve():
+        raise ContractError("bootstrap cache inventory must be written inside its cell directory")
+    inventory = complete_bootstrap_inventory(
+        arguments.plan,
+        arguments.shard_dir,
+        spec,
+        arguments.executable_sha256,
+        arguments.source_commit,
+    )
+    atomic_json(arguments.output, inventory)
+
+
 def expected_receipt(
     plan_path: Path,
     shard_dir: Path,
@@ -324,7 +957,7 @@ def expected_receipt(
     source_commit: str,
     result_sha256: str,
 ) -> dict[str, Any]:
-    return {
+    receipt = {
         "schema_version": SCHEMA_VERSION,
         "suite_id": RECEIPT_SUITE_ID,
         "status": "passed",
@@ -340,6 +973,15 @@ def expected_receipt(
             plan_path, shard_dir, spec, executable_sha256, source_commit
         ),
     }
+    if spec["resource_class"] == "bootstrap":
+        receipt["resumable_bootstrap"] = complete_bootstrap_inventory(
+            plan_path,
+            shard_dir,
+            spec,
+            executable_sha256,
+            source_commit,
+        )
+    return receipt
 
 
 def verify_checkpoint(
@@ -461,6 +1103,8 @@ def aggregate(arguments: argparse.Namespace) -> None:
         or header.get("sign_columns") != plan.get("sign_columns")
         or header.get("workers") != plan["workers"]
         or header.get("fixture_observations") != plan["fixture_observations"]
+        or header.get("multiclass_point_fixture_plan")
+        != plan["multiclass_point_fixture_plan"]
     ):
         raise ContractError("sentinel report header is not bound to the shard plan")
     report = dict(header)
@@ -543,9 +1187,6 @@ def aggregate(arguments: argparse.Namespace) -> None:
                 "fimix-p23-fixed-k-bootstrap",
                 "pos-destination-p23-fixed-k-bootstrap",
                 "pos-p2-common-metric-failure-fixed-k-bootstrap",
-                "pos-published-p0-k3-fixed-k-bootstrap",
-                "pos-published-p0-k4-fixed-k-bootstrap",
-                "pos-published-p0-k5-fixed-k-bootstrap",
             ]
         )
     }
@@ -599,6 +1240,32 @@ def parse_args() -> argparse.Namespace:
     failure.add_argument("--stdout", required=True, type=Path)
     failure.add_argument("--stderr", required=True, type=Path)
 
+    verify_prepared = subparsers.add_parser("verify-bootstrap-prepared")
+    add_identity_arguments(verify_prepared)
+    verify_prepared.add_argument("--shard-id", required=True)
+
+    seal_prepared = subparsers.add_parser("seal-bootstrap-prepared")
+    add_identity_arguments(seal_prepared)
+    seal_prepared.add_argument("--shard-id", required=True)
+    seal_prepared.add_argument("--temporary-prepared", required=True, type=Path)
+
+    verify_cache = subparsers.add_parser("verify-bootstrap-cache")
+    add_identity_arguments(verify_cache)
+    verify_cache.add_argument("--shard-id", required=True)
+    verify_cache.add_argument("--chunk-index", required=True, type=int)
+    verify_cache.add_argument("--require-complete", action="store_true")
+
+    seal_cache = subparsers.add_parser("seal-bootstrap-cache")
+    add_identity_arguments(seal_cache)
+    seal_cache.add_argument("--shard-id", required=True)
+    seal_cache.add_argument("--chunk-index", required=True, type=int)
+    seal_cache.add_argument("--temporary-cache", required=True, type=Path)
+
+    inventory = subparsers.add_parser("write-bootstrap-inventory")
+    add_identity_arguments(inventory)
+    inventory.add_argument("--shard-id", required=True)
+    inventory.add_argument("--output", required=True, type=Path)
+
     aggregate_parser = subparsers.add_parser("aggregate")
     add_identity_arguments(aggregate_parser)
     aggregate_parser.add_argument("--output", required=True, type=Path)
@@ -620,6 +1287,30 @@ def main() -> int:
             seal_checkpoint(arguments)
         elif arguments.command == "record-failure":
             record_failure(arguments)
+        elif arguments.command == "verify-bootstrap-prepared":
+            verify_bootstrap_prepared(
+                arguments.plan,
+                arguments.shard_dir,
+                arguments.shard_id,
+                arguments.executable_sha256,
+                arguments.source_commit,
+            )
+        elif arguments.command == "seal-bootstrap-prepared":
+            seal_bootstrap_prepared(arguments)
+        elif arguments.command == "verify-bootstrap-cache":
+            verify_bootstrap_cache(
+                arguments.plan,
+                arguments.shard_dir,
+                arguments.shard_id,
+                arguments.chunk_index,
+                arguments.executable_sha256,
+                arguments.source_commit,
+                arguments.require_complete,
+            )
+        elif arguments.command == "seal-bootstrap-cache":
+            seal_bootstrap_cache(arguments)
+        elif arguments.command == "write-bootstrap-inventory":
+            write_bootstrap_inventory(arguments)
         elif arguments.command == "aggregate":
             aggregate(arguments)
         else:  # pragma: no cover - argparse owns this boundary

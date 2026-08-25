@@ -410,33 +410,47 @@ prerequisite is admissible only when the exact algorithm/K candidate is
 one matching retained point-result receipt. Otherwise the discovery shard fails
 before any dependent bootstrap work starts. Independent
 non-Cargo executable shards may run concurrently, while bootstrap concurrency
-is separately bounded. Deterministic aggregation recreates the same raw report
-shape consumed by the independent comparator; partial output can never become
-a scientific result. The wrapper requires a fully clean tracked/untracked tree
+is separately bounded. Each retained bootstrap cell freezes one serialized
+prepared point/common-metric execution, then runs the exact 500-draw ledger as
+100 modulo caches with five owned draws per cache. A process resumes only its
+same validated cache, has a 25-minute internal cancellation budget within the
+30-minute external child bound, and must add at least one verified record.
+Finalization requires all 100 complete caches and the global 90% usable gate.
+Prepared executions and caches are immutable generation files; their payload
+and receipt are published by one atomically replaced current-generation
+pointer. Orphan generations left before that switch are ignored, while a bad
+current pointer fails closed. One relative-path cache-inventory manifest binds
+all 100 current generations to the exact commit, executable, plan,
+dependencies, prepared execution, and cache identities before Rust
+finalization. Missing files, tampering, or mixed identities fail closed. Deterministic aggregation recreates
+the same raw report shape consumed by the independent comparator; partial
+output can never become a scientific result. The wrapper requires a fully clean tracked/untracked tree
 and baseline, one-worker, non-compact, unsigned fixture environment; the
 comparator separately enforces the 400-row seed-42 qualification identity.
 Cargo build, plan generation, sentinel, all shards, aggregation, and comparison
 are supervised against the remaining budget with process-tree termination and
-bounded exit waits. A two-minute sentinel, 110-minute default campaign cap,
-and 30-minute per-shard cap retain valid checkpoints for exact-identity resume
+bounded exit waits. A two-minute sentinel, 108-minute internal work cutoff
+inside the 110-minute outer gate, and 30-minute per-shard cap retain valid checkpoints for exact-identity resume
 instead of allowing an unbounded, uncheckpointed run.
 
-The production matrix also runs publication-profile PLS-POS candidates and
-500-draw fixed-K bootstrap ledgers at each exact K from 2 through 5. The K=3
-through K=5 cells use 400-row balanced strong-separation fixtures, the exact
-`p0_structural` / `qpls.pls-pos.published.v2` identity, and POS-only
-ten-seeded-start discovery so the K dimension does not silently import tandem
-FIMIX or common-metric claims. Their ordinary P0 models use three structural
-paths with distinct class-specific coefficient vectors and no interaction
-terms; a one-path symmetric zero-effect middle class is not used as a recovery
-fixture. The independent comparator reconstructs every
-retained bootstrap overlap across all K! mappings (6, 24, and 120 at K=3, 4,
-and 5), target digests, majority decisions, validity bitmaps, and Type-7
-intervals. Separate production-function probes require a nonidentity
-mutual-majority pass plus ambiguous and unique-non-majority rejection at each
-of those K values. These exact cells remain Labs/absent until the frozen
-campaign produces commit-bound passing evidence; they are no longer merely a
-generic `K <= 5` implementation claim.
+The production bootstrap matrix retains seven distinct 500-draw K=2 profile
+cells: FIMIX P0/P2/P23, publication PLS-POS P0, destination-scored PLS-POS
+P2/P23, and the common-metric failure fixture. Publication-profile PLS-POS
+point discovery is additionally exercised at each exact K from 3 through 5.
+Those point-only cells use the typed
+`qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1` plan,
+balanced n=120 strong-separation fixtures (40, 30, and 24 rows per class at
+K=3, K=4, and K=5), the exact `p0_structural` /
+`qpls.pls-pos.published.v2` identity, and POS-only ten-seeded-start discovery.
+They do not claim or execute K=3 through K=5 bootstrap inference. Their
+ordinary P0 models use three structural paths with distinct class-specific
+coefficient vectors and no interaction terms; a one-path symmetric zero-effect
+middle class is not used as a recovery fixture. Separate production-function
+probes exhaustively enumerate all K! mappings (6, 24, and 120 at K=3, K=4, and
+K=5) and require a nonidentity mutual-majority pass plus ambiguous and unique-
+nonmajority rejection at each K. These exact point, bootstrap-profile, and
+alignment cells remain Labs/absent until the frozen campaign produces commit-
+bound passing evidence; they are not a generic `K <= 5` implementation claim.
 
 Scientific context:
 

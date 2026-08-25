@@ -20,7 +20,10 @@ param(
     [int]$PerShardTimeoutSeconds = 1800,
 
     [ValidateRange(600, 6600)]
-    [int]$OverallTimeoutSeconds = 6600
+    [int]$OverallTimeoutSeconds = 6480,
+
+    [ValidateRange(1, 1500)]
+    [int]$BootstrapProcessBudgetSeconds = 1500
 )
 
 $ErrorActionPreference = "Stop"
@@ -37,14 +40,18 @@ else {
 $shardDirectory = Join-Path $resolvedWorkRoot "shards"
 $logDirectory = Join-Path $resolvedWorkRoot "logs"
 $historyDirectory = Join-Path $resolvedWorkRoot "_attempt_history"
+$bootstrapDirectory = Join-Path $resolvedWorkRoot "bootstrap"
 $planPath = Join-Path $resolvedWorkRoot "shard-plan.json"
 $rawAggregate = Join-Path $resolvedWorkRoot "heterogeneity-production-science.raw.json"
 $checkpointTool = Join-Path $repositoryRoot "validation/multimod/multimod_heterogeneity_shards_v2.py"
 $comparator = Join-Path $repositoryRoot "validation/multimod/compare_multimod_heterogeneity_qualification_v2.py"
 $binary = Join-Path $repositoryRoot "target/release/examples/multimod_heterogeneity_qualification_v2.exe"
+$campaignStartedAtUtc = [DateTime]::UtcNow
 $campaignClock = [System.Diagnostics.Stopwatch]::StartNew()
+$workCutoffSeconds = [Math]::Min($OverallTimeoutSeconds, 6480)
 $sentinelTimeoutSeconds = [Math]::Min(120, $PerShardTimeoutSeconds)
 $active = @{}
+$bootstrapChunkCount = 100
 
 function Get-Sha256 {
     param([Parameter(Mandatory = $true)][string]$Path)
@@ -74,9 +81,9 @@ function Assert-BaselineEnvironment {
 }
 
 function Get-RemainingBudgetSeconds {
-    $remaining = [Math]::Floor($OverallTimeoutSeconds - $campaignClock.Elapsed.TotalSeconds)
+    $remaining = [Math]::Floor($workCutoffSeconds - $campaignClock.Elapsed.TotalSeconds)
     if ($remaining -lt 1) {
-        throw "Heterogeneity qualification reached its $OverallTimeoutSeconds-second resumable wall-clock cap. Completed shard receipts are retained."
+        throw "Heterogeneity qualification reached its $workCutoffSeconds-second resumable work cutoff. Completed shard receipts are retained for cleanup or resume."
     }
     return [int]$remaining
 }
@@ -106,6 +113,7 @@ function Start-BoundedChild {
     return [pscustomobject]@{
         Stage = $Stage
         Process = $process
+        StartedAtUtc = $process.StartTime.ToUniversalTime()
         Clock = [System.Diagnostics.Stopwatch]::StartNew()
         TimeoutSeconds = $effectiveTimeout
         StdoutPath = $StdoutPath
@@ -143,7 +151,7 @@ function Wait-BoundedChild {
     param([Parameter(Mandatory = $true)]$Job)
     while (-not $Job.Process.HasExited) {
         if ($Job.Clock.Elapsed.TotalSeconds -ge $Job.TimeoutSeconds -or
-            $campaignClock.Elapsed.TotalSeconds -ge $OverallTimeoutSeconds) {
+            $campaignClock.Elapsed.TotalSeconds -ge $workCutoffSeconds) {
             Stop-BoundedChild -Job $Job -Reason "bounded_timeout"
             throw "$($Job.Stage) exceeded its bounded time budget."
         }
@@ -152,6 +160,13 @@ function Wait-BoundedChild {
     if (-not $Job.Process.WaitForExit(10000)) {
         Stop-BoundedChild -Job $Job -Reason "exit_wait_timeout"
         throw "$($Job.Stage) did not finalize after exit."
+    }
+    $childElapsedSeconds = ($Job.Process.ExitTime.ToUniversalTime() - $Job.StartedAtUtc).TotalSeconds
+    $campaignElapsedAtExitSeconds = ($Job.Process.ExitTime.ToUniversalTime() - $campaignStartedAtUtc).TotalSeconds
+    if ($childElapsedSeconds -ge $Job.TimeoutSeconds -or
+        $campaignElapsedAtExitSeconds -ge $workCutoffSeconds) {
+        Save-ProcessLogs -Job $Job
+        throw "$($Job.Stage) exited at or beyond its exact bounded deadline."
     }
     Save-ProcessLogs -Job $Job
     return $Job.Process.ExitCode
@@ -284,6 +299,327 @@ function Complete-Shard {
     Write-Host ("[heterogeneity] completed shard {0} in {1:n1}s" -f $Job.ShardId, $Job.Clock.Elapsed.TotalSeconds)
 }
 
+function Get-BootstrapCellDirectory {
+    param([Parameter(Mandatory = $true)][string]$ShardId)
+    return Join-Path $bootstrapDirectory $ShardId
+}
+
+function Get-BootstrapPreparedPointerPath {
+    param([Parameter(Mandatory = $true)][string]$ShardId)
+    return Join-Path (Get-BootstrapCellDirectory -ShardId $ShardId) "prepared.current.json"
+}
+
+function Get-BootstrapCachePointerPath {
+    param(
+        [Parameter(Mandatory = $true)][string]$ShardId,
+        [Parameter(Mandatory = $true)][int]$ChunkIndex
+    )
+    return Join-Path (Get-BootstrapCellDirectory -ShardId $ShardId) `
+        ("cache-{0:D3}-of-{1:D3}.current.json" -f $ChunkIndex, $bootstrapChunkCount)
+}
+
+function Resolve-BootstrapGenerationPayload {
+    param(
+        [Parameter(Mandatory = $true)][string]$ShardId,
+        [Parameter(Mandatory = $true)][ValidateSet("prepared", "cache")][string]$Kind,
+        [Nullable[int]]$ChunkIndex
+    )
+    $pointerPath = if ($Kind -eq "prepared") {
+        Get-BootstrapPreparedPointerPath -ShardId $ShardId
+    }
+    else {
+        Get-BootstrapCachePointerPath -ShardId $ShardId -ChunkIndex $ChunkIndex.Value
+    }
+    if (-not (Test-Path -LiteralPath $pointerPath -PathType Leaf)) {
+        throw "Current $Kind generation pointer is absent for $ShardId."
+    }
+    $pointer = Get-Content -LiteralPath $pointerPath -Raw | ConvertFrom-Json -Depth 20
+    $payloadName = [string]$pointer.payload_file
+    $chunkMatches = if ($Kind -eq "prepared") {
+        $null -eq $pointer.chunk_index
+    }
+    else {
+        $null -ne $pointer.chunk_index -and [int]$pointer.chunk_index -eq $ChunkIndex.Value
+    }
+    if ([int]$pointer.schema_version -ne 1 -or
+        [string]$pointer.suite_id -ne "qpls.multimod.heterogeneity.bootstrap-current-generation.v1" -or
+        [string]$pointer.scientific_shard_id -ne $ShardId -or
+        [string]$pointer.kind -ne $Kind -or
+        -not $chunkMatches -or
+        [string]::IsNullOrWhiteSpace($payloadName) -or
+        [System.IO.Path]::IsPathRooted($payloadName) -or
+        [System.IO.Path]::GetFileName($payloadName) -ne $payloadName) {
+        throw "Current $Kind generation pointer is invalid for $ShardId."
+    }
+    $payloadPath = Join-Path (Get-BootstrapCellDirectory -ShardId $ShardId) $payloadName
+    if (-not (Test-Path -LiteralPath $payloadPath -PathType Leaf)) {
+        throw "Current $Kind generation payload is absent for $ShardId."
+    }
+    return $payloadPath
+}
+
+function Get-BootstrapPreparedPath {
+    param([Parameter(Mandatory = $true)][string]$ShardId)
+    return Resolve-BootstrapGenerationPayload -ShardId $ShardId -Kind "prepared"
+}
+
+function Get-BootstrapCachePath {
+    param(
+        [Parameter(Mandatory = $true)][string]$ShardId,
+        [Parameter(Mandatory = $true)][int]$ChunkIndex
+    )
+    return Resolve-BootstrapGenerationPayload -ShardId $ShardId -Kind "cache" `
+        -ChunkIndex $ChunkIndex
+}
+
+function Get-DependencyArguments {
+    param([Parameter(Mandatory = $true)]$Spec)
+    $arguments = @()
+    foreach ($dependencyId in @($Spec.dependencies)) {
+        $arguments += @("--dependency", (Join-Path $shardDirectory "$dependencyId.json"))
+    }
+    return $arguments
+}
+
+function Assert-BootstrapChildBudget {
+    param([Parameter(Mandatory = $true)][int]$InternalBudgetSeconds)
+    $required = $InternalBudgetSeconds + 30
+    $remaining = Get-RemainingBudgetSeconds
+    if ($remaining -lt $required) {
+        throw "Heterogeneity qualification has $remaining seconds left, below the $required-second safe bootstrap child envelope. Verified caches are retained for resume."
+    }
+}
+
+function Test-BootstrapPreparedCheckpoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$ShardId,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit
+    )
+    $pointer = Get-BootstrapPreparedPointerPath -ShardId $ShardId
+    if (-not (Test-Path -LiteralPath $pointer -PathType Leaf)) { return $false }
+    $exitCode = Invoke-CheckpointTool -Stage "bootstrap-verify-prepared-$ShardId" -Arguments @(
+        "verify-bootstrap-prepared", "--plan", $planPath, "--shard-dir", $shardDirectory,
+        "--shard-id", $ShardId, "--executable-sha256", $ExecutableSha256,
+        "--source-commit", $SourceCommit
+    )
+    if ($exitCode -ne 0) {
+        throw "Prepared bootstrap checkpoint is stale, altered, or mixed for $ShardId."
+    }
+    [void](Get-BootstrapPreparedPath -ShardId $ShardId)
+    return $true
+}
+
+function Test-BootstrapCacheCheckpoint {
+    param(
+        [Parameter(Mandatory = $true)][string]$ShardId,
+        [Parameter(Mandatory = $true)][int]$ChunkIndex,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit
+    )
+    $pointer = Get-BootstrapCachePointerPath -ShardId $ShardId -ChunkIndex $ChunkIndex
+    if (-not (Test-Path -LiteralPath $pointer -PathType Leaf)) { return $false }
+    $exitCode = Invoke-CheckpointTool -Stage "bootstrap-verify-cache-$ShardId-$ChunkIndex" -Arguments @(
+        "verify-bootstrap-cache", "--plan", $planPath, "--shard-dir", $shardDirectory,
+        "--shard-id", $ShardId, "--chunk-index", $ChunkIndex.ToString(),
+        "--executable-sha256", $ExecutableSha256, "--source-commit", $SourceCommit
+    )
+    if ($exitCode -ne 0) {
+        throw "Bootstrap cache checkpoint is stale, altered, or mixed for $ShardId chunk $ChunkIndex."
+    }
+    [void](Get-BootstrapCachePath -ShardId $ShardId -ChunkIndex $ChunkIndex)
+    return $true
+}
+
+function Set-NextBootstrapChunk {
+    param(
+        [Parameter(Mandatory = $true)]$State,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit,
+        [int]$StartIndex = 0
+    )
+    for ($chunkIndex = $StartIndex; $chunkIndex -lt $bootstrapChunkCount; $chunkIndex++) {
+        $hasCache = Test-BootstrapCacheCheckpoint -ShardId $State.ShardId -ChunkIndex $chunkIndex `
+            -ExecutableSha256 $ExecutableSha256 -SourceCommit $SourceCommit
+        if (-not $hasCache) {
+            $State.Phase = "chunk"
+            $State.ChunkIndex = $chunkIndex
+            return
+        }
+        $cachePath = Get-BootstrapCachePath -ShardId $State.ShardId -ChunkIndex $chunkIndex
+        $cacheState = Get-Content -LiteralPath $cachePath -Raw | ConvertFrom-Json -Depth 100
+        if (-not [bool]$cacheState.completed) {
+            $State.Phase = "chunk"
+            $State.ChunkIndex = $chunkIndex
+            return
+        }
+    }
+    $State.Phase = "finalize"
+    $State.ChunkIndex = $bootstrapChunkCount
+}
+
+function New-BootstrapState {
+    param(
+        [Parameter(Mandatory = $true)]$Spec,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit
+    )
+    $shardId = [string]$Spec.shard_id
+    $cellDirectory = Get-BootstrapCellDirectory -ShardId $shardId
+    New-Item -ItemType Directory -Path $cellDirectory -Force | Out-Null
+    $state = [pscustomobject]@{
+        Spec = $Spec
+        ShardId = $shardId
+        Phase = "prepare"
+        ChunkIndex = 0
+        Job = $null
+        TemporaryOutput = $null
+        Done = $false
+    }
+    if (Test-BootstrapPreparedCheckpoint -ShardId $shardId `
+        -ExecutableSha256 $ExecutableSha256 -SourceCommit $SourceCommit) {
+        Set-NextBootstrapChunk -State $state -ExecutableSha256 $ExecutableSha256 `
+            -SourceCommit $SourceCommit
+    }
+    return $state
+}
+
+function Start-BootstrapStateAttempt {
+    param(
+        [Parameter(Mandatory = $true)]$State,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit
+    )
+    $internalBudgetSeconds = [Math]::Min(
+        $BootstrapProcessBudgetSeconds,
+        [Math]::Max(1, $PerShardTimeoutSeconds - 30)
+    )
+    Assert-BootstrapChildBudget -InternalBudgetSeconds $internalBudgetSeconds
+    $identity = [Guid]::NewGuid().ToString("N")
+    $dependencyArguments = @(Get-DependencyArguments -Spec $State.Spec)
+    $stage = "bootstrap-$($State.Phase)-$($State.ShardId)"
+    if ($State.Phase -eq "prepare") {
+        $temporaryOutput = Join-Path $resolvedWorkRoot `
+            (".{0}.prepared.{1}.tmp.json" -f $State.ShardId, $identity)
+        $arguments = @(
+            "--output", $temporaryOutput, "--scale", $Scale, "--seed", $Seed.ToString(),
+            "--bootstrap-prepare", $State.ShardId, "--budget-seconds", $internalBudgetSeconds.ToString()
+        ) + $dependencyArguments
+    }
+    elseif ($State.Phase -eq "chunk") {
+        $preparedPath = Get-BootstrapPreparedPath -ShardId $State.ShardId
+        $temporaryOutput = Join-Path $resolvedWorkRoot `
+            (".{0}.cache-{1:D3}.{2}.tmp.json" -f $State.ShardId, $State.ChunkIndex, $identity)
+        $arguments = @(
+            "--output", $temporaryOutput, "--scale", $Scale, "--seed", $Seed.ToString(),
+            "--bootstrap-chunk", $State.ShardId, "--prepared-execution", $preparedPath,
+            "--chunk-index", $State.ChunkIndex.ToString(), "--chunk-count", $bootstrapChunkCount.ToString(),
+            "--budget-seconds", $internalBudgetSeconds.ToString()
+        ) + $dependencyArguments
+        $cachePointer = Get-BootstrapCachePointerPath -ShardId $State.ShardId `
+            -ChunkIndex $State.ChunkIndex
+        if (Test-Path -LiteralPath $cachePointer -PathType Leaf) {
+            $cachePath = Get-BootstrapCachePath -ShardId $State.ShardId `
+                -ChunkIndex $State.ChunkIndex
+            $arguments += @("--resume-cache", $cachePath)
+        }
+        $stage += "-$($State.ChunkIndex)"
+    }
+    elseif ($State.Phase -eq "finalize") {
+        $preparedPath = Get-BootstrapPreparedPath -ShardId $State.ShardId
+        $cacheInventory = Join-Path (Get-BootstrapCellDirectory -ShardId $State.ShardId) `
+            "cache-inventory.json"
+        $inventoryExit = Invoke-CheckpointTool -Stage "bootstrap-inventory-$($State.ShardId)" -Arguments @(
+            "write-bootstrap-inventory", "--plan", $planPath, "--shard-dir", $shardDirectory,
+            "--shard-id", $State.ShardId, "--output", $cacheInventory,
+            "--executable-sha256", $ExecutableSha256, "--source-commit", $SourceCommit
+        )
+        if ($inventoryExit -ne 0) {
+            throw "Bootstrap finalization inventory is incomplete, altered, or mixed for $($State.ShardId)."
+        }
+        $temporaryOutput = Join-Path $resolvedWorkRoot `
+            (".{0}.finalize.{1}.tmp.json" -f $State.ShardId, $identity)
+        $arguments = @(
+            "--output", $temporaryOutput, "--scale", $Scale, "--seed", $Seed.ToString(),
+            "--bootstrap-finalize", $State.ShardId, "--prepared-execution", $preparedPath,
+            "--cache-inventory", $cacheInventory
+        ) + $dependencyArguments
+    }
+    else {
+        throw "Bootstrap state $($State.ShardId) has invalid phase $($State.Phase)."
+    }
+    $stdout = Join-Path $logDirectory "$stage.$identity.stdout.log"
+    $stderr = Join-Path $logDirectory "$stage.$identity.stderr.log"
+    $job = Start-BoundedChild -Stage $stage -FileName $binary -Arguments $arguments `
+        -StdoutPath $stdout -StderrPath $stderr -TimeoutSeconds $PerShardTimeoutSeconds
+    $job | Add-Member -NotePropertyName ShardId -NotePropertyValue $State.ShardId
+    $job | Add-Member -NotePropertyName ExecutableSha256 -NotePropertyValue $ExecutableSha256
+    $job | Add-Member -NotePropertyName SourceCommit -NotePropertyValue $SourceCommit
+    $State.TemporaryOutput = $temporaryOutput
+    $State.Job = $job
+    $active[$State.ShardId] = $job
+}
+
+function Complete-BootstrapStateAttempt {
+    param(
+        [Parameter(Mandatory = $true)]$State,
+        [Parameter(Mandatory = $true)][string]$ExecutableSha256,
+        [Parameter(Mandatory = $true)][string]$SourceCommit
+    )
+    $exitCode = Wait-BoundedChild -Job $State.Job
+    [void]$active.Remove($State.ShardId)
+    if ($exitCode -ne 0 -or -not (Test-Path -LiteralPath $State.TemporaryOutput -PathType Leaf)) {
+        $reason = if ($exitCode -ne 0) { "bootstrap_producer_exit_nonzero" } else { "bootstrap_producer_output_absent" }
+        Write-ShardFailureReceipt -Job $State.Job -Reason $reason -ExitCode $exitCode
+        throw "Bootstrap $($State.Phase) attempt for $($State.ShardId) failed or made zero verified progress."
+    }
+    if ($State.Phase -eq "prepare") {
+        $sealExit = Invoke-CheckpointTool -Stage "bootstrap-seal-prepared-$($State.ShardId)" -Arguments @(
+            "seal-bootstrap-prepared", "--plan", $planPath, "--shard-dir", $shardDirectory,
+            "--shard-id", $State.ShardId, "--temporary-prepared", $State.TemporaryOutput,
+            "--executable-sha256", $ExecutableSha256, "--source-commit", $SourceCommit
+        )
+        if ($sealExit -ne 0) {
+            throw "Prepared bootstrap execution failed its atomic receipt for $($State.ShardId)."
+        }
+        Set-NextBootstrapChunk -State $State -ExecutableSha256 $ExecutableSha256 `
+            -SourceCommit $SourceCommit
+    }
+    elseif ($State.Phase -eq "chunk") {
+        $sealExit = Invoke-CheckpointTool -Stage "bootstrap-seal-cache-$($State.ShardId)-$($State.ChunkIndex)" -Arguments @(
+            "seal-bootstrap-cache", "--plan", $planPath, "--shard-dir", $shardDirectory,
+            "--shard-id", $State.ShardId, "--chunk-index", $State.ChunkIndex.ToString(),
+            "--temporary-cache", $State.TemporaryOutput, "--executable-sha256", $ExecutableSha256,
+            "--source-commit", $SourceCommit
+        )
+        if ($sealExit -ne 0) {
+            throw "Bootstrap chunk $($State.ChunkIndex) for $($State.ShardId) failed progress, identity, or atomic-cache validation."
+        }
+        $cachePath = Get-BootstrapCachePath -ShardId $State.ShardId -ChunkIndex $State.ChunkIndex
+        $cacheState = Get-Content -LiteralPath $cachePath -Raw | ConvertFrom-Json -Depth 100
+        Write-Host ("[heterogeneity] {0} chunk {1:D3}/{2:D3}: {3}/{4} records" -f `
+            $State.ShardId, $State.ChunkIndex, $bootstrapChunkCount, $cacheState.record_count, $cacheState.expected_record_count)
+        if ([bool]$cacheState.completed) {
+            Set-NextBootstrapChunk -State $State -ExecutableSha256 $ExecutableSha256 `
+                -SourceCommit $SourceCommit -StartIndex ($State.ChunkIndex + 1)
+        }
+    }
+    elseif ($State.Phase -eq "finalize") {
+        $sealExit = Invoke-CheckpointTool -Stage "checkpoint-seal-$($State.ShardId)" -Arguments @(
+            "seal", "--plan", $planPath, "--shard-dir", $shardDirectory,
+            "--shard-id", $State.ShardId, "--temporary-result", $State.TemporaryOutput,
+            "--executable-sha256", $ExecutableSha256, "--source-commit", $SourceCommit
+        ) -TimeoutSeconds $PerShardTimeoutSeconds
+        if ($sealExit -ne 0) {
+            throw "Finalized bootstrap scientific shard $($State.ShardId) failed its exact 100-cache receipt."
+        }
+        $State.Done = $true
+        Write-Host "[heterogeneity] completed resumable bootstrap shard $($State.ShardId)"
+    }
+    $State.Job = $null
+    $State.TemporaryOutput = $null
+}
+
 function Stop-ActiveShards {
     foreach ($job in @($active.Values)) {
         try {
@@ -315,8 +651,8 @@ try {
             throw "Unable to resolve the exact source commit."
         }
 
-        New-Item -ItemType Directory -Path $resolvedWorkRoot, $shardDirectory, $logDirectory, $historyDirectory -Force | Out-Null
-        Write-Host "[heterogeneity] one Cargo build; all scientific cells run afterward as resumable executable shards"
+        New-Item -ItemType Directory -Path $resolvedWorkRoot, $shardDirectory, $logDirectory, $historyDirectory, $bootstrapDirectory -Force | Out-Null
+        Write-Host "[heterogeneity] one Cargo build; point cells use scientific checkpoints and seven bootstrap cells use prepare/100 modulo caches/finalize"
         $buildExit = Invoke-BoundedStage -Stage "cargo-build" -FileName "cargo" -Arguments @(
             "build", "--release", "--quiet", "--locked", "-p", "qpls-runner", "--example",
             "multimod_heterogeneity_qualification_v2"
@@ -370,11 +706,11 @@ try {
             Write-Host ("[heterogeneity] reused {0} verified shard checkpoints" -f ($completed.Count - 1))
         }
 
-        while ($completed.Count -lt $specs.Count) {
+        $pointSpecs = @($specs | Where-Object { [string]$_.resource_class -ne "bootstrap" })
+        while (@($pointSpecs | Where-Object { -not $completed.Contains([string]$_.shard_id) }).Count -gt 0) {
             Assert-TimeBudget
             $startedAny = $false
-            $activeBootstrap = @($active.Values | Where-Object { [string]$_.Spec.resource_class -eq "bootstrap" }).Count
-            foreach ($spec in $specs) {
+            foreach ($spec in $pointSpecs) {
                 if ($active.Count -ge $MaxParallelShards) { break }
                 $shardId = [string]$spec.shard_id
                 if ($completed.Contains($shardId) -or $active.ContainsKey($shardId)) { continue }
@@ -386,12 +722,8 @@ try {
                     }
                 }
                 if (-not $dependenciesReady) { continue }
-                if ([string]$spec.resource_class -eq "bootstrap" -and $activeBootstrap -ge $MaxParallelBootstrapShards) {
-                    continue
-                }
                 $job = Start-Shard -Spec $spec -ExecutableSha256 $executableSha256 -SourceCommit $sourceCommit
                 $active[$shardId] = $job
-                if ([string]$spec.resource_class -eq "bootstrap") { $activeBootstrap++ }
                 $startedAny = $true
                 Write-Host "[heterogeneity] started shard $shardId"
             }
@@ -415,6 +747,61 @@ try {
             }
             if (-not $startedAny -and -not $completedAny -and $active.Count -eq 0) {
                 throw "The heterogeneity shard graph made no progress; a dependency is missing or cyclic."
+            }
+            if (-not $completedAny) { Start-Sleep -Milliseconds 250 }
+        }
+
+        $bootstrapSpecs = @($specs | Where-Object { [string]$_.resource_class -eq "bootstrap" })
+        if ($bootstrapSpecs.Count -gt 0) {
+            Write-Host ("[heterogeneity] running {0} retained bootstrap profiles with exact 500-draw ledgers; verified chunks resume without repeating completed draws" -f $bootstrapSpecs.Count)
+        }
+        $bootstrapStates = [System.Collections.Generic.List[object]]::new()
+        foreach ($spec in $bootstrapSpecs) {
+            $shardId = [string]$spec.shard_id
+            if ($completed.Contains($shardId)) { continue }
+            foreach ($dependencyId in @($spec.dependencies)) {
+                if (-not $completed.Contains([string]$dependencyId)) {
+                    throw "Bootstrap shard $shardId cannot start because dependency $dependencyId is incomplete."
+                }
+            }
+            Move-StaleShardFiles -ShardId $shardId
+            $state = New-BootstrapState -Spec $spec -ExecutableSha256 $executableSha256 `
+                -SourceCommit $sourceCommit
+            [void]$bootstrapStates.Add($state)
+        }
+        while (@($bootstrapStates | Where-Object { -not $_.Done }).Count -gt 0) {
+            Assert-TimeBudget
+            $startedAny = $false
+            foreach ($state in $bootstrapStates) {
+                if ($active.Count -ge $MaxParallelBootstrapShards) { break }
+                if ($state.Done -or $null -ne $state.Job) { continue }
+                Start-BootstrapStateAttempt -State $state -ExecutableSha256 $executableSha256 `
+                    -SourceCommit $sourceCommit
+                $startedAny = $true
+                Write-Host "[heterogeneity] started $($state.ShardId) phase $($state.Phase)"
+            }
+
+            $completedAny = $false
+            foreach ($state in $bootstrapStates) {
+                if ($null -eq $state.Job) { continue }
+                if (-not $state.Job.Process.HasExited) {
+                    if ($state.Job.Clock.Elapsed.TotalSeconds -ge $state.Job.TimeoutSeconds) {
+                        Stop-BoundedChild -Job $state.Job -Reason "bootstrap_child_timeout"
+                        Write-ShardFailureReceipt -Job $state.Job -Reason "bootstrap_child_timeout" -ExitCode 124
+                        [void]$active.Remove($state.ShardId)
+                        throw "Bootstrap child for $($state.ShardId) exceeded the external $PerShardTimeoutSeconds-second hard bound."
+                    }
+                    continue
+                }
+                Complete-BootstrapStateAttempt -State $state -ExecutableSha256 $executableSha256 `
+                    -SourceCommit $sourceCommit
+                if ($state.Done) {
+                    [void]$completed.Add($state.ShardId)
+                }
+                $completedAny = $true
+            }
+            if (-not $startedAny -and -not $completedAny -and $active.Count -eq 0) {
+                throw "The resumable bootstrap scheduler made no progress."
             }
             if (-not $completedAny) { Start-Sleep -Milliseconds 250 }
         }
