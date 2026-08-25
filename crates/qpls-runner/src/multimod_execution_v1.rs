@@ -13681,17 +13681,38 @@ fn pos_candidate(
     }
 }
 
-fn failed_candidate(
+fn candidate_from_heterogeneity_error(
     algorithm: CoreHeterogeneityAlgorithmV2,
     k: u8,
-    error: impl ToString,
+    error: &HeterogeneityV2Error,
 ) -> HeterogeneityCandidateV2 {
+    let (state, converged_starts, stable_starts) = match error {
+        HeterogeneityV2Error::UnstableFimixOptimum {
+            reproducing_starts,
+            diagnostics,
+            ..
+        } => (
+            HeterogeneityCandidateStateV2::Unstable,
+            diagnostics.iter().filter(|start| start.converged).count() as u32,
+            *reproducing_starts as u32,
+        ),
+        HeterogeneityV2Error::UnstablePosOptimum {
+            reproducing_starts,
+            diagnostics,
+            ..
+        } => (
+            HeterogeneityCandidateStateV2::Unstable,
+            diagnostics.iter().filter(|start| start.completed).count() as u32,
+            *reproducing_starts as u32,
+        ),
+        _ => (HeterogeneityCandidateStateV2::Failed, 0, 0),
+    };
     HeterogeneityCandidateV2 {
         method: HeterogeneityCandidateMethodV2::Segmentation { algorithm },
         k,
-        state: HeterogeneityCandidateStateV2::Failed,
-        converged_starts: 0,
-        stable_starts: 0,
+        state,
+        converged_starts,
+        stable_starts,
         log_likelihood: None,
         objective: None,
         criteria: BTreeMap::new(),
@@ -14627,7 +14648,8 @@ where
                             if controlled.cancelled || should_cancel() {
                                 return Err(MultiModRunnerErrorV1::Cancelled);
                             }
-                            candidates.push(failed_candidate(*algorithm, *k, &error));
+                            candidates
+                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
                             if inference_lock.is_some_and(|lock| {
                                 lock.selected_algorithm == *algorithm && lock.selected_k == *k
                             }) {
@@ -14679,7 +14701,8 @@ where
                             if controlled.cancelled || should_cancel() {
                                 return Err(MultiModRunnerErrorV1::Cancelled);
                             }
-                            candidates.push(failed_candidate(*algorithm, *k, &error));
+                            candidates
+                                .push(candidate_from_heterogeneity_error(*algorithm, *k, &error));
                             if inference_lock.is_some_and(|lock| {
                                 lock.selected_algorithm == *algorithm && lock.selected_k == *k
                             }) {
@@ -17359,6 +17382,93 @@ mod tests {
         let correlation = correlation_v1(&reference, &reversed).unwrap();
         assert!((correlation + 1.0).abs() < 1.0e-12);
         assert_eq!(sample_standard_deviation_v1(&[4.0, 4.0, 4.0]), 0.0);
+    }
+
+    #[test]
+    fn heterogeneity_unstable_candidates_retain_truthful_start_counts() {
+        let fimix_diagnostics = (0..4)
+            .map(|start_index| {
+                let converged = start_index < 3;
+                qpls_estimation::FimixStartDiagnosticV2 {
+                    start_index,
+                    start_seed: 100 + start_index as u64,
+                    converged,
+                    iterations: 12,
+                    final_log_likelihood: converged.then_some(-25.0 - start_index as f64),
+                    maximum_likelihood_decrease: 0.0,
+                    final_effective_class_sizes: vec![50.0, 50.0],
+                    failure_code: (!converged)
+                        .then_some(qpls_estimation::FimixStartFailureCodeV2::MaximumIterations),
+                    failure_message: (!converged).then_some("fixture did not converge".into()),
+                    trace: Vec::new(),
+                }
+            })
+            .collect::<Vec<_>>();
+        let fimix_error = HeterogeneityV2Error::UnstableFimixOptimum {
+            reproducing_starts: 1,
+            required_starts: 2,
+            diagnostics: fimix_diagnostics,
+        };
+        let fimix_candidate = candidate_from_heterogeneity_error(
+            CoreHeterogeneityAlgorithmV2::FimixPlsV2,
+            2,
+            &fimix_error,
+        );
+        assert_eq!(
+            fimix_candidate.state,
+            HeterogeneityCandidateStateV2::Unstable
+        );
+        assert_eq!(fimix_candidate.converged_starts, 3);
+        assert_eq!(fimix_candidate.stable_starts, 1);
+        assert_eq!(
+            fimix_candidate.blockers,
+            vec!["FIMIX optimum was reproduced by 1 starts; 2 required"]
+        );
+
+        let pos_diagnostics = (0..5)
+            .map(|start_index| {
+                let completed = start_index != 4;
+                qpls_estimation::PosStartDiagnosticV2 {
+                    start_index,
+                    completed,
+                    accepted_moves: if completed { 1 } else { 0 },
+                    final_objective: completed.then_some(1.5),
+                    failure_reason: (!completed).then_some("fixture refit failed".into()),
+                    candidate_refit_failures: Vec::new(),
+                    objective_history: if completed {
+                        vec![1.0, 1.5]
+                    } else {
+                        Vec::new()
+                    },
+                }
+            })
+            .collect::<Vec<_>>();
+        let pos_error = HeterogeneityV2Error::UnstablePosOptimum {
+            reproducing_starts: 1,
+            required_starts: 2,
+            diagnostics: pos_diagnostics,
+        };
+        let pos_candidate = candidate_from_heterogeneity_error(
+            CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2,
+            3,
+            &pos_error,
+        );
+        assert_eq!(pos_candidate.state, HeterogeneityCandidateStateV2::Unstable);
+        assert_eq!(pos_candidate.converged_starts, 4);
+        assert_eq!(pos_candidate.stable_starts, 1);
+        assert_eq!(
+            pos_candidate.blockers,
+            vec!["PLS-POS optimum was reproduced by 1 starts; 2 required"]
+        );
+
+        let hard_failure = candidate_from_heterogeneity_error(
+            CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2,
+            2,
+            &HeterogeneityV2Error::PosRefit("fixture hard failure".into()),
+        );
+        assert_eq!(hard_failure.state, HeterogeneityCandidateStateV2::Failed);
+        assert_eq!(hard_failure.converged_starts, 0);
+        assert_eq!(hard_failure.stable_starts, 0);
     }
 
     #[test]

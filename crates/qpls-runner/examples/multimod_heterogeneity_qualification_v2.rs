@@ -12,12 +12,14 @@ mod support;
 
 use qpls_core::*;
 use qpls_estimation::{
-    HETEROGENEITY_MULTISTART_COEFFICIENT_DIGEST_DOMAIN_V2,
+    FIMIX_PLS_METHOD_VERSION_V2, HETEROGENEITY_MULTISTART_COEFFICIENT_DIGEST_DOMAIN_V2,
     HETEROGENEITY_MULTISTART_EVIDENCE_SCHEMA_VERSION_V2,
     HETEROGENEITY_MULTISTART_FIT_STATISTIC_DIGEST_DOMAIN_V2,
     HETEROGENEITY_MULTISTART_PARAMETER_DIGEST_DOMAIN_V2,
     HETEROGENEITY_MULTISTART_PARTITION_DIGEST_DOMAIN_V2,
-    HETEROGENEITY_MULTISTART_POSTERIOR_DIGEST_DOMAIN_V2, align_labels_exhaustive_v2,
+    HETEROGENEITY_MULTISTART_POSTERIOR_DIGEST_DOMAIN_V2,
+    PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2, PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+    align_labels_exhaustive_v2,
 };
 use qpls_runner::*;
 use serde_json::{Value, json};
@@ -254,6 +256,19 @@ fn make_fixture_with_classes(
     )
 }
 
+fn strong_multiclass_p0_equation(class: usize, classes: usize) -> ([f64; 3], f64) {
+    debug_assert!(classes > 2 && class < classes);
+    const COEFFICIENTS: [[f64; 3]; 5] = [
+        [2.2, 0.2, 0.2],
+        [-2.0, 0.3, 0.3],
+        [0.3, 2.2, 0.3],
+        [0.3, -2.0, 0.3],
+        [0.3, 0.3, 2.2],
+    ];
+    let centered_class = class as f64 - (classes - 1) as f64 / 2.0;
+    (COEFFICIENTS[class], 0.35 * centered_class)
+}
+
 fn make_fixture_with_classes_and_observations(
     fixture_id: &str,
     profile: HeterogeneityInteractionProfileV2,
@@ -286,11 +301,17 @@ fn make_fixture_with_classes_and_observations(
             _ => row % classes,
         };
         let raw_x = random.normal();
-        let x = if scenario == Scenario::NonNormal {
+        let base_x = if scenario == Scenario::NonNormal {
             raw_x.signum() * raw_x.abs().powf(1.65)
         } else {
             raw_x
         };
+        let x = base_x
+            + if scenario == Scenario::CommonMetricFailure {
+                if class == 0 { -1.8 } else { 1.8 }
+            } else {
+                0.0
+            };
         let z = if scenario == Scenario::RankDeficient {
             x
         } else {
@@ -330,6 +351,18 @@ fn make_fixture_with_classes_and_observations(
                 Scenario::Overlap => class_sign * (0.62 * x + 0.16) + noise,
                 Scenario::Imbalanced => class_sign * (1.55 * x + 0.55) + noise,
                 Scenario::NonNormal => class_sign * (1.45 * x + 0.45) + noise,
+                Scenario::StrongSeparation if classes > 2 => {
+                    // A one-path standardized model collapses coefficient magnitude
+                    // when residual noise is small.  Use three ordinary structural
+                    // paths so every K=3..5 segment has a distinct high-signal
+                    // coefficient vector without adding any interaction term.
+                    let (coefficients, intercept) = strong_multiclass_p0_equation(class, classes);
+                    coefficients[0] * x
+                        + coefficients[1] * z
+                        + coefficients[2] * w
+                        + intercept
+                        + noise
+                }
                 _ => class_sign * (1.8 * x + 0.65) + noise,
             },
             HeterogeneityInteractionProfileV2::P2MultiTwoWay => {
@@ -368,7 +401,7 @@ fn make_fixture_with_classes_and_observations(
                     let metric_sign = if scenario == Scenario::CommonMetricFailure
                         && id == "x"
                         && class == 1
-                        && indicator >= 2
+                        && indicator == 3
                     {
                         -1.0
                     } else {
@@ -393,7 +426,17 @@ fn make_fixture_with_classes_and_observations(
     metamorphic::transform_row_aligned_values_v1(&mut truth);
     let dataset = dataset_from_columns(&format!("{fixture_id}.csv"), &headers, &columns)?;
 
-    let (construct_ids, paths) = profile_constructs(profile, scenario == Scenario::RankDeficient);
+    let (construct_ids, paths) = if profile == HeterogeneityInteractionProfileV2::P0Structural
+        && scenario == Scenario::StrongSeparation
+        && classes > 2
+    {
+        (
+            vec!["x", "z", "w", "y"],
+            vec![("x", "y"), ("z", "y"), ("w", "y")],
+        )
+    } else {
+        profile_constructs(profile, scenario == Scenario::RankDeficient)
+    };
     let owned = construct_ids
         .iter()
         .map(|id| {
@@ -770,6 +813,32 @@ fn run_discovery(
         fixture,
         discovery_config(fixture, seed, candidate_k, algorithms),
     )
+}
+
+fn run_required_discovery(
+    cell_id: &str,
+    fixture: &HeterogeneityFixture,
+    seed: u64,
+    candidate_k: Vec<u8>,
+    algorithms: Vec<HeterogeneityAlgorithmV2>,
+    required_candidates: &[(HeterogeneityAlgorithmV2, u8)],
+) -> Result<(String, Value), DynError> {
+    if required_candidates.is_empty() {
+        return Err(invalid(
+            "required discovery must name at least one exact algorithm/K candidate",
+        ));
+    }
+    let (_, value) = run_discovery(cell_id, fixture, seed, candidate_k, algorithms)?;
+    let identities = required_candidates
+        .iter()
+        .map(|(algorithm, k)| stable_discovery_identity(&value, cell_id, *algorithm, *k))
+        .collect::<Result<Vec<_>, _>>()?;
+    if identities.iter().any(|identity| identity != &identities[0]) {
+        return Err(invalid(format!(
+            "discovery {cell_id} produced inconsistent candidate-bound identities"
+        )));
+    }
+    Ok((identities[0].clone(), value))
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -1152,14 +1221,103 @@ fn dependency_value<'a>(dependencies: &'a [Value], shard_id: &str) -> Result<&'a
         .ok_or_else(|| invalid(format!("dependency {shard_id} has no cell value")))
 }
 
+fn expected_heterogeneity_method_version(algorithm: HeterogeneityAlgorithmV2) -> &'static str {
+    match algorithm {
+        HeterogeneityAlgorithmV2::FimixPlsV2 => FIMIX_PLS_METHOD_VERSION_V2,
+        HeterogeneityAlgorithmV2::PlsPosPublishedV2 => PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2 => {
+            PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2
+        }
+    }
+}
+
+fn stable_discovery_identity(
+    value: &Value,
+    source_id: &str,
+    algorithm: HeterogeneityAlgorithmV2,
+    k: u8,
+) -> Result<String, DynError> {
+    let algorithm_value = serde_json::to_value(algorithm)?;
+    let candidates = value["analysis"]["candidates"]
+        .as_array()
+        .ok_or_else(|| invalid(format!("discovery {source_id} has no candidate table")))?;
+    let matching = candidates
+        .iter()
+        .filter(|candidate| {
+            candidate["k"].as_u64() == Some(u64::from(k))
+                && candidate["method"]["kind"] == "segmentation"
+                && candidate["method"]["algorithm"] == algorithm_value
+        })
+        .collect::<Vec<_>>();
+    if matching.len() != 1 {
+        return Err(invalid(format!(
+            "multimod.qualification.heterogeneity.discovery_candidate_identity_invalid: discovery {source_id} requires exactly one {algorithm:?} K={k} candidate"
+        )));
+    }
+    let candidate = matching[0];
+    let blockers_empty = candidate["blockers"].as_array().is_some_and(Vec::is_empty);
+    let stable_starts = candidate["stable_starts"].as_u64().unwrap_or(0);
+    let completed_starts = candidate["converged_starts"].as_u64().unwrap_or(0);
+    if candidate["state"] != "converged_stable"
+        || stable_starts < 2
+        || completed_starts < stable_starts
+        || !blockers_empty
+    {
+        return Err(invalid(format!(
+            "multimod.qualification.heterogeneity.discovery_candidate_not_stable: discovery {source_id} {algorithm:?} K={k} has state={}, completed_starts={completed_starts}, stable_starts={stable_starts}, blockers={} ",
+            candidate["state"], candidate["blockers"]
+        )));
+    }
+
+    let evidence_key = if algorithm == HeterogeneityAlgorithmV2::FimixPlsV2 {
+        "fimix"
+    } else {
+        "pos"
+    };
+    let method_version = expected_heterogeneity_method_version(algorithm);
+    let evidence = value["evidence"][evidence_key].as_array().ok_or_else(|| {
+        invalid(format!(
+            "discovery {source_id} has no {evidence_key} evidence"
+        ))
+    })?;
+    let matching_evidence = evidence
+        .iter()
+        .filter(|row| {
+            row["k"].as_u64() == Some(u64::from(k))
+                && row["result"]["method_version"] == method_version
+        })
+        .count();
+    if matching_evidence != 1 {
+        return Err(invalid(format!(
+            "multimod.qualification.heterogeneity.discovery_point_evidence_invalid: discovery {source_id} requires exactly one {method_version} K={k} point result"
+        )));
+    }
+
+    let identity = value["analysis"]["discovery_result_identity_sha256"]
+        .as_str()
+        .filter(|identity| {
+            identity.len() == 64 && identity.bytes().all(|value| value.is_ascii_hexdigit())
+        })
+        .ok_or_else(|| {
+            invalid(format!(
+                "discovery {source_id} has no valid discovery identity"
+            ))
+        })?;
+    Ok(identity.to_owned())
+}
+
 fn dependency_discovery_identity(
     dependencies: &[Value],
     shard_id: &str,
+    algorithm: HeterogeneityAlgorithmV2,
+    k: u8,
 ) -> Result<String, DynError> {
-    dependency_value(dependencies, shard_id)?["analysis"]["discovery_result_identity_sha256"]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| invalid(format!("dependency {shard_id} has no discovery identity")))
+    stable_discovery_identity(
+        dependency_value(dependencies, shard_id)?,
+        shard_id,
+        algorithm,
+        k,
+    )
 }
 
 fn indexed_shard(shard_id: &str, prefix: &str, count: usize) -> Option<usize> {
@@ -1226,12 +1384,13 @@ fn shard_payload(
             Scenario::StrongSeparation,
             0x5000_u64.wrapping_add(seed),
         )?;
-        let (_, value) = run_discovery(
+        let (_, value) = run_required_discovery(
             &format!("fimix-p0-strong-seed-{seed}"),
             &fixture,
             seed,
             vec![2],
             vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+            &[(HeterogeneityAlgorithmV2::FimixPlsV2, 2)],
         )?;
         return Ok(json!({ "kind": "fimix_recovery", "index": index, "value": value }));
     }
@@ -1335,12 +1494,16 @@ fn shard_payload(
                 Scenario::StrongSeparation,
                 0x5000_u64.wrapping_add(args.seed),
             )?;
-            let (_, value) = run_discovery(
+            let (_, value) = run_required_discovery(
                 "pos-published-p0-discovery",
                 &fixture,
                 args.seed,
                 vec![2],
                 tandem_p0,
+                &[
+                    (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                    (HeterogeneityAlgorithmV2::PlsPosPublishedV2, 2),
+                ],
             )?;
             Ok(json!({ "kind": "pos_published_p0_discovery", "value": value }))
         }
@@ -1351,12 +1514,19 @@ fn shard_payload(
                 Scenario::StrongSeparation,
                 0x5200_u64.wrapping_add(args.seed),
             )?;
-            let (_, value) = run_discovery(
+            let (_, value) = run_required_discovery(
                 "heterogeneity-p2-tandem-discovery",
                 &fixture,
                 args.seed,
                 vec![2],
                 tandem_interactions,
+                &[
+                    (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                    (
+                        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                        2,
+                    ),
+                ],
             )?;
             Ok(json!({ "kind": "pos_destination_p2_discovery", "value": value }))
         }
@@ -1367,12 +1537,19 @@ fn shard_payload(
                 Scenario::StrongSeparation,
                 0x5230_u64.wrapping_add(args.seed),
             )?;
-            let (_, value) = run_discovery(
+            let (_, value) = run_required_discovery(
                 "heterogeneity-p23-tandem-discovery",
                 &fixture,
                 args.seed,
                 vec![2],
                 tandem_interactions,
+                &[
+                    (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                    (
+                        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                        2,
+                    ),
+                ],
             )?;
             Ok(json!({ "kind": "pos_destination_p23_discovery", "value": value }))
         }
@@ -1383,12 +1560,19 @@ fn shard_payload(
                 Scenario::CommonMetricFailure,
                 0x4641_494c_u64.wrapping_add(args.seed),
             )?;
-            let (_, value) = run_discovery(
+            let (_, value) = run_required_discovery(
                 "pos-p2-common-metric-failure-discovery",
                 &fixture,
                 args.seed,
                 vec![2],
                 tandem_interactions,
+                &[
+                    (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                    (
+                        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                        2,
+                    ),
+                ],
             )?;
             Ok(json!({ "kind": "pos_common_metric_failure_discovery", "value": value }))
         }
@@ -1478,12 +1662,13 @@ fn shard_payload(
                     .wrapping_add(args.seed),
                 usize::from(selected_k),
             )?;
-            let (_, value) = run_discovery(
+            let (_, value) = run_required_discovery(
                 &format!("pos-published-p0-k{selected_k}-discovery"),
                 &fixture,
                 args.seed,
                 vec![selected_k],
                 vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
+                &[(HeterogeneityAlgorithmV2::PlsPosPublishedV2, selected_k)],
             )?;
             Ok(json!({
                 "kind": "pos_published_k_discovery",
@@ -1514,7 +1699,12 @@ fn shard_payload(
                 args.seed,
                 vec![selected_k],
                 vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2],
-                dependency_discovery_identity(dependencies, &dependency_id)?,
+                dependency_discovery_identity(
+                    dependencies,
+                    &dependency_id,
+                    HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+                    selected_k,
+                )?,
                 HeterogeneityAlgorithmV2::PlsPosPublishedV2,
                 selected_k,
                 false,
@@ -1534,7 +1724,12 @@ fn shard_payload(
                 args.seed,
                 vec![2],
                 vec![HeterogeneityAlgorithmV2::FimixPlsV2],
-                dependency_discovery_identity(dependencies, "fimix-recovery-00")?,
+                dependency_discovery_identity(
+                    dependencies,
+                    "fimix-recovery-00",
+                    HeterogeneityAlgorithmV2::FimixPlsV2,
+                    2,
+                )?,
                 HeterogeneityAlgorithmV2::FimixPlsV2,
                 false,
             )?;
@@ -1553,7 +1748,12 @@ fn shard_payload(
                 args.seed,
                 vec![2],
                 tandem_p0,
-                dependency_discovery_identity(dependencies, "pos-published-p0-discovery")?,
+                dependency_discovery_identity(
+                    dependencies,
+                    "pos-published-p0-discovery",
+                    HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+                    2,
+                )?,
                 HeterogeneityAlgorithmV2::PlsPosPublishedV2,
                 true,
             )?;
@@ -1585,7 +1785,12 @@ fn shard_payload(
                 args.seed,
                 vec![2],
                 tandem_interactions,
-                dependency_discovery_identity(dependencies, "pos-destination-p2-discovery")?,
+                dependency_discovery_identity(
+                    dependencies,
+                    "pos-destination-p2-discovery",
+                    algorithm,
+                    2,
+                )?,
                 algorithm,
                 common_metric,
             )?;
@@ -1617,7 +1822,12 @@ fn shard_payload(
                 args.seed,
                 vec![2],
                 tandem_interactions,
-                dependency_discovery_identity(dependencies, "pos-destination-p23-discovery")?,
+                dependency_discovery_identity(
+                    dependencies,
+                    "pos-destination-p23-discovery",
+                    algorithm,
+                    2,
+                )?,
                 algorithm,
                 common_metric,
             )?;
@@ -1636,7 +1846,12 @@ fn shard_payload(
                 args.seed,
                 vec![2],
                 tandem_interactions,
-                dependency_discovery_identity(dependencies, "pos-common-metric-failure-discovery")?,
+                dependency_discovery_identity(
+                    dependencies,
+                    "pos-common-metric-failure-discovery",
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    2,
+                )?,
                 HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
                 true,
             )?;
@@ -1758,12 +1973,13 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
                 )?)
             };
             let fixture = generated_fixture.as_ref().unwrap_or(&p0);
-            run_discovery(
+            run_required_discovery(
                 &format!("fimix-p0-strong-seed-{seed}"),
                 fixture,
                 *seed,
                 vec![2],
                 vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+                &[(HeterogeneityAlgorithmV2::FimixPlsV2, 2)],
             )
             .map(|(_, value)| value)
         })
@@ -1831,33 +2047,58 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         HeterogeneityAlgorithmV2::FimixPlsV2,
         HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
     ];
-    let (p0_tandem_identity, p0_tandem_discovery) = run_discovery(
+    let (p0_tandem_identity, p0_tandem_discovery) = run_required_discovery(
         "pos-published-p0-discovery",
         &p0,
         args.seed,
         vec![2],
         tandem_p0_algorithms.clone(),
+        &[
+            (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+            (HeterogeneityAlgorithmV2::PlsPosPublishedV2, 2),
+        ],
     )?;
-    let (p2_identity, p2_discovery) = run_discovery(
+    let (p2_identity, p2_discovery) = run_required_discovery(
         "heterogeneity-p2-tandem-discovery",
         &p2,
         args.seed,
         vec![2],
         tandem_interaction_algorithms.clone(),
+        &[
+            (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+            (
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                2,
+            ),
+        ],
     )?;
-    let (p23_identity, p23_discovery) = run_discovery(
+    let (p23_identity, p23_discovery) = run_required_discovery(
         "heterogeneity-p23-tandem-discovery",
         &p23,
         args.seed,
         vec![2],
         tandem_interaction_algorithms.clone(),
+        &[
+            (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+            (
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                2,
+            ),
+        ],
     )?;
-    let (metric_failure_identity, metric_failure_discovery) = run_discovery(
+    let (metric_failure_identity, metric_failure_discovery) = run_required_discovery(
         "pos-p2-common-metric-failure-discovery",
         &metric_failure,
         args.seed,
         vec![2],
         tandem_interaction_algorithms.clone(),
+        &[
+            (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+            (
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                2,
+            ),
+        ],
     )?;
     let (_, pos_null_discovery) = run_discovery(
         "pos-published-p0-homogeneous-null",
@@ -1888,12 +2129,13 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
                 usize::from(selected_k),
             )?;
             let algorithms = vec![HeterogeneityAlgorithmV2::PlsPosPublishedV2];
-            let (discovery_identity, discovery) = run_discovery(
+            let (discovery_identity, discovery) = run_required_discovery(
                 &format!("pos-published-p0-k{selected_k}-discovery"),
                 &fixture,
                 args.seed,
                 vec![selected_k],
                 algorithms.clone(),
+                &[(HeterogeneityAlgorithmV2::PlsPosPublishedV2, selected_k)],
             )?;
             let bootstrap = run_inference_at_k(
                 &format!("pos-published-p0-k{selected_k}-fixed-k-bootstrap"),
@@ -2120,5 +2362,114 @@ fn main() -> Result<(), DynError> {
             Ok(())
         }
         ExecutionMode::Shard(shard_id) => run_shard(&args, shard_id),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::BTreeSet;
+
+    fn stable_discovery_fixture(algorithm: HeterogeneityAlgorithmV2, k: u8) -> Value {
+        let algorithm_value = serde_json::to_value(algorithm).unwrap();
+        let evidence_key = if algorithm == HeterogeneityAlgorithmV2::FimixPlsV2 {
+            "fimix"
+        } else {
+            "pos"
+        };
+        let mut evidence = json!({
+            "fimix": [],
+            "pos": [],
+        });
+        evidence[evidence_key] = json!([{
+            "k": k,
+            "result": {
+                "method_version": expected_heterogeneity_method_version(algorithm),
+            },
+        }]);
+        json!({
+            "analysis": {
+                "candidates": [{
+                    "method": {
+                        "kind": "segmentation",
+                        "algorithm": algorithm_value,
+                    },
+                    "k": k,
+                    "state": "converged_stable",
+                    "converged_starts": 10,
+                    "stable_starts": 2,
+                    "blockers": [],
+                }],
+                "discovery_result_identity_sha256": "a".repeat(64),
+            },
+            "evidence": evidence,
+        })
+    }
+
+    #[test]
+    fn discovery_dependency_requires_exact_stable_candidate_and_point_evidence() {
+        let algorithm = HeterogeneityAlgorithmV2::PlsPosPublishedV2;
+        let fixture = stable_discovery_fixture(algorithm, 3);
+        assert_eq!(
+            stable_discovery_identity(&fixture, "fixture", algorithm, 3).unwrap(),
+            "a".repeat(64)
+        );
+
+        for mutation in ["state", "starts", "blocker", "evidence", "duplicate"] {
+            let mut altered = fixture.clone();
+            match mutation {
+                "state" => altered["analysis"]["candidates"][0]["state"] = json!("unstable"),
+                "starts" => altered["analysis"]["candidates"][0]["stable_starts"] = json!(1),
+                "blocker" => altered["analysis"]["candidates"][0]["blockers"] = json!(["unstable"]),
+                "evidence" => altered["evidence"]["pos"] = json!([]),
+                "duplicate" => {
+                    let duplicate = altered["analysis"]["candidates"][0].clone();
+                    altered["analysis"]["candidates"]
+                        .as_array_mut()
+                        .unwrap()
+                        .push(duplicate);
+                }
+                _ => unreachable!(),
+            }
+            assert!(
+                stable_discovery_identity(&altered, "fixture", algorithm, 3).is_err(),
+                "mutation {mutation} must fail closed"
+            );
+        }
+    }
+
+    #[test]
+    fn multiclass_strong_fixture_has_distinct_multidimensional_structural_equations() {
+        for classes in 3..=5 {
+            let equations = (0..classes)
+                .map(|class| strong_multiclass_p0_equation(class, classes))
+                .collect::<Vec<_>>();
+            assert!(equations.iter().all(|(coefficients, intercept)| {
+                coefficients.iter().all(|value| value.is_finite())
+                    && intercept.is_finite()
+                    && coefficients.iter().any(|value| value.abs() >= 2.0)
+            }));
+            assert_eq!(
+                equations
+                    .iter()
+                    .map(|(coefficients, intercept)| (
+                        coefficients.map(f64::to_bits),
+                        intercept.to_bits()
+                    ))
+                    .collect::<BTreeSet<_>>()
+                    .len(),
+                classes
+            );
+            assert!(
+                equations
+                    .iter()
+                    .any(|(coefficients, _)| { coefficients.iter().any(|value| *value < 0.0) })
+            );
+            assert!(
+                equations
+                    .iter()
+                    .any(|(coefficients, _)| { coefficients.iter().any(|value| *value > 0.0) })
+            );
+        }
     }
 }

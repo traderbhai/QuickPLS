@@ -161,6 +161,113 @@ class HeterogeneityShardContractTests(unittest.TestCase):
                 altered[key] = replacement
                 self.assertFalse(comparator.is_baseline_qualification_matrix(altered))
 
+    def test_comparator_reconciles_frozen_bootstrap_failure_ledger(self) -> None:
+        fit_detail = (
+            "MultiMod statistical kernel failed: PLS-POS optimum was reproduced by "
+            "1 starts; 2 required"
+        )
+        entries = [
+            {
+                "replicate_index": 0,
+                "status": "usable",
+                "failure_reason": None,
+            },
+            {
+                "replicate_index": 1,
+                "status": "fit_failed",
+                "failure_reason": fit_detail,
+            },
+            {
+                "replicate_index": 2,
+                "status": "label_ambiguous",
+                "failure_reason": "bootstrap class/segment label match was ambiguous",
+            },
+        ]
+        ledger = {
+            "failure_counts": {
+                "heterogeneity.bootstrap.fit_failed": 1,
+                "heterogeneity.bootstrap.label_ambiguous": 1,
+            },
+            "failures": [
+                {
+                    "replicate_index": 1,
+                    "kind": "estimator_did_not_converge",
+                    "stable_code": "heterogeneity.bootstrap.fit_failed",
+                    "detail": fit_detail,
+                },
+                {
+                    "replicate_index": 2,
+                    "kind": "ambiguous_label_alignment",
+                    "stable_code": "heterogeneity.bootstrap.label_ambiguous",
+                    "detail": "bootstrap class/segment label match was ambiguous",
+                },
+            ],
+        }
+
+        reconciled, receipt = comparator.reconcile_bootstrap_failures(entries, ledger)
+        self.assertTrue(reconciled, receipt)
+        self.assertEqual(
+            comparator.BOOTSTRAP_FAILURE_PUBLIC_CONTRACT["fit_failed"],
+            (
+                "heterogeneity.bootstrap.fit_failed",
+                "estimator_did_not_converge",
+            ),
+        )
+
+        mutations = (
+            lambda value: value["failure_counts"].update(
+                {"heterogeneity.bootstrap.fit_failed": 2}
+            ),
+            lambda value: value["failures"][0].update(
+                {"stable_code": "heterogeneity.bootstrap.unstable_multistart"}
+            ),
+            lambda value: value["failures"][0].update(
+                {"kind": "unstable_multistart"}
+            ),
+            lambda value: value["failures"][0].update({"detail": "altered"}),
+            lambda value: value["failures"][0].update({"replicate_index": 99}),
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate):
+                altered = json.loads(json.dumps(ledger))
+                mutate(altered)
+                self.assertFalse(
+                    comparator.reconcile_bootstrap_failures(entries, altered)[0]
+                )
+
+    def test_comparator_failure_reconciliation_rejects_unknown_and_extra_rows(self) -> None:
+        empty_ledger = {"failure_counts": {}, "failures": []}
+        self.assertTrue(comparator.reconcile_bootstrap_failures([], empty_ledger)[0])
+        self.assertFalse(
+            comparator.reconcile_bootstrap_failures([], {"failure_counts": {}})[0]
+        )
+
+        unknown = [
+            {
+                "replicate_index": 0,
+                "status": "unstable_multistart",
+                "failure_reason": "not a frozen V2 ledger status",
+            }
+        ]
+        self.assertFalse(
+            comparator.reconcile_bootstrap_failures(unknown, empty_ledger)[0]
+        )
+
+        extra_public_row = {
+            "failure_counts": {},
+            "failures": [
+                {
+                    "replicate_index": 0,
+                    "kind": "estimator_did_not_converge",
+                    "stable_code": "heterogeneity.bootstrap.fit_failed",
+                    "detail": "orphan public failure",
+                }
+            ],
+        }
+        self.assertFalse(
+            comparator.reconcile_bootstrap_failures([], extra_public_row)[0]
+        )
+
     def test_wrapper_freezes_baseline_caps_and_bounded_children(self) -> None:
         wrapper = Path(__file__).with_name(
             "run_multimod_heterogeneity_qualification_v2.ps1"

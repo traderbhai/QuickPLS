@@ -404,7 +404,11 @@ Cargo build, a fast raw-runner sentinel must pass before independent recovery,
 scenario, candidate-K, POS-discovery, boundary, and bootstrap shards may run.
 Every shard is bound to the exact plan, commit, executable, seed, scale, and
 dependency receipts and is atomically sealed with SHA-256. Fixed-K inference
-reuses the retained discovery identity from its prerequisite shard. Independent
+reuses the retained discovery identity from its prerequisite shard. A discovery
+prerequisite is admissible only when the exact algorithm/K candidate is
+`converged_stable`, has at least two reproducing starts, has no blocker, and has
+one matching retained point-result receipt. Otherwise the discovery shard fails
+before any dependent bootstrap work starts. Independent
 non-Cargo executable shards may run concurrently, while bootstrap concurrency
 is separately bounded. Deterministic aggregation recreates the same raw report
 shape consumed by the independent comparator; partial output can never become
@@ -422,7 +426,10 @@ The production matrix also runs publication-profile PLS-POS candidates and
 through K=5 cells use 400-row balanced strong-separation fixtures, the exact
 `p0_structural` / `qpls.pls-pos.published.v2` identity, and POS-only
 ten-seeded-start discovery so the K dimension does not silently import tandem
-FIMIX or common-metric claims. The independent comparator reconstructs every
+FIMIX or common-metric claims. Their ordinary P0 models use three structural
+paths with distinct class-specific coefficient vectors and no interaction
+terms; a one-path symmetric zero-effect middle class is not used as a recovery
+fixture. The independent comparator reconstructs every
 retained bootstrap overlap across all K! mappings (6, 24, and 120 at K=3, 4,
 and 5), target digests, majority decisions, validity bitmaps, and Type-7
 intervals. Separate production-function probes require a nonidentity

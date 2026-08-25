@@ -26,6 +26,32 @@ MULTISTART_COEFFICIENT_DOMAIN = b"quickpls:heterogeneity:multistart-coefficients
 MULTISTART_POSTERIOR_DOMAIN = b"quickpls:heterogeneity:multistart-posteriors:v2\0"
 MULTISTART_PARAMETER_DOMAIN = b"quickpls:heterogeneity:multistart-parameters:v2\0"
 MULTISTART_FIT_STATISTIC_DOMAIN = b"quickpls:heterogeneity:multistart-fit-statistic:v2\0"
+BOOTSTRAP_FAILURE_PUBLIC_CONTRACT = {
+    "fit_failed": (
+        "heterogeneity.bootstrap.fit_failed",
+        "estimator_did_not_converge",
+    ),
+    "label_ambiguous": (
+        "heterogeneity.bootstrap.label_ambiguous",
+        "ambiguous_label_alignment",
+    ),
+    "label_not_mutual_majority": (
+        "heterogeneity.bootstrap.label_not_mutual_majority",
+        "ambiguous_label_alignment",
+    ),
+    "comparability_failed": (
+        "heterogeneity.bootstrap.comparability_failed",
+        "comparability_failed",
+    ),
+    "nonfinite_target": (
+        "heterogeneity.bootstrap.nonfinite_target",
+        "nonfinite_estimate",
+    ),
+    "cancelled": (
+        "heterogeneity.bootstrap.cancelled",
+        "cancelled",
+    ),
+}
 
 # Exact identities consumed by the POS/common-metric/bootstrap dependency
 # gates. This literal inventory keeps formatted check emission source-bound.
@@ -1550,6 +1576,68 @@ def validate_scientific_interaction_targets(cell: dict[str, Any], checks: Checks
     )
 
 
+def reconcile_bootstrap_failures(
+    entries: list[dict[str, Any]], analysis_ledger: dict[str, Any]
+) -> tuple[bool, dict[str, Any]]:
+    """Rebuild the frozen public failure ledger from retained bootstrap rows."""
+    expected_failures: list[dict[str, Any]] = []
+    expected_counts: Counter[str] = Counter()
+    unknown_statuses: list[dict[str, Any]] = []
+    for entry in entries:
+        status = entry.get("status")
+        if status == "usable":
+            continue
+        public_identity = BOOTSTRAP_FAILURE_PUBLIC_CONTRACT.get(status)
+        if public_identity is None:
+            unknown_statuses.append(
+                {
+                    "replicate_index": entry.get("replicate_index"),
+                    "status": status,
+                }
+            )
+            continue
+        stable_code, kind = public_identity
+        expected_counts[stable_code] += 1
+        expected_failures.append(
+            {
+                "replicate_index": entry.get("replicate_index"),
+                "kind": kind,
+                "stable_code": stable_code,
+                "detail": entry.get("failure_reason"),
+            }
+        )
+
+    observed_counts = analysis_ledger.get("failure_counts")
+    observed_failures = analysis_ledger.get("failures")
+    counts_have_exact_shape = isinstance(observed_counts, dict) and all(
+        isinstance(code, str)
+        and bool(code)
+        and type(count) is int
+        and count > 0
+        for code, count in observed_counts.items()
+    )
+    failures_have_exact_shape = isinstance(observed_failures, list) and all(
+        isinstance(row, dict)
+        and set(row) == {"replicate_index", "kind", "stable_code", "detail"}
+        for row in observed_failures
+    )
+    expected_counts_dict = dict(expected_counts)
+    reconciled = (
+        not unknown_statuses
+        and counts_have_exact_shape
+        and failures_have_exact_shape
+        and observed_counts == expected_counts_dict
+        and observed_failures == expected_failures
+    )
+    return reconciled, {
+        "expected_failure_counts": expected_counts_dict,
+        "observed_failure_counts": observed_counts,
+        "expected_failures": expected_failures,
+        "observed_failures": observed_failures,
+        "unknown_statuses": unknown_statuses,
+    }
+
+
 def validate_bootstrap_cell(cell: dict[str, Any], checks: Checks, prefix: str) -> None:
     evidence = cell["evidence"]["bootstrap"]
     analysis_ledger = cell["analysis"].get("bootstrap_ledger")
@@ -1565,6 +1653,18 @@ def validate_bootstrap_cell(cell: dict[str, Any], checks: Checks, prefix: str) -
     entries = prepared["entries"]
     targets = prepared["targets"]
     usable = [row for row in entries if row["status"] == "usable"]
+    failure_ledger_ok, failure_ledger_receipt = reconcile_bootstrap_failures(
+        entries, analysis_ledger
+    )
+    checks.require(
+        f"{prefix}.failure_ledger_reconciliation",
+        failure_ledger_ok,
+        observed=failure_ledger_receipt,
+        expected=(
+            "public failure_counts and every failure code/kind/detail exactly reproduce "
+            "the retained no-retry bootstrap rows"
+        ),
+    )
     target_ids = [row["target_id"] for row in targets]
     target_vectors_complete = all(len(row.get("estimates", [])) == len(entries) for row in targets)
     retained_k: set[int] = set()
