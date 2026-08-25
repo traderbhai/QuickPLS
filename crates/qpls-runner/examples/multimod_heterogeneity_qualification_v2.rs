@@ -23,6 +23,7 @@ use qpls_estimation::{
 };
 use qpls_resampling::MultiModShardSpecV1;
 use qpls_runner::*;
+use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -3533,7 +3534,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     )?;
     let compact_common_metric_profile_executions = if metamorphic::compact_matrix_v1() {
         compact_common_metric_profile_specs()
-            .into_iter()
+            .into_par_iter()
             .map(|spec| {
                 let fixture = match spec.profile {
                     HeterogeneityInteractionProfileV2::P2MultiTwoWay => &p2,
