@@ -1972,15 +1972,45 @@ fn expanded_frequency_fixture() -> Result<MgaFixture, DynError> {
     let mut expanded_x = Vec::new();
     let mut expanded_y = Vec::new();
     let mut next_row = 0_u64;
-    for selected in &compact_fixture.design.rows {
+    if compact_fixture.design.rows.len() != compact_fixture.x1.len()
+        || compact_fixture.design.rows.len() != compact_fixture.y1.len()
+    {
+        return Err(invalid(
+            "frequency expansion logical reference rows are misaligned",
+        ));
+    }
+    if source_rows.len() != compact_fixture.source_weights.len() {
+        return Err(invalid(
+            "frequency expansion dataset rows and source weights are misaligned",
+        ));
+    }
+    for (logical_row, selected) in compact_fixture.design.rows.iter().enumerate() {
         let source = selected.source_row as usize;
-        let count = compact_fixture.source_weights[source] as usize;
+        let source_values = source_rows
+            .get(source)
+            .ok_or_else(|| invalid("frequency expansion source row is outside the dataset"))?;
+        let count = *compact_fixture
+            .source_weights
+            .get(source)
+            .ok_or_else(|| invalid("frequency expansion weight row is outside the dataset"))?
+            as usize;
+        // The design remains in logical selected-row order while `source_row`
+        // addresses the (possibly reordered) dataset. The selected-only x1/y1
+        // references therefore use the logical design index, not `source_row`.
+        let selected_x = *compact_fixture
+            .x1
+            .get(logical_row)
+            .ok_or_else(|| invalid("frequency expansion x reference omitted a selected row"))?;
+        let selected_y = *compact_fixture
+            .y1
+            .get(logical_row)
+            .ok_or_else(|| invalid("frequency expansion y reference omitted a selected row"))?;
         for _ in 0..count {
             for (column, header) in headers.iter().enumerate() {
                 let value = if header == "weight" {
                     Some("1".into())
                 } else {
-                    source_rows[source].get(header).cloned().flatten()
+                    source_values.get(header).cloned().flatten()
                 };
                 expanded_columns[column].push(value);
             }
@@ -1988,8 +2018,8 @@ fn expanded_frequency_fixture() -> Result<MgaFixture, DynError> {
                 source_row: next_row,
                 group: selected.group,
             });
-            expanded_x.push(compact_fixture.x1[source]);
-            expanded_y.push(compact_fixture.y1[source]);
+            expanded_x.push(selected_x);
+            expanded_y.push(selected_y);
             next_row += 1;
         }
     }
