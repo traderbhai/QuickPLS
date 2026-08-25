@@ -363,7 +363,7 @@ function Start-Cell {
     param(
         [Parameter(Mandatory = $true)]$Spec,
         [Parameter(Mandatory = $true)][string]$SourceCommit,
-        [Parameter(Mandatory = $true)][System.Collections.Generic.HashSet[string]]$Completed
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.HashSet[string]]$Completed
     )
     $cellId = [string]$Spec.cell_id
     foreach ($dependency in @($Spec.dependencies)) {
@@ -447,7 +447,7 @@ function Invoke-CellPhase {
         [Parameter(Mandatory = $true)][string]$Name,
         [Parameter(Mandatory = $true)][AllowEmptyCollection()][object[]]$Specs,
         [Parameter(Mandatory = $true)][string]$SourceCommit,
-        [Parameter(Mandatory = $true)][System.Collections.Generic.HashSet[string]]$Completed
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Collections.Generic.HashSet[string]]$Completed
     )
     $requiredIds = @($Specs | ForEach-Object { [string]$_.cell_id })
     while (@($requiredIds | Where-Object { -not $Completed.Contains($_) }).Count -gt 0) {

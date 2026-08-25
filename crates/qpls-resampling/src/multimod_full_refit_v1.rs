@@ -1389,7 +1389,9 @@ fn multinomial_count_space_draw(
         } else {
             let distribution = Binomial::new(probability, remaining_draws)
                 .map_err(|error| MultiModFullRefitErrorV1::CountSpace(error.to_string()))?;
-            distribution.inverse_cdf(open_unit_interval(rng))
+            bounded_discrete_inverse_cdf(0, remaining_draws, open_unit_interval(rng), |value| {
+                distribution.cdf(value)
+            })
         };
         if count > remaining_draws {
             return Err(MultiModFullRefitErrorV1::CountSpace(
@@ -1417,6 +1419,28 @@ fn open_unit_interval(rng: &mut ChaCha20Rng) -> f64 {
     const DENOMINATOR: u64 = 1_u64 << 53;
     let numerator = rng.random_range(1..DENOMINATOR);
     numerator as f64 / DENOMINATOR as f64
+}
+
+// `statrs`' default discrete inverse CDF rejects valid probabilities below
+// F(min) and unwraps that failed search. Searching the known finite support
+// directly preserves zero-count binomial quantiles without changing RNG use.
+fn bounded_discrete_inverse_cdf<F>(lower: u64, upper: u64, probability: f64, mut cdf: F) -> u64
+where
+    F: FnMut(u64) -> f64,
+{
+    debug_assert!(lower <= upper);
+    debug_assert!(probability > 0.0 && probability < 1.0);
+    let mut left = lower;
+    let mut right = upper;
+    while left < right {
+        let midpoint = left + (right - left) / 2;
+        if cdf(midpoint) >= probability {
+            right = midpoint;
+        } else {
+            left = midpoint + 1;
+        }
+    }
+    left
 }
 
 fn select_and_normalize_weights(
@@ -2425,6 +2449,17 @@ mod tests {
             MULTIMOD_MAX_FREQUENCY_TOTAL_V1
         );
         assert!(validate_frequency_weights_v1(&[1, 0]).is_err());
+    }
+
+    #[test]
+    fn bounded_binomial_inverse_cdf_returns_zero_below_first_cdf_step() {
+        let distribution = Binomial::new(1.0 / 180.0, 180).unwrap();
+        let probability = distribution.cdf(0) / 2.0;
+        assert!(probability > 0.0 && probability < distribution.cdf(0));
+        assert_eq!(
+            bounded_discrete_inverse_cdf(0, 180, probability, |value| { distribution.cdf(value) }),
+            0
+        );
     }
 
     #[test]

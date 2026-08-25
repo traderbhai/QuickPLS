@@ -275,6 +275,13 @@ class MetamorphicWrapperStaticTests(unittest.TestCase):
             "    if ($paths.Count -eq 0)",
             wrapper,
         )
+        self.assertEqual(
+            2,
+            wrapper.count(
+                "[Parameter(Mandatory = $true)][AllowEmptyCollection()]"
+                "[System.Collections.Generic.HashSet[string]]$Completed"
+            ),
+        )
         self.assertLess(
             wrapper.index('Invoke-CellPhase -Name "baseline-root"'),
             wrapper.index('Invoke-CellPhase -Name "dependent-axis"'),
