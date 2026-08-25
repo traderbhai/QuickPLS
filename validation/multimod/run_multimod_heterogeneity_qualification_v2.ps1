@@ -13,8 +13,8 @@ param(
     [ValidateRange(1, 4)]
     [int]$MaxParallelShards = 4,
 
-    [ValidateRange(1, 2)]
-    [int]$MaxParallelBootstrapShards = 2,
+    [ValidateRange(1, 4)]
+    [int]$MaxParallelBootstrapShards = 4,
 
     [ValidateRange(60, 1800)]
     [int]$PerShardTimeoutSeconds = 1800,
@@ -652,7 +652,7 @@ try {
         }
 
         New-Item -ItemType Directory -Path $resolvedWorkRoot, $shardDirectory, $logDirectory, $historyDirectory, $bootstrapDirectory -Force | Out-Null
-        Write-Host "[heterogeneity] one Cargo build; point cells use scientific checkpoints and seven bootstrap cells use prepare/100 modulo caches/finalize"
+        Write-Host "[heterogeneity] one Cargo build; point cells use scientific checkpoints and seven typed n=80 dual-outcome bootstrap cells use prepare/100 modulo caches/finalize"
         $buildExit = Invoke-BoundedStage -Stage "cargo-build" -FileName "cargo" -Arguments @(
             "build", "--release", "--quiet", "--locked", "-p", "qpls-runner", "--example",
             "multimod_heterogeneity_qualification_v2"
@@ -680,6 +680,50 @@ try {
             [string]$plan.metamorphism -ne "baseline" -or $null -ne $plan.sign_columns -or
             [int]$plan.workers -ne 1 -or [int]$plan.fixture_observations -ne 400) {
             throw "The shard plan did not preserve the baseline 400-row qualification identity with the fast root sentinel first."
+        }
+        $bootstrapFixturePlanProperty = $plan.PSObject.Properties["bootstrap_fixture_plan"]
+        if ($null -eq $bootstrapFixturePlanProperty -or $null -eq $bootstrapFixturePlanProperty.Value) {
+            throw "The shard plan did not declare the required typed n=80 dual-outcome fixed-K bootstrap fixture plan."
+        }
+        $bootstrapFixturePlan = $bootstrapFixturePlanProperty.Value
+        $expectedBootstrapFixturePlanProperties = @(
+            "schema_version",
+            "plan_id",
+            "purpose",
+            "selected_k",
+            "observations_per_fixture",
+            "expected_cases_per_true_class",
+            "interaction_fixture_design",
+            "requested_replicates",
+            "performance_scope"
+        ) | Sort-Object
+        $actualBootstrapFixturePlanProperties = @(
+            $bootstrapFixturePlan.PSObject.Properties.Name | Sort-Object
+        )
+        $bootstrapFixturePlanPropertyDifference = @(
+            Compare-Object -ReferenceObject $expectedBootstrapFixturePlanProperties `
+                -DifferenceObject $actualBootstrapFixturePlanProperties
+        )
+        if ($bootstrapFixturePlanPropertyDifference.Count -ne 0 -or
+            $bootstrapFixturePlan.schema_version -isnot [System.Int64] -or
+            [int]$bootstrapFixturePlan.schema_version -ne 1 -or
+            $bootstrapFixturePlan.plan_id -isnot [string] -or
+            [string]$bootstrapFixturePlan.plan_id -cne "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1" -or
+            $bootstrapFixturePlan.purpose -isnot [string] -or
+            [string]$bootstrapFixturePlan.purpose -cne "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification" -or
+            $bootstrapFixturePlan.selected_k -isnot [System.Int64] -or
+            [int]$bootstrapFixturePlan.selected_k -ne 2 -or
+            $bootstrapFixturePlan.observations_per_fixture -isnot [System.Int64] -or
+            [int]$bootstrapFixturePlan.observations_per_fixture -ne 80 -or
+            $bootstrapFixturePlan.expected_cases_per_true_class -isnot [System.Int64] -or
+            [int]$bootstrapFixturePlan.expected_cases_per_true_class -ne 40 -or
+            $bootstrapFixturePlan.interaction_fixture_design -isnot [string] -or
+            [string]$bootstrapFixturePlan.interaction_fixture_design -cne "dual_endogenous_anchor_v1" -or
+            $bootstrapFixturePlan.requested_replicates -isnot [System.Int64] -or
+            [int]$bootstrapFixturePlan.requested_replicates -ne 500 -or
+            $bootstrapFixturePlan.performance_scope -isnot [string] -or
+            [string]$bootstrapFixturePlan.performance_scope -cne "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim") {
+            throw "The shard plan bootstrap_fixture_plan differs from the exact typed n=80 dual-outcome, K=2, 500-draw qualification contract."
         }
 
         $completed = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -753,7 +797,7 @@ try {
 
         $bootstrapSpecs = @($specs | Where-Object { [string]$_.resource_class -eq "bootstrap" })
         if ($bootstrapSpecs.Count -gt 0) {
-            Write-Host ("[heterogeneity] running {0} retained bootstrap profiles with exact 500-draw ledgers; verified chunks resume without repeating completed draws" -f $bootstrapSpecs.Count)
+            Write-Host ("[heterogeneity] running {0} retained bootstrap profiles on the typed n=80 dual-outcome fixture with exact 500-draw ledgers; up to {1} three-thread scientific cells run concurrently and verified chunks resume without repeating completed draws" -f $bootstrapSpecs.Count, $MaxParallelBootstrapShards)
         }
         $bootstrapStates = [System.Collections.Generic.List[object]]::new()
         foreach ($spec in $bootstrapSpecs) {

@@ -191,9 +191,14 @@ signature and an auditable refit receipt. Missing outcomes, inconsistent
 parameter dimensions, duplicate outcomes, nonfinite parameters, invalid R2, or
 an incomplete receipt invalidate that candidate.
 
-The frozen ten-start plan contains nine deterministic seeded
-presegmentations. When a same-K FIMIX result is available, its dominant
-partition is start ten; otherwise start ten is another seeded presegmentation.
+The frozen ten-start plan uses a deterministic hybrid coverage bank: one pooled
+projection presegmentation, balanced feature-axis quantile presegmentations,
+and at least two domain-seeded balanced shuffles. Generated partitions are
+unique up to label permutation. When a same-K FIMIX result is available, its
+dominant partition is the sole FIMIX start at position ten and any equivalent
+generated partition is excluded; otherwise all ten starts come from the hybrid
+bank. A bounded deterministic fallback fails closed if ten label-distinct
+starts cannot be formed.
 
 For each start, QuickPLS performs strict best-improvement hill climbing:
 
@@ -266,6 +271,28 @@ destination-scored interaction extension.
 - Each replicate index has one SHA-256-domain-separated seed and one attempt.
 - There are no replacement retries.
 - At least `ceil(.90 * requested)` replicates must be usable.
+
+The qualification fixture sizes are deliberately typed by purpose. The
+general n=400 matrix is retained for point estimation, recovery, power, and
+boundary evidence; it is not the runtime fixture for the seven bootstrap
+ledgers. Those ledgers use
+`qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1`: balanced
+n=80, fixed K=2, 40 cases per true class, and exactly 500 requested replicates.
+Its interaction fixture design is `dual_endogenous_anchor_v1`, its
+purpose is `fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification`,
+and its performance scope is explicitly
+`n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim`.
+
+P0 bootstrap fixtures remain single-outcome models with endogenous `y` only.
+P2, P23, and the P2 common-metric failure fixture model both `y` and the
+auxiliary endogenous anchor `v`. The anchor has the three ordinary paths
+`x -> v`, `z -> v`, and `w -> v`; every two- or three-way interaction remains
+on `y` only. The auxiliary equation improves a fixed bootstrap fixture's
+segment anchor without changing the scientific interaction targets.
+The negative-control common-metric fixture adds an X location separation for
+structural identifiability and suppresses the class-two X3 loading. This keeps
+the intended X compositional-invariance failure explicit without introducing
+the pooled-score variance collapse caused by a full sign reversal.
 
 A usable ledger row requires a finite fit statistic, a reproducible
 target-payload digest, and unique mutual-majority label alignment. The digest
@@ -410,7 +437,9 @@ prerequisite is admissible only when the exact algorithm/K candidate is
 one matching retained point-result receipt. Otherwise the discovery shard fails
 before any dependent bootstrap work starts. Independent
 non-Cargo executable shards may run concurrently, while bootstrap concurrency
-is separately bounded. Each retained bootstrap cell freezes one serialized
+is separately bounded. On a 12-logical-core qualification host, POS bootstrap
+execution permits at most four producer processes with three threads each.
+Each retained bootstrap cell freezes one serialized
 prepared point/common-metric execution, then runs the exact 500-draw ledger as
 100 modulo caches with five owned draws per cache. A process resumes only its
 same validated cache, has a 25-minute internal cancellation budget within the
@@ -426,7 +455,8 @@ finalization. Missing files, tampering, or mixed identities fail closed. Determi
 the same raw report shape consumed by the independent comparator; partial
 output can never become a scientific result. The wrapper requires a fully clean tracked/untracked tree
 and baseline, one-worker, non-compact, unsigned fixture environment; the
-comparator separately enforces the 400-row seed-42 qualification identity.
+comparator separately enforces both the 400-row seed-42 point/recovery identity
+and the typed balanced n=80 fixed-K dual-outcome bootstrap identity.
 Cargo build, plan generation, sentinel, all shards, aggregation, and comparison
 are supervised against the remaining budget with process-tree termination and
 bounded exit waits. A two-minute sentinel, 108-minute internal work cutoff
@@ -435,8 +465,16 @@ instead of allowing an unbounded, uncheckpointed run.
 
 The production bootstrap matrix retains seven distinct 500-draw K=2 profile
 cells: FIMIX P0/P2/P23, publication PLS-POS P0, destination-scored PLS-POS
-P2/P23, and the common-metric failure fixture. Publication-profile PLS-POS
-point discovery is additionally exercised at each exact K from 3 through 5.
+P2/P23, and the common-metric failure fixture. All seven use the typed
+`qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1` plan,
+balanced n=80 (40 cases per true class), and rerun the complete stage-one, product,
+multi-start, segmentation, common-metric-when-requested, and label-alignment
+pipeline for every one of the 500 no-retry draws. This qualifies inference and
+ledger semantics; it is not a claim that 500 n=400 bootstrap draws meet the
+same runtime budget. P0 is single-outcome; every P2/P23/common-metric fixture
+adds the modeled `v` outcome with ordinary `x/z/w -> v` anchor paths while all
+interactions continue to target `y` only. Publication-profile PLS-POS point discovery is
+additionally exercised at each exact K from 3 through 5.
 Those point-only cells use the typed
 `qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1` plan,
 balanced n=120 strong-separation fixtures (40, 30, and 24 rows per class at

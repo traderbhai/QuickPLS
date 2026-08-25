@@ -32,6 +32,7 @@ def plan(rows: list[dict[str, object]]) -> dict[str, object]:
         "workers": 1,
         "fixture_observations": 400,
         "multiclass_point_fixture_plan": shards.MULTICLASS_POINT_FIXTURE_PLAN,
+        "bootstrap_fixture_plan": shards.BOOTSTRAP_FIXTURE_PLAN,
         "execution_contract": "one_cargo_build_then_dependency_aware_non_cargo_shards",
         "sentinel_shard_id": "sentinel",
         "aggregation_order": "plan_order",
@@ -54,6 +55,7 @@ def result(
         "workers": 1,
         "fixture_observations": 400,
         "multiclass_point_fixture_plan": shards.MULTICLASS_POINT_FIXTURE_PLAN,
+        "bootstrap_fixture_plan": shards.BOOTSTRAP_FIXTURE_PLAN,
         "dependency_shard_ids": sorted(dependencies),
         "payload": {"kind": kind, "value": {"cell_id": shard_id}},
     }
@@ -73,8 +75,9 @@ def prepared_value(shard_id: str, dependencies: list[str]) -> dict[str, object]:
         "metamorphism": "baseline",
         "sign_columns": None,
         "workers": 1,
-        "fixture_observations": 400,
+        "fixture_observations": 80,
         "multiclass_point_fixture_plan": shards.MULTICLASS_POINT_FIXTURE_PLAN,
+        "bootstrap_fixture_plan": shards.BOOTSTRAP_FIXTURE_PLAN,
         "dependency_shard_ids": sorted(dependencies),
         "cell_id": "fimix-p0-fixed-k-bootstrap",
         "chunk_count": shards.BOOTSTRAP_CHUNK_COUNT,
@@ -123,8 +126,9 @@ def cache_value(
         "metamorphism": "baseline",
         "sign_columns": None,
         "workers": 1,
-        "fixture_observations": 400,
+        "fixture_observations": 80,
         "multiclass_point_fixture_plan": shards.MULTICLASS_POINT_FIXTURE_PLAN,
+        "bootstrap_fixture_plan": shards.BOOTSTRAP_FIXTURE_PLAN,
         "dependency_shard_ids": sorted(dependencies),
         "cell_id": "fimix-p0-fixed-k-bootstrap",
         "prepared_execution_identity_sha256": "c" * 64,
@@ -265,6 +269,69 @@ class HeterogeneityShardContractTests(unittest.TestCase):
         shards.atomic_json(self.plan_path, plan(rows))
         with self.assertRaises(shards.ContractError):
             shards.validated_plan(self.plan_path)
+
+    def test_plan_requires_the_exact_typed_n80_dual_outcome_bootstrap_fixture_plan(self) -> None:
+        rows = shards.expected_shard_specs("qualification")
+        baseline = plan(rows)
+        for label, mutate in (
+            (
+                "missing",
+                lambda value: value.pop("bootstrap_fixture_plan"),
+            ),
+            (
+                "wrong_rows",
+                lambda value: value["bootstrap_fixture_plan"].update(
+                    {"observations_per_fixture": 400}
+                ),
+            ),
+            (
+                "wrong_numeric_type",
+                lambda value: value["bootstrap_fixture_plan"].update(
+                    {"selected_k": True}
+                ),
+            ),
+            (
+                "extra_property",
+                lambda value: value["bootstrap_fixture_plan"].update(
+                    {"unbound_claim": "not_allowed"}
+                ),
+            ),
+        ):
+            with self.subTest(label=label):
+                altered = json.loads(json.dumps(baseline))
+                mutate(altered)
+                shards.atomic_json(self.plan_path, altered)
+                with self.assertRaises(shards.ContractError):
+                    shards.validated_plan(self.plan_path)
+
+    def test_prepared_bootstrap_uses_n80_while_global_plan_remains_n400(self) -> None:
+        rows = shards.expected_shard_specs("qualification")
+        plan_value = plan(rows)
+        spec = next(row for row in rows if row["shard_id"] == "bootstrap-fimix-p0")
+        prepared = prepared_value(
+            "bootstrap-fimix-p0", ["sentinel", "fimix-recovery-00"]
+        )
+        self.assertEqual(plan_value["fixture_observations"], 400)
+        self.assertEqual(prepared["fixture_observations"], 80)
+        shards.validate_bootstrap_prepared(prepared, plan_value, spec)
+
+        for label, mutate in (
+            (
+                "prepared_reuses_global_n400",
+                lambda value: value.update({"fixture_observations": 400}),
+            ),
+            (
+                "prepared_plan_tampered",
+                lambda value: value["bootstrap_fixture_plan"].update(
+                    {"expected_cases_per_true_class": 39}
+                ),
+            ),
+        ):
+            with self.subTest(label=label):
+                altered = json.loads(json.dumps(prepared))
+                mutate(altered)
+                with self.assertRaises(shards.ContractError):
+                    shards.validate_bootstrap_prepared(altered, plan_value, spec)
 
     def test_bootstrap_prepare_and_cache_tampering_fail_closed(self) -> None:
         shard_id, dependencies = self.prepare_bootstrap_checkpoint()
@@ -439,6 +506,14 @@ class HeterogeneityShardContractTests(unittest.TestCase):
         )
         self.assertEqual(inventory["chunk_count"], 100)
         self.assertEqual(len(inventory["caches"]), 100)
+        self.assertEqual(inventory["fixture_observations"], 80)
+        self.assertEqual(
+            inventory["bootstrap_fixture_plan"], shards.BOOTSTRAP_FIXTURE_PLAN
+        )
+        self.assertEqual(
+            inventory["multiclass_point_fixture_plan"],
+            shards.MULTICLASS_POINT_FIXTURE_PLAN,
+        )
         inventory_path = shards.bootstrap_cache_inventory_path(
             self.shard_dir, shard_id
         )
@@ -519,6 +594,20 @@ class HeterogeneityShardContractTests(unittest.TestCase):
                 "observations_per_fixture": 120,
                 "allocation": "row_mod_k_exactly_balanced",
                 "bootstrap_evidence": "not_requested",
+            },
+        )
+        self.assertEqual(
+            value["bootstrap_fixture_plan"],
+            {
+                "schema_version": 1,
+                "plan_id": "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1",
+                "purpose": "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification",
+                "selected_k": 2,
+                "observations_per_fixture": 80,
+                "expected_cases_per_true_class": 40,
+                "interaction_fixture_design": "dual_endogenous_anchor_v1",
+                "requested_replicates": 500,
+                "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
             },
         )
 
@@ -672,7 +761,7 @@ class HeterogeneityShardContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         for fragment in (
             '[ValidateRange(1, 4)]',
-            '[ValidateRange(1, 2)]',
+            '[int]$MaxParallelBootstrapShards = 4',
             '[ValidateRange(60, 1800)]',
             '[ValidateRange(600, 6600)]',
             '[int]$OverallTimeoutSeconds = 6480',
@@ -704,9 +793,14 @@ class HeterogeneityShardContractTests(unittest.TestCase):
             '$campaignElapsedAtExitSeconds -ge $workCutoffSeconds',
             '$workCutoffSeconds = [Math]::Min($OverallTimeoutSeconds, 6480)',
             'bootstrap_child_timeout',
+            'qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1',
+            'fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification',
+            'dual_endogenous_anchor_v1',
+            'n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim',
         ):
             with self.subTest(fragment=fragment):
                 self.assertIn(fragment, wrapper)
+        self.assertEqual(wrapper.count('[ValidateRange(1, 4)]'), 2)
 
         wait_start = wrapper.index("function Wait-BoundedChild")
         wait_end = wrapper.index("function Invoke-BoundedStage", wait_start)

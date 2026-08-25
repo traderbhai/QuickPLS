@@ -2378,9 +2378,10 @@ struct InternalPosStartFailureV2 {
     objective_history: Vec<f64>,
 }
 
-/// Build the frozen ten-start plan. Nine starts are deterministic seeded
-/// presegmentations. The tenth is a same-K FIMIX partition when supplied,
-/// otherwise a tenth seeded presegmentation.
+/// Build the frozen ten-start plan. The deterministic coverage bank prioritizes
+/// one pooled projection, balanced feature-axis quantile partitions, and at
+/// least two domain-seeded balanced shuffles. Start nine is the sole same-K
+/// FIMIX partition when supplied; otherwise it is another generated start.
 pub fn build_pls_pos_start_plan_v2(
     features: &[Vec<f64>],
     segments: usize,
@@ -2403,45 +2404,140 @@ pub fn build_pls_pos_start_plan_v2(
             "PLS-POS requires at least one row per segment".to_string(),
         ));
     }
-    let mut starts = Vec::with_capacity(10);
-    for start_index in 0..10 {
-        if start_index == 9 {
-            if let Some(fimix) = same_k_fimix_assignments {
-                if fimix.len() != features.len()
-                    || fimix.iter().any(|segment| *segment >= segments)
-                    || fimix.iter().copied().collect::<BTreeSet<_>>().len() != segments
-                {
-                    return Err(HeterogeneityV2Error::InvalidContract(
-                        "same-K FIMIX start has invalid labels or row count".to_string(),
-                    ));
-                }
-                starts.push(fimix.to_vec());
-                continue;
-            }
+    let fimix = if let Some(assignments) = same_k_fimix_assignments {
+        if assignments.len() != features.len()
+            || assignments.iter().any(|segment| *segment >= segments)
+            || assignments.iter().copied().collect::<BTreeSet<_>>().len() != segments
+        {
+            return Err(HeterogeneityV2Error::InvalidContract(
+                "same-K FIMIX start has invalid labels or row count".to_string(),
+            ));
         }
-        let mut order = (0..features.len()).collect::<Vec<_>>();
-        if start_index == 0 {
-            order.sort_by(|left, right| {
-                feature_projection_key(&features[*left])
-                    .total_cmp(&feature_projection_key(&features[*right]))
-                    .then(left.cmp(right))
-            });
+        Some(assignments)
+    } else {
+        None
+    };
+
+    const START_COUNT: usize = 10;
+    const RANDOM_COVERAGE_STARTS: usize = 2;
+    const MAX_FALLBACK_ATTEMPTS: usize = 1_024;
+
+    let generated_target = START_COUNT - usize::from(fimix.is_some());
+    let mut starts = Vec::with_capacity(START_COUNT);
+
+    let mut aggregate_order = (0..features.len()).collect::<Vec<_>>();
+    let aggregate_ascending = seed % 2 == 0;
+    aggregate_order.sort_by(|left, right| {
+        let projection_order = feature_projection_key(&features[*left])
+            .total_cmp(&feature_projection_key(&features[*right]));
+        (if aggregate_ascending {
+            projection_order
         } else {
-            let start_seed = derive_domain_seed_v2(seed, "pls_pos_start", start_index as u64);
-            let mut rng = ChaCha20Rng::seed_from_u64(start_seed);
-            order.shuffle(&mut rng);
-        }
-        let mut assignments = vec![0usize; features.len()];
-        for (rank, row) in order.into_iter().enumerate() {
-            assignments[row] = if start_index == 0 {
-                (rank * segments / features.len()).min(segments - 1)
-            } else {
-                rank % segments
-            };
-        }
-        starts.push(assignments);
+            projection_order.reverse()
+        })
+        .then(left.cmp(right))
+    });
+    push_unique_pos_presegmentation(
+        &mut starts,
+        balanced_contiguous_pos_partition(&aggregate_order, segments),
+        segments,
+        fimix,
+    );
+
+    let axis_capacity = generated_target
+        .saturating_sub(starts.len() + RANDOM_COVERAGE_STARTS)
+        .min(features[0].len());
+    let mut axis_order = (0..features[0].len()).collect::<Vec<_>>();
+    let mut axis_rng =
+        ChaCha20Rng::seed_from_u64(derive_domain_seed_v2(seed, "pls_pos_axis_order", 0));
+    axis_order.shuffle(&mut axis_rng);
+    for column in axis_order.into_iter().take(axis_capacity) {
+        let mut row_order = (0..features.len()).collect::<Vec<_>>();
+        row_order.sort_by(|left, right| {
+            features[*left][column]
+                .total_cmp(&features[*right][column])
+                .then(left.cmp(right))
+        });
+        push_unique_pos_presegmentation(
+            &mut starts,
+            balanced_contiguous_pos_partition(&row_order, segments),
+            segments,
+            fimix,
+        );
     }
+
+    for attempt in 0..MAX_FALLBACK_ATTEMPTS {
+        if starts.len() == generated_target {
+            break;
+        }
+        let mut row_order = (0..features.len()).collect::<Vec<_>>();
+        let start_seed = derive_domain_seed_v2(seed, "pls_pos_start_shuffle", attempt as u64);
+        let mut rng = ChaCha20Rng::seed_from_u64(start_seed);
+        row_order.shuffle(&mut rng);
+        let mut assignments = vec![0usize; features.len()];
+        for (rank, row) in row_order.into_iter().enumerate() {
+            assignments[row] = rank % segments;
+        }
+        push_unique_pos_presegmentation(&mut starts, assignments, segments, fimix);
+    }
+    if starts.len() != generated_target {
+        return Err(HeterogeneityV2Error::InvalidContract(format!(
+            "PLS-POS could not construct {generated_target} label-distinct deterministic presegmentations within {MAX_FALLBACK_ATTEMPTS} attempts"
+        )));
+    }
+    if let Some(assignments) = fimix {
+        starts.push(assignments.to_vec());
+    }
+    debug_assert_eq!(starts.len(), START_COUNT);
     Ok(starts)
+}
+
+fn balanced_contiguous_pos_partition(order: &[usize], segments: usize) -> Vec<usize> {
+    let mut assignments = vec![0usize; order.len()];
+    for (rank, row) in order.iter().copied().enumerate() {
+        assignments[row] = (rank * segments / order.len()).min(segments - 1);
+    }
+    assignments
+}
+
+fn push_unique_pos_presegmentation(
+    starts: &mut Vec<Vec<usize>>,
+    candidate: Vec<usize>,
+    segments: usize,
+    excluded: Option<&[usize]>,
+) -> bool {
+    if excluded.is_some_and(|partition| {
+        pos_partitions_equivalent_up_to_labels(&candidate, partition, segments)
+    }) || starts
+        .iter()
+        .any(|partition| pos_partitions_equivalent_up_to_labels(&candidate, partition, segments))
+    {
+        return false;
+    }
+    starts.push(candidate);
+    true
+}
+
+fn pos_partitions_equivalent_up_to_labels(
+    left: &[usize],
+    right: &[usize],
+    segments: usize,
+) -> bool {
+    if left.len() != right.len() || left.iter().chain(right).any(|label| *label >= segments) {
+        return false;
+    }
+    let mut left_to_right = vec![None; segments];
+    let mut right_to_left = vec![None; segments];
+    for (&left_label, &right_label) in left.iter().zip(right) {
+        if left_to_right[left_label].is_some_and(|mapped| mapped != right_label)
+            || right_to_left[right_label].is_some_and(|mapped| mapped != left_label)
+        {
+            return false;
+        }
+        left_to_right[left_label] = Some(right_label);
+        right_to_left[right_label] = Some(left_label);
+    }
+    true
 }
 
 fn feature_projection_key(row: &[f64]) -> f64 {
@@ -2984,9 +3080,8 @@ fn summarize_pos_candidate_move(
             destination_contribution = Some(contribution);
         }
     }
-    let source_contribution = source_contribution.ok_or_else(|| {
-        "PLS-POS candidate refits omitted the changed source segment".to_string()
-    })?;
+    let source_contribution = source_contribution
+        .ok_or_else(|| "PLS-POS candidate refits omitted the changed source segment".to_string())?;
     let destination_contribution = destination_contribution.ok_or_else(|| {
         "PLS-POS candidate refits omitted the changed destination segment".to_string()
     })?;
@@ -4280,6 +4375,163 @@ mod tests {
         assert!(heterogeneity_target_payload_sha256_v2(&[f64::NAN]).is_err());
     }
 
+    fn pos_start_features(rows: usize) -> Vec<Vec<f64>> {
+        (0..rows)
+            .map(|row| {
+                vec![
+                    row as f64,
+                    ((row * 7) % rows) as f64,
+                    ((row * 11) % rows) as f64,
+                    ((row * 13) % rows) as f64,
+                    ((row * 17) % rows) as f64,
+                ]
+            })
+            .collect()
+    }
+
+    fn reference_seeded_pos_start(
+        rows: usize,
+        segments: usize,
+        seed: u64,
+        attempt: usize,
+    ) -> Vec<usize> {
+        let mut order = (0..rows).collect::<Vec<_>>();
+        let start_seed = derive_domain_seed_v2(seed, "pls_pos_start_shuffle", attempt as u64);
+        let mut rng = ChaCha20Rng::seed_from_u64(start_seed);
+        order.shuffle(&mut rng);
+        let mut assignments = vec![0usize; rows];
+        for (rank, row) in order.into_iter().enumerate() {
+            assignments[row] = rank % segments;
+        }
+        assignments
+    }
+
+    fn reference_axis_pos_start(
+        features: &[Vec<f64>],
+        segments: usize,
+        column: usize,
+    ) -> Vec<usize> {
+        let mut order = (0..features.len()).collect::<Vec<_>>();
+        order.sort_by(|left, right| {
+            features[*left][column]
+                .total_cmp(&features[*right][column])
+                .then(left.cmp(right))
+        });
+        balanced_contiguous_pos_partition(&order, segments)
+    }
+
+    fn assert_label_distinct(starts: &[Vec<usize>], segments: usize) {
+        for left in 0..starts.len() {
+            for right in (left + 1)..starts.len() {
+                assert!(
+                    !pos_partitions_equivalent_up_to_labels(
+                        &starts[left],
+                        &starts[right],
+                        segments
+                    ),
+                    "starts {left} and {right} are label-equivalent"
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn pos_start_plan_covers_every_fixture_axis_and_keeps_fimix_sole_at_nine() {
+        let features = pos_start_features(37);
+        let fimix = reference_seeded_pos_start(features.len(), 3, 42, 0);
+        let starts = build_pls_pos_start_plan_v2(&features, 3, 42, Some(&fimix)).unwrap();
+
+        assert_eq!(starts.len(), 10);
+        assert_eq!(starts[9], fimix);
+        for column in 0..features[0].len() {
+            let expected = reference_axis_pos_start(&features, 3, column);
+            assert!(
+                starts[..9]
+                    .iter()
+                    .any(|start| { pos_partitions_equivalent_up_to_labels(start, &expected, 3) }),
+                "feature-axis partition {column} was not covered"
+            );
+        }
+        assert_label_distinct(&starts, 3);
+    }
+
+    #[test]
+    fn pos_start_plan_without_fimix_returns_ten_label_distinct_starts() {
+        let features = pos_start_features(37);
+        let starts = build_pls_pos_start_plan_v2(&features, 3, 42, None).unwrap();
+
+        assert_eq!(starts.len(), 10);
+        assert_label_distinct(&starts, 3);
+    }
+
+    #[test]
+    fn pos_start_plan_is_repeatable_for_the_same_seed() {
+        let features = pos_start_features(41);
+        let first = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
+        let repeated = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
+
+        assert_eq!(first, repeated);
+    }
+
+    #[test]
+    fn pos_start_plan_changes_with_the_master_seed() {
+        let features = pos_start_features(41);
+        let first = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
+        let changed = build_pls_pos_start_plan_v2(&features, 4, 43, None).unwrap();
+
+        assert_ne!(first, changed);
+        assert_ne!(first[0], changed[0]);
+    }
+
+    #[test]
+    fn pos_presegmentations_are_balanced_and_retain_every_segment() {
+        let features = pos_start_features(41);
+        let starts = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
+
+        for start in starts {
+            let mut counts = vec![0usize; 4];
+            for segment in start {
+                counts[segment] += 1;
+            }
+            assert!(counts.iter().all(|count| *count >= 1));
+            assert_eq!(
+                counts.iter().max().unwrap() - counts.iter().min().unwrap(),
+                1
+            );
+        }
+    }
+
+    #[test]
+    fn pos_presegmentations_are_diverse() {
+        let features = pos_start_features(41);
+        let starts = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
+        let unique = starts.iter().cloned().collect::<BTreeSet<_>>();
+
+        assert_eq!(unique.len(), starts.len());
+        assert_label_distinct(&starts, 4);
+    }
+
+    #[test]
+    fn pos_start_plan_is_bounded_balanced_and_complete_for_k2_through_k5() {
+        let features = (0..80)
+            .map(|row| {
+                (0..12)
+                    .map(|column| ((row * (column * 2 + 3) + column) % 83) as f64)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        for segments in 2..=5 {
+            let starts = build_pls_pos_start_plan_v2(&features, segments, 42, None).unwrap();
+            assert_eq!(starts.len(), 10);
+            assert_label_distinct(&starts, segments);
+            for start in starts {
+                let counts = partition_counts(&start, segments);
+                assert!(counts.iter().max().unwrap() - counts.iter().min().unwrap() <= 1);
+            }
+        }
+    }
+
     struct MeanSeparationRefitter {
         values: Vec<f64>,
         method_version: &'static str,
@@ -4498,6 +4750,46 @@ mod tests {
         assert!(result.reproducing_start_indices.len() >= 2);
         assert_eq!(result.segments[0].observations, 20);
         assert_eq!(result.segments[1].observations, 20);
+    }
+
+    #[test]
+    fn pos_axis_coverage_reproduces_fimix_optimum_without_copying_its_partition() {
+        let values = (0..40)
+            .map(|row| if row < 20 { -1.0 } else { 1.0 })
+            .collect::<Vec<_>>();
+        let fimix = (0..40)
+            .map(|row| usize::from(row >= 20))
+            .collect::<Vec<_>>();
+        let features = (0..40)
+            .map(|row| {
+                let almost_separated = match row {
+                    19 => 1.0,
+                    20 => -1.0,
+                    _ => values[row],
+                };
+                vec![((row * 17) % 41) as f64, almost_separated]
+            })
+            .collect::<Vec<_>>();
+        let starts = build_pls_pos_start_plan_v2(&features, 2, 42, Some(&fimix)).unwrap();
+
+        assert_eq!(starts.len(), 10);
+        assert_eq!(starts[9], fimix);
+        assert!(
+            starts[..9]
+                .iter()
+                .all(|start| !pos_partitions_equivalent_up_to_labels(start, &fimix, 2))
+        );
+
+        let mut config = PlsPosV2Config::for_segments(2, values.len());
+        config.minimum_segment_size = 10;
+        let mut refitter = MeanSeparationRefitter {
+            values,
+            method_version: PLS_POS_PUBLISHED_METHOD_VERSION_V2,
+        };
+        let result = fit_pls_pos_published_v2(&starts, &config, &mut refitter).unwrap();
+
+        assert!(result.reproducing_start_indices.len() >= 2);
+        assert!(result.reproducing_start_indices.contains(&9));
     }
 
     #[test]

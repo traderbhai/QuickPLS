@@ -66,10 +66,12 @@
     "sentinel_timeout_seconds": 120,
     "default_per_shard_timeout_seconds": 1800,
     "default_max_parallel_shards": 4,
-    "default_max_parallel_bootstrap_shards": 2,
+    "default_max_parallel_bootstrap_shards": 4,
+    "pos_bootstrap_worker_topology": "bounded_four_producer_processes_with_three_threads_each_on_twelve_logical_cores",
     "checkpoint_contract": "atomic_sha256_receipt_bound_to_plan_commit_executable_seed_scale_and_dependencies",
     "campaign_seed": 42,
     "observations_per_fixture": 400,
+    "observations_per_fixture_scope": "point_and_recovery_matrix_only",
     "multiclass_point_fixture_plan": {
       "schema_version": 1,
       "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
@@ -78,6 +80,26 @@
       "observations_per_fixture": 120,
       "allocation": "row_mod_k_exactly_balanced",
       "bootstrap_evidence": "not_requested"
+    },
+    "bootstrap_fixture_plan": {
+      "schema_version": 1,
+      "plan_id": "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1",
+      "purpose": "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification",
+      "selected_k": 2,
+      "observations_per_fixture": 80,
+      "expected_cases_per_true_class": 40,
+      "interaction_fixture_design": "dual_endogenous_anchor_v1",
+      "requested_replicates": 500,
+      "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim"
+    },
+    "bootstrap_outcome_design": {
+      "p0": "single_endogenous_y",
+      "interaction_profiles": ["p2_multi_two_way", "p23_all_current"],
+      "common_metric_failure_profile": "p2_multi_two_way",
+      "interaction_outcomes": ["y", "v"],
+      "auxiliary_endogenous": "v",
+      "ordinary_auxiliary_paths": ["x->v", "z->v", "w->v"],
+      "interaction_terms_target": "y"
     },
     "fimix_starts": 30,
     "pos_starts": 10,

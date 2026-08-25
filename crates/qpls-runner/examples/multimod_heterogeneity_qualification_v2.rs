@@ -38,6 +38,12 @@ const OBSERVATIONS: usize = 400;
 const MULTICLASS_POINT_OBSERVATIONS: usize = 120;
 const MULTICLASS_POINT_FIXTURE_PLAN_ID: &str =
     "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1";
+const BOOTSTRAP_FIXTURE_PLAN_ID: &str =
+    "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1";
+const BOOTSTRAP_FIXTURE_OBSERVATIONS: usize = 80;
+const BOOTSTRAP_EXPECTED_CASES_PER_TRUE_CLASS: usize = 40;
+const BOOTSTRAP_DISCOVERY_LOCK_SUITE_ID: &str =
+    "qpls.multimod.heterogeneity.bootstrap-discovery-lock.v1";
 const BOOTSTRAP_PREPARED_SUITE_ID: &str =
     "qpls.multimod.heterogeneity.bootstrap-prepared-execution.v1";
 const BOOTSTRAP_PREPARED_RECEIPT_SUITE_ID: &str =
@@ -52,6 +58,41 @@ const BOOTSTRAP_CACHE_INVENTORY_SUITE_ID: &str =
 const QUALIFICATION_BOOTSTRAP_DRAWS: u32 = 500;
 const DEFAULT_BOOTSTRAP_CHUNK_COUNT: u32 = 100;
 const DEFAULT_BOOTSTRAP_PROCESS_BUDGET_SECONDS: u64 = 1_500;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum BootstrapInteractionFixtureDesignV1 {
+    BaselineSingleEndogenousV1,
+    DualEndogenousAnchorV1,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapFixturePlanV1 {
+    schema_version: u32,
+    plan_id: String,
+    purpose: String,
+    selected_k: u8,
+    observations_per_fixture: usize,
+    expected_cases_per_true_class: usize,
+    interaction_fixture_design: BootstrapInteractionFixtureDesignV1,
+    requested_replicates: u32,
+    performance_scope: String,
+}
+
+fn bootstrap_fixture_plan() -> BootstrapFixturePlanV1 {
+    BootstrapFixturePlanV1 {
+        schema_version: 1,
+        plan_id: BOOTSTRAP_FIXTURE_PLAN_ID.into(),
+        purpose: "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification".into(),
+        selected_k: 2,
+        observations_per_fixture: BOOTSTRAP_FIXTURE_OBSERVATIONS,
+        expected_cases_per_true_class: BOOTSTRAP_EXPECTED_CASES_PER_TRUE_CLASS,
+        interaction_fixture_design: BootstrapInteractionFixtureDesignV1::DualEndogenousAnchorV1,
+        requested_replicates: QUALIFICATION_BOOTSTRAP_DRAWS,
+        performance_scope: "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim".into(),
+    }
+}
 
 fn fixture_observations() -> usize {
     if metamorphic::compact_matrix_v1() {
@@ -425,6 +466,23 @@ struct HeterogeneityFixture {
     scenario: Scenario,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct BootstrapDiscoveryLockV1 {
+    schema_version: u32,
+    suite_id: String,
+    bootstrap_fixture_plan: BootstrapFixturePlanV1,
+    fixture_observations: usize,
+    fixture_id: String,
+    dataset_fingerprint: String,
+    profile: HeterogeneityInteractionProfileV2,
+    scenario: String,
+    campaign_seed: u64,
+    selected_k: u8,
+    algorithms: Vec<HeterogeneityAlgorithmV2>,
+    discovery: Value,
+}
+
 fn profile_constructs(
     profile: HeterogeneityInteractionProfileV2,
     rank_deficient: bool,
@@ -456,6 +514,50 @@ fn make_fixture(
     make_fixture_with_classes(fixture_id, profile, scenario, data_seed, 2)
 }
 
+fn make_bootstrap_fixture(
+    fixture_id: &str,
+    profile: HeterogeneityInteractionProfileV2,
+    scenario: Scenario,
+    data_seed: u64,
+) -> Result<HeterogeneityFixture, DynError> {
+    let interaction_fixture_design = match profile {
+        HeterogeneityInteractionProfileV2::P0Structural => {
+            BootstrapInteractionFixtureDesignV1::BaselineSingleEndogenousV1
+        }
+        HeterogeneityInteractionProfileV2::P2MultiTwoWay
+        | HeterogeneityInteractionProfileV2::P23AllCurrent => {
+            BootstrapInteractionFixtureDesignV1::DualEndogenousAnchorV1
+        }
+    };
+    let fixture = make_fixture_with_classes_and_observations(
+        fixture_id,
+        profile,
+        scenario,
+        data_seed,
+        2,
+        BOOTSTRAP_FIXTURE_OBSERVATIONS,
+        interaction_fixture_design,
+    )?;
+    let counts = (0..2)
+        .map(|class| {
+            fixture
+                .true_classes
+                .iter()
+                .filter(|value| **value == class)
+                .count()
+        })
+        .collect::<Vec<_>>();
+    if fixture.dataset.batch.num_rows() != BOOTSTRAP_FIXTURE_OBSERVATIONS
+        || fixture.true_classes.len() != BOOTSTRAP_FIXTURE_OBSERVATIONS
+        || counts != vec![BOOTSTRAP_EXPECTED_CASES_PER_TRUE_CLASS; 2]
+    {
+        return Err(invalid(format!(
+            "{fixture_id} does not match the typed balanced K=2 n=80 bootstrap fixture plan; observed class counts {counts:?}"
+        )));
+    }
+    Ok(fixture)
+}
+
 fn make_fixture_with_classes(
     fixture_id: &str,
     profile: HeterogeneityInteractionProfileV2,
@@ -470,6 +572,7 @@ fn make_fixture_with_classes(
         data_seed,
         classes,
         fixture_observations(),
+        BootstrapInteractionFixtureDesignV1::BaselineSingleEndogenousV1,
     )
 }
 
@@ -513,6 +616,7 @@ fn make_multiclass_point_fixture(
         data_seed,
         classes,
         MULTICLASS_POINT_OBSERVATIONS,
+        BootstrapInteractionFixtureDesignV1::BaselineSingleEndogenousV1,
     )?;
     validate_multiclass_point_balance(fixture_id, classes, &fixture.true_classes)?;
     Ok(fixture)
@@ -531,6 +635,23 @@ fn strong_multiclass_p0_equation(class: usize, classes: usize) -> ([f64; 3], f64
     (COEFFICIENTS[class], 0.35 * centered_class)
 }
 
+fn indicator_metric_multiplier(
+    scenario: Scenario,
+    construct_id: &str,
+    class: usize,
+    indicator: usize,
+) -> f64 {
+    if scenario == Scenario::CommonMetricFailure
+        && construct_id == "x"
+        && class == 1
+        && indicator == 3
+    {
+        0.0
+    } else {
+        1.0
+    }
+}
+
 fn make_fixture_with_classes_and_observations(
     fixture_id: &str,
     profile: HeterogeneityInteractionProfileV2,
@@ -538,6 +659,7 @@ fn make_fixture_with_classes_and_observations(
     data_seed: u64,
     classes: usize,
     observations: usize,
+    interaction_fixture_design: BootstrapInteractionFixtureDesignV1,
 ) -> Result<HeterogeneityFixture, DynError> {
     if !(2..=5).contains(&classes)
         || (classes != 2
@@ -550,12 +672,24 @@ fn make_fixture_with_classes_and_observations(
             "heterogeneity qualification fixtures require 2 through 5 balanced classes; boundary scenarios remain two-class",
         ));
     }
+    let dual_endogenous_anchor =
+        interaction_fixture_design == BootstrapInteractionFixtureDesignV1::DualEndogenousAnchorV1;
+    if dual_endogenous_anchor
+        && (profile == HeterogeneityInteractionProfileV2::P0Structural
+            || classes != 2
+            || observations != BOOTSTRAP_FIXTURE_OBSERVATIONS)
+    {
+        return Err(invalid(
+            "the dual-endogenous interaction anchor is reserved for the typed K=2 n=80 P2/P23 bootstrap fixture",
+        ));
+    }
     let mut random = SplitMixNormal::new(data_seed);
     let mut truth = Vec::with_capacity(observations);
     let mut latent_x = Vec::with_capacity(observations);
     let mut latent_z = Vec::with_capacity(observations);
     let mut latent_w = Vec::with_capacity(observations);
     let mut latent_y = Vec::with_capacity(observations);
+    let mut latent_v = Vec::with_capacity(observations);
     for row in 0..observations {
         let class = match scenario {
             Scenario::RareClass => usize::from(row >= observations - 10),
@@ -568,6 +702,11 @@ fn make_fixture_with_classes_and_observations(
         } else {
             raw_x
         };
+        // The common-metric fixture uses an X location separation so the
+        // heterogeneous structural regimes are identifiable. Its X3 loading
+        // X3 loading suppression is isolated in `indicator_metric_multiplier`, which
+        // creates clear compositional non-invariance without collapsing the
+        // pooled X score variance in either class.
         let x = base_x
             + if scenario == Scenario::CommonMetricFailure {
                 if class == 0 { -1.8 } else { 1.8 }
@@ -638,6 +777,13 @@ fn make_fixture_with_classes_and_observations(
                     + noise
             }
         };
+        if dual_endogenous_anchor {
+            // This additional ordinary endogenous equation gives both true
+            // segments a low-noise, sign-reversed coefficient vector. It has
+            // no product term; P2/P23 interactions remain exclusively on y.
+            let v_noise = 0.025 * random.normal();
+            latent_v.push(class_sign * (2.4 * x - 1.9 * z + 1.6 * w + 0.55) + v_noise);
+        }
         truth.push(class);
         latent_x.push(x);
         latent_z.push(z);
@@ -647,12 +793,16 @@ fn make_fixture_with_classes_and_observations(
 
     let mut headers = Vec::new();
     let mut columns = Vec::new();
-    for (id, values) in [
+    let mut latent_columns = vec![
         ("x", &latent_x),
         ("z", &latent_z),
         ("w", &latent_w),
         ("y", &latent_y),
-    ] {
+    ];
+    if dual_endogenous_anchor {
+        latent_columns.push(("v", &latent_v));
+    }
+    for (id, values) in latent_columns {
         for indicator in 1..=3 {
             headers.push(format!("{id}{indicator}"));
             let observed = values
@@ -660,15 +810,8 @@ fn make_fixture_with_classes_and_observations(
                 .enumerate()
                 .map(|(row, value)| {
                     let class = truth[row];
-                    let metric_sign = if scenario == Scenario::CommonMetricFailure
-                        && id == "x"
-                        && class == 1
-                        && indicator == 3
-                    {
-                        -1.0
-                    } else {
-                        1.0
-                    };
+                    let metric_multiplier =
+                        indicator_metric_multiplier(scenario, id, class, indicator);
                     let perturbation = if scenario == Scenario::VarianceCollapse {
                         0.0
                     } else {
@@ -676,7 +819,8 @@ fn make_fixture_with_classes_and_observations(
                     };
                     Some(format!(
                         "{:.17}",
-                        metric_sign * value * (0.84 + indicator as f64 * 0.08) + perturbation
+                        metric_multiplier * value * (0.84 + indicator as f64 * 0.08)
+                            + perturbation
                     ))
                 })
                 .collect::<Vec<_>>();
@@ -688,7 +832,8 @@ fn make_fixture_with_classes_and_observations(
     metamorphic::transform_row_aligned_values_v1(&mut truth);
     let dataset = dataset_from_columns(&format!("{fixture_id}.csv"), &headers, &columns)?;
 
-    let (construct_ids, paths) = if profile == HeterogeneityInteractionProfileV2::P0Structural
+    let (mut construct_ids, mut paths) = if profile
+        == HeterogeneityInteractionProfileV2::P0Structural
         && scenario == Scenario::StrongSeparation
         && classes > 2
     {
@@ -699,6 +844,10 @@ fn make_fixture_with_classes_and_observations(
     } else {
         profile_constructs(profile, scenario == Scenario::RankDeficient)
     };
+    if dual_endogenous_anchor {
+        construct_ids.push("v");
+        paths.extend([("x", "v"), ("z", "v"), ("w", "v")]);
+    }
     let owned = construct_ids
         .iter()
         .map(|id| {
@@ -1103,57 +1252,139 @@ fn run_required_discovery(
     Ok((identities[0].clone(), value))
 }
 
-#[allow(clippy::too_many_arguments)]
-fn run_inference(
+fn run_bootstrap_discovery_lock(
     cell_id: &str,
     fixture: &HeterogeneityFixture,
     seed: u64,
-    candidate_k: Vec<u8>,
     algorithms: Vec<HeterogeneityAlgorithmV2>,
-    discovery_identity: String,
-    selected_algorithm: HeterogeneityAlgorithmV2,
-    request_common_metric: bool,
-) -> Result<Value, DynError> {
-    run_inference_at_k(
+    required_candidates: &[(HeterogeneityAlgorithmV2, u8)],
+) -> Result<BootstrapDiscoveryLockV1, DynError> {
+    let (_, discovery) = run_required_discovery(
         cell_id,
         fixture,
         seed,
-        candidate_k,
+        vec![2],
+        algorithms.clone(),
+        required_candidates,
+    )?;
+    Ok(BootstrapDiscoveryLockV1 {
+        schema_version: 1,
+        suite_id: BOOTSTRAP_DISCOVERY_LOCK_SUITE_ID.into(),
+        bootstrap_fixture_plan: bootstrap_fixture_plan(),
+        fixture_observations: fixture.dataset.batch.num_rows(),
+        fixture_id: fixture.fixture_id.clone(),
+        dataset_fingerprint: fixture.dataset.fingerprint.0.clone(),
+        profile: fixture.profile,
+        scenario: format!("{:?}", fixture.scenario).to_lowercase(),
+        campaign_seed: seed,
+        selected_k: 2,
         algorithms,
-        discovery_identity,
-        selected_algorithm,
-        2,
-        request_common_metric,
-    )
+        discovery,
+    })
 }
 
-#[allow(clippy::too_many_arguments)]
-fn run_inference_at_k(
-    cell_id: &str,
-    fixture: &HeterogeneityFixture,
-    seed: u64,
-    candidate_k: Vec<u8>,
-    algorithms: Vec<HeterogeneityAlgorithmV2>,
-    discovery_identity: String,
-    selected_algorithm: HeterogeneityAlgorithmV2,
-    selected_k: u8,
-    request_common_metric: bool,
-) -> Result<Value, DynError> {
-    let (_, value) = run_config(
-        cell_id,
-        fixture,
-        inference_config(
-            fixture,
-            seed,
-            candidate_k,
-            algorithms,
-            discovery_identity,
-            selected_algorithm,
-            selected_k,
-            request_common_metric,
+fn bootstrap_discovery_lock_for_dependency(
+    args: &Arguments,
+    dependency_id: &str,
+) -> Result<BootstrapDiscoveryLockV1, DynError> {
+    let tandem_p0 = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosPublishedV2,
+    ];
+    let tandem_interactions = vec![
+        HeterogeneityAlgorithmV2::FimixPlsV2,
+        HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+    ];
+    let (cell_id, fixture, algorithms, required_candidates) = match dependency_id {
+        "fimix-recovery-00" => (
+            "fimix-p0-bootstrap-n80-discovery-lock",
+            make_bootstrap_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?,
+            vec![HeterogeneityAlgorithmV2::FimixPlsV2],
+            vec![(HeterogeneityAlgorithmV2::FimixPlsV2, 2)],
         ),
-    )?;
-    Ok(value)
+        "pos-published-p0-discovery" => (
+            "pos-published-p0-bootstrap-n80-discovery-lock",
+            make_bootstrap_fixture(
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64.wrapping_add(args.seed),
+            )?,
+            tandem_p0,
+            vec![
+                (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                (HeterogeneityAlgorithmV2::PlsPosPublishedV2, 2),
+            ],
+        ),
+        "pos-destination-p2-discovery" => (
+            "heterogeneity-p2-tandem-bootstrap-n80-dual-outcome-discovery-lock",
+            make_bootstrap_fixture(
+                "heterogeneity-p2-strong",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::StrongSeparation,
+                0x5200_u64.wrapping_add(args.seed),
+            )?,
+            tandem_interactions.clone(),
+            vec![
+                (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                (
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    2,
+                ),
+            ],
+        ),
+        "pos-destination-p23-discovery" => (
+            "heterogeneity-p23-tandem-bootstrap-n80-dual-outcome-discovery-lock",
+            make_bootstrap_fixture(
+                "heterogeneity-p23-strong",
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+                Scenario::StrongSeparation,
+                0x5230_u64.wrapping_add(args.seed),
+            )?,
+            tandem_interactions.clone(),
+            vec![
+                (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                (
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    2,
+                ),
+            ],
+        ),
+        "pos-common-metric-failure-discovery" => (
+            "pos-p2-common-metric-failure-bootstrap-n80-dual-outcome-discovery-lock",
+            make_bootstrap_fixture(
+                "heterogeneity-p2-common-metric-failure",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::CommonMetricFailure,
+                0x4641_494c_u64.wrapping_add(args.seed),
+            )?,
+            tandem_interactions,
+            vec![
+                (HeterogeneityAlgorithmV2::FimixPlsV2, 2),
+                (
+                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+                    2,
+                ),
+            ],
+        ),
+        _ => {
+            return Err(invalid(format!(
+                "{dependency_id} does not own a typed n=80 bootstrap discovery lock"
+            )));
+        }
+    };
+    run_bootstrap_discovery_lock(
+        cell_id,
+        &fixture,
+        args.seed,
+        algorithms,
+        &required_candidates,
+    )
 }
 
 fn attempted_boundary(cell_id: &str, fixture: &HeterogeneityFixture, seed: u64) -> Value {
@@ -1353,6 +1584,7 @@ fn shard_plan(args: &Arguments) -> Result<Value, DynError> {
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "execution_contract": "one_cargo_build_then_dependency_aware_non_cargo_shards",
         "sentinel_shard_id": "sentinel",
         "aggregation_order": "plan_order",
@@ -1387,6 +1619,7 @@ fn shard_report_header(args: &Arguments) -> Result<Value, DynError> {
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
         "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
         "multistart_reproducibility_contract": multistart_reproducibility_contract(),
@@ -1431,6 +1664,7 @@ fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, 
     let expected_sign_columns = serde_json::to_value(sign_columns_identity()?)?;
     let expected_workers = metamorphic::configured_workers_v1(1).map_err(invalid)? as u64;
     let expected_multiclass_point_fixture_plan = multiclass_point_fixture_plan();
+    let expected_bootstrap_fixture_plan = serde_json::to_value(bootstrap_fixture_plan())?;
     for path in &args.dependencies {
         let value: Value = serde_json::from_slice(&fs::read(path)?)?;
         if value["schema_version"].as_u64() != Some(u64::from(SHARD_SCHEMA_VERSION))
@@ -1443,6 +1677,7 @@ fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, 
             || value["fixture_observations"].as_u64() != Some(fixture_observations() as u64)
             || value.get("multiclass_point_fixture_plan")
                 != Some(&expected_multiclass_point_fixture_plan)
+            || value.get("bootstrap_fixture_plan") != Some(&expected_bootstrap_fixture_plan)
         {
             return Err(invalid(format!(
                 "dependency {} has the wrong shard identity",
@@ -1467,18 +1702,6 @@ fn dependency_envelopes(args: &Arguments, shard_id: &str) -> Result<Vec<Value>, 
         )));
     }
     Ok(envelopes)
-}
-
-fn dependency_value<'a>(dependencies: &'a [Value], shard_id: &str) -> Result<&'a Value, DynError> {
-    dependencies
-        .iter()
-        .find(|value| value["shard_id"] == shard_id)
-        .and_then(|value| {
-            value["payload"]["value"]
-                .as_object()
-                .map(|_| &value["payload"]["value"])
-        })
-        .ok_or_else(|| invalid(format!("dependency {shard_id} has no cell value")))
 }
 
 fn expected_heterogeneity_method_version(algorithm: HeterogeneityAlgorithmV2) -> &'static str {
@@ -1566,18 +1789,64 @@ fn stable_discovery_identity(
     Ok(identity.to_owned())
 }
 
-fn dependency_discovery_identity(
+fn dependency_bootstrap_discovery_identity(
     dependencies: &[Value],
     shard_id: &str,
-    algorithm: HeterogeneityAlgorithmV2,
-    k: u8,
+    fixture: &HeterogeneityFixture,
+    seed: u64,
+    algorithms: &[HeterogeneityAlgorithmV2],
+    selected_algorithm: HeterogeneityAlgorithmV2,
 ) -> Result<String, DynError> {
-    stable_discovery_identity(
-        dependency_value(dependencies, shard_id)?,
-        shard_id,
-        algorithm,
-        k,
-    )
+    let dependency = dependencies
+        .iter()
+        .find(|value| value["shard_id"] == shard_id)
+        .ok_or_else(|| {
+            invalid(format!(
+                "dependency {shard_id} is absent from the bootstrap lock set"
+            ))
+        })?;
+    let lock_value = dependency["payload"]["bootstrap_lock"]
+        .as_object()
+        .map(|_| dependency["payload"]["bootstrap_lock"].clone())
+        .ok_or_else(|| {
+            invalid(format!(
+                "dependency {shard_id} has no typed n=80 bootstrap discovery lock"
+            ))
+        })?;
+    let lock: BootstrapDiscoveryLockV1 = serde_json::from_value(lock_value)?;
+    let expected_scenario = format!("{:?}", fixture.scenario).to_lowercase();
+    let expected_config = serde_json::to_value(discovery_config(
+        fixture,
+        seed,
+        vec![2],
+        algorithms.to_vec(),
+    ))?;
+    let expected_true_classes = serde_json::to_value(&fixture.true_classes)?;
+    if lock.schema_version != 1
+        || lock.suite_id != BOOTSTRAP_DISCOVERY_LOCK_SUITE_ID
+        || lock.bootstrap_fixture_plan != bootstrap_fixture_plan()
+        || lock.fixture_observations != BOOTSTRAP_FIXTURE_OBSERVATIONS
+        || lock.fixture_observations != fixture.dataset.batch.num_rows()
+        || lock.fixture_id != fixture.fixture_id
+        || lock.dataset_fingerprint != fixture.dataset.fingerprint.0
+        || lock.profile != fixture.profile
+        || lock.scenario != expected_scenario
+        || lock.campaign_seed != seed
+        || lock.selected_k != 2
+        || lock.algorithms != algorithms
+        || lock.discovery["fixture_id"] != fixture.fixture_id
+        || lock.discovery["dataset_rows"].as_u64() != Some(BOOTSTRAP_FIXTURE_OBSERVATIONS as u64)
+        || lock.discovery["dataset_fingerprint"] != fixture.dataset.fingerprint.0
+        || lock.discovery["profile"] != serde_json::to_value(fixture.profile)?
+        || lock.discovery["scenario"] != expected_scenario
+        || lock.discovery.get("config") != Some(&expected_config)
+        || lock.discovery.get("true_classes") != Some(&expected_true_classes)
+    {
+        return Err(invalid(format!(
+            "dependency {shard_id} bootstrap discovery lock does not match the exact typed n=80 inference fixture"
+        )));
+    }
+    stable_discovery_identity(&lock.discovery, shard_id, selected_algorithm, 2)
 }
 
 struct CompiledBootstrapCell {
@@ -1603,6 +1872,7 @@ struct BootstrapPreparedEnvelopeV1 {
     workers: usize,
     fixture_observations: usize,
     multiclass_point_fixture_plan: Value,
+    bootstrap_fixture_plan: BootstrapFixturePlanV1,
     dependency_shard_ids: Vec<String>,
     cell_id: String,
     chunk_count: u32,
@@ -1624,6 +1894,7 @@ struct BootstrapCacheEnvelopeV1 {
     workers: usize,
     fixture_observations: usize,
     multiclass_point_fixture_plan: Value,
+    bootstrap_fixture_plan: BootstrapFixturePlanV1,
     dependency_shard_ids: Vec<String>,
     cell_id: String,
     prepared_execution_identity_sha256: String,
@@ -1688,6 +1959,7 @@ struct BootstrapCacheInventoryV1 {
     workers: usize,
     fixture_observations: usize,
     multiclass_point_fixture_plan: Value,
+    bootstrap_fixture_plan: BootstrapFixturePlanV1,
     dependency_shard_ids: Vec<String>,
     dependency_receipts: Vec<BootstrapDependencyReceiptInventoryV1>,
     cell_id: String,
@@ -1903,7 +2175,7 @@ fn bootstrap_cell_definition(
         match shard_id {
             "bootstrap-fimix-p0" => (
                 "fimix-p0-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p0-strong",
                     HeterogeneityInteractionProfileV2::P0Structural,
                     Scenario::StrongSeparation,
@@ -1916,7 +2188,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-pos-published-p0" => (
                 "pos-published-p0-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p0-strong",
                     HeterogeneityInteractionProfileV2::P0Structural,
                     Scenario::StrongSeparation,
@@ -1929,7 +2201,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-fimix-p2" => (
                 "fimix-p2-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p2-strong",
                     HeterogeneityInteractionProfileV2::P2MultiTwoWay,
                     Scenario::StrongSeparation,
@@ -1942,7 +2214,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-pos-destination-p2" => (
                 "pos-destination-p2-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p2-strong",
                     HeterogeneityInteractionProfileV2::P2MultiTwoWay,
                     Scenario::StrongSeparation,
@@ -1955,7 +2227,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-fimix-p23" => (
                 "fimix-p23-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p23-strong",
                     HeterogeneityInteractionProfileV2::P23AllCurrent,
                     Scenario::StrongSeparation,
@@ -1968,7 +2240,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-pos-destination-p23" => (
                 "pos-destination-p23-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p23-strong",
                     HeterogeneityInteractionProfileV2::P23AllCurrent,
                     Scenario::StrongSeparation,
@@ -1981,7 +2253,7 @@ fn bootstrap_cell_definition(
             ),
             "bootstrap-pos-common-metric-failure" => (
                 "pos-p2-common-metric-failure-fixed-k-bootstrap",
-                make_fixture(
+                make_bootstrap_fixture(
                     "heterogeneity-p2-common-metric-failure",
                     HeterogeneityInteractionProfileV2::P2MultiTwoWay,
                     Scenario::CommonMetricFailure,
@@ -1998,8 +2270,14 @@ fn bootstrap_cell_definition(
                 )));
             }
         };
-    let discovery_identity =
-        dependency_discovery_identity(dependencies, dependency_id, selected_algorithm, 2)?;
+    let discovery_identity = dependency_bootstrap_discovery_identity(
+        dependencies,
+        dependency_id,
+        &fixture,
+        args.seed,
+        &algorithms,
+        selected_algorithm,
+    )?;
     let config = inference_config(
         &fixture,
         args.seed,
@@ -2059,8 +2337,10 @@ fn validate_prepared_envelope(
         || envelope.metamorphism != metamorphic::metamorphism_v1()
         || envelope.sign_columns != sign_columns_identity()?
         || envelope.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
-        || envelope.fixture_observations != fixture_observations()
+        || envelope.fixture_observations != cell.fixture.dataset.batch.num_rows()
+        || envelope.fixture_observations != BOOTSTRAP_FIXTURE_OBSERVATIONS
         || envelope.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || envelope.bootstrap_fixture_plan != bootstrap_fixture_plan()
         || envelope.dependency_shard_ids != bootstrap_dependency_ids(dependencies)?
         || envelope.cell_id != cell.cell_id
         || envelope.chunk_count != DEFAULT_BOOTSTRAP_CHUNK_COUNT
@@ -2108,8 +2388,10 @@ fn validate_cache_envelope(
         || envelope.metamorphism != metamorphic::metamorphism_v1()
         || envelope.sign_columns != sign_columns_identity()?
         || envelope.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
-        || envelope.fixture_observations != fixture_observations()
+        || envelope.fixture_observations != cell.fixture.dataset.batch.num_rows()
+        || envelope.fixture_observations != BOOTSTRAP_FIXTURE_OBSERVATIONS
         || envelope.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || envelope.bootstrap_fixture_plan != bootstrap_fixture_plan()
         || envelope.dependency_shard_ids != bootstrap_dependency_ids(dependencies)?
         || envelope.cell_id != cell.cell_id
         || envelope.prepared_execution_identity_sha256
@@ -2150,6 +2432,7 @@ fn run_sentinel(args: &Arguments) -> Result<Value, DynError> {
         0x5345_4e54_494e_454c_u64.wrapping_add(args.seed),
         2,
         80,
+        BootstrapInteractionFixtureDesignV1::BaselineSingleEndogenousV1,
     )?;
     let mut config = discovery_config(
         &fixture,
@@ -2207,7 +2490,15 @@ fn shard_payload(
             vec![HeterogeneityAlgorithmV2::FimixPlsV2],
             &[(HeterogeneityAlgorithmV2::FimixPlsV2, 2)],
         )?;
-        return Ok(json!({ "kind": "fimix_recovery", "index": index, "value": value }));
+        let bootstrap_lock = (args.scale == Scale::Qualification && index == 0)
+            .then(|| bootstrap_discovery_lock_for_dependency(args, "fimix-recovery-00"))
+            .transpose()?;
+        return Ok(json!({
+            "kind": "fimix_recovery",
+            "index": index,
+            "value": value,
+            "bootstrap_lock": bootstrap_lock,
+        }));
     }
     for (prefix, cell_prefix, kind, scenario, count, data_seed_domain) in [
         (
@@ -2320,7 +2611,14 @@ fn shard_payload(
                     (HeterogeneityAlgorithmV2::PlsPosPublishedV2, 2),
                 ],
             )?;
-            Ok(json!({ "kind": "pos_published_p0_discovery", "value": value }))
+            let bootstrap_lock = (args.scale == Scale::Qualification)
+                .then(|| bootstrap_discovery_lock_for_dependency(args, shard_id))
+                .transpose()?;
+            Ok(json!({
+                "kind": "pos_published_p0_discovery",
+                "value": value,
+                "bootstrap_lock": bootstrap_lock,
+            }))
         }
         "pos-destination-p2-discovery" => {
             let fixture = make_fixture(
@@ -2343,7 +2641,14 @@ fn shard_payload(
                     ),
                 ],
             )?;
-            Ok(json!({ "kind": "pos_destination_p2_discovery", "value": value }))
+            let bootstrap_lock = (args.scale == Scale::Qualification)
+                .then(|| bootstrap_discovery_lock_for_dependency(args, shard_id))
+                .transpose()?;
+            Ok(json!({
+                "kind": "pos_destination_p2_discovery",
+                "value": value,
+                "bootstrap_lock": bootstrap_lock,
+            }))
         }
         "pos-destination-p23-discovery" => {
             let fixture = make_fixture(
@@ -2366,7 +2671,14 @@ fn shard_payload(
                     ),
                 ],
             )?;
-            Ok(json!({ "kind": "pos_destination_p23_discovery", "value": value }))
+            let bootstrap_lock = (args.scale == Scale::Qualification)
+                .then(|| bootstrap_discovery_lock_for_dependency(args, shard_id))
+                .transpose()?;
+            Ok(json!({
+                "kind": "pos_destination_p23_discovery",
+                "value": value,
+                "bootstrap_lock": bootstrap_lock,
+            }))
         }
         "pos-common-metric-failure-discovery" => {
             let fixture = make_fixture(
@@ -2389,7 +2701,14 @@ fn shard_payload(
                     ),
                 ],
             )?;
-            Ok(json!({ "kind": "pos_common_metric_failure_discovery", "value": value }))
+            let bootstrap_lock = (args.scale == Scale::Qualification)
+                .then(|| bootstrap_discovery_lock_for_dependency(args, shard_id))
+                .transpose()?;
+            Ok(json!({
+                "kind": "pos_common_metric_failure_discovery",
+                "value": value,
+                "bootstrap_lock": bootstrap_lock,
+            }))
         }
         "pos-homogeneous-null-discovery" => {
             let fixture = make_fixture(
@@ -2489,150 +2808,16 @@ fn shard_payload(
                 "value": value,
             }))
         }
-        "bootstrap-fimix-p0" => {
-            let fixture = make_fixture(
-                "heterogeneity-p0-strong",
-                HeterogeneityInteractionProfileV2::P0Structural,
-                Scenario::StrongSeparation,
-                0x5000_u64.wrapping_add(args.seed),
-            )?;
-            let value = run_inference(
-                "fimix-p0-fixed-k-bootstrap",
-                &fixture,
-                args.seed,
-                vec![2],
-                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
-                dependency_discovery_identity(
-                    dependencies,
-                    "fimix-recovery-00",
-                    HeterogeneityAlgorithmV2::FimixPlsV2,
-                    2,
-                )?,
-                HeterogeneityAlgorithmV2::FimixPlsV2,
-                false,
-            )?;
-            Ok(json!({ "kind": "bootstrap", "value": value }))
-        }
-        "bootstrap-pos-published-p0" => {
-            let fixture = make_fixture(
-                "heterogeneity-p0-strong",
-                HeterogeneityInteractionProfileV2::P0Structural,
-                Scenario::StrongSeparation,
-                0x5000_u64.wrapping_add(args.seed),
-            )?;
-            let value = run_inference(
-                "pos-published-p0-fixed-k-bootstrap",
-                &fixture,
-                args.seed,
-                vec![2],
-                tandem_p0,
-                dependency_discovery_identity(
-                    dependencies,
-                    "pos-published-p0-discovery",
-                    HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                    2,
-                )?,
-                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                true,
-            )?;
-            Ok(json!({ "kind": "bootstrap", "value": value }))
-        }
-        "bootstrap-fimix-p2" | "bootstrap-pos-destination-p2" => {
-            let fixture = make_fixture(
-                "heterogeneity-p2-strong",
-                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
-                Scenario::StrongSeparation,
-                0x5200_u64.wrapping_add(args.seed),
-            )?;
-            let (cell_id, algorithm, common_metric) = if shard_id == "bootstrap-fimix-p2" {
-                (
-                    "fimix-p2-fixed-k-bootstrap",
-                    HeterogeneityAlgorithmV2::FimixPlsV2,
-                    false,
-                )
-            } else {
-                (
-                    "pos-destination-p2-fixed-k-bootstrap",
-                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                    true,
-                )
-            };
-            let value = run_inference(
-                cell_id,
-                &fixture,
-                args.seed,
-                vec![2],
-                tandem_interactions,
-                dependency_discovery_identity(
-                    dependencies,
-                    "pos-destination-p2-discovery",
-                    algorithm,
-                    2,
-                )?,
-                algorithm,
-                common_metric,
-            )?;
-            Ok(json!({ "kind": "bootstrap", "value": value }))
-        }
-        "bootstrap-fimix-p23" | "bootstrap-pos-destination-p23" => {
-            let fixture = make_fixture(
-                "heterogeneity-p23-strong",
-                HeterogeneityInteractionProfileV2::P23AllCurrent,
-                Scenario::StrongSeparation,
-                0x5230_u64.wrapping_add(args.seed),
-            )?;
-            let (cell_id, algorithm, common_metric) = if shard_id == "bootstrap-fimix-p23" {
-                (
-                    "fimix-p23-fixed-k-bootstrap",
-                    HeterogeneityAlgorithmV2::FimixPlsV2,
-                    false,
-                )
-            } else {
-                (
-                    "pos-destination-p23-fixed-k-bootstrap",
-                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                    true,
-                )
-            };
-            let value = run_inference(
-                cell_id,
-                &fixture,
-                args.seed,
-                vec![2],
-                tandem_interactions,
-                dependency_discovery_identity(
-                    dependencies,
-                    "pos-destination-p23-discovery",
-                    algorithm,
-                    2,
-                )?,
-                algorithm,
-                common_metric,
-            )?;
-            Ok(json!({ "kind": "bootstrap", "value": value }))
-        }
-        "bootstrap-pos-common-metric-failure" => {
-            let fixture = make_fixture(
-                "heterogeneity-p2-common-metric-failure",
-                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
-                Scenario::CommonMetricFailure,
-                0x4641_494c_u64.wrapping_add(args.seed),
-            )?;
-            let value = run_inference(
-                "pos-p2-common-metric-failure-fixed-k-bootstrap",
-                &fixture,
-                args.seed,
-                vec![2],
-                tandem_interactions,
-                dependency_discovery_identity(
-                    dependencies,
-                    "pos-common-metric-failure-discovery",
-                    HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                    2,
-                )?,
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?;
+        "bootstrap-fimix-p0"
+        | "bootstrap-pos-published-p0"
+        | "bootstrap-fimix-p2"
+        | "bootstrap-pos-destination-p2"
+        | "bootstrap-fimix-p23"
+        | "bootstrap-pos-destination-p23"
+        | "bootstrap-pos-common-metric-failure" => {
+            let (cell_id, fixture, config) =
+                bootstrap_cell_definition(args, shard_id, dependencies)?;
+            let (_, value) = run_config(&cell_id, &fixture, config)?;
             Ok(json!({ "kind": "bootstrap", "value": value }))
         }
         _ => Err(invalid(format!(
@@ -2660,6 +2845,7 @@ fn run_shard(args: &Arguments, shard_id: &str) -> Result<(), DynError> {
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "dependency_shard_ids": dependency_ids,
         "payload": payload,
     });
@@ -2684,8 +2870,9 @@ fn bootstrap_prepared_envelope(
         metamorphism: metamorphic::metamorphism_v1().into(),
         sign_columns: sign_columns_identity()?,
         workers: metamorphic::configured_workers_v1(1).map_err(invalid)?,
-        fixture_observations: fixture_observations(),
+        fixture_observations: cell.fixture.dataset.batch.num_rows(),
         multiclass_point_fixture_plan: multiclass_point_fixture_plan(),
+        bootstrap_fixture_plan: bootstrap_fixture_plan(),
         dependency_shard_ids: bootstrap_dependency_ids(dependencies)?,
         cell_id: cell.cell_id.clone(),
         chunk_count: DEFAULT_BOOTSTRAP_CHUNK_COUNT,
@@ -2791,8 +2978,9 @@ fn run_bootstrap_chunk(
         metamorphism: metamorphic::metamorphism_v1().into(),
         sign_columns: sign_columns_identity()?,
         workers: metamorphic::configured_workers_v1(1).map_err(invalid)?,
-        fixture_observations: fixture_observations(),
+        fixture_observations: cell.fixture.dataset.batch.num_rows(),
         multiclass_point_fixture_plan: multiclass_point_fixture_plan(),
+        bootstrap_fixture_plan: bootstrap_fixture_plan(),
         dependency_shard_ids: bootstrap_dependency_ids(&dependencies)?,
         cell_id: cell.cell_id.clone(),
         prepared_execution_identity_sha256: prepared.execution.execution_identity_sha256.clone(),
@@ -2826,6 +3014,7 @@ fn bootstrap_scientific_value(
         "profile": cell.fixture.profile,
         "dataset_rows": cell.fixture.dataset.batch.num_rows(),
         "dataset_fingerprint": cell.fixture.dataset.fingerprint.0,
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "config": cell.config,
         "compiler_receipt": output.compilation_receipt,
         "compiled_plan": cell.artifact.plan(),
@@ -2860,8 +3049,10 @@ fn run_bootstrap_finalize(
         || inventory.metamorphism != metamorphic::metamorphism_v1()
         || inventory.sign_columns != sign_columns_identity()?
         || inventory.workers != metamorphic::configured_workers_v1(1).map_err(invalid)?
-        || inventory.fixture_observations != fixture_observations()
+        || inventory.fixture_observations != cell.fixture.dataset.batch.num_rows()
+        || inventory.fixture_observations != BOOTSTRAP_FIXTURE_OBSERVATIONS
         || inventory.multiclass_point_fixture_plan != multiclass_point_fixture_plan()
+        || inventory.bootstrap_fixture_plan != bootstrap_fixture_plan()
         || inventory.dependency_shard_ids != dependency_ids
         || inventory.cell_id != cell.cell_id
         || !is_lower_hex(&inventory.plan_sha256, 64)
@@ -3026,6 +3217,7 @@ fn run_bootstrap_finalize(
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "dependency_shard_ids": bootstrap_dependency_ids(&dependencies)?,
         "payload": payload,
     });
@@ -3192,7 +3384,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         HeterogeneityAlgorithmV2::FimixPlsV2,
         HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
     ];
-    let (p0_tandem_identity, p0_tandem_discovery) = run_required_discovery(
+    let (_, p0_tandem_discovery) = run_required_discovery(
         "pos-published-p0-discovery",
         &p0,
         args.seed,
@@ -3203,7 +3395,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
             (HeterogeneityAlgorithmV2::PlsPosPublishedV2, 2),
         ],
     )?;
-    let (p2_identity, p2_discovery) = run_required_discovery(
+    let (_, p2_discovery) = run_required_discovery(
         "heterogeneity-p2-tandem-discovery",
         &p2,
         args.seed,
@@ -3217,7 +3409,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
             ),
         ],
     )?;
-    let (p23_identity, p23_discovery) = run_required_discovery(
+    let (_, p23_discovery) = run_required_discovery(
         "heterogeneity-p23-tandem-discovery",
         &p23,
         args.seed,
@@ -3231,7 +3423,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
             ),
         ],
     )?;
-    let (metric_failure_identity, metric_failure_discovery) = run_required_discovery(
+    let (_, metric_failure_discovery) = run_required_discovery(
         "pos-p2-common-metric-failure-discovery",
         &metric_failure,
         args.seed,
@@ -3282,120 +3474,53 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         }
     }
 
-    let bootstrap_cells = if metamorphic::compact_matrix_v1() {
+    let bootstrap_shard_ids = if metamorphic::compact_matrix_v1() {
         vec![
-            run_inference(
-                "fimix-p0-fixed-k-bootstrap",
-                &p0,
-                args.seed,
-                vec![2],
-                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
-                fimix_recovery[0]["analysis"]["discovery_result_identity_sha256"]
-                    .as_str()
-                    .ok_or_else(|| invalid("FIMIX discovery identity is absent"))?
-                    .into(),
-                HeterogeneityAlgorithmV2::FimixPlsV2,
-                false,
-            )?,
-            run_inference(
-                "pos-destination-p2-fixed-k-bootstrap",
-                &p2,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p2_identity.clone(),
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?,
-            run_inference(
-                "pos-destination-p23-fixed-k-bootstrap",
-                &p23,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p23_identity.clone(),
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?,
+            "bootstrap-fimix-p0",
+            "bootstrap-pos-destination-p2",
+            "bootstrap-pos-destination-p23",
         ]
     } else if args.scale == Scale::Qualification {
         vec![
-            run_inference(
-                "fimix-p0-fixed-k-bootstrap",
-                &p0,
-                args.seed,
-                vec![2],
-                vec![HeterogeneityAlgorithmV2::FimixPlsV2],
-                fimix_recovery[0]["analysis"]["discovery_result_identity_sha256"]
-                    .as_str()
-                    .ok_or_else(|| invalid("FIMIX discovery identity is absent"))?
-                    .into(),
-                HeterogeneityAlgorithmV2::FimixPlsV2,
-                false,
-            )?,
-            run_inference(
-                "pos-published-p0-fixed-k-bootstrap",
-                &p0,
-                args.seed,
-                vec![2],
-                tandem_p0_algorithms.clone(),
-                p0_tandem_identity,
-                HeterogeneityAlgorithmV2::PlsPosPublishedV2,
-                true,
-            )?,
-            run_inference(
-                "fimix-p2-fixed-k-bootstrap",
-                &p2,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p2_identity.clone(),
-                HeterogeneityAlgorithmV2::FimixPlsV2,
-                false,
-            )?,
-            run_inference(
-                "pos-destination-p2-fixed-k-bootstrap",
-                &p2,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p2_identity,
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?,
-            run_inference(
-                "fimix-p23-fixed-k-bootstrap",
-                &p23,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p23_identity.clone(),
-                HeterogeneityAlgorithmV2::FimixPlsV2,
-                false,
-            )?,
-            run_inference(
-                "pos-destination-p23-fixed-k-bootstrap",
-                &p23,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                p23_identity,
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?,
-            run_inference(
-                "pos-p2-common-metric-failure-fixed-k-bootstrap",
-                &metric_failure,
-                args.seed,
-                vec![2],
-                tandem_interaction_algorithms.clone(),
-                metric_failure_identity,
-                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
-                true,
-            )?,
+            "bootstrap-fimix-p0",
+            "bootstrap-pos-published-p0",
+            "bootstrap-fimix-p2",
+            "bootstrap-pos-destination-p2",
+            "bootstrap-fimix-p23",
+            "bootstrap-pos-destination-p23",
+            "bootstrap-pos-common-metric-failure",
         ]
     } else {
         Vec::new()
+    };
+    let bootstrap_cells = if bootstrap_shard_ids.is_empty() {
+        Vec::new()
+    } else {
+        let bootstrap_dependencies = [
+            "fimix-recovery-00",
+            "pos-published-p0-discovery",
+            "pos-destination-p2-discovery",
+            "pos-destination-p23-discovery",
+            "pos-common-metric-failure-discovery",
+        ]
+        .into_iter()
+        .map(|dependency_id| {
+            Ok(json!({
+                "shard_id": dependency_id,
+                "payload": {
+                    "bootstrap_lock": bootstrap_discovery_lock_for_dependency(args, dependency_id)?,
+                },
+            }))
+        })
+        .collect::<Result<Vec<_>, DynError>>()?;
+        bootstrap_shard_ids
+            .into_iter()
+            .map(|shard_id| {
+                let (cell_id, fixture, config) =
+                    bootstrap_cell_definition(args, shard_id, &bootstrap_dependencies)?;
+                run_config(&cell_id, &fixture, config).map(|(_, value)| value)
+            })
+            .collect::<Result<Vec<_>, DynError>>()?
     };
     let report = json!({
         "schema_version": SCHEMA_VERSION,
@@ -3407,6 +3532,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         "workers": metamorphic::configured_workers_v1(1).map_err(invalid)?,
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
+        "bootstrap_fixture_plan": bootstrap_fixture_plan(),
         "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
         "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
         "multistart_reproducibility_contract": {
@@ -3523,6 +3649,85 @@ mod tests {
     use super::*;
     use std::collections::BTreeSet;
 
+    fn interaction_inventory(model: &SemModelV4) -> Vec<(String, Vec<String>, String)> {
+        let mut inventory = model
+            .derived_terms
+            .iter()
+            .filter_map(|term| {
+                let SemDerivedTermV4::InteractionV2 {
+                    id,
+                    output,
+                    operands,
+                    ..
+                } = term
+                else {
+                    return None;
+                };
+                let target = model
+                    .relations
+                    .iter()
+                    .find_map(|relation| match relation {
+                        SemRelationV4::Structural { source, target, .. } if source == output => {
+                            Some(target.clone())
+                        }
+                        _ => None,
+                    })
+                    .expect("every interaction output has one structural destination");
+                Some((id.clone(), operands.clone(), target))
+            })
+            .collect::<Vec<_>>();
+        inventory.sort();
+        inventory
+    }
+
+    fn expected_interaction_inventory(
+        profile: HeterogeneityInteractionProfileV2,
+    ) -> Vec<(String, Vec<String>, String)> {
+        let mut inventory = match profile {
+            HeterogeneityInteractionProfileV2::P2MultiTwoWay => vec![
+                (
+                    "interaction:x_by_z".into(),
+                    vec!["construct:x".into(), "construct:z".into()],
+                    "construct:y".into(),
+                ),
+                (
+                    "interaction:x_by_w".into(),
+                    vec!["construct:x".into(), "construct:w".into()],
+                    "construct:y".into(),
+                ),
+            ],
+            HeterogeneityInteractionProfileV2::P23AllCurrent => vec![
+                (
+                    "interaction:x_by_z".into(),
+                    vec!["construct:x".into(), "construct:z".into()],
+                    "construct:y".into(),
+                ),
+                (
+                    "interaction:x_by_w".into(),
+                    vec!["construct:x".into(), "construct:w".into()],
+                    "construct:y".into(),
+                ),
+                (
+                    "interaction:z_by_w".into(),
+                    vec!["construct:z".into(), "construct:w".into()],
+                    "construct:y".into(),
+                ),
+                (
+                    "interaction:x_by_z_by_w".into(),
+                    vec![
+                        "construct:x".into(),
+                        "construct:z".into(),
+                        "construct:w".into(),
+                    ],
+                    "construct:y".into(),
+                ),
+            ],
+            HeterogeneityInteractionProfileV2::P0Structural => Vec::new(),
+        };
+        inventory.sort();
+        inventory
+    }
+
     fn stable_discovery_fixture(algorithm: HeterogeneityAlgorithmV2, k: u8) -> Value {
         let algorithm_value = serde_json::to_value(algorithm).unwrap();
         let evidence_key = if algorithm == HeterogeneityAlgorithmV2::FimixPlsV2 {
@@ -3592,6 +3797,85 @@ mod tests {
     }
 
     #[test]
+    fn bootstrap_lock_requires_exact_n80_dataset_and_typed_plan_identity() {
+        let seed = 42;
+        let algorithm = HeterogeneityAlgorithmV2::FimixPlsV2;
+        let algorithms = vec![algorithm];
+        let fixture = make_bootstrap_fixture(
+            "heterogeneity-p0-strong",
+            HeterogeneityInteractionProfileV2::P0Structural,
+            Scenario::StrongSeparation,
+            0x5000_u64 + seed,
+        )
+        .unwrap();
+        let mut discovery = stable_discovery_fixture(algorithm, 2);
+        discovery["fixture_id"] = json!(fixture.fixture_id.clone());
+        discovery["dataset_rows"] = json!(fixture.dataset.batch.num_rows());
+        discovery["dataset_fingerprint"] = json!(fixture.dataset.fingerprint.0.clone());
+        discovery["profile"] = serde_json::to_value(fixture.profile).unwrap();
+        discovery["scenario"] = json!("strongseparation");
+        discovery["config"] = serde_json::to_value(discovery_config(
+            &fixture,
+            seed,
+            vec![2],
+            algorithms.clone(),
+        ))
+        .unwrap();
+        discovery["true_classes"] = json!(fixture.true_classes.clone());
+        let lock = BootstrapDiscoveryLockV1 {
+            schema_version: 1,
+            suite_id: BOOTSTRAP_DISCOVERY_LOCK_SUITE_ID.into(),
+            bootstrap_fixture_plan: bootstrap_fixture_plan(),
+            fixture_observations: fixture.dataset.batch.num_rows(),
+            fixture_id: fixture.fixture_id.clone(),
+            dataset_fingerprint: fixture.dataset.fingerprint.0.clone(),
+            profile: fixture.profile,
+            scenario: "strongseparation".into(),
+            campaign_seed: seed,
+            selected_k: 2,
+            algorithms: algorithms.clone(),
+            discovery,
+        };
+        let dependency = json!({
+            "shard_id": "fimix-recovery-00",
+            "payload": { "bootstrap_lock": lock },
+        });
+        assert_eq!(
+            dependency_bootstrap_discovery_identity(
+                std::slice::from_ref(&dependency),
+                "fimix-recovery-00",
+                &fixture,
+                seed,
+                &algorithms,
+                algorithm,
+            )
+            .unwrap(),
+            "a".repeat(64)
+        );
+
+        for field in ["fixture_observations", "bootstrap_fixture_plan"] {
+            let mut altered = dependency.clone();
+            altered["payload"]["bootstrap_lock"][field] = if field == "fixture_observations" {
+                json!(400)
+            } else {
+                json!({})
+            };
+            assert!(
+                dependency_bootstrap_discovery_identity(
+                    &[altered],
+                    "fimix-recovery-00",
+                    &fixture,
+                    seed,
+                    &algorithms,
+                    algorithm,
+                )
+                .is_err(),
+                "tampered {field} must fail closed"
+            );
+        }
+    }
+
+    #[test]
     fn multiclass_strong_fixture_has_distinct_multidimensional_structural_equations() {
         for classes in 3..=5 {
             let equations = (0..classes)
@@ -3651,6 +3935,198 @@ mod tests {
                 .count(),
             7
         );
+    }
+
+    #[test]
+    fn typed_bootstrap_fixture_plan_is_exactly_n80_k2_and_not_an_n400_runtime_claim() {
+        assert_eq!(fixture_observations(), 400);
+        assert_eq!(
+            serde_json::to_value(bootstrap_fixture_plan()).unwrap(),
+            json!({
+                "schema_version": 1,
+                "plan_id": "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1",
+                "purpose": "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification",
+                "selected_k": 2,
+                "observations_per_fixture": 80,
+                "expected_cases_per_true_class": 40,
+                "interaction_fixture_design": "dual_endogenous_anchor_v1",
+                "requested_replicates": 500,
+                "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
+            })
+        );
+    }
+
+    #[test]
+    fn typed_bootstrap_fixtures_are_exactly_balanced_n80_for_every_retained_shape() {
+        for (fixture_id, profile, scenario, seed) in [
+            (
+                "heterogeneity-p0-strong",
+                HeterogeneityInteractionProfileV2::P0Structural,
+                Scenario::StrongSeparation,
+                0x5000_u64 + 42,
+            ),
+            (
+                "heterogeneity-p2-strong",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::StrongSeparation,
+                0x5200_u64 + 42,
+            ),
+            (
+                "heterogeneity-p23-strong",
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+                Scenario::StrongSeparation,
+                0x5230_u64 + 42,
+            ),
+            (
+                "heterogeneity-p2-common-metric-failure",
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                Scenario::CommonMetricFailure,
+                0x4641_494c_u64 + 42,
+            ),
+        ] {
+            let fixture = make_bootstrap_fixture(fixture_id, profile, scenario, seed).unwrap();
+            assert_eq!(fixture.dataset.batch.num_rows(), 80);
+            assert_eq!(fixture.true_classes.len(), 80);
+            assert_eq!(
+                (0..2)
+                    .map(|class| fixture
+                        .true_classes
+                        .iter()
+                        .filter(|value| **value == class)
+                        .count())
+                    .collect::<Vec<_>>(),
+                vec![40, 40]
+            );
+            let has_v = fixture
+                .model
+                .variables
+                .iter()
+                .any(|variable| variable.id() == "construct:v");
+            assert_eq!(
+                has_v,
+                profile != HeterogeneityInteractionProfileV2::P0Structural
+            );
+        }
+    }
+
+    #[test]
+    fn interaction_bootstrap_fixture_adds_only_the_v_anchor_equation() {
+        for (profile, fixture_id, seed) in [
+            (
+                HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+                "heterogeneity-p2-strong",
+                0x5200_u64 + 42,
+            ),
+            (
+                HeterogeneityInteractionProfileV2::P23AllCurrent,
+                "heterogeneity-p23-strong",
+                0x5230_u64 + 42,
+            ),
+        ] {
+            let fixture =
+                make_bootstrap_fixture(fixture_id, profile, Scenario::StrongSeparation, seed)
+                    .unwrap();
+            let structural_paths = fixture
+                .model
+                .relations
+                .iter()
+                .filter_map(|relation| match relation {
+                    SemRelationV4::Structural { source, target, .. }
+                        if !source.starts_with("derived:") =>
+                    {
+                        Some((source.as_str(), target.as_str()))
+                    }
+                    _ => None,
+                })
+                .collect::<BTreeSet<_>>();
+            for source in ["construct:x", "construct:z", "construct:w"] {
+                assert!(structural_paths.contains(&(source, "construct:v")));
+            }
+            assert_eq!(
+                fixture
+                    .dataset
+                    .schema
+                    .columns
+                    .iter()
+                    .filter(|column| column.name.starts_with('v'))
+                    .map(|column| column.name.as_str())
+                    .collect::<BTreeSet<_>>(),
+                BTreeSet::from(["v1", "v2", "v3"])
+            );
+            assert_eq!(
+                interaction_inventory(&fixture.model),
+                expected_interaction_inventory(profile)
+            );
+
+            let point_fixture =
+                make_fixture(fixture_id, profile, Scenario::StrongSeparation, seed).unwrap();
+            assert_eq!(
+                point_fixture.dataset.batch.num_rows(),
+                fixture_observations()
+            );
+            assert!(
+                !point_fixture
+                    .model
+                    .variables
+                    .iter()
+                    .any(|variable| variable.id() == "construct:v")
+            );
+            assert_eq!(
+                interaction_inventory(&point_fixture.model),
+                expected_interaction_inventory(profile)
+            );
+        }
+    }
+
+    #[test]
+    fn common_metric_failure_keeps_the_x3_class_one_loading_suppression() {
+        assert_eq!(
+            indicator_metric_multiplier(Scenario::CommonMetricFailure, "x", 1, 3),
+            0.0
+        );
+        for (construct_id, class, indicator) in [("x", 0, 3), ("x", 1, 2), ("y", 1, 3), ("v", 1, 3)]
+        {
+            assert_eq!(
+                indicator_metric_multiplier(
+                    Scenario::CommonMetricFailure,
+                    construct_id,
+                    class,
+                    indicator,
+                ),
+                1.0
+            );
+        }
+        assert_eq!(
+            indicator_metric_multiplier(Scenario::StrongSeparation, "x", 1, 3),
+            1.0
+        );
+
+        let fixture = make_bootstrap_fixture(
+            "heterogeneity-p2-common-metric-failure",
+            HeterogeneityInteractionProfileV2::P2MultiTwoWay,
+            Scenario::CommonMetricFailure,
+            0x4641_494c_u64 + 42,
+        )
+        .unwrap();
+        assert_eq!(fixture.scenario, Scenario::CommonMetricFailure);
+        assert_eq!(
+            interaction_inventory(&fixture.model),
+            expected_interaction_inventory(HeterogeneityInteractionProfileV2::P2MultiTwoWay)
+        );
+        let config = inference_config(
+            &fixture,
+            42,
+            vec![2],
+            vec![
+                HeterogeneityAlgorithmV2::FimixPlsV2,
+                HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+            ],
+            "a".repeat(64),
+            HeterogeneityAlgorithmV2::PlsPosDestinationScoredInteractionsV2,
+            2,
+            true,
+        );
+        assert!(config.pos_common_metric.is_some());
     }
 
     #[test]

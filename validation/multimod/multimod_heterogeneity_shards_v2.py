@@ -42,6 +42,17 @@ PRODUCER_SUITE_ID = "qpls.multimod.heterogeneity.production-qualification.v2"
 SCHEMA_VERSION = 1
 BOOTSTRAP_CHUNK_COUNT = 100
 BOOTSTRAP_REQUESTED_REPLICATES = 500
+BOOTSTRAP_FIXTURE_PLAN = {
+    "schema_version": 1,
+    "plan_id": "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1",
+    "purpose": "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification",
+    "selected_k": 2,
+    "observations_per_fixture": 80,
+    "expected_cases_per_true_class": 40,
+    "interaction_fixture_design": "dual_endogenous_anchor_v1",
+    "requested_replicates": 500,
+    "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
+}
 MULTICLASS_POINT_FIXTURE_PLAN = {
     "schema_version": 1,
     "plan_id": "qpls.multimod.heterogeneity.pos-published-p0-k3-k5-point-discovery.v1",
@@ -51,6 +62,18 @@ MULTICLASS_POINT_FIXTURE_PLAN = {
     "allocation": "row_mod_k_exactly_balanced",
     "bootstrap_evidence": "not_requested",
 }
+
+
+def is_exact_bootstrap_fixture_plan(value: Any) -> bool:
+    return (
+        type(value) is dict
+        and value.keys() == BOOTSTRAP_FIXTURE_PLAN.keys()
+        and all(
+            type(value[key]) is type(expected)
+            for key, expected in BOOTSTRAP_FIXTURE_PLAN.items()
+        )
+        and value == BOOTSTRAP_FIXTURE_PLAN
+    )
 
 
 class ContractError(ValueError):
@@ -221,6 +244,7 @@ def validated_plan(path: Path) -> tuple[dict[str, Any], dict[str, dict[str, Any]
         or plan["fixture_observations"] <= 0
         or plan.get("multiclass_point_fixture_plan")
         != MULTICLASS_POINT_FIXTURE_PLAN
+        or not is_exact_bootstrap_fixture_plan(plan.get("bootstrap_fixture_plan"))
         or plan.get("execution_contract")
         != "one_cargo_build_then_dependency_aware_non_cargo_shards"
         or plan.get("sentinel_shard_id") != "sentinel"
@@ -402,6 +426,8 @@ def validate_shard_result(
         or result.get("fixture_observations") != plan["fixture_observations"]
         or result.get("multiclass_point_fixture_plan")
         != plan["multiclass_point_fixture_plan"]
+        or not is_exact_bootstrap_fixture_plan(result.get("bootstrap_fixture_plan"))
+        or result.get("bootstrap_fixture_plan") != plan["bootstrap_fixture_plan"]
         or result.get("dependency_shard_ids") != sorted(spec["dependencies"])
         or not isinstance(payload, dict)
         or payload.get("kind") != spec["payload_kind"]
@@ -476,9 +502,12 @@ def validate_bootstrap_prepared(
         or value.get("metamorphism") != plan["metamorphism"]
         or value.get("sign_columns") != plan.get("sign_columns")
         or value.get("workers") != plan["workers"]
-        or value.get("fixture_observations") != plan["fixture_observations"]
+        or value.get("fixture_observations")
+        != BOOTSTRAP_FIXTURE_PLAN["observations_per_fixture"]
         or value.get("multiclass_point_fixture_plan")
         != plan["multiclass_point_fixture_plan"]
+        or not is_exact_bootstrap_fixture_plan(value.get("bootstrap_fixture_plan"))
+        or value.get("bootstrap_fixture_plan") != plan["bootstrap_fixture_plan"]
         or value.get("dependency_shard_ids") != sorted(spec["dependencies"])
         or not isinstance(value.get("cell_id"), str)
         or not value["cell_id"]
@@ -653,9 +682,12 @@ def validate_bootstrap_cache(
         or value.get("metamorphism") != plan["metamorphism"]
         or value.get("sign_columns") != plan.get("sign_columns")
         or value.get("workers") != plan["workers"]
-        or value.get("fixture_observations") != plan["fixture_observations"]
+        or value.get("fixture_observations") != prepared["fixture_observations"]
         or value.get("multiclass_point_fixture_plan")
-        != plan["multiclass_point_fixture_plan"]
+        != prepared["multiclass_point_fixture_plan"]
+        or not is_exact_bootstrap_fixture_plan(value.get("bootstrap_fixture_plan"))
+        or value.get("bootstrap_fixture_plan")
+        != prepared["bootstrap_fixture_plan"]
         or value.get("dependency_shard_ids") != sorted(spec["dependencies"])
         or value.get("cell_id") != prepared.get("cell_id")
         or value.get("prepared_execution_identity_sha256")
@@ -908,8 +940,9 @@ def complete_bootstrap_inventory(
         "metamorphism": plan["metamorphism"],
         "sign_columns": plan.get("sign_columns"),
         "workers": plan["workers"],
-        "fixture_observations": plan["fixture_observations"],
-        "multiclass_point_fixture_plan": plan["multiclass_point_fixture_plan"],
+        "fixture_observations": prepared["fixture_observations"],
+        "multiclass_point_fixture_plan": prepared["multiclass_point_fixture_plan"],
+        "bootstrap_fixture_plan": prepared["bootstrap_fixture_plan"],
         "dependency_shard_ids": sorted(spec["dependencies"]),
         "dependency_receipts": dependency_inventory(
             plan_path, shard_dir, spec, executable_sha256, source_commit
@@ -1105,6 +1138,8 @@ def aggregate(arguments: argparse.Namespace) -> None:
         or header.get("fixture_observations") != plan["fixture_observations"]
         or header.get("multiclass_point_fixture_plan")
         != plan["multiclass_point_fixture_plan"]
+        or not is_exact_bootstrap_fixture_plan(header.get("bootstrap_fixture_plan"))
+        or header.get("bootstrap_fixture_plan") != plan["bootstrap_fixture_plan"]
     ):
         raise ContractError("sentinel report header is not bound to the shard plan")
     report = dict(header)

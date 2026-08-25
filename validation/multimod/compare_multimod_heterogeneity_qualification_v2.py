@@ -35,6 +35,17 @@ MULTICLASS_POINT_FIXTURE_PLAN = {
     "allocation": "row_mod_k_exactly_balanced",
     "bootstrap_evidence": "not_requested",
 }
+BOOTSTRAP_FIXTURE_PLAN = {
+    "schema_version": 1,
+    "plan_id": "qpls.multimod.heterogeneity.k2-fixed-bootstrap-n80-dual-outcome.v1",
+    "purpose": "fixed_k_full_pipeline_bootstrap_inference_and_ledger_qualification",
+    "selected_k": 2,
+    "observations_per_fixture": 80,
+    "expected_cases_per_true_class": 40,
+    "interaction_fixture_design": "dual_endogenous_anchor_v1",
+    "requested_replicates": 500,
+    "performance_scope": "n80_fixed_k_bootstrap_not_a_500_draw_n400_runtime_claim",
+}
 EXPECTED_BOOTSTRAP_CELL_IDS = frozenset(
     {
         "fimix-p0-fixed-k-bootstrap",
@@ -105,6 +116,8 @@ BOUND_GATE_CHECK_IDS = {
     "heterogeneity.bootstrap.pos-published-p0-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
     "heterogeneity.bootstrap.pos-destination-p2-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
     "heterogeneity.bootstrap.pos-destination-p23-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
+    "heterogeneity.bootstrap.typed_n80_dual_outcome_fixed_k_full_pipeline_fixture_matrix",
+    "heterogeneity.bootstrap.dual_outcome_interaction_fixture_design",
     "heterogeneity.label_alignment.k3.exhaustive_k_factorial_decisions",
     "heterogeneity.label_alignment.k4.exhaustive_k_factorial_decisions",
     "heterogeneity.label_alignment.k5.exhaustive_k_factorial_decisions",
@@ -135,6 +148,7 @@ def is_git_commit(value: Any) -> bool:
 
 
 def is_baseline_qualification_matrix(report: dict[str, Any]) -> bool:
+    """Validate the n=400 point/recovery matrix, not bootstrap fixture size."""
     return (
         report.get("scale") == "qualification"
         and report.get("metamorphism") == "baseline"
@@ -146,6 +160,11 @@ def is_baseline_qualification_matrix(report: dict[str, Any]) -> bool:
         and report.get("campaign_seed") == 42
         and report.get("seed") == 42
     )
+
+
+def is_bootstrap_fixture_plan(report: dict[str, Any]) -> bool:
+    """Validate the typed balanced n=80 dual-outcome bootstrap identity."""
+    return report.get("bootstrap_fixture_plan") == BOOTSTRAP_FIXTURE_PLAN
 
 
 def expected_qualification_shard_ids() -> list[str]:
@@ -2027,6 +2046,123 @@ def prepared_common_metric_repeated(cell: dict[str, Any]) -> bool:
     return len(bootstrap) == 1 and bootstrap[0]["pooled_common_metric_refit_repeated"] is True
 
 
+def bootstrap_fixture_matrix_receipt(
+    report: dict[str, Any], cells: list[dict[str, Any]]
+) -> tuple[bool, list[dict[str, Any]]]:
+    expected_ids = set(EXPECTED_BOOTSTRAP_CELL_IDS)
+    actual_ids = {cell["cell_id"] for cell in cells}
+    fixture_rows: list[dict[str, Any]] = []
+    fixture_matrix_ok = (
+        is_bootstrap_fixture_plan(report)
+        and len(cells) == len(expected_ids)
+        and actual_ids == expected_ids
+    )
+    for cell in cells:
+        true_counts = sorted(Counter(int(value) for value in cell.get("true_classes", [])).values())
+        raw_observations: int | None = None
+        try:
+            raw_observations = int(raw_fimix_input(cell)["metric"]["observation_count"])
+        except (KeyError, TypeError, ValueError):
+            fixture_matrix_ok = False
+        bootstrap_config = cell.get("config", {}).get("bootstrap")
+        locked_k = cell.get("analysis", {}).get("locked_k")
+        cell_ok = (
+            cell.get("dataset_rows") == BOOTSTRAP_FIXTURE_PLAN["observations_per_fixture"]
+            and raw_observations == BOOTSTRAP_FIXTURE_PLAN["observations_per_fixture"]
+            and true_counts
+            == [
+                BOOTSTRAP_FIXTURE_PLAN["expected_cases_per_true_class"],
+                BOOTSTRAP_FIXTURE_PLAN["expected_cases_per_true_class"],
+            ]
+            and locked_k == BOOTSTRAP_FIXTURE_PLAN["selected_k"]
+            and isinstance(bootstrap_config, dict)
+            and bootstrap_config.get("resamples")
+            == BOOTSTRAP_FIXTURE_PLAN["requested_replicates"]
+        )
+        fixture_matrix_ok &= cell_ok
+        fixture_rows.append(
+            {
+                "cell_id": cell.get("cell_id"),
+                "dataset_rows": cell.get("dataset_rows"),
+                "raw_observations": raw_observations,
+                "true_class_counts": true_counts,
+                "locked_k": locked_k,
+                "requested_replicates": (
+                    bootstrap_config.get("resamples")
+                    if isinstance(bootstrap_config, dict)
+                    else None
+                ),
+            }
+        )
+    return fixture_matrix_ok, fixture_rows
+
+
+def bootstrap_outcome_design_receipt(
+    cells: list[dict[str, Any]],
+) -> tuple[bool, list[dict[str, Any]]]:
+    """Rebuild the single- versus dual-endogenous model-design receipt."""
+    design_ok = True
+    rows: list[dict[str, Any]] = []
+    for cell in cells:
+        model = cell.get("sem_model_authority")
+        variables = model.get("variables", []) if isinstance(model, dict) else []
+        relations = model.get("relations", []) if isinstance(model, dict) else []
+        variable_ids = {
+            variable.get("id")
+            for variable in variables
+            if isinstance(variable, dict) and isinstance(variable.get("id"), str)
+        }
+        structural_paths = {
+            (relation.get("source"), relation.get("target"))
+            for relation in relations
+            if isinstance(relation, dict)
+            and relation.get("kind") == "structural"
+            and isinstance(relation.get("source"), str)
+            and isinstance(relation.get("target"), str)
+        }
+        outcome_targets = {target for _, target in structural_paths}
+        derived_targets = {
+            target for source, target in structural_paths if source.startswith("derived:")
+        }
+        ordinary_v_sources = {
+            source
+            for source, target in structural_paths
+            if target == "construct:v" and not source.startswith("derived:")
+        }
+        profile = cell.get("profile")
+        if profile == "p0_structural":
+            cell_ok = (
+                "construct:y" in variable_ids
+                and "construct:v" not in variable_ids
+                and outcome_targets == {"construct:y"}
+                and not ordinary_v_sources
+                and not derived_targets
+            )
+        elif profile in {"p2_multi_two_way", "p23_all_current"}:
+            cell_ok = (
+                {"construct:y", "construct:v"}.issubset(variable_ids)
+                and outcome_targets == {"construct:y", "construct:v"}
+                and ordinary_v_sources
+                == {"construct:x", "construct:z", "construct:w"}
+                and derived_targets == {"construct:y"}
+            )
+        else:
+            cell_ok = False
+        design_ok &= cell_ok
+        rows.append(
+            {
+                "cell_id": cell.get("cell_id"),
+                "profile": profile,
+                "model_exposed": isinstance(model, dict),
+                "outcome_targets": sorted(outcome_targets),
+                "ordinary_v_sources": sorted(ordinary_v_sources),
+                "derived_targets": sorted(derived_targets),
+                "cell_ok": cell_ok,
+            }
+        )
+    return design_ok and bool(cells), rows
+
+
 def validate_bootstrap_matrix(report: dict[str, Any], checks: Checks) -> None:
     cells = report["fixed_k_bootstrap"]
     expected_ids = set(EXPECTED_BOOTSTRAP_CELL_IDS)
@@ -2036,6 +2172,30 @@ def validate_bootstrap_matrix(report: dict[str, Any], checks: Checks) -> None:
         len(cells) == len(expected_ids) and actual_ids == expected_ids,
         observed={"count": len(cells), "cell_ids": sorted(actual_ids)},
         expected=sorted(expected_ids),
+    )
+    fixture_matrix_ok, fixture_rows = bootstrap_fixture_matrix_receipt(report, cells)
+    checks.require(
+        "heterogeneity.bootstrap.typed_n80_dual_outcome_fixed_k_full_pipeline_fixture_matrix",
+        fixture_matrix_ok,
+        observed={
+            "bootstrap_fixture_plan": report.get("bootstrap_fixture_plan"),
+            "cells": fixture_rows,
+        },
+        expected={
+            "bootstrap_fixture_plan": BOOTSTRAP_FIXTURE_PLAN,
+            "cell_ids": sorted(expected_ids),
+        },
+    )
+    outcome_design_ok, outcome_design_rows = bootstrap_outcome_design_receipt(cells)
+    checks.require(
+        "heterogeneity.bootstrap.dual_outcome_interaction_fixture_design",
+        outcome_design_ok,
+        observed=outcome_design_rows,
+        expected=(
+            "P0 exposes only outcome y; every P2/P23/common-metric interaction cell "
+            "exposes outcomes y and v with ordinary x/z/w->v paths and every "
+            "derived interaction path targeting y only"
+        ),
     )
     expected_k_by_id = {cell_id: 2 for cell_id in expected_ids}
     for cell in cells:
@@ -2145,7 +2305,7 @@ def validate_report(
         expected="qualification-scale raw-SUT receipt",
     )
     checks.require(
-        "heterogeneity.receipt.baseline_400_row_matrix",
+        "heterogeneity.receipt.baseline_400_row_point_recovery_matrix",
         is_baseline_qualification_matrix(report),
         observed={
             key: report.get(key)
@@ -2160,9 +2320,16 @@ def validate_report(
             )
         },
         expected=(
-            "baseline metamorphism, no sign transform, one worker, 400-row general "
-            "fixtures, the typed n=120 K3-K5 point-fixture plan, and seed 42"
+            "baseline metamorphism, no sign transform, one worker, the 400-row "
+            "point/recovery matrix only, the typed n=120 K3-K5 point-fixture plan, "
+            "and seed 42"
         ),
+    )
+    checks.require(
+        "heterogeneity.receipt.typed_n80_dual_outcome_fixed_k_bootstrap_fixture_plan",
+        is_bootstrap_fixture_plan(report),
+        observed=report.get("bootstrap_fixture_plan"),
+        expected=BOOTSTRAP_FIXTURE_PLAN,
     )
     shard_receipt = report.get("shard_execution_receipt")
     if require_shard_receipts or shard_receipt is not None:
