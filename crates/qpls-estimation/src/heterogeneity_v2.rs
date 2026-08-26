@@ -5256,16 +5256,20 @@ mod tests {
         assert_eq!(candidate_moves * 2, 48);
         assert_eq!(candidate_moves * config.segments, 72);
 
+        let scientific_order = scientific_row_order_v2(&row_keys);
+        let mut current_rows = vec![Vec::new(); config.segments];
+        for row in scientific_order.iter().copied() {
+            current_rows[assignments[row]].push(row);
+        }
         let mut expected_requests = Vec::new();
-        for observation in 0..assignments.len() {
+        for observation in scientific_order {
             let source = assignments[observation];
-            let source_rows = assignments
+            let mut source_rows = current_rows[source].clone();
+            let source_position = source_rows
                 .iter()
-                .enumerate()
-                .filter_map(|(row, assigned)| {
-                    (*assigned == source && row != observation).then_some(row)
-                })
-                .collect::<Vec<_>>();
+                .position(|row| *row == observation)
+                .expect("source membership includes the candidate observation");
+            source_rows.remove(source_position);
             expected_requests.push(PosSegmentRefitRequestV2 {
                 segment_index: source,
                 row_indices: source_rows,
@@ -5275,13 +5279,9 @@ mod tests {
                 if destination == source {
                     continue;
                 }
-                let destination_rows = assignments
-                    .iter()
-                    .enumerate()
-                    .filter_map(|(row, assigned)| {
-                        (*assigned == destination || row == observation).then_some(row)
-                    })
-                    .collect::<Vec<_>>();
+                let mut destination_rows = current_rows[destination].clone();
+                destination_rows.push(observation);
+                destination_rows.sort_by(|left, right| row_keys[*left].cmp(&row_keys[*right]));
                 expected_requests.push(PosSegmentRefitRequestV2 {
                     segment_index: destination,
                     row_indices: destination_rows,
