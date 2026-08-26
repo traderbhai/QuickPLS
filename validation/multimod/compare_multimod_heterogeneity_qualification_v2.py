@@ -9,6 +9,7 @@ import itertools
 import json
 import math
 import struct
+import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 from statistics import median
@@ -20,6 +21,7 @@ FIMIX = "qpls.fimix-pls.v2"
 POS_PUBLISHED = "qpls.pls-pos.published.v2"
 POS_INTERACTIONS = "qpls.pls-pos.destination-scored-interactions.v2"
 TOL = 3.0e-9
+MGA_NUMERICAL_TIE_ULPS_V1 = 64.0
 TARGET_DIGEST_DOMAIN = b"quickpls:heterogeneity:target-payload:v2\0"
 MULTISTART_PARTITION_DOMAIN = b"quickpls:heterogeneity:multistart-partition:v2\0"
 MULTISTART_COEFFICIENT_DOMAIN = b"quickpls:heterogeneity:multistart-coefficients:v2\0"
@@ -145,6 +147,20 @@ def close(left: float, right: float, tolerance: float = TOL) -> bool:
     return math.isfinite(left) and math.isfinite(right) and abs(left - right) <= tolerance * max(
         1.0, abs(left), abs(right)
     )
+
+
+def mga_tie_tolerance(left: float, right: float) -> float:
+    return MGA_NUMERICAL_TIE_ULPS_V1 * sys.float_info.epsilon * max(
+        1.0, abs(left), abs(right)
+    )
+
+
+def mga_greater_or_tied(left: float, right: float) -> bool:
+    return left >= right - mga_tie_tolerance(left, right)
+
+
+def mga_less_or_tied(left: float, right: float) -> bool:
+    return left <= right + mga_tie_tolerance(left, right)
 
 
 def file_sha256(path: Path) -> str:
@@ -2004,8 +2020,10 @@ def validate_common_metric(cell: dict[str, Any], checks: Checks, prefix: str, sh
             ]
             observed = float(construct["observed_compositional_correlation"])
             lower = type7(null, 0.05)
-            probability = (1 + sum(candidate <= observed for candidate in null)) / (len(null) + 1)
-            invariant = observed >= lower
+            probability = (1 + sum(mga_less_or_tied(candidate, observed) for candidate in null)) / (
+                len(null) + 1
+            )
+            invariant = mga_greater_or_tied(observed, lower)
             independent_step2 &= len(null) == pair["usable_permutations"]
             independent_step2 &= close(lower, construct["compositional_lower_quantile"])
             independent_step2 &= close(

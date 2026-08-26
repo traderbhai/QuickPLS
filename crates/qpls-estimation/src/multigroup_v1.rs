@@ -50,23 +50,7 @@ const STREAM_DOMAIN: &[u8] = b"quickpls/mga_multigroup_v1";
 const PAIRWISE_STREAM: &[u8] = b"pairwise_fixed_size_permutation";
 const OMNIBUS_STREAM: &[u8] = b"global_fixed_size_permutation";
 const BOOTSTRAP_STREAM: &[u8] = b"group_case_bootstrap";
-const MGA_NUMERICAL_TIE_ULPS_V1: f64 = 64.0;
-
-pub(crate) fn mga_numerical_tie_tolerance_v1(left: f64, right: f64) -> f64 {
-    MGA_NUMERICAL_TIE_ULPS_V1 * f64::EPSILON * 1.0_f64.max(left.abs()).max(right.abs())
-}
-
-pub(crate) fn mga_numerically_tied_v1(left: f64, right: f64) -> bool {
-    (left - right).abs() <= mga_numerical_tie_tolerance_v1(left, right)
-}
-
-pub(crate) fn mga_greater_or_tied_v1(left: f64, right: f64) -> bool {
-    left >= right - mga_numerical_tie_tolerance_v1(left, right)
-}
-
-pub(crate) fn mga_less_or_tied_v1(left: f64, right: f64) -> bool {
-    left <= right + mga_numerical_tie_tolerance_v1(left, right)
-}
+pub(crate) use qpls_core::{mga_greater_or_tied_v1, mga_less_or_tied_v1, mga_numerically_tied_v1};
 
 /// A checked zero-based group position.  Serialized values remain numeric and
 /// cannot exceed the v1 maximum even when constructed by deserialization.
@@ -3240,6 +3224,19 @@ mod tests {
         assert!(mga_greater_or_tied_v1(1.0 - within, 1.0));
         assert!(mga_less_or_tied_v1(1.0 + within, 1.0));
         assert!(!mga_numerically_tied_v1(1.0, 1.0 + 1.0e-10));
+        assert!(mga_greater_or_tied_v1(
+            0.999_999_999_999_999_6,
+            0.999_999_999_999_999_7,
+        ));
+        assert!(!mga_greater_or_tied_v1(
+            0.999_999_999_999_999_7 - 1.0e-10,
+            0.999_999_999_999_999_7,
+        ));
+        assert!(mga_less_or_tied_v1(1.421_085_471_520_200_4e-14, -1.0e-300));
+        assert!(!mga_numerically_tied_v1(
+            10_000_000_000.000_143,
+            10_000_000_000.0,
+        ));
 
         let mut banks = synthetic_banks();
         banks.groups[0].replicate_estimates = vec![

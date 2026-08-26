@@ -6,6 +6,7 @@ import {
   multiModSidecarCostStateV1,
   parseGeneralSemConditionalProcessConfigV2,
   parseInterventionalCausalMediationConfigV1,
+  parseMultiModAnalysisResultV1,
   parseMgaMultigroupV1,
   parseMultimodIntervalV1,
   parseMultimodResultSidecarDescriptorV1,
@@ -35,7 +36,96 @@ const identification = {
   positivity_reviewed: true,
 };
 
+function boundaryMgaResult(compositionalCorrelation: number) {
+  return {
+    kind: "pls_multigroup_analysis_v1",
+    analysis: {
+      schema_version: 1,
+      provenance: {
+        method_version: "qpls.mga.multigroup.v1",
+        recipe_id: "recipe-1",
+        recipe_analytical_sha256: "a".repeat(64),
+        config_sha256: "b".repeat(64),
+        model_id: "model-1",
+        model_scientific_sha256: "c".repeat(64),
+        dataset_id: "dataset-1",
+        dataset_fingerprint: "dataset-fingerprint",
+        engine_version: "2.56.0",
+        seed: 42,
+        capability_cell: {
+          registry_schema_version: 2,
+          capability_id: "quickpls.multimod",
+          cell_id: "qpls.multimod.mga.general_sem_pls.v1",
+          capability_version: "mga_multigroup_v1",
+        },
+        qualification: "unqualified_labs",
+      },
+      profile: "general_sem_pls",
+      group_eligibility: [
+        {
+          group_id: "group_01",
+          label: "Group 1",
+          complete_cases: 30,
+          selected_rows: 30,
+          eligible: true,
+          warnings: [],
+          blockers: [],
+        },
+        {
+          group_id: "group_07",
+          label: "Group 7",
+          complete_cases: 30,
+          selected_rows: 30,
+          eligible: true,
+          warnings: [],
+          blockers: [],
+        },
+      ],
+      group_parameters: [],
+      micom_pairs: [
+        {
+          left_group_id: "group_01",
+          right_group_id: "group_07",
+          construct_id: "construct:x",
+          interpretation: "composite_invariance",
+          configural_invariance_confirmed: true,
+          compositional_correlation: compositionalCorrelation,
+          compositional_lower_quantile: 0.999_999_999_999_999_7,
+          compositional_p_value: 1,
+          compositional_invariance: true,
+          partial_invariance: true,
+          equal_mean_p_value: 1,
+          equal_variance_p_value: 1,
+        },
+      ],
+      omnibus: [],
+      pairwise: [],
+      multiplicity: "holm",
+      replicate_ledgers: [],
+      excluded_rows: [],
+      sidecars: [],
+    },
+  };
+}
+
 describe("MultiMod versioned TypeScript contracts", () => {
+  it("uses the frozen MGA numerical-tie rule for MICOM result validation", () => {
+    const boundary = parseMultiModAnalysisResultV1(
+      boundaryMgaResult(0.999_999_999_999_999_6),
+      "result-1",
+    );
+    expect(boundary.kind).toBe("pls_multigroup_analysis_v1");
+
+    expect(() =>
+      parseMultiModAnalysisResultV1(
+        boundaryMgaResult(0.999_999_999_999_999_7 - 1e-10),
+        "result-1",
+      ),
+    ).toThrowError(
+      expect.objectContaining({ code: "multimod_result.micom_pair" }),
+    );
+  });
+
   it("preserves typed MGA group identities and complete MICOM review", () => {
     const parsed = parseMgaMultigroupV1({
       schema_version: 1,

@@ -13,6 +13,16 @@ export const MULTIMOD_RESULT_SIDECAR_DESCRIPTOR_V1_SCHEMA_VERSION = 1 as const;
 export const MULTIMOD_SIDECAR_WARN_BYTES_V1 = 128 * 1024 * 1024;
 export const MULTIMOD_SIDECAR_MAX_BYTES_V1 = 512 * 1024 * 1024;
 
+const MGA_NUMERICAL_TIE_ULPS_V1 = 64;
+
+function mgaGreaterOrTiedV1(left: number, right: number): boolean {
+  const tolerance =
+    MGA_NUMERICAL_TIE_ULPS_V1 *
+    Number.EPSILON *
+    Math.max(1, Math.abs(left), Math.abs(right));
+  return left >= right - tolerance;
+}
+
 export type InferenceAlternativeV1 = "two_sided" | "less" | "greater";
 export type MultiplicityAdjustmentV1 =
   | "holm"
@@ -3775,8 +3785,10 @@ function parseMgaResult(
         parsed.compositional_lower_quantile < -1 ||
         parsed.compositional_lower_quantile > 1 ||
         parsed.compositional_invariance !==
-          parsed.compositional_correlation >=
-            parsed.compositional_lower_quantile ||
+          mgaGreaterOrTiedV1(
+            parsed.compositional_correlation,
+            parsed.compositional_lower_quantile,
+          ) ||
         parsed.partial_invariance !==
           (parsed.configural_invariance_confirmed &&
             parsed.compositional_invariance)

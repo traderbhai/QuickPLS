@@ -15,6 +15,30 @@ pub const INTERVENTIONAL_MEDIATION_RESULT_INTERPRETATION_LABEL_V1: &str =
 pub const MULTIMOD_RESULT_SIDECAR_DESCRIPTOR_V1_SCHEMA_VERSION: u32 = 1;
 pub const MULTIMOD_CANDIDATE_QUALIFICATION_RECEIPT_V1_SCHEMA_VERSION: u32 = 1;
 
+const MGA_NUMERICAL_TIE_ULPS_V1: f64 = 64.0;
+
+/// Returns the frozen scale-aware tolerance used by every MGA numerical-tie
+/// predicate. Keep the individual predicates separate: their direct IEEE-754
+/// expressions are part of the qualified inference contract.
+pub fn mga_numerical_tie_tolerance_v1(left: f64, right: f64) -> f64 {
+    MGA_NUMERICAL_TIE_ULPS_V1 * f64::EPSILON * 1.0_f64.max(left.abs()).max(right.abs())
+}
+
+pub fn mga_numerically_tied_v1(left: f64, right: f64) -> bool {
+    (left - right).abs() <= mga_numerical_tie_tolerance_v1(left, right)
+}
+
+/// Applies the frozen MGA numerical-tie policy when deciding whether `left`
+/// is at least `right`. This shared boundary keeps estimation, cache replay,
+/// and public-result validation on the same machine-precision rule.
+pub fn mga_greater_or_tied_v1(left: f64, right: f64) -> bool {
+    left >= right - mga_numerical_tie_tolerance_v1(left, right)
+}
+
+pub fn mga_less_or_tied_v1(left: f64, right: f64) -> bool {
+    left <= right + mga_numerical_tie_tolerance_v1(left, right)
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum MultimodQualificationStateV1 {
@@ -847,7 +871,10 @@ impl MultiModAnalysisResultV1 {
                         || !probability(pair.equal_mean_p_value)
                         || !probability(pair.equal_variance_p_value)
                         || pair.compositional_invariance
-                            != (pair.compositional_correlation >= pair.compositional_lower_quantile)
+                            != mga_greater_or_tied_v1(
+                                pair.compositional_correlation,
+                                pair.compositional_lower_quantile,
+                            )
                         || pair.partial_invariance
                             != (pair.configural_invariance_confirmed
                                 && pair.compositional_invariance)
@@ -1330,6 +1357,47 @@ mod tests {
         })
     }
 
+    fn valid_mga_result_with_boundary_micom() -> MultiModAnalysisResultV1 {
+        MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(PlsMultigroupAnalysisV1 {
+            schema_version: PLS_MULTIGROUP_ANALYSIS_V1_SCHEMA_VERSION,
+            provenance: provenance(),
+            profile: MgaModelProfileV1::GeneralSemPls,
+            group_eligibility: ["a", "b"]
+                .into_iter()
+                .map(|group_id| MgaGroupEligibilityV1 {
+                    group_id: group_id.into(),
+                    label: group_id.to_uppercase(),
+                    complete_cases: 10,
+                    selected_rows: 10,
+                    eligible: true,
+                    warnings: Vec::new(),
+                    blockers: Vec::new(),
+                })
+                .collect(),
+            group_parameters: Vec::new(),
+            micom_pairs: vec![MicomPairResultV1 {
+                left_group_id: "a".into(),
+                right_group_id: "b".into(),
+                construct_id: "construct:x".into(),
+                interpretation: MicomInvarianceInterpretationV1::CompositeInvariance,
+                configural_invariance_confirmed: true,
+                compositional_correlation: 0.999_999_999_999_999_6,
+                compositional_lower_quantile: 0.999_999_999_999_999_7,
+                compositional_p_value: 1.0,
+                compositional_invariance: true,
+                partial_invariance: true,
+                equal_mean_p_value: 1.0,
+                equal_variance_p_value: 1.0,
+            }],
+            omnibus: Vec::new(),
+            pairwise: Vec::new(),
+            multiplicity: MultiplicityAdjustmentV1::Holm,
+            replicate_ledgers: Vec::new(),
+            excluded_rows: Vec::new(),
+            sidecars: Vec::new(),
+        })
+    }
+
     fn candidate_receipt() -> MultimodCandidateQualificationReceiptV1 {
         MultimodCandidateQualificationReceiptV1 {
             schema_version: MULTIMOD_CANDIDATE_QUALIFICATION_RECEIPT_V1_SCHEMA_VERSION,
@@ -1349,6 +1417,22 @@ mod tests {
     #[test]
     fn valid_result_contract_passes() {
         valid_causal_result().ensure_valid().unwrap();
+    }
+
+    #[test]
+    fn mga_result_contract_uses_the_shared_numerical_tie_policy() {
+        let mut result = valid_mga_result_with_boundary_micom();
+        result.ensure_valid().unwrap();
+
+        let MultiModAnalysisResultV1::PlsMultigroupAnalysisV1(value) = &mut result else {
+            unreachable!();
+        };
+        value.micom_pairs[0].compositional_correlation =
+            value.micom_pairs[0].compositional_lower_quantile - 1.0e-10;
+        assert_eq!(
+            result.ensure_valid().unwrap_err().code,
+            "multimod_result.micom_pair"
+        );
     }
 
     #[test]

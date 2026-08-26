@@ -55,6 +55,17 @@ EXPECTED_MULTICLASS_POINT_FIXTURE_PLAN = {
 
 
 class HeterogeneityFixturePlanTests(unittest.TestCase):
+    def test_micom_reconstruction_uses_the_frozen_mga_numerical_tie_rule(self) -> None:
+        observed = 0.999_999_999_999_999_6
+        lower = 0.999_999_999_999_999_7
+        self.assertTrue(comparator.mga_greater_or_tied(observed, lower))
+        self.assertTrue(comparator.mga_less_or_tied(lower, observed))
+
+        materially_below = lower - 1.0e-10
+        materially_above = observed + 1.0e-10
+        self.assertFalse(comparator.mga_greater_or_tied(materially_below, lower))
+        self.assertFalse(comparator.mga_less_or_tied(materially_above, observed))
+
     def test_multiclass_point_plan_is_typed_per_k_and_point_only(self) -> None:
         self.assertEqual(
             comparator.MULTICLASS_POINT_FIXTURE_PLAN,

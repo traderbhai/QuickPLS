@@ -53,9 +53,9 @@ use qpls_core::{
     compile_pls_higher_order_lower_order_projection_multimod_v2,
     compile_pls_higher_order_repeated_stage_projection_multimod_v2,
     compile_pls_higher_order_score_stage_projection_multimod_v2, compile_pls_plan_v3,
-    compile_pls_plan_v3_multimod_multiple_hoc_v2, project_general_sem_pls_base_recipe_v1,
-    project_general_sem_pls_stage_one_recipe_v1, sha256_serialized,
-    validate_compiled_analysis_recipe_v4, validate_compiled_multimod_recipe_v1,
+    compile_pls_plan_v3_multimod_multiple_hoc_v2, mga_greater_or_tied_v1,
+    project_general_sem_pls_base_recipe_v1, project_general_sem_pls_stage_one_recipe_v1,
+    sha256_serialized, validate_compiled_analysis_recipe_v4, validate_compiled_multimod_recipe_v1,
 };
 use qpls_data::Dataset;
 use qpls_estimation::{
@@ -6706,6 +6706,25 @@ fn micom_public_rows_v1(
         .collect()
 }
 
+fn micom_public_row_satisfies_invariance_contract_v1(row: &MicomPairResultV1) -> bool {
+    row.configural_invariance_confirmed
+        && row.compositional_correlation.is_finite()
+        && row.compositional_lower_quantile.is_finite()
+        && row.compositional_p_value.is_finite()
+        && (0.0..=1.0).contains(&row.compositional_p_value)
+        && row.equal_mean_p_value.is_finite()
+        && (0.0..=1.0).contains(&row.equal_mean_p_value)
+        && row.equal_variance_p_value.is_finite()
+        && (0.0..=1.0).contains(&row.equal_variance_p_value)
+        && row.compositional_invariance
+            == mga_greater_or_tied_v1(
+                row.compositional_correlation,
+                row.compositional_lower_quantile,
+            )
+        && row.partial_invariance
+            == (row.configural_invariance_confirmed && row.compositional_invariance)
+}
+
 fn validate_cached_micom_result_v1<'a>(
     result: &MicomPairwiseResultV1,
     expected_method_version: &str,
@@ -6772,7 +6791,10 @@ fn validate_cached_micom_result_v1<'a>(
                     .into_iter()
                     .all(|value| value.is_finite() && (0.0..=1.0).contains(&value))
                     && construct.compositional_invariance
-                        == (construct.observed_compositional_correlation >= lower)
+                        == mga_greater_or_tied_v1(
+                            construct.observed_compositional_correlation,
+                            lower,
+                        )
                     && construct.equal_means == (mean_probability >= config.alpha)
                     && construct.equal_variances == (variance_probability >= config.alpha)
                     && construct.partial_measurement_invariance
@@ -10648,21 +10670,9 @@ where
             prepared.micom_pairs.clone()
         };
         if rows.is_empty()
-            || rows.iter().any(|row| {
-                !row.configural_invariance_confirmed
-                    || !row.compositional_correlation.is_finite()
-                    || !row.compositional_lower_quantile.is_finite()
-                    || !row.compositional_p_value.is_finite()
-                    || !(0.0..=1.0).contains(&row.compositional_p_value)
-                    || !row.equal_mean_p_value.is_finite()
-                    || !(0.0..=1.0).contains(&row.equal_mean_p_value)
-                    || !row.equal_variance_p_value.is_finite()
-                    || !(0.0..=1.0).contains(&row.equal_variance_p_value)
-                    || row.compositional_invariance
-                        != (row.compositional_correlation >= row.compositional_lower_quantile)
-                    || row.partial_invariance
-                        != (row.configural_invariance_confirmed && row.compositional_invariance)
-            })
+            || rows
+                .iter()
+                .any(|row| !micom_public_row_satisfies_invariance_contract_v1(row))
         {
             return Err(MultiModRunnerErrorV1::PreparedInput(
                 "MICOM procedure requires finite pairwise Steps 2-3 rows bound to confirmed Step 1"
@@ -18330,6 +18340,132 @@ mod tests {
 
     fn test_group(index: usize) -> GroupIndexV1 {
         GroupIndexV1::new(index).unwrap()
+    }
+
+    #[test]
+    fn micom_cache_and_public_output_use_the_kernel_numerical_tie_policy() {
+        let pair = OrderedGroupPairV1 {
+            group_a: test_group(0),
+            group_b: test_group(6),
+        };
+        let receipt = MicomConfiguralReceiptV1 {
+            identical_indicators_and_coding: true,
+            identical_data_treatment: true,
+            identical_algorithm_settings: true,
+            identical_model_specification: true,
+            deterministic_orientation_reviewed: true,
+            analyst_review_confirmed: true,
+        };
+        let config = MicomPermutationConfigV1 {
+            requested: 1_000,
+            seed: 42,
+            alpha: 0.05,
+        };
+        let partition_sha256 = (0..config.requested)
+            .map(|replicate| format!("partition:{replicate}"))
+            .collect::<Vec<_>>();
+        let ledger = partition_sha256
+            .iter()
+            .enumerate()
+            .map(
+                |(replicate, partition_sha256)| qpls_estimation::MicomPermutationLedgerEntryV1 {
+                    replicate,
+                    seed: config.seed,
+                    partition_sha256: partition_sha256.clone(),
+                    status: MicomPermutationStatusV1::Usable,
+                },
+            )
+            .collect::<Vec<_>>();
+        let result = MicomPairwiseResultV1 {
+            method_version: MICOM_PAIRWISE_METHOD_VERSION_V1.into(),
+            pair,
+            configural_receipt: receipt.clone(),
+            requested_permutations: config.requested,
+            usable_permutations: config.requested,
+            minimum_usable_permutations: config.minimum_usable(),
+            partition_plan_sha256: "plan".into(),
+            ledger_sha256: sha256_serialized(&ledger),
+            ledger,
+            constructs: vec![qpls_estimation::MicomConstructResultV1 {
+                construct_id: "construct:x".into(),
+                observed_compositional_correlation: 0.999_999_999_999_999_6,
+                compositional_lower_quantile: Some(0.999_999_999_999_999_7),
+                compositional_invariance_probability: Some(1.0),
+                compositional_invariance: true,
+                observed_mean_difference_a_minus_b: 0.0,
+                mean_difference_two_sided_probability: Some(1.0),
+                equal_means: true,
+                observed_log_variance_ratio_a_minus_b: 0.0,
+                variance_difference_two_sided_probability: Some(1.0),
+                equal_variances: true,
+                partial_measurement_invariance: true,
+                full_measurement_invariance: true,
+                permutation_compositional_correlations: Vec::new(),
+                permutation_mean_differences: Vec::new(),
+                permutation_log_variance_ratios: Vec::new(),
+            }],
+            complete: true,
+        };
+        let construct_ids = vec!["construct:x".to_owned()];
+        let expected_partitions = || {
+            partition_sha256
+                .iter()
+                .enumerate()
+                .map(|(replicate, sha256)| (replicate, sha256.as_str()))
+        };
+        validate_cached_micom_result_v1(
+            &result,
+            MICOM_PAIRWISE_METHOD_VERSION_V1,
+            pair,
+            &construct_ids,
+            &receipt,
+            &config,
+            "plan",
+            expected_partitions(),
+        )
+        .unwrap();
+
+        let mut materially_below = result.clone();
+        materially_below.constructs[0].observed_compositional_correlation = materially_below
+            .constructs[0]
+            .compositional_lower_quantile
+            .unwrap()
+            - 1.0e-10;
+        assert!(matches!(
+            validate_cached_micom_result_v1(
+                &materially_below,
+                MICOM_PAIRWISE_METHOD_VERSION_V1,
+                pair,
+                &construct_ids,
+                &receipt,
+                &config,
+                "plan",
+                expected_partitions(),
+            ),
+            Err(MultiModRunnerErrorV1::ExecutionCache(_))
+        ));
+
+        let mut public_row = MicomPairResultV1 {
+            left_group_id: "group_01".into(),
+            right_group_id: "group_07".into(),
+            construct_id: "construct:x".into(),
+            interpretation: MicomInvarianceInterpretationV1::CompositeInvariance,
+            configural_invariance_confirmed: true,
+            compositional_correlation: 0.999_999_999_999_999_6,
+            compositional_lower_quantile: 0.999_999_999_999_999_7,
+            compositional_p_value: 1.0,
+            compositional_invariance: true,
+            partial_invariance: true,
+            equal_mean_p_value: 1.0,
+            equal_variance_p_value: 1.0,
+        };
+        assert!(micom_public_row_satisfies_invariance_contract_v1(
+            &public_row
+        ));
+        public_row.compositional_correlation = public_row.compositional_lower_quantile - 1.0e-10;
+        assert!(!micom_public_row_satisfies_invariance_contract_v1(
+            &public_row
+        ));
     }
 
     fn test_micom_pair(
