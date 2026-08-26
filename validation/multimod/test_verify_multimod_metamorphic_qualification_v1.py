@@ -438,6 +438,74 @@ class PreparationContractTests(unittest.TestCase):
         report["qualification_claim"] = "raw_sut_facts_for_independent_comparison_only"
         self.assertFalse(verifier.production_contract_valid("heterogeneity", report))
 
+    def test_fimix_row_reverse_relaxes_only_completed_start_posteriors(self) -> None:
+        completed_start_path = (
+            "heterogeneity.row_reverse.completed_result.fixture.evidence.fimix[0]."
+            "result.multistart_evidence.completed_starts[3]."
+            "canonical_posteriors[42][0]"
+        )
+        failures: list[str] = []
+        verifier.close(0.25, 0.25000008, completed_start_path, failures)
+        self.assertEqual(failures, [])
+
+        failures = []
+        verifier.close(0.25, 0.250000101, completed_start_path, failures)
+        self.assertEqual(failures, [completed_start_path])
+
+        selected_path = (
+            "heterogeneity.row_reverse.completed_result.fixture.evidence.fimix[0]."
+            "result.posteriors[42][0]"
+        )
+        failures = []
+        verifier.close(0.25, 0.25000005, selected_path, failures)
+        self.assertEqual(failures, [selected_path])
+
+        other_axis_path = completed_start_path.replace("row_reverse", "seed_repeat")
+        failures = []
+        verifier.close(0.25, 0.25000005, other_axis_path, failures)
+        self.assertEqual(failures, [other_axis_path])
+
+        pos_path = completed_start_path.replace(".evidence.fimix[", ".evidence.pos[")
+        failures = []
+        verifier.close(0.25, 0.25000005, pos_path, failures)
+        self.assertEqual(failures, [pos_path])
+
+    def test_fimix_row_reverse_compares_typed_collapse_messages_semantically(self) -> None:
+        failure_path = (
+            "heterogeneity.row_reverse.completed_result.fixture.evidence.fimix[0]."
+            "result.starts[20].failure_message"
+        )
+        left = "class 2 has effective size 19.999999999995; minimum is 20"
+        right = "class 2 has effective size 20.000000000005; minimum is 20"
+        failures: list[str] = []
+        verifier.close(left, right, failure_path, failures)
+        self.assertEqual(failures, [])
+
+        material = "class 2 has effective size 20.0000001; minimum is 20"
+        failures = []
+        verifier.close(left, material, failure_path, failures)
+        self.assertEqual(failures, [failure_path])
+
+        wrong_class = "class 3 has effective size 20.000000000005; minimum is 20"
+        failures = []
+        verifier.close(left, wrong_class, failure_path, failures)
+        self.assertEqual(failures, [failure_path])
+
+        wrong_minimum = "class 2 has effective size 20.000000000005; minimum is 21"
+        failures = []
+        verifier.close(left, wrong_minimum, failure_path, failures)
+        self.assertEqual(failures, [failure_path])
+
+        other_axis_path = failure_path.replace("row_reverse", "seed_repeat")
+        failures = []
+        verifier.close(left, right, other_axis_path, failures)
+        self.assertEqual(failures, [other_axis_path])
+
+        unrelated_message = "class 2 collapsed near the minimum"
+        failures = []
+        verifier.close(left, unrelated_message, failure_path, failures)
+        self.assertEqual(failures, [failure_path])
+
 
 if __name__ == "__main__":
     unittest.main()

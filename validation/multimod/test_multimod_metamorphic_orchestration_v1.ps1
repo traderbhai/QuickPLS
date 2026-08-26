@@ -54,6 +54,33 @@ $rootCall = $wrapper.IndexOf('Invoke-CellPhase -Name "baseline-root"', [StringCo
 $dependentCall = $wrapper.IndexOf('Invoke-CellPhase -Name "dependent-axis"', [StringComparison]::Ordinal)
 Assert-Contract ($rootCall -ge 0 -and $dependentCall -gt $rootCall) `
     "All family baseline roots must complete before dependent axes start."
+$statusCalls = [regex]::Matches(
+    $wrapper,
+    'Invoke-CheckpointTool\s+-Command\s+"status"\s+-Arguments\s+\$statusArguments'
+)
+Assert-Contract ($statusCalls.Count -eq 2) `
+    "Metamorphic orchestration must run the exact checkpoint-status command before and after cell execution."
+$completedStatusCall = $wrapper.IndexOf(
+    '$completedStatus = Invoke-CheckpointTool -Command "status" -Arguments $statusArguments',
+    [StringComparison]::Ordinal
+)
+$scientificVerifierCall = $wrapper.IndexOf(
+    '$verification = Invoke-BoundedStage -Stage "scoped-scientific-verifier"',
+    [StringComparison]::Ordinal
+)
+Assert-Contract (
+    $completedStatusCall -gt $dependentCall -and
+    $scientificVerifierCall -gt $completedStatusCall
+) "The completed 25-cell status must be refreshed before scientific verification."
+foreach ($completedStatusGuard in @(
+    '-not [bool]$completedCheckpointStatus.complete',
+    '@($completedCheckpointStatus.invalid_cells).Count -ne 0',
+    '$validCellIds.Count -ne 25',
+    '-not $validCellIdentityMatches'
+)) {
+    Assert-Contract ($wrapper.Contains($completedStatusGuard)) `
+        "The completed checkpoint validation is missing guard: $completedStatusGuard"
+}
 
 foreach ($producerWrapperName in @(
     "run_multimod_mga_qualification_v1.ps1",

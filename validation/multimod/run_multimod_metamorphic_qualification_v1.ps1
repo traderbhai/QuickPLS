@@ -718,6 +718,35 @@ try {
         throw "Metamorphic execution ended without all 25 exact cell receipts."
     }
 
+    # Refresh the persisted checkpoint after the final cell is sealed. The
+    # pre-execution status above is intentionally retained for exact resume,
+    # while this second pass independently revalidates every receipt before
+    # any scientific comparison consumes the cell outputs.
+    $completedStatus = Invoke-CheckpointTool -Command "status" -Arguments $statusArguments
+    if ($completedStatus.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $statusPath -PathType Leaf)) {
+        throw "Completed metamorphic checkpoints could not be revalidated."
+    }
+    $completedCheckpointStatus = Get-Content -LiteralPath $statusPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
+    $expectedCellIds = @($specs | ForEach-Object { [string]$_.cell_id })
+    $validCellIds = @($completedCheckpointStatus.valid_cell_ids | ForEach-Object { [string]$_ })
+    $validCellIdentityMatches = $validCellIds.Count -eq $expectedCellIds.Count
+    if ($validCellIdentityMatches) {
+        for ($index = 0; $index -lt $expectedCellIds.Count; $index++) {
+            if ($validCellIds[$index] -cne $expectedCellIds[$index]) {
+                $validCellIdentityMatches = $false
+                break
+            }
+        }
+    }
+    if ([string]$completedCheckpointStatus.status_id -ne "qpls.multimod.metamorphic.cell-status.v1" -or
+        [string]$completedCheckpointStatus.source_commit -ne $sourceCommit -or
+        -not [bool]$completedCheckpointStatus.complete -or
+        @($completedCheckpointStatus.invalid_cells).Count -ne 0 -or
+        $validCellIds.Count -ne 25 -or
+        -not $validCellIdentityMatches) {
+        throw "Completed metamorphic checkpoint status is not the exact valid 25-cell ledger."
+    }
+
     $temporaryReport = Join-Path $resolvedWorkRoot (".scientific-report.{0}.tmp.json" -f [Guid]::NewGuid().ToString("N"))
     try {
         $verification = Invoke-BoundedStage -Stage "scoped-scientific-verifier" -FileName "python" -Arguments @(

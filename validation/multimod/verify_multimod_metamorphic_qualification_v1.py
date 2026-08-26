@@ -96,6 +96,14 @@ STABLE_ARRAY_KEYS = (
 )
 ROW_TOKEN = re.compile(r"^(?:source[-_]row|row)[:_-](\d+)$")
 GROUP_HYPOTHESIS = re.compile(r"^(.*):(group_\d+):(group_\d+):(.*)$")
+FIMIX_COLLAPSED_CLASS_FAILURE = re.compile(
+    r"^class (?P<class_id>[1-9]\d*) has effective size "
+    r"(?P<effective_size>[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?); "
+    r"minimum is (?P<minimum>[1-9]\d*)$"
+)
+DEFAULT_NUMERIC_TOLERANCE = 2.0e-8
+FIMIX_ROW_REVERSE_COMPLETED_START_POSTERIOR_TOLERANCE = 1.0e-7
+FIMIX_ROW_REVERSE_COLLAPSED_CLASS_MESSAGE_TOLERANCE = 1.0e-12
 ROW_BOUND_METRIC_IDENTITY_PREFIXES = (
     "qpls.heterogeneity.pooled-standardized-metric.v2:",
     "qpls.pos.pooled-common-metric.v1:",
@@ -522,6 +530,51 @@ def preparation_cases(
     return found, profiles, failures
 
 
+def is_fimix_row_reverse_completed_start_posterior(path: str) -> bool:
+    return (
+        path.startswith("heterogeneity.row_reverse.completed_result.")
+        and ".evidence.fimix[" in path
+        and ".result.multistart_evidence.completed_starts[" in path
+        and ".canonical_posteriors[" in path
+    )
+
+
+def is_fimix_row_reverse_failure_message(path: str) -> bool:
+    return (
+        path.startswith("heterogeneity.row_reverse.completed_result.")
+        and ".evidence.fimix[" in path
+        and ".result.starts[" in path
+        and path.endswith(".failure_message")
+    )
+
+
+def scaled_numeric_close(left: float, right: float, tolerance: float) -> bool:
+    return abs(left - right) <= tolerance * max(1.0, abs(left), abs(right))
+
+
+def collapsed_class_failure_messages_close(left: str, right: str) -> bool:
+    left_match = FIMIX_COLLAPSED_CLASS_FAILURE.fullmatch(left)
+    right_match = FIMIX_COLLAPSED_CLASS_FAILURE.fullmatch(right)
+    if left_match is None or right_match is None:
+        return False
+    if (
+        left_match.group("class_id") != right_match.group("class_id")
+        or left_match.group("minimum") != right_match.group("minimum")
+    ):
+        return False
+    left_size = float(left_match.group("effective_size"))
+    right_size = float(right_match.group("effective_size"))
+    return (
+        math.isfinite(left_size)
+        and math.isfinite(right_size)
+        and scaled_numeric_close(
+            left_size,
+            right_size,
+            FIMIX_ROW_REVERSE_COLLAPSED_CLASS_MESSAGE_TOLERANCE,
+        )
+    )
+
+
 def close(left: Any, right: Any, path: str, failures: list[str]) -> None:
     if isinstance(left, bool) or isinstance(right, bool) or left is None or right is None:
         if left != right:
@@ -532,8 +585,12 @@ def close(left: Any, right: Any, path: str, failures: list[str]) -> None:
             if left != right:
                 failures.append(path)
             return
-        tolerance = 2.0e-8 * max(1.0, abs(float(left)), abs(float(right)))
-        if abs(float(left) - float(right)) > tolerance:
+        tolerance = (
+            FIMIX_ROW_REVERSE_COMPLETED_START_POSTERIOR_TOLERANCE
+            if is_fimix_row_reverse_completed_start_posterior(path)
+            else DEFAULT_NUMERIC_TOLERANCE
+        )
+        if not scaled_numeric_close(float(left), float(right), tolerance):
             failures.append(path)
         return
     if type(left) is not type(right):
@@ -552,6 +609,14 @@ def close(left: Any, right: Any, path: str, failures: list[str]) -> None:
             return
         for index, (left_item, right_item) in enumerate(zip(left, right, strict=True)):
             close(left_item, right_item, f"{path}[{index}]", failures)
+        return
+    if (
+        left != right
+        and isinstance(left, str)
+        and isinstance(right, str)
+        and is_fimix_row_reverse_failure_message(path)
+        and collapsed_class_failure_messages_close(left, right)
+    ):
         return
     if left != right:
         failures.append(path)

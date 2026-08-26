@@ -1183,6 +1183,26 @@ fn bind_mga_stable_row_tokens_for_columns_v1(
     Ok(bound)
 }
 
+fn bind_pos_common_metric_stable_row_tokens_v1(
+    dataset: &Dataset,
+    scientific_columns: &[String],
+    assignments: &[usize],
+) -> Result<Vec<SelectedGroupRowV1>, MultiModRunnerErrorV1> {
+    let design = MultigroupDesignV1 {
+        groups: Vec::new(),
+        rows: assignments
+            .iter()
+            .enumerate()
+            .map(|(row, segment)| SelectedGroupRowV1 {
+                source_row: row as u64,
+                stable_row_token: row as u64,
+                group: GroupIndexV1::new(*segment).expect("validated segment index"),
+            })
+            .collect(),
+    };
+    Ok(bind_mga_stable_row_tokens_for_columns_v1(dataset, scientific_columns, &design)?.rows)
+}
+
 pub fn prepare_compiled_raw_mga_execution_plan_v1(
     dataset: &Dataset,
     recipe: &AnalysisRecipeV4,
@@ -12436,15 +12456,11 @@ where
             "POS common-metric MICOM requires at least 20 rows in every locked segment".into(),
         ));
     }
-    let selected_rows = assignments
-        .iter()
-        .enumerate()
-        .map(|(row, segment)| SelectedGroupRowV1 {
-            source_row: row as u64,
-            stable_row_token: row as u64,
-            group: GroupIndexV1::new(*segment).expect("validated segment index"),
-        })
-        .collect::<Vec<_>>();
+    let selected_rows = bind_pos_common_metric_stable_row_tokens_v1(
+        refitter.dataset,
+        &refitter.authority.source_columns,
+        assignments,
+    )?;
     let construct_ids = refitter
         .authority
         .blocks
@@ -17435,6 +17451,117 @@ mod tests {
         );
         for (x, (_, source_row)) in &baseline_tokens {
             assert_eq!(*source_row + reversed_tokens[x].1, 3);
+        }
+    }
+
+    #[test]
+    fn pos_common_metric_row_binding_preserves_partition_schedule_on_row_reversal() {
+        fn dataset(order: impl Iterator<Item = usize>, name: &str) -> Dataset {
+            let mut source = String::from("x,y\n");
+            for x in order {
+                source.push_str(&format!("{x},{}\n", x + 100));
+            }
+            qpls_data::import_delimited_bytes(
+                source.as_bytes(),
+                name,
+                b',',
+                &qpls_data::ImportOptions::default(),
+            )
+            .unwrap()
+        }
+        fn assignments(dataset: &Dataset) -> Vec<usize> {
+            qpls_data::preview_page(dataset, 0, dataset.batch.num_rows())
+                .iter()
+                .map(|row| {
+                    usize::from(row["x"].as_deref().unwrap().parse::<usize>().unwrap() >= 10)
+                })
+                .collect()
+        }
+        fn scientific_partition(
+            dataset: &Dataset,
+            rows: &[SelectedGroupRowV1],
+        ) -> BTreeMap<String, usize> {
+            let preview = qpls_data::preview_page(dataset, 0, dataset.batch.num_rows());
+            rows.iter()
+                .map(|row| {
+                    (
+                        preview[row.source_row as usize]["x"].clone().unwrap(),
+                        row.group.get(),
+                    )
+                })
+                .collect()
+        }
+
+        let baseline = dataset(0..20, "pos-micom-row-token-baseline.csv");
+        let reversed = dataset((0..20).rev(), "pos-micom-row-token-reversed.csv");
+        let columns = vec!["x".into(), "y".into()];
+        let baseline_rows = bind_pos_common_metric_stable_row_tokens_v1(
+            &baseline,
+            &columns,
+            &assignments(&baseline),
+        )
+        .unwrap();
+        let reversed_rows = bind_pos_common_metric_stable_row_tokens_v1(
+            &reversed,
+            &columns,
+            &assignments(&reversed),
+        )
+        .unwrap();
+
+        assert!(
+            baseline_rows
+                .iter()
+                .enumerate()
+                .all(|(physical, row)| row.source_row == physical as u64)
+        );
+        assert!(
+            reversed_rows
+                .iter()
+                .enumerate()
+                .all(|(physical, row)| row.source_row == physical as u64)
+        );
+        let token_by_x = |dataset: &Dataset, rows: &[SelectedGroupRowV1]| {
+            let preview = qpls_data::preview_page(dataset, 0, dataset.batch.num_rows());
+            rows.iter()
+                .map(|row| {
+                    (
+                        preview[row.source_row as usize]["x"].clone().unwrap(),
+                        row.stable_row_token,
+                    )
+                })
+                .collect::<BTreeMap<_, _>>()
+        };
+        assert_eq!(
+            token_by_x(&baseline, &baseline_rows),
+            token_by_x(&reversed, &reversed_rows)
+        );
+
+        let pair =
+            OrderedGroupPairV1::new(GroupIndexV1::new(0).unwrap(), GroupIndexV1::new(1).unwrap())
+                .unwrap();
+        let baseline_plan =
+            build_pairwise_partition_plan_from_rows_v1(&baseline_rows, pair, 5_000, 42).unwrap();
+        let reversed_plan =
+            build_pairwise_partition_plan_from_rows_v1(&reversed_rows, pair, 5_000, 42).unwrap();
+        for replicate in [0, 1, 4_999] {
+            let baseline_partition = qpls_estimation::materialize_pairwise_partition_v1(
+                &baseline_rows,
+                pair,
+                &baseline_plan,
+                replicate,
+            )
+            .unwrap();
+            let reversed_partition = qpls_estimation::materialize_pairwise_partition_v1(
+                &reversed_rows,
+                pair,
+                &reversed_plan,
+                replicate,
+            )
+            .unwrap();
+            assert_eq!(
+                scientific_partition(&baseline, &baseline_partition.assignments),
+                scientific_partition(&reversed, &reversed_partition.assignments)
+            );
         }
     }
 
