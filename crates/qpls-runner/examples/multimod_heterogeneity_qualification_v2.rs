@@ -712,8 +712,22 @@ fn strong_multiclass_p0_equation(class: usize, classes: usize) -> ([f64; 3], f64
         [0.0, -2.2, 0.0],
         [0.0, 0.0, 2.2],
     ];
+    // Avoid the exact +X/-X/+Z/-Z symmetry at K=4. That symmetry creates
+    // equivalent local POS basins even in a strong-separation fixture and can
+    // leave only one of the frozen ten starts at the canonical optimum.
+    const K4_ASYMMETRIC_COEFFICIENTS: [[f64; 3]; 4] = [
+        [2.4, 0.15, -0.10],
+        [-2.1, 0.55, 0.20],
+        [0.30, 2.35, -0.45],
+        [-0.50, -1.95, 0.85],
+    ];
     let centered_class = class as f64 - (classes - 1) as f64 / 2.0;
-    (COEFFICIENTS[class], 0.35 * centered_class)
+    let coefficients = if classes == 4 {
+        K4_ASYMMETRIC_COEFFICIENTS[class]
+    } else {
+        COEFFICIENTS[class]
+    };
+    (coefficients, 0.35 * centered_class)
 }
 
 fn indicator_metric_multiplier(
@@ -4437,6 +4451,19 @@ mod tests {
                 vec![expected_per_class; usize::from(selected_k)]
             );
         }
+    }
+
+    #[test]
+    fn k4_strong_fixture_breaks_sign_symmetric_local_basins() {
+        let equations = (0..4)
+            .map(|class| strong_multiclass_p0_equation(class, 4).0)
+            .collect::<Vec<_>>();
+        assert_eq!(equations[0], [2.4, 0.15, -0.10]);
+        assert_eq!(equations[1], [-2.1, 0.55, 0.20]);
+        assert_eq!(equations[2], [0.30, 2.35, -0.45]);
+        assert_eq!(equations[3], [-0.50, -1.95, 0.85]);
+        assert_ne!(equations[0], equations[1].map(|value| -value));
+        assert_ne!(equations[2], equations[3].map(|value| -value));
     }
 
     #[test]
