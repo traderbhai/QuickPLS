@@ -64,15 +64,18 @@ ROW_ORDER_VECTOR_KEYS = {
     "canonical_assignments",
     "canonical_hard_assignments",
     "canonical_posteriors",
+    "case_weights",
     "complete_source_row_tokens",
     "design",
     "fitted_scores",
+    "frequencies",
     "hard_assignments",
     "observed_scores",
     "outcome",
     "pos_start_features",
     "posteriors",
     "reference_assignments",
+    "source_rows",
     "source_row_indices",
     "source_row_tokens",
     "true_classes",
@@ -87,6 +90,7 @@ STABLE_ARRAY_KEYS = (
     "segment_id",
     "relation_id",
     "replicate_index",
+    "start_index",
     "index",
     "id",
 )
@@ -123,6 +127,12 @@ def load(path: Path) -> dict[str, Any]:
     return value
 
 
+def is_common_metric_preparation(value: dict[str, Any]) -> bool:
+    """Distinguish the declared preparation payload from execution-plan metadata."""
+
+    return value.get("execution_scope") == COMMON_METRIC_PREPARATION_SCOPE
+
+
 def expected_profiles(root: Path, capability_index: Path) -> dict[str, set[str]]:
     index = load(capability_index)
     result: dict[str, set[str]] = {}
@@ -154,7 +164,11 @@ def normalize(
     if isinstance(value, dict):
         normalized: dict[str, Any] = {}
         for key, item in value.items():
-            if key in IDENTITY_KEYS or key.endswith("_sha256"):
+            if (
+                key in IDENTITY_KEYS
+                or key.endswith("_sha256")
+                or key.endswith("_sha256s")
+            ):
                 continue
             if row_reverse and key in ROW_SCALAR_KEYS and isinstance(item, int):
                 normalized[key] = mapped_row(item, row_count)
@@ -166,6 +180,16 @@ def normalize(
                 if key in ROW_ORDER_VECTOR_KEYS:
                     mapped.reverse()
                 normalized[key] = mapped
+                continue
+            if (
+                row_reverse
+                and set(value) == {"variable_id", "values"}
+                and isinstance(value.get("variable_id"), str)
+                and key == "values"
+                and isinstance(item, list)
+                and len(item) == row_count
+            ):
+                normalized[key] = list(reversed(item))
                 continue
             normalized[key] = normalize(
                 item,
@@ -210,7 +234,7 @@ def result_cases(report: dict[str, Any]) -> dict[str, tuple[int, dict[str, Any]]
             # A preparation is not a completed result, even if a malformed
             # producer were to place an `analysis` or `result` member inside
             # it.  Its explicit schema is handled by preparation_cases().
-            if "execution_scope" in value:
+            if is_common_metric_preparation(value):
                 return
             row_count = value.get("dataset_rows")
             if not isinstance(row_count, int):
@@ -475,7 +499,7 @@ def preparation_cases(
 
     def visit(value: Any, path: str) -> None:
         if isinstance(value, dict):
-            if "execution_scope" in value:
+            if is_common_metric_preparation(value):
                 try:
                     profile_id, case_id, row_count, scientific = (
                         extract_common_metric_preparation(value, path)
@@ -569,7 +593,7 @@ def executed_profile_inventory(family: str, report: dict[str, Any]) -> set[str]:
 
     def visit(value: Any) -> None:
         if isinstance(value, dict):
-            if "execution_scope" in value:
+            if is_common_metric_preparation(value):
                 if family == "heterogeneity":
                     try:
                         profile_id, _, _, _ = extract_common_metric_preparation(
@@ -731,9 +755,44 @@ def compare_axis(
     }
 
 
-def canonical_group_contrast_orientation(value: Any) -> Any:
+SIGNED_GROUP_SCALAR_KEYS = {
+    "difference",
+    "difference_left_minus_right",
+    "difference_a_minus_b",
+    "point_difference_a_minus_b",
+    "observed_difference_a_minus_b",
+    "observed_mean_difference_a_minus_b",
+    "observed_log_variance_ratio_a_minus_b",
+}
+SIGNED_GROUP_VECTOR_KEYS = {
+    "null_differences",
+    "permutation_mean_differences",
+    "permutation_log_variance_ratios",
+}
+
+
+def direct_group_orientation_is_reversed(value: Any) -> bool:
+    if not isinstance(value, dict):
+        return False
+    for left_key, right_key in (
+        ("left_group_id", "right_group_id"),
+        ("group_a", "group_b"),
+    ):
+        left = value.get(left_key)
+        right = value.get(right_key)
+        if isinstance(left, (str, int)) and isinstance(right, type(left)):
+            return left > right
+    return False
+
+
+def canonical_group_contrast_orientation(
+    value: Any, reverse_orientation: bool = False
+) -> Any:
     if isinstance(value, list):
-        return [canonical_group_contrast_orientation(item) for item in value]
+        return [
+            canonical_group_contrast_orientation(item, reverse_orientation)
+            for item in value
+        ]
     if isinstance(value, str):
         match = GROUP_HYPOTHESIS.match(value)
         if match:
@@ -742,19 +801,42 @@ def canonical_group_contrast_orientation(value: Any) -> Any:
         return value
     if not isinstance(value, dict):
         return value
+    pair = value.get("pair")
+    reverse_orientation = (
+        reverse_orientation
+        or direct_group_orientation_is_reversed(value)
+        or direct_group_orientation_is_reversed(pair)
+    )
     mapped = {
-        key: canonical_group_contrast_orientation(item) for key, item in value.items()
+        key: canonical_group_contrast_orientation(item, reverse_orientation)
+        for key, item in value.items()
     }
-    left = mapped.get("left_group_id")
-    right = mapped.get("right_group_id")
-    if isinstance(left, str) and isinstance(right, str) and left > right:
-        mapped["left_group_id"], mapped["right_group_id"] = right, left
-        for key in ("difference", "difference_left_minus_right"):
+    if reverse_orientation:
+        for left_key, right_key in (
+            ("left_group_id", "right_group_id"),
+            ("group_a", "group_b"),
+            ("estimate_a", "estimate_b"),
+            ("p_value_greater", "p_value_less"),
+        ):
+            if left_key in mapped and right_key in mapped:
+                mapped[left_key], mapped[right_key] = mapped[right_key], mapped[left_key]
+        for key in SIGNED_GROUP_SCALAR_KEYS:
             if isinstance(mapped.get(key), (int, float)):
                 mapped[key] = -mapped[key]
+        for key in SIGNED_GROUP_VECTOR_KEYS:
+            if isinstance(mapped.get(key), list):
+                mapped[key] = [
+                    -item if isinstance(item, (int, float)) else item
+                    for item in mapped[key]
+                ]
         probability = mapped.get("directional_probability")
         if isinstance(probability, (int, float)):
             mapped["directional_probability"] = 1.0 - float(probability)
+        alternative = mapped.get("selected_alternative")
+        if alternative == "greater":
+            mapped["selected_alternative"] = "less"
+        elif alternative == "less":
+            mapped["selected_alternative"] = "greater"
         interval = mapped.get("interval")
         if isinstance(interval, dict):
             lower = interval.get("lower")

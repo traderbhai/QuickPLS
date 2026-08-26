@@ -34,6 +34,61 @@ export type NativeMultiModJobStateV1 =
   | "failed"
   | "cancelled";
 
+export type NativeMultiModAccessV1 =
+  | {
+      readonly surface: "standard_multimod_v1";
+      readonly experimentalLabsEnabled: false;
+    }
+  | {
+      readonly surface: "internal_labs_multimod_v1";
+      readonly experimentalLabsEnabled: true;
+    };
+
+export const NATIVE_MULTIMOD_STANDARD_ACCESS_V1 = Object.freeze({
+  surface: "standard_multimod_v1",
+  experimentalLabsEnabled: false,
+} as const satisfies NativeMultiModAccessV1);
+
+export const NATIVE_MULTIMOD_LABS_ACCESS_V1 = Object.freeze({
+  surface: "internal_labs_multimod_v1",
+  experimentalLabsEnabled: true,
+} as const satisfies NativeMultiModAccessV1);
+
+export function parseNativeMultiModAccessV1(
+  value: unknown,
+): NativeMultiModAccessV1 {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(
+      "MultiMod access must be exact Standard(false) or Experimental Labs(true).",
+    );
+  }
+  const item = value as Record<string, unknown>;
+  if (
+    Object.keys(item).length !== 2 ||
+    !Object.prototype.hasOwnProperty.call(item, "surface") ||
+    !Object.prototype.hasOwnProperty.call(item, "experimentalLabsEnabled")
+  ) {
+    throw new Error(
+      "MultiMod access must be exact Standard(false) or Experimental Labs(true).",
+    );
+  }
+  if (
+    item.surface === "standard_multimod_v1" &&
+    item.experimentalLabsEnabled === false
+  ) {
+    return NATIVE_MULTIMOD_STANDARD_ACCESS_V1;
+  }
+  if (
+    item.surface === "internal_labs_multimod_v1" &&
+    item.experimentalLabsEnabled === true
+  ) {
+    return NATIVE_MULTIMOD_LABS_ACCESS_V1;
+  }
+  throw new Error(
+    "MultiMod access must be exact Standard(false) or Experimental Labs(true).",
+  );
+}
+
 export interface NativeMultiModArchiveAuthorityV1 {
   readonly archivePath: string;
   readonly archiveSha256: string;
@@ -84,9 +139,7 @@ export interface NativeMultiModExternalCacheReceiptV1 {
   readonly createdAt: string;
 }
 
-export interface NativeMultiModStagedRequestV1 {
-  readonly surface: "internal_labs_multimod_v1";
-  readonly experimentalLabsEnabled: true;
+export type NativeMultiModStagedRequestV1 = NativeMultiModAccessV1 & {
   readonly archivePath: string;
   readonly expectedArchiveSha256: string;
   readonly projectId: string;
@@ -103,7 +156,7 @@ export interface NativeMultiModStagedRequestV1 {
     readonly config: MultiModRecipeConfigV1["config"];
   };
   readonly resumeCache?: NativeMultiModExternalCacheReceiptV1;
-}
+};
 
 export interface NativeMultiModPreflightV1 {
   readonly schemaVersion: 1;
@@ -564,6 +617,7 @@ export function nativeMultiModTargetV1(
 export function stageNativeMultiModRequestV1(
   authority: NativeMultiModArchiveAuthorityV1,
   request: MultiModRecipeConfigV1,
+  access: NativeMultiModAccessV1,
   identity: { readonly recipeId?: string; readonly createdAt?: string } = {},
 ): NativeMultiModStagedRequestV1 {
   const recipeId = identity.recipeId ?? globalThis.crypto?.randomUUID?.();
@@ -591,8 +645,7 @@ export function stageNativeMultiModRequestV1(
     ),
   };
   return {
-    surface: "internal_labs_multimod_v1",
-    experimentalLabsEnabled: true,
+    ...parseNativeMultiModAccessV1(access),
     archivePath: validatedAuthority.archivePath,
     expectedArchiveSha256: validatedAuthority.archiveSha256,
     projectId: validatedAuthority.projectId,
@@ -970,10 +1023,10 @@ export async function prepareNativeConditionalRawProbeMetricsV2(
 
 export async function profileNativeMultiModGroupingV1(
   authority: NativeMultiModArchiveAuthorityV1,
+  access: NativeMultiModAccessV1,
 ): Promise<NativeMultiModGroupingProfileV1> {
   const request = {
-    surface: "internal_labs_multimod_v1" as const,
-    experimentalLabsEnabled: true as const,
+    ...parseNativeMultiModAccessV1(access),
     archivePath: authority.archivePath,
     expectedArchiveSha256: authority.archiveSha256,
     projectId: authority.projectId,

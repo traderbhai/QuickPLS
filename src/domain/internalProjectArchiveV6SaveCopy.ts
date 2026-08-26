@@ -6,20 +6,26 @@ import {
   parseInternalProjectArchiveV6Wire,
   type InternalProjectArchiveV6Wire,
 } from "./internalProjectArchiveV6Wire";
+import {
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1,
+  internalProjectArchiveV6AccessPairV1,
+  type InternalProjectArchiveV6AccessV1,
+} from "./internalProjectArchiveV6Access";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
 type WireRecord = Record<string, unknown>;
 
-export const INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE = "internal_labs" as const;
+/** Historical surface retained for callers that explicitly request Labs. */
+export const INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE =
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1.surface;
 
-export interface InternalProjectArchiveV6SaveCopyRequestV1 {
-  surface: typeof INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE;
-  experimentalLabsEnabled: true;
+export type InternalProjectArchiveV6SaveCopyRequestV1 =
+  InternalProjectArchiveV6AccessV1 & {
   sourceArchivePath: string;
   expectedSourceArchiveSha256: string;
   destinationArchivePath: string;
   project: InternalProjectArchiveV6Wire;
-}
+};
 
 export interface InternalProjectArchiveV6SaveCopyReceiptV1 {
   schemaVersion: 1;
@@ -122,9 +128,16 @@ export function parseInternalProjectArchiveV6SaveCopyRequestV1(
     "destinationArchivePath",
     "project",
   ], path);
-  if (request.surface !== INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE
-    || request.experimentalLabsEnabled !== true) {
-    fail("schema6_save_copy.internal_labs_required", path, "Save copy requires the internal Experimental Labs boundary.");
+  const access = internalProjectArchiveV6AccessPairV1(
+    request.surface,
+    request.experimentalLabsEnabled,
+  );
+  if (!access) {
+    fail(
+      "schema6_save_copy.surface_pair_invalid",
+      path,
+      "Save copy requires exact internal_labs/true or standard_multimod_v1/false access.",
+    );
   }
   const sourceArchivePath = textAt(request.sourceArchivePath, `${path}.sourceArchivePath`);
   const destinationArchivePath = textAt(request.destinationArchivePath, `${path}.destinationArchivePath`);
@@ -136,8 +149,7 @@ export function parseInternalProjectArchiveV6SaveCopyRequestV1(
     fail("schema6_save_copy.new_destination_required", `${path}.destinationArchivePath`, "Save copy requires a different destination path.");
   }
   return {
-    surface: INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE,
-    experimentalLabsEnabled: true,
+    ...access,
     sourceArchivePath,
     expectedSourceArchiveSha256: sha256At(
       request.expectedSourceArchiveSha256,
@@ -193,6 +205,7 @@ export function parseInternalProjectArchiveV6SaveCopyOutcomeV1(
   input: unknown,
   request: InternalProjectArchiveV6SaveCopyRequestV1,
 ): InternalProjectArchiveV6SaveCopyOutcomeV1 {
+  request = parseInternalProjectArchiveV6SaveCopyRequestV1(request);
   const outcome = recordAt(input, "outcome");
   if (outcome.status === "blocked") {
     exactRecordAt(outcome, ["status", "diagnostic"], "outcome");

@@ -208,6 +208,7 @@ const edges: Edge[] = [
 ];
 
 const services = {
+  multiModCandidateAuthority: vi.fn(),
   scientificDigest: vi.fn(),
   bootstrapArchive: vi.fn(),
   inspectArchive: vi.fn(),

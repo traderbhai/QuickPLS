@@ -190,6 +190,19 @@ describe("native desktop multi-model shell contracts", () => {
     expect(generalSem.intent.kind).not.toBe("add_interaction");
   });
 
+  it("exposes MultiMod from the activated General SEM model toolbar in workspace mode", () => {
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+
+    expect(source).toContain('onOpenMultiMod={strictGeneralSemAuthority');
+    expect(source).toContain('openDialog("multimod-workspace")');
+    expect(source).toContain('data-testid="native-multimod-workspace-open"');
+    expect(source).toContain("Moderation &amp; heterogeneity…");
+    expect(source).toContain('dialog === "multimod-workspace" ? <NativeRecipeV4GeneralSemWorkspace');
+    expect(source).toContain('key={`${activeModelId ?? "model"}:multimod-workspace`}');
+    expect(source).toContain('presentation="workspace"');
+    expect(source).toContain('if (dialog === "multimod-workspace") return "Moderation & Heterogeneity";');
+  });
+
   it("routes post-activation General SEM moderation through the versioned model-and-Recipe revision transaction", () => {
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
 
@@ -320,6 +333,10 @@ describe("native desktop multi-model shell contracts", () => {
 
   it("keeps About synchronized with the established Calculate surface and scoped post-hoc add-on", () => {
     const settings = useWorkspace.getState().analysisSettings;
+    const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
+
+    expect(source).toContain("<dt>Version</dt><dd>2.56.0</dd>");
+    expect(source).not.toContain("<dt>Version</dt><dd>2.55.5</dd>");
 
     const standardKinds = ["pls_algorithm", "plsc", "wpls", "gsca", "cca", "cta_pls", "ipma", "cbsem", "pls_bootstrap", "plsc_bootstrap", "pls_permutation", "pls_posthoc_technical_minimum_sample_size", "pls_sample_size_power", "mga", "predict", "nca", "pca", "regression"];
     expect(aboutVisibleAnalysisLabelsV2(settings, false)).toEqual(standardKinds.map((kind) => (

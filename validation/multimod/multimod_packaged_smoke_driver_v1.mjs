@@ -8,6 +8,7 @@ import process from "node:process";
 import { chromium } from "playwright";
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
+const STANDARD_MULTIMOD_SURFACE = "standard_multimod_v1";
 const FAMILY_EXPECTATIONS = Object.freeze({
   "qpls.multimod.mga_multigroup_v1": Object.freeze({ target: "mga_multigroup_v1", resultKind: "pls_multigroup_analysis_v1", maximumSeconds: 7200 }),
   "qpls.multimod.pls_heterogeneity_v2": Object.freeze({ target: "pls_heterogeneity_v2", resultKind: "pls_heterogeneity_analysis_v2", maximumSeconds: 7200 }),
@@ -115,8 +116,8 @@ function stagedRequest(fixture) {
   const expected = FAMILY_EXPECTATIONS[fixture.familyId];
   assert(expected, `Unknown fixture family ${fixture.familyId}.`);
   return {
-    surface: "internal_labs_multimod_v1",
-    experimentalLabsEnabled: true,
+    surface: STANDARD_MULTIMOD_SURFACE,
+    experimentalLabsEnabled: false,
     archivePath: fixture.authority.archivePath,
     expectedArchiveSha256: fixture.authority.archiveSha256,
     projectId: fixture.authority.projectId,
@@ -250,7 +251,7 @@ async function verifyTamperedCandidateReceiptFails(page, document, directory, st
 
 async function inspectStrict(page, archivePath, expectedSha) {
   const outcome = await nativeInvoke(page, "inspect_internal_project_archive_v6_zip", {
-    request: { surface: "internal_labs", experimentalLabsEnabled: true, archivePath },
+    request: { surface: STANDARD_MULTIMOD_SURFACE, experimentalLabsEnabled: false, archivePath },
   });
   assert(outcome?.status === "ok", `Strict Archive V6 reopen failed: ${JSON.stringify(outcome?.diagnostic ?? {})}`);
   assert(outcome.value?.archiveSha256 === expectedSha, "Strict reopen returned a different archive digest.");
@@ -261,8 +262,8 @@ async function inspectStrict(page, archivePath, expectedSha) {
 async function saveAndReopen(page, result, snapshot, destination) {
   const saved = await nativeInvoke(page, "save_internal_project_archive_v6_copy", {
     request: {
-      surface: "internal_labs",
-      experimentalLabsEnabled: true,
+      surface: STANDARD_MULTIMOD_SURFACE,
+      experimentalLabsEnabled: false,
       sourceArchivePath: result.archivePath,
       expectedSourceArchiveSha256: result.archiveSha256,
       destinationArchivePath: destination,
@@ -284,8 +285,8 @@ async function exportRawSidecar(page, result, directory, stem) {
   const receipt = await nativeInvoke(page, "publish_internal_labs_multimod_raw_sidecar_v1", {
     request: {
       schemaVersion: 1,
-      surface: "internal_labs_multimod_v1",
-      experimentalLabsEnabled: true,
+      surface: STANDARD_MULTIMOD_SURFACE,
+      experimentalLabsEnabled: false,
       archivePath: result.archivePath,
       expectedArchiveSha256: result.archiveSha256,
       projectId: result.projectId,
@@ -304,8 +305,8 @@ async function exportRawSidecar(page, result, directory, stem) {
 async function integrityVariants(page, fixtureRoot, result) {
   const variants = await nativeInvoke(page, "prepare_multimod_packaged_integrity_variants_v1", {
     request: {
-      surface: "internal_labs_multimod_packaged_qualification_v1",
-      experimentalLabsEnabled: true,
+      surface: STANDARD_MULTIMOD_SURFACE,
+      experimentalLabsEnabled: false,
       fixtureRoot,
       archivePath: result.archivePath,
       expectedArchiveSha256: result.archiveSha256,
@@ -315,11 +316,38 @@ async function integrityVariants(page, fixtureRoot, result) {
   assert(variants?.productionStrictReopenRejectedMissing && variants.productionStrictReopenRejectedTamper, "Fixture creator did not observe strict sidecar integrity rejection.");
   for (const [label, archivePath] of [["missing", variants.missingSidecarArchivePath], ["tampered", variants.tamperedSidecarArchivePath]]) {
     const blocked = await nativeInvoke(page, "inspect_internal_project_archive_v6_zip", {
-      request: { surface: "internal_labs", experimentalLabsEnabled: true, archivePath },
+      request: { surface: STANDARD_MULTIMOD_SURFACE, experimentalLabsEnabled: false, archivePath },
     });
     assert(blocked?.status === "blocked", `Production strict reopen accepted the ${label}-sidecar archive.`);
   }
   return variants;
+}
+
+async function openStandardMultiModWorkspace(page, family) {
+  const activationTimeout = Math.min(
+    120_000,
+    remainingScientificMilliseconds("Standard MultiMod UI activation"),
+  );
+  await page.evaluate(({ archivePath }) => {
+    window.dispatchEvent(new CustomEvent("quickpls:open-project-path", {
+      detail: { path: archivePath },
+    }));
+  }, { archivePath: family.archive_path });
+  const action = page.locator('[data-testid="native-multimod-workspace-open"]');
+  await action.waitFor({ state: "visible", timeout: activationTimeout });
+  await action.click({ timeout: activationTimeout });
+  const standardBadge = page.locator(".nd-multimod-labs-badge.standard", {
+    hasText: "Standard · Release-qualified",
+  });
+  await standardBadge.waitFor({ state: "visible", timeout: activationTimeout });
+  return {
+    archive_path: family.archive_path,
+    archive_sha256: family.archive_sha256,
+    result_id: family.result_id,
+    production_project_open_event: "quickpls:open-project-path",
+    production_toolbar_action: "[data-testid=native-multimod-workspace-open]",
+    standard_badge_visible: true,
+  };
 }
 
 const args = parseArguments(process.argv.slice(2));
@@ -366,7 +394,7 @@ try {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForSelector("body");
   assert((await page.title()).includes("QuickPLS"), "Packaged page title does not identify QuickPLS.");
-  await page.evaluate(() => localStorage.setItem("quickpls:native-ui-preferences:v1", JSON.stringify({ experimentalLabsEnabled: true })));
+  await page.evaluate(() => localStorage.setItem("quickpls:native-ui-preferences:v1", JSON.stringify({ experimentalLabsEnabled: false })));
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.waitForSelector("body");
 
@@ -374,6 +402,7 @@ try {
   assert(registry?.registry_id === "quickpls.capability_registry.v2" && /^[a-f0-9]{64}$/u.test(registry?.source_sha256 ?? ""), "Embedded capability registry is invalid.");
   const authority = await nativeInvoke(page, "multimod_candidate_authority_status_v1");
   assert(authority?.schemaVersion === 1 && authority.state === "release_qualified_candidate", "Packaged executable has no candidate authority.");
+  assert(authority.standardSurfaceAuthorized === true, "Embedded authority did not authorize the Standard MultiMod surface.");
   assert(authority.embeddedDocumentSha256 === args["authority-document-sha256"], "Embedded authority document differs from package receipt.");
   assert(authority.authorityBindingSha256 === args["authority-binding-sha256"], "Embedded authority binding differs from package receipt.");
   assert(authority.candidateCommitSha === args["candidate-commit"] && authority.candidateVersion === args["candidate-version"], "Embedded candidate identity differs from package receipt.");
@@ -394,7 +423,7 @@ try {
   assert(invalidPreflight.rejected, "Malformed MultiMod preflight did not fail closed.");
   const fixtureRoot = path.join(workRoot, "fixtures");
   const prepared = await nativeInvoke(page, "prepare_multimod_packaged_qualification_fixtures_v1", {
-    request: { surface: "internal_labs_multimod_packaged_qualification_v1", experimentalLabsEnabled: true, outputDirectory: fixtureRoot, seed: numericSeed },
+    request: { surface: STANDARD_MULTIMOD_SURFACE, experimentalLabsEnabled: false, outputDirectory: fixtureRoot, seed: numericSeed },
   });
   assert(prepared?.fixtureId === "qpls.v256.multimod.packaged-production-fixtures.v1", "Packaged production fixture identity is invalid.");
   assert(prepared.families?.length === 4 && new Set(prepared.families.map((fixture) => fixture.familyId)).size === 4, "Packaged fixture set does not contain four exact result families.");
@@ -440,6 +469,8 @@ try {
   const chartFormats = new Set(families.flatMap((family) => family.exports.map((entry) => entry.format)));
   assert(chartFormats.has("svg") && chartFormats.has("png"), "The four-family canonical matrix exposed no chart for SVG/PNG semantic publication and readback.");
 
+  const multiModUiRoute = await openStandardMultiModWorkspace(page, families[0]);
+
   assertWithinScientificDeadline("Packaged accessibility checks");
   const accessibility = await page.evaluate(() => {
     const visible = (element) => {
@@ -463,6 +494,23 @@ try {
   await page.keyboard.press("Tab");
   const keyboardFocusReached = await page.evaluate(() => document.activeElement && document.activeElement !== document.body && document.activeElement !== document.documentElement);
   assert(keyboardFocusReached, "Keyboard Tab did not reach a visible control after workflow completion.");
+  const multiModSurfacePresentation = await page.evaluate(() => {
+    const badgeTexts = [...document.querySelectorAll(".nd-multimod-labs-badge")]
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
+      })
+      .map((element) => element.textContent?.trim() ?? "");
+    const labsPattern = /(?:Experimental\s+Labs|Lab\s+Only|Labs\s+Only|Labs\s*·\s*Unqualified)/iu;
+    return {
+      badge_texts: badgeTexts,
+      standard_badge_count: badgeTexts.filter((text) => text === "Standard · Release-qualified").length,
+      lab_badge_count: badgeTexts.filter((text) => labsPattern.test(text)).length,
+    };
+  });
+  assert(multiModSurfacePresentation.standard_badge_count >= 1, "The qualified Standard MultiMod surface was not visibly rendered.");
+  assert(multiModSurfacePresentation.lab_badge_count === 0, "A visible MultiMod Lab-only badge remained on the qualified Standard surface.");
   await page.screenshot({ path: screenshot, fullPage: true });
 
   const resources = await page.evaluate(() => performance.getEntriesByType("resource").map((entry) => entry.name));
@@ -505,6 +553,11 @@ try {
     },
     native_registry_digest: registry.source_sha256,
     embedded_candidate_authority: authority,
+    standard_surface_verified: true,
+    labs_opt_in_not_required: true,
+    lab_badge_absent: multiModSurfacePresentation.lab_badge_count === 0,
+    multimod_surface_presentation: multiModSurfacePresentation,
+    multimod_production_ui_route: multiModUiRoute,
     invalid_preflight_failed_closed: true,
     candidate_receipt_tamper_failed_closed: tamperedAuthorityRejection.rejected,
     families,

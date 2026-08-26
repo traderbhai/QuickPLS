@@ -963,8 +963,8 @@ fn validate_prepackage_manifests(
                 manifest.get("declared_evidence_state"),
                 "live manifest.declared_evidence_state",
             ) != "release_qualified"
-            || text(manifest.get("surface"), "live manifest.surface") != "labs"
-            || boolean(
+            || text(manifest.get("surface"), "live manifest.surface") != "standard"
+            || !boolean(
                 manifest.get("promotion_allowed"),
                 "live manifest.promotion_allowed",
             )
@@ -1032,7 +1032,7 @@ fn validate_prepackage_manifests(
                     != "release_qualified"
                 || text(profile.get("evidence_state"), "profile.evidence_state")
                     != "release_qualified"
-                || text(profile.get("surface"), "profile.surface") != "labs"
+                || text(profile.get("surface"), "profile.surface") != "standard"
             {
                 panic!("live manifest profile is not release-qualified: {profile_id}");
             }
@@ -1175,6 +1175,22 @@ fn validate_prepackage_manifests(
             .iter()
             .cloned()
             .collect::<BTreeSet<_>>();
+        let tracked_profile_ids = tracked_manifest
+            .profiles
+            .keys()
+            .cloned()
+            .collect::<BTreeSet<_>>();
+        let tracked_cells = tracked_manifest
+            .profiles
+            .values()
+            .flat_map(|profile| profile.exact_profile_cells.iter().cloned())
+            .collect::<BTreeSet<_>>();
+        if live_profiles != tracked_profile_ids || manifest_cells != tracked_cells {
+            panic!(
+                "live Standard manifest does not cover every tracked profile and procedure cell: {}",
+                row.family_id
+            );
+        }
         if manifest_cells != row_cells {
             panic!(
                 "manifest row exact-cell inventory differs from its live manifest: {}",
@@ -1259,8 +1275,8 @@ fn validate_and_embed_candidate(
         || manifest_set.manifest_set_id != "qpls.v256.multimod.prepackage-authority-set.v1"
         || manifest_set.stage != "prepackage_authority"
         || manifest_set.state != "release_qualified"
-        || manifest_set.surface != "labs"
-        || manifest_set.promotion_allowed
+        || manifest_set.surface != "standard"
+        || !manifest_set.promotion_allowed
         || manifest_set.candidate_commit_sha != head
         || manifest_set.candidate_version != package_version
         || manifest_set.plan_sha256 != binding.qualification_plan_sha256
@@ -1298,6 +1314,7 @@ fn validate_and_embed_candidate(
         panic!("tracked MultiMod capability index must remain Labs/absent for this candidate");
     }
     let mut tracked_profiles = BTreeSet::new();
+    let mut tracked_exact_cells = BTreeSet::new();
     let mut tracked_families = BTreeMap::new();
     for family in index.families {
         if family.family_id.trim().is_empty()
@@ -1344,7 +1361,14 @@ fn validate_and_embed_candidate(
         {
             panic!("tracked capability index points to the wrong family manifest: {family_id}");
         }
-        validate_tracked_manifest_template(repository, template, tracked_family);
+        let tracked_manifest =
+            validate_tracked_manifest_template(repository, template, tracked_family);
+        tracked_exact_cells.extend(
+            tracked_manifest
+                .profiles
+                .values()
+                .flat_map(|profile| profile.exact_profile_cells.iter().cloned()),
+        );
     }
     let campaign_root = manifest_set_path
         .parent()
@@ -1371,8 +1395,15 @@ fn validate_and_embed_candidate(
                 .to_owned()
         })
         .collect::<BTreeSet<_>>();
-    if !authority_profiles.is_subset(&tracked_profiles) {
-        panic!("candidate authority contains an exact cell for an untracked MultiMod profile");
+    let authority_cells = binding
+        .exact_profile_cells
+        .iter()
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    if authority_profiles != tracked_profiles || authority_cells != tracked_exact_cells {
+        panic!(
+            "Standard candidate authority must cover every tracked MultiMod profile and procedure cell"
+        );
     }
 
     fs::write(out_dir.join(EMBEDDED_AUTHORITY_FILE), authority_bytes)

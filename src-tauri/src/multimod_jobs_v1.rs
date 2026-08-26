@@ -7,7 +7,8 @@
 use crate::{
     DesktopJobs,
     multimod_candidate_authority_v1::{
-        embedded_multimod_cache_authority_sha256_v1, promote_completed_multimod_result_v1,
+        embedded_multimod_cache_authority_sha256_v1, multimod_standard_surface_authorized_v1,
+        promote_completed_multimod_result_v1,
     },
     recipe_v4_jobs::{
         DesktopRecipeV4Jobs, PlsModelComparisonAdmissionReservationV1,
@@ -21,7 +22,7 @@ use qpls_core::{
     ConditionalRawProbeFitMetricReceiptV2, GeneralSemConditionalProcessConfigV2,
     InterventionalCausalMediationConfigV1, MULTIMOD_SIDECAR_MAX_BYTES_V1, MgaModelProfileV1,
     MgaMultigroupV1, MultiModAnalysisResultV1, MultiModCompilerTargetV1,
-    PlsUnobservedHeterogeneityConfigV2, SemModelV4, SemVariableV4,
+    MultimodQualificationStateV1, PlsUnobservedHeterogeneityConfigV2, SemModelV4, SemVariableV4,
     TypedGroupValueV1 as CoreTypedGroupValueV1, compile_multimod_recipe_v1, sha256_serialized,
 };
 use qpls_data::{DataKind, Dataset, ScaleType};
@@ -67,6 +68,7 @@ use uuid::Uuid;
 const MULTIMOD_JOB_SCHEMA_VERSION_V1: u32 = 1;
 const MULTIMOD_CACHE_SCHEMA_VERSION_V1: u32 = 1;
 const MULTIMOD_INTERNAL_LABS_SURFACE_V1: &str = "internal_labs_multimod_v1";
+pub(crate) const MULTIMOD_STANDARD_SURFACE_V1: &str = "standard_multimod_v1";
 const MULTIMOD_SIDECAR_WARNING_BYTES_V1: u64 = 128 * 1024 * 1024;
 const MAXIMUM_RETAINED_MULTIMOD_JOBS_V1: usize = 255;
 
@@ -515,15 +517,65 @@ fn sha256_file(path: &Path) -> Result<String, MultiModJobFailureV1> {
     Ok(format!("{:x}", digest.finalize()))
 }
 
-fn validate_request_access(request: &MultiModJobRequestV1) -> Result<(), MultiModJobFailureV1> {
-    if request.surface != MULTIMOD_INTERNAL_LABS_SURFACE_V1 || !request.experimental_labs_enabled {
-        return Err(failure(
+fn validate_multimod_runtime_surface_access_using_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+    standard_authorized: impl FnOnce() -> Result<bool, String>,
+) -> Result<bool, MultiModJobFailureV1> {
+    match surface {
+        MULTIMOD_INTERNAL_LABS_SURFACE_V1 if experimental_labs_enabled => Ok(false),
+        MULTIMOD_INTERNAL_LABS_SURFACE_V1 => Err(failure(
             MultiModFailureStageV1::Access,
             "multimod.job.internal_labs_required",
-            "MultiMod V1 execution is available only through explicit Experimental Labs opt-in.",
+            "MultiMod Labs execution requires explicit Experimental Labs opt-in.",
             "Enable Experimental Labs and rerun exact native preflight.",
-        ));
+        )),
+        MULTIMOD_STANDARD_SURFACE_V1 if experimental_labs_enabled => Err(failure(
+            MultiModFailureStageV1::Access,
+            "multimod.job.surface_invalid",
+            "The Standard MultiMod surface requires Experimental Labs to be disabled.",
+            "Disable Experimental Labs and retry through standard_multimod_v1.",
+        )),
+        MULTIMOD_STANDARD_SURFACE_V1 => match standard_authorized() {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(failure(
+                MultiModFailureStageV1::Access,
+                "multimod.job.standard_authority_required",
+                "Standard MultiMod execution requires a release-qualified immutable authority embedded in this executable.",
+                "Use the exact release-qualified candidate package, or run this request through explicit Experimental Labs.",
+            )),
+            Err(error) => Err(failure(
+                MultiModFailureStageV1::Integrity,
+                "multimod.job.embedded_authority_invalid",
+                error,
+                "Do not execute, resume, publish, or export MultiMod results from this executable.",
+            )),
+        },
+        _ => Err(failure(
+            MultiModFailureStageV1::Access,
+            "multimod.job.surface_invalid",
+            "The requested MultiMod runtime surface is unsupported.",
+            "Use standard_multimod_v1 for a release-qualified candidate or internal_labs_multimod_v1 with explicit Labs opt-in.",
+        )),
     }
+}
+
+fn validate_multimod_runtime_surface_access_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+) -> Result<bool, MultiModJobFailureV1> {
+    validate_multimod_runtime_surface_access_using_v1(
+        surface,
+        experimental_labs_enabled,
+        multimod_standard_surface_authorized_v1,
+    )
+}
+
+fn validate_request_access(request: &MultiModJobRequestV1) -> Result<(), MultiModJobFailureV1> {
+    validate_multimod_runtime_surface_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+    )?;
     let path = Path::new(&request.archive_path);
     if request.archive_path.trim() != request.archive_path
         || !path.is_absolute()
@@ -644,10 +696,7 @@ fn stage_recipe_v1(
             recipe.interventional_causal_mediation = Some(config.clone());
         }
     }
-    recipe.metadata.insert(
-        "execution_surface".into(),
-        MULTIMOD_INTERNAL_LABS_SURFACE_V1.into(),
-    );
+    persist_multimod_execution_surface_v1(&mut recipe.metadata, request.surface.clone());
     recipe
         .metadata
         .insert("multimod_generation".into(), "multimod_v1".into());
@@ -664,6 +713,13 @@ fn stage_recipe_v1(
         )
     })?;
     Ok(recipe)
+}
+
+fn persist_multimod_execution_surface_v1(
+    metadata: &mut BTreeMap<String, String>,
+    request_surface: String,
+) {
+    metadata.insert("execution_surface".into(), request_surface);
 }
 
 fn validate_heterogeneity_discovery_lock_source_v2(
@@ -1076,14 +1132,10 @@ fn grouping_value_label(value: &CoreTypedGroupValueV1) -> String {
 pub(crate) fn profile_internal_labs_multimod_grouping_v1(
     request: MultiModGroupingProfileRequestV1,
 ) -> Result<MultiModGroupingProfileV1, MultiModJobFailureV1> {
-    if request.surface != MULTIMOD_INTERNAL_LABS_SURFACE_V1 || !request.experimental_labs_enabled {
-        return Err(failure(
-            MultiModFailureStageV1::Access,
-            "multimod.grouping_profile.internal_labs_required",
-            "Typed grouping discovery is available only through explicit Experimental Labs opt-in.",
-            "Enable Experimental Labs and reopen the exact Archive V6 authority.",
-        ));
-    }
+    validate_multimod_runtime_surface_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+    )?;
     for digest in [
         &request.expected_archive_sha256,
         &request.dataset_fingerprint,
@@ -1682,6 +1734,7 @@ fn archive_ready_output_v1(
     recipe: &AnalysisRecipeV4,
     artifact: &CompiledMultiModRecipeV1,
     mut output: MultiModRunOutputV1,
+    standard_surface: bool,
 ) -> Result<
     (
         MultiModResultAttachmentV1,
@@ -1698,6 +1751,17 @@ fn archive_ready_output_v1(
             "Keep the result unpublished; use a Labs preview or rebuild the candidate with exact profile-cell authority.",
         )
     })?;
+    if standard_surface
+        && output.result.provenance().qualification
+            != MultimodQualificationStateV1::ReleaseQualifiedCandidate
+    {
+        return Err(failure(
+            MultiModFailureStageV1::Integrity,
+            "multimod.job.standard_result_not_qualified",
+            "The embedded candidate authority does not cover every exact profile cell required by this Standard result.",
+            "Keep the result unpublished and use only a candidate package whose immutable authority covers the exact requested profile.",
+        ));
+    }
     if output.evidence.is_empty() {
         return Err(failure(
             MultiModFailureStageV1::Evidence,
@@ -3440,6 +3504,7 @@ fn run_worker_v1(
                 &resolved.staged_recipe,
                 &resolved.artifact,
                 output,
+                request.surface == MULTIMOD_STANDARD_SURFACE_V1,
             ) {
                 Ok(value) => value,
                 Err(error) => {
@@ -3548,6 +3613,22 @@ fn run_worker_v1(
         }
     };
     let (attachment, payloads, canonical_document, warn_large, cache) = archive_ready;
+    if request.surface == MULTIMOD_STANDARD_SURFACE_V1
+        && attachment.result.provenance().qualification
+            != MultimodQualificationStateV1::ReleaseQualifiedCandidate
+    {
+        finish_failed(
+            &jobs,
+            job_id,
+            failure(
+                MultiModFailureStageV1::Integrity,
+                "multimod.job.standard_result_not_qualified",
+                "The archive-ready result is not release-qualified by this executable's immutable candidate authority.",
+                "Do not publish the cached result; restart only with an exact covered candidate profile.",
+            ),
+        );
+        return;
+    }
     set_publishing(&jobs, job_id, cache.clone(), warn_large);
     if cancellation.load(Ordering::Acquire) {
         finish_cancelled(&jobs, job_id);
@@ -3941,9 +4022,13 @@ fn unknown_job(job_id: Uuid) -> MultiModJobFailureV1 {
 #[cfg(test)]
 mod tests {
     use super::{
+        MULTIMOD_INTERNAL_LABS_SURFACE_V1, MULTIMOD_STANDARD_SURFACE_V1,
         MultiModExternalCacheReceiptV1, MultiModExternalCacheStageV1, NativeMgaEngineV1,
-        native_mga_engine_v1,
+        native_mga_engine_v1, persist_multimod_execution_surface_v1,
+        validate_multimod_runtime_surface_access_using_v1,
+        validate_multimod_runtime_surface_access_v1,
     };
+    use crate::multimod_candidate_authority_v1::with_typed_qualification_test_authority_v1;
     use qpls_core::{MgaModelProfileV1, MultiModCompilerTargetV1};
     use uuid::Uuid;
 
@@ -3995,5 +4080,82 @@ mod tests {
         assert_eq!(value["stage"], "mga_execution");
         value["stage"] = serde_json::Value::String("unknown".into());
         assert!(serde_json::from_value::<MultiModExternalCacheReceiptV1>(value).is_err());
+    }
+
+    #[test]
+    fn standard_surface_requires_release_qualified_embedded_authority() {
+        let mixed_surface = validate_multimod_runtime_surface_access_using_v1(
+            MULTIMOD_STANDARD_SURFACE_V1,
+            true,
+            || -> Result<bool, String> {
+                panic!("an invalid Standard/Labs pair must not consult authority")
+            },
+        )
+        .unwrap_err();
+        assert_eq!(mixed_surface.code, "multimod.job.surface_invalid");
+
+        let labs_disabled = validate_multimod_runtime_surface_access_using_v1(
+            MULTIMOD_INTERNAL_LABS_SURFACE_V1,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(labs_disabled.code, "multimod.job.internal_labs_required");
+
+        let denied = validate_multimod_runtime_surface_access_using_v1(
+            MULTIMOD_STANDARD_SURFACE_V1,
+            false,
+            || Ok(false),
+        )
+        .unwrap_err();
+        assert_eq!(denied.code, "multimod.job.standard_authority_required");
+
+        with_typed_qualification_test_authority_v1(
+            &["conditional.multi_two_way_percentile.v2::explicit_path_target_math"],
+            |_| {
+                assert!(
+                    validate_multimod_runtime_surface_access_v1(
+                        MULTIMOD_STANDARD_SURFACE_V1,
+                        false,
+                    )
+                    .unwrap()
+                );
+            },
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn labs_surface_still_requires_explicit_opt_in_and_never_reads_standard_authority() {
+        let denied = validate_multimod_runtime_surface_access_using_v1(
+            MULTIMOD_INTERNAL_LABS_SURFACE_V1,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(denied.code, "multimod.job.internal_labs_required");
+
+        assert!(
+            !validate_multimod_runtime_surface_access_using_v1(
+                MULTIMOD_INTERNAL_LABS_SURFACE_V1,
+                true,
+                || -> Result<bool, String> { panic!("Labs access must not consult authority") },
+            )
+            .unwrap()
+        );
+        let unsupported =
+            validate_multimod_runtime_surface_access_using_v1("standard", true, || Ok(true))
+                .unwrap_err();
+        assert_eq!(unsupported.code, "multimod.job.surface_invalid");
+    }
+
+    #[test]
+    fn staged_recipe_provenance_persists_the_validated_request_surface() {
+        let mut metadata = std::collections::BTreeMap::new();
+        persist_multimod_execution_surface_v1(&mut metadata, MULTIMOD_STANDARD_SURFACE_V1.into());
+        assert_eq!(
+            metadata.get("execution_surface").map(String::as_str),
+            Some(MULTIMOD_STANDARD_SURFACE_V1)
+        );
     }
 }

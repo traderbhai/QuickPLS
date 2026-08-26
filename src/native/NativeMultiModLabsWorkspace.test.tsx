@@ -8,6 +8,10 @@ import {
   nativeMultiModModelInventoryV1,
   type NativeMultiModGroupingColumnV1,
 } from "./NativeMultiModLabsWorkspace";
+import {
+  NATIVE_MULTIMOD_LABS_ACCESS_V1,
+  NATIVE_MULTIMOD_STANDARD_ACCESS_V1,
+} from "./nativeMultiModJobV1";
 
 function modelFixture(): SemModelV4 {
   return {
@@ -225,6 +229,26 @@ function validatedResultFixture(): MultiModResultAttachmentV1 {
   };
 }
 
+function standardQualifiedResultFixture(): MultiModResultAttachmentV1 {
+  const result = validatedResultFixture();
+  result.result.analysis.provenance = {
+    ...result.result.analysis.provenance,
+    qualification: "release_qualified_candidate",
+    candidate_qualification_receipt: {
+      schema_version: 1,
+      authority_binding_sha256: "2".repeat(64),
+      candidate_commit_sha: "3".repeat(40),
+      candidate_version: "2.56.0",
+      qualification_plan_sha256: "4".repeat(64),
+      gate_binding_sha256: "5".repeat(64),
+      capability_index_sha256: "6".repeat(64),
+      prepackage_manifest_set_sha256: "7".repeat(64),
+      required_profile_cells: ["mga.general_sem_pls.v1::point_estimation"],
+    },
+  };
+  return result;
+}
+
 function heterogeneityDiscoveryFixture(): MultiModResultAttachmentV1 {
   const base = validatedResultFixture();
   const segmentation = (
@@ -264,9 +288,8 @@ function heterogeneityDiscoveryFixture(): MultiModResultAttachmentV1 {
             pooled_parameters: [
               {
                 target_id: "pooled:path:x-m",
-                family: "structural_path",
+                target_kind: "structural_path",
                 estimate: 0.2,
-                standardized: true,
               },
             ],
             blockers: [],
@@ -319,6 +342,7 @@ describe("Native MultiMod Labs workspace", () => {
   it("exposes the ARIA tab contract and keeps native execution disabled until wired", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModLabsWorkspace
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         model={modelFixture()}
         caseCount={155}
         groupingColumns={groupingColumns}
@@ -338,6 +362,7 @@ describe("Native MultiMod Labs workspace", () => {
   it("never preselects a conditional indirect path", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModLabsWorkspace
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         model={modelFixture()}
         caseCount={155}
         groupingColumns={groupingColumns}
@@ -387,6 +412,7 @@ describe("Native MultiMod Labs workspace", () => {
   it("labels the causal module as assumption-dependent before any configuration", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModLabsWorkspace
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         model={modelFixture()}
         caseCount={155}
         groupingColumns={groupingColumns}
@@ -411,6 +437,7 @@ describe("Native MultiMod Labs workspace", () => {
   it("renders results only when a strict validated attachment is supplied", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModLabsWorkspace
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         model={modelFixture()}
         caseCount={155}
         groupingColumns={groupingColumns}
@@ -420,5 +447,22 @@ describe("Native MultiMod Labs workspace", () => {
     expect(html).toContain('data-multimod-results="v1"');
     expect(html).toContain("PLS multigroup analysis");
     expect(html).toContain("Result-level gates passed.");
+  });
+
+  it("presents a qualified authority as Standard without user-facing Labs tags", () => {
+    const html = renderToStaticMarkup(
+      <NativeMultiModLabsWorkspace
+        access={NATIVE_MULTIMOD_STANDARD_ACCESS_V1}
+        model={modelFixture()}
+        caseCount={155}
+        groupingColumns={groupingColumns}
+        validatedResult={standardQualifiedResultFixture()}
+      />,
+    );
+
+    expect(html).toContain("Standard · Release-qualified");
+    expect(html).not.toMatch(
+      /Experimental Labs|Labs output|Labs qualification|MultiMod Labs result/iu,
+    );
   });
 });

@@ -97,12 +97,14 @@ use qpls_estimation::{
     assess_frequency_multigroup_design_v1, assess_multigroup_design_v1, bca_interval_v2,
     bias_corrected_interval_for_alternative_v1, build_frequency_pairwise_partition_plan_v1,
     build_pairwise_partition_plan_from_rows_v1, build_pairwise_partition_plan_v1,
-    build_pls_pos_start_plan_v2, compile_explicit_conditional_path_v2, conditional_derivatives_v2,
-    conditional_effect_v2, conditional_probe_contrast_v2,
+    build_pls_pos_start_plan_v2, build_pls_pos_start_plan_with_scientific_row_features_v2,
+    compile_explicit_conditional_path_v2, conditional_derivatives_v2, conditional_effect_v2,
+    conditional_probe_contrast_v2,
     estimate_general_sem_pls_multiple_two_way_interactions_v1_with_control,
     estimate_general_sem_pls_three_way_moderation_v1_with_control,
     estimate_interventional_mediation_v1, estimate_pls_validated_with_control,
     evaluate_pos_common_metric_gate_v1, fit_fimix_pls_v2,
+    fit_fimix_pls_with_scientific_row_features_v2,
     fit_pls_pos_destination_scored_interactions_with_scientific_row_features_v2,
     fit_pls_pos_published_with_scientific_row_features_v2, fit_pooled_metric_segment_baselines_v2,
     fit_pooled_structural_baseline_v2, henseler_directional_probabilities_v1,
@@ -12675,12 +12677,18 @@ where
 {
     let (prepared, pooled_fit, raw_scores, orientation_rows) =
         prepare_raw_heterogeneity_execution_v2(dataset, authority, config.profile, should_cancel)?;
+    let scientific_row_features =
+        raw_heterogeneity_scientific_row_features_v2(dataset, &authority.source_columns)?;
     match algorithm {
         CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
             let mut settings = fimix_config(config, k as usize);
             settings.seed = fit_seed;
-            let result = fit_fimix_pls_v2(&prepared.fimix_input, &settings)
-                .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))?;
+            let result = fit_fimix_pls_with_scientific_row_features_v2(
+                &prepared.fimix_input,
+                &scientific_row_features,
+                &settings,
+            )
+            .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))?;
             validate_fimix_multistart_evidence_v2(&result)
                 .map_err(|error| MultiModRunnerErrorV1::ResultContract(error.to_string()))?;
             let parameters = fimix_parameters(&result, &prepared.fimix_scientific_targets)?;
@@ -12696,20 +12704,25 @@ where
             let tandem_fimix = if tandem_fimix_required {
                 let mut settings = fimix_config(config, k as usize);
                 settings.seed = fit_seed;
-                let result =
-                    fit_fimix_pls_v2(&prepared.fimix_input, &settings).map_err(|error| {
-                        MultiModRunnerErrorV1::Kernel(format!(
-                            "multimod.runner.heterogeneity.tandem_fimix_refit_failed: {error}"
-                        ))
-                    })?;
+                let result = fit_fimix_pls_with_scientific_row_features_v2(
+                    &prepared.fimix_input,
+                    &scientific_row_features,
+                    &settings,
+                )
+                .map_err(|error| {
+                    MultiModRunnerErrorV1::Kernel(format!(
+                        "multimod.runner.heterogeneity.tandem_fimix_refit_failed: {error}"
+                    ))
+                })?;
                 validate_fimix_multistart_evidence_v2(&result)
                     .map_err(|error| MultiModRunnerErrorV1::ResultContract(error.to_string()))?;
                 Some(result)
             } else {
                 None
             };
-            let starts = build_pls_pos_start_plan_v2(
+            let starts = build_pls_pos_start_plan_with_scientific_row_features_v2(
                 &prepared.pos_start_features,
+                &scientific_row_features,
                 k as usize,
                 fit_seed,
                 tandem_fimix
@@ -12718,8 +12731,6 @@ where
             )
             .map_err(|error| MultiModRunnerErrorV1::Kernel(error.to_string()))?;
             let settings = pos_config(config, k as usize, prepared.pos_start_features.len());
-            let scientific_row_features =
-                raw_heterogeneity_scientific_row_features_v2(dataset, &authority.source_columns)?;
             let mut refitter = RawPlsPosRefitterV2 {
                 dataset,
                 authority,
@@ -13344,6 +13355,7 @@ where
         candidate_k,
         &prepared_point,
         &pos_scientific_row_features,
+        Some(&pos_scientific_row_features),
         &mut refitter,
         &should_cancel,
         &progress,
@@ -13818,6 +13830,8 @@ where
             config.profile,
             should_cancel,
         )?;
+    let scientific_row_features =
+        raw_heterogeneity_scientific_row_features_v2(&complete_dataset, &authority.source_columns)?;
     let mut refitter = RawPlsPosRefitterV2 {
         dataset: &complete_dataset,
         authority: &authority,
@@ -13828,12 +13842,13 @@ where
         retain_outcome_audits: true,
         should_cancel,
     };
-    let mut output = run_compiled_pls_heterogeneity_v2(
+    let mut output = run_compiled_pls_heterogeneity_internal_v2(
         dataset,
         recipe,
         model,
         artifact,
         &prepared,
+        Some(&scientific_row_features),
         &mut refitter,
         should_cancel,
         progress,
@@ -15120,11 +15135,22 @@ fn run_pos_candidate<R: PlsPosFullRefitterV2>(
     config: &qpls_core::PlsUnobservedHeterogeneityConfigV2,
     prepared: &PreparedHeterogeneityExecutionV2,
     scientific_row_features: &[Vec<f64>],
+    start_identity_features: Option<&[Vec<f64>]>,
     same_k_fimix: Option<&[usize]>,
     refitter: &mut R,
 ) -> Result<PlsPosV2Result, HeterogeneityV2Error> {
-    let starts =
-        build_pls_pos_start_plan_v2(&prepared.pos_start_features, k, config.seed, same_k_fimix)?;
+    let starts = match start_identity_features {
+        Some(row_features) => build_pls_pos_start_plan_with_scientific_row_features_v2(
+            &prepared.pos_start_features,
+            row_features,
+            k,
+            config.seed,
+            same_k_fimix,
+        ),
+        None => {
+            build_pls_pos_start_plan_v2(&prepared.pos_start_features, k, config.seed, same_k_fimix)
+        }
+    }?;
     let settings = pos_config(config, k, prepared.pos_start_features.len());
     let result = match algorithm {
         CoreHeterogeneityAlgorithmV2::PlsPosPublishedV2 => {
@@ -15384,6 +15410,7 @@ fn execute_heterogeneity_point_pass_v2<R, C, P>(
     candidate_k: &[u8],
     prepared: &PreparedHeterogeneityExecutionV2,
     pos_scientific_row_features: &[Vec<f64>],
+    raw_scientific_row_features: Option<&[Vec<f64>]>,
     pos_refitter: &mut R,
     should_cancel: &C,
     progress: &P,
@@ -15439,8 +15466,15 @@ where
             );
             match algorithm {
                 CoreHeterogeneityAlgorithmV2::FimixPlsV2 => {
-                    let point =
-                        fit_fimix_pls_v2(&prepared.fimix_input, &fimix_config(config, *k as usize));
+                    let settings = fimix_config(config, *k as usize);
+                    let point = match raw_scientific_row_features {
+                        Some(row_features) => fit_fimix_pls_with_scientific_row_features_v2(
+                            &prepared.fimix_input,
+                            row_features,
+                            &settings,
+                        ),
+                        None => fit_fimix_pls_v2(&prepared.fimix_input, &settings),
+                    };
                     match point {
                         Ok(point) => {
                             validate_fimix_multistart_evidence_v2(&point).map_err(|error| {
@@ -15488,6 +15522,7 @@ where
                             config,
                             prepared,
                             pos_scientific_row_features,
+                            raw_scientific_row_features,
                             same_k,
                             &mut controlled,
                         )
@@ -16019,6 +16054,36 @@ where
     C: Fn() -> bool + Sync,
     P: Fn(MultiModRunnerProgressV1) + Sync,
 {
+    run_compiled_pls_heterogeneity_internal_v2(
+        dataset,
+        recipe,
+        model,
+        artifact,
+        prepared,
+        None,
+        pos_refitter,
+        should_cancel,
+        progress,
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn run_compiled_pls_heterogeneity_internal_v2<R, C, P>(
+    dataset: &Dataset,
+    recipe: &AnalysisRecipeV4,
+    model: &SemModelV4,
+    artifact: &CompiledMultiModRecipeV1,
+    prepared: &PreparedHeterogeneityExecutionV2,
+    raw_scientific_row_features: Option<&[Vec<f64>]>,
+    pos_refitter: &mut R,
+    should_cancel: C,
+    progress: P,
+) -> Result<MultiModRunOutputV1, MultiModRunnerErrorV1>
+where
+    R: PlsPosFullRefitterV2,
+    C: Fn() -> bool + Sync,
+    P: Fn(MultiModRunnerProgressV1) + Sync,
+{
     if should_cancel() {
         return Err(MultiModRunnerErrorV1::Cancelled);
     }
@@ -16091,13 +16156,16 @@ where
             "PLS-POS requires one finite start-feature row per source observation".into(),
         ));
     }
+    let pos_scientific_row_features =
+        raw_scientific_row_features.unwrap_or(prepared.pos_start_features.as_slice());
     let point_pass = execute_heterogeneity_point_pass_v2(
         artifact,
         config,
         algorithms,
         candidate_k,
         prepared,
-        &prepared.pos_start_features,
+        pos_scientific_row_features,
+        raw_scientific_row_features,
         pos_refitter,
         &should_cancel,
         &progress,

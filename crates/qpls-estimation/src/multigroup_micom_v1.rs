@@ -7,6 +7,7 @@
 //! same pooled scoring rows. The kernel never substitutes static scores and
 //! never retries failed partitions.
 
+use crate::multigroup_v1::{mga_greater_or_tied_v1, mga_less_or_tied_v1};
 use crate::{
     GroupIndexV1, OrderedGroupPairV1, PairwisePartitionPlanV1, RefitFailureCodeV1, RefitFailureV1,
     SelectedGroupRowV1, build_pairwise_partition_plan_from_rows_v1,
@@ -546,7 +547,9 @@ where
             plus_one_probability(
                 correlations
                     .iter()
-                    .filter(|value| **value <= observed.compositional_correlation)
+                    .filter(|value| {
+                        mga_less_or_tied_v1(**value, observed.compositional_correlation)
+                    })
                     .count(),
                 correlations.len(),
             )
@@ -555,7 +558,9 @@ where
             plus_one_probability(
                 means
                     .iter()
-                    .filter(|value| value.abs() >= observed.mean_difference.abs())
+                    .filter(|value| {
+                        mga_greater_or_tied_v1(value.abs(), observed.mean_difference.abs())
+                    })
                     .count(),
                 means.len(),
             )
@@ -564,13 +569,17 @@ where
             plus_one_probability(
                 variances
                     .iter()
-                    .filter(|value| value.abs() >= observed.log_variance_ratio.abs())
+                    .filter(|value| {
+                        mga_greater_or_tied_v1(value.abs(), observed.log_variance_ratio.abs())
+                    })
                     .count(),
                 variances.len(),
             )
         });
         let compositional_invariance = complete
-            && lower.is_some_and(|threshold| observed.compositional_correlation >= threshold);
+            && lower.is_some_and(|threshold| {
+                mga_greater_or_tied_v1(observed.compositional_correlation, threshold)
+            });
         let equal_means = mean_probability.is_some_and(|value| value >= config.alpha);
         let equal_variances = variance_probability.is_some_and(|value| value >= config.alpha);
         constructs.push(MicomConstructResultV1 {

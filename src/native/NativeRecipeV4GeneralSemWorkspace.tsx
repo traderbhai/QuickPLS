@@ -88,6 +88,11 @@ import { useWorkspace } from "../store";
 import { GeneralSemEstimatorCompatibilityPanel } from "./GeneralSemEstimatorCompatibilityPanel";
 import { NativeGeneralSemModeratedMediationPanel } from "./NativeGeneralSemModeratedMediationPanel";
 import { NativeMultiModJobWorkspaceV1 } from "./NativeMultiModJobWorkspaceV1";
+import {
+  getNativeMultiModCandidateAuthorityV1,
+  selectNativeMultiModWorkspaceAccessV1,
+  type NativeMultiModCandidateAuthorityV1,
+} from "./nativeMultiModCandidateAuthorityV1";
 import { CanonicalResultExportPanelV2 } from "./CanonicalResultExportPanelV2";
 import { observedSemanticsForParameterTable } from "./NativeSemParameterTable";
 import {
@@ -95,6 +100,7 @@ import {
 } from "./NativeRecipeV4CbsemWorkspace";
 
 export interface NativeRecipeV4GeneralSemWorkspaceServices {
+  multiModCandidateAuthority: typeof getNativeMultiModCandidateAuthorityV1;
   scientificDigest: typeof getInternalSemModelV4ScientificSha256;
   bootstrapArchive: typeof bootstrapInternalGeneralSemProjectArchiveV6;
   inspectArchive: typeof inspectInternalProjectArchiveV6At;
@@ -119,6 +125,7 @@ export interface NativeRecipeV4GeneralSemWorkspaceServices {
 }
 
 const defaultServices: NativeRecipeV4GeneralSemWorkspaceServices = {
+  multiModCandidateAuthority: getNativeMultiModCandidateAuthorityV1,
   scientificDigest: getInternalSemModelV4ScientificSha256,
   bootstrapArchive: bootstrapInternalGeneralSemProjectArchiveV6,
   inspectArchive: inspectInternalProjectArchiveV6At,
@@ -665,6 +672,9 @@ export function NativeRecipeV4GeneralSemWorkspace({
   services = defaultServices,
 }: NativeRecipeV4GeneralSemWorkspaceProps) {
   const calculationPresentation = presentation === "calculation";
+  const [multiModCandidateAuthority, setMultiModCandidateAuthority] = useState<
+    NativeMultiModCandidateAuthorityV1 | null
+  >(null);
   const workspaceProjectId = useWorkspace((state) => state.projectId);
   const workspaceProjectPath = useWorkspace((state) => state.projectPath);
   const projectName = useWorkspace((state) => state.projectName);
@@ -691,6 +701,28 @@ export function NativeRecipeV4GeneralSemWorkspace({
   const generalSemRevisionStatusMessage = useInternalProjectArchiveV6Session((state) => state.revisionForkStatusMessage);
   const reviseGeneralSemModeratedMediationAuthority = useInternalProjectArchiveV6Session(
     (state) => state.reviseGeneralSemModeratedMediationAuthority,
+  );
+  useEffect(() => {
+    let live = true;
+    setMultiModCandidateAuthority(null);
+    if (calculationPresentation) return () => { live = false; };
+    void services.multiModCandidateAuthority()
+      .then((authority) => {
+        if (live) setMultiModCandidateAuthority(authority);
+      })
+      .catch(() => {
+        if (live) setMultiModCandidateAuthority(null);
+      });
+    return () => { live = false; };
+  }, [calculationPresentation, services.multiModCandidateAuthority]);
+  const multiModWorkspaceAccess = useMemo(
+    () => multiModCandidateAuthority
+      ? selectNativeMultiModWorkspaceAccessV1(
+          multiModCandidateAuthority,
+          experimentalLabsEnabled,
+        )
+      : null,
+    [experimentalLabsEnabled, multiModCandidateAuthority],
   );
   const activatedGeneralSemProjectMode = Boolean(
     generalSemSession?.standardActivation
@@ -2084,12 +2116,13 @@ export function NativeRecipeV4GeneralSemWorkspace({
         />
       : null}
 
-    {experimentalLabsEnabled
+    {multiModWorkspaceAccess
       && !calculationPresentation
       && markedGeneralSemProjectMode
       && model
       && rehydratedExecution?.status === "ok"
       ? <NativeMultiModJobWorkspaceV1
+          access={multiModWorkspaceAccess.access}
           model={model}
           caseCount={dataset.rowCount ?? dataset.rows.length}
           authority={{

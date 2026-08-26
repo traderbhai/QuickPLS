@@ -5,7 +5,9 @@
 //! descriptor from one completed result, and publishes only posterior,
 //! membership, assignment, replicate-ledger, or target-vector evidence.
 
-use crate::multimod_candidate_authority_v1::verify_multimod_candidate_receipt_against_embedded_v1;
+use crate::multimod_candidate_authority_v1::{
+    multimod_standard_surface_authorized_v1, verify_multimod_candidate_receipt_against_embedded_v1,
+};
 use qpls_core::MultimodQualificationStateV1;
 use qpls_project::{
     MultiModSidecarPayloadV1, load_project_archive_v6_from_file,
@@ -22,6 +24,7 @@ use uuid::Uuid;
 
 const RAW_SIDECAR_EXPORT_SCHEMA_VERSION_V1: u32 = 1;
 const INTERNAL_LABS_SURFACE_V1: &str = "internal_labs_multimod_v1";
+const MULTIMOD_STANDARD_SURFACE_V1: &str = "standard_multimod_v1";
 const TEMPORARY_PREFIX_V1: &str = ".quickpls-multimod-arrow-export-v1-";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -103,6 +106,57 @@ fn lowercase_sha256(value: &str) -> bool {
         && value
             .bytes()
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+fn validate_raw_sidecar_surface_access_using_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+    standard_authorized: impl FnOnce() -> Result<bool, String>,
+) -> Result<bool, MultiModRawSidecarExportErrorV1> {
+    match surface {
+        INTERNAL_LABS_SURFACE_V1 if experimental_labs_enabled => Ok(false),
+        INTERNAL_LABS_SURFACE_V1 => Err(MultiModRawSidecarExportErrorV1::new(
+            "multimod.raw_export.internal_labs_required",
+            "Labs raw-evidence export requires explicit Experimental Labs opt-in.",
+            "Enable Experimental Labs and reopen the completed result.",
+        )),
+        MULTIMOD_STANDARD_SURFACE_V1 if experimental_labs_enabled => {
+            Err(MultiModRawSidecarExportErrorV1::new(
+                "multimod.raw_export.surface_invalid",
+                "The Standard MultiMod raw-evidence surface requires Experimental Labs to be disabled.",
+                "Disable Experimental Labs and retry through standard_multimod_v1.",
+            ))
+        }
+        MULTIMOD_STANDARD_SURFACE_V1 => match standard_authorized() {
+            Ok(true) => Ok(true),
+            Ok(false) => Err(MultiModRawSidecarExportErrorV1::new(
+                "multimod.raw_export.standard_authority_required",
+                "Standard raw-evidence export requires a release-qualified immutable authority embedded in this executable.",
+                "Open the result in the exact release-qualified candidate package, or export through explicit Experimental Labs.",
+            )),
+            Err(error) => Err(MultiModRawSidecarExportErrorV1::new(
+                "multimod.raw_export.candidate_authority_mismatch",
+                error,
+                "Do not export MultiMod evidence from this executable.",
+            )),
+        },
+        _ => Err(MultiModRawSidecarExportErrorV1::new(
+            "multimod.raw_export.request_invalid",
+            "The raw-sidecar request names an unsupported MultiMod runtime surface.",
+            "Use standard_multimod_v1 for a release-qualified candidate or internal_labs_multimod_v1 with explicit Labs opt-in.",
+        )),
+    }
+}
+
+fn validate_raw_sidecar_surface_access_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+) -> Result<bool, MultiModRawSidecarExportErrorV1> {
+    validate_raw_sidecar_surface_access_using_v1(
+        surface,
+        experimental_labs_enabled,
+        multimod_standard_surface_authorized_v1,
+    )
 }
 
 fn sha256_bytes(bytes: &[u8]) -> String {
@@ -481,8 +535,6 @@ pub(crate) fn publish_internal_labs_multimod_raw_sidecar_v1(
     request: MultiModRawSidecarExportRequestV1,
 ) -> Result<MultiModRawSidecarExportReceiptV1, MultiModRawSidecarExportErrorV1> {
     if request.schema_version != RAW_SIDECAR_EXPORT_SCHEMA_VERSION_V1
-        || request.surface != INTERNAL_LABS_SURFACE_V1
-        || !request.experimental_labs_enabled
         || !lowercase_sha256(&request.expected_archive_sha256)
         || !lowercase_sha256(&request.expected_identity_sha256)
         || !lowercase_sha256(&request.expected_payload_sha256)
@@ -493,6 +545,10 @@ pub(crate) fn publish_internal_labs_multimod_raw_sidecar_v1(
             "Reopen the completed result and select its listed evidence entry.",
         ));
     }
+    let standard_surface = validate_raw_sidecar_surface_access_v1(
+        &request.surface,
+        request.experimental_labs_enabled,
+    )?;
     let expected_project = Uuid::parse_str(&request.project_id).map_err(|_| {
         MultiModRawSidecarExportErrorV1::new(
             "multimod.raw_export.request_invalid",
@@ -556,6 +612,15 @@ pub(crate) fn publish_internal_labs_multimod_raw_sidecar_v1(
             )
         })?;
     let provenance = attachment.result.provenance();
+    if standard_surface
+        && provenance.qualification != MultimodQualificationStateV1::ReleaseQualifiedCandidate
+    {
+        return Err(MultiModRawSidecarExportErrorV1::new(
+            "multimod.raw_export.standard_result_not_qualified",
+            "The selected result is not release-qualified by this executable's immutable candidate authority.",
+            "Do not export it through Standard; use only an exact covered candidate result.",
+        ));
+    }
     if provenance.qualification == MultimodQualificationStateV1::ReleaseQualifiedCandidate {
         let receipt = provenance
             .candidate_qualification_receipt
@@ -641,7 +706,12 @@ pub(crate) fn publish_internal_labs_multimod_raw_sidecar_v1(
 
 #[cfg(test)]
 mod tests {
-    use super::{exportable_entry, publish_strictly_validated_payload_v1};
+    use super::{
+        INTERNAL_LABS_SURFACE_V1, MULTIMOD_STANDARD_SURFACE_V1, exportable_entry,
+        publish_strictly_validated_payload_v1, validate_raw_sidecar_surface_access_using_v1,
+        validate_raw_sidecar_surface_access_v1,
+    };
+    use crate::multimod_candidate_authority_v1::with_typed_qualification_test_authority_v1;
     use qpls_project::{
         encode_multimod_arrow_sidecar_v1, multimod_membership_with_row_tokens_batch_v1,
         multimod_target_ledger_batch_v1,
@@ -697,7 +767,7 @@ mod tests {
         .unwrap();
         let replicates = encode_multimod_arrow_sidecar_v1(
             result_id,
-            "conditional-target-vectors.arrow",
+            "conditional-inference-target-vectors.arrow",
             &identity,
             "conditional-inference:target-vectors",
             &multimod_target_ledger_batch_v1(
@@ -719,7 +789,7 @@ mod tests {
             let (published, byte_count) =
                 publish_strictly_validated_payload_v1(result_id, &payload, &path.to_string_lossy())
                     .unwrap();
-            assert_eq!(published, path);
+            assert_eq!(published, fs::canonicalize(&path).unwrap());
             assert_eq!(byte_count, payload.bytes.len() as u64);
             assert_eq!(fs::read(&path).unwrap(), payload.bytes);
 
@@ -736,7 +806,7 @@ mod tests {
         let identity = "b".repeat(64);
         let mut payload = encode_multimod_arrow_sidecar_v1(
             result_id,
-            "conditional-target-vectors.arrow",
+            "conditional-inference-target-vectors.arrow",
             &identity,
             "conditional-inference:target-vectors",
             &multimod_target_ledger_batch_v1(
@@ -757,5 +827,70 @@ mod tests {
                 .unwrap_err();
         assert_eq!(error.code, "multimod.raw_export.payload_mismatch");
         assert!(!path.exists());
+    }
+
+    #[test]
+    fn raw_sidecar_standard_surface_uses_only_embedded_candidate_authority() {
+        let mixed_surface = validate_raw_sidecar_surface_access_using_v1(
+            MULTIMOD_STANDARD_SURFACE_V1,
+            true,
+            || -> Result<bool, String> {
+                panic!("an invalid Standard/Labs pair must not consult authority")
+            },
+        )
+        .unwrap_err();
+        assert_eq!(mixed_surface.code, "multimod.raw_export.surface_invalid");
+
+        let labs_disabled = validate_raw_sidecar_surface_access_using_v1(
+            INTERNAL_LABS_SURFACE_V1,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(
+            labs_disabled.code,
+            "multimod.raw_export.internal_labs_required"
+        );
+
+        let denied = validate_raw_sidecar_surface_access_using_v1(
+            MULTIMOD_STANDARD_SURFACE_V1,
+            false,
+            || Ok(false),
+        )
+        .unwrap_err();
+        assert_eq!(
+            denied.code,
+            "multimod.raw_export.standard_authority_required"
+        );
+
+        with_typed_qualification_test_authority_v1(
+            &["conditional.multi_two_way_percentile.v2::explicit_path_target_math"],
+            |_| {
+                assert!(
+                    validate_raw_sidecar_surface_access_v1(MULTIMOD_STANDARD_SURFACE_V1, false,)
+                        .unwrap()
+                );
+            },
+        )
+        .unwrap();
+    }
+
+    #[test]
+    fn raw_sidecar_labs_surface_still_requires_explicit_opt_in() {
+        let denied = validate_raw_sidecar_surface_access_using_v1(
+            INTERNAL_LABS_SURFACE_V1,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(denied.code, "multimod.raw_export.internal_labs_required");
+        assert!(
+            !validate_raw_sidecar_surface_access_using_v1(
+                INTERNAL_LABS_SURFACE_V1,
+                true,
+                || -> Result<bool, String> { panic!("Labs access must not consult authority") },
+            )
+            .unwrap()
+        );
     }
 }

@@ -427,7 +427,32 @@ pub fn fit_fimix_pls_v2(
     input: &StandardizedFimixInputV2,
     config: &FimixPlsV2Config,
 ) -> Result<FimixPlsV2Result, HeterogeneityV2Error> {
+    fit_fimix_pls_internal_v2(input, config, None)
+}
+
+/// Estimate FIMIX-PLS while deriving deterministic multistart row identities
+/// from the supplied scientific source features. The standardized structural
+/// equations still define every fitted quantity; the additional features are
+/// used only to make seeded start allocation invariant to physical row order
+/// and to low-bit changes introduced by order-dependent standardization.
+pub fn fit_fimix_pls_with_scientific_row_features_v2(
+    input: &StandardizedFimixInputV2,
+    scientific_row_features: &[Vec<f64>],
+    config: &FimixPlsV2Config,
+) -> Result<FimixPlsV2Result, HeterogeneityV2Error> {
+    fit_fimix_pls_internal_v2(input, config, Some(scientific_row_features))
+}
+
+fn fit_fimix_pls_internal_v2(
+    input: &StandardizedFimixInputV2,
+    config: &FimixPlsV2Config,
+    scientific_row_features: Option<&[Vec<f64>]>,
+) -> Result<FimixPlsV2Result, HeterogeneityV2Error> {
     let observations = validate_fimix_contract(input, config)?;
+    let row_keys = match scientific_row_features {
+        Some(features) => validate_fimix_scientific_row_features_v2(features, observations)?,
+        None => fimix_scientific_row_keys_v2(input),
+    };
     let minimum_effective_size = minimum_fimix_class_size(input, config, observations);
     if observations < config.classes.saturating_mul(minimum_effective_size) {
         return Err(HeterogeneityV2Error::InvalidContract(format!(
@@ -448,6 +473,7 @@ pub fn fit_fimix_pls_v2(
         let start_seed = derive_domain_seed_v2(config.seed, "fimix_start", start_index as u64);
         match run_fimix_start(
             input,
+            &row_keys,
             config,
             minimum_effective_size,
             start_index,
@@ -480,7 +506,32 @@ pub fn fit_fimix_pls_v2(
             .total_cmp(&left.log_likelihood)
             .then(left.start_index.cmp(&right.start_index))
     });
-    let best = completed[0].clone();
+    let exact_best = completed[0].clone();
+    let (exact_stability, exact_reproducing_count) =
+        fimix_multistart_stability(&exact_best, &completed, config)?;
+    if exact_reproducing_count < config.required_reproducing_starts {
+        return Err(HeterogeneityV2Error::UnstableFimixOptimum {
+            reproducing_starts: exact_reproducing_count,
+            required_starts: config.required_reproducing_starts,
+            diagnostics,
+        });
+    }
+    let canonical_start_index = exact_stability
+        .reproducing_start_indices
+        .into_iter()
+        .min()
+        .expect("the exact optimum always reproduces itself");
+    let best = completed
+        .iter()
+        .find(|run| run.start_index == canonical_start_index)
+        .cloned()
+        .expect("the canonical optimum is a completed start");
+    completed.sort_by_key(|run| {
+        (
+            usize::from(run.start_index != best.start_index),
+            run.start_index,
+        )
+    });
     let (stability, reproducing_count) = fimix_multistart_stability(&best, &completed, config)?;
     if reproducing_count < config.required_reproducing_starts {
         return Err(HeterogeneityV2Error::UnstableFimixOptimum {
@@ -954,12 +1005,14 @@ fn validate_fimix_likelihood_step_v2(
 
 fn run_fimix_start(
     input: &StandardizedFimixInputV2,
+    row_keys: &[ScientificContentRowKeyV2],
     config: &FimixPlsV2Config,
     minimum_effective_size: usize,
     start_index: usize,
     start_seed: u64,
 ) -> Result<InternalFimixRun, InternalStartFailure> {
-    let mut posteriors = initial_responsibilities(input, config.classes, start_index, start_seed);
+    let mut posteriors =
+        initial_responsibilities(input, row_keys, config.classes, start_index, start_seed);
     let mut classes = fimix_m_step(input, &posteriors, config, minimum_effective_size, 0)?;
     let (mut log_likelihood, updated) = fimix_e_step(input, &classes, 0)?;
     posteriors = updated;
@@ -1128,15 +1181,44 @@ fn fimix_scientific_row_keys_v2(
         .collect()
 }
 
+fn validate_fimix_scientific_row_features_v2(
+    features: &[Vec<f64>],
+    observations: usize,
+) -> Result<Vec<ScientificContentRowKeyV2>, HeterogeneityV2Error> {
+    if features.len() != observations
+        || features.first().is_none_or(Vec::is_empty)
+        || features
+            .iter()
+            .any(|row| row.len() != features[0].len() || row.iter().any(|value| !value.is_finite()))
+    {
+        return Err(HeterogeneityV2Error::InvalidContract(
+            "FIMIX scientific row features must be a finite rectangular matrix with one row per observation"
+                .to_string(),
+        ));
+    }
+    Ok(features
+        .iter()
+        .map(|row| {
+            let mut canonical = Vec::with_capacity(8 + row.len() * 8);
+            canonical.extend_from_slice(&(row.len() as u64).to_le_bytes());
+            for value in row {
+                update_row_key_f64_v2(&mut canonical, *value);
+            }
+            finish_scientific_row_key_v2(FIMIX_SCIENTIFIC_ROW_KEY_DOMAIN_V2, canonical)
+        })
+        .collect())
+}
+
 fn initial_responsibilities(
     input: &StandardizedFimixInputV2,
+    row_keys: &[ScientificContentRowKeyV2],
     classes: usize,
     start_index: usize,
     seed: u64,
 ) -> Vec<Vec<f64>> {
     let observations = input.equations[0].outcome.len();
-    let row_keys = fimix_scientific_row_keys_v2(input);
-    let mut order = scientific_row_order_v2(&row_keys);
+    debug_assert_eq!(row_keys.len(), observations);
+    let mut order = scientific_row_order_v2(row_keys);
     if start_index == 0 {
         order.sort_by(|left, right| {
             initial_row_key(input, *left)
@@ -1569,7 +1651,10 @@ fn fimix_multistart_stability(
     let mut reproducing = vec![best.start_index];
     let mut maximum_coefficient_difference = 0.0f64;
     let mut maximum_posterior_difference = 0.0f64;
-    for candidate in completed.iter().skip(1) {
+    for candidate in completed
+        .iter()
+        .filter(|candidate| candidate.start_index != best.start_index)
+    {
         let likelihood_difference = (candidate.log_likelihood - best.log_likelihood).abs()
             / (1.0 + best.log_likelihood.abs());
         if likelihood_difference > config.optimum_relative_log_likelihood_tolerance {
@@ -1594,6 +1679,7 @@ fn fimix_multistart_stability(
             maximum_posterior_difference = maximum_posterior_difference.max(posterior_difference);
         }
     }
+    reproducing[1..].sort_unstable();
     let count = reproducing.len();
     Ok((
         FimixMultistartStabilityV2 {
@@ -2496,6 +2582,36 @@ pub fn build_pls_pos_start_plan_v2(
     seed: u64,
     same_k_fimix_assignments: Option<&[usize]>,
 ) -> Result<Vec<Vec<usize>>, HeterogeneityV2Error> {
+    build_pls_pos_start_plan_internal_v2(features, None, segments, seed, same_k_fimix_assignments)
+}
+
+/// Build the frozen ten-start plan while using raw scientific source rows as
+/// the deterministic row identity. Standardized score features continue to
+/// define projection and axis partitions; source rows define only stable
+/// ordering, seeded shuffles, and exact-value ties.
+pub fn build_pls_pos_start_plan_with_scientific_row_features_v2(
+    features: &[Vec<f64>],
+    scientific_row_features: &[Vec<f64>],
+    segments: usize,
+    seed: u64,
+    same_k_fimix_assignments: Option<&[usize]>,
+) -> Result<Vec<Vec<usize>>, HeterogeneityV2Error> {
+    build_pls_pos_start_plan_internal_v2(
+        features,
+        Some(scientific_row_features),
+        segments,
+        seed,
+        same_k_fimix_assignments,
+    )
+}
+
+fn build_pls_pos_start_plan_internal_v2(
+    features: &[Vec<f64>],
+    scientific_row_features: Option<&[Vec<f64>]>,
+    segments: usize,
+    seed: u64,
+    same_k_fimix_assignments: Option<&[usize]>,
+) -> Result<Vec<Vec<usize>>, HeterogeneityV2Error> {
     if !(MIN_CLASSES_OR_SEGMENTS..=MAX_CLASSES_OR_SEGMENTS).contains(&segments)
         || features.is_empty()
         || features[0].is_empty()
@@ -2532,7 +2648,12 @@ pub fn build_pls_pos_start_plan_v2(
 
     let generated_target = START_COUNT - usize::from(fimix.is_some());
     let mut starts = Vec::with_capacity(START_COUNT);
-    let row_keys = pos_scientific_row_keys_v2(features);
+    let row_keys = match scientific_row_features {
+        Some(scientific_rows) => {
+            validate_pos_scientific_row_features_v2(scientific_rows, features.len())?
+        }
+        None => pos_scientific_row_keys_v2(features),
+    };
     let scientific_order = scientific_row_order_v2(&row_keys);
 
     let mut aggregate_order = scientific_order.clone();
@@ -2842,22 +2963,32 @@ fn fit_pls_pos_internal<R: PlsPosFullRefitterV2>(
             .total_cmp(&left.objective)
             .then(left.start_index.cmp(&right.start_index))
     });
-    let best = runs[0].clone();
-    let mut reproducing = vec![best.start_index];
-    for candidate in runs.iter().skip(1) {
-        if (candidate.objective - best.objective).abs() > config.stable_objective_tolerance {
-            continue;
-        }
-        let alignment =
-            align_labels_exhaustive_v2(&best.assignments, &candidate.assignments, config.segments)?;
-        if !alignment.ambiguous
-            && alignment.matched_observations == observations
-            && aligned_pos_parameter_difference(&best, candidate, &alignment)
-                <= config.stable_objective_tolerance
-        {
-            reproducing.push(candidate.start_index);
-        }
+    let exact_best = runs[0].clone();
+    let exact_reproducing =
+        pos_multistart_reproducing_indices_v2(&exact_best, &runs, config, observations)?;
+    if exact_reproducing.len() < config.required_reproducing_starts {
+        return Err(HeterogeneityV2Error::UnstablePosOptimum {
+            reproducing_starts: exact_reproducing.len(),
+            required_starts: config.required_reproducing_starts,
+            diagnostics,
+        });
     }
+    let canonical_start_index = exact_reproducing
+        .into_iter()
+        .min()
+        .expect("the exact POS optimum always reproduces itself");
+    let best = runs
+        .iter()
+        .find(|run| run.start_index == canonical_start_index)
+        .cloned()
+        .expect("the canonical POS optimum is a completed start");
+    runs.sort_by_key(|run| {
+        (
+            usize::from(run.start_index != best.start_index),
+            run.start_index,
+        )
+    });
+    let reproducing = pos_multistart_reproducing_indices_v2(&best, &runs, config, observations)?;
     if reproducing.len() < config.required_reproducing_starts {
         return Err(HeterogeneityV2Error::UnstablePosOptimum {
             reproducing_starts: reproducing.len(),
@@ -2896,6 +3027,34 @@ fn fit_pls_pos_internal<R: PlsPosFullRefitterV2>(
     };
     validate_pos_multistart_evidence_v2(&result)?;
     Ok(result)
+}
+
+fn pos_multistart_reproducing_indices_v2(
+    best: &InternalPosRun,
+    runs: &[InternalPosRun],
+    config: &PlsPosV2Config,
+    observations: usize,
+) -> Result<Vec<usize>, HeterogeneityV2Error> {
+    let mut reproducing = vec![best.start_index];
+    for candidate in runs
+        .iter()
+        .filter(|candidate| candidate.start_index != best.start_index)
+    {
+        if (candidate.objective - best.objective).abs() > config.stable_objective_tolerance {
+            continue;
+        }
+        let alignment =
+            align_labels_exhaustive_v2(&best.assignments, &candidate.assignments, config.segments)?;
+        if !alignment.ambiguous
+            && alignment.matched_observations == observations
+            && aligned_pos_parameter_difference(best, candidate, &alignment)
+                <= config.stable_objective_tolerance
+        {
+            reproducing.push(candidate.start_index);
+        }
+    }
+    reproducing[1..].sort_unstable();
+    Ok(reproducing)
 }
 
 fn validate_pos_contract(
@@ -4371,6 +4530,20 @@ mod tests {
         assert_eq!(result.classes.len(), 2);
         assert_eq!(result.posteriors.len(), 160);
         assert!(result.stability.stable);
+        assert_eq!(
+            result.selected_start_index,
+            *result
+                .stability
+                .reproducing_start_indices
+                .iter()
+                .min()
+                .unwrap()
+        );
+        assert!(
+            result.multistart_evidence.completed_starts[1..]
+                .windows(2)
+                .all(|window| window[0].start_index < window[1].start_index)
+        );
         assert!(
             result
                 .posteriors
@@ -4433,13 +4606,67 @@ mod tests {
         let mut reversed = input.clone();
         reversed.equations[0].design.reverse();
         reversed.equations[0].outcome.reverse();
+        let expected_keys = fimix_scientific_row_keys_v2(&input);
+        let reversed_keys = fimix_scientific_row_keys_v2(&reversed);
 
         for start_index in 0..5 {
             let seed = derive_domain_seed_v2(42, "fimix_start", start_index as u64);
-            let expected = initial_responsibilities(&input, 3, start_index, seed);
-            let mut actual = initial_responsibilities(&reversed, 3, start_index, seed);
+            let expected = initial_responsibilities(&input, &expected_keys, 3, start_index, seed);
+            let mut actual =
+                initial_responsibilities(&reversed, &reversed_keys, 3, start_index, seed);
             actual.reverse();
             assert_eq!(actual, expected, "start {start_index} changed by reversal");
+        }
+    }
+
+    #[test]
+    fn fimix_raw_row_identities_ignore_low_bit_standardization_drift() {
+        let observations = 24usize;
+        let input = StandardizedFimixInputV2 {
+            interaction_profile: HeterogeneityInteractionProfileV2::P0Structural,
+            metric: fixture_metric(observations),
+            equations: vec![StandardizedStructuralEquationV2 {
+                equation_id: "low_bit_drift".into(),
+                outcome_id: "y".into(),
+                predictor_ids: vec!["x".into()],
+                design: (0..observations)
+                    .map(|row| vec![row as f64 * 3.0 + 0.25])
+                    .collect(),
+                outcome: (0..observations)
+                    .map(|row| row as f64 * 2.0 - 4.0)
+                    .collect(),
+                include_intercept: true,
+            }],
+        };
+        let raw_rows = (0..observations)
+            .map(|row| vec![1_000.0 + row as f64, (row * row + 7) as f64])
+            .collect::<Vec<_>>();
+        let mut reversed = input.clone();
+        reversed.equations[0].design.reverse();
+        reversed.equations[0].outcome.reverse();
+        for (row, values) in reversed.equations[0].design.iter_mut().enumerate() {
+            values[0] += (row + 1) as f64 * 1.0e-14;
+        }
+        for (row, value) in reversed.equations[0].outcome.iter_mut().enumerate() {
+            *value -= (row + 1) as f64 * 1.0e-14;
+        }
+        let mut reversed_raw_rows = raw_rows.clone();
+        reversed_raw_rows.reverse();
+        let expected_keys =
+            validate_fimix_scientific_row_features_v2(&raw_rows, observations).unwrap();
+        let reversed_keys =
+            validate_fimix_scientific_row_features_v2(&reversed_raw_rows, observations).unwrap();
+
+        for start_index in 0..6 {
+            let seed = derive_domain_seed_v2(42, "fimix_start", start_index as u64);
+            let expected = initial_responsibilities(&input, &expected_keys, 3, start_index, seed);
+            let mut actual =
+                initial_responsibilities(&reversed, &reversed_keys, 3, start_index, seed);
+            actual.reverse();
+            assert_eq!(
+                actual, expected,
+                "start {start_index} changed by low-bit drift"
+            );
         }
     }
 
@@ -4777,6 +5004,63 @@ mod tests {
     }
 
     #[test]
+    fn pos_start_plan_uses_raw_identities_across_low_bit_score_drift() {
+        let rows = 41usize;
+        let features = (0..rows)
+            .map(|row| {
+                (0..5)
+                    .map(|column| row as f64 * (column + 2) as f64 + column as f64 * 0.25)
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+        let raw_rows = (0..rows)
+            .map(|row| vec![10_000.0 + row as f64, (row * row + 11) as f64])
+            .collect::<Vec<_>>();
+        let fimix = (0..rows).map(|row| row % 3).collect::<Vec<_>>();
+        let mut reversed_features = features.clone();
+        reversed_features.reverse();
+        for (row, values) in reversed_features.iter_mut().enumerate() {
+            for (column, value) in values.iter_mut().enumerate() {
+                *value += (row + column + 1) as f64 * 1.0e-14;
+            }
+        }
+        let mut reversed_raw_rows = raw_rows.clone();
+        reversed_raw_rows.reverse();
+        let mut reversed_fimix = fimix.clone();
+        reversed_fimix.reverse();
+
+        for (expected_fimix, actual_fimix) in [
+            (None, None),
+            (Some(fimix.as_slice()), Some(reversed_fimix.as_slice())),
+        ] {
+            let expected = build_pls_pos_start_plan_with_scientific_row_features_v2(
+                &features,
+                &raw_rows,
+                3,
+                42,
+                expected_fimix,
+            )
+            .unwrap();
+            let actual = build_pls_pos_start_plan_with_scientific_row_features_v2(
+                &reversed_features,
+                &reversed_raw_rows,
+                3,
+                42,
+                actual_fimix,
+            )
+            .unwrap()
+            .into_iter()
+            .map(|mut assignments| {
+                assignments.reverse();
+                assignments
+            })
+            .collect::<Vec<_>>();
+
+            assert_eq!(actual, expected);
+        }
+    }
+
+    #[test]
     fn pos_start_plan_changes_with_the_master_seed() {
         let features = pos_start_features(41);
         let first = build_pls_pos_start_plan_v2(&features, 4, 42, None).unwrap();
@@ -5051,6 +5335,15 @@ mod tests {
                 .all(|window| window[1] > window[0])
         );
         assert!(result.reproducing_start_indices.len() >= 2);
+        assert_eq!(
+            result.selected_start_index,
+            *result.reproducing_start_indices.iter().min().unwrap()
+        );
+        assert!(
+            result.multistart_evidence.completed_starts[1..]
+                .windows(2)
+                .all(|window| window[0].start_index < window[1].start_index)
+        );
         assert_eq!(result.segments[0].observations, 20);
         assert_eq!(result.segments[1].observations, 20);
     }

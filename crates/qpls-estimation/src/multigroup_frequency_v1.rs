@@ -5,6 +5,7 @@
 //! totals; bootstrap allocations are multinomial with probabilities f_i/N.
 //! No operation materializes the expanded row vector.
 
+use crate::multigroup_v1::{mga_greater_or_tied_v1, mga_less_or_tied_v1};
 use crate::{
     AlternativeHypothesisV1, BootstrapGroupLedgerV1, BootstrapLedgerEntryV1,
     EligibilityBlockerCodeV1, EligibilityBlockerV1, EligibilityWarningCodeV1, EligibilityWarningV1,
@@ -1180,13 +1181,13 @@ pub fn run_frequency_pairwise_permutation_with_plan_v1<R: FrequencyMultigroupRef
                 if index == 0 {
                     audit_null_differences.push(difference);
                 }
-                if difference.abs() >= observed[index].abs() {
+                if mga_greater_or_tied_v1(difference.abs(), observed[index].abs()) {
                     absolute[index] += 1;
                 }
-                if difference >= observed[index] {
+                if mga_greater_or_tied_v1(difference, observed[index]) {
                     greater[index] += 1;
                 }
-                if difference <= observed[index] {
+                if mga_less_or_tied_v1(difference, observed[index]) {
                     less[index] += 1;
                 }
             }
@@ -1413,7 +1414,7 @@ pub fn run_frequency_max_spread_omnibus_permutation_v1<R: FrequencyMultigroupRef
             let spread = maximum_spreads(&values, parameters.len());
             for index in 0..parameters.len() {
                 null_spreads[index].push(spread[index]);
-                if spread[index] >= observed[index] {
+                if mga_greater_or_tied_v1(spread[index], observed[index]) {
                     extremes[index] += 1;
                 }
             }
@@ -2037,7 +2038,7 @@ where
             add_one_probability(
                 correlation_values
                     .iter()
-                    .filter(|value| **value <= point.correlation)
+                    .filter(|value| mga_less_or_tied_v1(**value, point.correlation))
                     .count(),
                 usable,
             )
@@ -2046,7 +2047,9 @@ where
             add_one_probability(
                 means[construct]
                     .iter()
-                    .filter(|value| value.abs() >= point.mean_difference.abs())
+                    .filter(|value| {
+                        mga_greater_or_tied_v1(value.abs(), point.mean_difference.abs())
+                    })
                     .count(),
                 usable,
             )
@@ -2055,13 +2058,15 @@ where
             add_one_probability(
                 variances[construct]
                     .iter()
-                    .filter(|value| value.abs() >= point.log_variance_ratio.abs())
+                    .filter(|value| {
+                        mga_greater_or_tied_v1(value.abs(), point.log_variance_ratio.abs())
+                    })
                     .count(),
                 usable,
             )
         });
-        let compositional_invariance =
-            complete && lower.is_some_and(|threshold| point.correlation >= threshold);
+        let compositional_invariance = complete
+            && lower.is_some_and(|threshold| mga_greater_or_tied_v1(point.correlation, threshold));
         let equal_means = mean_probability.is_some_and(|probability| probability >= config.alpha);
         let equal_variances =
             variance_probability.is_some_and(|probability| probability >= config.alpha);

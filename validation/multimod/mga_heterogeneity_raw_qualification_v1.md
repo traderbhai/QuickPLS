@@ -74,7 +74,11 @@ construct's Step-3 mean and log-variance-ratio series. The comparator
 recalculates Type-7 quantiles, plus-one tails, Step-2/Step-3 decisions, and a
 representative Henseler probability from the shared group-bootstrap bank. All
 other targets retain stable identities and summaries without duplicating large
-raw vectors.
+raw vectors. Extreme-tail and directional-tie decisions use the frozen
+scale-aware guard `64 * EPSILON * max(1, abs(left), abs(right))`; this treats
+machine-roundoff zero/unit-correlation differences consistently without
+changing finite scientific contrasts. The independent comparator applies the
+same published rule directly to retained raw draws.
 
 The wrapper rejects a dirty tracked or untracked tree, non-baseline metamorphic
 environment, non-seed-42 qualification, stale cell identity, or altered cache

@@ -79,6 +79,34 @@ function okOutcome() {
 }
 
 describe("Internal/Labs schema-6 Save copy contract", () => {
+  it("accepts Standard(false) and rejects both cross-paired access requests", () => {
+    expect(
+      parseInternalProjectArchiveV6SaveCopyRequestV1({
+        ...request(),
+        surface: "standard_multimod_v1",
+        experimentalLabsEnabled: false,
+      }),
+    ).toMatchObject({
+      surface: "standard_multimod_v1",
+      experimentalLabsEnabled: false,
+    });
+    for (const access of [
+      { surface: "internal_labs", experimentalLabsEnabled: false },
+      { surface: "standard_multimod_v1", experimentalLabsEnabled: true },
+    ]) {
+      expect(() =>
+        parseInternalProjectArchiveV6SaveCopyRequestV1({
+          ...request(),
+          ...access,
+        }),
+      ).toThrowError(
+        expect.objectContaining({
+          code: "schema6_save_copy.surface_pair_invalid",
+        }),
+      );
+    }
+  });
+
   it("accepts only a receipt-bound strict destination snapshot", () => {
     const parsed = parseInternalProjectArchiveV6SaveCopyOutcomeV1(okOutcome(), request());
     expect(parsed).toMatchObject({

@@ -1,6 +1,8 @@
 # QuickPLS MultiMod boundaries and qualification
 
-Status: implementation candidate, Labs only, evidence absent.
+Status: tracked capability templates are Labs/absent. An immutable candidate
+may expose Standard/release-qualified MultiMod only when its build embeds a
+complete external authority for that exact commit and every declared cell.
 
 This document is the product-level boundary for the additive MultiMod work. It
 does not promote a method, replace a historical contract, or imply that the
@@ -114,9 +116,19 @@ never says that causality was established.
 
 ## Evidence ladder
 
-Each profile/procedure cell starts with `surface=labs` and
-`evidence_state=absent`. Promotion requires all of the following against one
-exact candidate commit:
+The tracked capability index and family manifests are permanent fail-closed
+templates: every profile/procedure cell stays `surface=labs`,
+`promotion_allowed=false`, and `evidence_state=absent`. Qualification never
+rewrites those source files. After the evidence ladder passes, the external
+materializer derives a separate prepackage/live manifest set with
+`surface=standard`, `promotion_allowed=true`, and release-qualified evidence
+for one exact clean candidate commit. `build.rs` embeds that authority only
+when its Git, version, qualification-plan, gate-binding, source, receipt, and
+complete exact-cell identities all match. A build without that complete
+authority embeds the Labs sentinel, and no runtime request or project can
+upgrade it.
+
+Promotion requires all of the following against one exact candidate commit:
 
 1. Frozen method specification, configuration/result schema and compiler
    receipt identity.
@@ -136,16 +148,21 @@ exact candidate commit:
 10. A live manifest whose source hashes and candidate commit match the final
     unmerged commit exactly.
 
-Missing or stale evidence derives `absent`; a declarative manifest can never
-promote itself. Registry state must not exceed the live derivation.
+Missing, stale, incomplete, duplicated, crossed, or identity-mismatched
+evidence derives `absent`; a declarative manifest can never promote itself.
+Registry state must not exceed the live derivation. The installed and portable
+qualified candidates must visibly expose Standard with Labs disabled and no
+Lab-only badge.
 
 The frozen competitor catalogue in `capability_registry_v2.json` has exactly
 45 official rows and conservatively projects a whole row to the least mature
 option cell. Adding an absent MultiMod cell there would incorrectly downgrade
 already release-qualified legacy MGA or mediation cells. Pending MultiMod work
 is therefore registered additively in
-`validation/multimod/multimod_capability_index_v1.json` and the six Labs cell
-manifest templates. It must enter the customer registry only through a
+`validation/multimod/multimod_capability_index_v1.json` and the four tracked
+Labs/absent family manifest templates. A qualified package surface comes only
+from the immutable embedded external authority, never from editing these
+templates. MultiMod must enter the customer registry only through a
 separately reviewed registry-generation change that can preserve qualified V1
 availability while keeping each V2 profile absent until its own evidence is
 live.
@@ -153,8 +170,8 @@ live.
 ## Campaign boundary
 
 `validation/run_v256_multimod_qualification.ps1` is a resumable campaign
-driver draft. Until every plan gate is marked ready and bound to a real command,
-the driver refuses execution and can only print its plan. The campaign writes
+driver. It refuses execution while any plan gate is pending or lacks a reviewed
+command binding. The campaign writes
 one issue inventory and never edits source. Foundational fixes invalidate all
 dependent gates as recorded in the plan. Open upstream issues are resolved
 through the transitive dependency graph, and invalidated gates are recorded as
@@ -182,8 +199,17 @@ attempt.
 changed. It executes prior open issue roots plus their dependency closure, marks
 all other gates `not_executed_targeted`, and never runs performance, package,
 installed/portable, live-manifest, or release-acceptance gates. Its evidence is
-not promotion eligible. After any source change, release qualification still
-requires one complete exact-current-SHA confirmation campaign.
+not promotion eligible.
+
+A first complete qualification-eligible campaign is sufficient for release
+acceptance when every gate passes, the issue inventory is empty, both packaged
+Standard smoke receipts are valid, and the final acceptance verifier succeeds
+for that exact unchanged SHA. There is no unconditional requirement to repeat
+an already clean full campaign. If a campaign records any issue, however, that
+campaign cannot promote. Fixing an issue changes source and invalidates the old
+inventory and all dependent receipts; one fresh full exact-current-SHA
+confirmation campaign is then required. Targeted reruns remain diagnostic and
+cannot substitute for that confirmation.
 
 Qualification does not merge, push, tag,
 publish or replace public installer artifacts.

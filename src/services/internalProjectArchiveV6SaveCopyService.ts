@@ -2,11 +2,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "../domain/internalProjectArchiveV6Read";
 import {
-  INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE,
   parseInternalProjectArchiveV6SaveCopyOutcomeV1,
   parseInternalProjectArchiveV6SaveCopyRequestV1,
 } from "../domain/internalProjectArchiveV6SaveCopy";
 import type { InternalProjectArchiveV6Wire } from "../domain/internalProjectArchiveV6Wire";
+import {
+  resolveInternalProjectArchiveV6AccessV1,
+  type InternalProjectArchiveV6AccessDependenciesV1,
+} from "./internalProjectArchiveV6AccessService";
 
 const SAVE_SCHEMA6_COPY_COMMAND = "save_internal_project_archive_v6_copy";
 
@@ -20,10 +23,10 @@ export async function saveInternalProjectArchiveV6CopyAt(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
   project: InternalProjectArchiveV6Wire,
   destinationArchivePath: string,
+  dependencies: InternalProjectArchiveV6AccessDependenciesV1 = {},
 ) {
   const request = parseInternalProjectArchiveV6SaveCopyRequestV1({
-    surface: INTERNAL_PROJECT_ARCHIVE_V6_SAVE_COPY_SURFACE,
-    experimentalLabsEnabled: true,
+    ...(await resolveInternalProjectArchiveV6AccessV1(dependencies)),
     sourceArchivePath: snapshot.archivePath,
     expectedSourceArchiveSha256: snapshot.archiveSha256,
     destinationArchivePath,
@@ -37,11 +40,17 @@ export async function saveInternalProjectArchiveV6CopyAt(
 export async function saveInternalProjectArchiveV6Copy(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
   project: InternalProjectArchiveV6Wire,
+  dependencies: InternalProjectArchiveV6AccessDependenciesV1 = {},
 ) {
   const destinationArchivePath = await save({
     defaultPath: suggestedCopyPath(snapshot.archivePath),
     filters: [{ name: "QuickPLS schema-6 ZIP project", extensions: ["qpls"] }],
   });
   if (!destinationArchivePath) return null;
-  return saveInternalProjectArchiveV6CopyAt(snapshot, project, destinationArchivePath);
+  return saveInternalProjectArchiveV6CopyAt(
+    snapshot,
+    project,
+    destinationArchivePath,
+    dependencies,
+  );
 }

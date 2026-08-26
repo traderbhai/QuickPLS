@@ -5,6 +5,7 @@ import {
   stageNativeMultiModRequestV1,
   startNativeMultiModJobV1,
   type NativeMultiModArchiveAuthorityV1,
+  type NativeMultiModAccessV1,
   type NativeMultiModCompletedResultV1,
   type NativeMultiModPreflightV1,
   type NativeMultiModStagedRequestV1,
@@ -18,9 +19,10 @@ type MgaRequestV1 = Extract<
 export function stageNativeMultimodMgaV1(
   authority: NativeMultiModArchiveAuthorityV1,
   request: MgaRequestV1,
+  access: NativeMultiModAccessV1,
   identity?: { readonly recipeId?: string; readonly createdAt?: string },
 ): NativeMultiModStagedRequestV1 {
-  return stageNativeMultiModRequestV1(authority, request, identity);
+  return stageNativeMultiModRequestV1(authority, request, access, identity);
 }
 
 export async function preflightNativeMultimodMgaV1(

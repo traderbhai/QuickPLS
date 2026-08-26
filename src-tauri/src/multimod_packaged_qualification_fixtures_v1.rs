@@ -19,9 +19,7 @@ pub(crate) struct MultiModPackagedQualificationUnavailableV1 {
 #[cfg(feature = "multimod-qualification-harness")]
 mod enabled {
     use super::*;
-    use crate::multimod_candidate_authority_v1::{
-        NativeMultiModCandidateAuthorityStateV1, embedded_multimod_candidate_authority_v1,
-    };
+    use crate::multimod_candidate_authority_v1::multimod_standard_surface_authorized_v1;
     use chrono::{TimeZone, Utc};
     use qpls_core::*;
     use qpls_data::{Dataset, ImportOptions, import_delimited_bytes};
@@ -38,7 +36,7 @@ mod enabled {
     use uuid::Uuid;
     use zip::{ZipArchive, ZipWriter, write::SimpleFileOptions};
 
-    const SURFACE: &str = "internal_labs_multimod_packaged_qualification_v1";
+    const SURFACE: &str = "standard_multimod_v1";
 
     type FixtureError = Box<dyn std::error::Error + Send + Sync>;
 
@@ -117,13 +115,12 @@ mod enabled {
     }
 
     fn require_enabled_surface(surface: &str, labs: bool) -> Result<(), FixtureError> {
-        if surface != SURFACE || !labs {
+        if surface != SURFACE || labs {
             return Err(invalid(
-                "the packaged qualification surface and Labs confirmation are required",
+                "the Standard MultiMod surface with Labs disabled is required",
             ));
         }
-        let authority = embedded_multimod_candidate_authority_v1().map_err(invalid)?;
-        if authority.state != NativeMultiModCandidateAuthorityStateV1::ReleaseQualifiedCandidate {
+        if !multimod_standard_surface_authorized_v1().map_err(invalid)? {
             return Err(invalid(
                 "the build-embedded MultiMod candidate authority is unavailable",
             ));

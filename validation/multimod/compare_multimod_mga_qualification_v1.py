@@ -217,6 +217,22 @@ def target_id(parameter: dict[str, Any]) -> str:
     return str(parameter["stable_id"])
 
 
+def mga_tie_tolerance(left: float, right: float) -> float:
+    return 64.0 * sys.float_info.epsilon * max(1.0, abs(left), abs(right))
+
+
+def mga_tied(left: float, right: float) -> bool:
+    return abs(left - right) <= mga_tie_tolerance(left, right)
+
+
+def mga_greater_or_tied(left: float, right: float) -> bool:
+    return left >= right - mga_tie_tolerance(left, right)
+
+
+def mga_less_or_tied(left: float, right: float) -> bool:
+    return left <= right + mga_tie_tolerance(left, right)
+
+
 def type7(values: Iterable[float], probability: float) -> float:
     ordered = sorted(float(value) for value in values)
     if len(ordered) == 1:
@@ -585,9 +601,15 @@ def validate_raw_inference_reconstruction(
             row for row in pairwise["parameters"] if target_id(row["parameter"]) == parameter_id
         )
         usable = len(values)
-        p_two_sided = (1 + sum(abs(value) >= abs(observed) for value in values)) / (usable + 1)
-        p_greater = (1 + sum(value >= observed for value in values)) / (usable + 1)
-        p_less = (1 + sum(value <= observed for value in values)) / (usable + 1)
+        p_two_sided = (
+            1 + sum(mga_greater_or_tied(abs(value), abs(observed)) for value in values)
+        ) / (usable + 1)
+        p_greater = (1 + sum(mga_greater_or_tied(value, observed) for value in values)) / (
+            usable + 1
+        )
+        p_less = (1 + sum(mga_less_or_tied(value, observed) for value in values)) / (
+            usable + 1
+        )
         public = next(
             row
             for row in cell["analysis"]["pairwise"]
@@ -636,17 +658,27 @@ def validate_raw_inference_reconstruction(
             row for row in micom["constructs"] if row["construct_id"] == audit["construct_id"]
         )
         lower = type7(values, 0.05)
-        probability = (1 + sum(value <= observed for value in values)) / (len(values) + 1)
-        invariant = observed >= lower
+        probability = (
+            1 + sum(mga_less_or_tied(value, observed) for value in values)
+        ) / (len(values) + 1)
+        invariant = mga_greater_or_tied(observed, lower)
         mean_values = [float(value) for value in audit["permutation_mean_differences"]]
         variance_values = [float(value) for value in audit["permutation_log_variance_ratios"]]
         observed_mean = float(audit["observed_mean_difference_a_minus_b"])
         observed_variance = float(audit["observed_log_variance_ratio_a_minus_b"])
         mean_probability = (
-            1 + sum(abs(value) >= abs(observed_mean) for value in mean_values)
+            1
+            + sum(
+                mga_greater_or_tied(abs(value), abs(observed_mean))
+                for value in mean_values
+            )
         ) / (len(mean_values) + 1)
         variance_probability = (
-            1 + sum(abs(value) >= abs(observed_variance) for value in variance_values)
+            1
+            + sum(
+                mga_greater_or_tied(abs(value), abs(observed_variance))
+                for value in variance_values
+            )
         ) / (len(variance_values) + 1)
         checks.require(
             f"{prefix}.micom_step2_from_raw_null",
@@ -713,8 +745,8 @@ def validate_raw_inference_reconstruction(
             )
             if left_draw is not None and right_draw is not None
         ]
-        greater = sum(value > 0.0 for value in differences)
-        equal = sum(value == 0.0 for value in differences)
+        greater = sum(value > 0.0 and not mga_tied(value, 0.0) for value in differences)
+        equal = sum(mga_tied(value, 0.0) for value in differences)
         probability = (greater + 0.5 * equal) / len(differences)
         public = next(
             row
@@ -777,7 +809,7 @@ def validate_omnibus(cell: dict[str, Any], checks: Checks, prefix: str) -> None:
             float(value) for value in parameter["null_maximum_pairwise_spreads"]
         ]
         probability = (
-            1 + sum(value >= recomputed for value in null_spreads)
+            1 + sum(mga_greater_or_tied(value, recomputed) for value in null_spreads)
         ) / (len(null_spreads) + 1)
         parameter_id = target_id(parameter["parameter"])
         public = next(

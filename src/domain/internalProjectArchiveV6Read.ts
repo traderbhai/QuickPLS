@@ -5,19 +5,25 @@ import {
   type ProjectAnalysisRecipeV4Wire,
   type InternalProjectArchiveV6Wire,
 } from "./internalProjectArchiveV6Wire";
+import {
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1,
+  internalProjectArchiveV6AccessPairV1,
+  type InternalProjectArchiveV6AccessV1,
+} from "./internalProjectArchiveV6Access";
 
 const LOWER_SHA256 = /^[0-9a-f]{64}$/;
 const CANONICAL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 type WireRecord = Record<string, unknown>;
 
-export const INTERNAL_PROJECT_ARCHIVE_V6_READ_SURFACE = "internal_labs" as const;
+/** Historical surface retained for callers that explicitly request Labs. */
+export const INTERNAL_PROJECT_ARCHIVE_V6_READ_SURFACE =
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1.surface;
 
-export interface InternalProjectArchiveV6ReadRequestV1 {
-  surface: typeof INTERNAL_PROJECT_ARCHIVE_V6_READ_SURFACE;
-  experimentalLabsEnabled: true;
+export type InternalProjectArchiveV6ReadRequestV1 =
+  InternalProjectArchiveV6AccessV1 & {
   archivePath: string;
-}
+};
 
 export interface InternalProjectArchiveV6ManifestV1 {
   schema_version: 6;
@@ -155,6 +161,32 @@ function textAt(value: unknown, path: string, allowEmpty = false): string {
     fail("schema6_archive_read.text_required", path, `${path} must be a${allowEmpty ? "" : " nonempty"} string.`);
   }
   return value;
+}
+
+export function parseInternalProjectArchiveV6ReadRequestV1(
+  input: unknown,
+): InternalProjectArchiveV6ReadRequestV1 {
+  const path = "request";
+  const request = exactRecordAt(
+    input,
+    ["surface", "experimentalLabsEnabled", "archivePath"],
+    path,
+  );
+  const access = internalProjectArchiveV6AccessPairV1(
+    request.surface,
+    request.experimentalLabsEnabled,
+  );
+  if (!access) {
+    fail(
+      "schema6_archive_read.surface_pair_invalid",
+      path,
+      "Archive inspection requires exact internal_labs/true or standard_multimod_v1/false access.",
+    );
+  }
+  return {
+    ...access,
+    archivePath: textAt(request.archivePath, `${path}.archivePath`),
+  };
 }
 
 function sha256At(value: unknown, path: string): string {

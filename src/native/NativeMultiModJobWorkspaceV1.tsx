@@ -32,6 +32,7 @@ import {
   stageNativeMultiModRequestV1,
   startNativeMultiModJobV1,
   type NativeMultiModArchiveAuthorityV1,
+  type NativeMultiModAccessV1,
   type NativeMultiModCompletedResultV1,
   type NativeMultiModJobSnapshotV1,
   type NativeMultiModPreflightV1,
@@ -48,6 +49,7 @@ interface StagedNativeRequestV1 {
 
 export interface NativeMultiModJobWorkspaceV1Props {
   readonly authority: NativeMultiModArchiveAuthorityV1;
+  readonly access: NativeMultiModAccessV1;
   readonly model: SemModelV4;
   readonly caseCount: number;
   readonly groupingColumns?: readonly NativeMultiModGroupingColumnV1[];
@@ -124,6 +126,7 @@ function progressValue(snapshot: NativeMultiModJobSnapshotV1): number {
 
 export function NativeMultiModJobWorkspaceV1({
   authority,
+  access,
   model,
   caseCount,
   groupingColumns,
@@ -132,6 +135,7 @@ export function NativeMultiModJobWorkspaceV1({
   onArchiveUpdated,
 }: NativeMultiModJobWorkspaceV1Props) {
   const authorityKey = useMemo(() => JSON.stringify(authority), [authority]);
+  const accessKey = `${access.surface}:${String(access.experimentalLabsEnabled)}`;
   const incomingAuthority = useRef(authority);
   incomingAuthority.current = authority;
   const effectiveAuthority = useRef(authority);
@@ -172,7 +176,7 @@ export function NativeMultiModJobWorkspaceV1({
     setGroupingProfileNotice(null);
     setOperationPending(false);
     setSelectedResidentResultId(residentResults[0]?.attachment.result_id ?? "");
-  }, [authorityKey, residentResults]);
+  }, [accessKey, authorityKey, residentResults]);
 
   useEffect(() => {
     let live = true;
@@ -182,7 +186,7 @@ export function NativeMultiModJobWorkspaceV1({
         live = false;
       };
     }
-    void profileNativeMultiModGroupingV1(incomingAuthority.current)
+    void profileNativeMultiModGroupingV1(incomingAuthority.current, access)
       .then((profile) => {
         if (!live) return;
         setProfiledGroupingColumns(profile.columns);
@@ -201,7 +205,7 @@ export function NativeMultiModJobWorkspaceV1({
     return () => {
       live = false;
     };
-  }, [authorityKey, groupingColumns]);
+  }, [access, authorityKey, groupingColumns]);
 
   useEffect(
     () => () => {
@@ -213,10 +217,14 @@ export function NativeMultiModJobWorkspaceV1({
   const stageAndPreflight = useCallback(
     async (request: MultiModRecipeConfigV1): Promise<StagedNativeRequestV1> => {
       const currentAuthority = effectiveAuthority.current;
-      const requestKey = `${JSON.stringify(currentAuthority)}\n${JSON.stringify(request)}`;
+      const requestKey = `${accessKey}\n${JSON.stringify(currentAuthority)}\n${JSON.stringify(request)}`;
       const cached = stagedByIdentity.current.get(requestKey);
       if (cached) return cached;
-      const staged = stageNativeMultiModRequestV1(currentAuthority, request);
+      const staged = stageNativeMultiModRequestV1(
+        currentAuthority,
+        request,
+        access,
+      );
       const preflight = await preflightNativeMultiModJobV1(staged);
       if (preflight.stagedRecipeId !== staged.stagedRecipeId) {
         throw new Error(
@@ -227,7 +235,7 @@ export function NativeMultiModJobWorkspaceV1({
       stagedByIdentity.current.set(requestKey, value);
       return value;
     },
-    [authorityKey],
+    [access, accessKey, authorityKey],
   );
 
   const assessRuntime = useCallback(
@@ -580,6 +588,7 @@ export function NativeMultiModJobWorkspaceV1({
         </label>
       ) : null}
       <NativeMultiModLabsWorkspace
+        access={access}
         model={model}
         caseCount={caseCount}
         groupingColumns={profiledGroupingColumns ?? groupingColumns}
@@ -600,6 +609,7 @@ export function NativeMultiModJobWorkspaceV1({
                 archiveSha256:
                   completed?.archiveSha256 ?? authority.archiveSha256,
                 projectId: completed?.projectId ?? authority.projectId,
+                access,
               }
             : undefined
         }

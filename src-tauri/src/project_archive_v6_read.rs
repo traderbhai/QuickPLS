@@ -1,8 +1,9 @@
-//! Internal/Labs-only, read-only bridge for strict schema-6 ZIP archives.
+//! Authority-gated, read-only bridge for strict schema-6 ZIP archives.
 //!
 //! This command deliberately calls the dedicated schema-6 ZIP reader and never
 //! projects the archive into the live schema-5 `Project` service.
 
+use crate::multimod_candidate_authority_v1::multimod_standard_surface_authorized_v1;
 use qpls_core::{AnalysisRecipeModelBindingV4, AnalysisRecipeV4, sha256_serialized};
 use qpls_data::preview_page;
 use qpls_project::{
@@ -18,6 +19,7 @@ use std::{
 };
 
 const INTERNAL_LABS_SURFACE: &str = "internal_labs";
+const STANDARD_MULTIMOD_SURFACE_V1: &str = "standard_multimod_v1";
 const ARCHIVE_READ_SNAPSHOT_SCHEMA_VERSION: u32 = 1;
 const ARCHIVE_DATASET_ROWS_SCHEMA_VERSION: u32 = 1;
 const MAX_ARCHIVE_DATASET_ROW_PAGE_SIZE: usize = 500;
@@ -54,6 +56,14 @@ enum ProjectArchiveV6ReadAccessV1 {
 #[serde(rename_all = "snake_case")]
 enum ProjectArchiveV6LoaderV1 {
     StrictSchema6Zip,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ProjectArchiveV6SurfaceAccessErrorV1 {
+    InternalLabsRequired,
+    StandardAuthorityRequired,
+    EmbeddedAuthorityInvalid(String),
+    SurfaceInvalid,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -198,6 +208,95 @@ fn dataset_rows_blocked(
     }
 }
 
+fn validate_archive_v6_surface_access_using_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+    standard_authorized: impl FnOnce() -> Result<bool, String>,
+) -> Result<(), ProjectArchiveV6SurfaceAccessErrorV1> {
+    match surface {
+        INTERNAL_LABS_SURFACE if experimental_labs_enabled => Ok(()),
+        INTERNAL_LABS_SURFACE => Err(ProjectArchiveV6SurfaceAccessErrorV1::InternalLabsRequired),
+        STANDARD_MULTIMOD_SURFACE_V1 if experimental_labs_enabled => {
+            Err(ProjectArchiveV6SurfaceAccessErrorV1::SurfaceInvalid)
+        }
+        STANDARD_MULTIMOD_SURFACE_V1 => match standard_authorized() {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ProjectArchiveV6SurfaceAccessErrorV1::StandardAuthorityRequired),
+            Err(error) => {
+                Err(ProjectArchiveV6SurfaceAccessErrorV1::EmbeddedAuthorityInvalid(error))
+            }
+        },
+        _ => Err(ProjectArchiveV6SurfaceAccessErrorV1::SurfaceInvalid),
+    }
+}
+
+fn validate_archive_v6_surface_access_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+) -> Result<(), ProjectArchiveV6SurfaceAccessErrorV1> {
+    validate_archive_v6_surface_access_using_v1(
+        surface,
+        experimental_labs_enabled,
+        multimod_standard_surface_authorized_v1,
+    )
+}
+
+fn archive_read_surface_blocked(
+    error: ProjectArchiveV6SurfaceAccessErrorV1,
+) -> ProjectArchiveV6ReadOutcomeV1 {
+    match error {
+        ProjectArchiveV6SurfaceAccessErrorV1::InternalLabsRequired => blocked(
+            "schema6_archive_read.internal_labs_required",
+            "Schema-6 ZIP inspection through the historical internal surface requires explicit Experimental Labs opt-in.",
+            "Enable Experimental Labs for the historical internal surface, or use a release-qualified Standard MultiMod package.",
+        ),
+        ProjectArchiveV6SurfaceAccessErrorV1::StandardAuthorityRequired => blocked(
+            "schema6_archive_read.standard_authority_required",
+            "Standard schema-6 ZIP inspection requires release-qualified immutable MultiMod authority embedded in this executable.",
+            "Use the exact release-qualified candidate package.",
+        ),
+        ProjectArchiveV6SurfaceAccessErrorV1::EmbeddedAuthorityInvalid(message) => blocked(
+            "schema6_archive_read.embedded_authority_invalid",
+            message,
+            "Do not inspect, execute, save, or export MultiMod results from this executable.",
+        ),
+        ProjectArchiveV6SurfaceAccessErrorV1::SurfaceInvalid => blocked(
+            "schema6_archive_read.surface_invalid",
+            "The requested schema-6 archive inspection surface is unsupported.",
+            "Use standard_multimod_v1 for a release-qualified package or internal_labs with explicit Labs opt-in.",
+        ),
+    }
+}
+
+fn dataset_rows_surface_blocked(
+    error: ProjectArchiveV6SurfaceAccessErrorV1,
+) -> ProjectArchiveV6DatasetRowsOutcomeV1 {
+    match error {
+        ProjectArchiveV6SurfaceAccessErrorV1::InternalLabsRequired => dataset_rows_blocked(
+            "schema6_dataset_rows.internal_labs_required",
+            "Schema-6 dataset paging through the historical internal surface requires explicit Experimental Labs opt-in.",
+            "Enable Experimental Labs for the historical internal surface, or use a release-qualified Standard MultiMod package.",
+        ),
+        ProjectArchiveV6SurfaceAccessErrorV1::StandardAuthorityRequired => dataset_rows_blocked(
+            "schema6_dataset_rows.standard_authority_required",
+            "Standard schema-6 dataset paging requires release-qualified immutable MultiMod authority embedded in this executable.",
+            "Use the exact release-qualified candidate package.",
+        ),
+        ProjectArchiveV6SurfaceAccessErrorV1::EmbeddedAuthorityInvalid(message) => {
+            dataset_rows_blocked(
+                "schema6_dataset_rows.embedded_authority_invalid",
+                message,
+                "Do not inspect, execute, save, or export MultiMod results from this executable.",
+            )
+        }
+        ProjectArchiveV6SurfaceAccessErrorV1::SurfaceInvalid => dataset_rows_blocked(
+            "schema6_dataset_rows.surface_invalid",
+            "The requested schema-6 dataset paging surface is unsupported.",
+            "Use standard_multimod_v1 for a release-qualified package or internal_labs with explicit Labs opt-in.",
+        ),
+    }
+}
+
 fn lowercase_sha256(value: &str) -> bool {
     value.len() == 64
         && value
@@ -303,12 +402,10 @@ fn general_sem_execution_authority(
 }
 
 fn inspect_archive_v6(request: &ProjectArchiveV6ReadRequestV1) -> ProjectArchiveV6ReadOutcomeV1 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        return blocked(
-            "schema6_archive_read.internal_labs_required",
-            "Schema-6 ZIP inspection is available only through the internal Experimental Labs boundary.",
-            "Enable Experimental Labs and use the internal read-only schema-6 archive service.",
-        );
+    if let Err(error) =
+        validate_archive_v6_surface_access_v1(&request.surface, request.experimental_labs_enabled)
+    {
+        return archive_read_surface_blocked(error);
     }
 
     let archive_path_text = request.archive_path.trim();
@@ -437,12 +534,10 @@ fn inspect_archive_v6(request: &ProjectArchiveV6ReadRequestV1) -> ProjectArchive
 fn read_archive_dataset_rows_v1(
     request: &ProjectArchiveV6DatasetRowsRequestV1,
 ) -> ProjectArchiveV6DatasetRowsOutcomeV1 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        return dataset_rows_blocked(
-            "schema6_dataset_rows.internal_labs_required",
-            "Schema-6 dataset paging is available only through the internal Experimental Labs boundary.",
-            "Enable Experimental Labs and reopen the exact General SEM archive.",
-        );
+    if let Err(error) =
+        validate_archive_v6_surface_access_v1(&request.surface, request.experimental_labs_enabled)
+    {
+        return dataset_rows_surface_blocked(error);
     }
     if request.limit == 0 || request.limit > MAX_ARCHIVE_DATASET_ROW_PAGE_SIZE {
         return dataset_rows_blocked(
@@ -630,8 +725,14 @@ pub(crate) fn read_internal_project_archive_v6_dataset_rows(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::multimod_candidate_authority_v1::with_typed_qualification_test_authority_v1;
     use chrono::{TimeZone, Utc};
-    use qpls_core::{GeneralSemConfigV1, MethodConfig, SemDataBindingV4};
+    use qpls_core::{
+        AnalysisMethod, GeneralSemConfigV1, InferenceAlternativeV1, MethodConfig,
+        MgaComparisonPlanV1, MgaModelProfileV1, MgaMultigroupV1, MgaProcedureV1,
+        MicomConfiguralChecklistV1, MultiplicityAdjustmentV1, SelectedGroupV1, SemDataBindingV4,
+        TypedGroupValueV1,
+    };
     use qpls_data::{Dataset, write_arrow};
     use qpls_project::{
         PROJECT_ARCHIVE_SCHEMA_V6_VERSION, Project, ProjectArchiveUpgradeRequestV6,
@@ -940,6 +1041,93 @@ mod tests {
     }
 
     #[test]
+    fn strict_inspection_keeps_base_authority_after_standard_multimod_recipe_append() {
+        let directory = tempfile::tempdir().unwrap();
+        let source_path = directory.path().join("base-general-sem-authority.qpls");
+        create_general_sem_authority_for_exact_cbsem(&source_path);
+        let loaded = load_project_archive_v6(&source_path).unwrap();
+        let mut document = loaded.document;
+        let base_recipe = document.recipes[0].clone();
+        let mut multimod_recipe = base_recipe.clone();
+        multimod_recipe.id = uuid::Uuid::parse_str("00000000-0000-0000-0000-00000000cba2").unwrap();
+        multimod_recipe.settings.method = AnalysisMethod::Mga;
+        multimod_recipe.settings.permutation_samples = 5_000;
+        multimod_recipe.settings.bootstrap_samples = 5_000;
+        multimod_recipe.method_config = None;
+        multimod_recipe.mga_multigroup = Some(MgaMultigroupV1 {
+            schema_version: 1,
+            profile: MgaModelProfileV1::GeneralSemPls,
+            grouping_column: "group".into(),
+            groups: vec![
+                SelectedGroupV1 {
+                    group_id: "a".into(),
+                    label: "Group A".into(),
+                    value: TypedGroupValueV1::Text { value: "A".into() },
+                },
+                SelectedGroupV1 {
+                    group_id: "b".into(),
+                    label: "Group B".into(),
+                    value: TypedGroupValueV1::Text { value: "B".into() },
+                },
+            ],
+            comparison_plan: MgaComparisonPlanV1::ReferenceVsRest {
+                reference_group_id: "a".into(),
+            },
+            procedures: vec![MgaProcedureV1::PairwisePermutation],
+            permutation_samples: 5_000,
+            bootstrap_samples: 5_000,
+            seed: 42,
+            confidence_level: 0.95,
+            alpha: 0.05,
+            alternative: InferenceAlternativeV1::TwoSided,
+            multiplicity: MultiplicityAdjustmentV1::Holm,
+            configural_checklist: MicomConfiguralChecklistV1 {
+                identical_indicators_and_coding: true,
+                identical_data_treatment: true,
+                identical_algorithm_settings: true,
+                identical_model_specification: true,
+                deterministic_sign_orientation_reviewed: true,
+                analyst_review_confirmed: true,
+            },
+            weight: None,
+            selected_parameter_ids: Vec::new(),
+        });
+        multimod_recipe.metadata.insert(
+            "execution_surface".into(),
+            STANDARD_MULTIMOD_SURFACE_V1.into(),
+        );
+        multimod_recipe
+            .metadata
+            .insert("multimod_generation".into(), "multimod_v1".into());
+        multimod_recipe.ensure_valid().unwrap();
+        document.recipes.push(multimod_recipe.clone());
+        document.ensure_valid().unwrap();
+
+        let archive_path = directory
+            .path()
+            .join("general-sem-with-multimod-recipe.qpls");
+        write_schema6_zip(&archive_path, &document, &loaded.datasets);
+        let ProjectArchiveV6ReadOutcomeV1::Ok { value } =
+            inspect_archive_v6(&request(&archive_path))
+        else {
+            panic!("strict inspection rejected an archive with an additive MultiMod recipe")
+        };
+        let authority = value
+            .general_sem_execution_authority
+            .expect("base General SEM execution authority must remain selected");
+        assert_eq!(authority.recipe_id, base_recipe.id.to_string());
+        assert_eq!(
+            authority
+                .recipe
+                .metadata
+                .get("execution_surface")
+                .map(String::as_str),
+            Some("native_general_sem_cbsem_standard_v1")
+        );
+        assert_ne!(authority.recipe_id, multimod_recipe.id.to_string());
+    }
+
+    #[test]
     fn strict_inspection_rejects_duplicate_general_sem_recipe_authorities() {
         let directory = tempfile::tempdir().unwrap();
         let source_path = directory.path().join("single-general-sem-authority.qpls");
@@ -1065,7 +1253,7 @@ mod tests {
         assert!(matches!(
             inspect_archive_v6(&denied),
             ProjectArchiveV6ReadOutcomeV1::Blocked { diagnostic }
-                if diagnostic.code == "schema6_archive_read.internal_labs_required"
+                if diagnostic.code == "schema6_archive_read.surface_invalid"
         ));
 
         assert!(matches!(
@@ -1073,5 +1261,56 @@ mod tests {
             ProjectArchiveV6ReadOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code == "schema6_archive_read.invalid_archive"
         ));
+    }
+
+    #[test]
+    fn standard_archive_surfaces_require_only_embedded_release_authority() {
+        let mixed_surface = validate_archive_v6_surface_access_using_v1(
+            STANDARD_MULTIMOD_SURFACE_V1,
+            true,
+            || -> Result<bool, String> {
+                panic!("an invalid Standard/Labs pair must not consult authority")
+            },
+        )
+        .unwrap_err();
+        assert_eq!(
+            mixed_surface,
+            ProjectArchiveV6SurfaceAccessErrorV1::SurfaceInvalid
+        );
+
+        let labs_disabled = validate_archive_v6_surface_access_using_v1(
+            INTERNAL_LABS_SURFACE,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(
+            labs_disabled,
+            ProjectArchiveV6SurfaceAccessErrorV1::InternalLabsRequired
+        );
+
+        let denied = validate_archive_v6_surface_access_using_v1(
+            STANDARD_MULTIMOD_SURFACE_V1,
+            false,
+            || Ok(false),
+        )
+        .unwrap_err();
+        assert_eq!(
+            denied,
+            ProjectArchiveV6SurfaceAccessErrorV1::StandardAuthorityRequired
+        );
+
+        with_typed_qualification_test_authority_v1(
+            &["conditional.multi_two_way_percentile.v2::explicit_path_target_math"],
+            |_| {
+                validate_archive_v6_surface_access_v1(STANDARD_MULTIMOD_SURFACE_V1, false).unwrap();
+            },
+        )
+        .unwrap();
+
+        validate_archive_v6_surface_access_using_v1(INTERNAL_LABS_SURFACE, true, || {
+            panic!("historical Labs access must not consult Standard authority")
+        })
+        .unwrap();
     }
 }

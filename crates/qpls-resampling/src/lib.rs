@@ -4230,11 +4230,18 @@ fn resample_dataset_columns(
         .map_err(|error| EstimationError::Numerical(error.to_string()))?;
     let mut schema = dataset.schema.clone();
     schema.case_count = batch.num_rows();
-    schema.columns.retain(|column| {
-        column_names
-            .iter()
-            .any(|column_name| column_name == &column.name)
-    });
+    schema.columns = column_names
+        .iter()
+        .map(|column_name| {
+            dataset
+                .schema
+                .columns
+                .iter()
+                .find(|column| &column.name == column_name)
+                .cloned()
+                .ok_or_else(|| EstimationError::InvalidIndicator(column_name.clone()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(Dataset {
         id: dataset.id,
         name: dataset.name.clone(),
@@ -6414,5 +6421,48 @@ mod tests {
             assert_eq!(estimate.used_observations, original.used_observations);
             assert_eq!(estimate.omitted_observations, 0);
         }
+    }
+
+    #[test]
+    fn selected_column_metadata_matches_reordered_arrow_columns() {
+        let dataset = import_delimited_bytes(
+            b"a,b,c\n1,2,3\n4,5,6\n",
+            "reordered.csv",
+            b',',
+            &ImportOptions::default(),
+        )
+        .unwrap();
+        let sampled = resample_dataset_columns_v1(
+            &dataset,
+            &["c".to_string(), "a".to_string()],
+            &[1, 0],
+            || false,
+        )
+        .unwrap();
+
+        assert_eq!(
+            sampled
+                .schema
+                .columns
+                .iter()
+                .map(|column| column.name.as_str())
+                .collect::<Vec<_>>(),
+            vec!["c", "a"]
+        );
+        assert_eq!(
+            sampled
+                .batch
+                .schema()
+                .fields()
+                .iter()
+                .map(|field| field.name().as_str())
+                .collect::<Vec<_>>(),
+            vec!["c", "a"]
+        );
+        let preview = qpls_data::preview_page(&sampled, 0, 2);
+        assert_eq!(preview[0]["c"].as_deref(), Some("6"));
+        assert_eq!(preview[0]["a"].as_deref(), Some("4"));
+        assert_eq!(preview[1]["c"].as_deref(), Some("3"));
+        assert_eq!(preview[1]["a"].as_deref(), Some("1"));
     }
 }

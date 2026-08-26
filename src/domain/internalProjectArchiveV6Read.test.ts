@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  parseInternalProjectArchiveV6ReadRequestV1,
   parseInternalProjectArchiveV6ReadOutcomeV1,
 } from "./internalProjectArchiveV6Read";
 
@@ -53,6 +54,45 @@ function okOutcome() {
 }
 
 describe("Internal/Labs strict schema-6 ZIP read contract", () => {
+  it("accepts only exact historical Labs or qualified Standard access pairs", () => {
+    expect(
+      parseInternalProjectArchiveV6ReadRequestV1({
+        surface: "internal_labs",
+        experimentalLabsEnabled: true,
+        archivePath: "D:\\projects\\strict-v6.qpls",
+      }),
+    ).toMatchObject({ surface: "internal_labs", experimentalLabsEnabled: true });
+    expect(
+      parseInternalProjectArchiveV6ReadRequestV1({
+        surface: "standard_multimod_v1",
+        experimentalLabsEnabled: false,
+        archivePath: "D:\\projects\\strict-v6.qpls",
+      }),
+    ).toMatchObject({
+      surface: "standard_multimod_v1",
+      experimentalLabsEnabled: false,
+    });
+    for (const request of [
+      {
+        surface: "internal_labs",
+        experimentalLabsEnabled: false,
+        archivePath: "D:\\projects\\strict-v6.qpls",
+      },
+      {
+        surface: "standard_multimod_v1",
+        experimentalLabsEnabled: true,
+        archivePath: "D:\\projects\\strict-v6.qpls",
+      },
+    ]) {
+      expect(() => parseInternalProjectArchiveV6ReadRequestV1(request))
+        .toThrowError(
+          expect.objectContaining({
+            code: "schema6_archive_read.surface_pair_invalid",
+          }),
+        );
+    }
+  });
+
   it("returns a typed read-only snapshot from the dedicated ZIP loader", () => {
     const parsed = parseInternalProjectArchiveV6ReadOutcomeV1(okOutcome());
     expect(parsed).toMatchObject({

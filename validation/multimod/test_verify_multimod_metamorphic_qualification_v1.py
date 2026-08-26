@@ -129,6 +129,115 @@ def preparation_case(profile: str = "p2_multi_two_way") -> dict:
 
 
 class PreparationContractTests(unittest.TestCase):
+    def test_execution_plan_scope_is_not_misclassified_as_preparation(self) -> None:
+        execution_plan = {
+            "execution_scope": "full_requested_multigroup_analysis",
+            "analysis": {"estimate": 0.5},
+            "dataset_rows": 80,
+            "cell_id": "ordinary-result",
+        }
+        report = {"execution_plan": execution_plan}
+
+        self.assertFalse(verifier.is_common_metric_preparation(execution_plan))
+        self.assertEqual(set(verifier.result_cases(report)), {"ordinary-result"})
+        preparations, profiles, failures = verifier.preparation_cases(report)
+        self.assertEqual(preparations, {})
+        self.assertEqual(profiles, {})
+        self.assertEqual(failures, [])
+
+    def test_provenance_hash_vectors_do_not_create_scientific_differences(self) -> None:
+        baseline = {
+            "estimate": 0.5,
+            "record_identity_sha256s": ["a" * 64, "b" * 64],
+        }
+        transformed = {
+            "estimate": 0.5,
+            "record_identity_sha256s": ["c" * 64, "d" * 64],
+        }
+
+        self.assertEqual(
+            verifier.normalize(baseline, row_count=2, row_reverse=False),
+            verifier.normalize(transformed, row_count=2, row_reverse=False),
+        )
+
+    def test_row_reverse_normalizes_row_bound_columns_weights_and_start_order(self) -> None:
+        transformed = {
+            "columns": [{"variable_id": "x", "values": [20.0, 10.0]}],
+            "case_weights": [2.0, 1.0],
+            "completed_starts": [
+                {"start_index": 1, "objective": 0.5},
+                {"start_index": 0, "objective": 1.0},
+            ],
+        }
+        baseline = {
+            "columns": [{"variable_id": "x", "values": [10.0, 20.0]}],
+            "case_weights": [1.0, 2.0],
+            "completed_starts": [
+                {"start_index": 0, "objective": 1.0},
+                {"start_index": 1, "objective": 0.5},
+            ],
+        }
+
+        self.assertEqual(
+            verifier.normalize(baseline, row_count=2, row_reverse=False),
+            verifier.normalize(transformed, row_count=2, row_reverse=True),
+        )
+        probe_grid = {
+            "variable_id": "x",
+            "values": [-1.0, 0.0, 1.0],
+            "kind": "standardized_probe_grid",
+        }
+        self.assertEqual(
+            verifier.normalize(probe_grid, row_count=3, row_reverse=True)["values"],
+            [-1.0, 0.0, 1.0],
+        )
+
+    def test_group_reversal_canonicalizes_nested_micom_and_directional_evidence(self) -> None:
+        forward = {
+            "pair": {"group_a": 0, "group_b": 1},
+            "audit_step2": {
+                "observed_mean_difference_a_minus_b": -0.5,
+                "permutation_log_variance_ratios": [0.2, -0.1],
+            },
+            "parameters": [
+                {
+                    "difference_a_minus_b": -0.25,
+                    "estimate_a": 0.5,
+                    "estimate_b": 0.75,
+                    "p_value_greater": 0.8,
+                    "p_value_less": 0.2,
+                    "p_value_two_sided": 0.4,
+                }
+            ],
+        }
+        reverse = {
+            "pair": {"group_a": 1, "group_b": 0},
+            "audit_step2": {
+                "observed_mean_difference_a_minus_b": 0.5,
+                "permutation_log_variance_ratios": [-0.2, 0.1],
+            },
+            "parameters": [
+                {
+                    "difference_a_minus_b": 0.25,
+                    "estimate_a": 0.75,
+                    "estimate_b": 0.5,
+                    "p_value_greater": 0.2,
+                    "p_value_less": 0.8,
+                    "p_value_two_sided": 0.4,
+                }
+            ],
+        }
+
+        self.assertEqual(
+            verifier.canonical_group_contrast_orientation(forward),
+            verifier.canonical_group_contrast_orientation(reverse),
+        )
+        reverse["parameters"][0]["p_value_two_sided"] = 0.5
+        self.assertNotEqual(
+            verifier.canonical_group_contrast_orientation(forward),
+            verifier.canonical_group_contrast_orientation(reverse),
+        )
+
     def test_valid_preparation_is_compared_but_never_counted_as_result(self) -> None:
         case = preparation_case()
         report = {"compact_common_metric_profile_executions": [case]}

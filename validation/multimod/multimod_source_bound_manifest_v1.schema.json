@@ -23,9 +23,9 @@
     "contract_kind": { "const": "multimod_source_bound_qualification_manifest" },
     "manifest_id": { "$ref": "#/$defs/id" },
     "family_id": { "$ref": "#/$defs/id" },
-    "surface": { "const": "labs" },
+    "surface": { "enum": ["labs", "standard"] },
     "declared_evidence_state": { "enum": ["absent", "release_qualified"] },
-    "promotion_allowed": { "const": false },
+    "promotion_allowed": { "type": "boolean" },
     "method_versions": {
       "type": "array",
       "minItems": 1,
@@ -63,6 +63,95 @@
       }
     }
   },
+  "oneOf": [
+    {
+      "title": "Tracked Labs template",
+      "properties": {
+        "surface": { "const": "labs" },
+        "declared_evidence_state": { "const": "absent" },
+        "promotion_allowed": { "const": false },
+        "source_binding": {
+          "properties": {
+            "status": { "const": "pending" },
+            "candidate_commit_sha": { "type": "null" },
+            "source_artifacts": {
+              "items": {
+                "properties": { "sha256": { "type": "null" } }
+              }
+            }
+          }
+        },
+        "profile_matrix": {
+          "items": {
+            "properties": {
+              "surface": { "const": "labs" },
+              "coverage_state": { "const": "absent" },
+              "evidence_state": { "const": "absent" },
+              "procedure_cells": {
+                "items": {
+                  "properties": {
+                    "evidence_state": { "const": "absent" },
+                    "gate_state": { "const": "pending" },
+                    "report_path": { "type": "null" },
+                    "report_sha256": { "type": "null" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "title": "Externally materialized Standard authority",
+      "properties": {
+        "surface": { "const": "standard" },
+        "declared_evidence_state": { "const": "release_qualified" },
+        "promotion_allowed": { "const": true },
+        "source_binding": {
+          "properties": {
+            "status": { "const": "bound" },
+            "candidate_commit_sha": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{40}$"
+            },
+            "source_artifacts": {
+              "items": {
+                "properties": {
+                  "sha256": {
+                    "type": "string",
+                    "pattern": "^[a-f0-9]{64}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "profile_matrix": {
+          "items": {
+            "properties": {
+              "surface": { "const": "standard" },
+              "coverage_state": { "const": "release_qualified" },
+              "evidence_state": { "const": "release_qualified" },
+              "procedure_cells": {
+                "items": {
+                  "properties": {
+                    "evidence_state": { "const": "release_qualified" },
+                    "gate_state": { "const": "passed" },
+                    "report_path": { "$ref": "#/$defs/nonempty" },
+                    "report_sha256": {
+                      "type": "string",
+                      "pattern": "^[a-f0-9]{64}$"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "$defs": {
     "nonempty": { "type": "string", "minLength": 1 },
     "id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9_.-]*$" },
@@ -142,7 +231,7 @@
         "method_version": { "$ref": "#/$defs/nonempty" },
         "coverage_state": { "enum": ["absent", "release_qualified"] },
         "evidence_state": { "enum": ["absent", "release_qualified"] },
-        "surface": { "const": "labs" },
+        "surface": { "enum": ["labs", "standard"] },
         "procedure_cells": {
           "type": "array",
           "minItems": 1,

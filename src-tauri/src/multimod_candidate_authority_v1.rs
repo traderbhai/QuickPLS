@@ -70,6 +70,7 @@ pub(crate) struct NativeMultiModCandidateAuthorityStatusV1 {
 pub(crate) struct NativeMultiModCandidateAuthorityStatusWireV1 {
     schema_version: u32,
     state: NativeMultiModCandidateAuthorityStateV1,
+    standard_surface_authorized: bool,
     embedded_document_sha256: String,
     authority_binding_sha256: Option<String>,
     candidate_commit_sha: Option<String>,
@@ -205,6 +206,25 @@ pub(crate) fn embedded_multimod_cache_authority_sha256_v1() -> Result<String, St
         .clone())
 }
 
+/// Returns whether this exact executable may accept the Standard MultiMod
+/// runtime surface.
+///
+/// The decision is derived only from the fully parsed immutable authority
+/// embedded by `build.rs`. Requests, archives, preferences, and environment
+/// variables cannot upgrade a Labs-only executable at runtime.
+pub(crate) fn multimod_standard_surface_authorized_v1() -> Result<bool, String> {
+    #[cfg(test)]
+    if let Some(injected) =
+        QUALIFICATION_TEST_AUTHORITY_V1.with(|authority| authority.borrow().clone())
+    {
+        return Ok(
+            injected.state == NativeMultiModCandidateAuthorityStateV1::ReleaseQualifiedCandidate
+        );
+    }
+    Ok(embedded_multimod_candidate_authority_v1()?.state
+        == NativeMultiModCandidateAuthorityStateV1::ReleaseQualifiedCandidate)
+}
+
 #[tauri::command]
 pub(crate) fn multimod_candidate_authority_status_v1()
 -> Result<NativeMultiModCandidateAuthorityStatusWireV1, String> {
@@ -213,6 +233,8 @@ pub(crate) fn multimod_candidate_authority_status_v1()
     Ok(NativeMultiModCandidateAuthorityStatusWireV1 {
         schema_version: 1,
         state: authority.state,
+        standard_surface_authorized: authority.state
+            == NativeMultiModCandidateAuthorityStateV1::ReleaseQualifiedCandidate,
         embedded_document_sha256: authority.embedded_document_sha256.clone(),
         authority_binding_sha256: authority.authority_binding_sha256.clone(),
         candidate_commit_sha: binding.map(|value| value.candidate_commit_sha.clone()),
@@ -456,6 +478,10 @@ mod tests {
     fn every_build_contains_a_parseable_immutable_authority_or_labs_sentinel() {
         let authority = embedded_multimod_candidate_authority_v1().unwrap();
         assert!(lower_sha(&authority.embedded_document_sha256, 64));
+        assert_eq!(
+            multimod_standard_surface_authorized_v1().unwrap(),
+            authority.state == NativeMultiModCandidateAuthorityStateV1::ReleaseQualifiedCandidate
+        );
         if authority.state == NativeMultiModCandidateAuthorityStateV1::LabsOnly {
             assert!(authority.binding.is_none());
             assert!(authority.authority_binding_sha256.is_none());
@@ -485,5 +511,16 @@ mod tests {
         )
         .unwrap();
         assert!(receipt.is_none());
+    }
+
+    #[test]
+    fn typed_candidate_authority_alone_authorizes_the_standard_surface() {
+        with_typed_qualification_test_authority_v1(
+            &["conditional.multi_two_way_percentile.v2::explicit_path_target_math"],
+            |_| {
+                assert!(multimod_standard_surface_authorized_v1().unwrap());
+            },
+        )
+        .unwrap();
     }
 }

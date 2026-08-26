@@ -1,9 +1,10 @@
-//! Internal/Labs bridge for the Windows-only schema-6 new-copy writer.
+//! Authority-gated bridge for the Windows-only schema-6 new-copy writer.
 //!
 //! The command accepts only a detached schema-6 document and the exact strict
 //! source snapshot identity. It never reaches the Standard/schema-5 project,
 //! autosave, recovery, or in-place save lanes.
 
+use crate::multimod_candidate_authority_v1::multimod_standard_surface_authorized_v1;
 use qpls_project::{
     PROJECT_ARCHIVE_SCHEMA_V6_VERSION, ProjectArchiveDocumentV6, ProjectArchiveV6SaveCopyError,
     ProjectArchiveV6SaveCopyReceipt, ProjectManifest, load_project_archive_v6_from_file,
@@ -19,6 +20,7 @@ use std::{
 };
 
 const INTERNAL_LABS_SURFACE: &str = "internal_labs";
+const STANDARD_MULTIMOD_SURFACE_V1: &str = "standard_multimod_v1";
 const SAVE_COPY_RESULT_SCHEMA_VERSION: u32 = 1;
 const SNAPSHOT_SCHEMA_VERSION: u32 = 1;
 
@@ -49,6 +51,14 @@ enum ProjectArchiveV6SaveCopyAccessV1 {
 #[serde(rename_all = "snake_case")]
 enum ProjectArchiveV6SaveCopyLoaderV1 {
     StrictSchema6Zip,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ProjectArchiveV6SaveCopySurfaceErrorV1 {
+    InternalLabsRequired,
+    StandardAuthorityRequired,
+    EmbeddedAuthorityInvalid(String),
+    SurfaceInvalid,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -133,6 +143,66 @@ fn blocked(
             message: message.into(),
             corrective_action: corrective_action.into(),
         },
+    }
+}
+
+fn validate_save_copy_surface_using_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+    standard_authorized: impl FnOnce() -> Result<bool, String>,
+) -> Result<(), ProjectArchiveV6SaveCopySurfaceErrorV1> {
+    match surface {
+        INTERNAL_LABS_SURFACE if experimental_labs_enabled => Ok(()),
+        INTERNAL_LABS_SURFACE => Err(ProjectArchiveV6SaveCopySurfaceErrorV1::InternalLabsRequired),
+        STANDARD_MULTIMOD_SURFACE_V1 if experimental_labs_enabled => {
+            Err(ProjectArchiveV6SaveCopySurfaceErrorV1::SurfaceInvalid)
+        }
+        STANDARD_MULTIMOD_SURFACE_V1 => match standard_authorized() {
+            Ok(true) => Ok(()),
+            Ok(false) => Err(ProjectArchiveV6SaveCopySurfaceErrorV1::StandardAuthorityRequired),
+            Err(error) => {
+                Err(ProjectArchiveV6SaveCopySurfaceErrorV1::EmbeddedAuthorityInvalid(error))
+            }
+        },
+        _ => Err(ProjectArchiveV6SaveCopySurfaceErrorV1::SurfaceInvalid),
+    }
+}
+
+fn validate_save_copy_surface_v1(
+    surface: &str,
+    experimental_labs_enabled: bool,
+) -> Result<(), ProjectArchiveV6SaveCopySurfaceErrorV1> {
+    validate_save_copy_surface_using_v1(
+        surface,
+        experimental_labs_enabled,
+        multimod_standard_surface_authorized_v1,
+    )
+}
+
+fn save_copy_surface_blocked(
+    error: ProjectArchiveV6SaveCopySurfaceErrorV1,
+) -> ProjectArchiveV6SaveCopyOutcomeV1 {
+    match error {
+        ProjectArchiveV6SaveCopySurfaceErrorV1::InternalLabsRequired => blocked(
+            "schema6_save_copy.internal_labs_required",
+            "Schema-6 Save copy through the historical internal surface requires explicit Experimental Labs opt-in.",
+            "Enable Experimental Labs for the historical internal surface, or use a release-qualified Standard MultiMod package.",
+        ),
+        ProjectArchiveV6SaveCopySurfaceErrorV1::StandardAuthorityRequired => blocked(
+            "schema6_save_copy.standard_authority_required",
+            "Standard schema-6 Save copy requires release-qualified immutable MultiMod authority embedded in this executable.",
+            "Use the exact release-qualified candidate package.",
+        ),
+        ProjectArchiveV6SaveCopySurfaceErrorV1::EmbeddedAuthorityInvalid(message) => blocked(
+            "schema6_save_copy.embedded_authority_invalid",
+            message,
+            "Do not inspect, execute, save, or export MultiMod results from this executable.",
+        ),
+        ProjectArchiveV6SaveCopySurfaceErrorV1::SurfaceInvalid => blocked(
+            "schema6_save_copy.surface_invalid",
+            "The requested schema-6 Save copy surface is unsupported.",
+            "Use standard_multimod_v1 for a release-qualified package or internal_labs with explicit Labs opt-in.",
+        ),
     }
 }
 
@@ -227,12 +297,10 @@ fn sha256_file_handle(file: &mut File) -> std::io::Result<String> {
 }
 
 fn save_copy(request: ProjectArchiveV6SaveCopyRequestV1) -> ProjectArchiveV6SaveCopyOutcomeV1 {
-    if request.surface != INTERNAL_LABS_SURFACE || !request.experimental_labs_enabled {
-        return blocked(
-            "schema6_save_copy.internal_labs_required",
-            "Schema-6 Save copy is available only through the internal Experimental Labs boundary.",
-            "Enable Experimental Labs and use the isolated schema-6 session action.",
-        );
+    if let Err(error) =
+        validate_save_copy_surface_v1(&request.surface, request.experimental_labs_enabled)
+    {
+        return save_copy_surface_blocked(error);
     }
 
     if request.source_archive_path.is_empty()
@@ -399,6 +467,7 @@ pub(crate) async fn save_internal_project_archive_v6_copy(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::multimod_candidate_authority_v1::with_typed_qualification_test_authority_v1;
     use std::path::PathBuf;
 
     #[test]
@@ -411,5 +480,53 @@ mod tests {
             ProjectArchiveV6SaveCopyOutcomeV1::Blocked { diagnostic }
                 if diagnostic.code == "schema6_save_copy.destination_exists"
         ));
+    }
+
+    #[test]
+    fn standard_save_copy_requires_only_embedded_release_authority() {
+        let mixed_surface = validate_save_copy_surface_using_v1(
+            STANDARD_MULTIMOD_SURFACE_V1,
+            true,
+            || -> Result<bool, String> {
+                panic!("an invalid Standard/Labs pair must not consult authority")
+            },
+        )
+        .unwrap_err();
+        assert_eq!(
+            mixed_surface,
+            ProjectArchiveV6SaveCopySurfaceErrorV1::SurfaceInvalid
+        );
+
+        let labs_disabled = validate_save_copy_surface_using_v1(
+            INTERNAL_LABS_SURFACE,
+            false,
+            || -> Result<bool, String> { panic!("Labs denial must not consult authority") },
+        )
+        .unwrap_err();
+        assert_eq!(
+            labs_disabled,
+            ProjectArchiveV6SaveCopySurfaceErrorV1::InternalLabsRequired
+        );
+
+        let denied =
+            validate_save_copy_surface_using_v1(STANDARD_MULTIMOD_SURFACE_V1, false, || Ok(false))
+                .unwrap_err();
+        assert_eq!(
+            denied,
+            ProjectArchiveV6SaveCopySurfaceErrorV1::StandardAuthorityRequired
+        );
+
+        with_typed_qualification_test_authority_v1(
+            &["conditional.multi_two_way_percentile.v2::explicit_path_target_math"],
+            |_| {
+                validate_save_copy_surface_v1(STANDARD_MULTIMOD_SURFACE_V1, false).unwrap();
+            },
+        )
+        .unwrap();
+
+        validate_save_copy_surface_using_v1(INTERNAL_LABS_SURFACE, true, || {
+            panic!("historical Labs access must not consult Standard authority")
+        })
+        .unwrap();
     }
 }

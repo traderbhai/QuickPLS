@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { MultiModRecipeConfigV1 } from "../domain/multimodContractsV1";
 import {
+  NATIVE_MULTIMOD_LABS_ACCESS_V1,
+  NATIVE_MULTIMOD_STANDARD_ACCESS_V1,
+  parseNativeMultiModAccessV1,
   parseNativeMultiModCompletedResultV1,
   parseNativeMultiModGroupingProfileV1,
   parseNativeMultiModJobSnapshotV1,
@@ -98,6 +101,7 @@ describe("strict native MultiMod job adapter", () => {
     const staged = stageNativeMultiModRequestV1(
       authority,
       heterogeneityRequest,
+      NATIVE_MULTIMOD_LABS_ACCESS_V1,
       {
         recipeId: UUIDS.staged,
         createdAt: "2026-08-24T10:00:00.000Z",
@@ -112,6 +116,7 @@ describe("strict native MultiMod job adapter", () => {
     const staged = stageNativeMultiModRequestV1(
       authority,
       heterogeneityRequest,
+      NATIVE_MULTIMOD_LABS_ACCESS_V1,
       {
         recipeId: UUIDS.staged,
         createdAt: "2026-08-24T10:00:00.000Z",
@@ -126,6 +131,34 @@ describe("strict native MultiMod job adapter", () => {
         cacheReceipt("mga_execution", "pls_heterogeneity_v2"),
       ),
     ).toThrow(/supported resume stage/u);
+  });
+
+  it("stages only exact explicit Standard(false) or Labs(true) access", () => {
+    const standard = stageNativeMultiModRequestV1(
+      authority,
+      heterogeneityRequest,
+      NATIVE_MULTIMOD_STANDARD_ACCESS_V1,
+      {
+        recipeId: UUIDS.staged,
+        createdAt: "2026-08-24T10:00:00.000Z",
+      },
+    );
+    expect(standard).toMatchObject({
+      surface: "standard_multimod_v1",
+      experimentalLabsEnabled: false,
+    });
+    expect(() =>
+      parseNativeMultiModAccessV1({
+        surface: "standard_multimod_v1",
+        experimentalLabsEnabled: true,
+      }),
+    ).toThrow(/exact Standard/u);
+    expect(() =>
+      parseNativeMultiModAccessV1({
+        ...NATIVE_MULTIMOD_LABS_ACCESS_V1,
+        fabricated: true,
+      }),
+    ).toThrow(/exact Standard/u);
   });
 
   it("fails closed on unknown preflight fields and parses only exact built-in readiness", () => {
@@ -256,7 +289,10 @@ describe("strict native MultiMod job adapter", () => {
 
     mocks.invoke.mockResolvedValue(wire);
     await expect(
-      profileNativeMultiModGroupingV1(authority),
+      profileNativeMultiModGroupingV1(
+        authority,
+        NATIVE_MULTIMOD_LABS_ACCESS_V1,
+      ),
     ).resolves.toMatchObject({ schemaVersion: 1 });
     expect(mocks.invoke).toHaveBeenCalledWith(
       "profile_internal_labs_multimod_grouping_v1",
@@ -265,6 +301,8 @@ describe("strict native MultiMod job adapter", () => {
           archivePath: authority.archivePath,
           expectedArchiveSha256: authority.archiveSha256,
           sourceRecipeDocumentSha256: authority.sourceRecipeDocumentSha256,
+          surface: "internal_labs_multimod_v1",
+          experimentalLabsEnabled: true,
         }),
       },
     );

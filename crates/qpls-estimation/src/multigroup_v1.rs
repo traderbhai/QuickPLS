@@ -50,6 +50,23 @@ const STREAM_DOMAIN: &[u8] = b"quickpls/mga_multigroup_v1";
 const PAIRWISE_STREAM: &[u8] = b"pairwise_fixed_size_permutation";
 const OMNIBUS_STREAM: &[u8] = b"global_fixed_size_permutation";
 const BOOTSTRAP_STREAM: &[u8] = b"group_case_bootstrap";
+const MGA_NUMERICAL_TIE_ULPS_V1: f64 = 64.0;
+
+pub(crate) fn mga_numerical_tie_tolerance_v1(left: f64, right: f64) -> f64 {
+    MGA_NUMERICAL_TIE_ULPS_V1 * f64::EPSILON * 1.0_f64.max(left.abs()).max(right.abs())
+}
+
+pub(crate) fn mga_numerically_tied_v1(left: f64, right: f64) -> bool {
+    (left - right).abs() <= mga_numerical_tie_tolerance_v1(left, right)
+}
+
+pub(crate) fn mga_greater_or_tied_v1(left: f64, right: f64) -> bool {
+    left >= right - mga_numerical_tie_tolerance_v1(left, right)
+}
+
+pub(crate) fn mga_less_or_tied_v1(left: f64, right: f64) -> bool {
+    left <= right + mga_numerical_tie_tolerance_v1(left, right)
+}
 
 /// A checked zero-based group position.  Serialized values remain numeric and
 /// cannot exceed the v1 maximum even when constructed by deserialization.
@@ -1355,13 +1372,13 @@ pub fn run_pairwise_permutation_with_plan_v1<R: MultigroupRefitterV1>(
                 if index == 0 {
                     audit_null_differences.push(difference);
                 }
-                if difference.abs() >= observed.abs() {
+                if mga_greater_or_tied_v1(difference.abs(), observed.abs()) {
                     absolute_extremes[index] += 1;
                 }
-                if difference >= observed {
+                if mga_greater_or_tied_v1(difference, observed) {
                     greater_extremes[index] += 1;
                 }
-                if difference <= observed {
+                if mga_less_or_tied_v1(difference, observed) {
                     less_extremes[index] += 1;
                 }
             }
@@ -1563,7 +1580,7 @@ pub fn run_max_spread_omnibus_permutation_v1<R: MultigroupRefitterV1>(
             let spreads = maximum_spreads(&replicate_values, parameters.len());
             for index in 0..parameters.len() {
                 null_spreads[index].push(spreads[index]);
-                if spreads[index] >= observed_spreads[index] {
+                if mga_greater_or_tied_v1(spreads[index], observed_spreads[index]) {
                     extremes[index] += 1;
                 }
             }
@@ -2099,12 +2116,12 @@ pub fn henseler_directional_probabilities_v1(
         {
             if let (Some(left), Some(right)) = (left, right) {
                 let difference = left[parameter_index] - right[parameter_index];
-                if difference > 0.0 {
-                    greater += 1;
-                } else if difference < 0.0 {
-                    less += 1;
-                } else {
+                if mga_numerically_tied_v1(difference, 0.0) {
                     equal += 1;
+                } else if difference > 0.0 {
+                    greater += 1;
+                } else {
+                    less += 1;
                 }
             }
         }
@@ -3214,6 +3231,39 @@ mod tests {
             ],
             eligibility_warnings: Vec::new(),
         }
+    }
+
+    #[test]
+    fn numerical_tie_guard_is_scale_aware_and_stabilizes_henseler_counts() {
+        let within = 32.0 * f64::EPSILON;
+        assert!(mga_numerically_tied_v1(1.0, 1.0 - within));
+        assert!(mga_greater_or_tied_v1(1.0 - within, 1.0));
+        assert!(mga_less_or_tied_v1(1.0 + within, 1.0));
+        assert!(!mga_numerically_tied_v1(1.0, 1.0 + 1.0e-10));
+
+        let mut banks = synthetic_banks();
+        banks.groups[0].replicate_estimates = vec![
+            Some(vec![1.0]),
+            Some(vec![1.0]),
+            Some(vec![1.0]),
+            Some(vec![1.0]),
+        ];
+        banks.groups[1].replicate_estimates = vec![
+            Some(vec![1.0 + within]),
+            Some(vec![1.0 - within]),
+            Some(vec![1.0 + 1.0e-10]),
+            Some(vec![1.0 - 1.0e-10]),
+        ];
+        let pair =
+            OrderedGroupPairV1::new(GroupIndexV1::new(0).unwrap(), GroupIndexV1::new(1).unwrap())
+                .unwrap();
+        let result = henseler_directional_probabilities_v1(&banks, pair, 0.05)
+            .unwrap()
+            .remove(0);
+        assert_eq!(result.equal_differences, 2);
+        assert_eq!(result.greater_differences, 1);
+        assert_eq!(result.less_differences, 1);
+        assert_eq!(result.directional_probability_a_greater, 0.5);
     }
 
     #[test]

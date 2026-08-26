@@ -211,7 +211,7 @@ import "./nativeDesktop.css";
 import "./nativeCanvas.css";
 
 export type { NativeSurface } from "./nativeCommands";
-type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "advanced-calculation" | "advanced-parameters" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
+type NativeDialog = "new-project" | "import-data" | "recode-data" | "derive-variable" | "group-setup" | "higher-order" | "moderation" | "calculation" | "advanced-calculation" | "advanced-parameters" | "multimod-workspace" | "export" | "trust" | "settings" | "run-details" | "shortcuts" | "about" | null;
 export function completedRunNavigationTarget(
   status: RunMonitorStatus,
   lastRunId: string | null,
@@ -2563,6 +2563,9 @@ export function NativeDesktopApp() {
         propertiesOpen={propertiesOpen}
         readiness={modelReadiness}
         generalSemRevisionRequired={strictGeneralSemRevisionRequired}
+        onOpenMultiMod={strictGeneralSemAuthority
+          ? () => openDialog("multimod-workspace")
+          : undefined}
         onContextMenuRequest={onModelCanvasContextMenuRequest}
         onEditHigherOrder={(strictGeneralSemRevisionRequired
           ? generalSemRevisionDisabledReason === null
@@ -2723,6 +2726,13 @@ export function NativeDesktopApp() {
           navigate("model");
           window.setTimeout(() => document.getElementById("nd-model-canvas-panel")?.focus(), 0);
         }}
+      /> : null}
+      {dialog === "multimod-workspace" ? <NativeRecipeV4GeneralSemWorkspace
+        key={`${activeModelId ?? "model"}:multimod-workspace`}
+        modelName={activeEditableModelName}
+        experimentalLabsEnabled={uiPreferences.experimentalLabsEnabled}
+        projectActivationConnected
+        presentation="workspace"
       /> : null}
       {dialog === "advanced-calculation" ? advancedCalculationPlan?.route === "exact_cbsem_compatibility"
         ? <NativeRecipeV4CbsemWorkspace
@@ -3076,11 +3086,12 @@ export function Launcher({ projectName, projectPath, datasetName, runs, recentPr
   </div>;
 }
 
-function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, onContextMenuRequest, onEditHigherOrder, onRemoveHigherOrder, onRemoveModeratingEffect }: {
+function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevisionRequired, onOpenMultiMod, onContextMenuRequest, onEditHigherOrder, onRemoveHigherOrder, onRemoveModeratingEffect }: {
   modelName: string;
   propertiesOpen: boolean;
   readiness: NativePlsReadiness;
   generalSemRevisionRequired: boolean;
+  onOpenMultiMod?: () => void;
   onContextMenuRequest: (request: ModelCanvasContextMenuRequest) => void;
   onEditHigherOrder?: (request: { nodeId: string; termId: string }) => void;
   onRemoveHigherOrder?: (request: { nodeId: string; termId: string }) => void;
@@ -3301,6 +3312,11 @@ function ModelSurface({ modelName, propertiesOpen, readiness, generalSemRevision
         <span className="nd-model-document-title" title={modelName}><GitBranch size={14} aria-hidden="true" />{modelName}</span>
         <span className="nd-model-view-label"><GitBranch size={13} aria-hidden="true" />Canvas</span>
         <span className="nd-model-toolbar-spacer" />
+        {onOpenMultiMod ? <button
+          type="button"
+          data-testid="native-multimod-workspace-open"
+          onClick={onOpenMultiMod}
+        ><UsersRound size={13} aria-hidden="true" />Moderation &amp; heterogeneity…</button> : null}
       </div>
       {generalSemRevisionRequired ? <p className="nd-inline-warning" role="note" data-testid="general-sem-scientific-revision-required">
         <strong>Safe revision required.</strong> Advanced scientific edits create a new calculation-ready revision; the current project remains unchanged.
@@ -3591,7 +3607,7 @@ export function aboutVisibleAnalysisLabelsV2(settings: AnalysisUiSettings, exper
 function AboutDialog({ settings, experimentalLabsEnabled }: { settings: AnalysisUiSettings; experimentalLabsEnabled: boolean }) {
   const visibleMethods = aboutVisibleAnalysisLabelsV2(settings, experimentalLabsEnabled);
   const availabilityView = experimentalLabsEnabled ? "Standard + Experimental Labs" : "Standard";
-  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.55.5</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
+  return <div className="nd-about"><div className="nd-about-mark">Q</div><div><h3>QuickPLS</h3><p>Offline structural equation modeling for Windows.</p><dl className="nd-property-list"><div><dt>Version</dt><dd>2.56.0</dd></div><div><dt>Availability view</dt><dd>{availabilityView}</dd></div><div><dt>Available calculation methods</dt><dd>{visibleMethods.length ? visibleMethods.join(", ") : "No methods are available in the current view."}</dd></div><div><dt>Model workflow</dt><dd>Authority-aware Canvas editing and Registry-authorized PLS-SEM and CB-SEM use one Canvas, Calculate, Results, export, and reopen workflow.</dd></div><div><dt>Conditional result groups</dt><dd>Researcher-facing mediation, two-way and three-way moderation, higher-order, moderated-mediation, and CB-SEM output appears only when owned by the completed result.</dd></div><div><dt>Runtime</dt><dd>{isNativeDesktop() ? "Native desktop" : "Browser preview"}</dd></div><div><dt>Implementation</dt><dd>Independent QuickPLS engine</dd></div><div><dt>Third-party notices</dt><dd>Included with the installed application</dd></div></dl></div></div>;
 }
 
 function StatusBar({
@@ -3651,6 +3667,7 @@ function dialogTitle(
   if (dialog === "calculation") return "Calculate";
   if (dialog === "advanced-calculation") return "Calculate Advanced Model";
   if (dialog === "advanced-parameters") return "Advanced Parameter Table";
+  if (dialog === "multimod-workspace") return "Moderation & Heterogeneity";
   if (dialog === "export") return "Export Results";
   if (dialog === "trust") return "Method Details";
   if (dialog === "settings") return "Preferences";

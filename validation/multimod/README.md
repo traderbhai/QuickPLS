@@ -1,7 +1,9 @@
 # MultiMod qualification evidence
 
-Everything in this directory is a qualification contract or an unexecuted
-template. No file here is evidence that a MultiMod method passed.
+Tracked files in this directory are qualification contracts or fail-closed
+templates. They are not evidence that a MultiMod method passed. Campaign
+evidence, generated authorities, packages, and receipts live under the
+external campaign root and are bound to one exact clean commit.
 
 - `multimod_capability_index_v1.json` registers every candidate profile as
   Labs with absent evidence.
@@ -18,12 +20,29 @@ template. No file here is evidence that a MultiMod method passed.
 - `unsupported_intersections_v1.json` is the machine-readable fail-closed
   reason-code contract.
 
+## Tracked Labs templates and packaged Standard authority
+
+`multimod_capability_index_v1.json` and the four tracked family manifests stay
+`surface=labs`, `promotion_allowed=false`, and `evidence_state=absent`. The
+qualification process never edits them into release claims. Only after every
+required gate passes may the external materializer derive complete Standard
+prepackage/live manifests and an exact-cell authority for the unchanged
+candidate SHA.
+
+`src-tauri/build.rs` embeds Standard authority only when the external authority
+fully matches the Git commit, version, plan and binding digests, tracked source
+digests, evidence receipts, and sorted exact-cell inventory. Without that full
+authority the executable contains the Labs sentinel and runtime state cannot
+promote it. Installed and portable acceptance must exercise the real Standard
+surface with Labs disabled, show at least one `Standard · Release-qualified`
+badge, show no Lab-only badge, and bind both smoke receipts to the embedded
+authority and exact executable.
+
 The PowerShell campaign driver is
 `validation/run_v256_multimod_qualification.ps1`. It defaults to plan-only
 mode. `-Execute` is intentionally rejected while any gate has
-`implementation_status=pending` or no reviewed command binding. Once real gate
-programs exist, update the plan through code review, freeze a clean candidate
-commit, then run:
+`implementation_status=pending` or no reviewed command binding. Freeze a clean
+candidate commit, then run:
 
 ```powershell
 pwsh -NoProfile -File .\validation\run_v256_multimod_qualification.ps1 `
@@ -40,6 +59,14 @@ spending build or simulation time on evidence that cannot be promoted. A
 blocked gate is terminal for campaign accounting, but it always produces a
 `completed_with_issues` campaign and a nonzero driver exit; it can never count
 as clean or release-acceptable evidence.
+
+One first full qualification-eligible campaign may release when every gate
+passes, its issue inventory is empty, both packaged Standard receipts pass, and
+release acceptance succeeds for the unchanged SHA. A second full campaign is
+not required merely for confirmation of an already clean run. If any issue is
+recorded, that campaign is ineligible; fixes invalidate its inventory and
+dependent receipts, so one fresh full exact-current-SHA campaign is mandatory.
+Targeted reruns diagnose residual failures but never promote a candidate.
 
 ## Independent reference oracles
 
@@ -108,8 +135,9 @@ CSV, XLSX, JSON, HTML, PDF, SVG and PNG, independently verifies the exact
 profile/procedure and candidate-authority receipt inventory, and exercises
 strict optional posterior and replicate-sidecar publication. The typed
 qualification authority injection exists only under `cfg(test)`; normal native
-publication continues to accept only the immutable embedded candidate
-authority and remains fail closed while the application is Labs.
+publication accepts only the immutable embedded candidate authority. A build
+without complete authority remains Labs, while an exact-authority candidate
+uses the separately derived Standard surface.
 
 `metamorphic.global` binds all 25 exact profiles to deterministic fixtures that
 use the public Recipe V4 compiler and the four production raw runners. It
@@ -189,9 +217,10 @@ after evidence is collected:
    the qualification fixture bridge. Both are compile-time conditions: no
    project, request or runtime environment can inject promotion authority.
 4. Launch the exact receipt-bound installed and portable executables. Each must
-   emit `ReleaseQualifiedCandidate` provenance for covered exact cells and
-   complete the four-family production workflow matrix; missing covered cells
-   remain Labs, while malformed or mismatched authority/receipts fail closed.
+   emit `ReleaseQualifiedCandidate` provenance for the complete tracked exact
+   cell inventory, complete the four-family production workflow matrix, and
+   visibly render Standard with Labs disabled and no Lab-only badge. Incomplete,
+   malformed, or mismatched authority/receipts fail closed to Labs.
 5. Bind both smoke receipts to the embedded authority, package receipt and exact
    executable hashes, then derive the final external live set and run release
    acceptance. The receipts identify this unmerged review candidate only; a

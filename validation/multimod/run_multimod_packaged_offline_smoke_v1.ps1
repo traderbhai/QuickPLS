@@ -587,6 +587,9 @@ if (
     $report.offline.passed -ne $true -or
     $report.candidate_receipt_tamper_failed_closed -ne $true -or
     $report.cancellation_recovery_verified -ne $true -or
+    $report.standard_surface_verified -ne $true -or
+    $report.labs_opt_in_not_required -ne $true -or
+    $report.lab_badge_absent -ne $true -or
     $report.harness.compile_time_feature_required -ne $true -or
     $report.harness.embedded_candidate_authority_required -ne $true -or
     $report.harness.runtime_or_request_authority_injection -ne $false -or
@@ -677,6 +680,9 @@ $runtimeReceipt = [ordered]@{
     console_window_absent = $peSubsystem.console_subsystem_absent
     qualification_state = "release_qualified_candidate"
     unqualified_authority_fails_closed = $true
+    standard_surface_verified = [bool]$report.standard_surface_verified
+    labs_opt_in_not_required = [bool]$report.labs_opt_in_not_required
+    lab_badge_absent = [bool]$report.lab_badge_absent
     post_evidence_source_change_required = $false
     qualification_coverage_complete = $true
     qualification_harness_contract = "qpls.v256.multimod.build-only-packaged-qualification-harness.v1"

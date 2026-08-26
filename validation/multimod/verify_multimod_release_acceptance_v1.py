@@ -124,6 +124,9 @@ def validate_runtime_promotion_receipt(
         "console_window_absent": True,
         "qualification_state": "release_qualified_candidate",
         "unqualified_authority_fails_closed": True,
+        "standard_surface_verified": True,
+        "labs_opt_in_not_required": True,
+        "lab_badge_absent": True,
         "post_evidence_source_change_required": False,
         "cancellation_recovery_verified": True,
     }
@@ -187,6 +190,9 @@ def validate_runtime_promotion_receipt(
         or evidence.get("package_receipt_sha256") != package_digest
         or evidence.get("candidate_receipt_tamper_failed_closed") is not True
         or evidence.get("cancellation_recovery_verified") is not True
+        or evidence.get("standard_surface_verified") is not True
+        or evidence.get("labs_opt_in_not_required") is not True
+        or evidence.get("lab_badge_absent") is not True
         or evidence.get("offline", {}).get("passed") is not True
         or evidence.get("offline", {}).get("functional_network_requests") != []
         or evidence.get("offline", {}).get("remote_resource_urls") != []
@@ -297,6 +303,8 @@ def validate_runtime_promotion_receipt(
 def audit(campaign_root: Path, candidate_commit: str, plan_sha256: str) -> dict[str, Any]:
     errors: list[str] = []
     runtime_promotion_mechanism_verified = False
+    prepackage_standard_authority_verified = False
+    final_standard_manifest_verified = False
     campaign_root = campaign_root.resolve()
     plan = read_json(PLAN)
     if sha256(PLAN) != plan_sha256:
@@ -417,6 +425,7 @@ def audit(campaign_root: Path, candidate_commit: str, plan_sha256: str) -> dict[
                 "prepackage_authority",
                 prepackage_authority_path,
             )
+            prepackage_standard_authority_verified = True
         except Exception as error:
             errors.append(
                 f"prepackage authority verification failed: {type(error).__name__}:{error}"
@@ -430,6 +439,7 @@ def audit(campaign_root: Path, candidate_commit: str, plan_sha256: str) -> dict[
                 manifest_set_path,
                 "final_live",
             )
+            final_standard_manifest_verified = True
         except Exception as error:
             errors.append(f"live manifest verification failed: {type(error).__name__}:{error}")
     try:
@@ -503,6 +513,12 @@ def audit(campaign_root: Path, candidate_commit: str, plan_sha256: str) -> dict[
         "candidate_unpushed": not any("remote branch" in error for error in errors),
         "candidate_unpublished": not any("package receipt" in error for error in errors),
         "runtime_promotion_mechanism_verified": runtime_promotion_mechanism_verified,
+        "prepackage_standard_authority_verified": prepackage_standard_authority_verified,
+        "final_standard_manifest_verified": final_standard_manifest_verified,
+        "standard_manifest_authority_verified": (
+            prepackage_standard_authority_verified
+            and final_standard_manifest_verified
+        ),
         "free_gib": free,
         "errors": errors,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),

@@ -25,6 +25,7 @@ import {
   publishNativeMultiModRawSidecarV1,
   type NativeMultiModRawSidecarExportAuthorityV1,
 } from "./nativeMultiModRawSidecarExportV1";
+import type { NativeMultiModAccessV1 } from "./nativeMultiModJobV1";
 
 export type MultiModResultsTabV1 =
   | "eligibility"
@@ -61,6 +62,7 @@ export interface NativeMultiModResultReadinessV1 {
 }
 
 export interface NativeMultiModResultsV1Props {
+  readonly access: NativeMultiModAccessV1;
   /** Must originate from parseMultiModResultAttachmentV1 or the strict V6 archive reader. */
   readonly validatedResult: MultiModResultAttachmentV1;
   /** Strict post-reopen canonical projection for semantic exports. */
@@ -334,7 +336,7 @@ export function paginateMultiModRowsV1<T>(
 export function windowMultiModRowsV1<T>(
   rows: readonly T[],
   requestedStart: number,
-  requestedSize = MULTIMOD_RESULT_VIRTUAL_WINDOW_ROWS_V1,
+  requestedSize: number = MULTIMOD_RESULT_VIRTUAL_WINDOW_ROWS_V1,
 ): {
   rows: readonly T[];
   start: number;
@@ -377,6 +379,7 @@ function table(
 function qualificationRows(
   attachment: MultiModResultAttachmentV1,
   readiness: NativeMultiModResultReadinessV1,
+  standardQualified: boolean,
 ): string[][] {
   const provenance = resultProvenance(attachment.result);
   return [
@@ -387,8 +390,12 @@ function qualificationRows(
     ],
     [
       "Qualification",
-      humanize(provenance.qualification),
-      provenance.qualification === "unqualified_labs"
+      standardQualified
+        ? "Standard · Release-qualified"
+        : humanize(provenance.qualification),
+      standardQualified
+        ? "This result is bound to the exact release-qualified authority embedded in this QuickPLS build."
+        : provenance.qualification === "unqualified_labs"
         ? "Labs output only; schema validity is not release qualification."
         : provenance.qualification === "release_qualified_candidate"
           ? "Candidate state only; live exact-commit manifests remain authoritative."
@@ -412,6 +419,7 @@ function qualificationRows(
 function commonTables(
   attachment: MultiModResultAttachmentV1,
   readiness: NativeMultiModResultReadinessV1,
+  standardQualified: boolean,
 ): MultiModResultTableV1[] {
   const result = attachment.result;
   const provenance = resultProvenance(result);
@@ -423,7 +431,7 @@ function commonTables(
       "Result eligibility",
       "Strict parsing, qualification, scientific-display, and evidence-inventory decisions.",
       ["Gate", "Status", "Detail"],
-      qualificationRows(attachment, readiness),
+      qualificationRows(attachment, readiness, standardQualified),
       ["parser", "qualification", "scientific-display", "sidecars"],
     ),
     table(
@@ -448,7 +456,12 @@ function commonTables(
         ["Capability ID", provenance.capability_cell.capability_id],
         ["Capability cell", provenance.capability_cell.cell_id],
         ["Capability version", provenance.capability_cell.capability_version],
-        ["Qualification", humanize(provenance.qualification)],
+        [
+          "Qualification",
+          standardQualified
+            ? "Standard · Release-qualified"
+            : humanize(provenance.qualification),
+        ],
       ],
     ),
     table(
@@ -480,10 +493,15 @@ function commonTables(
       "These boundaries remain visible in every exported and on-screen result.",
       ["Boundary", "Reason"],
       [
-        [
-          "Release qualification is not implied",
-          "A validated Labs/candidate result still requires exact-commit live manifests and every dependent qualification gate.",
-        ],
+        standardQualified
+          ? [
+              "Release authority",
+              "This result carries the exact build-embedded candidate receipt for its qualified profile cells.",
+            ]
+          : [
+              "Release qualification is not implied",
+              "A validated Labs/candidate result still requires exact-commit live manifests and every dependent qualification gate.",
+            ],
         [
           "Continuous moderation V1 is separate",
           "This additive result does not reinterpret or replace the protected continuous-moderation workflow.",
@@ -1276,9 +1294,10 @@ function causalTables(
 function buildView(
   attachment: MultiModResultAttachmentV1,
   readiness: NativeMultiModResultReadinessV1,
+  standardQualified: boolean,
 ): MultiModResultsViewV1 {
   const result = attachment.result;
-  const common = commonTables(attachment, readiness);
+  const common = commonTables(attachment, readiness, standardQualified);
   if (result.kind === "pls_multigroup_analysis_v1") {
     return {
       familyLabel: "PLS multigroup analysis",
@@ -1331,10 +1350,12 @@ function PaginatedMultiModResultTable({
   table: source,
   resultId,
   initialPageSize,
+  standardQualified,
 }: {
   readonly table: MultiModResultTableV1;
   readonly resultId: string;
   readonly initialPageSize: 25 | 50 | 100;
+  readonly standardQualified: boolean;
 }) {
   const instanceId = useId().replaceAll(":", "");
   const [pageSize, setPageSize] = useState<number>(initialPageSize);
@@ -1362,9 +1383,10 @@ function PaginatedMultiModResultTable({
   const nativeTable: ResultTable = {
     id: source.id,
     title: source.title,
-    status: "experimental",
-    warning:
-      "MultiMod Labs result. Qualification state and scientific boundaries remain visible in the surrounding result view.",
+    status: standardQualified ? "validated" : "experimental",
+    warning: standardQualified
+      ? null
+      : "MultiMod Labs result. Qualification state and scientific boundaries remain visible in the surrounding result view.",
     columns: [...source.columns],
     rows: pageRows,
     presentation: { rows: rowHints },
@@ -1573,6 +1595,7 @@ function InvalidMultiModResult({ error }: { readonly error: unknown }) {
 }
 
 export function NativeMultiModResultsV1({
+  access,
   validatedResult,
   canonicalDocument,
   rawSidecarExportAuthority,
@@ -1596,6 +1619,7 @@ export function NativeMultiModResultsV1({
     return <InvalidMultiModResult error={validation.error} />;
   return (
     <ValidatedNativeMultiModResultsV1
+      access={access}
       result={validation.result}
       canonicalDocument={canonicalDocument}
       rawSidecarExportAuthority={rawSidecarExportAuthority}
@@ -1606,12 +1630,14 @@ export function NativeMultiModResultsV1({
 }
 
 function ValidatedNativeMultiModResultsV1({
+  access,
   result,
   canonicalDocument,
   rawSidecarExportAuthority,
   initialTab,
   initialPageSize,
 }: {
+  readonly access: NativeMultiModAccessV1;
   readonly result: MultiModResultAttachmentV1;
   readonly canonicalDocument?: CanonicalResultDocumentV2;
   readonly rawSidecarExportAuthority?: NativeMultiModRawSidecarExportAuthorityV1;
@@ -1622,7 +1648,14 @@ function ValidatedNativeMultiModResultsV1({
     () => nativeMultiModResultReadinessV1(result.result),
     [result.result],
   );
-  const view = useMemo(() => buildView(result, readiness), [readiness, result]);
+  const standardQualified =
+    access.surface === "standard_multimod_v1" &&
+    result.result.analysis.provenance.qualification ===
+      "release_qualified_candidate";
+  const view = useMemo(
+    () => buildView(result, readiness, standardQualified),
+    [readiness, result, standardQualified],
+  );
   const disabledTabs = useMemo(
     () =>
       new Set<MultiModResultsTabV1>(
@@ -1650,7 +1683,11 @@ function ValidatedNativeMultiModResultsV1({
     setActiveTab(next);
     document.getElementById(`nd-multimod-results-tab-${next}`)?.focus();
   };
-  const qualificationLabel = humanize(view.provenance.qualification);
+  const qualificationLabel = standardQualified
+    ? "Standard · Release-qualified"
+    : access.surface === "internal_labs_multimod_v1"
+      ? "Experimental Labs · Unqualified"
+      : "Standard · Qualification unavailable";
   const headingId = `nd-multimod-results-heading-${result.result_id.replace(/[^a-zA-Z0-9_-]/gu, "-")}`;
 
   return (
@@ -1694,7 +1731,9 @@ function ValidatedNativeMultiModResultsV1({
         </strong>
         <span>
           {readiness.completeScientificResult
-            ? "Estimates and inference below come only from the strict completed attachment. Labs qualification and scope warnings still apply."
+            ? standardQualified
+              ? "Estimates and inference below come only from the strict completed attachment and its exact build-embedded release authority."
+              : "Estimates and inference below come only from the strict completed attachment. Labs qualification and scope warnings still apply."
             : readiness.reasons.join(" ")}
         </span>
       </div>
@@ -1755,6 +1794,7 @@ function ValidatedNativeMultiModResultsV1({
                       table={entry}
                       resultId={result.result_id}
                       initialPageSize={initialPageSize}
+                      standardQualified={standardQualified}
                     />
                   ))
                 ) : (
@@ -1778,7 +1818,7 @@ function ValidatedNativeMultiModResultsV1({
       <CanonicalResultExportPanelV2
         document={canonicalDocument}
         nativeDesktop
-        publicationBlockedReason={view.provenance.qualification === "release_qualified_candidate"
+        publicationBlockedReason={standardQualified
           ? undefined
           : "This exact MultiMod profile is not release-qualified. CSV, XLSX, JSON, HTML, PDF, SVG, and PNG publication remain disabled until live qualification evidence is bound to the final build."}
       />

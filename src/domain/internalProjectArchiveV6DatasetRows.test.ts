@@ -3,8 +3,10 @@ import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectAr
 import {
   InternalProjectArchiveV6DatasetRowsWireError,
   buildInternalProjectArchiveV6DatasetRowsRequestV1,
+  parseInternalProjectArchiveV6DatasetRowsRequestV1,
   parseInternalProjectArchiveV6DatasetRowsOutcomeV1,
 } from "./internalProjectArchiveV6DatasetRows";
+import { INTERNAL_PROJECT_ARCHIVE_V6_STANDARD_ACCESS_V1 } from "./internalProjectArchiveV6Access";
 
 const PROJECT_ID = "00000000-0000-0000-0000-000000000601";
 const DATASET_ID = "00000000-0000-0000-0000-000000000602";
@@ -98,6 +100,34 @@ describe("strict schema-6 General SEM dataset row paging wire", () => {
       .toThrowError(InternalProjectArchiveV6DatasetRowsWireError);
     expect(() => buildInternalProjectArchiveV6DatasetRowsRequestV1(snapshot, DATASET_ID, 0, 501))
       .toThrow(/limit from 1 through 500/);
+
+    expect(
+      buildInternalProjectArchiveV6DatasetRowsRequestV1(
+        snapshot,
+        DATASET_ID,
+        1,
+        2,
+        INTERNAL_PROJECT_ARCHIVE_V6_STANDARD_ACCESS_V1,
+      ),
+    ).toMatchObject({
+      surface: "standard_multimod_v1",
+      experimentalLabsEnabled: false,
+    });
+    for (const access of [
+      { surface: "internal_labs", experimentalLabsEnabled: false },
+      { surface: "standard_multimod_v1", experimentalLabsEnabled: true },
+    ]) {
+      expect(() =>
+        parseInternalProjectArchiveV6DatasetRowsRequestV1({
+          ...request(),
+          ...access,
+        }),
+      ).toThrowError(
+        expect.objectContaining({
+          code: "schema6_dataset_rows.surface_pair_invalid",
+        }),
+      );
+    }
   });
 
   it("accepts an exact complete page and rejects identity, shape, and row drift", () => {

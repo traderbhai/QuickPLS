@@ -13,6 +13,10 @@ import {
   windowMultiModRowsV1,
   type MultiModResultsTabV1,
 } from "./NativeMultiModResultsV1";
+import {
+  NATIVE_MULTIMOD_LABS_ACCESS_V1,
+  NATIVE_MULTIMOD_STANDARD_ACCESS_V1,
+} from "./nativeMultiModJobV1";
 
 const SHA = {
   recipe: "a".repeat(64),
@@ -139,6 +143,26 @@ function attachment(
   };
 }
 
+function standardQualifiedAttachment(): MultiModResultAttachmentV1 {
+  const result = attachment();
+  result.result.analysis.provenance = {
+    ...result.result.analysis.provenance,
+    qualification: "release_qualified_candidate",
+    candidate_qualification_receipt: {
+      schema_version: 1,
+      authority_binding_sha256: "2".repeat(64),
+      candidate_commit_sha: "3".repeat(40),
+      candidate_version: "2.56.0",
+      qualification_plan_sha256: "4".repeat(64),
+      gate_binding_sha256: "5".repeat(64),
+      capability_index_sha256: "6".repeat(64),
+      prepackage_manifest_set_sha256: "7".repeat(64),
+      required_profile_cells: ["mga.general_sem_pls.v1::point_estimation"],
+    },
+  };
+  return result;
+}
+
 function heterogeneityAttachment(): MultiModResultAttachmentV1 {
   const base = attachment();
   return {
@@ -162,9 +186,8 @@ function heterogeneityAttachment(): MultiModResultAttachmentV1 {
             pooled_parameters: [
               {
                 target_id: "pooled:path:x-y",
-                family: "structural_path",
+                target_kind: "structural_path",
                 estimate: 0.25,
-                standardized: true,
               },
             ],
             blockers: [],
@@ -270,6 +293,7 @@ describe("NativeMultiModResultsV1", () => {
   it("renders an accessible result tab contract and a bounded first table page", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={attachment({ rows: 61 })}
         initialTab="estimates"
       />,
@@ -290,14 +314,15 @@ describe("NativeMultiModResultsV1", () => {
     expect(html).toContain(
       'aria-label="Next page of Group-specific parameters"',
     );
-    expect(html).toContain("path-target-049");
-    expect(html).not.toContain("path-target-050");
+    expect(html).toContain("path-target-024");
+    expect(html).not.toContain("path-target-025");
     expect(html).toContain("Not applicable");
   });
 
   it("withholds estimates and inference for incomplete results while retaining failure evidence", () => {
     const html = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={attachment({ complete: false })}
         initialTab="failures"
       />,
@@ -322,16 +347,18 @@ describe("NativeMultiModResultsV1", () => {
   it("projects each strict result family without substituting another method's semantics", () => {
     const heterogeneity = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={heterogeneityAttachment()}
         initialTab="diagnostics"
       />,
     );
     expect(heterogeneity).toContain("PLS unobserved heterogeneity");
     expect(heterogeneity).toContain("Candidate segmentation diagnostics");
-    expect(heterogeneity).toContain("Fimix Pls V2");
+    expect(heterogeneity).toContain("Pooled baseline");
 
     const conditional = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={conditionalAttachment()}
         initialTab="inference"
       />,
@@ -342,6 +369,7 @@ describe("NativeMultiModResultsV1", () => {
 
     const causal = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={causalAttachment()}
         initialTab="estimates"
       />,
@@ -373,6 +401,7 @@ describe("NativeMultiModResultsV1", () => {
     ];
     const html = renderToStaticMarkup(
       <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
         validatedResult={result}
         initialTab="diagnostics"
       />,
@@ -384,13 +413,28 @@ describe("NativeMultiModResultsV1", () => {
   it("renders no scientific values when the allegedly validated attachment fails local revalidation", () => {
     const invalid = { ...attachment(), result_sha256: "not-a-sha" };
     const html = renderToStaticMarkup(
-      <NativeMultiModResultsV1 validatedResult={invalid} />,
+      <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_LABS_ACCESS_V1}
+        validatedResult={invalid}
+      />,
     );
 
     expect(html).toContain('data-multimod-results="invalid"');
     expect(html).toContain("MultiMod result withheld");
     expect(html).toContain("No scientific values were rendered.");
     expect(html).not.toContain('role="tablist"');
+  });
+
+  it("renders qualified Standard results without user-facing Labs labels", () => {
+    const html = renderToStaticMarkup(
+      <NativeMultiModResultsV1
+        access={NATIVE_MULTIMOD_STANDARD_ACCESS_V1}
+        validatedResult={standardQualifiedAttachment()}
+      />,
+    );
+
+    expect(html).toContain("Standard · Release-qualified");
+    expect(html).not.toMatch(/Experimental Labs|Labs output|Labs qualification/iu);
   });
 
   it("uses WAI-ARIA tab navigation order and skips withheld scientific tabs", () => {

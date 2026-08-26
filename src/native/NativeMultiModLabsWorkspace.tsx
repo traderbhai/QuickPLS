@@ -39,7 +39,10 @@ import {
 import type { SemModelV4 } from "../domain/semModelV4";
 import type { CanonicalResultDocumentV2 } from "../domain/canonicalResultDocumentV2";
 import type { NativeMultiModRawSidecarExportAuthorityV1 } from "./nativeMultiModRawSidecarExportV1";
-import type { NativeMgaGroupEligibilityV1 } from "./nativeMultiModJobV1";
+import type {
+  NativeMgaGroupEligibilityV1,
+  NativeMultiModAccessV1,
+} from "./nativeMultiModJobV1";
 import { NativeMultiModResultsV1 } from "./NativeMultiModResultsV1";
 
 export interface NativeMultiModGroupOptionV1 {
@@ -70,6 +73,7 @@ export type NativeMultiModRunnerAvailabilityV1 =
     };
 
 export interface NativeMultiModLabsWorkspaceProps {
+  readonly access: NativeMultiModAccessV1;
   readonly model: SemModelV4;
   readonly caseCount: number;
   readonly groupingColumns?: readonly NativeMultiModGroupingColumnV1[];
@@ -812,8 +816,8 @@ function CostAndActions({
       </div>
       {!runnerExecutable ? (
         <p className="nd-dialog-note" role="note">
-          Configuration and cost review are available in Labs. Calculation
-          remains disabled until native availability says this exact profile is
+          Configuration and cost review remain available. Calculation is
+          disabled until native availability says this exact profile is
           executable. {unavailableReason}
         </p>
       ) : null}
@@ -1039,7 +1043,7 @@ function MgaFlow(
         <fieldset>
           <legend>2. Comparison and profile</legend>
           <label htmlFor="nd-multimod-mga-profile">
-            Labs profile envelope
+            Profile envelope
             <select
               id="nd-multimod-mga-profile"
               value={profile}
@@ -2089,7 +2093,7 @@ function ConditionalProcessFlow(
         <li>Calculate</li>
       </ol>
       <label htmlFor="nd-multimod-conditional-profile">
-        Labs profile envelope
+        Profile envelope
         <select
           id="nd-multimod-conditional-profile"
           value={profile}
@@ -3233,6 +3237,10 @@ const TABS: readonly {
 export function NativeMultiModLabsWorkspace(
   props: NativeMultiModLabsWorkspaceProps,
 ) {
+  const standardAccess = props.access.surface === "standard_multimod_v1";
+  const accessLabel = standardAccess
+    ? "Standard · Release-qualified"
+    : "Experimental Labs · Unqualified";
   const [activeTab, setActiveTab] = useState<MultiModTabV1>(
     props.initialTab ?? "mga",
   );
@@ -3268,8 +3276,10 @@ export function NativeMultiModLabsWorkspace(
     >
       <header className="nd-cbsem-v4-header">
         <div>
-          <span className="nd-multimod-labs-badge">
-            Experimental Labs · Unqualified
+          <span
+            className={`nd-multimod-labs-badge ${standardAccess ? "standard" : "labs"}`}
+          >
+            {accessLabel}
           </span>
           <h2 id="nd-multimod-heading">Moderation and heterogeneity suite</h2>
           <p>
@@ -3277,13 +3287,18 @@ export function NativeMultiModLabsWorkspace(
             continuous moderation V1 remains unchanged
           </p>
         </div>
-        <FlaskConical size={24} aria-hidden="true" />
+        {standardAccess ? (
+          <ShieldCheck size={24} aria-hidden="true" />
+        ) : (
+          <FlaskConical size={24} aria-hidden="true" />
+        )}
       </header>
       {props.validatedResult ? (
         <NativeMultiModResultsV1
           validatedResult={props.validatedResult}
           canonicalDocument={props.canonicalResultDocument}
           rawSidecarExportAuthority={props.rawSidecarExportAuthority}
+          access={props.access}
         />
       ) : null}
       <div

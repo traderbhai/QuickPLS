@@ -4,6 +4,10 @@ import type {
   MultiModResultAttachmentV1,
   MultimodResultSidecarDescriptorV1,
 } from "../domain/multimodContractsV1";
+import {
+  parseNativeMultiModAccessV1,
+  type NativeMultiModAccessV1,
+} from "./nativeMultiModJobV1";
 
 const COMMAND = "publish_internal_labs_multimod_raw_sidecar_v1";
 const SHA256 = /^[a-f0-9]{64}$/u;
@@ -12,6 +16,7 @@ export interface NativeMultiModRawSidecarExportAuthorityV1 {
   readonly archivePath: string;
   readonly archiveSha256: string;
   readonly projectId: string;
+  readonly access: NativeMultiModAccessV1;
 }
 
 export interface NativeMultiModRawSidecarExportReceiptV1 {
@@ -111,6 +116,26 @@ function parseReceipt(
   return item as unknown as NativeMultiModRawSidecarExportReceiptV1;
 }
 
+export function buildNativeMultiModRawSidecarExportRequestV1(
+  authority: NativeMultiModRawSidecarExportAuthorityV1,
+  attachment: MultiModResultAttachmentV1,
+  descriptor: MultimodResultSidecarDescriptorV1,
+  destinationPath: string,
+) {
+  return {
+    schemaVersion: 1 as const,
+    ...parseNativeMultiModAccessV1(authority.access),
+    archivePath: authority.archivePath,
+    expectedArchiveSha256: authority.archiveSha256,
+    projectId: authority.projectId,
+    resultId: attachment.result_id,
+    entryName: descriptor.entry_name,
+    expectedIdentitySha256: attachment.identity_sha256,
+    expectedPayloadSha256: descriptor.sha256,
+    destinationPath,
+  };
+}
+
 export async function publishNativeMultiModRawSidecarV1(
   authority: NativeMultiModRawSidecarExportAuthorityV1,
   attachment: MultiModResultAttachmentV1,
@@ -138,19 +163,12 @@ export async function publishNativeMultiModRawSidecarV1(
     );
   }
   const response = await invoke<unknown>(COMMAND, {
-    request: {
-      schemaVersion: 1,
-      surface: "internal_labs_multimod_v1",
-      experimentalLabsEnabled: true,
-      archivePath: authority.archivePath,
-      expectedArchiveSha256: authority.archiveSha256,
-      projectId: authority.projectId,
-      resultId: attachment.result_id,
-      entryName: descriptor.entry_name,
-      expectedIdentitySha256: attachment.identity_sha256,
-      expectedPayloadSha256: descriptor.sha256,
+    request: buildNativeMultiModRawSidecarExportRequestV1(
+      authority,
+      attachment,
+      descriptor,
       destinationPath,
-    },
+    ),
   });
   return parseReceipt(response, {
     authority,

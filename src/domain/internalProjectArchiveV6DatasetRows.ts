@@ -1,4 +1,9 @@
 import type { InternalProjectArchiveV6ReadSnapshotV1 } from "./internalProjectArchiveV6Read";
+import {
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1,
+  internalProjectArchiveV6AccessPairV1,
+  type InternalProjectArchiveV6AccessV1,
+} from "./internalProjectArchiveV6Access";
 import { supportsGeneralSemV1 } from "./internalProjectArchiveV6Wire";
 import type { Dataset } from "../types";
 
@@ -7,11 +12,12 @@ const MAX_PAGE_SIZE = 500;
 
 type WireRecord = Record<string, unknown>;
 
-export const INTERNAL_PROJECT_ARCHIVE_V6_DATASET_ROWS_SURFACE = "internal_labs" as const;
+/** Historical surface retained for callers that explicitly request Labs. */
+export const INTERNAL_PROJECT_ARCHIVE_V6_DATASET_ROWS_SURFACE =
+  INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1.surface;
 
-export interface InternalProjectArchiveV6DatasetRowsRequestV1 {
-  surface: typeof INTERNAL_PROJECT_ARCHIVE_V6_DATASET_ROWS_SURFACE;
-  experimentalLabsEnabled: true;
+export type InternalProjectArchiveV6DatasetRowsRequestV1 =
+  InternalProjectArchiveV6AccessV1 & {
   archivePath: string;
   expectedArchiveSha256: string;
   projectId: string;
@@ -19,7 +25,7 @@ export interface InternalProjectArchiveV6DatasetRowsRequestV1 {
   datasetFingerprint: string;
   offset: number;
   limit: number;
-}
+};
 
 export interface InternalProjectArchiveV6DatasetRowsPageV1 {
   schemaVersion: 1;
@@ -91,6 +97,18 @@ function textAt(value: unknown, path: string): string {
   return value;
 }
 
+function sha256At(value: unknown, path: string): string {
+  const digest = textAt(value, path);
+  if (!LOWER_SHA256.test(digest)) {
+    fail(
+      "schema6_dataset_rows.archive_sha256_invalid",
+      path,
+      `${path} must be a lowercase SHA-256 digest.`,
+    );
+  }
+  return digest;
+}
+
 function countAt(value: unknown, path: string, positive = false): number {
   if (!Number.isSafeInteger(value) || Object.is(value, -0) || (value as number) < (positive ? 1 : 0)) {
     fail("schema6_dataset_rows.count_invalid", path, `${path} must be a ${positive ? "positive" : "nonnegative"} safe integer.`);
@@ -127,12 +145,71 @@ function rowAt(value: unknown, columns: readonly string[], path: string): Datase
   return row as Dataset["rows"][number];
 }
 
+export function parseInternalProjectArchiveV6DatasetRowsRequestV1(
+  input: unknown,
+): InternalProjectArchiveV6DatasetRowsRequestV1 {
+  const path = "request";
+  const request = exactRecordAt(
+    input,
+    [
+      "surface",
+      "experimentalLabsEnabled",
+      "archivePath",
+      "expectedArchiveSha256",
+      "projectId",
+      "datasetId",
+      "datasetFingerprint",
+      "offset",
+      "limit",
+    ],
+    path,
+  );
+  const access = internalProjectArchiveV6AccessPairV1(
+    request.surface,
+    request.experimentalLabsEnabled,
+  );
+  if (!access) {
+    fail(
+      "schema6_dataset_rows.surface_pair_invalid",
+      path,
+      "Dataset paging requires exact internal_labs/true or standard_multimod_v1/false access.",
+    );
+  }
+  const offset = countAt(request.offset, `${path}.offset`);
+  const limit = countAt(request.limit, `${path}.limit`, true);
+  if (limit > MAX_PAGE_SIZE) {
+    fail(
+      "schema6_dataset_rows.page_bounds_invalid",
+      `${path}.limit`,
+      `Dataset page limit must be from 1 through ${MAX_PAGE_SIZE}.`,
+    );
+  }
+  return {
+    ...access,
+    archivePath: textAt(request.archivePath, `${path}.archivePath`),
+    expectedArchiveSha256: sha256At(
+      request.expectedArchiveSha256,
+      `${path}.expectedArchiveSha256`,
+    ),
+    projectId: textAt(request.projectId, `${path}.projectId`),
+    datasetId: textAt(request.datasetId, `${path}.datasetId`),
+    datasetFingerprint: textAt(
+      request.datasetFingerprint,
+      `${path}.datasetFingerprint`,
+    ),
+    offset,
+    limit,
+  };
+}
+
 /** Builds an exact archive-bound request from the current strict read receipt. */
 export function buildInternalProjectArchiveV6DatasetRowsRequestV1(
   snapshot: InternalProjectArchiveV6ReadSnapshotV1,
   datasetId: string,
   offset: number,
   limit: number,
+  access: InternalProjectArchiveV6AccessV1 =
+    INTERNAL_PROJECT_ARCHIVE_V6_LABS_ACCESS_V1,
 ): InternalProjectArchiveV6DatasetRowsRequestV1 {
   if (!supportsGeneralSemV1(snapshot.project)) {
     fail("schema6_dataset_rows.general_sem_required", "snapshot.project.sem_generation", "Strict archive paging is limited to marked General SEM projects.");
@@ -154,9 +231,8 @@ export function buildInternalProjectArchiveV6DatasetRowsRequestV1(
   if (!Number.isSafeInteger(offset) || offset < 0 || !Number.isSafeInteger(limit) || limit < 1 || limit > MAX_PAGE_SIZE) {
     fail("schema6_dataset_rows.page_bounds_invalid", "request", `Dataset pages require a nonnegative offset and a limit from 1 through ${MAX_PAGE_SIZE}.`);
   }
-  return {
-    surface: INTERNAL_PROJECT_ARCHIVE_V6_DATASET_ROWS_SURFACE,
-    experimentalLabsEnabled: true,
+  return parseInternalProjectArchiveV6DatasetRowsRequestV1({
+    ...access,
     archivePath: snapshot.archivePath,
     expectedArchiveSha256: snapshot.archiveSha256,
     projectId: snapshot.project.project_id,
@@ -164,13 +240,14 @@ export function buildInternalProjectArchiveV6DatasetRowsRequestV1(
     datasetFingerprint: descriptor.fingerprint,
     offset,
     limit,
-  };
+  });
 }
 
 export function parseInternalProjectArchiveV6DatasetRowsOutcomeV1(
   value: unknown,
   request: InternalProjectArchiveV6DatasetRowsRequestV1,
 ): InternalProjectArchiveV6DatasetRowsOutcomeV1 {
+  request = parseInternalProjectArchiveV6DatasetRowsRequestV1(request);
   const outcome = recordAt(value, "outcome");
   if (outcome.status === "blocked") {
     exactRecordAt(outcome, ["status", "diagnostic"], "outcome");

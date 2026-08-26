@@ -285,6 +285,8 @@ if (
     $manifestSet.manifest_set_id -cne "qpls.v256.multimod.prepackage-authority-set.v1" -or
     $manifestSet.stage -cne "prepackage_authority" -or
     $manifestSet.state -cne "release_qualified" -or
+    $manifestSet.surface -cne "standard" -or
+    $manifestSet.promotion_allowed -ne $true -or
     $manifestSet.candidate_commit_sha -cne $CandidateCommit -or
     $manifestSet.candidate_version -cne $finalVersion -or
     $manifestSet.plan_sha256 -cne $planSha256 -or
