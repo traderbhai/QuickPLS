@@ -1132,6 +1132,13 @@ export function prepareCanonicalResultExportV2(
   const built = buildCanonicalResultSemanticExportV2(document);
   if (!built.ok) return { ok: false, code: "invalid_source_document", errors: built.errors };
   const projection = built.projection;
+  if (publicationAuthorityV2(projection).qualification === "failed_closed") {
+    return {
+      ok: false,
+      code: "invalid_source_document",
+      errors: ["MultiMod publication authority is missing, invalid, or inconsistent."],
+    };
+  }
   const exportCharts = exportChartsForProjectionV2(projection).map((entry) => entry.chart);
   const availableTables = projection.tables.map((table) => table.id);
   const availableCharts = exportCharts.map((chart) => chart.id);
@@ -1581,6 +1588,13 @@ async function prepareCanonicalResultExportAsyncV2(
   const built = buildCanonicalResultSemanticExportV2(document);
   if (!built.ok) return { ok: false, code: "invalid_source_document", errors: built.errors };
   const projection = built.projection;
+  if (publicationAuthorityV2(projection).qualification === "failed_closed") {
+    return {
+      ok: false,
+      code: "invalid_source_document",
+      errors: ["MultiMod publication authority is missing, invalid, or inconsistent."],
+    };
+  }
   const exportCharts = exportChartsForProjectionV2(projection).map((entry) => entry.chart);
   const availableTables = projection.tables.map((table) => table.id);
   const availableCharts = exportCharts.map((chart) => chart.id);
