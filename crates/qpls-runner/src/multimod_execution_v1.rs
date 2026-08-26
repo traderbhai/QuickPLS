@@ -9306,13 +9306,11 @@ fn validate_cached_omnibus_permutation_v1(
                             minimum = minimum.min(point.values[parameter_index]);
                             maximum = maximum.max(point.values[parameter_index]);
                         }
-                        let reconstructed_probability = (1 + inference
-                            .null_maximum_pairwise_spreads
-                            .iter()
-                            .filter(|value| **value >= inference.observed_maximum_pairwise_spread)
-                            .count())
-                            as f64
-                            / (result.usable + 1) as f64;
+                        let reconstructed_probability =
+                            reconstruct_omnibus_right_tail_probability_v1(
+                                &inference.null_maximum_pairwise_spreads,
+                                inference.observed_maximum_pairwise_spread,
+                            );
                         inference.parameter == parameters[parameter_index]
                             && inference.observed_maximum_pairwise_spread.is_finite()
                             && inference.observed_maximum_pairwise_spread.to_bits()
@@ -9351,6 +9349,17 @@ fn validate_cached_omnibus_permutation_v1(
         ));
     }
     Ok(())
+}
+
+fn reconstruct_omnibus_right_tail_probability_v1(
+    null_maximum_pairwise_spreads: &[f64],
+    observed_maximum_pairwise_spread: f64,
+) -> f64 {
+    (1 + null_maximum_pairwise_spreads
+        .iter()
+        .filter(|value| mga_greater_or_tied_v1(**value, observed_maximum_pairwise_spread))
+        .count()) as f64
+        / (null_maximum_pairwise_spreads.len() + 1) as f64
 }
 
 fn validate_cached_bootstrap_banks_v1(
@@ -18466,6 +18475,23 @@ mod tests {
         assert!(!micom_public_row_satisfies_invariance_contract_v1(
             &public_row
         ));
+    }
+
+    #[test]
+    fn omnibus_cache_probability_uses_the_kernel_numerical_tie_policy() {
+        let observed_roundoff_spread = 3.330_669_073_875_469_6e-16;
+        assert!(0.0 < observed_roundoff_spread);
+        assert_eq!(
+            reconstruct_omnibus_right_tail_probability_v1(
+                &[0.0, 0.0, 0.0],
+                observed_roundoff_spread,
+            ),
+            1.0,
+        );
+        assert_eq!(
+            reconstruct_omnibus_right_tail_probability_v1(&[0.0], 1.0e-10),
+            0.5,
+        );
     }
 
     fn test_micom_pair(

@@ -2598,7 +2598,9 @@ mod tests {
         let extreme = inference
             .null_maximum_pairwise_spreads
             .iter()
-            .filter(|spread| **spread >= inference.observed_maximum_pairwise_spread)
+            .filter(|spread| {
+                mga_greater_or_tied_v1(**spread, inference.observed_maximum_pairwise_spread)
+            })
             .count();
         let replay = (extreme + 1) as f64 / (result.usable + 1) as f64;
         assert_eq!(inference.p_value_right_tailed.to_bits(), replay.to_bits());
