@@ -111,16 +111,25 @@ qualification authority injection exists only under `cfg(test)`; normal native
 publication continues to accept only the immutable embedded candidate
 authority and remains fail closed while the application is Labs.
 
-`metamorphic.global` now binds all 25 exact profiles to deterministic fixtures
-that use the public Recipe V4 compiler and the four production raw runners. It
-compares complete typed results and retained inference evidence under mapped
+`metamorphic.global` binds all 25 exact profiles to deterministic fixtures that
+use the public Recipe V4 compiler and the four production raw runners. It
+compares completed typed results and retained inference evidence under mapped
 row order, input-column/indicator order, model declaration order, repeated
-seed and worker-count changes; separately maps full MGA group-label contrasts,
-requires a real nonidentity class-label alignment with complete target vectors,
-checks an observed-data sign reversal, and proves production MGA cancel/resume
-equals uninterrupted execution without a publishable partial result. Shard
-topology is additionally receipt-bound to the production full-refit ledger
-tests rather than inferred from a fixture helper.
+seed and worker-count changes. For destination-scored POS P2/P23 common-metric
+profiles, it instead compares an explicitly typed locked-point/common-metric
+preparation that must retain a passed comparability gate and cannot be counted
+as a completed result. Their full 500-draw fixed-K bootstraps remain in the
+dedicated heterogeneity production shards; an exact-commit dependency binds
+those P2/P23 MICOM, common-metric and label-aligned-ledger checks before the
+global matrix may pass. Live profile coverage remains unavailable until the
+separate common-metric and heterogeneity-bootstrap gates also pass.
+
+The gate separately maps full MGA group-label contrasts, requires a real
+nonidentity class-label alignment with complete target vectors, checks an
+observed-data sign reversal, and proves production MGA cancel/resume equals
+uninterrupted execution without a publishable partial result. Shard topology is
+additionally receipt-bound to the production full-refit ledger tests rather
+than inferred from a fixture helper.
 
 The gate builds the four producers once, runs the exact 25-cell matrix through
 at most four direct executable processes, and requires all four successful

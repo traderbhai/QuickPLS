@@ -720,7 +720,7 @@ try {
 
     $temporaryReport = Join-Path $resolvedWorkRoot (".scientific-report.{0}.tmp.json" -f [Guid]::NewGuid().ToString("N"))
     try {
-        $verification = Invoke-BoundedStage -Stage "unchanged-scientific-verifier" -FileName "python" -Arguments @(
+        $verification = Invoke-BoundedStage -Stage "scoped-scientific-verifier" -FileName "python" -Arguments @(
             $verifier,
             "--input-directory", $cellDirectory,
             "--capability-index", $capabilityIndex,
@@ -728,7 +728,7 @@ try {
             "--output", $temporaryReport
         ) -TimeoutSeconds ([Math]::Min($PerCellTimeoutSeconds, (Get-RemainingScientificWorkSeconds))) -ScientificBudget
         if ($verification.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $temporaryReport -PathType Leaf)) {
-            throw "The unchanged scientific metamorphic verifier rejected the completed cell matrix."
+            throw "The scoped scientific metamorphic verifier rejected the completed-result/preparation matrix."
         }
         $report = Get-Content -LiteralPath $temporaryReport -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
         if ([string]$report.report_id -ne "qpls.multimod.global-metamorphic-qualification.v1" -or

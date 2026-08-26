@@ -276,7 +276,7 @@ class MetamorphicReceiptContractTests(unittest.TestCase):
         self.assertEqual(25, receipt["cell_count"])
         self.assertEqual(4, len(receipt["baseline_root_cell_ids"]))
         self.assertTrue(receipt["one_cargo_build"])
-        self.assertTrue(receipt["verifier_unchanged"])
+        self.assertTrue(receipt["verifier_contract_source_bound"])
 
     def test_tampered_baseline_invalidates_its_dependent_axes_only(self) -> None:
         self.seal_all()

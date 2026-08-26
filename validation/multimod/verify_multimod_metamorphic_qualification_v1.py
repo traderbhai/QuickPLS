@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""Mapped-result verifier for full raw MultiMod metamorphic runs.
+"""Mapped scientific verifier for raw MultiMod metamorphic runs.
 
-The producer reports come from the public Recipe V4 compiler and raw runner.
-This verifier removes execution identities only, maps declared row tokens, and
-compares the complete typed result plus retained resampling evidence.
+Completed analyses come from the public Recipe V4 compiler and raw runners.
+The two expensive POS common-metric interaction profiles instead expose an
+explicit locked-point/common-metric preparation payload.  This verifier keeps
+those preparations separate from completed results; their full 500-draw
+bootstrap evidence is bound by a separate exact-candidate gate dependency.
 """
 
 from __future__ import annotations
@@ -49,18 +51,29 @@ IDENTITY_KEYS = {
 }
 ROW_SCALAR_KEYS = {"source_row", "row_index", "omitted_row"}
 ROW_VECTOR_KEYS = {
+    "complete_source_row_tokens",
     "source_rows",
     "source_row_tokens",
+    "source_row_indices",
     "row_indices",
     "draw_rows",
     "sampled_rows",
 }
 ROW_ORDER_VECTOR_KEYS = {
     "assignments",
+    "canonical_assignments",
+    "canonical_hard_assignments",
+    "canonical_posteriors",
+    "complete_source_row_tokens",
     "design",
+    "fitted_scores",
     "hard_assignments",
+    "observed_scores",
     "outcome",
+    "pos_start_features",
     "posteriors",
+    "reference_assignments",
+    "source_row_indices",
     "source_row_tokens",
     "true_classes",
 }
@@ -79,6 +92,28 @@ STABLE_ARRAY_KEYS = (
 )
 ROW_TOKEN = re.compile(r"^(?:source[-_]row|row)[:_-](\d+)$")
 GROUP_HYPOTHESIS = re.compile(r"^(.*):(group_\d+):(group_\d+):(.*)$")
+ROW_BOUND_METRIC_IDENTITY_PREFIXES = (
+    "qpls.heterogeneity.pooled-standardized-metric.v2:",
+    "qpls.pos.pooled-common-metric.v1:",
+)
+COMMON_METRIC_PREPARATION_SCOPE = (
+    "public_compiler_plus_raw_locked_point_and_common_metric_preparation"
+)
+COMMON_METRIC_PREPARATION_CONTRACT = {
+    "p2_multi_two_way": {
+        "profile_id": "pos.common_metric.p2_multi_two_way.v1",
+        "cell_id": "pos-common-metric-p2-compact-point-preparation",
+        "bootstrap_shard_id": "bootstrap-pos-destination-p2",
+    },
+    "p23_all_current": {
+        "profile_id": "pos.common_metric.p23_all_current.v1",
+        "cell_id": "pos-common-metric-p23-compact-point-preparation",
+        "bootstrap_shard_id": "bootstrap-pos-destination-p23",
+    },
+}
+COMMON_METRIC_DEPENDENCY_STATUS = "required_not_evaluated_in_global_metamorphic_gate"
+COMMON_METRIC_DEPENDENCY_GATE = "fimix.recovery"
+COMMON_METRIC_DEPENDENCY_STEP = "heterogeneity_production_science"
 
 
 def load(path: Path) -> dict[str, Any]:
@@ -141,7 +176,7 @@ def normalize(
         return normalized
     if isinstance(value, list):
         normalized = [
-            normalize(item, row_count=row_count, row_reverse=row_reverse, parent_key=parent_key)
+            normalize(item, row_count=row_count, row_reverse=row_reverse, parent_key="")
             for item in value
         ]
         if row_reverse and parent_key in ROW_ORDER_VECTOR_KEYS:
@@ -154,6 +189,11 @@ def normalize(
                         key=lambda item: json.dumps(item[stable_key], sort_keys=True),
                     )
         return normalized
+    if isinstance(value, str):
+        for prefix in ROW_BOUND_METRIC_IDENTITY_PREFIXES:
+            suffix = value.removeprefix(prefix)
+            if suffix != value and re.fullmatch(r"[0-9a-f]{64}", suffix):
+                return f"{prefix}<row-bound-sha256>"
     if row_reverse and isinstance(value, str):
         match = ROW_TOKEN.match(value)
         if match:
@@ -167,6 +207,11 @@ def result_cases(report: dict[str, Any]) -> dict[str, tuple[int, dict[str, Any]]
 
     def visit(value: Any, path: str, inherited_rows: int | None = None) -> None:
         if isinstance(value, dict):
+            # A preparation is not a completed result, even if a malformed
+            # producer were to place an `analysis` or `result` member inside
+            # it.  Its explicit schema is handled by preparation_cases().
+            if "execution_scope" in value:
+                return
             row_count = value.get("dataset_rows")
             if not isinstance(row_count, int):
                 row_count = inherited_rows
@@ -197,6 +242,260 @@ def result_cases(report: dict[str, Any]) -> dict[str, tuple[int, dict[str, Any]]
 
     visit(report, "root")
     return found
+
+
+def extract_common_metric_preparation(
+    value: dict[str, Any], path: str
+) -> tuple[str, str, int, dict[str, Any]]:
+    """Validate and extract one preparation-only scientific payload.
+
+    The returned tuple is profile id, stable case id, row count and the exact
+    preparation facts to compare.  It deliberately cannot return a completed
+    result and rejects any result-shaped alias at this boundary.
+    """
+
+    failures: list[str] = []
+    if value.get("execution_scope") != COMMON_METRIC_PREPARATION_SCOPE:
+        failures.append("execution_scope")
+    if "analysis" in value or "result" in value:
+        failures.append("result_alias_forbidden")
+
+    profile = str(value.get("profile", ""))
+    contract = COMMON_METRIC_PREPARATION_CONTRACT.get(profile)
+    if contract is None:
+        failures.append("profile")
+        contract = {
+            "profile_id": "",
+            "cell_id": "",
+            "bootstrap_shard_id": "",
+        }
+    cell_id = value.get("cell_id")
+    if cell_id != contract["cell_id"]:
+        failures.append("cell_id")
+    row_count = value.get("dataset_rows")
+    if not isinstance(row_count, int) or isinstance(row_count, bool) or row_count < 1:
+        failures.append("dataset_rows")
+
+    profile_preparation = value.get("profile_preparation")
+    evidence = value.get("evidence")
+    dependency = value.get("bootstrap_dependency")
+    config = value.get("config")
+    compiled_plan = value.get("compiled_plan")
+    if not isinstance(profile_preparation, dict):
+        failures.append("profile_preparation")
+        profile_preparation = {}
+    if not isinstance(evidence, dict):
+        failures.append("evidence")
+        evidence = {}
+    if not isinstance(dependency, dict):
+        failures.append("bootstrap_dependency")
+        dependency = {}
+    if not isinstance(config, dict):
+        failures.append("config")
+        config = {}
+    if not isinstance(compiled_plan, dict):
+        failures.append("compiled_plan")
+        compiled_plan = {}
+
+    expected_algorithm = "pls_pos_destination_scored_interactions_v2"
+    if config.get("profile") != profile:
+        failures.append("config_profile_identity")
+    phase = config.get("phase")
+    lock = phase.get("lock") if isinstance(phase, dict) else None
+    if (
+        not isinstance(lock, dict)
+        or phase.get("kind") != "inference"
+        or lock.get("discovery_candidate_k") != [2]
+        or lock.get("discovery_algorithms") != [expected_algorithm]
+        or lock.get("selected_algorithm") != expected_algorithm
+        or lock.get("selected_k") != 2
+        or lock.get("analyst_lock_confirmed") is not True
+    ):
+        failures.append("config_inference_lock_identity")
+    common_metric_config = config.get("pos_common_metric")
+    if (
+        not isinstance(common_metric_config, dict)
+        or common_metric_config.get("request_segment_contrasts") is not True
+        or common_metric_config.get("permutation_samples") != 5000
+        or common_metric_config.get("require_partial_compositional_invariance") is not True
+    ):
+        failures.append("config_common_metric_contract")
+    if (
+        compiled_plan.get("kind") != "pls_heterogeneity_v2"
+        or compiled_plan.get("profile") != profile
+        or compiled_plan.get("algorithms") != [expected_algorithm]
+        or compiled_plan.get("candidate_k") != [2]
+    ):
+        failures.append("compiled_plan_profile_identity")
+
+    prepared_point = profile_preparation.get("prepared_point")
+    raw_preparation = profile_preparation.get("raw_preparation_receipt")
+    prepared_fimix_input = (
+        prepared_point.get("fimix_input") if isinstance(prepared_point, dict) else None
+    )
+    raw_fimix_input = (
+        raw_preparation.get("fimix_input") if isinstance(raw_preparation, dict) else None
+    )
+    if (
+        not isinstance(prepared_fimix_input, dict)
+        or prepared_fimix_input.get("interaction_profile") != profile
+        or not isinstance(raw_fimix_input, dict)
+        or raw_fimix_input.get("interaction_profile") != profile
+    ):
+        failures.append("prepared_profile_identity")
+
+    common_metric_rows = evidence.get("common_metric")
+    common_metric = (
+        common_metric_rows[0]
+        if isinstance(common_metric_rows, list)
+        and len(common_metric_rows) == 1
+        and isinstance(common_metric_rows[0], dict)
+        else {}
+    )
+    if not common_metric:
+        failures.append("common_metric_evidence")
+    gate_result = common_metric.get("gate_result") if isinstance(common_metric, dict) else None
+    if not isinstance(gate_result, dict) or gate_result.get("status") != "passed":
+        failures.append("common_metric_gate_not_passed")
+    elif (
+        gate_result.get("inferential_gamma_delta_slope_contrasts_allowed") is not True
+        or gate_result.get("blockers") != []
+    ):
+        failures.append("common_metric_gate_incoherent")
+    if evidence.get("fimix") != []:
+        failures.append("fimix_evidence_for_pos_only_preparation")
+    if evidence.get("bootstrap") != []:
+        failures.append("bootstrap_result_forbidden")
+    if not isinstance(evidence.get("pos"), list) or not evidence.get("pos"):
+        failures.append("pos_point_evidence")
+    if not isinstance(evidence.get("raw_preparation"), list) or not evidence.get(
+        "raw_preparation"
+    ):
+        failures.append("raw_preparation_evidence")
+
+    retained_common_metric = profile_preparation.get("common_metric_evidence")
+    if retained_common_metric != common_metric:
+        failures.append("common_metric_evidence_identity")
+    if isinstance(prepared_point, dict) and isinstance(common_metric, dict):
+        if (
+            prepared_point.get("pos_common_metric_gate") != common_metric.get("gate_input")
+            or prepared_point.get("pos_common_metric_parameters")
+            != common_metric.get("common_metric_parameters")
+            or prepared_point.get("pos_common_metric_micom_pairs")
+            != common_metric.get("micom_pairs")
+        ):
+            failures.append("prepared_common_metric_identity")
+    point_pass = profile_preparation.get("point_pass")
+    locked = point_pass.get("locked") if isinstance(point_pass, dict) else None
+    if not isinstance(locked, dict) or (
+        locked.get("algorithm") != expected_algorithm
+        or locked.get("k") != 2
+    ):
+        failures.append("locked_pos_point")
+    pos_candidates = point_pass.get("pos_candidates") if isinstance(point_pass, dict) else None
+    expected_pos_evidence: list[dict[str, Any]] = []
+    if not isinstance(pos_candidates, list) or len(pos_candidates) != 1:
+        failures.append("prepared_pos_candidates")
+    else:
+        for candidate in pos_candidates:
+            result = candidate.get("result") if isinstance(candidate, dict) else None
+            if (
+                not isinstance(candidate, dict)
+                or candidate.get("algorithm") != expected_algorithm
+                or candidate.get("k") != 2
+                or not isinstance(result, dict)
+                or result.get("method_version")
+                != "qpls.pls-pos.destination-scored-interactions.v2"
+                or result.get("scoring_contract")
+                != {"destination_scored_interactions": {"profile": profile}}
+            ):
+                failures.append("prepared_pos_candidate_identity")
+                continue
+            expected_pos_evidence.append(
+                {"k": candidate["k"], "result": candidate["result"]}
+            )
+    if evidence.get("pos") != expected_pos_evidence:
+        failures.append("pos_evidence_identity")
+    if isinstance(point_pass, dict) and point_pass.get("fimix_candidates") != []:
+        failures.append("prepared_fimix_candidates_for_pos_only_preparation")
+    pooled_baseline = point_pass.get("pooled_baseline") if isinstance(point_pass, dict) else None
+    if evidence.get("pooled_baseline") != [pooled_baseline]:
+        failures.append("pooled_baseline_evidence_identity")
+    if evidence.get("raw_preparation") != [raw_preparation]:
+        failures.append("raw_preparation_evidence_identity")
+
+    bootstrap_config = config.get("bootstrap") if isinstance(config, dict) else None
+    if not isinstance(bootstrap_config, dict) or bootstrap_config.get("resamples") != 500:
+        failures.append("configured_bootstrap_resamples")
+    reference = profile_preparation.get("reference")
+    heterogeneity_plan = (
+        reference.get("heterogeneity_plan") if isinstance(reference, dict) else None
+    )
+    if (
+        not isinstance(heterogeneity_plan, dict)
+        or heterogeneity_plan.get("requested_replicates") != 500
+        or reference.get("algorithm") != expected_algorithm
+        or reference.get("k") != 2
+        or reference.get("use_pooled_common_metric") is not True
+    ):
+        failures.append("prepared_bootstrap_reference")
+
+    expected_dependency = {
+        "configured_but_not_executed_here": True,
+        "configured_resamples": 500,
+        "global_metamorphic_matrix_scope": "locked_point_and_common_metric_preparation_only",
+        "dependency_status": COMMON_METRIC_DEPENDENCY_STATUS,
+        "dependency_gate_id": COMMON_METRIC_DEPENDENCY_GATE,
+        "dependency_step_id": COMMON_METRIC_DEPENDENCY_STEP,
+        "dedicated_full_bootstrap_shard_id": contract["bootstrap_shard_id"],
+    }
+    if dependency != expected_dependency:
+        failures.append("bootstrap_dependency_contract")
+
+    if failures:
+        raise ValueError(f"{path}:" + ",".join(sorted(set(failures))))
+    return (
+        str(contract["profile_id"]),
+        str(cell_id),
+        int(row_count),
+        {
+            "profile_preparation": profile_preparation,
+            "evidence": evidence,
+            "bootstrap_dependency": dependency,
+        },
+    )
+
+
+def preparation_cases(
+    report: dict[str, Any],
+) -> tuple[dict[str, tuple[int, dict[str, Any]]], dict[str, str], list[str]]:
+    found: dict[str, tuple[int, dict[str, Any]]] = {}
+    profiles: dict[str, str] = {}
+    failures: list[str] = []
+
+    def visit(value: Any, path: str) -> None:
+        if isinstance(value, dict):
+            if "execution_scope" in value:
+                try:
+                    profile_id, case_id, row_count, scientific = (
+                        extract_common_metric_preparation(value, path)
+                    )
+                    if case_id in found:
+                        failures.append(f"{path}:duplicate_case_id")
+                    else:
+                        found[case_id] = (row_count, scientific)
+                        profiles[case_id] = profile_id
+                except ValueError as error:
+                    failures.append(str(error))
+                return
+            for key, item in value.items():
+                visit(item, f"{path}.{key}")
+        elif isinstance(value, list):
+            for index, item in enumerate(value):
+                visit(item, f"{path}[{index}]")
+
+    visit(report, "root")
+    return found, profiles, failures
 
 
 def close(left: Any, right: Any, path: str, failures: list[str]) -> None:
@@ -270,6 +569,16 @@ def executed_profile_inventory(family: str, report: dict[str, Any]) -> set[str]:
 
     def visit(value: Any) -> None:
         if isinstance(value, dict):
+            if "execution_scope" in value:
+                if family == "heterogeneity":
+                    try:
+                        profile_id, _, _, _ = extract_common_metric_preparation(
+                            value, "profile_inventory"
+                        )
+                        profiles.add(profile_id)
+                    except ValueError:
+                        pass
+                return
             if family == "mga" and isinstance(value.get("analysis"), dict):
                 mapped = mga_profiles.get(str(value.get("profile_fixture", "")))
                 if mapped:
@@ -290,8 +599,6 @@ def executed_profile_inventory(family: str, report: dict[str, Any]) -> set[str]:
                             profiles.add("pos.published.p0_structural.v2")
                         else:
                             profiles.add(f"pos.destination_scored.{suffix}.v2")
-                    if evidence.get("common_metric") and suffix != "p0_structural":
-                        profiles.add(f"pos.common_metric.{suffix}.v1")
             if family in {"conditional", "causal"} and isinstance(value.get("result"), dict):
                 for cell in value.get("cell_ids", []):
                     if "::" in str(cell):
@@ -315,8 +622,8 @@ def production_contract_valid(family: str, report: dict[str, Any]) -> bool:
         ),
         "heterogeneity": (
             "qpls.multimod.heterogeneity.production-qualification.v2",
-            "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
-            "raw_sut_facts_for_independent_comparison_only",
+            "public_recipe_v4_compiler_plus_raw_fimix_pos_runner_and_declared_profile_preparation",
+            "raw_sut_results_and_preparation_facts_for_independent_comparison_only",
         ),
         "conditional": (
             "conditional_process_v2",
@@ -347,44 +654,77 @@ def compare_axis(
     axis: str,
 ) -> dict[str, Any]:
     failures: list[str] = []
-    baseline_cases = result_cases(baseline)
-    transformed_cases = result_cases(transformed)
-    if set(baseline_cases) != set(transformed_cases):
-        failures.append("case_inventory")
-    for case_id in sorted(set(baseline_cases) & set(transformed_cases)):
-        baseline_rows, baseline_science = baseline_cases[case_id]
-        transformed_rows, transformed_science = transformed_cases[case_id]
-        if baseline_rows != transformed_rows:
-            failures.append(f"{case_id}.row_count")
-            continue
-        if axis == "sign_reverse":
-            # The declared sign map flips one adjustment variable. Its fitted
-            # nuisance coefficient necessarily reverses, while every reported
-            # interventional target and its complete bootstrap ledger must be
-            # invariant. Prepared input equations are not a result payload.
-            baseline_science = {
-                key: value for key, value in baseline_science.items() if key != "prepared_paths"
-            }
-            transformed_science = {
-                key: value for key, value in transformed_science.items() if key != "prepared_paths"
-            }
-        left = normalize(
-            baseline_science,
-            row_count=baseline_rows,
-            row_reverse=False,
-        )
-        right = normalize(
-            transformed_science,
-            row_count=transformed_rows,
-            row_reverse=axis == "row_reverse",
-        )
-        close(left, right, f"{family}.{axis}.{case_id}", failures)
+    baseline_results = result_cases(baseline)
+    transformed_results = result_cases(transformed)
+    baseline_preparations, baseline_preparation_profiles, baseline_preparation_failures = (
+        preparation_cases(baseline)
+    )
+    (
+        transformed_preparations,
+        transformed_preparation_profiles,
+        transformed_preparation_failures,
+    ) = preparation_cases(transformed)
+    failures.extend(f"baseline_preparation_schema.{item}" for item in baseline_preparation_failures)
+    failures.extend(
+        f"transformed_preparation_schema.{item}" for item in transformed_preparation_failures
+    )
+    if set(baseline_results) != set(transformed_results):
+        failures.append("completed_result_case_inventory")
+    if set(baseline_preparations) != set(transformed_preparations):
+        failures.append("preparation_case_inventory")
+    if baseline_preparation_profiles != transformed_preparation_profiles:
+        failures.append("preparation_profile_inventory")
+
+    def compare_cases(
+        baseline_cases: dict[str, tuple[int, dict[str, Any]]],
+        transformed_cases: dict[str, tuple[int, dict[str, Any]]],
+        case_kind: str,
+    ) -> None:
+        for case_id in sorted(set(baseline_cases) & set(transformed_cases)):
+            baseline_rows, baseline_science = baseline_cases[case_id]
+            transformed_rows, transformed_science = transformed_cases[case_id]
+            if baseline_rows != transformed_rows:
+                failures.append(f"{case_kind}.{case_id}.row_count")
+                continue
+            if axis == "sign_reverse":
+                # The declared sign map flips one adjustment variable. Its fitted
+                # nuisance coefficient necessarily reverses, while every reported
+                # interventional target and its complete bootstrap ledger must be
+                # invariant. Prepared input equations are not a result payload.
+                baseline_science = {
+                    key: value
+                    for key, value in baseline_science.items()
+                    if key != "prepared_paths"
+                }
+                transformed_science = {
+                    key: value
+                    for key, value in transformed_science.items()
+                    if key != "prepared_paths"
+                }
+            left = normalize(
+                baseline_science,
+                row_count=baseline_rows,
+                row_reverse=False,
+            )
+            right = normalize(
+                transformed_science,
+                row_count=transformed_rows,
+                row_reverse=axis == "row_reverse",
+            )
+            close(left, right, f"{family}.{axis}.{case_kind}.{case_id}", failures)
+
+    compare_cases(baseline_results, transformed_results, "completed_result")
+    compare_cases(baseline_preparations, transformed_preparations, "preparation")
     return {
         "family": family,
         "axis": axis,
-        "baseline_case_count": len(baseline_cases),
-        "transformed_case_count": len(transformed_cases),
-        "complete_result_and_evidence_compared": True,
+        "baseline_completed_result_count": len(baseline_results),
+        "transformed_completed_result_count": len(transformed_results),
+        "baseline_preparation_count": len(baseline_preparations),
+        "transformed_preparation_count": len(transformed_preparations),
+        "completed_results_and_evidence_compared": True,
+        "locked_point_common_metric_preparations_compared": True,
+        "preparation_is_completed_result": False,
         "status": "passed" if not failures else "failed",
         "failures": failures[:200],
         "failure_count": len(failures),
@@ -674,12 +1014,32 @@ def main() -> int:
     missing_profiles = sorted(expected_all_profiles - covered_profiles)
     if missing_profiles:
         failures.append("global.profile_inventory")
+    required_preparation_profiles = {
+        contract["profile_id"] for contract in COMMON_METRIC_PREPARATION_CONTRACT.values()
+    }
+    preparation_only_profiles = sorted(covered_profiles & required_preparation_profiles)
+    completed_result_profiles = sorted(covered_profiles - required_preparation_profiles)
     result = {
         "schema_version": 1,
         "report_id": "qpls.multimod.global-metamorphic-qualification.v1",
         "status": "passed" if not failures and covered_profiles == expected_all_profiles else "failed",
-        "producer_contract": "public_recipe_v4_compiler_plus_full_raw_family_runners",
+        "producer_contract": (
+            "public_recipe_v4_compiler_plus_completed_raw_family_results_and_explicit_"
+            "locked_point_common_metric_preparations"
+        ),
         "covered_profiles": sorted(covered_profiles),
+        "completed_result_profiles": completed_result_profiles,
+        "preparation_only_profiles": preparation_only_profiles,
+        "preparation_coverage_contract": {
+            "schema_version": 1,
+            "contract_id": "qpls.multimod.common-metric-preparation-metamorphic.v1",
+            "preparation_is_completed_result": False,
+            "full_bootstrap_evaluated_in_this_gate": False,
+            "exact_candidate_dependency_gate": COMMON_METRIC_DEPENDENCY_GATE,
+            "exact_candidate_dependency_step": COMMON_METRIC_DEPENDENCY_STEP,
+            "dependency_status": COMMON_METRIC_DEPENDENCY_STATUS,
+            "required_profiles": sorted(required_preparation_profiles),
+        },
         "missing_profiles": missing_profiles,
         "comparisons": comparisons,
         "failures": failures,
@@ -693,3 +1053,4 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+    "complete_source_row_tokens",

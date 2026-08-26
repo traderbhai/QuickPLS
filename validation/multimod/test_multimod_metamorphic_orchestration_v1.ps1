@@ -7,6 +7,7 @@ $ErrorActionPreference = "Stop"
 $repositoryRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot "../..")).Path
 $wrapperPath = Join-Path $PSScriptRoot "run_multimod_metamorphic_qualification_v1.ps1"
 $bindingPath = Join-Path $PSScriptRoot "multimod_gate_bindings_v1.json"
+$planPath = Join-Path $PSScriptRoot "v256_multimod_qualification_plan_v1.json"
 
 function Assert-Contract {
     param(
@@ -70,6 +71,7 @@ foreach ($producerWrapperName in @(
 }
 
 $bindings = Get-Content -LiteralPath $bindingPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
+$plan = Get-Content -LiteralPath $planPath -Raw -Encoding UTF8 | ConvertFrom-Json -Depth 100
 $metamorphicGates = @(
     $bindings.gates | Where-Object { [string]$_.gate_id -eq "metamorphic.global" }
 )
@@ -88,6 +90,9 @@ foreach ($sourceBoundWrapper in @(
         $metamorphicInputs -ccontains "validation/multimod/$sourceBoundWrapper"
     ) "Metamorphic qualification must hash $sourceBoundWrapper as an input artifact."
 }
+Assert-Contract (
+    $metamorphicInputs -ccontains "validation/multimod/test_verify_multimod_metamorphic_qualification_v1.py"
+) "Metamorphic qualification must hash its split result/preparation verifier tests."
 
 function Get-GateStep {
     param(
@@ -123,8 +128,32 @@ foreach ($row in $expected) {
 $metamorphic = Get-GateStep -GateId "metamorphic.global" -StepId "all_profile_production_metamorphic_matrix"
 $outputs = @($metamorphic.expected_outputs | ForEach-Object { [string]$_ })
 Assert-Contract ($outputs -ccontains "{gate_output}/multimod-global-metamorphic.json") `
-    "Metamorphic gate must publish the unchanged scientific report."
+    "Metamorphic gate must publish the scoped scientific report."
 Assert-Contract ($outputs -ccontains "{gate_output}/multimod-global-metamorphic.json.execution-receipt.json") `
     "Metamorphic gate must publish the ordered execution receipt."
+
+$bootstrapDependency = Get-GateStep -GateId "metamorphic.global" -StepId "pos_p2_p23_full_bootstrap_dependency"
+$dependencyArguments = @($bootstrapDependency.arguments | ForEach-Object { [string]$_ })
+foreach ($identity in @(
+    "fimix.recovery",
+    "heterogeneity_production_science",
+    "heterogeneity.bootstrap.full_profile_matrix",
+    "heterogeneity.bootstrap.typed_n80_dual_outcome_fixed_k_full_pipeline_fixture_matrix",
+    "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.independent_micom_step2",
+    "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.pass",
+    "heterogeneity.bootstrap.pos-destination-p2-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger",
+    "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.independent_micom_step2",
+    "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.pass",
+    "heterogeneity.bootstrap.pos-destination-p23-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger"
+)) {
+    Assert-Contract ($dependencyArguments -ccontains $identity) `
+        "P2/P23 full-bootstrap dependency is missing $identity."
+}
+Assert-Contract (-not ($dependencyArguments -ccontains "fimix-p23-fixed-k-bootstrap")) `
+    "P2/P23 common-metric qualification must not be substituted by the representative FIMIX bootstrap cell."
+$fimixPlan = @($plan.gates | Where-Object { [string]$_.gate_id -ceq "fimix.recovery" })
+Assert-Contract ($fimixPlan.Count -eq 1) "Expected one fimix.recovery campaign-plan row."
+Assert-Contract (@($fimixPlan[0].invalidates_on_failure) -ccontains "metamorphic.global") `
+    "The exact heterogeneity producer must invalidate its metamorphic consumer."
 
 Write-Host "MultiMod metamorphic orchestration static contract passed."

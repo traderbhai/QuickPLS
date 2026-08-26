@@ -535,7 +535,7 @@ def aggregate(args: argparse.Namespace) -> None:
         "scientific_report_path": str(report_path),
         "scientific_report_sha256": sha256_file(report_path),
         "scientific_report_size": report_path.stat().st_size,
-        "verifier_unchanged": True,
+        "verifier_contract_source_bound": True,
         "scientific_settings_changed": False,
     }
     atomic_json(args.output.resolve(), execution)

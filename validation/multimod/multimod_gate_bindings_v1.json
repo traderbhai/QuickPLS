@@ -565,8 +565,8 @@
         "pos.published.p0_structural.v2::metamorphic",
         "pos.destination_scored.p2_multi_two_way.v2::metamorphic",
         "pos.destination_scored.p23_all_current.v2::metamorphic",
-        "pos.common_metric.p2_multi_two_way.v1::metamorphic",
-        "pos.common_metric.p23_all_current.v1::metamorphic",
+        "pos.common_metric.p2_multi_two_way.v1::locked_point_common_metric_preparation_metamorphic",
+        "pos.common_metric.p23_all_current.v1::locked_point_common_metric_preparation_metamorphic",
         "conditional.multi_two_way_percentile.v2::metamorphic",
         "conditional.multi_two_way_bca.v2::metamorphic",
         "conditional.studentized.v2::metamorphic",
@@ -606,6 +606,7 @@
         "validation/multimod/run_multimod_metamorphic_qualification_v1.ps1",
         "validation/multimod/multimod_metamorphic_cells_v1.py",
         "validation/multimod/test_multimod_metamorphic_cells_v1.py",
+        "validation/multimod/test_verify_multimod_metamorphic_qualification_v1.py",
         "validation/multimod/test_multimod_metamorphic_orchestration_v1.ps1",
         "validation/multimod/metamorphic_qualification_v1.md",
         "validation/multimod/verify_multimod_metamorphic_qualification_v1.py",
@@ -617,6 +618,22 @@
         "validation/multimod/interventional_causal_mediation_v1.qualification.manifest.json"
       ],
       "steps": [
+        {
+          "step_id": "metamorphic_verifier_contract_tests",
+          "executable": "python",
+          "arguments": ["validation/multimod/test_verify_multimod_metamorphic_qualification_v1.py", "-v"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": []
+        },
+        {
+          "step_id": "pos_p2_p23_full_bootstrap_dependency",
+          "executable": "python",
+          "arguments": ["validation/multimod/verify_multimod_gate_dependency_v1.py", "--campaign-root", "{campaign_root}", "--producer-gate", "fimix.recovery", "--producer-step", "heterogeneity_production_science", "--artifact-basename", "heterogeneity-production-science.json", "--required-scientific-check", "heterogeneity.bootstrap.full_profile_matrix", "--required-scientific-check", "heterogeneity.bootstrap.typed_n80_dual_outcome_fixed_k_full_pipeline_fixture_matrix", "--required-scientific-check", "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.independent_micom_step2", "--required-scientific-check", "pos.common_metric.pos-destination-p2-fixed-k-bootstrap.pass", "--required-scientific-check", "heterogeneity.bootstrap.pos-destination-p2-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--required-scientific-check", "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.independent_micom_step2", "--required-scientific-check", "pos.common_metric.pos-destination-p23-fixed-k-bootstrap.pass", "--required-scientific-check", "heterogeneity.bootstrap.pos-destination-p23-fixed-k-bootstrap.fixed_k_label_aligned_shared_ledger", "--output", "{gate_output}/pos-p2-p23-full-bootstrap-dependency.json"],
+          "uses_cargo": false,
+          "maximum_seconds": 120,
+          "expected_outputs": ["{gate_output}/pos-p2-p23-full-bootstrap-dependency.json"]
+        },
         {
           "step_id": "mga_group_label_production_dependency",
           "executable": "python",

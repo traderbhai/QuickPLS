@@ -19,11 +19,10 @@ use qpls_estimation::{
     HETEROGENEITY_MULTISTART_PARTITION_DIGEST_DOMAIN_V2,
     HETEROGENEITY_MULTISTART_POSTERIOR_DIGEST_DOMAIN_V2,
     PLS_POS_DESTINATION_SCORED_INTERACTIONS_METHOD_VERSION_V2, PLS_POS_PUBLISHED_METHOD_VERSION_V2,
-    align_labels_exhaustive_v2,
+    PosCommonMetricGateStatusV1, align_labels_exhaustive_v2,
 };
 use qpls_resampling::MultiModShardSpecV1;
 use qpls_runner::*;
-use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -104,7 +103,8 @@ fn compact_bootstrap_shard_ids() -> Vec<&'static str> {
 struct CompactCommonMetricProfileSpecV1 {
     profile: HeterogeneityInteractionProfileV2,
     discovery_cell_id: &'static str,
-    inference_cell_id: &'static str,
+    preparation_cell_id: &'static str,
+    dedicated_bootstrap_shard_id: &'static str,
 }
 
 fn compact_common_metric_profile_specs() -> [CompactCommonMetricProfileSpecV1; 2] {
@@ -112,12 +112,14 @@ fn compact_common_metric_profile_specs() -> [CompactCommonMetricProfileSpecV1; 2
         CompactCommonMetricProfileSpecV1 {
             profile: HeterogeneityInteractionProfileV2::P2MultiTwoWay,
             discovery_cell_id: "pos-common-metric-p2-compact-discovery",
-            inference_cell_id: "pos-common-metric-p2-compact-fixed-k-bootstrap",
+            preparation_cell_id: "pos-common-metric-p2-compact-point-preparation",
+            dedicated_bootstrap_shard_id: "bootstrap-pos-destination-p2",
         },
         CompactCommonMetricProfileSpecV1 {
             profile: HeterogeneityInteractionProfileV2::P23AllCurrent,
             discovery_cell_id: "pos-common-metric-p23-compact-discovery",
-            inference_cell_id: "pos-common-metric-p23-compact-fixed-k-bootstrap",
+            preparation_cell_id: "pos-common-metric-p23-compact-point-preparation",
+            dedicated_bootstrap_shard_id: "bootstrap-pos-destination-p23",
         },
     ]
 }
@@ -131,6 +133,22 @@ fn fixture_observations() -> usize {
         80
     } else {
         OBSERVATIONS
+    }
+}
+
+fn execution_contract() -> &'static str {
+    if metamorphic::compact_matrix_v1() {
+        "public_recipe_v4_compiler_plus_raw_fimix_pos_runner_and_declared_profile_preparation"
+    } else {
+        "public_recipe_v4_compiler_plus_raw_fimix_pos_runner"
+    }
+}
+
+fn qualification_claim() -> &'static str {
+    if metamorphic::compact_matrix_v1() {
+        "raw_sut_results_and_preparation_facts_for_independent_comparison_only"
+    } else {
+        "raw_sut_facts_for_independent_comparison_only"
     }
 }
 
@@ -1331,7 +1349,25 @@ fn run_required_discovery(
     Ok((identities[0].clone(), value))
 }
 
-fn run_compact_common_metric_profile_execution(
+fn compact_common_metric_bootstrap_dependency(
+    spec: CompactCommonMetricProfileSpecV1,
+    config: &PlsUnobservedHeterogeneityConfigV2,
+) -> Result<Value, DynError> {
+    let bootstrap = config.bootstrap.as_ref().ok_or_else(|| {
+        invalid("compact common-metric preparation requires the qualified bootstrap contract")
+    })?;
+    Ok(json!({
+        "configured_but_not_executed_here": true,
+        "configured_resamples": bootstrap.resamples,
+        "global_metamorphic_matrix_scope": "locked_point_and_common_metric_preparation_only",
+        "dependency_status": "required_not_evaluated_in_global_metamorphic_gate",
+        "dependency_gate_id": "fimix.recovery",
+        "dependency_step_id": "heterogeneity_production_science",
+        "dedicated_full_bootstrap_shard_id": spec.dedicated_bootstrap_shard_id,
+    }))
+}
+
+fn prepare_compact_common_metric_profile_execution(
     spec: CompactCommonMetricProfileSpecV1,
     fixture: &HeterogeneityFixture,
     seed: u64,
@@ -1353,11 +1389,82 @@ fn run_compact_common_metric_profile_execution(
         &[(selected_algorithm, 2)],
     )?;
     let config = compact_common_metric_inference_config(fixture, seed, discovery_identity);
-    let (_, inference) = run_config(spec.inference_cell_id, fixture, config)?;
+    let mut recipe = fixture.recipe.clone();
+    let mut model = fixture.model.clone();
+    recipe.settings.workers =
+        metamorphic::configured_workers_v1(recipe.settings.workers).map_err(invalid)?;
+    metamorphic::transform_model_declaration_order_v1(&mut model);
+    stage_additive_multimod_recipe(&mut recipe, AnalysisMethod::Predict);
+    recipe.pls_heterogeneity = Some(config.clone());
+    finalize_recipe(&mut recipe, &model)?;
+    let artifact = prepare_multimod_recipe_v1(
+        &fixture.dataset,
+        &recipe,
+        &model,
+        MultiModCompilerTargetV1::PlsHeterogeneityV2,
+    )?;
+    let execution = prepare_compiled_raw_pls_heterogeneity_bootstrap_v2(
+        &fixture.dataset,
+        &recipe,
+        &model,
+        &artifact,
+        || false,
+        |_| {},
+    )?;
+    let locked = execution.point_pass.locked.as_ref().ok_or_else(|| {
+        invalid("compact common-metric preparation omitted its locked POS point analysis")
+    })?;
+    if locked.algorithm != selected_algorithm || locked.k != 2 {
+        return Err(invalid(
+            "compact common-metric preparation retained the wrong algorithm or K",
+        ));
+    }
+    let common_metric = execution.common_metric_evidence.as_ref().ok_or_else(|| {
+        invalid("compact common-metric preparation omitted HeterogeneityPosCommonMetric evidence")
+    })?;
+    common_metric.ensure_valid().map_err(invalid)?;
+    if common_metric.gate_result.status != PosCommonMetricGateStatusV1::Passed {
+        return Err(invalid(
+            "compact positive common-metric profile did not pass its comparability gate",
+        ));
+    }
+    let bootstrap_dependency = compact_common_metric_bootstrap_dependency(spec, &config)?;
+    let mut runner_evidence = execution
+        .point_pass
+        .pos_candidates
+        .iter()
+        .map(|candidate| MultiModRunnerEvidenceV1::PlsPosCandidate {
+            k: candidate.k,
+            result: candidate.result.clone(),
+        })
+        .collect::<Vec<_>>();
+    runner_evidence.push(MultiModRunnerEvidenceV1::HeterogeneityPooledBaseline(
+        execution.point_pass.pooled_baseline.clone(),
+    ));
+    runner_evidence.push(MultiModRunnerEvidenceV1::HeterogeneityRawPreparation(
+        execution.raw_preparation_receipt.clone(),
+    ));
+    runner_evidence.push(MultiModRunnerEvidenceV1::HeterogeneityPosCommonMetric(
+        common_metric.clone(),
+    ));
+    let evidence = summarize_evidence(&runner_evidence);
+    let profile_preparation = serde_json::to_value(&execution)?;
     Ok(json!({
+        "cell_id": spec.preparation_cell_id,
+        "execution_scope": "public_compiler_plus_raw_locked_point_and_common_metric_preparation",
         "profile": spec.profile,
+        "fixture_id": fixture.fixture_id,
+        "scenario": format!("{:?}", fixture.scenario).to_lowercase(),
+        "dataset_rows": fixture.dataset.batch.num_rows(),
+        "dataset_fingerprint": fixture.dataset.fingerprint.0,
+        "config": config,
+        "compiler_receipt": artifact.receipt(),
+        "compiled_plan": artifact.plan(),
+        "sem_model_authority": model,
         "discovery": discovery,
-        "locked_inference": inference,
+        "profile_preparation": profile_preparation,
+        "evidence": evidence,
+        "bootstrap_dependency": bootstrap_dependency,
     }))
 }
 
@@ -1729,8 +1836,8 @@ fn shard_report_header(args: &Arguments) -> Result<Value, DynError> {
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "bootstrap_fixture_plan": bootstrap_fixture_plan(),
-        "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
-        "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
+        "execution_contract": execution_contract(),
+        "qualification_claim": qualification_claim(),
         "multistart_reproducibility_contract": multistart_reproducibility_contract(),
         "label_alignment_decision_contract": "qpls_estimation::align_labels_exhaustive_v2",
         "required_profile_ids": [
@@ -3534,7 +3641,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
     )?;
     let compact_common_metric_profile_executions = if metamorphic::compact_matrix_v1() {
         compact_common_metric_profile_specs()
-            .into_par_iter()
+            .into_iter()
             .map(|spec| {
                 let fixture = match spec.profile {
                     HeterogeneityInteractionProfileV2::P2MultiTwoWay => &p2,
@@ -3545,7 +3652,7 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
                         ));
                     }
                 };
-                run_compact_common_metric_profile_execution(spec, fixture, args.seed)
+                prepare_compact_common_metric_profile_execution(spec, fixture, args.seed)
             })
             .collect::<Result<Vec<_>, DynError>>()?
     } else {
@@ -3657,8 +3764,8 @@ fn run_monolithic(args: &Arguments) -> Result<(), DynError> {
         "fixture_observations": fixture_observations(),
         "multiclass_point_fixture_plan": multiclass_point_fixture_plan(),
         "bootstrap_fixture_plan": bootstrap_fixture_plan(),
-        "execution_contract": "public_recipe_v4_compiler_plus_raw_fimix_pos_runner",
-        "qualification_claim": "raw_sut_facts_for_independent_comparison_only",
+        "execution_contract": execution_contract(),
+        "qualification_claim": qualification_claim(),
         "multistart_reproducibility_contract": {
             "schema_version": HETEROGENEITY_MULTISTART_EVIDENCE_SCHEMA_VERSION_V2,
             "partition_digest_domain": String::from_utf8_lossy(HETEROGENEITY_MULTISTART_PARTITION_DIGEST_DOMAIN_V2),
@@ -4339,7 +4446,7 @@ mod tests {
     }
 
     #[test]
-    fn compact_common_metric_profiles_are_pos_only_locked_full_draw_runs() {
+    fn compact_common_metric_profiles_are_pos_only_locked_point_preparations() {
         let specs = compact_common_metric_profile_specs();
         assert_eq!(
             specs.map(|spec| spec.profile),
@@ -4349,10 +4456,17 @@ mod tests {
             ]
         );
         assert_eq!(
-            specs.map(|spec| spec.inference_cell_id),
+            specs.map(|spec| spec.preparation_cell_id),
             [
-                "pos-common-metric-p2-compact-fixed-k-bootstrap",
-                "pos-common-metric-p23-compact-fixed-k-bootstrap",
+                "pos-common-metric-p2-compact-point-preparation",
+                "pos-common-metric-p23-compact-point-preparation",
+            ]
+        );
+        assert_eq!(
+            specs.map(|spec| spec.dedicated_bootstrap_shard_id),
+            [
+                "bootstrap-pos-destination-p2",
+                "bootstrap-pos-destination-p23",
             ]
         );
 
@@ -4397,6 +4511,27 @@ mod tests {
             assert_eq!(bootstrap.resamples, 500);
             assert_eq!(bootstrap.seed, 42 ^ 0x4253_5452_4150);
             assert_eq!(bootstrap.confidence_level.to_bits(), 0.95_f64.to_bits());
+
+            let dependency = compact_common_metric_bootstrap_dependency(spec, &config).unwrap();
+            assert_eq!(dependency["configured_but_not_executed_here"], true);
+            assert_eq!(dependency["configured_resamples"], 500);
+            assert_eq!(
+                dependency["global_metamorphic_matrix_scope"],
+                "locked_point_and_common_metric_preparation_only"
+            );
+            assert_eq!(
+                dependency["dependency_status"],
+                "required_not_evaluated_in_global_metamorphic_gate"
+            );
+            assert_eq!(dependency["dependency_gate_id"], "fimix.recovery");
+            assert_eq!(
+                dependency["dependency_step_id"],
+                "heterogeneity_production_science"
+            );
+            assert_eq!(
+                dependency["dedicated_full_bootstrap_shard_id"],
+                spec.dedicated_bootstrap_shard_id
+            );
         }
     }
 }

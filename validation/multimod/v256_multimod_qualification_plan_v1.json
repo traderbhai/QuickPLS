@@ -327,6 +327,7 @@
         "fimix.collapse.boundaries",
         "pos.recovery",
         "heterogeneity.bootstrap",
+        "metamorphic.global",
         "archive.sidecar.integrity",
         "manifests.live.derivation"
       ]
@@ -649,9 +650,10 @@
         ]
       },
       "acceptance": [
-        "Row, construct, group label, class label and sign transformations reproduce mapped results.",
+        "Row, construct, group label, class label and sign transformations reproduce mapped completed results and explicitly typed preparation payloads.",
         "Seed, worker and shard invariance holds.",
-        "Cancel-resume equals uninterrupted execution without publishing a partial result."
+        "Cancel-resume equals uninterrupted execution without publishing a partial result.",
+        "Destination-scored POS P2/P23 common-metric cells are preparation-only in this matrix; their exact-candidate full 500-draw bootstrap, MICOM and label-aligned-ledger checks must pass in the dedicated heterogeneity production dependency before this gate can pass."
       ],
       "invalidates_on_failure": [
         "archive.sidecar.integrity",
