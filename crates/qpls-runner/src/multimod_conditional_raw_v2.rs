@@ -14,22 +14,22 @@ use crate::{
     run_compiled_pls_recipe_v4, run_compiled_pls_recipe_v4_allowing_isolated, validate_authority,
 };
 use qpls_core::{
-    AnalysisMethod, AnalysisRecipeModelBindingV4, AnalysisRecipeV4, AnalysisWeightBindingV1,
-    CONDITIONAL_RAW_PROBE_FIT_METRIC_CONTRACT_V2, CompiledAnalysisRecipeV4,
-    CompiledInteractionIdentityV1, CompiledMultiModPlanV1, CompiledMultiModRecipeV1,
-    CompiledPlsPlanV2, CompiledPlsPlanV3, CompiledRecipePlanV4, ConditionalProbeScaleV2,
-    ConditionalProcessIntervalV2, ConditionalProcessProfileV2, ConditionalProcessTargetKindV2,
-    ConditionalProcessTargetResultV2, ConditionalRawProbeFitMetricReceiptV2,
-    ConditionalRawProbeFitScopeV2, ConditionalRawProbeMetricBasisV2,
-    GENERAL_SEM_CONDITIONAL_PROCESS_RESULT_V2_SCHEMA_VERSION, GeneralSemConditionalProcessConfigV2,
-    GeneralSemConditionalProcessResultV2, HigherOrderConstructionApproachV4,
-    InferenceAlternativeV1, MULTIMOD_SIDECAR_MAX_BYTES_V1, MULTIMOD_SIDECAR_WARN_BYTES_V1,
-    MethodConfig, MissingDataPolicy, MultiModAnalysisResultV1, MultiModCompilerTargetV1,
-    MultimodCompiledWeightedPlsRecipeV1, MultimodIntervalV1, MultimodReplicateFailureKindV1,
-    MultimodReplicateFailureV1, MultimodReplicateLedgerSummaryV1, ObservedScaleV4,
-    RecipeV4CompilerTarget, SemDataBindingV4, SemGroupV4, SemModelV4, SemRelationV4, SemVariableV4,
-    StructuralRelationRoleV4, TypedGroupValueV1, compile_analysis_recipe_v4,
-    compile_multimod_weighted_pls_recipe_v4_v1,
+    AnalysisMethod, AnalysisRecipeModelBindingV4, AnalysisRecipeV4, AnalysisSettings,
+    AnalysisWeightBindingV1, CONDITIONAL_RAW_PROBE_FIT_METRIC_CONTRACT_V2,
+    CompiledAnalysisRecipeV4, CompiledInteractionIdentityV1, CompiledMultiModPlanV1,
+    CompiledMultiModRecipeV1, CompiledPlsPlanV2, CompiledPlsPlanV3, CompiledRecipePlanV4,
+    ConditionalProbeScaleV2, ConditionalProcessIntervalV2, ConditionalProcessProfileV2,
+    ConditionalProcessTargetKindV2, ConditionalProcessTargetResultV2,
+    ConditionalRawProbeFitMetricReceiptV2, ConditionalRawProbeFitScopeV2,
+    ConditionalRawProbeMetricBasisV2, GENERAL_SEM_CONDITIONAL_PROCESS_RESULT_V2_SCHEMA_VERSION,
+    GeneralSemConditionalProcessConfigV2, GeneralSemConditionalProcessResultV2,
+    HigherOrderConstructionApproachV4, InferenceAlternativeV1, MULTIMOD_SIDECAR_MAX_BYTES_V1,
+    MULTIMOD_SIDECAR_WARN_BYTES_V1, MethodConfig, MissingDataPolicy, MultiModAnalysisResultV1,
+    MultiModCompilerTargetV1, MultimodCompiledWeightedPlsRecipeV1, MultimodIntervalV1,
+    MultimodReplicateFailureKindV1, MultimodReplicateFailureV1, MultimodReplicateLedgerSummaryV1,
+    ObservedScaleV4, PlsBootstrapTestTail, RecipeV4CompilerTarget, SemDataBindingV4, SemGroupV4,
+    SemModelV4, SemRelationV4, SemVariableV4, StructuralRelationRoleV4, TypedGroupValueV1,
+    compile_analysis_recipe_v4, compile_multimod_weighted_pls_recipe_v4_v1,
     compile_pls_higher_order_lower_order_projection_multimod_v2,
     compile_pls_higher_order_repeated_stage_projection_multimod_v2,
     compile_pls_higher_order_score_stage_projection_multimod_v2, compile_pls_plan_v3,
@@ -2763,6 +2763,14 @@ struct BuiltInConditionalAuthorityV2 {
     raw_probe_sources: BTreeMap<String, String>,
 }
 
+fn stage_conditional_point_sampling_settings_v2(settings: &mut AnalysisSettings) {
+    settings.bootstrap_samples = 0;
+    settings.bootstrap_test_tail = PlsBootstrapTestTail::TwoSided;
+    settings.studentized_inner_samples = 0;
+    settings.permutation_samples = 0;
+    settings.case_weight_column = None;
+}
+
 fn remove_runtime_binding_variable_v2(
     model: &mut SemModelV4,
     source_column: &str,
@@ -2884,19 +2892,17 @@ fn built_in_conditional_authority_v2(
             "multimod.runner.conditional.external_disjoint_hoc_full_refitter_required".into(),
         ));
     }
+    let mut point_projection_recipe = recipe.clone();
+    stage_conditional_point_sampling_settings_v2(&mut point_projection_recipe.settings);
     let (mut point_recipe, point_model) =
-        project_general_sem_pls_stage_one_recipe_v1(recipe, &scientific_model).map_err(
-            |error| {
+        project_general_sem_pls_stage_one_recipe_v1(&point_projection_recipe, &scientific_model)
+            .map_err(|error| {
                 MultiModRunnerErrorV1::UnsupportedProfile(format!(
                     "multimod.runner.conditional.stage_one_projection_rejected:{error}"
                 ))
-            },
-        )?;
+            })?;
     point_recipe.settings.method = AnalysisMethod::PlsPm;
-    point_recipe.settings.bootstrap_samples = 0;
-    point_recipe.settings.permutation_samples = 0;
-    point_recipe.settings.studentized_inner_samples = 0;
-    point_recipe.settings.case_weight_column = None;
+    stage_conditional_point_sampling_settings_v2(&mut point_recipe.settings);
     point_recipe.method_config = Some(MethodConfig::PlsAlgorithm);
     point_recipe.general_sem_config = None;
     point_recipe.mga_multigroup = None;
@@ -6361,6 +6367,24 @@ mod tests {
                 confidence_level: 0.95,
             },
         }
+    }
+
+    #[test]
+    fn conditional_point_sampling_settings_do_not_inherit_outer_inference() {
+        let mut settings = AnalysisSettings::default();
+        settings.bootstrap_samples = 500;
+        settings.bootstrap_test_tail = PlsBootstrapTestTail::OneSidedGreater;
+        settings.studentized_inner_samples = 200;
+        settings.permutation_samples = 5_000;
+        settings.case_weight_column = Some("weight".into());
+
+        stage_conditional_point_sampling_settings_v2(&mut settings);
+
+        assert_eq!(settings.bootstrap_samples, 0);
+        assert_eq!(settings.bootstrap_test_tail, PlsBootstrapTestTail::TwoSided);
+        assert_eq!(settings.studentized_inner_samples, 0);
+        assert_eq!(settings.permutation_samples, 0);
+        assert_eq!(settings.case_weight_column, None);
     }
 
     fn four_disjoint_hoc_projection_fixture() -> SemModelV4 {
