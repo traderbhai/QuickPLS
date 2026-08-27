@@ -461,6 +461,10 @@ fn lowercase_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+fn valid_dataset_fingerprint(value: &str) -> bool {
+    lowercase_sha256(value) || value.strip_prefix("v2:").is_some_and(lowercase_sha256)
+}
+
 fn sha256_bytes(bytes: &[u8]) -> String {
     format!("{:x}", Sha256::digest(bytes))
 }
@@ -616,7 +620,6 @@ fn validate_request_access(request: &MultiModJobRequestV1) -> Result<(), MultiMo
     }
     for digest in [
         &request.expected_archive_sha256,
-        &request.dataset_fingerprint,
         &request.model_scientific_sha256,
         &request.source_recipe_document_sha256,
     ] {
@@ -628,6 +631,14 @@ fn validate_request_access(request: &MultiModJobRequestV1) -> Result<(), MultiMo
                 "Rebuild the request from the strict native archive snapshot.",
             ));
         }
+    }
+    if !valid_dataset_fingerprint(&request.dataset_fingerprint) {
+        return Err(failure(
+            MultiModFailureStageV1::ArchiveAuthority,
+            "multimod.job.invalid_digest",
+            "The requested dataset fingerprint is not a supported legacy SHA-256 or v2 fingerprint.",
+            "Rebuild the request from the strict native archive snapshot.",
+        ));
     }
     Ok(())
 }
@@ -1138,7 +1149,6 @@ pub(crate) fn profile_internal_labs_multimod_grouping_v1(
     )?;
     for digest in [
         &request.expected_archive_sha256,
-        &request.dataset_fingerprint,
         &request.model_scientific_sha256,
         &request.source_recipe_document_sha256,
     ] {
@@ -1150,6 +1160,14 @@ pub(crate) fn profile_internal_labs_multimod_grouping_v1(
                 "Rebuild the request from a strict native Archive V6 snapshot.",
             ));
         }
+    }
+    if !valid_dataset_fingerprint(&request.dataset_fingerprint) {
+        return Err(failure(
+            MultiModFailureStageV1::ArchiveAuthority,
+            "multimod.grouping_profile.invalid_digest",
+            "The grouping-profile dataset fingerprint is not a supported legacy SHA-256 or v2 fingerprint.",
+            "Rebuild the request from a strict native Archive V6 snapshot.",
+        ));
     }
     let path = Path::new(&request.archive_path);
     if request.archive_path.trim() != request.archive_path
@@ -4024,7 +4042,7 @@ mod tests {
     use super::{
         MULTIMOD_INTERNAL_LABS_SURFACE_V1, MULTIMOD_STANDARD_SURFACE_V1,
         MultiModExternalCacheReceiptV1, MultiModExternalCacheStageV1, NativeMgaEngineV1,
-        native_mga_engine_v1, persist_multimod_execution_surface_v1,
+        native_mga_engine_v1, persist_multimod_execution_surface_v1, valid_dataset_fingerprint,
         validate_multimod_runtime_surface_access_using_v1,
         validate_multimod_runtime_surface_access_v1,
     };
@@ -4080,6 +4098,21 @@ mod tests {
         assert_eq!(value["stage"], "mga_execution");
         value["stage"] = serde_json::Value::String("unknown".into());
         assert!(serde_json::from_value::<MultiModExternalCacheReceiptV1>(value).is_err());
+    }
+
+    #[test]
+    fn dataset_fingerprint_validation_accepts_native_v2_and_legacy_sha256_only() {
+        assert!(valid_dataset_fingerprint(&format!("v2:{}", "a".repeat(64))));
+        assert!(valid_dataset_fingerprint(&"b".repeat(64)));
+        assert!(!valid_dataset_fingerprint(&format!(
+            "V2:{}",
+            "a".repeat(64)
+        )));
+        assert!(!valid_dataset_fingerprint(&format!(
+            "v2:{}",
+            "A".repeat(64)
+        )));
+        assert!(!valid_dataset_fingerprint("v2:short"));
     }
 
     #[test]

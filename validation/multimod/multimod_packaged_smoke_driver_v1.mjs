@@ -76,13 +76,20 @@ function stableSlug(value) {
 
 async function nativeInvoke(page, command, payload = {}) {
   assertWithinScientificDeadline(`Native command ${command} start`);
-  const value = await page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
+  const outcome = await page.evaluate(async ({ command: commandName, payload: invokePayload }) => {
     const invoke = globalThis.__TAURI_INTERNALS__?.invoke;
     if (typeof invoke !== "function") throw new Error("Tauri invoke bridge is unavailable.");
-    return invoke(commandName, invokePayload);
+    try {
+      return { ok: true, value: await invoke(commandName, invokePayload) };
+    } catch (error) {
+      return { ok: false, error, message: String(error) };
+    }
   }, { command, payload });
+  if (!outcome.ok) {
+    throw new Error(`Native command ${command} rejected: ${JSON.stringify({ error: outcome.error, message: outcome.message })}`);
+  }
   assertWithinScientificDeadline(`Native command ${command} completion`);
-  return value;
+  return outcome.value;
 }
 
 async function expectInvokeRejected(page, command, payload) {

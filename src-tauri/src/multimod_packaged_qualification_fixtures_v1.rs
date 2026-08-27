@@ -1112,27 +1112,72 @@ mod enabled {
     mod tests {
         use super::*;
 
+        fn preflight_fixture(fixture: &FamilyFixtureV1) -> Result<(), FixtureError> {
+            let target = match fixture.family_id {
+                "qpls.multimod.mga_multigroup_v1" => "mga_multigroup_v1",
+                "qpls.multimod.pls_heterogeneity_v2" => "pls_heterogeneity_v2",
+                "qpls.multimod.general_sem_conditional_process_v2" => {
+                    "general_sem_conditional_process_v2"
+                }
+                "qpls.multimod.interventional_causal_mediation_v1" => {
+                    "interventional_causal_mediation_v1"
+                }
+                family => return Err(invalid(format!("unexpected fixture family {family}"))),
+            };
+            let request = serde_json::json!({
+                "surface": "internal_labs_multimod_v1",
+                "experimentalLabsEnabled": true,
+                "archivePath": fixture.authority.archive_path,
+                "expectedArchiveSha256": fixture.authority.archive_sha256,
+                "projectId": fixture.authority.project_id,
+                "datasetId": fixture.authority.dataset_id,
+                "datasetFingerprint": fixture.authority.dataset_fingerprint,
+                "modelId": fixture.authority.model_id,
+                "modelScientificSha256": fixture.authority.model_scientific_sha256,
+                "sourceRecipeId": fixture.authority.source_recipe_id,
+                "sourceRecipeDocumentSha256": fixture.authority.source_recipe_document_sha256,
+                "stagedRecipeId": Uuid::new_v4(),
+                "stagedCreatedAt": Utc::now().to_rfc3339(),
+                "config": { "kind": target, "config": fixture.config },
+            });
+            let request =
+                serde_json::from_value::<crate::multimod_jobs_v1::MultiModJobRequestV1>(request)?;
+            crate::multimod_jobs_v1::preflight_internal_labs_multimod_v1(request).map_err(
+                |error| invalid(format!("{} preflight failed: {error:?}", fixture.family_id)),
+            )?;
+            Ok(())
+        }
+
         #[test]
-        fn conditional_and_causal_packaged_fixtures_build_with_canonical_ids()
-        -> Result<(), FixtureError> {
+        fn all_packaged_fixtures_build_and_pass_native_preflight() -> Result<(), FixtureError> {
             let root = std::env::temp_dir().join(format!(
                 "quickpls-multimod-packaged-fixtures-{}",
                 Uuid::new_v4()
             ));
             fs::create_dir(&root)?;
             let result = (|| -> Result<(), FixtureError> {
-                let conditional = conditional_fixture(&root, 42)?;
-                let causal = causal_fixture(&root, 42)?;
+                let fixtures = vec![
+                    mga_fixture(&root, 42)?,
+                    heterogeneity_fixture(&root, 42)?,
+                    conditional_fixture(&root, 42)?,
+                    causal_fixture(&root, 42)?,
+                ];
                 assert_eq!(
-                    conditional.family_id,
-                    "qpls.multimod.general_sem_conditional_process_v2"
+                    fixtures
+                        .iter()
+                        .map(|fixture| fixture.family_id)
+                        .collect::<Vec<_>>(),
+                    vec![
+                        "qpls.multimod.mga_multigroup_v1",
+                        "qpls.multimod.pls_heterogeneity_v2",
+                        "qpls.multimod.general_sem_conditional_process_v2",
+                        "qpls.multimod.interventional_causal_mediation_v1",
+                    ]
                 );
-                assert_eq!(
-                    causal.family_id,
-                    "qpls.multimod.interventional_causal_mediation_v1"
-                );
-                assert!(Path::new(&conditional.authority.archive_path).is_file());
-                assert!(Path::new(&causal.authority.archive_path).is_file());
+                for fixture in &fixtures {
+                    assert!(Path::new(&fixture.authority.archive_path).is_file());
+                    preflight_fixture(fixture)?;
+                }
                 Ok(())
             })();
             let cleanup = fs::remove_dir_all(&root);
