@@ -349,10 +349,10 @@ foreach ($required in @($sourcePortable, $sourceSetup)) {
     if (-not (Test-Path -LiteralPath $required -PathType Leaf)) { throw "Expected candidate artifact is missing: $required" }
 }
 New-Item -ItemType Directory -Path $packageDirectory -Force | Out-Null
-$candidateDirectoryName = "QuickPLS_${finalVersion}_${CandidateCommit.Substring(0,12)}_candidate"
+$candidateDirectoryName = "QuickPLS_${finalVersion}_$($CandidateCommit.Substring(0,12))_candidate"
 $finalCandidateDirectory = Join-Path $packageDirectory $candidateDirectoryName
-$legacyPortable = Join-Path $packageDirectory "QuickPLS_${finalVersion}_${CandidateCommit.Substring(0,12)}_portable.exe"
-$legacySetup = Join-Path $packageDirectory "QuickPLS_${finalVersion}_${CandidateCommit.Substring(0,12)}_setup.exe"
+$legacyPortable = Join-Path $packageDirectory "QuickPLS_${finalVersion}_$($CandidateCommit.Substring(0,12))_portable.exe"
+$legacySetup = Join-Path $packageDirectory "QuickPLS_${finalVersion}_$($CandidateCommit.Substring(0,12))_setup.exe"
 if (Test-Path -LiteralPath $outputPath) {
     throw "Candidate package receipt already exists: $outputPath"
 }
@@ -390,8 +390,8 @@ if (-not $stagingFull.StartsWith($packagePrefix, [StringComparison]::OrdinalIgno
     throw "Package staging path escapes the exact campaign package directory."
 }
 New-Item -ItemType Directory -Path $stagingFull | Out-Null
-$portableName = "QuickPLS_${finalVersion}_${CandidateCommit.Substring(0,12)}_portable.exe"
-$setupName = "QuickPLS_${finalVersion}_${CandidateCommit.Substring(0,12)}_setup.exe"
+$portableName = "QuickPLS_${finalVersion}_$($CandidateCommit.Substring(0,12))_portable.exe"
+$setupName = "QuickPLS_${finalVersion}_$($CandidateCommit.Substring(0,12))_setup.exe"
 $stagedPortable = Join-Path $stagingFull $portableName
 $stagedSetup = Join-Path $stagingFull $setupName
 $portable = Join-Path $finalCandidateDirectory $portableName

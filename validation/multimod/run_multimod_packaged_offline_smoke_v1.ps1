@@ -230,7 +230,10 @@ function Get-QuickPlsRegistrations {
     return @(
         foreach ($path in $paths) {
             Get-ItemProperty -Path $path -ErrorAction SilentlyContinue |
-                Where-Object { $_.DisplayName -and [string]$_.DisplayName -match '^QuickPLS(?:\s|$)' }
+                Where-Object {
+                    $displayName = $_.PSObject.Properties["DisplayName"]
+                    $displayName -and [string]$displayName.Value -match '^QuickPLS(?:\s|$)'
+                }
         }
     )
 }

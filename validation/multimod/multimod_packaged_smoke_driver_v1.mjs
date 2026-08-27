@@ -6,6 +6,10 @@ import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
 import { chromium } from "playwright";
+import {
+  PACKAGED_TAURI_ORIGIN,
+  connectToSingleQuickPlsPage,
+} from "../v247_cdp_package_helpers.mjs";
 
 const TERMINAL = new Set(["completed", "failed", "cancelled"]);
 const STANDARD_MULTIMOD_SURFACE = "standard_multimod_v1";
@@ -373,16 +377,20 @@ const workRoot = path.join(outputDirectory, `${args.kind}-production-workflows`)
 assert(!fs.existsSync(workRoot), `Packaged workflow root already exists: ${workRoot}`);
 fs.mkdirSync(workRoot, { recursive: false });
 const screenshot = path.join(workRoot, `${args.kind}-completed-workflows.png`);
-const browser = await chromium.connectOverCDP(args.endpoint);
+const {
+  browser,
+  page: connectedPage,
+} = await connectToSingleQuickPlsPage({
+  chromium,
+  endpoint: args.endpoint,
+  expectedOrigin: PACKAGED_TAURI_ORIGIN,
+  attempts: 480,
+  intervalMilliseconds: 250,
+});
 const consoleErrors = [];
 const functionalNetwork = [];
-let page;
+let page = connectedPage;
 try {
-  const contexts = browser.contexts();
-  assert(contexts.length === 1, `Expected one candidate browser context; found ${contexts.length}.`);
-  const pages = contexts[0].pages().filter((candidate) => !candidate.isClosed());
-  assert(pages.length === 1, `Expected one candidate page; found ${pages.length}.`);
-  [page] = pages;
   page.on("console", (message) => { if (message.type() === "error") consoleErrors.push(message.text()); });
   page.on("pageerror", (error) => consoleErrors.push(String(error)));
   page.on("request", (request) => {
@@ -392,11 +400,11 @@ try {
       && !["127.0.0.1", "localhost", "ipc.localhost"].includes(parsed.hostname)) functionalNetwork.push(url);
   });
   await page.waitForLoadState("domcontentloaded");
-  await page.waitForSelector("body");
+  await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 45_000 });
   assert((await page.title()).includes("QuickPLS"), "Packaged page title does not identify QuickPLS.");
   await page.evaluate(() => localStorage.setItem("quickpls:native-ui-preferences:v1", JSON.stringify({ experimentalLabsEnabled: false })));
   await page.reload({ waitUntil: "domcontentloaded" });
-  await page.waitForSelector("body");
+  await page.locator(".nd-app[data-native-desktop-shell='true']").waitFor({ state: "visible", timeout: 45_000 });
 
   const registry = await nativeInvoke(page, "capability_registry_v2");
   assert(registry?.registry_id === "quickpls.capability_registry.v2" && /^[a-f0-9]{64}$/u.test(registry?.source_sha256 ?? ""), "Embedded capability registry is invalid.");

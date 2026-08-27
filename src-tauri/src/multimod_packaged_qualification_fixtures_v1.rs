@@ -680,24 +680,28 @@ mod enabled {
             &[("x", "m"), ("z", "m"), ("m", "y"), ("x", "y")],
             seed,
         )?;
-        add_interaction(&mut model, "int:x:z:m", &["x", "z"], "x", "m")?;
+        let x_id = "construct:x";
+        let z_id = "construct:z";
+        let m_id = "construct:m";
+        let y_id = "construct:y";
+        add_interaction(&mut model, "int:x:z:m", &[x_id, z_id], x_id, m_id)?;
         let config = GeneralSemConditionalProcessConfigV2 {
             schema_version: 2,
             profile: ConditionalProcessProfileV2::MultiTwoWayPercentile,
             paths: vec![ConditionalProcessPathV2 {
                 path_id: "x_m_y".into(),
                 ordered_relation_ids: vec![
-                    relation_id(&model, "x", "m")?,
-                    relation_id(&model, "m", "y")?,
+                    relation_id(&model, x_id, m_id)?,
+                    relation_id(&model, m_id, y_id)?,
                 ],
             }],
             declared_interaction_ids: vec!["int:x:z:m".into()],
             three_way_interaction_id: None,
             hoc_ids: Vec::new(),
-            moderator_ids: vec!["z".into()],
+            moderator_ids: vec![z_id.into()],
             probes: vec![ConditionalModeratorProbeV2 {
                 probe_id: "probe:z".into(),
-                moderator_id: "z".into(),
+                moderator_id: z_id.into(),
                 scale: ConditionalProbeScaleV2::StandardizedScore,
                 values: vec![-1.0, 0.0, 1.0],
                 raw_transformation_receipt: None,
@@ -1102,6 +1106,40 @@ mod enabled {
             })
         })()
         .map_err(|error| error.to_string())
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn conditional_and_causal_packaged_fixtures_build_with_canonical_ids()
+        -> Result<(), FixtureError> {
+            let root = std::env::temp_dir().join(format!(
+                "quickpls-multimod-packaged-fixtures-{}",
+                Uuid::new_v4()
+            ));
+            fs::create_dir(&root)?;
+            let result = (|| -> Result<(), FixtureError> {
+                let conditional = conditional_fixture(&root, 42)?;
+                let causal = causal_fixture(&root, 42)?;
+                assert_eq!(
+                    conditional.family_id,
+                    "qpls.multimod.general_sem_conditional_process_v2"
+                );
+                assert_eq!(
+                    causal.family_id,
+                    "qpls.multimod.interventional_causal_mediation_v1"
+                );
+                assert!(Path::new(&conditional.authority.archive_path).is_file());
+                assert!(Path::new(&causal.authority.archive_path).is_file());
+                Ok(())
+            })();
+            let cleanup = fs::remove_dir_all(&root);
+            result?;
+            cleanup?;
+            Ok(())
+        }
     }
 }
 
