@@ -272,6 +272,19 @@ fn conditional_profile_identity_v1(
     }
 }
 
+fn conditional_result_profile_id_v1(profile: ConditionalProcessProfileV2) -> &'static str {
+    match profile {
+        ConditionalProcessProfileV2::MultiTwoWayPercentile => "multi_two_way_percentile",
+        ConditionalProcessProfileV2::MultiTwoWayBca => "multi_two_way_bca",
+        ConditionalProcessProfileV2::MultiTwoWayStudentized => "multi_two_way_studentized",
+        ConditionalProcessProfileV2::BoundedThreeWayPercentile => "bounded_three_way_percentile",
+        ConditionalProcessProfileV2::MultipleHocPercentile => "multiple_hoc_percentile",
+        ConditionalProcessProfileV2::GroupedPercentile => "grouped_percentile",
+        ConditionalProcessProfileV2::CaseWeightedPercentile => "case_weighted_percentile",
+        ConditionalProcessProfileV2::FrequencyWeightedPercentile => "frequency_weighted_percentile",
+    }
+}
+
 fn insert_heterogeneity_required_cells_v1(
     cells: &mut BTreeSet<String>,
     config: &PlsUnobservedHeterogeneityConfigV2,
@@ -414,7 +427,9 @@ pub fn required_multimod_candidate_profile_cells_v1(
                 .as_ref()
                 .ok_or(MultiModCandidateAuthorityErrorV1::FamilyMismatch)?;
             let (profile_id, procedures) = conditional_profile_identity_v1(*profile);
-            if config.profile != *profile || value.profile_id != profile_id {
+            if config.profile != *profile
+                || value.profile_id != conditional_result_profile_id_v1(*profile)
+            {
                 return Err(MultiModCandidateAuthorityErrorV1::ArtifactMismatch);
             }
             insert_profile_cells(&mut cells, profile_id, procedures);
@@ -478,6 +493,82 @@ mod tests {
             deterministic_sign_orientation_reviewed: true,
             analyst_review_confirmed: true,
         }
+    }
+
+    #[test]
+    fn conditional_result_profile_ids_remain_distinct_from_qualification_cells() {
+        let cases = [
+            (
+                ConditionalProcessProfileV2::MultiTwoWayPercentile,
+                "multi_two_way_percentile",
+                "conditional.multi_two_way_percentile.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::MultiTwoWayBca,
+                "multi_two_way_bca",
+                "conditional.multi_two_way_bca.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::MultiTwoWayStudentized,
+                "multi_two_way_studentized",
+                "conditional.studentized.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::BoundedThreeWayPercentile,
+                "bounded_three_way_percentile",
+                "conditional.bounded_three_way_percentile.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::MultipleHocPercentile,
+                "multiple_hoc_percentile",
+                "conditional.multiple_hoc_percentile.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::GroupedPercentile,
+                "grouped_percentile",
+                "conditional.grouped_percentile.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::CaseWeightedPercentile,
+                "case_weighted_percentile",
+                "conditional.case_weighted_percentile.v2",
+            ),
+            (
+                ConditionalProcessProfileV2::FrequencyWeightedPercentile,
+                "frequency_weighted_percentile",
+                "conditional.frequency_weighted_percentile.v2",
+            ),
+        ];
+
+        let mut result_profile_ids = BTreeSet::new();
+        let mut qualification_profile_ids = BTreeSet::new();
+        for (profile, result_profile_id, qualification_profile_id) in cases {
+            assert_eq!(conditional_result_profile_id_v1(profile), result_profile_id);
+            assert_eq!(
+                conditional_profile_identity_v1(profile).0,
+                qualification_profile_id
+            );
+            assert!(result_profile_ids.insert(result_profile_id));
+            assert!(qualification_profile_ids.insert(qualification_profile_id));
+        }
+
+        let (profile_id, procedures) =
+            conditional_profile_identity_v1(ConditionalProcessProfileV2::MultiTwoWayPercentile);
+        assert_eq!(
+            procedures
+                .iter()
+                .map(|procedure| cell(profile_id, procedure))
+                .collect::<BTreeSet<_>>(),
+            [
+                "conditional.multi_two_way_percentile.v2::all_predeclared_alternatives",
+                "conditional.multi_two_way_percentile.v2::both_stage_multiple_long_path",
+                "conditional.multi_two_way_percentile.v2::explicit_path_target_math",
+                "conditional.multi_two_way_percentile.v2::shared_ledger_percentile_type7",
+            ]
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
+        );
     }
 
     fn discovery_config() -> PlsUnobservedHeterogeneityConfigV2 {
