@@ -51,8 +51,14 @@ recovery or export procedure before ending support.
 
 ## Current Transition
 
-QuickPLS 2.51.x is the current published unified-workflow preview line while QuickPLS 3 remains under development.
-The published `v2.53.0` artifacts are unsigned technical previews, not Beta or Stable, even though they are publicly downloadable from GitHub.
+QuickPLS 2.56.0 Beta (Unsigned) is the current public evaluation line. Its
+distribution channel remains **Unsigned preview** because the GitHub setup and
+portable artifacts are not Authenticode-signed. “Beta” is the public version
+label and does not imply a signed build or Stable support, even though bounded
+analytical capability cells may be labelled Standard inside the exact
+qualified package.
+The previously published `v2.53.0` and `v2.54.0` artifacts remain historical
+unsigned technical previews.
 Unsigned QuickPLS 3 builds likewise remain preview artifacts and do not replace a signed stable line.
 The first competitor-grade QuickPLS 3 stable line begins only after the signed
 commercial-readiness gate passes.

@@ -1,76 +1,142 @@
-# QuickPLS Installation
+# QuickPLS 2.56.0 installation
 
-Current source version: **2.55.5**. The 2.55.0 evidence described below is
-historical and does not qualify a 2.55.5 package. Formal first diagnostic `20260822T142953Z`
-at source `2e3a23f` executed all 14 steps and passed 13; the sole failure was
-`frontend_typecheck`, where `src/data/v255NamedSemEvidenceFixtures.test.ts`
-reported TypeScript error `TS2339`. The final consolidated diagnostic
-`20260823T030939Z` at source `e5723df08b7205ce75f1887c5f4709f235ad893c`
-passed 14/14, including 453/453 Vitest suites, 1724/1724 tests, 17/17
-interactions, and zero captured console errors. Its report is
-`validation/results/v255_consolidated_diagnostics_20260823T030939Z/v255_consolidated_diagnostics.json`,
-has SHA-256 `03da7a8e0db2924d0157eb0cb0ca92e841fffd61f470d5cd16ccd58f87fe9b2a`,
-and is retained in evidence commit `8a727262c07dd38bae38d8154e1662c78fbb8ee7`.
-Both formal records use runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796` and are
-separate evidence records, not byte-identical. A new provenance-bound unsigned
-setup, portable, CLI, and checksum package, its isolated install, full
-installed-and-portable smoke, evidence collection and bundling, final audit,
-and publication remain pending. Code signing is excluded. Exactly one
-case—the actual Windows 200% scaling case—may use the
-opt-in waiver; its real observed DPI screenshot and receipt remain required,
-its status remains `waived`, and the other 54 named cases must pass.
+QuickPLS 2.56.0 Beta (Unsigned) is a Windows x64 evaluation release. It is not a
+signed or Stable release and does not claim unrestricted SmartPLS parity.
 
-Latest published public pre-release: [`v2.54.0`](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Its setup, portable, CLI, manifest, and checksum package passed the documented 2.54 workflow and remains unsigned. The superseded final diagnostic `20260823T000930Z`, candidate/install/smoke attempts `20260823T004848Z` and `20260823T005212Z`, portable probe `20260822T233111Z`, and all prior local 2.55 candidate, install, smoke, diagnostic, or probe attempts are historical and ineligible. The install wrapper permits only Tauri's exact three-byte `UNK` → `NSS` package marker transition and rejects every other byte difference. One new candidate build, isolated install, full installed-and-portable smoke, evidence collection and bundling, final audit, and publication remain pending; no 2.55 download or installed-app success is claimed.
+- Release page: [v2.56.0-beta.1](https://github.com/traderbhai/QuickPLS/releases/tag/v2.56.0-beta.1)
+- Candidate source: `28939b73db8f2284f21ce184050eb3f04110bf94`
+- Supported Beta platform: maintained Windows 10/11 x64 installations
 
-## Choose An Install Type
+## Choose a download
 
-Use one of the assets from the [QuickPLS 2.54.0 release page](https://github.com/traderbhai/QuickPLS/releases/tag/v2.54.0). Maintainers can create versioned local artifacts under `target/release/artifacts/` after a production build:
+| Use | Asset | Size | SHA-256 |
+| --- | --- | ---: | --- |
+| Recommended installation | `QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe` | 231,889,558 bytes (221.15 MiB) | `46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523` |
+| Portable launch | `QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe` | 79,480,832 bytes (75.80 MiB) | `54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1` |
 
-- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe` for a normal Windows installation.
-- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe` for a portable launch without installing.
-- `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe` for offline command-line and batch recipe execution.
+Choose **setup** for normal use. It includes Microsoft's WebView2 offline
+installer and can prepare a machine without downloading WebView2 during the
+QuickPLS installation. Choose **portable** only when a compatible WebView2
+Runtime is already installed and normal application installation is unavailable
+or undesirable.
 
-For most users, choose **setup**. Choose **portable** when installation is not possible and a compatible Microsoft WebView2 runtime is already available. The `v2.54.0` files include `unsigned-preview` in their names because they are not Authenticode-signed.
+QuickPLS does not require R, Rscript, Python, a QuickPLS account, an activation
+server, cloud storage, or remote computation at runtime.
 
-The desktop, CLI, and analytical workflows require no internet connection,
-account, or cloud service after download. The QuickPLS application and page make
-no external requests. This is a functional-offline claim, not a literal
-fully-offline, no-telemetry, or zero-egress process-tree claim: the
-Microsoft-managed WebView2 runtime may make its own background service
-connections unless an independently validated OS-enforced fixed-WebView2
-network boundary is applied. See `docs/WEBVIEW2_OFFLINE_BOUNDARY.md`.
+## Verify the download
 
-## Verify The Download
-
-From PowerShell:
+Open PowerShell in the download folder and run the command for your asset:
 
 ```powershell
-Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_setup.exe -Algorithm SHA256
-Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_portable.exe -Algorithm SHA256
-Get-FileHash .\QuickPLS_<version>_<channel>_<label>_<UTC>_x64_cli.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe -Algorithm SHA256
+Get-FileHash .\QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe -Algorithm SHA256
 ```
 
-Compare the hashes with the matching `QuickPLS_<version>_<channel>_<label>_<UTC>_x64_checksums.txt` file. Checksums detect changed or corrupted bytes; they do not establish publisher identity.
+Expected values:
+
+```text
+setup     46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523
+portable  54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1
+```
+
+Compare all 64 hexadecimal characters. Do not run a file with a different
+size, hash, name, or download source. A checksum can detect changed or corrupted
+bytes, but it does not establish publisher identity.
 
 ## Windows SmartScreen
 
-The installer is unsigned. Windows may warn that the app is from an unknown publisher or show Microsoft SmartScreen. Confirm that the filename came from the official GitHub Release and that its SHA-256 value matches the attached checksum file before running it. A future signed build will replace this preview distribution path.
+The Beta executables are not Authenticode-signed. Windows may report an unknown
+publisher or display Microsoft SmartScreen. This is expected for this unsigned
+Beta; it is not evidence of a signed or verified publisher.
 
-## First Launch
+Proceed only if:
 
-1. Open QuickPLS.
-2. Choose `Open demo project`, create a project, or import your own dataset.
-3. Save the project as a `.qpls` file to enable autosave and recovery.
-4. Use Canvas to draw the diagram, then choose from the unchanged 18-method `Calculate` catalogue. Open the Advanced Parameter Table only when a CB-SEM setting or corrective action requires parameter-level editing.
-5. After completion, use `Results` to inspect, export, save, close, and strictly reopen the verified result.
+1. the file came from the official release page above;
+2. its exact filename and byte size match this guide; and
+3. its complete SHA-256 value matches this guide.
 
-## Runtime Dependencies
+If any item differs, cancel the launch and report it through the
+[QuickPLS issue tracker](https://github.com/traderbhai/QuickPLS/issues/new/choose).
 
-QuickPLS does not require R, Rscript, Python, cloud services, accounts, or activation at runtime. QuickPLS product telemetry is disabled and its application/page makes no external requests. The installer embeds the WebView2 offline installer; portable execution requires a compatible WebView2 runtime already installed. The separate Microsoft-managed WebView2 process boundary described above still applies. R and Python are used only by development validation scripts.
+## Install with setup
+
+1. Back up important `.qpls` projects and original datasets before changing an
+   application installation.
+2. Run `QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe`.
+3. Review the Windows warning and continue only after completing the verification
+   above.
+4. Complete the installer. The bundled WebView2 offline installer runs silently
+   when the required runtime is unavailable.
+5. Start QuickPLS from the Start menu.
+6. Open **Help → About** and confirm Version `2.56.0`.
+
+If Windows reports an installation conflict with an older registered QuickPLS
+installation, remove that installation through **Settings → Apps → Installed
+apps** using its registered uninstaller, then run the 2.56.0 setup again. Do not
+manually delete project, recovery, or QuickPLS application-data folders as an
+installation workaround.
+
+This Beta does not claim the complete oldest-version upgrade, unattended
+deployment, coexistence, interruption-recovery, or institutional rollout matrix
+required for a future Stable release.
+
+## Use the portable executable
+
+1. Verify the portable file exactly as described above.
+2. Move it to a user-writable folder if desired.
+3. Run `QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe`.
+4. If QuickPLS cannot start because WebView2 is unavailable, use the setup
+   installer or install a compatible Microsoft WebView2 Runtime through your
+   organization's approved process.
+
+The portable executable is a separate application launch, not proof that the
+setup installer or an installed upgrade path works. Delete the portable
+executable when it is no longer required.
+
+## First launch
+
+1. Create a project, open a `.qpls` project, or select a bundled sample.
+2. Import and inspect data in **Data**.
+3. Create or activate a model on **Canvas**.
+4. Use **Calculate** for the normal method catalogue.
+5. For the new suite, activate a calculation-ready model and choose
+   **Moderation & heterogeneity…** from the Model toolbar. Select Categorical
+   moderation, Latent segmentation, Conditional process, or Interventional
+   mediation.
+6. Review every eligibility warning and exact method boundary before calculating
+   or reporting a result.
+
+The MultiMod result should visibly identify its qualification state. An official
+candidate-authorized result says **Standard · Release-qualified**. A source-built
+or altered executable without the exact embedded candidate authority remains
+**Experimental Labs · Unqualified**. A Labs-only build cannot be promoted by a
+project file, environment variable, or UI request.
+
+See [MultiMod boundaries and qualification](MULTIMOD_BOUNDARIES_AND_QUALIFICATION_V1.md)
+and [unsupported intersections](MULTIMOD_UNSUPPORTED_INTERSECTIONS_V1.md) before
+using the new workflows.
+
+## Offline behavior
+
+QuickPLS calculations, projects, and exports remain local. QuickPLS product
+telemetry is disabled, and no account or cloud service is required. The QuickPLS
+application/page is configured to make no external requests during the
+documented offline workflow.
+
+Microsoft manages the separate WebView2 Runtime. Its process tree may make
+background service connections unless Windows or an independently verified
+OS-level network policy blocks them. QuickPLS 2.56.0 therefore does not claim
+zero network egress for the complete WebView2 process tree.
 
 ## Uninstall
 
-If you used the installer, uninstall QuickPLS from Windows Apps/Programs. If you used the portable executable, delete the executable when no longer needed.
+- Setup installation: use **Settings → Apps → Installed apps → QuickPLS →
+  Uninstall**.
+- Portable: close QuickPLS and delete the portable executable.
 
-For controlled 2.55 release qualification, an existing registered QuickPLS installation may be removed only through its exact registered uninstaller before the isolated candidate install. Project files, recovery data, and QuickPLS application user data must remain untouched and must be verified unchanged across that operation. The portable executable is still required for its separate journey, but it does not substitute for installed-candidate evidence.
+Uninstalling the application is not a substitute for managing research data.
+Keep your own backups and confirm the location of projects and exports before
+removing software or application data.
+
+For help, see [Known Issues](KNOWN_ISSUES.md), [Support Policy](SUPPORT_POLICY.md),
+and the repository [Security Policy](../SECURITY.md).

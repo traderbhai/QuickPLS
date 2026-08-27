@@ -2,6 +2,14 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [2.56.0] - 2026-08-27 (Beta, unsigned)
+
+- Added the authority-gated **MultiMod** workspace with four bounded result families: multigroup analysis, FIMIX-PLS/PLS-POS latent segmentation, conditional-process analysis, and observed-data interventional mediation.
+- Added deterministic resampling evidence, explicit profile and estimand identities, Archive V6 sidecars with strict integrity checks, qualified exports, and fail-closed handling of unsupported profile intersections.
+- Preserved continuous moderation V1 and legacy archive/recipe/result behavior unchanged. Quadratic self-moderation is not part of MultiMod.
+
+The candidate at commit `28939b73db8f2284f21ce184050eb3f04110bf94` passed 32/32 qualification gates, including installed and portable offline smoke. The setup artifact is 231,889,558 bytes (SHA-256 `46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523`); the portable artifact is 79,480,832 bytes (SHA-256 `54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1`). GitHub distribution is QuickPLS 2.56.0 Beta (Unsigned), not a signed or Stable release and not a claim of full SmartPLS parity.
+
 ## [2.55.5] - 2026-08-23 (local preview)
 
 - Added three OI-based editable samples—Mediation, Moderated Mediation (Point Topology), and a disjoint two-stage Higher-Order model—while reusing one embedded 305-case dataset.

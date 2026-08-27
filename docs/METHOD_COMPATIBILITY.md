@@ -1,5 +1,32 @@
 # Method Compatibility
 
+## QuickPLS 2.56.0 MultiMod suite
+
+The release-qualified QuickPLS 2.56.0 package adds four versioned workflows to
+the existing catalogue. These are non-Cartesian capability profiles: support
+for one row does not imply that every method, model feature, weight, group, or
+inference option can be combined. The application checks the exact request and
+returns a stable blocker instead of silently simplifying an unsupported model.
+
+| Workflow | Qualified 2.56.0 boundary | Main user flow |
+| --- | --- | --- |
+| Categorical moderation / MGA | Typed 2–20-group MGA with structured MICOM Step 1 review, pairwise MICOM Steps 2–3, pairwise size-preserving permutation, Henseler directional probability, BC bootstrap differences, a max-spread omnibus permutation for three or more groups, declared multiplicity handling, and independently qualified General SEM, interaction, HOC, weighted, and reflective PLSc profiles. | Groups → profile/comparisons → MICOM review → inference/multiplicity → parameters → Calculate |
+| Latent segmentation | Genuine FIMIX-PLS V2 and separately named PLS-POS V2 profiles for analyst-selected K=2–5. K=1 is a pooled baseline; QuickPLS never auto-selects K. Bootstrap inference requires an explicit algorithm/K lock. POS interaction contrasts require the common-metric comparability gate. | Discover candidate K → inspect diagnostics → explicitly lock algorithm and K → fixed-K bootstrap |
+| Conditional process | Explicitly selected conditional indirect paths with bounded multiple two-way, full BCa, studentized, one three-way, multiple nonnested HOC, grouped, case-weighted, and frequency-weighted profiles. A scalar index is reported only when the selected-path function is affine in one moderator; otherwise the result uses derivatives and finite contrasts. | Select paths → attach authored interactions → define probes/contrasts → select estimands/inference → Calculate |
+| Interventional mediation | Separate observed-data parametric g-computation for directly observed treatment, mediators, outcome, baseline moderators, and a required adjustment set. It requires explicit paths/equations, positivity review, and an identification checklist. | Assign observed roles → define treatment contrast and paths → review equations → complete assumptions/positivity → Calculate |
+
+MultiMod does not alter continuous moderation V1. Quadratic/self-moderation is
+outside MultiMod; the separate fixed-score nonlinear diagnostic below retains
+its existing bounded meaning. Ordinary conditional-process output is
+associational and is never relabelled causal. Interventional-mediation output
+uses the mandatory wording “assumption-dependent interventional estimate.”
+
+Only the exact release package with its embedded external authority displays
+**Standard · Release-qualified** for these profiles. A local source build that
+lacks that exact authority remains Labs/unavailable even when the calculation
+code is present. See [MultiMod boundaries](MULTIMOD_BOUNDARIES_AND_QUALIFICATION_V1.md)
+and [unsupported intersections](MULTIMOD_UNSUPPORTED_INTERSECTIONS_V1.md).
+
 | Family | Method | Foundation status | Stable output |
 | --- | --- | --- | --- |
 | PLS-SEM | PLS path modeling core | Release-qualified scoped Standard for deterministic recursive raw-data composite models with reflective Mode A, formative Mode B, single-item blocks, listwise deletion, and path, factor, or bounded PCA weighting. Cyclic and covariance-only models and bootstrap, permutation, prediction, group, PLSc, WPLS, and CB-SEM inference remain separate; no SmartPLS numerical identity is claimed. | Yes; current engine/archive/native/packaged evidence, selected-run XLSX export, and same-run save/reopen for the bounded `pls_pm_v1` scope |

@@ -1,134 +1,399 @@
-# QuickPLS User Guide
+# QuickPLS 2.56.0 User Guide
 
-This guide describes the Version 2.55 source workflow.
-QuickPLS runs analyses locally without an account, cloud service, R, or Python
-at runtime. Formal first diagnostic `20260822T142953Z` at source `2e3a23f`
-executed all 14 steps and passed 13; the sole failure was `frontend_typecheck`,
-where `src/data/v255NamedSemEvidenceFixtures.test.ts` reported TypeScript error
-`TS2339`. The final consolidated diagnostic `20260823T030939Z` at source
-`e5723df08b7205ce75f1887c5f4709f235ad893c` passed 14/14, including 453/453
-Vitest suites, 1724/1724 tests, 17/17 rebaseline assertions, and zero captured
-console errors. Its report is
-`validation/results/v255_consolidated_diagnostics_20260823T030939Z/v255_consolidated_diagnostics.json`,
-has SHA-256 `03da7a8e0db2924d0157eb0cb0ca92e841fffd61f470d5cd16ccd58f87fe9b2a`,
-and is retained in evidence commit `8a727262c07dd38bae38d8154e1662c78fbb8ee7`.
-Both formal records use runner SHA-256
-`64969b4eb89c9789e586c372532d89b082766a44661cc4feea66b6cf3a0f9796` and are
-separate evidence records, not byte-identical. A new provenance-bound unsigned
-2.55 candidate build, isolated install, full installed-and-portable smoke,
-evidence collection and bundling, final audit, and publication remain pending.
-The verified `v2.54.0` release remains available; code signing is excluded.
+QuickPLS is an offline Windows desktop application for structural equation
+modeling. It does not require an account, cloud service, R, or Python at
+runtime.
 
-The superseded final diagnostic `20260823T000930Z`, candidate/install/smoke
-attempts `20260823T004848Z` and `20260823T005212Z`, portable probe
-`20260822T233111Z`, and all prior 2.55 candidate, install, smoke, diagnostic, or
-probe attempts are historical and ineligible. The install wrapper accepts only Tauri's exact
-three-byte `UNK` → `NSS` marker transition and rejects every other byte
-difference. One new candidate, isolated install, and full smoke are still required.
-Exactly one case—the actual Windows 200% scaling case—may use the opt-in waiver;
-its real DPI screenshot and receipt remain required, its status remains
-`waived`, and the other 54 named cases must pass. If an existing registered
-installation must be removed for the isolated install, only its exact registered
-uninstaller may be used and project files, recovery data, and QuickPLS
-application user data must remain untouched. Installed and portable journeys are
-both mandatory; neither substitutes for the other.
+The GitHub distribution is **QuickPLS 2.56.0 Beta (Unsigned)**, intended for
+technical evaluation. Download it from the
+[`v2.56.0-beta.1` release](https://github.com/traderbhai/QuickPLS/releases/tag/v2.56.0-beta.1).
+The executables are not Authenticode-signed, so Windows may display an
+unknown-publisher or Microsoft Defender SmartScreen warning. Verify the
+published SHA-256 checksum before running a downloaded file.
 
-## Projects and scientific authority
+This guide does not claim a signed or stable-channel release, unrestricted
+method coverage, SmartPLS project compatibility, or numerical identity with
+another product.
 
-A `.qpls` project stores immutable dataset versions, SEM models, recipes, completed results, report settings, layout metadata, and provenance. A completed result remains bound to its dataset, model, settings, seed, method version, capability cell, and engine identity.
+## Common workflow
 
-Advanced SEM calculations use `SemModelV4` as the model authority, `AnalysisRecipeV4` as the requested analysis, compiled plans as execution authority, `CanonicalResultDocumentV2` as result authority, and schema-6 as persistence authority. These are internal contracts; users work through Canvas, Calculate, and Results. Canvas layout cannot override scientific content.
+The normal journey is:
 
-## Launcher and Data
+`Launcher → Data → Model → Calculate → Results → Save/Export`
 
-Use Launcher to create or open a project, open a sample, or continue from recovery. Use Data to import and inspect raw or supported matrix data, review missing values and quality, search variables, edit metadata, and create immutable derived dataset versions.
+1. In **Launcher**, create a project, open a `.qpls` project, or open a bundled
+   sample.
+2. In **Data**, import and inspect the dataset. Resolve incorrect headers,
+   nonnumeric analysis columns, constants, missing-value problems, and reported
+   quality issues.
+3. In **Model**, create constructs, assign indicators, draw structural paths,
+   and author only the advanced terms required by the hypothesis.
+4. Choose **Calculate**. QuickPLS checks the exact dataset, model, recipe,
+   method profile, and release authority before enabling a run.
+5. Monitor the calculation. A cancelled or failed run is never presented as a
+   completed scientific result.
+6. Review the completed result in **Results**, save the project, and use
+   **Export Results** for the formats admitted by that result family.
 
-## Canvas and Advanced Parameter Table
+Save early. A scientific edit to an activated calculation-ready project uses a
+source-preserving revision instead of silently changing the authority behind
+an existing result.
 
-Use Model to create constructs, assign indicators, draw paths and supported covariances, arrange the diagram, and validate the model. Layout changes do not alter analytical fingerprints.
+## Launcher, Data, and Model
 
-The model navigator separates Indicators, Constructs, and Relationships. Use a
-navigator row to focus its model element. Canvas arrangement includes tidy
-selection, alignment, distribution, and whole-model direction, while Fit can
-target the structure, all diagram content, or the current selection. Indicator
-side/free placement, pins, path routes, and label offsets remain presentation
-metadata and survive unrelated scientific edits.
+Use Launcher, **File → Open Project…**, or **Open** to open a `.qpls` file.
+Recent projects appear in Launcher. Bundled samples are useful for learning the
+interface because they include data, a model, and a completed result.
 
-The Parameter Table is no longer a permanent workspace tab. Open the resizable **Advanced Parameter Table** from Canvas, CB-SEM setup, or a corrective preflight action. Construct representation and the active table define the model sent to native preflight and estimation. Supported fixed/free rows, equality labels, and row bounds are preserved; unsupported constraint objects remain visible and block calculation instead of being discarded.
+In **Data**, verify row and variable counts, column names and numeric types,
+missing values, constants, and scale metadata. For categorical MGA or grouped
+conditional-process analysis, keep the grouping column outside the model
+indicators. For weighted profiles, retain the intended case-weight or frequency
+column.
 
-## Advanced model authoring
+In **Model**, use Canvas and the **Indicators**, **Constructs**, and
+**Relationships** navigator sections. Canvas layout is presentation metadata
+and does not change scientific identities.
 
-The same Canvas supports bounded advanced authoring:
+To author moderation, drag a moderator onto an eligible structural path, or
+select/right-click the path and choose **Add Moderating Effect…**. The `M` key
+opens the same action. A small `×` anchor and dashed connector identify the
+effect. Select the anchor and press Enter to edit it or Delete to remove it. A
+bounded three-way term is created by adding a second moderator to an eligible
+parent two-way interaction; the required main and pairwise lower-order terms
+must be present.
 
-- **Mediation:** draw the component paths. QuickPLS detects eligible indirect paths automatically from substantive directed structural relationships. Covariance, control, measurement, generated, and interaction-hierarchy relations do not count.
-- **Moderation:** drag a moderator onto an eligible structural path, use the path context menu, or select the path and press `M`. QuickPLS shows a compact `×` anchor and dashed moderator connector. Enter edits the selected effect; Delete removes only that effect. The anchor is presentation-only and never becomes a persisted scientific relationship.
-- **Three-way moderation:** add a second moderator to an eligible parent two-way interaction. The bounded source cell requires one three-way term, two-stage construction, strong hierarchy, all main and pairwise lower-order effects, and supported continuous or `0/1` binary moderators. Its point/bootstrap Registry cells are scoped Standard for this exact predicate.
-- **Higher-order constructs:** select at least two eligible constructs, then open **Higher-Order Construct…** from the Model menu or the selection context menu. Choose whether the HOC explains its dimensions or the dimensions form the HOC. QuickPLS derives the RR/RF/FR/FF type from that direction and the dimensions' existing Mode A/B measurement, then recommends a construction approach from the current topology. Use **Edit Higher-Order Construct…** from the HOC context menu, Properties, or Enter key to revise it.
-- **Moderated mediation:** in PLS Bootstrapping setup, choose one eligible two-relation path and one first- or second-stage interaction. Probes are fixed at standardized `−1`, `0`, and `+1`.
-- **CB-SEM:** use common-factor constructs and the Advanced Parameter Table for bounded recursive ML or recursive case bootstrap.
+For a higher-order construct, select eligible component constructs and choose
+**Model → Higher-Order Construct…**. QuickPLS derives the RR/RF/FR/FF type and
+offers only admitted construction approaches.
 
-The HOC dialog keeps construction approach and the optional legacy short code under **Advanced**. Measurement-only dimensions default to disjoint two-stage when eligible; dimensions already in structural relationships prefer embedded two-stage. Repeated and extended-repeated approaches appear only for combinations supported by the current bounded workflow; hybrid remains read-only compatibility.
+## Standard and Experimental Labs
 
-Advanced changes use **Save As Revision**. Creating or editing an HOC in an activated immutable project writes one atomic versioned revision while retaining the original project unchanged. Its existing scientific term/output identities and authored structural paths are preserved when the HOC is edited. Historical General SEM and Exact CB-SEM payloads remain readable through hidden compatibility adapters; they are not separate workspace tabs.
+MultiMod displays one of two exact authority labels:
 
-## Calculate and preflight
+- **Standard · Release-qualified** means the executable contains the embedded
+  authority for the exact source commit, method profile, procedure cell,
+  schemas, and qualification evidence used by the request. It is not a broad
+  promise that adjacent or combined methods are supported.
+- **Experimental Labs · Unqualified** means the surface does not carry release
+  authority. A Labs result must not be reported as Standard, and publication
+  exports can remain disabled.
 
-Use the generic `Calculate` command. Its 18-method catalogue is unchanged. Preflight evaluates the exact model, dataset, recipe, and Registry cell, then routes PLS Algorithm, Bootstrapping, or CB-SEM to the bounded capability owned by the current topology and inference settings. A method can be:
+The qualified 2.56.0 Beta package is expected to show **Standard ·
+Release-qualified** for admitted MultiMod cells. A source build, altered build,
+or package without complete embedded authority is expected to remain Labs-only
+or unavailable. Enabling Experimental Labs cannot manufacture Standard
+authority.
 
-- `Supported` — a matching scoped-Standard cell can run;
-- `Experimental` — a matching Labs cell can run only after Labs opt-in; or
-- `Blocked` — the setup is incompatible, with a corrective explanation.
+## Open the MultiMod suite
 
-The setup shows detected features, expected result groups, and direct correction actions. An eligible HOC appears as one compact row with its name, RR/RF/FR/FF type, approach, and an **Edit…** action. PLS Algorithm routes to the existing HOC point cell; PLS Bootstrapping routes to the existing point plus full-model case-bootstrap cells. Starting a run opens native progress. Cancellation publishes no partial analytical result.
+MultiMod is additive to the existing General SEM workflow. It does not replace
+continuous moderation V1.
+
+1. Open or create a calculation-ready General SEM project with data and a valid
+   model.
+2. If offered, use **Calculate → Save and activate project…**, then continue
+   from the newly activated project.
+3. Return to **Model** and select **Moderation & heterogeneity…** in the Canvas
+   toolbar.
+4. Confirm that the workspace says **Moderation and heterogeneity suite** and
+   inspect its authority badge.
+5. Choose **Categorical moderation**, **Latent segmentation**, **Conditional
+   process**, or **Interventional mediation**.
+
+Every tab validates the exact request continuously. **Stage Recipe V4** stores
+the configuration without running it. **Calculate** is enabled only when native
+preflight says that exact profile is executable. **Predicted result sidecar**
+warns above 128 MiB and blocks a run above 512 MiB.
+
+## Categorical moderation: MICOM and 2-20-group MGA
+
+Use **Categorical moderation** when the moderator is a typed grouping variable
+and the research question concerns group differences.
+
+1. Under **1. Groups**, choose a **Grouping column** that is not a model
+   indicator and select 2-20 mutually exclusive values. Unselected levels and
+   unusable rows are excluded with stable row tokens and reasons.
+2. Review complete-case counts. Each group needs at least 10 complete model
+   cases. QuickPLS warns below 30 cases, warns above 2:1 imbalance, and rejects
+   imbalance above 10:1.
+3. Under **2. Comparison and profile**, choose the exact **Profile envelope**:
+   ordinary recursive General SEM PLS, multiple two-way moderation, bounded
+   three-way moderation, bounded two-way moderated mediation, multiple
+   nonnested HOCs, positive case-weighted PLS, positive-integer
+   frequency-weighted PLS, or reflective PLSc.
+4. Enter the weight column when required. With more than two groups, a
+   max-spread omnibus permutation precedes pairwise follow-up. All 190 pairs at
+   20 groups require explicit heavy-run confirmation.
+5. Complete **MICOM Step 1: configural invariance review**. QuickPLS calculates
+   Steps 2-3 pairwise and does not invent an omnibus MICOM conclusion. Partial
+   measurement invariance is required before interpreting affected structural
+   differences.
+6. Under **4. Inference and multiplicity**, select the needed procedures:
+   pairwise MICOM, size-preserving permutation, Henseler PLS-MGA directional
+   probability, bootstrap BC difference interval, pooled-variance parametric,
+   Welch-Satterthwaite, or K-group inverse-variance Wald.
+7. Choose 5,000-10,000 draws, the alternative, multiplicity method, and exact
+   **Parameters to compare**. Holm FWER is the confirmatory default. One-sided
+   A-minus-B alternatives must be declared before calculation.
+8. Review cost and choose **Calculate**.
+
+In Results, inspect group eligibility, pairwise MICOM, group-specific
+parameters, omnibus comparisons, signed left-minus-right pairwise comparisons,
+excluded rows, and ledgers. Henseler's output remains a directional probability,
+not an ordinary two-sided p value; the bootstrap interval is BC, not BCa.
+
+## Latent segmentation: FIMIX-PLS and PLS-POS V2
+
+The **Latent segmentation** workflow separates discovery from inference and
+never chooses K for the analyst.
+
+### Discover candidates
+
+1. Select **Discover candidates (never auto-select K)**.
+2. Choose **P0: structural only**, **P2: multiple two-way interactions**, or
+   **P23: bounded three-way closure**.
+3. Select the discovery algorithms. FIMIX-PLS V2 admits P0/P2/P23. **PLS-POS
+   published V2** is P0-only; interaction profiles use the separately named
+   **PLS-POS destination-scored interactions V2**.
+4. Select candidate K values from 2 through 5. K=1 remains a read-only pooled
+   reference.
+5. Choose **Calculate**, then inspect candidate diagnostics, criteria, shares,
+   convergence, multi-start stability, blockers, and the pooled baseline.
+
+Criteria support judgment; they do not select a solution automatically.
+
+### Lock the solution and run inference
+
+1. Return with the completed discovery result available and select **Lock
+   reviewed algorithm and K for inference**.
+2. Choose a converged **Locked algorithm** and **Locked K**.
+3. Confirm that the completed diagnostics were reviewed and this exact method/K
+   is locked.
+4. Choose 500-10,000 **Bootstrap replicates**.
+5. For PLS-POS interaction contrasts, optionally request the pooled common
+   metric and complete its configural-invariance checklist.
+6. Choose **Calculate** again.
+
+Bootstrap keeps algorithm and K fixed. Ambiguous or non-majority label matches
+are rejected rather than replaced. If PLS-POS common-metric comparability fails,
+QuickPLS retains segment-local descriptive output but suppresses invalid
+between-segment gamma, delta, slope, and effect tests. FIMIX and POS remain
+separate analyses.
+
+## Conditional process: broader moderated mediation
+
+Use **Conditional process** for explicitly selected indirect paths whose edge
+coefficients vary with authored moderators. These are associational PLS
+estimates and receive no causal label.
+
+1. Choose the exact **Profile envelope**:
+   - Multiple two-way · percentile: 1-8 interactions, 1-8 paths of 2-6 edges,
+     and up to 4 moderators.
+   - Multiple two-way · full delete-one BCa: the same structural envelope with
+     a complete delete-one jackknife.
+   - Studentized bounded profile: up to 4 interactions, 1-2 paths of 2-4 edges,
+     up to 3 moderators, 27 probes, and 256 targets.
+   - Bounded three-way · percentile: exactly one three-way term with complete
+     lower-order closure and 1-4 paths of 2-5 edges.
+   - Multiple HOC · percentile: up to 4 pairwise-disjoint nonnested HOCs and 2
+     two-way interactions.
+   - Grouped · stratified percentile: 2-20 groups, up to 4 interactions, and 4
+     paths of 2-4 edges.
+   - Positive case weighted or positive-integer frequency weighted: the
+     corresponding bounded two-way profile.
+2. Under **1. Explicit indirect paths**, select every intended ordered path.
+   QuickPLS never guesses or shortens a path.
+3. Under **2. Authored interaction terms**, select terms already created on
+   Canvas.
+4. Review **3. Frozen original-sample probes**. Defaults are standardized
+   `−1, 0, +1`, with up to five values per moderator. Use a Cartesian grid or
+   **Explicit joint tuples**; joint tuples replace the grid. **Finite probe
+   contrasts** retain their declared left-minus-right direction.
+5. Raw units are allowed only for an observed continuous or binary
+   single-indicator moderator. Select **Raw observed units** and use **Prepare
+   exact metric**. Composite and HOC probes remain standardized.
+6. Select the profile-specific HOCs, groups, or weight column and choose the
+   requested estimands.
+7. Enter **Outer resamples**. Studentized inference also requires **Inner
+   resamples** and is capped at one million inner refits. One-sided alternatives
+   are available only in profiles that admit them and must be predeclared.
+8. Review conditional cells, inferential targets, interval type, one shared
+   ledger, and cost; then choose **Calculate**.
+
+All targets use the same bootstrap ledger. A scalar index is reported only when
+the selected indirect effect is affine in one moderator. Both-stage,
+multiple-moderator, and three-way effects instead receive correctly named local
+derivatives and finite contrasts.
+
+## Interventional mediation: observed-data g-computation
+
+This is a separate observed-data workflow. Every result uses the wording
+**assumption-dependent interventional estimate**; QuickPLS never states that
+causality is established.
+
+1. Under **Observed treatment and outcome**, select a directly observed
+   treatment and continuous outcome.
+2. Choose **Binary control → treated** or **Continuous x0 → x1** and enter the
+   treatment contrast.
+3. Select one to three ordered **Observed continuous mediators**.
+4. Select observed baseline numeric/binary moderators and a **Required nonempty
+   adjustment set**.
+5. Enter **Explicit causal paths**, one per line, using a stable ID and `>`
+   separated variables, for example:
+
+   ```text
+   path:treatment-mediator-outcome = treatment_id > mediator_id > outcome_id
+   ```
+
+   A path contains 2-4 directed edges.
+6. Review **Explicit observed-data equations**. Required predecessor and
+   adjustment main effects cannot be removed. Add only allowed recursive
+   pairwise terms after selecting their main effects.
+7. Complete every **Identification and positivity declaration**. It records
+   analyst review; it does not prove the assumptions.
+8. Choose 500-10,000 **Bootstrap replicates**, review cost, and select
+   **Calculate**.
+
+The first profile excludes latent/composite/HOC roles, groups, weights, natural
+or cross-world effects, recanting-witness settings, and exposure-induced
+mediator-outcome confounding. Positivity and rank failures block execution.
+
+## Monitor, cancel, retry, and resume
+
+The **MultiMod native job** panel shows state, phase, progress, warnings, and
+validated cache receipts.
+
+- **Cancel safely** publishes no partial scientific result.
+- A cancelled or failed MGA run with a validated execution cache can offer
+  **Resume MGA shards**.
+- An archive-ready cache can offer **Resume publication**.
+- Estimation resume is not available for other MultiMod families before the
+  archive-ready boundary; cancellation there restarts the exact execution.
+- A failed request without a reusable cache can offer **Retry exact request**.
+- **Dismiss job state** clears a reviewed terminal state.
+
+Resume and retry revalidate identities. A stale or mismatched cache is rejected.
 
 ## Results
 
-Verified results open in the normal Results workspace and remain available after strict save/close/reopen. Depending on the selected estimator, result groups can include:
+A strictly reopened completed result says **Complete result payload** and shows
+its family, profile, authority, and result ID. The result tabs are:
 
-- measurement loadings, weights, and collinearity;
-- structural paths and effects;
-- mediation and moderation output;
-- three-way conditional effects and two-dimensional simple-slope output for the exact scoped Standard cell;
-- higher-order stages and generated-variable mappings;
-- conditional indirect effects and moderated-mediation indices;
-- CB-SEM parameters, standardized estimates, fit, and identification; and
-- bootstrap inference and ordered failure accounting.
+- **Eligibility**: admission and interpretation gates;
+- **Diagnostics**: invariance, convergence, comparability, and positivity;
+- **Estimates**: completed point estimates;
+- **Inference**: intervals, probabilities, omnibus tests, and contrasts;
+- **Exclusions**: rows, blockers, warnings, and scope boundaries;
+- **Failures**: requested, usable, and failed resampling evidence;
+- **Provenance**: method, recipe, model, dataset, engine, seed, capability, and
+  digest identities; and
+- **Sidecars**: the required Arrow evidence inventory.
 
-Researcher-authored paths remain distinguishable from generated technical paths. Reflective HOC relationships report loadings; formative relationships report weights. HOC results are grouped as component relationships, HOC structural paths, extended effects when applicable, and bootstrap inference. Selecting an HOC result highlights the HOC and its dimensions without adding stored scientific edges.
+If result-level gates did not pass, scientific Estimates and Inference are
+withheld. Large tables are paged and virtualized and remain keyboard accessible.
 
-Normal result labels come from the immutable model snapshot attached to the
-run. Primary identity columns remain sticky in wide tables, numeric cells align
-as numbers, and interval tables expose their confidence level. Generated term
-IDs, hashes, and raw receipts remain under Run Details or Diagnostics.
+## Save, reopen, and Archive V6
 
-### PLS model fit
+QuickPLS 2.56 uses Archive V6 `.qpls` files and reads compatible V5 projects
+without reinterpreting historical method identities. A completed MultiMod
+result is atomically attached, saved, and strictly reopened before it becomes
+the resident result.
 
-PLS point-fit output is titled **Model fit — descriptive**. SRMR and NFI are approximate fit measures; `d_ULS` and `d_G` remain descriptive unless the completed result contains separately linked exact-fit inference. Use the title's information button or Model Fit Details for the full interpretation.
+Large evidence is stored as compressed, SHA-256-checked Arrow sidecars. These
+can hold posteriors, memberships, assignments, start traces, bootstrap ledgers,
+target vectors, validity bitmaps, and jackknife summaries.
 
-The Properties pane reports exactly one state: **Exact-fit bootstrap: Not run**, **Exact-fit results available**, **Exact-fit results partial**, **Exact-fit results unavailable**, or **Exact-fit run failed**. Amber or red is reserved for an exact-fit run that was requested but incomplete or failed. Adapted Bollen–Stine is not offered as a Calculate option in Version 2.52.
+- A predicted sidecar above 128 MiB requires review.
+- An aggregate above 512 MiB is rejected before execution.
+- A missing, altered, duplicate, schema-mismatched, or identity-mismatched
+  required sidecar makes strict reopen fail.
+- Do not edit a `.qpls` ZIP or sidecar manually. Return to the unchanged
+  original or a verified backup after an integrity failure.
 
 ## Export
 
-Canonical General SEM exports are generated from the same result document shown in Results:
+A complete Standard canonical result can offer CSV, XLSX, JSON, self-contained
+HTML, PDF, SVG, and PNG through **Export Results**. Exact choices depend on the
+result family. Exports retain the source result ID and provenance.
 
-- CSV for a selected table;
-- XLSX with multiple sheets;
-- self-contained HTML;
-- PDF;
-- SVG; and
-- PNG.
+The **Sidecars** tab can offer **Optional validated Arrow evidence** for eligible
+posterior, membership, assignment, replicate-ledger, or target-vector payloads.
+Each raw export strictly reopens and validates the archive and never overwrites
+an existing file.
 
-Stable result IDs and provenance accompany the publication contract. Other method families expose their compatible table, report, or diagram formats.
+Publication can be withheld for Labs results, incomplete results, or a missing
+strict post-reopen canonical projection. An export cannot override an on-screen
+interpretation blocker.
 
-## Scope and interpretation
+## Strict supported boundaries
 
-Always review Method Details and the exact supported predicate before reporting results. Scoped Standard does not mean unrestricted SmartPLS parity, identical undocumented behavior, or a causal claim.
+QuickPLS fails closed when a request has no exact qualified cell. It does not
+silently drop terms, change inference, shorten paths, or remove weights.
+
+- Continuous moderation V1 remains separate and unchanged.
+- Quadratic/self-moderation is outside MultiMod.
+- One Recipe V4 analysis contains only one additive MultiMod configuration.
+- HOC+groups, HOC+weights, groups+weights, three-way+HOC,
+  nested/overlapping HOCs, mixed HOC approaches, and more than one three-way
+  term are unsupported.
+- Studentized inference is limited to its bounded profile. BCa requires the
+  complete delete-one jackknife and has no percentile fallback.
+- Raw-unit probes are unsupported for composites and HOCs.
+- Case weights are analytic weights, not survey weights. Sampling weights,
+  clusters, strata, PPS, and survey-design claims are unsupported.
+- PLS-POS published V2 is P0 structural-only; P2/P23 use the separately named
+  destination-scored interaction method.
+- Conditional-process results are associational and not causal.
+- Interventional mediation admits only its observed linear V1 envelope and
+  remains assumption-dependent.
+
+## Troubleshooting
+
+### `Moderation & heterogeneity…` is not visible
+
+The project lacks strict calculation-ready General SEM authority, or the
+executable lacks MultiMod authority. Use **Calculate → Save and activate
+project…** when offered and reopen the saved project. Enabling Labs does not
+upgrade an unqualified build to Standard.
+
+### Calculate is disabled
+
+Read the nearby stable error code and corrective text. Common causes include an
+incomplete checklist, invalid group/weight column, insufficient cases, an
+unsupported intersection, no explicit path, a missing raw probe metric, no
+stable segmentation lock candidate, or cost above 512 MiB.
+
+### A group is missing or rejected
+
+Only selected typed levels are analyzed. Confirm the column is not an indicator,
+each group has at least 10 complete model cases, and imbalance is not above
+10:1. Review **Exclusions** for row-level reasons.
+
+### Estimates or inference are withheld
+
+Inspect **Eligibility**, **Exclusions**, **Failures**, and **Sidecars**.
+Invariance, common-metric comparability, positivity, usable-ledger, archive, or
+authority gates can suppress scientific output.
+
+### Reopen reports a sidecar integrity failure
+
+Stop and reopen the original unchanged file or a verified backup. QuickPLS
+intentionally rejects missing, altered, duplicated, schema-mismatched, and
+identity-mismatched sidecars.
+
+### Windows warns about the download
+
+QuickPLS 2.56.0 Beta (Unsigned) is not Authenticode-signed. Download only from
+the official GitHub release and compare its SHA-256 with the published value. A
+checksum verifies bytes; it does not establish a signed publisher identity.
+
+## Further reading
 
 - [Quick Start](QUICK_START.md)
+- [QuickPLS 2.56.0 Release Notes](RELEASE_NOTES_V2_56_0.md)
+- [QuickPLS 2.56.0 Features](FEATURES_V2_56_0.md)
 - [Method Compatibility](METHOD_COMPATIBILITY.md)
-- [Known Differences](KNOWN_DIFFERENCES.md)
-- [Version 2.55 Release Notes](RELEASE_NOTES_V2_55_0.md)
-- [Version 2.54 Release Notes](RELEASE_NOTES_V2_54_0.md)
-- [Version 2.53 Release Notes](RELEASE_NOTES_V2_53_0.md)
-- [Version 2.52 Release Notes](RELEASE_NOTES_V2_52_0.md)
+- [MultiMod boundaries](MULTIMOD_BOUNDARIES_AND_QUALIFICATION_V1.md)
+- [Unsupported intersections](MULTIMOD_UNSUPPORTED_INTERSECTIONS_V1.md)
 - [FAQ](FAQ.md)

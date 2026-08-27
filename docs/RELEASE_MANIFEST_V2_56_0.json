@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "product": "QuickPLS",
+  "version": "2.56.0",
+  "release_tag": "v2.56.0-beta.1",
+  "release_label": "Beta (Unsigned)",
+  "release_channel": "unsigned-preview",
+  "authenticode_status": "not_signed",
+  "qualified_build_commit": "28939b73db8f2284f21ce184050eb3f04110bf94",
+  "artifacts": [
+    {
+      "role": "windows_x64_setup",
+      "filename": "QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe",
+      "size_bytes": 231889558,
+      "sha256": "46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523"
+    },
+    {
+      "role": "windows_x64_portable",
+      "filename": "QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe",
+      "size_bytes": 79480832,
+      "sha256": "54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1"
+    }
+  ],
+  "qualification": {
+    "gates_passed": 32,
+    "gates_total": 32,
+    "issue_inventory_empty": true,
+    "installed_offline_smoke_verified": true,
+    "portable_offline_smoke_verified": true,
+    "package_receipt_sha256": "9a71158cad5c862568b060e9c4c993e5f0609711a2cf02d787bb81dfb82846f1",
+    "final_campaign_closure_sha256": "35a992e57dde6ae77af85256cdb0c23a94b3cde589f416e4a80eb502410a9d6b",
+    "final_campaign_evidence_index_sha256": "61c0adeeaf78bc0366e808dc5c3ca0cda70f82858cd69cbcc1584e0705139453",
+    "post_merge_receipt_sha256": "43e35a1aadda5984dde115b06f6be127a3d6eaff63f6a5533a8a666001b1ec1f"
+  },
+  "validation_disclosure": {
+    "temporary_validation_driver_corrections_were_sealed": true,
+    "product_or_package_bytes_changed_by_driver_corrections": false,
+    "ordinary_clean_source_smoke_equivalence_claimed": false,
+    "overlay_seal_attestation_sha256": "7cecda0dc9b8b3dfae88e7bf325891f23af055315d3dcf395828cd2779855f96"
+  },
+  "runtime_boundary": {
+    "account_required": false,
+    "cloud_computation_required": false,
+    "product_telemetry_enabled": false,
+    "installer_embeds_webview2_offline_installer": true,
+    "portable_requires_compatible_webview2_runtime": true,
+    "webview2_platform_background_connections_may_occur": true
+  },
+  "source_build_notice": "A source or development build without the exact embedded external MultiMod authority remains Labs or unavailable and must not be represented as this qualified package.",
+  "license": "QuickPLS proprietary source-available license; official releases may be used free of charge within the documented terms."
+}

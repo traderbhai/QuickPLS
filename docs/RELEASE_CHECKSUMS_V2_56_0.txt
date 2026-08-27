@@ -1,0 +1,5 @@
+# QuickPLS 2.56.0 Beta (Unsigned)
+# Qualified build commit: 28939b73db8f2284f21ce184050eb3f04110bf94
+# SHA-256  filename
+46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523  QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe
+54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1  QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe

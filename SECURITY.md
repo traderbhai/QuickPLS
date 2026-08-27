@@ -4,9 +4,8 @@
 
 | Version | Supported |
 | --- | --- |
-| 2.50.x | Public unsigned preview; security reports accepted and fixes are best effort |
-| 2.46.x | Historical transition support only |
-| Earlier releases | No public security support |
+| 2.56.0 Beta (Unsigned) | Security reports accepted; fixes and issue triage are best effort |
+| 2.54.x and earlier | Superseded builds; critical transition reports are reviewed, but users should reproduce against 2.56.0 when safe |
 
 The lifecycle and transition rules are defined in
 [`docs/VERSION_SUPPORT_POLICY.md`](docs/VERSION_SUPPORT_POLICY.md). Public
@@ -39,4 +38,12 @@ QuickPLS is designed as an offline Windows desktop application:
 - No cloud sync.
 - No remote computation.
 
-The 2.50.0 installer is currently unsigned and is published only as a GitHub pre-release. Windows SmartScreen warnings are expected until a code-signing certificate is added and the exact signed artifacts pass the release-readiness gate. Unsigned builds must not be presented as Beta, Stable, or the competitor-grade release.
+The 2.56.0 Beta executables are unsigned. Windows may identify the publisher as
+unknown or show Microsoft SmartScreen. Verify the exact SHA-256 values in
+[`docs/INSTALLATION.md`](docs/INSTALLATION.md) before running either asset. This
+Beta must not be presented as signed, Stable, or a full-parity release.
+
+QuickPLS product telemetry is disabled and its documented analytical workflow
+runs locally. The separately managed Microsoft WebView2 Runtime may still make
+background service connections unless an OS-level network policy blocks them;
+the Beta does not claim zero egress for the complete WebView2 process tree.

@@ -11,7 +11,7 @@ If you need commercial redistribution, institutional deployment terms, white-lab
 - **QuickPLS** means the QuickPLS software, source code, desktop application, command-line tools, documentation, validation scripts, release artifacts, screenshots, trademarks, names, logos, and related materials in this repository or official releases.
 - **Official release** means a build or installer published by the copyright holder through the official QuickPLS GitHub repository or another official channel.
 - **You** means any individual or organization accessing, downloading, installing, using, inspecting, or contributing to QuickPLS.
-- **Supported scope** means the method, product, export, and validation scope documented in the QuickPLS release documentation, including `docs/V1_SUPPORTED_SCOPE.md`, `docs/V1_COMPATIBILITY_MATRIX.md`, and `docs/V1_KNOWN_DIFFERENCES.md`.
+- **Supported scope** means the method, product, export, and validation scope documented for the applicable QuickPLS release, including `docs/METHOD_COMPATIBILITY.md`, current release notes, `docs/MULTIMOD_BOUNDARIES_AND_QUALIFICATION_V1.md`, `docs/MULTIMOD_UNSUPPORTED_INTERSECTIONS_V1.md`, and the retained V1 compatibility documents.
 
 ## 2. Permitted Uses
 
@@ -95,4 +95,3 @@ To the maximum extent permitted by law, the copyright holder, authors, and contr
 ## 13. Reservation Of Rights
 
 All rights not expressly granted in this license are reserved by the copyright holder.
-
