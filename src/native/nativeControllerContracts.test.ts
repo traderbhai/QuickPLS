@@ -51,7 +51,7 @@ describe("native controller release contracts", () => {
 
   it("synchronizes the native DesktopProject before exposing a strictly reopened General SEM authority", () => {
     const strictOpen = controller.slice(
-      controller.indexOf('if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project))'),
+      controller.indexOf('if (generalSemArchive && inspected.status === "ok")'),
       controller.indexOf("const loaded = loadNativeSnapshot(await openNativeProjectAt(selectedPath));"),
     );
 
@@ -69,6 +69,29 @@ describe("native controller release contracts", () => {
     expect(strictOpen).toContain("selectLatestStoredExactCaseBootstrapEntryV1(stored.entries)");
     expect(strictOpen.indexOf("selectLatestGeneralSemReopenedEntryV1"))
       .toBeLessThan(strictOpen.indexOf("readStoredInternalLabsRecipeV4CbsemResultsV1"));
+  });
+
+  it("routes strict bundled samples through the shared schema-6 open path without a second replacement prompt", () => {
+    const sampleOpen = controller.slice(
+      controller.indexOf("const openDemoProject = async"),
+      controller.indexOf("const saveProject = async"),
+    );
+    const resolvedPathOpen = controller.slice(
+      controller.indexOf("const openProjectAtResolvedPath = async"),
+      controller.indexOf("const openProject = async"),
+    );
+
+    expect(sampleOpen).toContain("launchNativeBundledSampleV1(sampleId");
+    expect(sampleOpen).toContain("openNativeDemoProject(ordinarySampleId)");
+    expect(sampleOpen).toContain("materializeGeneralSemSample: materializeBundledGeneralSemSample");
+    expect(sampleOpen).toContain('openProjectAtResolvedPath(archivePath, "general_sem_v1")');
+    expect(sampleOpen).not.toContain("openProject(archivePath");
+    expect(sampleOpen.match(/confirmWorkspaceReplacement/g)).toHaveLength(1);
+    expect(resolvedPathOpen).not.toContain("confirmWorkspaceReplacement");
+    expect(resolvedPathOpen).toContain("inspectInternalProjectArchiveV6At(selectedPath)");
+    expect(resolvedPathOpen).toContain('if (generalSemArchive && inspected.status === "ok")');
+    expect(resolvedPathOpen).toContain("adoptNativeSchema6RevisionSourceV1(inspected.value)");
+    expect(resolvedPathOpen).toContain("activateStandardAuthorities");
   });
 
   it("clears a prior canonical result before any accepted replacement can restore another", () => {

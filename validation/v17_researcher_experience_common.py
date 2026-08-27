@@ -69,6 +69,56 @@ REQUESTED_OI_SAMPLE_SEMANTICS = {
         "reference_boundary_tokens": (),
         "metadata_boundary_tokens": ("shared_oi_dataset",),
     },
+    "organizational_identification_moderation": {
+        "label_tokens": ("Two-Outcome Moderation",),
+        "detail_tokens": ("jointly moderating", "simultaneous multiple two-way moderation point run"),
+        "project_kind": "general_sem_v1",
+        "paths": {
+            ("org_identification", "affective_commitment_joy"),
+            ("org_prestige", "affective_commitment_joy"),
+            ("interaction_oi_op_acj", "affective_commitment_joy"),
+            ("org_identification", "affective_commitment_love"),
+            ("org_prestige", "affective_commitment_love"),
+            ("interaction_oi_op_acl", "affective_commitment_love"),
+        },
+        "interactions": {
+            (
+                "oi_x_op_to_acj",
+                "org_identification",
+                "org_prestige",
+                "interaction_oi_op_acj",
+                "affective_commitment_joy",
+                "two_stage_product_score",
+            ),
+            (
+                "oi_x_op_to_acl",
+                "org_identification",
+                "org_prestige",
+                "interaction_oi_op_acl",
+                "affective_commitment_love",
+                "two_stage_product_score",
+            ),
+        },
+        "higher_order": set(),
+        "reference_paths": {
+            ("org_identification", "affective_commitment_joy"),
+            ("org_identification", "affective_commitment_love"),
+        },
+        "reference_interactions": {"oi_x_op_to_acj", "oi_x_op_to_acl"},
+        "reference_kind": "quickpls_general_sem_simultaneous_two_outcome_moderation_three_decimal_values",
+        "secondary_screenshot_field": None,
+        "reference_boundary_tokens": (
+            "strict schema-6 General SEM",
+            "both outcome equations",
+            "point-estimation",
+            "joint-stage R-squared",
+        ),
+        "metadata_boundary_tokens": (
+            "strict_general_sem_simultaneous_point_estimation_only",
+            "no_causal_moderation_claim",
+            "joint_stage_r_squared_not_yet_persisted",
+        ),
+    },
     "organizational_identification_moderated_mediation": {
         "label_tokens": ("Moderated Mediation", "Point Topology"),
         "detail_tokens": ("Second-stage", "point topology", "not dedicated conditional-effect inference"),
@@ -235,10 +285,13 @@ SECTION_CHECKS: dict[str, dict[str, list[tuple[str, str]]]] = {
         "src/native/NativeDesktopController.tsx": [
             ("parseNativeSampleProjectId(requestedSampleId)", "native event validates selected catalog identity"),
             ("DEFAULT_BUNDLED_SAMPLE_PROJECT_ID", "native event uses the catalog default"),
-            ("openNativeDemoProject(sampleId)", "native controller forwards selected sample"),
+            ("launchNativeBundledSampleV1(sampleId", "native controller routes the selected sample by project authority"),
+            ("openNativeDemoProject(ordinarySampleId)", "ordinary sample keeps the editable project loader"),
+            ('openProjectAtResolvedPath(archivePath, "general_sem_v1")', "General SEM sample uses strict schema-6 activation"),
         ],
         "src/services/projectService.ts": [
             ('invoke<NativeProjectSnapshot>("open_demo_project", { sampleId })', "Tauri invocation forwards camelCase sample ID"),
+            ('invoke<unknown>("materialize_bundled_general_sem_sample", { sampleId })', "strict sample invokes the schema-6 materializer"),
         ],
         "src-tauri/src/lib.rs": [
             ("build_bundled_sample_project(sample_id)", "catalog-backed bundled sample selector"),
@@ -249,6 +302,7 @@ SECTION_CHECKS: dict[str, dict[str, list[tuple[str, str]]]] = {
             (".find(|sample| sample.id == sample_id)", "backend resolves sample identities from the catalogue"),
             ("for sample in &catalog.samples", "backend tests iterate the catalogue"),
             ("append_validated_result(recipe, result)", "sample contains a contract-validated completed result"),
+            ("materialize_bundled_general_sem_sample_v1", "General SEM sample uses its strict archive builder"),
             ("save_project(&path, &project)", "sample save test"),
             ("let reopened = load_project(&path).unwrap()", "sample reopen test"),
         ],
@@ -510,9 +564,8 @@ def audit_bundled_sample_catalog() -> tuple[
     requested_oi_ids = list(REQUESTED_OI_SAMPLE_SEMANTICS)
     expected_sample_ids = [*LEGACY_BUNDLED_SAMPLE_CONTRACTS, *requested_oi_ids]
     check(
-        sample_ids == expected_sample_ids
-        and "organizational_identification_moderation" not in seen_sample_ids,
-        "the final seven-sample catalog contains only the three selected OI additions",
+        sample_ids == expected_sample_ids,
+        "the eight-sample catalog contains all four selected OI additions",
         f"expected sample ids in order: {expected_sample_ids!r}",
     )
     requested_scope_summary: dict[str, dict[str, object]] = {}
@@ -529,6 +582,13 @@ def audit_bundled_sample_catalog() -> tuple[
             and model.get("constructSetId") == "organizational_identification_v1",
             f"requested sample {sample_id} reuses the OI dataset and construct set",
             "datasetId and model.constructSetId must both be organizational_identification_v1",
+        )
+        expected_project_kind = expected.get("project_kind", "ordinary_v1")
+        observed_project_kind = sample.get("projectKind", "ordinary_v1")
+        check(
+            observed_project_kind == expected_project_kind,
+            f"requested sample {sample_id} uses its declared project authority",
+            f"expected projectKind {expected_project_kind!r}, observed {observed_project_kind!r}",
         )
         check(
             all(token.lower() in label.lower() for token in expected["label_tokens"])
@@ -596,9 +656,10 @@ def audit_bundled_sample_catalog() -> tuple[
             if isinstance(key, str) and key.startswith("path:") and "->" in key
         }
         observed_reference_interactions = {
-            key.removeprefix("interaction:")
+            key.split(":", 1)[1]
             for key in values
-            if isinstance(key, str) and key.startswith("interaction:")
+            if isinstance(key, str)
+            and (key.startswith("interaction:") or key.startswith("scientific_gamma:"))
         }
         check(
             reference.get("reference_kind") == expected["reference_kind"],

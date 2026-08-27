@@ -1,7 +1,7 @@
 {
   "passed": true,
   "section": "v176_samples_guided",
-  "generated_at": "2026-08-23T15:57:15.340230+00:00",
+  "generated_at": "2026-08-27T15:27:58.175653+00:00",
   "checked_files": [
     "src-tauri/src/lib.rs",
     "src-tauri/src/sample_projects.rs",
@@ -15,6 +15,7 @@
     "validation/benchmarks/organizational_identification/higher_order_reference_v1.json",
     "validation/benchmarks/organizational_identification/mediation_reference_v1.json",
     "validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json",
+    "validation/benchmarks/organizational_identification/moderation_reference_v2.json",
     "validation/benchmarks/organizational_identification/screenshot_reference_v1.json",
     "validation/fixtures/corporate_reputation_smartpls_mean_replaced_v1.csv",
     "validation/fixtures/mediation_sample.csv",
@@ -56,11 +57,23 @@
     },
     {
       "file": "src/native/NativeDesktopController.tsx",
-      "label": "native controller forwards selected sample"
+      "label": "native controller routes the selected sample by project authority"
+    },
+    {
+      "file": "src/native/NativeDesktopController.tsx",
+      "label": "ordinary sample keeps the editable project loader"
+    },
+    {
+      "file": "src/native/NativeDesktopController.tsx",
+      "label": "General SEM sample uses strict schema-6 activation"
     },
     {
       "file": "src/services/projectService.ts",
       "label": "Tauri invocation forwards camelCase sample ID"
+    },
+    {
+      "file": "src/services/projectService.ts",
+      "label": "strict sample invokes the schema-6 materializer"
     },
     {
       "file": "src-tauri/src/lib.rs",
@@ -85,6 +98,10 @@
     {
       "file": "src-tauri/src/sample_projects.rs",
       "label": "sample contains a contract-validated completed result"
+    },
+    {
+      "file": "src-tauri/src/sample_projects.rs",
+      "label": "General SEM sample uses its strict archive builder"
     },
     {
       "file": "src-tauri/src/sample_projects.rs",
@@ -152,6 +169,10 @@
     },
     {
       "file": "src/data/bundledSampleProjects.v1.json",
+      "label": "catalog sample organizational_identification_moderation contract"
+    },
+    {
+      "file": "src/data/bundledSampleProjects.v1.json",
       "label": "catalog sample organizational_identification_moderated_mediation contract"
     },
     {
@@ -168,13 +189,14 @@
   "native_backend_bound": true,
   "numerical_outputs_changed": false,
   "bundled_sample_catalog": {
-    "sample_count": 7,
+    "sample_count": 8,
     "sample_ids": [
       "corporate_reputation",
       "simple_pls",
       "mediation",
       "organizational_identification",
       "organizational_identification_mediation",
+      "organizational_identification_moderation",
       "organizational_identification_moderated_mediation",
       "organizational_identification_higher_order"
     ],
@@ -190,6 +212,12 @@
         "reference_kind": "supplied_screenshot_three_decimal_values",
         "reference_path": "validation/benchmarks/organizational_identification/mediation_reference_v1.json",
         "evidence_boundary": "alternative_pedagogical_model_on_the_shared_oi_dataset",
+        "uses_shared_oi_dataset": true
+      },
+      "organizational_identification_moderation": {
+        "reference_kind": "quickpls_general_sem_simultaneous_two_outcome_moderation_three_decimal_values",
+        "reference_path": "validation/benchmarks/organizational_identification/moderation_reference_v2.json",
+        "evidence_boundary": "strict_general_sem_simultaneous_point_estimation_only_no_causal_moderation_claim_and_joint_stage_r_squared_not_yet_persisted_in_the_canonical_result",
         "uses_shared_oi_dataset": true
       },
       "organizational_identification_moderated_mediation": {

@@ -30,6 +30,7 @@ mod recipe_v4_general_sem_cbsem_jobs;
 mod recipe_v4_general_sem_pls_jobs;
 mod recipe_v4_jobs;
 mod sample_projects;
+mod sample_projects_general_sem;
 mod sem_model_v4_scientific_digest;
 mod standard_sem_model_v4_authority;
 #[cfg(test)]
@@ -132,7 +133,10 @@ use recipe_v4_jobs::{
     start_internal_labs_recipe_v4_pls_job,
 };
 use regex::{Captures, Regex};
-use sample_projects::build_bundled_sample_project;
+use sample_projects::{
+    build_bundled_sample_project,
+    materialize_bundled_general_sem_sample as materialize_bundled_general_sem_sample_archive,
+};
 use sem_model_v4_scientific_digest::internal_sem_model_v4_scientific_sha256;
 use serde::Deserialize;
 use serde::Serialize;
@@ -3109,6 +3113,14 @@ fn open_demo_project(
     Ok(response)
 }
 
+/// Produces a fresh strict schema-6 archive for a bundled General SEM sample.
+/// The frontend then opens this path through the existing strict native
+/// schema-6 adoption workflow; ordinary editable sample state is untouched.
+#[tauri::command]
+fn materialize_bundled_general_sem_sample(sample_id: String) -> Result<String, String> {
+    materialize_bundled_general_sem_sample_archive(&sample_id)
+}
+
 fn build_sample_project(sample_id: &str) -> Result<Project, String> {
     build_bundled_sample_project(sample_id)
 }
@@ -5318,7 +5330,7 @@ mod desktop_job_tests {
     }
 
     #[test]
-    fn sample_project_selector_opens_only_the_seven_advertised_projects() {
+    fn ordinary_sample_selector_opens_the_seven_ordinary_catalog_projects_only() {
         for (sample_id, expected_name, expected_constructs) in [
             ("corporate_reputation", "Corporate Reputation Sample", 8),
             (
@@ -5356,6 +5368,7 @@ mod desktop_job_tests {
         for invalid in ["", "plspredict", "cbsem_cfa"] {
             assert!(build_sample_project(invalid).is_err());
         }
+        assert!(build_sample_project("organizational_identification_moderation").is_err());
     }
 
     #[test]
@@ -7449,6 +7462,7 @@ pub fn run() {
             profile_dataset_groups,
             import_validation_fixture,
             open_demo_project,
+            materialize_bundled_general_sem_sample,
             set_column_metadata,
             recode_dataset_column,
             preview_dataset_transformation,

@@ -58,8 +58,10 @@ first launch, offline behavior, and uninstall instructions.
   without partial scientific publication, and integrity-checked project data.
 - CSV, XLSX, JSON, self-contained HTML, PDF, SVG, and PNG publication where the
   exact completed result family authorizes the format.
-- Seven editable bundled projects, including Corporate Reputation and the
-  Organizational Identification model collection.
+- Eight bundled projects, including Corporate Reputation and four
+  Organizational Identification variants. Seven open as ordinary editable
+  projects; the two-outcome moderation sample opens through the qualified,
+  integrity-checked General SEM schema-6 workflow.
 
 ## Moderation and heterogeneity suite
 

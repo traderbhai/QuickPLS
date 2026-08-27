@@ -344,6 +344,20 @@ export async function openNativeDemoProject(sampleId: NativeSampleProjectId = DE
   return normalizeProjectSnapshot(project);
 }
 
+/**
+ * Materializes a catalog-backed General SEM sample as a fresh schema-6 archive.
+ * The returned path is untrusted native boundary data until validated here and
+ * then strictly inspected by the shared project-open path.
+ */
+export async function materializeBundledGeneralSemSample(sampleId: NativeSampleProjectId) {
+  const archivePath = await invoke<unknown>("materialize_bundled_general_sem_sample", { sampleId });
+  if (typeof archivePath !== "string"
+    || !/^(?:[A-Za-z]:[\\/]|\\\\)[\s\S]+\.qpls$/iu.test(archivePath.trim())) {
+    throw new Error("Bundled General SEM materialization did not return an absolute Windows .qpls path.");
+  }
+  return archivePath.trim();
+}
+
 export async function saveNativeProject(
   currentPath: string | null,
   workspace: unknown,

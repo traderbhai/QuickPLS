@@ -19,6 +19,7 @@ import {
   importNativeDataset,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
   isNativeDesktop,
+  materializeBundledGeneralSemSample,
   mutateNativeProjectExplorer,
   openNativeDemoProject,
   openNativeProjectAt,
@@ -73,6 +74,7 @@ import {
 import { nativePlsReadiness } from "./nativePlsReadiness";
 import { nativeLogisticReadiness } from "./nativeLogistic";
 import { nativeProcessReadiness } from "./nativeProcess";
+import { launchNativeBundledSampleV1 } from "./nativeBundledSampleLaunch";
 import { nativePlsSampleSizePowerRecipeFromCanonical } from "./nativePlsSampleSizePower";
 import { createAnalysisModelSnapshot } from "./nativeRunModelSnapshot";
 import {
@@ -546,16 +548,17 @@ export function NativeDesktopController() {
     }
   };
 
-  const openProject = async (path?: string) => {
-    if (!await confirmWorkspaceReplacement(path ? "opening another project" : "opening a project")) return;
-    if (!isNativeDesktop()) {
-      projectInputRef.current?.click();
-      return;
-    }
-    const selectedPath = path ?? await selectQuickPlsProjectArchivePath();
-    if (!selectedPath) return;
+  const openProjectAtResolvedPath = async (
+    selectedPath: string,
+    requiredProjectKind?: "general_sem_v1",
+  ) => {
     const inspected = await inspectInternalProjectArchiveV6At(selectedPath);
-    if (inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project)) {
+    const generalSemArchive = inspected.status === "ok" && supportsGeneralSemV1(inspected.value.project);
+    if (requiredProjectKind === "general_sem_v1" && !generalSemArchive) {
+      const diagnostic = inspected.status === "blocked" ? ` ${inspected.diagnostic.message}` : "";
+      throw new Error(`The bundled General SEM sample did not materialize as a supported strict schema-6 archive.${diagnostic}`);
+    }
+    if (generalSemArchive && inspected.status === "ok") {
       await invalidateNativeGeneralSemFreshDraftAuthorityV1();
       // Activation revokes any backend-only fresh-draft token before resolving
       // and installing Standard authority, so a previous draft cannot survive.
@@ -686,10 +689,29 @@ export function NativeDesktopController() {
     }
   };
 
+  const openProject = async (path?: string) => {
+    if (!await confirmWorkspaceReplacement(path ? "opening another project" : "opening a project")) return;
+    if (!isNativeDesktop()) {
+      projectInputRef.current?.click();
+      return;
+    }
+    const selectedPath = path ?? await selectQuickPlsProjectArchivePath();
+    if (!selectedPath) return;
+    await openProjectAtResolvedPath(selectedPath);
+  };
+
   const openDemoProject = async (sampleId: NativeSampleProjectId = DEFAULT_BUNDLED_SAMPLE_PROJECT_ID) => {
     if (!isNativeDesktop()) return;
     if (!await confirmWorkspaceReplacement("opening the sample project")) return;
-    if (loadNativeSnapshot(await openNativeDemoProject(sampleId))) clearPresentedCanonicalResult();
+    await launchNativeBundledSampleV1(sampleId, {
+      openOrdinarySample: async (ordinarySampleId) => {
+        if (loadNativeSnapshot(await openNativeDemoProject(ordinarySampleId))) clearPresentedCanonicalResult();
+      },
+      materializeGeneralSemSample: materializeBundledGeneralSemSample,
+      openGeneralSemArchive: async (archivePath) => {
+        await openProjectAtResolvedPath(archivePath, "general_sem_v1");
+      },
+    });
   };
 
   const saveProject = async (saveAs: boolean): Promise<boolean> => {

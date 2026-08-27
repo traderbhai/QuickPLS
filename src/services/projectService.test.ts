@@ -31,6 +31,7 @@ import {
   getNativePlsJobResult,
   invalidateNativeGeneralSemFreshDraftAuthorityV1,
   importNativeDatasetAtPathForValidation,
+  materializeBundledGeneralSemSample,
   mutateNativeProjectExplorer,
   inspectInternalProjectUpgradeV6,
   openNativeDemoProject,
@@ -998,6 +999,27 @@ describe("native canonical project services", () => {
     await openNativeDemoProject(mediationSampleId!);
 
     expect(mocks.invoke).toHaveBeenCalledWith("open_demo_project", { sampleId: "mediation" });
+  });
+
+  it("materializes a strict bundled sample to an exact absolute schema-6 path", async () => {
+    mocks.invoke.mockResolvedValue("D:\\QuickPLS\\samples\\oi-moderation.qpls");
+    const sampleId = parseNativeSampleProjectId("organizational_identification_moderation");
+    expect(sampleId).not.toBeNull();
+
+    await expect(materializeBundledGeneralSemSample(sampleId!))
+      .resolves.toBe("D:\\QuickPLS\\samples\\oi-moderation.qpls");
+    expect(mocks.invoke).toHaveBeenCalledWith("materialize_bundled_general_sem_sample", {
+      sampleId: "organizational_identification_moderation",
+    });
+  });
+
+  it("rejects a malformed strict bundled-sample archive path", async () => {
+    mocks.invoke.mockResolvedValue("relative/oi-moderation.qpls");
+    const sampleId = parseNativeSampleProjectId("organizational_identification_moderation");
+    expect(sampleId).not.toBeNull();
+
+    await expect(materializeBundledGeneralSemSample(sampleId!))
+      .rejects.toThrow(/absolute Windows \.qpls path/);
   });
 
   it("sends the typed active model with both explicit saves and recovery saves", async () => {

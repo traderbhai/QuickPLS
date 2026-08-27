@@ -507,7 +507,6 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
             'JSON.parse(bundledSampleCatalogBytes.toString("utf8"))',
             "function bundledSampleContractsFromCatalog(catalog)",
             "const requestedOiBundledSampleIds = Object.freeze([",
-            'const excludedOiBundledSampleId = "organizational_identification_moderation"',
             "const expectedBundledSampleScopeSubstitutionIds = Object.freeze([",
             "const contracts = catalog.samples.map((sample) =>",
             "const constructs = [...baseConstructs, ...model.extraConstructs]",
@@ -531,6 +530,7 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
             "liveLauncher: true",
             "typedSelector: true",
             "completedCanonicalResults: true",
+            'projectKind === "general_sem_v1"',
             'statusItems.nth(2)',
             'statusItems.nth(3)',
             'statusItems.nth(4)',
@@ -546,14 +546,14 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
         )
         requested_oi_ids = [
             "organizational_identification_mediation",
+            "organizational_identification_moderation",
             "organizational_identification_moderated_mediation",
             "organizational_identification_higher_order",
         ]
-        self.assertEqual(sample_ids[4:7], requested_oi_ids)
-        self.assertNotIn("organizational_identification_moderation", sample_ids)
+        self.assertEqual(sample_ids[4:8], requested_oi_ids)
         self.assertEqual(self.sample_catalog["defaultSampleId"], "corporate_reputation")
         self.assertEqual(len(sample_ids), len(set(sample_ids)))
-        self.assertEqual(len(sample_ids), 7)
+        self.assertEqual(len(sample_ids), 8)
         samples_by_id = {sample["id"]: sample for sample in self.sample_catalog["samples"]}
         for sample_id in requested_oi_ids:
             sample = samples_by_id[sample_id]
@@ -562,6 +562,10 @@ class CumulativeNativeAcceptanceSupervisorSourceTests(unittest.TestCase):
             self.assertEqual(sample["acceptance"]["referencePath"], sample["metadata"]["smartpls_reference"])
             self.assertTrue(sample["metadata"]["reference_scope"])
             self.assertTrue(sample["metadata"]["evidence_boundary"])
+        self.assertEqual(
+            samples_by_id["organizational_identification_moderation"].get("projectKind"),
+            "general_sem_v1",
+        )
         self.assertEqual(
             [
                 sample_id

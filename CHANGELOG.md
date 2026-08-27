@@ -2,6 +2,12 @@
 
 This changelog summarizes public product releases. Detailed historical milestone notes remain under `docs/`.
 
+## [Unreleased]
+
+- Added **Organizational Identification - Two-Outcome Moderation** as the eighth bundled sample, reusing the existing 305-case OI dataset.
+- Routes the sample through the qualified simultaneous multiple two-way General SEM point estimator and strict schema-6 save/reopen authority; it never falls back to the ordinary single-interaction engine.
+- Records three-decimal comparison evidence for 21 loadings, two focal paths, two scientific gamma values, and two independently reconstructed joint-equation R-squared values. The R-squared reconstruction is disclosed because final joint-stage R-squared is not yet a typed canonical result field.
+
 ## [2.56.0] - 2026-08-27 (Beta, unsigned)
 
 - Added the authority-gated **MultiMod** workspace with four bounded result families: multigroup analysis, FIMIX-PLS/PLS-POS latent segmentation, conditional-process analysis, and observed-data interventional mediation.

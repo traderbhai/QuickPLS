@@ -4,7 +4,7 @@ use qpls_core::{
     HigherOrderConstruct, InteractionTerm, MeasurementMode, MethodConfig, ModelSpec,
     StructuralPath,
 };
-use qpls_data::{ImportOptions, import_delimited_bytes};
+use qpls_data::{Dataset, ImportOptions, import_delimited_bytes};
 use qpls_project::Project;
 use qpls_runner::run_pls_analysis;
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,10 @@ use std::{
     sync::OnceLock,
 };
 use uuid::Uuid;
+
+use crate::sample_projects_general_sem::{
+    BundledGeneralSemSampleV1, materialize_bundled_general_sem_sample_v1,
+};
 
 const SAMPLE_CATALOG_JSON: &str = include_str!("../../src/data/bundledSampleProjects.v1.json");
 const SUPPORTED_SAMPLE_CATALOG_SCHEMA: u32 = 1;
@@ -52,12 +56,22 @@ struct CatalogSampleV1 {
     project_name: String,
     sample_version: String,
     dataset_id: String,
+    #[serde(default)]
+    project_kind: CatalogProjectKindV1,
     model: CatalogModelV1,
     runs: Vec<CatalogRunV1>,
     presentation: CatalogPresentationV1,
     #[serde(default)]
     metadata: BTreeMap<String, String>,
     acceptance: CatalogAcceptanceV1,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+enum CatalogProjectKindV1 {
+    #[default]
+    OrdinaryV1,
+    GeneralSemV1,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -272,6 +286,35 @@ fn validate_catalog(catalog: &BundledSampleCatalogV1) -> Result<(), String> {
                 ));
             }
         }
+        if sample.project_kind == CatalogProjectKindV1::OrdinaryV1
+            && sample.model.interactions.len() > 1
+        {
+            return Err(format!(
+                "ordinary bundled sample {} exceeds the validated single-interaction scope",
+                sample.id
+            ));
+        }
+        if sample.project_kind == CatalogProjectKindV1::GeneralSemV1 {
+            if sample.runs.len() != 1 {
+                return Err(format!(
+                    "General SEM sample {} must declare exactly one resident point run",
+                    sample.id
+                ));
+            }
+            if sample.model.interactions.is_empty() {
+                return Err(format!(
+                    "General SEM sample {} must declare at least one interaction",
+                    sample.id
+                ));
+            }
+            if !sample.model.controls.is_empty() || !sample.model.higher_order_constructs.is_empty()
+            {
+                return Err(format!(
+                    "General SEM bundled moderation sample {} exceeds the qualified direct-only point scope",
+                    sample.id
+                ));
+            }
+        }
         for higher_order in &sample.model.higher_order_constructs {
             if !construct_ids.contains(higher_order.id.as_str())
                 || higher_order
@@ -335,42 +378,13 @@ pub(crate) fn build_bundled_sample_project(sample_id: &str) -> Result<Project, S
         .iter()
         .find(|sample| sample.id == sample_id)
         .ok_or_else(|| format!("unknown bundled sample project {sample_id:?}"))?;
-    let dataset_spec = catalog
-        .datasets
-        .iter()
-        .find(|dataset| dataset.id == sample.dataset_id)
-        .ok_or_else(|| format!("sample {} references an unavailable dataset", sample.id))?;
-    let embedded = embedded_dataset(&dataset_spec.id)?;
-    let actual_sha256 = format!("{:x}", Sha256::digest(embedded.bytes));
-    if actual_sha256 != dataset_spec.sha256 {
+    if sample.project_kind != CatalogProjectKindV1::OrdinaryV1 {
         return Err(format!(
-            "bundled dataset {} failed its SHA-256 check",
-            dataset_spec.id
-        ));
-    }
-    let dataset = import_delimited_bytes(
-        embedded.bytes,
-        embedded.file_name,
-        b',',
-        &ImportOptions::default(),
-    )
-    .map_err(|error| error.to_string())?;
-    if let Some(expected) = &dataset_spec.expected_fingerprint {
-        if &dataset.fingerprint.0 != expected {
-            return Err(format!(
-                "bundled dataset {} fingerprint mismatch",
-                dataset_spec.id
-            ));
-        }
-    }
-    if dataset.schema.case_count != sample.acceptance.case_count
-        || dataset.schema.columns.len() != sample.acceptance.column_count
-    {
-        return Err(format!(
-            "bundled sample {} dataset dimensions do not match the catalog",
+            "bundled sample {} is a strict General SEM project; use the schema-6 sample materializer",
             sample.id
         ));
     }
+    let (dataset_spec, dataset) = load_catalog_sample_dataset(catalog, sample)?;
     let model = catalog_model(catalog, sample)?;
     let template_sha256 = format!(
         "{:x}",
@@ -470,6 +484,143 @@ pub(crate) fn build_bundled_sample_project(sample_id: &str) -> Result<Project, S
     Ok(project)
 }
 
+/// Materializes a fresh strict schema-6 copy of a bundled General SEM sample
+/// and returns the absolute archive path. The ordinary schema-5 sample builder
+/// deliberately never executes this path.
+pub(crate) fn materialize_bundled_general_sem_sample(sample_id: &str) -> Result<String, String> {
+    let specification = bundled_general_sem_sample_specification(sample_id)?;
+    materialize_bundled_general_sem_sample_v1(&specification)
+}
+
+fn load_catalog_sample_dataset<'a>(
+    catalog: &'a BundledSampleCatalogV1,
+    sample: &CatalogSampleV1,
+) -> Result<(&'a CatalogDatasetV1, Dataset), String> {
+    let dataset_spec = catalog
+        .datasets
+        .iter()
+        .find(|dataset| dataset.id == sample.dataset_id)
+        .ok_or_else(|| format!("sample {} references an unavailable dataset", sample.id))?;
+    let embedded = embedded_dataset(&dataset_spec.id)?;
+    let actual_sha256 = format!("{:x}", Sha256::digest(embedded.bytes));
+    if actual_sha256 != dataset_spec.sha256 {
+        return Err(format!(
+            "bundled dataset {} failed its SHA-256 check",
+            dataset_spec.id
+        ));
+    }
+    let dataset = import_delimited_bytes(
+        embedded.bytes,
+        embedded.file_name,
+        b',',
+        &ImportOptions::default(),
+    )
+    .map_err(|error| error.to_string())?;
+    if let Some(expected) = &dataset_spec.expected_fingerprint {
+        if &dataset.fingerprint.0 != expected {
+            return Err(format!(
+                "bundled dataset {} fingerprint mismatch",
+                dataset_spec.id
+            ));
+        }
+    }
+    if dataset.schema.case_count != sample.acceptance.case_count
+        || dataset.schema.columns.len() != sample.acceptance.column_count
+    {
+        return Err(format!(
+            "bundled sample {} dataset dimensions do not match the catalog",
+            sample.id
+        ));
+    }
+    Ok((dataset_spec, dataset))
+}
+
+fn bundled_general_sem_sample_specification(
+    sample_id: &str,
+) -> Result<BundledGeneralSemSampleV1, String> {
+    let catalog = bundled_sample_catalog()?;
+    let sample = catalog
+        .samples
+        .iter()
+        .find(|sample| sample.id == sample_id)
+        .ok_or_else(|| format!("unknown bundled sample project {sample_id:?}"))?;
+    if sample.project_kind != CatalogProjectKindV1::GeneralSemV1 {
+        return Err(format!(
+            "bundled sample {} is an ordinary editable project, not a strict General SEM sample",
+            sample.id
+        ));
+    }
+    let (dataset_spec, dataset) = load_catalog_sample_dataset(catalog, sample)?;
+    let run = sample
+        .runs
+        .first()
+        .ok_or_else(|| format!("sample {} has no resident run", sample.id))?;
+
+    let catalog_model = catalog_model(catalog, sample)?;
+    let product_constructs = sample
+        .model
+        .interactions
+        .iter()
+        .map(|interaction| interaction.product_construct.as_str())
+        .collect::<BTreeSet<_>>();
+    let source_model = ModelSpec {
+        id: catalog_model.id,
+        name: catalog_model.name.clone(),
+        constructs: catalog_model
+            .constructs
+            .into_iter()
+            .filter(|construct| !product_constructs.contains(construct.id.as_str()))
+            .collect(),
+        paths: catalog_model
+            .paths
+            .into_iter()
+            .filter(|path| !product_constructs.contains(path.source.as_str()))
+            .collect(),
+        controls: Vec::new(),
+        higher_order_constructs: Vec::new(),
+        interactions: Vec::new(),
+    };
+    let template_sha256 = format!(
+        "{:x}",
+        Sha256::digest(serde_json::to_vec(&sample.model).map_err(|error| error.to_string())?)
+    );
+    let mut metadata = dataset_spec.metadata.clone();
+    metadata.extend(sample.metadata.clone());
+    metadata.extend(run.metadata.clone());
+    metadata.extend(BTreeMap::from([
+        ("sample_project".into(), sample.sample_version.clone()),
+        ("sample_id".into(), sample.id.clone()),
+        ("sample_version".into(), sample.sample_version.clone()),
+        (
+            "sample_catalog_schema_version".into(),
+            catalog.schema_version.to_string(),
+        ),
+        ("sample_dataset_asset".into(), dataset_spec.id.clone()),
+        ("sample_template_sha256".into(), template_sha256),
+        ("fixture".into(), dataset_spec.source_path.clone()),
+        ("fixture_sha256".into(), dataset_spec.sha256.clone()),
+        ("execution_surface".into(), "standard_multimod_v1".into()),
+        ("general_sem_generation".into(), "general_sem_v1".into()),
+    ]));
+
+    Ok(BundledGeneralSemSampleV1 {
+        sample_id: sample.id.clone(),
+        project_name: sample.project_name.clone(),
+        sample_version: sample.sample_version.clone(),
+        project_id: Uuid::from_u128(
+            sample.model.id.as_u128() ^ 0x5150_4c53_4753_454d_0000_0000_0000_0001,
+        ),
+        dataset,
+        source_model,
+        interactions: sample.model.interactions.clone(),
+        recipe_id: run.id,
+        created_at: parse_time(&run.created_at)?,
+        settings: run.settings.clone(),
+        method_config: run.method_config.clone(),
+        metadata,
+    })
+}
+
 fn catalog_model(
     catalog: &BundledSampleCatalogV1,
     sample: &CatalogSampleV1,
@@ -538,9 +689,15 @@ fn parse_time(value: &str) -> Result<DateTime<Utc>, String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use qpls_core::{AnalysisPayload, RunStatus, Severity, validate_recipe};
+    use crate::sample_projects_general_sem::build_bundled_general_sem_sample_archive_v1;
+    use qpls_core::{
+        AnalysisPayload, RunStatus, SemDerivedTermV4, SemRelationV4, Severity, validate_recipe,
+    };
     use qpls_estimation::PlsResult;
-    use qpls_project::{load_project, save_project};
+    use qpls_project::{
+        ProjectModelPayloadV6, ProjectSemGenerationV6, load_project, load_project_archive_v6,
+        save_project,
+    };
     use std::{fs, path::Path};
 
     fn estimation(project: &Project) -> PlsResult {
@@ -587,7 +744,7 @@ mod tests {
     fn bundled_catalog_is_single_source_valid_and_complete() {
         let catalog = bundled_sample_catalog().unwrap();
         assert_eq!(catalog.schema_version, 1);
-        assert_eq!(catalog.samples.len(), 7);
+        assert_eq!(catalog.samples.len(), 8);
         assert_eq!(catalog.default_sample_id, "corporate_reputation");
         assert_eq!(
             catalog
@@ -601,6 +758,10 @@ mod tests {
             assert!(!sample.label.trim().is_empty());
             assert!(!sample.detail.trim().is_empty());
             assert_eq!(sample.runs.len(), 1);
+            if sample.project_kind == CatalogProjectKindV1::GeneralSemV1 {
+                assert!(build_bundled_sample_project(&sample.id).is_err());
+                continue;
+            }
             let project = build_bundled_sample_project(&sample.id).unwrap();
             assert_eq!(
                 project.datasets[0].schema.case_count,
@@ -619,7 +780,12 @@ mod tests {
 
     #[test]
     fn every_bundled_sample_round_trips_as_an_editable_project() {
-        for sample in &bundled_sample_catalog().unwrap().samples {
+        for sample in bundled_sample_catalog()
+            .unwrap()
+            .samples
+            .iter()
+            .filter(|sample| sample.project_kind == CatalogProjectKindV1::OrdinaryV1)
+        {
             let project = build_bundled_sample_project(&sample.id).unwrap();
             let directory = tempfile::tempdir().unwrap();
             let path = directory.path().join(format!("{}.qpls", sample.id));
@@ -634,10 +800,145 @@ mod tests {
     }
 
     #[test]
+    fn two_outcome_moderation_materializes_one_strict_joint_general_sem_authority() {
+        let sample_id = "organizational_identification_moderation";
+        let specification = bundled_general_sem_sample_specification(sample_id).unwrap();
+        assert_eq!(specification.source_model.constructs.len(), 4);
+        assert_eq!(specification.source_model.paths.len(), 4);
+        assert!(specification.source_model.interactions.is_empty());
+        assert_eq!(specification.interactions.len(), 2);
+
+        let directory = tempfile::tempdir().unwrap();
+        let archive = directory.path().join("oi-two-outcome-moderation.qpls");
+        let receipt =
+            build_bundled_general_sem_sample_archive_v1(&specification, &archive).unwrap();
+        assert_eq!(receipt.archive_path, archive);
+
+        let reopened = load_project_archive_v6(&archive).unwrap();
+        assert_eq!(reopened.document.project_id, specification.project_id);
+        assert_eq!(
+            reopened.document.sem_generation,
+            Some(ProjectSemGenerationV6::GeneralSemV1)
+        );
+        assert!(reopened.document.supports_general_sem_v1());
+        assert_eq!(reopened.datasets.len(), 1);
+        assert_eq!(reopened.document.models.len(), 1);
+        assert_eq!(reopened.document.recipes.len(), 1);
+        assert_eq!(reopened.document.canonical_result_documents.len(), 1);
+
+        let ProjectModelPayloadV6::SemModelV4 { model, .. } = &reopened.document.models[0].payload
+        else {
+            panic!("bundled moderation archive did not retain SemModelV4 authority");
+        };
+        let interactions = model
+            .derived_terms
+            .iter()
+            .filter_map(|term| match term {
+                SemDerivedTermV4::InteractionV2 {
+                    id,
+                    output,
+                    operands,
+                    ..
+                } => Some((id, output, operands)),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(interactions.len(), 2);
+        let expected_operands = vec![
+            "construct:org_identification".to_owned(),
+            "construct:org_prestige".to_owned(),
+        ];
+        let mut model_outcomes = BTreeSet::new();
+        for (_, output, operands) in &interactions {
+            assert_eq!(**operands, expected_operands);
+            let outcome = model
+                .relations
+                .iter()
+                .find_map(|relation| match relation {
+                    SemRelationV4::Structural { source, target, .. } if source == *output => {
+                        Some(target.clone())
+                    }
+                    _ => None,
+                })
+                .expect("each interaction output must target one outcome");
+            model_outcomes.insert(outcome);
+        }
+        assert_eq!(
+            model_outcomes,
+            BTreeSet::from([
+                "construct:affective_commitment_joy".to_owned(),
+                "construct:affective_commitment_love".to_owned(),
+            ])
+        );
+
+        let canonical = reopened.document.canonical_result_documents[0].canonical_document();
+        assert!(!canonical.document_id.is_empty());
+        let general_sem = canonical
+            .general_sem_results
+            .as_ref()
+            .expect("moderation result must retain typed General SEM results");
+        assert_eq!(general_sem.interaction_effects.len(), 2);
+        assert_eq!(general_sem.conditional_effects.len(), 6);
+        let canonical_outcomes = general_sem
+            .interaction_effects
+            .iter()
+            .map(|effect| {
+                assert_eq!(effect.focal_predictor_id, expected_operands[0]);
+                assert_eq!(effect.moderator_id, expected_operands[1]);
+                effect.outcome_id.clone()
+            })
+            .collect::<BTreeSet<_>>();
+        assert_eq!(canonical_outcomes, model_outcomes);
+
+        let exact_path = |target: &str| {
+            general_sem
+                .joint_stage_structural_coefficients
+                .iter()
+                .find(|coefficient| {
+                    coefficient.source_id == "construct:org_identification"
+                        && coefficient.target_id == target
+                })
+                .unwrap_or_else(|| panic!("missing joint OI path to {target}"))
+                .estimate
+                .estimate
+        };
+        let exact_gamma = |interaction_id: &str| {
+            general_sem
+                .interaction_effects
+                .iter()
+                .find(|effect| effect.interaction_id == interaction_id)
+                .unwrap_or_else(|| panic!("missing scientific gamma for {interaction_id}"))
+                .scientific_rescaled_gamma
+                .estimate
+        };
+        let close = |actual: f64, expected: f64| {
+            assert!(
+                (actual - expected).abs() <= 1e-11,
+                "expected {expected:.12}, observed {actual:.12}"
+            );
+        };
+        close(
+            exact_path("construct:affective_commitment_joy"),
+            0.549_354_789_561,
+        );
+        close(
+            exact_path("construct:affective_commitment_love"),
+            -0.404_304_393_331,
+        );
+        close(exact_gamma("oi_x_op_to_acj"), 0.050_447_855_377);
+        close(exact_gamma("oi_x_op_to_acl"), -0.198_829_205_065);
+    }
+
+    #[test]
     fn catalog_reference_values_match_current_engine_at_declared_precision() {
         let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
         let mut mismatches = Vec::new();
-        for sample in &bundled_sample_catalog().unwrap().samples {
+        for sample in bundled_sample_catalog()
+            .unwrap()
+            .samples
+            .iter()
+            .filter(|sample| sample.project_kind == CatalogProjectKindV1::OrdinaryV1)
+        {
             let Some(reference_path) = &sample.acceptance.reference_path else {
                 continue;
             };

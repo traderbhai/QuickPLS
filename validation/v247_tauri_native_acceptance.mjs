@@ -23,10 +23,10 @@ const legacyBundledSampleResultTables = Object.freeze({
 });
 const requestedOiBundledSampleIds = Object.freeze([
   "organizational_identification_mediation",
+  "organizational_identification_moderation",
   "organizational_identification_moderated_mediation",
   "organizational_identification_higher_order",
 ]);
-const excludedOiBundledSampleId = "organizational_identification_moderation";
 const expectedBundledSampleScopeSubstitutionIds = Object.freeze([
   "organizational_identification_moderated_mediation",
   "organizational_identification_higher_order",
@@ -49,9 +49,8 @@ function bundledSampleContractsFromCatalog(catalog) {
   const legacyIds = Object.keys(legacyBundledSampleResultTables);
   const expectedSampleIds = [...legacyIds, ...requestedOiBundledSampleIds];
   if (JSON.stringify(sampleIds) !== JSON.stringify(expectedSampleIds)
-    || sampleIds.includes(excludedOiBundledSampleId)
     || catalog.defaultSampleId !== "corporate_reputation") {
-    throw new Error("The shared catalog must preserve the legacy four and contain only the three selected OI additions.");
+    throw new Error("The shared catalog must preserve the legacy four and contain all four selected OI additions.");
   }
   const contracts = catalog.samples.map((sample) => {
     const dataset = datasets.get(sample.datasetId);
@@ -76,6 +75,10 @@ function bundledSampleContractsFromCatalog(catalog) {
     }
     const generatedInteractionIds = new Set(model.interactions.map((interaction) => interaction.product_construct));
     const higherOrderIds = new Set(model.higher_order_constructs.map((higherOrder) => higherOrder.id));
+    const projectKind = sample.projectKind ?? "ordinary_v1";
+    if (!["ordinary_v1", "general_sem_v1"].includes(projectKind)) {
+      throw new Error(`Bundled sample ${sample.id} has an unsupported projectKind ${projectKind}.`);
+    }
     if (generatedInteractionIds.size !== model.interactions.length
       || model.interactions.some((interaction) => !constructIds.includes(interaction.product_construct)
         || !constructIds.includes(interaction.outcome)
@@ -88,14 +91,18 @@ function bundledSampleContractsFromCatalog(catalog) {
       throw new Error(`Bundled sample ${sample.id} has an invalid generated interaction or higher-order contract.`);
     }
     const diagramConstructs = constructs.length - generatedInteractionIds.size;
-    const resultPaths = higherOrderIds.size > 0
+    const resultPaths = projectKind === "general_sem_v1"
+      ? model.interactions.length
+      : higherOrderIds.size > 0
       ? model.paths.filter((candidate) => higherOrderIds.has(candidate.source) || higherOrderIds.has(candidate.target)).length
       : model.paths.filter((candidate) => !generatedInteractionIds.has(candidate.source) && !generatedInteractionIds.has(candidate.target)).length;
     const run = runs[0];
     const runLabel = acceptance.runLabel
+      ?? (projectKind === "general_sem_v1" ? "Simultaneous two-way PLS moderation point estimates" : null)
       ?? (run?.methodConfig?.kind === "pls_algorithm" ? "PLS-SEM Algorithm run" : null);
     const resultTable = acceptance.resultTable
       ?? legacyBundledSampleResultTables[sample.id]
+      ?? (projectKind === "general_sem_v1" ? "Interaction effects and product scaling" : null)
       ?? (higherOrderIds.size > 0 ? "Higher-order structural paths" : null);
     const referencePath = acceptance.referencePath ?? null;
     const referenceScope = sample.metadata?.reference_scope ?? null;
@@ -123,11 +130,13 @@ function bundledSampleContractsFromCatalog(catalog) {
       dataset: dataset.fileName,
       cases: acceptance.caseCount,
       constructs: constructs.length,
+      statusConstructs: projectKind === "general_sem_v1" ? diagramConstructs : constructs.length,
       diagramConstructs,
       paths: model.paths.length,
       resultPaths,
       runLabel,
       resultTable,
+      projectKind,
       referencePath,
       referenceScope,
       evidenceBoundary,
@@ -2419,7 +2428,7 @@ async function inspectBundledSample(sample) {
     || observed.project !== sample.project
     || observed.dataset !== sample.dataset
     || observed.cases !== `${sample.cases} cases`
-    || observed.renderedConstructs !== `${sample.constructs} constructs`
+    || observed.renderedConstructs !== `${sample.statusConstructs} constructs`
     || runOptions.length !== 1
     || runOptions[0] !== sample.runLabel
     || !observed.selectedRunId

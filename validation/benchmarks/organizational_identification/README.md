@@ -8,11 +8,11 @@ The checked-in evidence is:
 - `validation/fixtures/organizational_identification_v1.provenance.json`
 - `validation/benchmarks/organizational_identification/screenshot_reference_v1.json`
 - `validation/benchmarks/organizational_identification/mediation_reference_v1.json`
-- `validation/benchmarks/organizational_identification/moderation_reference_v1.json`
+- `validation/benchmarks/organizational_identification/moderation_reference_v2.json`
 - `validation/benchmarks/organizational_identification/moderated_mediation_reference_v1.json`
 - `validation/benchmarks/organizational_identification/higher_order_reference_v1.json`
 
-All four OI-based bundled projects reference the same values-only CSV asset. The fixture is not copied for each alternative model. The moderation reference is retained as benchmark evidence but is not bundled as a sample project.
+All five OI-based bundled projects reference the same values-only CSV asset. The fixture is not copied for each alternative model. The two-outcome moderation model is bundled as a strict General SEM schema-6 sample because its simultaneous interactions are outside the ordinary project's single-interaction persistence contract.
 
 ## Data preparation
 
@@ -60,4 +60,4 @@ v2:fa5968177bc154d04ae8bfbba9853c56126a07ff84fc8d7d40cf3a46c6d8290a
 
 The screenshot exposes values to three decimals. Passing this benchmark proves equality of the displayed values at that precision; it does not establish bitwise equivalence with unexposed calculations from another engine. A full-precision external result export should be recorded as a separate reference if one becomes available.
 
-The mediation variant matches its supplied screenshot at the displayed three-decimal precision. The supplied moderation screenshot is retained as benchmark evidence but is not bundled: the editable ordinary-project path is scientifically qualified for one interaction, while its exact parallel two-outcome topology belongs to the stricter General SEM workflow. The moderated-mediation sample is explicitly a point topology: it freezes the current qualified single-interaction PLS point result and separately records the nearby supplied screenshot values. The dedicated moderated-mediation method is not bundled because its result is not yet covered by the ordinary-project persistence contract; conditional-effect inference requires a separately qualified workflow. The higher-order reference freezes QuickPLS's supported disjoint two-stage result and separately records the nearby screenshot values, so it does not claim screenshot parity.
+The mediation variant matches its supplied screenshot at the displayed three-decimal precision. The two-outcome moderation sample estimates both outcome equations and both strong-hierarchy interactions jointly through the qualified General SEM point cell. Its 21 loadings, two focal paths, and two scientific gamma values are stored in the canonical result; the two screenshot R-squared values are independently reproduced from the same joint equations but are not yet a typed canonical result field. The sample therefore discloses 25 directly persisted and two reconstructed screenshot-comparable values, and makes no causal-moderation claim. The moderated-mediation sample remains explicitly a point topology: it freezes the current qualified single-interaction PLS point result and separately records the nearby supplied screenshot values. The dedicated moderated-mediation method is not bundled because its result is not yet covered by the ordinary-project persistence contract; conditional-effect inference requires a separately qualified workflow. The higher-order reference freezes QuickPLS's supported disjoint two-stage result and separately records the nearby screenshot values, so it does not claim screenshot parity.

@@ -6,10 +6,13 @@ export type NativeSampleProjectId = string & {
   readonly [nativeSampleProjectIdBrand]: "NativeSampleProjectId";
 };
 
+export type BundledSampleProjectKind = "ordinary_v1" | "general_sem_v1";
+
 export interface BundledSampleProjectCard {
   readonly id: NativeSampleProjectId;
   readonly label: string;
   readonly detail: string;
+  readonly projectKind: BundledSampleProjectKind;
 }
 
 export interface ParsedBundledSampleCatalog {
@@ -19,6 +22,10 @@ export interface ParsedBundledSampleCatalog {
 }
 
 const SAMPLE_ID_PATTERN = /^[a-z0-9]+(?:_[a-z0-9]+)*$/u;
+const SAMPLE_PROJECT_KINDS = new Set<BundledSampleProjectKind>([
+  "ordinary_v1",
+  "general_sem_v1",
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -40,6 +47,14 @@ function brandedSampleId(value: unknown, path: string): NativeSampleProjectId {
     throw new Error(`${path} must use lowercase snake_case.`);
   }
   return id as NativeSampleProjectId;
+}
+
+function sampleProjectKind(value: unknown, path: string): BundledSampleProjectKind {
+  const kind = value === undefined ? "ordinary_v1" : requiredTrimmedString(value, path);
+  if (!SAMPLE_PROJECT_KINDS.has(kind as BundledSampleProjectKind)) {
+    throw new Error(`${path} must be ordinary_v1 or general_sem_v1.`);
+  }
+  return kind as BundledSampleProjectKind;
 }
 
 export function parseBundledSampleCatalog(value: unknown): ParsedBundledSampleCatalog {
@@ -71,6 +86,7 @@ export function parseBundledSampleCatalog(value: unknown): ParsedBundledSampleCa
       id,
       label: requiredTrimmedString(candidate.label, `${path}.label`),
       detail: requiredTrimmedString(candidate.detail, `${path}.detail`),
+      projectKind: sampleProjectKind(candidate.projectKind, `${path}.projectKind`),
     });
   });
   const defaultSampleId = brandedSampleId(
