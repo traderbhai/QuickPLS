@@ -23,7 +23,10 @@ mod enabled {
     use chrono::{TimeZone, Utc};
     use qpls_core::*;
     use qpls_data::{Dataset, ImportOptions, import_delimited_bytes};
-    use qpls_project::{create_populated_general_sem_project_archive_v6, load_project_archive_v6};
+    use qpls_project::{
+        GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1,
+        create_populated_general_sem_project_archive_v6, load_project_archive_v6,
+    };
     use serde::Deserialize;
     use serde_json::Value;
     use sha2::{Digest, Sha256};
@@ -253,6 +256,13 @@ mod enabled {
         recipe.settings.permutation_samples = 0;
         recipe.settings.studentized_inner_samples = 0;
         recipe.general_sem_config = Some(GeneralSemConfigV1::default());
+        recipe.metadata.insert(
+            "execution_surface".into(),
+            GENERAL_SEM_PLS_STANDARD_RECIPE_EXECUTION_SURFACE_V1.into(),
+        );
+        recipe
+            .metadata
+            .insert("general_sem_generation".into(), "general_sem_v1".into());
         Ok((recipe, model))
     }
 

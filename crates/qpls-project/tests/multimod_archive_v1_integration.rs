@@ -452,7 +452,9 @@ fn attachment_rejects_an_aggregate_sidecar_set_above_the_per_run_cap() {
 
     assert!(matches!(
         MultiModResultAttachmentV1::new(RESULT_ID, recipe_id, result, sidecars),
-        Err(MultiModArchiveErrorV1::SidecarSetTooLarge)
+        Err(MultiModArchiveErrorV1::InvalidScientificResult(message))
+            if message
+                == "multimod_result.sidecar_total at result.sidecars: aggregate sidecar evidence exceeds the 512 MiB per-run cap"
     ));
 }
 
@@ -1024,6 +1026,47 @@ mod strict_archive {
         Duplicate,
     }
 
+    fn rewrite_central_directory_entry_name(path: &Path, from: &str, to: &str) {
+        const CENTRAL_DIRECTORY_SIGNATURE: [u8; 4] = [0x50, 0x4b, 0x01, 0x02];
+        const END_OF_CENTRAL_DIRECTORY_SIGNATURE: [u8; 4] = [0x50, 0x4b, 0x05, 0x06];
+
+        assert_eq!(from.len(), to.len());
+        let mut bytes = fs::read(path).unwrap();
+        let eocd_offset = bytes
+            .windows(END_OF_CENTRAL_DIRECTORY_SIGNATURE.len())
+            .rposition(|window| window == END_OF_CENTRAL_DIRECTORY_SIGNATURE)
+            .unwrap();
+        let entry_count =
+            u16::from_le_bytes([bytes[eocd_offset + 10], bytes[eocd_offset + 11]]) as usize;
+        let mut cursor = u32::from_le_bytes([
+            bytes[eocd_offset + 16],
+            bytes[eocd_offset + 17],
+            bytes[eocd_offset + 18],
+            bytes[eocd_offset + 19],
+        ]) as usize;
+        let mut rewritten = 0;
+
+        for _ in 0..entry_count {
+            assert_eq!(
+                &bytes[cursor..cursor + CENTRAL_DIRECTORY_SIGNATURE.len()],
+                CENTRAL_DIRECTORY_SIGNATURE.as_slice()
+            );
+            let name_len = u16::from_le_bytes([bytes[cursor + 28], bytes[cursor + 29]]) as usize;
+            let extra_len = u16::from_le_bytes([bytes[cursor + 30], bytes[cursor + 31]]) as usize;
+            let comment_len = u16::from_le_bytes([bytes[cursor + 32], bytes[cursor + 33]]) as usize;
+            let name_start = cursor + 46;
+            let name_end = name_start + name_len;
+            if &bytes[name_start..name_end] == from.as_bytes() {
+                bytes[name_start..name_end].copy_from_slice(to.as_bytes());
+                rewritten += 1;
+            }
+            cursor = name_end + extra_len + comment_len;
+        }
+
+        assert_eq!(rewritten, 1, "expected one shadow entry to rewrite");
+        fs::write(path, bytes).unwrap();
+    }
+
     fn rewrite_archive_with_sidecar_mutation(
         source: &Path,
         destination: &Path,
@@ -1036,6 +1079,7 @@ mod strict_archive {
         let options =
             SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
         let mut sidecar_bytes = None;
+        let mut duplicate_shadow_entry = None;
 
         for index in 0..input.len() {
             let mut entry = input.by_index(index).unwrap();
@@ -1056,10 +1100,16 @@ mod strict_archive {
         }
 
         if mutation == ArchiveMutation::Duplicate {
-            writer.start_file(sidecar_entry, options).unwrap();
+            let shadow_entry = "z".repeat(sidecar_entry.len());
+            writer.start_file(&shadow_entry, options).unwrap();
             writer.write_all(&sidecar_bytes.unwrap()).unwrap();
+            duplicate_shadow_entry = Some(shadow_entry);
         }
         writer.finish().unwrap().sync_all().unwrap();
+
+        if let Some(shadow_entry) = duplicate_shadow_entry {
+            rewrite_central_directory_entry_name(destination, &shadow_entry, sidecar_entry);
+        }
     }
 
     fn archive_sha256(path: &Path) -> String {

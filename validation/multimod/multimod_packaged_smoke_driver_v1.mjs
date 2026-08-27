@@ -345,7 +345,11 @@ async function openStandardMultiModWorkspace(page, family) {
     }));
   }, { archivePath: family.archive_path });
   const action = page.locator('[data-testid="native-multimod-workspace-open"]');
-  await action.waitFor({ state: "visible", timeout: activationTimeout });
+  const openFailure = page.locator(".nd-toast.error", { hasText: "Open failed" });
+  await action.or(openFailure).first().waitFor({ state: "visible", timeout: activationTimeout });
+  if (await openFailure.isVisible()) {
+    throw new Error(`Standard MultiMod project activation failed: ${(await openFailure.innerText()).trim()}`);
+  }
   await action.click({ timeout: activationTimeout });
   const standardBadge = page.locator(".nd-multimod-labs-badge.standard", {
     hasText: "Standard · Release-qualified",

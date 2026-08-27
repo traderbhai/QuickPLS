@@ -111,7 +111,17 @@ fn select_general_sem_authority_recipe_v1(
 ) -> Result<&AnalysisRecipeV4, String> {
     let candidates = recipes
         .iter()
-        .filter(|recipe| recipe.general_sem_config.is_some())
+        // Completed MultiMod analyses retain the source General SEM config for
+        // exact compiler provenance, but they are additive result recipes, not
+        // replacement base execution authorities. Keep native adoption aligned
+        // with strict schema-6 inspection when selecting the sole base recipe.
+        .filter(|recipe| {
+            recipe.general_sem_config.is_some()
+                && recipe.mga_multigroup.is_none()
+                && recipe.pls_heterogeneity.is_none()
+                && recipe.general_sem_conditional_process.is_none()
+                && recipe.interventional_causal_mediation.is_none()
+        })
         .collect::<Vec<_>>();
     let [recipe] = candidates.as_slice() else {
         return Err(failure(
@@ -506,6 +516,11 @@ mod tests {
     use super::*;
     use crate::project_archive_v6_general_sem_bootstrap::tests::general_sem_native_fixture_v1;
     use chrono::{TimeZone, Utc};
+    use qpls_core::{
+        InferenceAlternativeV1, MgaComparisonPlanV1, MgaModelProfileV1, MgaMultigroupV1,
+        MgaProcedureV1, MicomConfiguralChecklistV1, MultiplicityAdjustmentV1, SelectedGroupV1,
+        TypedGroupValueV1,
+    };
     use qpls_project::{create_populated_general_sem_project_archive_v6, load_project_archive_v6};
     use std::{fs::OpenOptions, io::Write};
     use tempfile::tempdir;
@@ -566,13 +581,50 @@ mod tests {
     }
 
     #[test]
-    fn authority_selector_tolerates_one_non_authority_exact_result_recipe_only() {
+    fn authority_selector_ignores_additive_result_recipe_but_rejects_two_true_bases() {
         let fixture = general_sem_native_fixture_v1();
         let authority = fixture.recipe;
-        let mut exact_result_recipe = authority.clone();
-        exact_result_recipe.id = Uuid::from_u128(0x6e61_7469_7665_5f61_646f_7074_0099);
-        exact_result_recipe.general_sem_config = None;
-        let recipes = [authority.clone(), exact_result_recipe];
+        let mut multimod_result_recipe = authority.clone();
+        multimod_result_recipe.id = Uuid::from_u128(0x6e61_7469_7665_5f61_646f_7074_0099);
+        multimod_result_recipe.mga_multigroup = Some(MgaMultigroupV1 {
+            schema_version: 1,
+            profile: MgaModelProfileV1::GeneralSemPls,
+            grouping_column: "group".into(),
+            groups: vec![
+                SelectedGroupV1 {
+                    group_id: "a".into(),
+                    label: "Group A".into(),
+                    value: TypedGroupValueV1::Text { value: "A".into() },
+                },
+                SelectedGroupV1 {
+                    group_id: "b".into(),
+                    label: "Group B".into(),
+                    value: TypedGroupValueV1::Text { value: "B".into() },
+                },
+            ],
+            comparison_plan: MgaComparisonPlanV1::AllPairs {
+                heavy_run_confirmed: false,
+            },
+            procedures: vec![MgaProcedureV1::PairwisePermutation],
+            permutation_samples: 5_000,
+            bootstrap_samples: 5_000,
+            seed: 42,
+            confidence_level: 0.95,
+            alpha: 0.05,
+            alternative: InferenceAlternativeV1::TwoSided,
+            multiplicity: MultiplicityAdjustmentV1::Holm,
+            configural_checklist: MicomConfiguralChecklistV1 {
+                identical_indicators_and_coding: true,
+                identical_data_treatment: true,
+                identical_algorithm_settings: true,
+                identical_model_specification: true,
+                deterministic_sign_orientation_reviewed: true,
+                analyst_review_confirmed: true,
+            },
+            weight: None,
+            selected_parameter_ids: Vec::new(),
+        });
+        let recipes = [authority.clone(), multimod_result_recipe];
         let selected = select_general_sem_authority_recipe_v1(&recipes).unwrap();
         assert_eq!(selected.id, authority.id);
 
