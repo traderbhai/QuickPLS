@@ -1430,6 +1430,12 @@ fn main() {
     let out_dir = PathBuf::from(env::var_os("OUT_DIR").expect("OUT_DIR"));
     let authority = env::var_os(AUTHORITY_ENV).map(PathBuf::from);
     let manifest_set = env::var_os(MANIFEST_SET_ENV).map(PathBuf::from);
+    if let Some(path) = authority.as_ref() {
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
+    if let Some(path) = manifest_set.as_ref() {
+        println!("cargo:rerun-if-changed={}", path.display());
+    }
     match (authority, manifest_set) {
         (None, None) => {
             fs::write(out_dir.join(EMBEDDED_AUTHORITY_FILE), LABS_SENTINEL)
