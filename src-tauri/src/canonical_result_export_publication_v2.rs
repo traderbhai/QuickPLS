@@ -206,6 +206,10 @@ fn is_lower_hex_sha256(value: &str) -> bool {
             .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
 }
 
+fn is_dataset_fingerprint_v1(value: &str) -> bool {
+    is_lower_hex_sha256(value) || value.strip_prefix("v2:").is_some_and(is_lower_hex_sha256)
+}
+
 fn require_nonempty(label: &str, value: &str) -> Result<(), PublicationErrorV2> {
     if value.is_empty() || value != value.trim() || value.chars().any(char::is_control) {
         return Err(PublicationErrorV2::new(
@@ -277,7 +281,6 @@ fn validate_identity(
     }
     for (label, digest) in [
         ("modelDigest", identity.model_digest.as_str()),
-        ("datasetFingerprint", identity.dataset_fingerprint.as_str()),
         ("recipeDigest", identity.recipe_digest.as_str()),
         ("semanticSha256", identity.semantic_sha256.as_str()),
     ] {
@@ -287,6 +290,12 @@ fn validate_identity(
                 format!("{label} must be a lowercase SHA-256 digest."),
             ));
         }
+    }
+    if !is_dataset_fingerprint_v1(&identity.dataset_fingerprint) {
+        return Err(PublicationErrorV2::new(
+            "CANONICAL_EXPORT_IDENTITY_INVALID",
+            "datasetFingerprint must be a bare lowercase SHA-256 or v2:<lowercase SHA-256>.",
+        ));
     }
     let validate_ids = |label: &str, ids: &[String]| -> Result<(), PublicationErrorV2> {
         let mut unique = BTreeSet::new();
@@ -1167,6 +1176,21 @@ mod tests {
         let error = validate_identity(CanonicalResultExportFormatV2::Csv, &invented)
             .expect_err("legacy identities must not invent MultiMod authority fields");
         assert_eq!(error.code, "CANONICAL_EXPORT_MULTIMOD_LABS_BLOCKED");
+    }
+
+    #[test]
+    fn publishes_native_v2_dataset_fingerprint_identity_exactly() {
+        let directory = tempfile::tempdir().unwrap();
+        let path = directory.path().join("native-v2-fingerprint.csv");
+        let bytes = b"id,value\r\n";
+        let fingerprint = format!("v2:{}", "b".repeat(64));
+        let mut request = exact_request(CanonicalResultExportFormatV2::Csv, path.clone(), bytes);
+        request.identity.dataset_fingerprint = fingerprint.clone();
+
+        let publication = publish(request).unwrap();
+
+        assert_eq!(fs::read(path).unwrap(), bytes);
+        assert_eq!(publication.identity.dataset_fingerprint, fingerprint);
     }
 
     #[test]
