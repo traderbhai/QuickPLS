@@ -67,12 +67,18 @@ async function exportCanonicalMatrix(
     matrix.push({ format: "png", chartIds: [chartId] });
   }
   const receipts: PackagedQualificationExportReceiptV1[] = [];
+  const verifiedSvgChartIds = new Set<string>();
   for (const cell of matrix) {
     const prepared = prepareCanonicalResultExportV2(document, {
       format: cell.format,
       ...(cell.chartIds ? { chartIds: cell.chartIds } : {}),
     });
     if (!prepared.ok) {
+      const exactSvgFallbackVerified =
+        cell.format === "png" &&
+        prepared.code === "unsupported_visible_text" &&
+        cell.chartIds?.every((id) => verifiedSvgChartIds.has(id)) === true;
+      if (exactSvgFallbackVerified) continue;
       throw new Error(
         `Canonical ${cell.format} preparation failed: ${prepared.errors.join(" | ")}`,
       );
@@ -111,6 +117,9 @@ async function exportCanonicalMatrix(
       renderedSurfaceReadback: true,
       publication,
     });
+    if (cell.format === "svg") {
+      for (const id of cell.chartIds ?? []) verifiedSvgChartIds.add(id);
+    }
   }
   return receipts;
 }
