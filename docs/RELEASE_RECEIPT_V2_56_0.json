@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "product": "QuickPLS",
+  "version": "2.56.0",
+  "display_name": "QuickPLS 2.56.0 Beta (Unsigned)",
+  "github_repository": "traderbhai/QuickPLS",
+  "github_release_id": 377874044,
+  "github_release_url": "https://github.com/traderbhai/QuickPLS/releases/tag/v2.56.0-beta.1",
+  "published_at_utc": "2026-08-27T14:09:42Z",
+  "tag": {
+    "name": "v2.56.0-beta.1",
+    "annotated_tag_object": "1d81de180008b02b3916d83f5728fd4f8d70f6c5",
+    "qualified_build_commit": "28939b73db8f2284f21ce184050eb3f04110bf94"
+  },
+  "repository": {
+    "documentation_commit": "e6431a25998337f94b595bb8fa0e646b2d34aae8",
+    "remote_main_after_publication": "e6431a25998337f94b595bb8fa0e646b2d34aae8"
+  },
+  "qualification": {
+    "gates_passed": 32,
+    "gates_total": 32,
+    "installed_offline_smoke_included": true,
+    "portable_offline_smoke_included": true,
+    "issue_inventory_empty": true,
+    "package_receipt_sha256": "9a71158cad5c862568b060e9c4c993e5f0609711a2cf02d787bb81dfb82846f1",
+    "final_campaign_closure_sha256": "35a992e57dde6ae77af85256cdb0c23a94b3cde589f416e4a80eb502410a9d6b",
+    "final_campaign_evidence_index_sha256": "61c0adeeaf78bc0366e808dc5c3ca0cda70f82858cd69cbcc1584e0705139453",
+    "post_merge_receipt_sha256": "43e35a1aadda5984dde115b06f6be127a3d6eaff63f6a5533a8a666001b1ec1f",
+    "validation_overlay_seal_sha256": "7cecda0dc9b8b3dfae88e7bf325891f23af055315d3dcf395828cd2779855f96"
+  },
+  "artifacts": [
+    {
+      "name": "QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_setup.exe",
+      "size_bytes": 231889558,
+      "sha256": "46b121d252ba236f4e8d72e5e618bbf4542d0cdb0819b834fb9b3d3677599523",
+      "github_asset_id": 532393706
+    },
+    {
+      "name": "QuickPLS_2.56.0_unsigned-preview_multimod_28939b73_x64_portable.exe",
+      "size_bytes": 79480832,
+      "sha256": "54abad31daca14dbad16588f85015fb39b030bac28e1cd475a10d4d4573cb2d1",
+      "github_asset_id": 532393699
+    },
+    {
+      "name": "QuickPLS_2.56.0_SHA256SUMS.txt",
+      "size_bytes": 386,
+      "sha256": "23fffed0be9b185bceb286038f6ee11afb15be787d93ce93d85e9f7ee7217ad3",
+      "github_asset_id": 532393700
+    },
+    {
+      "name": "QuickPLS_2.56.0_RELEASE_MANIFEST.json",
+      "size_bytes": 2424,
+      "sha256": "79d54e6adfbd6e4c8370e8e6e4a5bc4bdaa4a3ce57c698faeb2d1c8916b60081",
+      "github_asset_id": 532393676
+    },
+    {
+      "name": "QuickPLS_2.56.0_USER_GUIDE.md",
+      "size_bytes": 19523,
+      "sha256": "8131b11a240900b9856282dd4285f8a1e3e08671c0f6cbfadb71416680ef98f1",
+      "github_asset_id": 532393711
+    },
+    {
+      "name": "QuickPLS_2.56.0_FEATURES.md",
+      "size_bytes": 8817,
+      "sha256": "7aac88b20e22d0949d09d733e58a66a55b24dde3a9a104baf12998e4e2e6b507",
+      "github_asset_id": 532393671
+    },
+    {
+      "name": "QuickPLS_2.56.0_RELEASE_NOTES.md",
+      "size_bytes": 6069,
+      "sha256": "6f429e3e6101bad87ee3590eea350868c06d53182eb40295bfc4699c4a58ce9e",
+      "github_asset_id": 532393668
+    },
+    {
+      "name": "QuickPLS_2.56.0_LICENSE.md",
+      "size_bytes": 7057,
+      "sha256": "9fb7ce9d432114a39325b0f3b507e7121add43e501a83391ebaab7864879d8fe",
+      "github_asset_id": 532393670
+    },
+    {
+      "name": "QuickPLS_2.56.0_EULA.md",
+      "size_bytes": 1384,
+      "sha256": "1213a715137329f58a00eda70cfe2318f91c6f085c7a75fe3d8c0771e75731fa",
+      "github_asset_id": 532393675
+    }
+  ],
+  "signing": {
+    "authenticode_signed": false,
+    "user_action": "Verify the full SHA-256 before running either executable."
+  }
+}
+

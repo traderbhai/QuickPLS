@@ -151,6 +151,7 @@ SmartPLS GmbH or any referenced third-party project.
 - [QuickPLS 2.56.0 Release Notes](docs/RELEASE_NOTES_V2_56_0.md)
 - [Release checksums](docs/RELEASE_CHECKSUMS_V2_56_0.txt)
 - [Machine-readable release manifest](docs/RELEASE_MANIFEST_V2_56_0.json)
+- [GitHub release receipt](docs/RELEASE_RECEIPT_V2_56_0.json)
 - [Method Compatibility](docs/METHOD_COMPATIBILITY.md)
 - [Known Issues](docs/KNOWN_ISSUES.md)
 - [Privacy Notice](docs/PRIVACY_NOTICE.md)
