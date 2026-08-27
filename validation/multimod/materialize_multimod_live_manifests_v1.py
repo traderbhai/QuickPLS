@@ -45,6 +45,15 @@ TRACKED_SURFACE = "labs"
 TRACKED_PROMOTION_ALLOWED = False
 LIVE_SURFACE = "standard"
 LIVE_PROMOTION_ALLOWED = True
+AUTHORITY_BINDING_FIELDS = (
+    "candidate_commit_sha",
+    "candidate_version",
+    "qualification_plan_sha256",
+    "gate_binding_sha256",
+    "capability_index_sha256",
+    "prepackage_manifest_set_sha256",
+    "exact_profile_cells",
+)
 
 PREPACKAGE_GLOBAL_GATES = (
     "contracts.schemas.source_identity",
@@ -121,6 +130,15 @@ def assert_tracked_manifest_template(template: dict[str, Any]) -> None:
         raise ManifestError(
             f"tracked manifest template must remain Labs/absent: {family_id}"
         )
+    method_versions = template.get("method_versions")
+    if (
+        not isinstance(method_versions, list)
+        or not method_versions
+        or len(method_versions) != len(set(method_versions))
+        or any(not isinstance(value, str) or not value for value in method_versions)
+    ):
+        raise ManifestError(f"tracked manifest method versions are invalid: {family_id}")
+    declared_method_versions = set(method_versions)
     source_artifacts = template["source_binding"].get("source_artifacts")
     if not isinstance(source_artifacts, list) or not source_artifacts:
         raise ManifestError(
@@ -150,6 +168,10 @@ def assert_tracked_manifest_template(template: dict[str, Any]) -> None:
             or not isinstance(profile_id, str)
             or not profile_id
             or profile_id in observed_profiles
+            or (
+                profile.get("method_version") not in declared_method_versions
+                and profile.get("method_version") != family_id
+            )
             or profile.get("surface") != TRACKED_SURFACE
             or profile.get("coverage_state") != "absent"
             or profile.get("evidence_state") != "absent"
@@ -205,6 +227,13 @@ def read_json(path: Path) -> Any:
 
 def canonical_bytes(value: Any) -> bytes:
     return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode("utf-8")
+
+
+def authority_binding_bytes(value: Any) -> bytes:
+    if not isinstance(value, dict) or set(value) != set(AUTHORITY_BINDING_FIELDS):
+        raise ManifestError("candidate authority binding fields differ from the typed schema")
+    ordered = {field: value[field] for field in AUTHORITY_BINDING_FIELDS}
+    return json.dumps(ordered, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
 
 
 def write_json_atomic(path: Path, value: Any) -> None:
@@ -614,7 +643,7 @@ def materialize(
             "prepackage_manifest_set_sha256": sha256(output),
             "exact_profile_cells": exact_profile_cells,
         }
-        compact_binding = json.dumps(binding, ensure_ascii=True, separators=(",", ":")).encode("utf-8")
+        compact_binding = authority_binding_bytes(binding)
         authority = {
             "schema_version": 1,
             "authority_kind": "qpls_multimod_embedded_candidate_authority_v1",
@@ -848,7 +877,7 @@ def verify(
             or binding.get("prepackage_manifest_set_sha256") != sha256(output)
             or binding.get("exact_profile_cells") != manifest_set.get("exact_profile_cells")
             or authority.get("authority_binding_sha256")
-            != sha256_bytes(json.dumps(binding, ensure_ascii=True, separators=(",", ":")).encode("utf-8"))
+            != sha256_bytes(authority_binding_bytes(binding))
         ):
             raise ManifestError("candidate authority output differs from its prepackage set")
     return manifest_set

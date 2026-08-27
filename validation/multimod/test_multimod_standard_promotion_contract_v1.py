@@ -105,6 +105,10 @@ class MultiModStandardPromotionContractV1Tests(unittest.TestCase):
         changed["promotion_allowed"] = True
         with self.assertRaises(self.materializer.ManifestError):
             self.materializer.assert_tracked_manifest_template(changed)
+        undeclared_method = copy.deepcopy(self.templates[0])
+        undeclared_method["profile_matrix"][0]["method_version"] = "undeclared.method.v1"
+        with self.assertRaises(self.materializer.ManifestError):
+            self.materializer.assert_tracked_manifest_template(undeclared_method)
         self.assertTrue(
             self.materializer.valid_surface_promotion_pair("standard", True)
         )
@@ -121,8 +125,25 @@ class MultiModStandardPromotionContractV1Tests(unittest.TestCase):
             "live_profiles != tracked_profile_ids",
             "manifest_cells != tracked_cells",
             "authority_cells != tracked_exact_cells",
+            "method_version != family_id",
         ):
             self.assertIn(required, source)
+
+    def test_authority_binding_digest_uses_typed_field_order(self) -> None:
+        binding = {
+            "candidate_commit_sha": "a" * 40,
+            "candidate_version": "2.56.0",
+            "qualification_plan_sha256": "b" * 64,
+            "gate_binding_sha256": "c" * 64,
+            "capability_index_sha256": "d" * 64,
+            "prepackage_manifest_set_sha256": "e" * 64,
+            "exact_profile_cells": ["profile.v1::procedure"],
+        }
+        sorted_round_trip = json.loads(json.dumps(binding, sort_keys=True))
+        self.assertEqual(
+            self.materializer.authority_binding_bytes(binding),
+            self.materializer.authority_binding_bytes(sorted_round_trip),
+        )
 
     def test_release_acceptance_requires_visible_standard_evidence(self) -> None:
         source = RELEASE.read_text(encoding="utf-8")

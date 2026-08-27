@@ -446,7 +446,7 @@ fn validate_tracked_manifest_template(
             "tracked profile.method_version",
         );
         if !expected_family.profiles.contains(profile_id)
-            || !method_versions.contains(method_version)
+            || (!method_versions.contains(method_version) && method_version != family_id)
             || text(
                 profile.get("coverage_state"),
                 "tracked profile.coverage_state",
