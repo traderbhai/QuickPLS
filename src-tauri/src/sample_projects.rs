@@ -695,8 +695,8 @@ mod tests {
     };
     use qpls_estimation::PlsResult;
     use qpls_project::{
-        ProjectModelPayloadV6, ProjectSemGenerationV6, load_project, load_project_archive_v6,
-        save_project,
+        CanonicalResultCellV2, ProjectModelPayloadV6, ProjectSemGenerationV6, load_project,
+        load_project_archive_v6, save_project,
     };
     use std::{fs, path::Path};
 
@@ -889,6 +889,52 @@ mod tests {
             })
             .collect::<BTreeSet<_>>();
         assert_eq!(canonical_outcomes, model_outcomes);
+
+        let reference_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .parent()
+            .unwrap()
+            .join(
+                "validation/benchmarks/organizational_identification/moderation_reference_v2.json",
+            );
+        let reference: serde_json::Value =
+            serde_json::from_slice(&fs::read(reference_path).unwrap()).unwrap();
+        let expected_loadings = reference["values"]
+            .as_object()
+            .unwrap()
+            .iter()
+            .filter(|(key, _)| key.starts_with("loading:"))
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(expected_loadings.len(), 21);
+        let outer_model = canonical
+            .tables
+            .iter()
+            .find(|table| table.id == "outer_model")
+            .expect("moderation result must retain the stage-one outer model");
+        let actual_loadings = outer_model
+            .rows
+            .iter()
+            .map(|row| {
+                let (
+                    CanonicalResultCellV2::Text { value: construct },
+                    CanonicalResultCellV2::Text { value: indicator },
+                    CanonicalResultCellV2::Number { value: loading, .. },
+                ) = (&row.cells[0], &row.cells[1], &row.cells[3])
+                else {
+                    panic!("outer-model row did not retain construct, indicator, and loading");
+                };
+                let construct = construct.strip_prefix("construct:").unwrap_or(construct);
+                (format!("loading:{construct}:{indicator}"), *loading)
+            })
+            .collect::<BTreeMap<_, _>>();
+        assert_eq!(actual_loadings.len(), expected_loadings.len());
+        for (key, expected) in expected_loadings {
+            let actual = actual_loadings
+                .get(key)
+                .unwrap_or_else(|| panic!("missing persisted loading {key}"));
+            let expected = expected.as_f64().unwrap();
+            let rounded = (actual * 1_000.0).round() / 1_000.0;
+            assert_eq!(rounded, expected, "persisted loading mismatch for {key}");
+        }
 
         let exact_path = |target: &str| {
             general_sem

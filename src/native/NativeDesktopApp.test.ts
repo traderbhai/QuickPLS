@@ -335,7 +335,8 @@ describe("native desktop multi-model shell contracts", () => {
     const settings = useWorkspace.getState().analysisSettings;
     const source = readFileSync("src/native/NativeDesktopApp.tsx", "utf8");
 
-    expect(source).toContain("<dt>Version</dt><dd>2.56.0</dd>");
+    expect(source).toContain("<dt>Version</dt><dd>2.56.1</dd>");
+    expect(source).not.toContain("<dt>Version</dt><dd>2.56.0</dd>");
     expect(source).not.toContain("<dt>Version</dt><dd>2.55.5</dd>");
 
     const standardKinds = ["pls_algorithm", "plsc", "wpls", "gsca", "cca", "cta_pls", "ipma", "cbsem", "pls_bootstrap", "plsc_bootstrap", "pls_permutation", "pls_posthoc_technical_minimum_sample_size", "pls_sample_size_power", "mga", "predict", "nca", "pca", "regression"];

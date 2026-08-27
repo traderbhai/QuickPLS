@@ -40,7 +40,7 @@ python validation/capability_registry_v2.py --check-legacy
 
 The repository also retains historical release-campaign scripts and evidence
 contracts for older exact candidates. They are not generic packaging commands
-for 2.56.0 and can intentionally reject the current version.
+for the current source version and can intentionally reject it.
 
 ## Development Desktop App
 

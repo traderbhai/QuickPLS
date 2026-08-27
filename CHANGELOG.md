@@ -4,9 +4,14 @@ This changelog summarizes public product releases. Detailed historical milestone
 
 ## [Unreleased]
 
+## [2.56.1] - 2026-08-27 (local preview, unsigned)
+
 - Added **Organizational Identification - Two-Outcome Moderation** as the eighth bundled sample, reusing the existing 305-case OI dataset.
 - Routes the sample through the qualified simultaneous multiple two-way General SEM point estimator and strict schema-6 save/reopen authority; it never falls back to the ordinary single-interaction engine.
 - Records three-decimal comparison evidence for 21 loadings, two focal paths, two scientific gamma values, and two independently reconstructed joint-equation R-squared values. The R-squared reconstruction is disclosed because final joint-stage R-squared is not yet a typed canonical result field.
+
+The 2.56.1 installer is a locally built unsigned preview. It does not replace or
+inherit the exact package qualification of the published 2.56.0 Beta.1 build.
 
 ## [2.56.0] - 2026-08-27 (Beta, unsigned)
 
