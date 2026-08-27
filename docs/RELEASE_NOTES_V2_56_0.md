@@ -71,4 +71,8 @@ The **Standard · Release-qualified** presentation depends on exact embedded aut
 - Conditional-process PLS results are not causal. The separate interventional module remains assumption-dependent and supports only its qualified observed-data profile.
 - Python and R references are qualification tools only; the shipped Windows application remains self-contained and offline for analysis.
 
+## Release receipt
+
+The machine-readable [GitHub release receipt](https://github.com/traderbhai/QuickPLS/blob/main/docs/RELEASE_RECEIPT_V2_56_0.json) records the exact tag target, publication identity, asset IDs, byte sizes, SHA-256 digests, and qualification receipt hashes. Its SHA-256 is `57e20e95b0d9d786280f87fa9f0880328abbb551a3dc7ada53fe8bca1d4ffd86`.
+
 See [QuickPLS 2.56.0 Features](FEATURES_V2_56_0.md), [Method Compatibility](METHOD_COMPATIBILITY.md), [MultiMod boundaries and qualification](MULTIMOD_BOUNDARIES_AND_QUALIFICATION_V1.md), and [unsupported intersections](MULTIMOD_UNSUPPORTED_INTERSECTIONS_V1.md).
